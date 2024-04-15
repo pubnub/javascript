@@ -3,8 +3,8 @@
 import { Listener, ListenerManager } from './components/listener_manager';
 import { SubscriptionManager } from './components/subscription-manager';
 import NotificationsPayload from './components/push_payload';
+import { TokenManager } from './components/token_manager';
 import { AbstractRequest } from './components/request';
-import TokenManager from './components/token_manager';
 import Crypto from './components/cryptography/index';
 import EventEmitter from './components/eventEmitter';
 import { encode } from './components/base64_codec';
@@ -26,7 +26,7 @@ import RequestOperation from './constants/operations';
 import StatusCategory from './constants/categories';
 // endregion
 
-import { createValidationError, PubnubError } from '../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../errors/pubnub-error';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
 
 // region Event Engine
@@ -220,6 +220,11 @@ export class PubNubCore<
    */
   private readonly _push: PubNubPushNotifications;
 
+  /**
+   *  {@link ArrayBuffer} to {@link string} decoder.
+   */
+  private static decoder = new TextDecoder();
+
   // --------------------------------------------------------
   // ----------------------- Static -------------------------
   // --------------------------------------------------------
@@ -253,7 +258,7 @@ export class PubNubCore<
    *
    * @returns Pre-formatted message payload which will trigger push notification.
    */
-  static notificationPayload(title: string, body: Payload) {
+  static notificationPayload(title: string, body: string) {
     return new NotificationsPayload(title, body);
   }
 
@@ -294,7 +299,7 @@ export class PubNubCore<
           heartbeatDelay: () =>
             new Promise((resolve, reject) => {
               heartbeatInterval = this._configuration.getHeartbeatInterval();
-              if (!heartbeatInterval) reject(new PubnubError('Heartbeat interval has been reset.'));
+              if (!heartbeatInterval) reject(new PubNubError('Heartbeat interval has been reset.'));
               else setTimeout(resolve, heartbeatInterval * 1000);
             }),
           retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
@@ -308,12 +313,24 @@ export class PubNubCore<
         handshake: this.subscribeHandshake.bind(this),
         receiveMessages: this.subscribeReceiveMessages.bind(this),
         delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-        join: this.presenceEventEngine?.join.bind(this.presenceEventEngine),
-        leave: this.presenceEventEngine?.leave.bind(this.presenceEventEngine),
-        leaveAll: this.presenceEventEngine?.leaveAll.bind(this.presenceEventEngine),
+        join: this.join.bind(this),
+        leave: this.leave.bind(this),
+        leaveAll: this.leaveAll.bind(this),
         presenceState: this.presenceState,
         config: this._configuration,
-        emitMessages: (events) => events.forEach((event) => this.eventEmitter.emitEvent(event)),
+        emitMessages: (events) => {
+          try {
+            events.forEach((event) => this.eventEmitter.emitEvent(event));
+          } catch (e) {
+            const errorStatus: Status = {
+              error: true,
+              category: StatusCategory.PNUnknownCategory,
+              errorData: e as Error,
+              statusCode: 0,
+            };
+            this.listenerManager.announceStatus(errorStatus);
+          }
+        },
         emitStatus: (status) => this.listenerManager.announceStatus(status),
       });
     } else {
@@ -389,7 +406,7 @@ export class PubNubCore<
    * @returns Current PubNub client user identifier.
    */
   get userId(): string {
-    return this._configuration.userId;
+    return this._configuration.userId!;
   }
 
   /**
@@ -402,6 +419,8 @@ export class PubNubCore<
    * @throws Error empty user identifier has been provided.
    */
   set userId(value: string) {
+    if (!value || typeof value !== 'string' || value.trim().length === 0)
+      throw new Error('Missing or invalid userId parameter. Provide a valid string userId');
     this._configuration.userId = value;
   }
 
@@ -411,7 +430,7 @@ export class PubNubCore<
    * @returns Current PubNub client user identifier.
    */
   getUserId(): string {
-    return this._configuration.userId;
+    return this._configuration.userId!;
   }
 
   /**
@@ -424,6 +443,8 @@ export class PubNubCore<
    * @throws Error empty user identifier has been provided.
    */
   setUserId(value: string): void {
+    if (!value || typeof value !== 'string' || value.trim().length === 0)
+      throw new Error('Missing or invalid userId parameter. Provide a valid string userId');
     this._configuration.userId = value;
   }
 
@@ -469,7 +490,7 @@ export class PubNubCore<
    * @returns Currently used key for data encryption / decryption.
    */
   get cipherKey(): string | undefined {
-    return this._configuration.cipherKey;
+    return this._configuration.getCipherKey();
   }
 
   /**
@@ -514,7 +535,7 @@ export class PubNubCore<
    * @returns Current SDK version.
    */
   getVersion(): string {
-    return this._configuration.version;
+    return this._configuration.getVersion();
   }
 
   /**
@@ -564,7 +585,7 @@ export class PubNubCore<
    * @deprecated Instead use {@link cryptoModule} for data encryption.
    */
   get customEncrypt(): ((data: string) => string) | undefined {
-    return this._configuration.customEncrypt;
+    return this._configuration.getCustomEncrypt();
   }
 
   /**
@@ -573,7 +594,7 @@ export class PubNubCore<
    * @deprecated Instead use {@link cryptoModule} for data decryption.
    */
   get customDecrypt(): ((data: string) => string) | undefined {
-    return this._configuration.customDecrypt;
+    return this._configuration.getCustomDecrypt();
   }
   // endregion
   // endregion
@@ -641,9 +662,9 @@ export class PubNubCore<
    * @param parameters - Subscriptions set configuration parameters.
    */
   public subscriptionSet(parameters: {
-    channels: string[];
-    channelGroups: string[];
-    subscriptionOptions: SubscriptionOptions;
+    channels?: string[];
+    channelGroups?: string[];
+    subscriptionOptions?: SubscriptionOptions;
   }): SubscriptionSet {
     return new SubscriptionSet({ ...parameters, eventEmitter: this.eventEmitter, pubnub: this });
   }
@@ -685,7 +706,7 @@ export class PubNubCore<
    * @returns Asynchronous request execution and response parsing result or `void` in case if
    * `callback` provided.
    *
-   * @throws PubnubError in case of request processing error.
+   * @throws PubNubError in case of request processing error.
    */
   private async sendRequest<ResponseType>(
     request: AbstractRequest<ResponseType>,
@@ -695,16 +716,12 @@ export class PubNubCore<
     const validationResult = request.validate();
     if (validationResult) {
       if (callback) return callback(createValidationError(validationResult), null);
-      throw new PubnubError('Validation failed, check status for details', createValidationError(validationResult));
+      throw new PubNubError('Validation failed, check status for details', createValidationError(validationResult));
     }
 
     // Complete request configuration.
     const transportRequest = request.request();
-    if (
-      transportRequest.body &&
-      typeof transportRequest.body === 'object' &&
-      'toArrayBuffer' in transportRequest.body
-    ) {
+    if (transportRequest.formData && transportRequest.formData.length > 0) {
       // Set 300 seconds file upload request delay.
       transportRequest.timeout = 300;
     } else {
@@ -735,6 +752,16 @@ export class PubNubCore<
       .then((response) => {
         status.statusCode = response.status;
 
+        // Handle special case when request completed but not fully processed by PubNub service.
+        if (response.status !== 200 && response.status !== 204) {
+          const contentType = response.headers['content-type'];
+          if (contentType || contentType.indexOf('javascript') !== -1 || contentType.indexOf('json') !== -1) {
+            const json = JSON.parse(PubNubCore.decoder.decode(response.body)) as Payload;
+            if (typeof json === 'object' && 'error' in json && json.error && typeof json.error === 'object')
+              status.errorData = json.error;
+          }
+        }
+
         return request.parse(response);
       })
       .then((parsed) => {
@@ -743,24 +770,38 @@ export class PubNubCore<
 
         return parsed;
       })
-      .catch((error: PubNubAPIError) => {
-        // Notify callback (if possible).
-        if (callback) callback(error.toStatus(request.operation()), null);
+      .catch((error: Error) => {
+        const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
 
-        throw error.toPubNubError(request.operation(), 'REST API request processing error, check status for details');
+        // Notify callback (if possible).
+        if (callback) return callback(apiError.toStatus(request.operation()), null);
+
+        throw apiError.toPubNubError(
+          request.operation(),
+          'REST API request processing error, check status for details',
+        );
       });
   }
 
   /**
    * Unsubscribe from all channels and groups.
    *
-   * @param isOffline - Whether `offline` presence should be notified or not.
+   * @param [isOffline] - Whether `offline` presence should be notified or not.
    */
-  public destroy(isOffline: boolean): void {
+  public destroy(isOffline?: boolean): void {
     if (this.subscriptionManager) {
       this.subscriptionManager.unsubscribeAll(isOffline);
       this.subscriptionManager.disconnect();
     } else if (this.eventEngine) this.eventEngine.dispose();
+  }
+
+  /**
+   * Unsubscribe from all channels and groups.
+   *
+   * @deprecated Use {@link destroy} method instead.
+   */
+  public stop(): void {
+    this.destroy();
   }
   // endregion
 
@@ -833,7 +874,7 @@ export class PubNubCore<
     const request = new Publish.PublishRequest({
       ...parameters,
       keySet: this._configuration.keySet,
-      crypto: this._configuration.cryptoModule,
+      crypto: this._configuration.getCryptoModule(),
     });
 
     if (callback) return this.sendRequest(request, callback);
@@ -984,7 +1025,8 @@ export class PubNubCore<
     const request = new SubscribeRequest({
       ...parameters,
       keySet: this._configuration.keySet,
-      getFileUrl: this.getFileUrl,
+      crypto: this._configuration.getCryptoModule(),
+      getFileUrl: this.getFileUrl.bind(this),
     });
 
     this.sendRequest(request, (status, result) => {
@@ -1073,11 +1115,13 @@ export class PubNubCore<
     const request = new HandshakeSubscribeRequest({
       ...parameters,
       keySet: this._configuration.keySet,
-      crypto: this._configuration.cryptoModule,
-      getFileUrl: this.getFileUrl,
+      crypto: this._configuration.getCryptoModule(),
+      getFileUrl: this.getFileUrl.bind(this),
     });
 
-    const abortUnsubscribe = parameters.abortSignal.subscribe(request.abort);
+    const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
+      request.abort();
+    });
 
     /**
      * Allow subscription cancellation.
@@ -1101,11 +1145,13 @@ export class PubNubCore<
     const request = new ReceiveMessagesSubscribeRequest({
       ...parameters,
       keySet: this._configuration.keySet,
-      crypto: this._configuration.cryptoModule,
-      getFileUrl: this.getFileUrl,
+      crypto: this._configuration.getCryptoModule(),
+      getFileUrl: this.getFileUrl.bind(this),
     });
 
-    const abortUnsubscribe = parameters.abortSignal.subscribe(request.abort);
+    const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
+      request.abort();
+    });
 
     /**
      * Allow subscription cancellation.
@@ -1264,8 +1310,6 @@ export class PubNubCore<
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
-   *
-   * @deprecated
    */
   public fetchMessages(
     parameters: History.FetchMessagesParameters,
@@ -1278,8 +1322,6 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    *
    * @returns Asynchronous fetch messages response.
-   *
-   * @deprecated
    */
   public async fetchMessages(parameters: History.FetchMessagesParameters): Promise<History.FetchMessagesResponse>;
 
@@ -1290,8 +1332,6 @@ export class PubNubCore<
    * @param [callback] - Request completion handler callback.
    *
    * @returns Asynchronous fetch messages response or `void` in case if `callback` provided.
-   *
-   * @deprecated
    */
   async fetchMessages(
     parameters: History.FetchMessagesParameters,
@@ -1300,8 +1340,8 @@ export class PubNubCore<
     const request = new FetchMessagesRequest({
       ...parameters,
       keySet: this._configuration.keySet,
-      crypto: this._configuration.cryptoModule,
-      getFileUrl: this.getFileUrl,
+      crypto: this._configuration.getCryptoModule(),
+      getFileUrl: this.getFileUrl.bind(this),
     });
 
     if (callback) return this.sendRequest(request, callback);
@@ -1361,8 +1401,6 @@ export class PubNubCore<
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
-   *
-   * @deprecated
    */
   public messageCounts(
     parameters: History.MessageCountParameters,
@@ -1375,8 +1413,6 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    *
    * @returns Asynchronous count messages response.
-   *
-   * @deprecated
    */
   public async messageCounts(parameters: History.MessageCountParameters): Promise<History.MessageCountResponse>;
 
@@ -1387,8 +1423,6 @@ export class PubNubCore<
    * @param [callback] - Request completion handler callback.
    *
    * @returns Asynchronous count messages response or `void` in case if `callback` provided.
-   *
-   * @deprecated
    */
   async messageCounts(
     parameters: History.MessageCountParameters,
@@ -1441,7 +1475,7 @@ export class PubNubCore<
     const request = new GetHistoryRequest({
       ...parameters,
       keySet: this._configuration.keySet,
-      crypto: this._configuration.cryptoModule,
+      crypto: this._configuration.getCryptoModule(),
     });
 
     if (callback) return this.sendRequest(request, callback);
@@ -1530,7 +1564,7 @@ export class PubNubCore<
     callback?: ResultCallback<Presence.WhereNowResponse>,
   ): Promise<Presence.WhereNowResponse | void> {
     const request = new WhereNowRequest({
-      uuid: parameters.uuid ?? this._configuration.userId,
+      uuid: parameters.uuid ?? this._configuration.userId!,
       keySet: this._configuration.keySet,
     });
 
@@ -1618,7 +1652,7 @@ export class PubNubCore<
     parameters: Presence.SetPresenceStateParameters | Presence.SetPresenceStateWithHeartbeatParameters,
     callback?: ResultCallback<Presence.SetPresenceStateResponse | Presence.PresenceHeartbeatResponse>,
   ): Promise<Presence.SetPresenceStateResponse | Presence.PresenceHeartbeatResponse | void> {
-    const { keySet, userId: uuid } = this._configuration;
+    const { keySet, userId: userId } = this._configuration;
     const heartbeat = this._configuration.getPresenceTimeout();
     let request: AbstractRequest<Presence.PresenceHeartbeatResponse | Presence.SetPresenceStateResponse>;
 
@@ -1636,7 +1670,7 @@ export class PubNubCore<
     if ('withHeartbeat' in parameters) {
       request = new HeartbeatRequest({ ...parameters, keySet, heartbeat });
     } else {
-      request = new SetPresenceStateRequest({ ...parameters, keySet, uuid });
+      request = new SetPresenceStateRequest({ ...parameters, keySet, uuid: userId! });
     }
 
     // Update state used by subscription manager.
@@ -1663,8 +1697,12 @@ export class PubNubCore<
    * Announce user presence
    *
    * @param parameters - Desired presence state for provided list of channels and groups.
+   * @param callback - Request completion handler callback.
    */
-  private async heartbeat(parameters: Presence.PresenceHeartbeatParameters) {
+  private async heartbeat(
+    parameters: Presence.PresenceHeartbeatParameters,
+    callback?: ResultCallback<Presence.PresenceHeartbeatResponse>,
+  ) {
     // Manual presence management possible only with subscription manager.
     if (!this.subscriptionManager) return;
 
@@ -1673,7 +1711,37 @@ export class PubNubCore<
       keySet: this._configuration.keySet,
     });
 
+    if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
+  }
+  // endregion
+
+  // region Join
+  /**
+   * Announce user `join` on specified list of channels and groups.
+   *
+   * @param parameters - List of channels and groups where `join` event should be sent.
+   */
+  private join(parameters: { channels?: string[]; groups?: string[] }) {
+    this.presenceEventEngine?.join(parameters);
+  }
+  // endregion
+
+  // region Leave
+  /**
+   * Announce user `leave` on specified list of channels and groups.
+   *
+   * @param parameters - List of channels and groups where `leave` event should be sent.
+   */
+  private leave(parameters: { channels?: string[]; groups?: string[] }) {
+    this.presenceEventEngine?.leave(parameters);
+  }
+
+  /**
+   * Announce user `leave` on all subscribed channels.
+   */
+  private leaveAll() {
+    this.presenceEventEngine?.leaveAll();
   }
   // endregion
   // endregion
@@ -1936,7 +2004,7 @@ export class PubNubCore<
    * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata} method instead.
    */
   public fetchUsers<Custom extends AppContext.CustomData = AppContext.CustomData>(
-    parameters: AppContext.GetAllMetadataParameters,
+    parameters: AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>>,
     callback: ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
   ): void;
 
@@ -1950,7 +2018,7 @@ export class PubNubCore<
    * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata} method instead.
    */
   public async fetchUsers<Custom extends AppContext.CustomData = AppContext.CustomData>(
-    parameters?: AppContext.GetAllMetadataParameters,
+    parameters?: AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>>,
   ): Promise<AppContext.GetAllUUIDMetadataResponse<Custom>>;
 
   /**
@@ -1965,7 +2033,7 @@ export class PubNubCore<
    */
   public async fetchUsers<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parametersOrCallback?:
-      | AppContext.GetAllMetadataParameters
+      | AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>>
       | ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllUUIDMetadataResponse<Custom> | void> {
@@ -2199,7 +2267,7 @@ export class PubNubCore<
    * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata} method instead.
    */
   public fetchSpaces<Custom extends AppContext.CustomData = AppContext.CustomData>(
-    parameters: AppContext.GetAllMetadataParameters,
+    parameters: AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>>,
     callback: ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
   ): void;
 
@@ -2213,7 +2281,7 @@ export class PubNubCore<
    * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata} method instead.
    */
   public async fetchSpaces<Custom extends AppContext.CustomData = AppContext.CustomData>(
-    parameters?: AppContext.GetAllMetadataParameters,
+    parameters?: AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>>,
   ): Promise<AppContext.GetAllChannelMetadataResponse<Custom>>;
 
   /**
@@ -2229,7 +2297,7 @@ export class PubNubCore<
    */
   async fetchSpaces<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parametersOrCallback?:
-      | AppContext.GetAllMetadataParameters
+      | AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>>
       | ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllChannelMetadataResponse<Custom> | void> {
@@ -2761,14 +2829,13 @@ export class PubNubCore<
 
     const sendFileRequest = new SendFileRequest<FileConstructorParameters>({
       ...parameters,
-      cipherKey: parameters.cipherKey ?? this._configuration.cipherKey,
       keySet: this._configuration.keySet,
-      PubNubFile: this._configuration.PubNubFile!,
+      PubNubFile: this._configuration.PubNubFile,
       fileUploadPublishRetryLimit: this._configuration.fileUploadPublishRetryLimit,
       file: parameters.file,
-      sendRequest: this.sendRequest,
-      publishFile: this.publishFile,
-      crypto: this._configuration.cryptoModule,
+      sendRequest: this.sendRequest.bind(this),
+      publishFile: this.publishFile.bind(this),
+      crypto: this._configuration.getCryptoModule(),
       cryptography: this.cryptography ? (this.cryptography as Cryptography<ArrayBuffer>) : undefined,
     });
 
@@ -2793,7 +2860,7 @@ export class PubNubCore<
         // Notify callback (if possible).
         if (callback) callback(errorStatus, null);
 
-        throw new PubnubError('REST API request processing error, check status for details', errorStatus);
+        throw new PubNubError('REST API request processing error, check status for details', errorStatus);
       });
   }
   // endregion
@@ -2839,7 +2906,7 @@ export class PubNubCore<
     const request = new PublishFileMessageRequest({
       ...parameters,
       keySet: this._configuration.keySet,
-      crypto: this._configuration.cryptoModule,
+      crypto: this._configuration.getCryptoModule(),
     });
 
     if (callback) return this.sendRequest(request, callback);
@@ -2948,11 +3015,10 @@ export class PubNubCore<
 
     const request = new DownloadFileRequest<PlatformFile>({
       ...parameters,
-      cipherKey: parameters.cipherKey ?? this._configuration.cipherKey,
       keySet: this._configuration.keySet,
-      PubNubFile: this._configuration.PubNubFile!,
+      PubNubFile: this._configuration.PubNubFile,
       cryptography: this.cryptography ? (this.cryptography as Cryptography<ArrayBuffer>) : undefined,
-      crypto: this._configuration.cryptoModule,
+      crypto: this._configuration.getCryptoModule(),
     });
 
     if (callback) return this.sendRequest(request, callback);
@@ -3051,9 +3117,11 @@ export class PubNubCore<
    *
    * @returns Data encryption result as a string.
    */
-  public encrypt(data: string, customCipherKey?: string): string {
-    if (typeof customCipherKey === 'undefined' && this._configuration.cryptoModule) {
-      const encrypted = this._configuration.cryptoModule.encrypt(data);
+  public encrypt(data: string | Payload, customCipherKey?: string): string {
+    const cryptoModule = this._configuration.getCryptoModule();
+
+    if (!customCipherKey && cryptoModule && typeof data === 'string') {
+      const encrypted = cryptoModule.encrypt(data);
 
       return typeof encrypted === 'string' ? encrypted : encode(encrypted);
     }
@@ -3073,8 +3141,9 @@ export class PubNubCore<
    * @returns Data decryption result as an object.
    */
   public decrypt(data: string, customCipherKey?: string): Payload | null {
-    if (typeof customCipherKey === 'undefined' && this._configuration.cryptoModule) {
-      const decrypted = this._configuration.cryptoModule.decrypt(data);
+    const cryptoModule = this._configuration.getCryptoModule();
+    if (!customCipherKey && cryptoModule) {
+      const decrypted = cryptoModule.decrypt(data);
 
       return decrypted instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decrypted)) : decrypted;
     }
@@ -3131,7 +3200,7 @@ export class PubNubCore<
 
     if (!file) throw new Error('File encryption error. Source file is missing.');
     if (!this._configuration.PubNubFile) throw new Error('File encryption error. File constructor not configured.');
-    if (typeof keyOrFile !== 'string' && !this._configuration.cryptoModule)
+    if (typeof keyOrFile !== 'string' && !this._configuration.getCryptoModule())
       throw new Error('File encryption error. Crypto module not configured.');
 
     if (typeof keyOrFile === 'string') {
@@ -3139,7 +3208,7 @@ export class PubNubCore<
       return this.cryptography.encryptFile(keyOrFile, file, this._configuration.PubNubFile);
     }
 
-    return this._configuration.cryptoModule?.encryptFile(file, this._configuration.PubNubFile);
+    return this._configuration.getCryptoModule()?.encryptFile(file, this._configuration.PubNubFile);
   }
 
   /**
@@ -3188,7 +3257,7 @@ export class PubNubCore<
     if (!file) throw new Error('File encryption error. Source file is missing.');
     if (!this._configuration.PubNubFile)
       throw new Error('File decryption error. File constructor' + ' not configured.');
-    if (typeof keyOrFile === 'string' && !this._configuration.cryptoModule)
+    if (typeof keyOrFile === 'string' && !this._configuration.getCryptoModule())
       throw new Error('File decryption error. Crypto module not configured.');
 
     if (typeof keyOrFile === 'string') {
@@ -3196,7 +3265,7 @@ export class PubNubCore<
       return this.cryptography.decryptFile(keyOrFile, file, this._configuration.PubNubFile);
     }
 
-    return this._configuration.cryptoModule?.decryptFile(file, this._configuration.PubNubFile);
+    return this._configuration.getCryptoModule()?.decryptFile(file, this._configuration.PubNubFile);
   }
   // endregion
   // endregion

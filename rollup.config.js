@@ -1,23 +1,17 @@
-import { join, basename, dirname, resolve as pathResolve } from 'path';
-import ts from 'typescript';
-import fs from 'fs';
+import { join, basename, dirname } from 'path';
 
 import typescript from '@rollup/plugin-typescript';
-import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 import replace from '@rollup/plugin-replace';
 import json from '@rollup/plugin-json';
 
-import terser from '@rollup/plugin-terser';
 const gzipPlugin = require('rollup-plugin-gzip').default;
+import terser from '@rollup/plugin-terser';
 
 import { browser, version } from './package.json';
-import tsConfig from './tsconfig.rollup.json';
 
-const sourcePath = pathResolve('src/transport/web-worker.ts');
-const workerContent = fs.readFileSync(sourcePath, 'utf8');
-const result = ts.transpileModule(workerContent, tsConfig);
-const webWorkerDataUrl = `'data:application/javascript;base64,${btoa(result.outputText)}'`;
+const SERVICE_WORKER_CDN = 'https://cdn.pubnub.com/sdk/javascript';
 
 export default [
   {
@@ -27,7 +21,18 @@ export default [
       format: 'umd',
       name: 'PubNub',
     },
-    plugins: [json(), resolve({ browser: true }), commonjs(), typescript(tsConfig), terser()],
+    plugins: [
+      json(),
+      resolve({ browser: true }),
+      replace({
+        SERVICE_WORKER_FILE_PLACEHOLDER: join(dirname(browser), basename(browser, '.min.js') + '.worker.min.js'),
+        SERVICE_WORKER_CDN,
+        preventAssignment: true,
+      }),
+      commonjs(),
+      typescript({ tsconfig: 'tsconfig.rollup.json' }),
+      terser(),
+    ],
   },
   {
     input: 'src/web/index.ts',
@@ -39,14 +44,38 @@ export default [
     plugins: [
       json(),
       resolve({ browser: true }),
-      // Stringify Web Worker to register it from the Data URL.
       replace({
-        WEB_WORKER_PLACEHOLDER: webWorkerDataUrl,
+        SERVICE_WORKER_FILE_PLACEHOLDER: join(dirname(browser), basename(browser, '.min.js') + '.worker.js'),
+        SERVICE_WORKER_CDN,
         preventAssignment: true,
       }),
       commonjs(),
-      typescript(tsConfig),
+      typescript({ tsconfig: 'tsconfig.rollup.json' }),
     ],
+  },
+  {
+    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    output: {
+      file: join(dirname(browser), basename(browser, '.min.js') + '.worker.min.js'),
+      format: 'umd',
+      name: 'PubNub',
+    },
+    plugins: [
+      json(),
+      resolve({ browser: true }),
+      commonjs(),
+      typescript({ tsconfig: 'tsconfig.rollup.json' }),
+      terser(),
+    ],
+  },
+  {
+    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    output: {
+      file: join(dirname(browser), basename(browser, '.min.js') + '.worker.js'),
+      format: 'umd',
+      name: 'PubNub',
+    },
+    plugins: [json(), resolve({ browser: true }), commonjs(), typescript({ tsconfig: 'tsconfig.rollup.json' })],
   },
   {
     input: 'src/web/index.ts',
@@ -58,13 +87,13 @@ export default [
     plugins: [
       json(),
       resolve({ browser: true }),
-      // Stringify Web Worker to register it from the Data URL.
       replace({
-        WEB_WORKER_PLACEHOLDER: webWorkerDataUrl,
+        SERVICE_WORKER_FILE_PLACEHOLDER: `pubnub.worker.${version}.min.js`,
+        SERVICE_WORKER_CDN,
         preventAssignment: true,
       }),
       commonjs(),
-      typescript(tsConfig),
+      typescript({ tsconfig: 'tsconfig.rollup.json' }),
       terser(),
       gzipPlugin({ fileName: '' }),
     ],
@@ -79,13 +108,13 @@ export default [
     plugins: [
       json(),
       resolve({ browser: true }),
-      // Stringify Web Worker to register it from the Data URL.
       replace({
-        WEB_WORKER_PLACEHOLDER: webWorkerDataUrl,
+        SERVICE_WORKER_FILE_PLACEHOLDER: `pubnub.worker.${version}.js`,
+        SERVICE_WORKER_CDN,
         preventAssignment: true,
       }),
       commonjs(),
-      typescript(tsConfig),
+      typescript({ tsconfig: 'tsconfig.rollup.json' }),
       gzipPlugin({ fileName: '' }),
     ],
   },
@@ -99,13 +128,13 @@ export default [
     plugins: [
       json(),
       resolve({ browser: true }),
-      // Stringify Web Worker to register it from the Data URL.
       replace({
-        WEB_WORKER_PLACEHOLDER: webWorkerDataUrl,
+        SERVICE_WORKER_FILE_PLACEHOLDER: `pubnub.worker.${version}.min.js`,
+        SERVICE_WORKER_CDN,
         preventAssignment: true,
       }),
       commonjs(),
-      typescript(tsConfig),
+      typescript({ tsconfig: 'tsconfig.rollup.json' }),
       terser(),
     ],
   },
@@ -119,13 +148,68 @@ export default [
     plugins: [
       json(),
       resolve({ browser: true }),
-      // Stringify Web Worker to register it from the Data URL.
       replace({
-        WEB_WORKER_PLACEHOLDER: webWorkerDataUrl,
+        SERVICE_WORKER_FILE_PLACEHOLDER: `pubnub.worker.${version}.js`,
+        SERVICE_WORKER_CDN,
         preventAssignment: true,
       }),
       commonjs(),
-      typescript(tsConfig),
+      typescript({ tsconfig: 'tsconfig.rollup.json' }),
     ],
+  },
+  {
+    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    output: {
+      file: `upload/gzip/pubnub.worker.${version}.min.js`,
+      format: 'umd',
+      name: 'PubNub',
+    },
+    plugins: [
+      json(),
+      resolve({ browser: true }),
+      commonjs(),
+      typescript({ tsconfig: 'tsconfig.rollup.json' }),
+      terser(),
+      gzipPlugin({ fileName: '' }),
+    ],
+  },
+  {
+    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    output: {
+      file: `upload/gzip/pubnub.worker.${version}.js`,
+      format: 'umd',
+      name: 'PubNub',
+    },
+    plugins: [
+      json(),
+      resolve({ browser: true }),
+      commonjs(),
+      typescript({ tsconfig: 'tsconfig.rollup.json' }),
+      gzipPlugin({ fileName: '' }),
+    ],
+  },
+  {
+    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    output: {
+      file: `upload/normal/pubnub.worker.${version}.min.js`,
+      format: 'umd',
+      name: 'PubNub',
+    },
+    plugins: [
+      json(),
+      resolve({ browser: true }),
+      commonjs(),
+      typescript({ tsconfig: 'tsconfig.rollup.json' }),
+      terser(),
+    ],
+  },
+  {
+    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    output: {
+      file: `upload/normal/pubnub.worker.${version}.js`,
+      format: 'umd',
+      name: 'PubNub',
+    },
+    plugins: [json(), resolve({ browser: true }), commonjs(), typescript({ tsconfig: 'tsconfig.rollup.json' })],
   },
 ];

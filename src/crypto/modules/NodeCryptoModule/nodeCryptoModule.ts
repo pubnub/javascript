@@ -9,7 +9,7 @@ import { AbstractCryptoModule, CryptorConfiguration } from '../../../core/interf
 import PubNubFile, { PubNubFileParameters } from '../../../file/modules/node';
 import { PubNubFileConstructor } from '../../../core/types/file';
 import { decode } from '../../../core/components/base64_codec';
-import { PubnubError } from '../../../errors/pubnub-error';
+import { PubNubError } from '../../../errors/pubnub-error';
 import { EncryptedDataType, ICryptor } from './ICryptor';
 import { ILegacyCryptor } from './ILegacyCryptor';
 import AesCbcCryptor from './aesCbcCryptor';
@@ -40,7 +40,7 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
   // region Convenience functions
 
   static legacyCryptoModule(config: CryptorConfiguration) {
-    if (!config.cipherKey) throw new PubnubError('Crypto module error: cipher key not set.');
+    if (!config.cipherKey) throw new PubNubError('Crypto module error: cipher key not set.');
 
     return new this({
       default: new LegacyCryptor({
@@ -52,7 +52,7 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
   }
 
   static aesCbcCryptoModule(config: CryptorConfiguration) {
-    if (!config.cipherKey) throw new PubnubError('Crypto module error: cipher key not set.');
+    if (!config.cipherKey) throw new PubNubError('Crypto module error: cipher key not set.');
 
     return new this({
       default: new AesCbcCryptor({ cipherKey: config.cipherKey }),
@@ -92,9 +92,12 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
     if (!encrypted.metadata) return encrypted.data;
 
     const headerData = this.getHeaderData(encrypted)!;
+
     // Write encrypted data payload content.
     const encryptedData =
-      typeof encrypted.data === 'string' ? CryptoModule.encoder.encode(encrypted.data) : encrypted.data.buffer;
+      typeof encrypted.data === 'string'
+        ? CryptoModule.encoder.encode(encrypted.data).buffer
+        : encrypted.data.buffer.slice(encrypted.data.byteOffset, encrypted.data.byteOffset + encrypted.data.length);
 
     return this.concatArrayBuffer(headerData, encryptedData);
   }
@@ -155,7 +158,9 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
 
   decrypt(data: ArrayBuffer | string) {
     const encryptedData = Buffer.from(typeof data === 'string' ? decode(data) : data);
-    const header = CryptorHeader.tryParse(encryptedData);
+    const header = CryptorHeader.tryParse(
+      encryptedData.buffer.slice(encryptedData.byteOffset, encryptedData.byteOffset + encryptedData.length),
+    );
     const cryptor = this.getCryptor(header);
     const metadata =
       header.length > 0
@@ -175,7 +180,9 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
     File: PubNubFileConstructor<PubNubFile, PubNubFileParameters>,
   ): Promise<PubNubFile | undefined> {
     if (file.data && file.data instanceof Buffer) {
-      const header = CryptorHeader.tryParse(file.data);
+      const header = CryptorHeader.tryParse(
+        file.data.buffer.slice(file.data.byteOffset, file.data.byteOffset + file.data.length),
+      );
       const cryptor = this.getCryptor(header);
       /**
        * If It's legacy one then redirect it.
@@ -264,6 +271,7 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
     headerData.set(header!.data, pos);
     pos += header!.length - encrypted.metadata.byteLength;
     headerData.set(new Uint8Array(encrypted.metadata), pos);
+
     return headerData.buffer;
   }
 

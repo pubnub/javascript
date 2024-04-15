@@ -36,6 +36,13 @@ type ManagedDeviceChannels = {
 type ListFCMDeviceChannelsParameters = Omit<ManageFCMDeviceChannelsParameters, 'channels'>;
 
 /**
+ * List all APNS device push notification enabled channels parameters.
+ *
+ * @deprecated Use `APNS2`-based endpoints.
+ */
+type ListAPNSDeviceChannelsParameters = Omit<ManageAPNSDeviceChannelsParameters, 'channels'>;
+
+/**
  * List all APNS2 device push notification enabled channels parameters.
  */
 type ListAPNS2DeviceChannelsParameters = Omit<ManageAPNS2DeviceChannelsParameters, 'channels'>;
@@ -43,7 +50,10 @@ type ListAPNS2DeviceChannelsParameters = Omit<ManageAPNS2DeviceChannelsParameter
 /**
  * List all device push notification enabled channels parameters.
  */
-export type ListDeviceChannelsParameters = ListFCMDeviceChannelsParameters | ListAPNS2DeviceChannelsParameters;
+export type ListDeviceChannelsParameters =
+  | ListFCMDeviceChannelsParameters
+  | ListAPNSDeviceChannelsParameters
+  | ListAPNS2DeviceChannelsParameters;
 
 /**
  * List all device push notification enabled channels response.
@@ -65,6 +75,18 @@ type ManageFCMDeviceChannelsParameters = ManagedDeviceChannels & {
    * Push Notifications gateway type.
    */
   pushGateway: 'gcm';
+};
+
+/**
+ * Manage APNS device push notification enabled channels parameters.
+ *
+ * @deprecated Use `APNS2`-based endpoints.
+ */
+type ManageAPNSDeviceChannelsParameters = ManagedDeviceChannels & {
+  /**
+   * Push Notifications gateway type.
+   */
+  pushGateway: 'apns';
 };
 
 /**
@@ -90,7 +112,10 @@ type ManageAPNS2DeviceChannelsParameters = ManagedDeviceChannels & {
 /**
  * Manage device push notification enabled channels parameters.
  */
-export type ManageDeviceChannelsParameters = ManageFCMDeviceChannelsParameters | ManageAPNS2DeviceChannelsParameters;
+export type ManageDeviceChannelsParameters =
+  | ManageFCMDeviceChannelsParameters
+  | ManageAPNSDeviceChannelsParameters
+  | ManageAPNS2DeviceChannelsParameters;
 
 /**
  * Manage device push notification enabled channels response.
@@ -105,6 +130,13 @@ export type ManageDeviceChannelsResponse = Record<string, unknown>;
 type RemoveFCMDeviceParameters = Omit<ManageFCMDeviceChannelsParameters, 'channels'>;
 
 /**
+ * Manage APNS device push notification enabled channels parameters.
+ *
+ * @deprecated Use `APNS2`-based endpoints.
+ */
+type RemoveAPNSDeviceParameters = Omit<ManageAPNSDeviceChannelsParameters, 'channels'>;
+
+/**
  * Manage APNS2 device push notification enabled channels parameters.
  */
 type RemoveAPNS2DeviceParameters = Omit<ManageAPNS2DeviceChannelsParameters, 'channels'>;
@@ -112,7 +144,10 @@ type RemoveAPNS2DeviceParameters = Omit<ManageAPNS2DeviceChannelsParameters, 'ch
 /**
  * Remove all device push notification enabled channels parameters.
  */
-export type RemoveDeviceParameters = RemoveFCMDeviceParameters | RemoveAPNS2DeviceParameters;
+export type RemoveDeviceParameters =
+  | RemoveFCMDeviceParameters
+  | RemoveAPNSDeviceParameters
+  | RemoveAPNS2DeviceParameters;
 
 /**
  * Remove all device push notification enabled channels response.

@@ -3,7 +3,7 @@
  */
 
 import { TransportResponse } from '../../types/transport-response';
-import { TransportRequest } from '../../types/transport-request';
+import { TransportMethod, TransportRequest } from '../../types/transport-request';
 import { AbstractRequest } from '../../components/request';
 import * as FileSharing from '../../types/api/file-sharing';
 import RequestOperation from '../../constants/operations';
@@ -14,7 +14,7 @@ import { PubNubFileInterface } from '../../types/file';
  */
 export class UploadFileRequest extends AbstractRequest<FileSharing.UploadFileResponse> {
   constructor(private readonly parameters: FileSharing.UploadFileParameters) {
-    super();
+    super({ method: TransportMethod.POST });
 
     // Use file's actual mime type if available.
     const mimeType = parameters.file.mimeType;
@@ -47,7 +47,11 @@ export class UploadFileRequest extends AbstractRequest<FileSharing.UploadFileRes
   }
 
   request(): TransportRequest {
-    return { ...super.request(), origin: new URL(this.parameters.uploadUrl).origin };
+    return {
+      ...super.request(),
+      origin: new URL(this.parameters.uploadUrl).origin,
+      timeout: 300,
+    };
   }
 
   protected get path(): string {
@@ -58,5 +62,9 @@ export class UploadFileRequest extends AbstractRequest<FileSharing.UploadFileRes
 
   protected get body(): ArrayBuffer | PubNubFileInterface | string | undefined {
     return this.parameters.file;
+  }
+
+  protected get formData(): Record<string, string>[] | undefined {
+    return this.parameters.formFields;
   }
 }

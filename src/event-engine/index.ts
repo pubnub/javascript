@@ -116,7 +116,9 @@ export class EventEngine {
     this.groups = [];
 
     if (this.dependencies.presenceState) {
-      this.dependencies.presenceState = {};
+      Object.keys(this.dependencies.presenceState).forEach((objectName) => {
+        delete this.dependencies.presenceState[objectName];
+      });
     }
     this.engine.transition(events.subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
     if (this.dependencies.leaveAll) {

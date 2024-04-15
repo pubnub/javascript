@@ -149,7 +149,7 @@ export class PubNubFile implements PubNubFileInterface {
    *
    * @returns Asynchronous results of conversion to the {@link string}.
    */
-  async toString() {
+  async toString(): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
@@ -190,7 +190,7 @@ export class PubNubFile implements PubNubFileInterface {
    *
    * @throws Error because file `Uri` not available in browser environment.
    */
-  async toFileUri() {
+  async toFileUri(): Promise<Record<string, unknown>> {
     throw new Error('This feature is only supported in React Native environments.');
   }
 

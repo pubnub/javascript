@@ -2,10 +2,10 @@ import CborReader from 'cbor-js';
 import { Buffer } from 'buffer';
 
 import { stringifyBufferKeys } from '../core/components/stringify_buffer_keys';
-import { ReactNativeTransport } from '../transport/react-native-transport';
+import { WebReactNativeTransport } from '../transport/web-react-native-transport';
 import { makeConfiguration } from '../core/components/configuration';
 import { PubNubFileParameters } from '../file/modules/react-native';
-import TokenManager from '../core/components/token_manager';
+import { TokenManager } from '../core/components/token_manager';
 import { PubNubMiddleware } from '../transport/middleware';
 import { decode } from '../core/components/base64_codec';
 import PubNubFile from '../file/modules/react-native';
@@ -35,16 +35,21 @@ export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
 
     // Legacy crypto (legacy data encryption / decryption and request signature support).
     let crypto: Crypto | undefined;
-    if (clientConfiguration.cipherKey || clientConfiguration.secretKey) {
-      const { secretKey, cipherKey, useRandomIVs, customEncrypt, customDecrypt } = clientConfiguration;
-      crypto = new Crypto({ secretKey, cipherKey, useRandomIVs, customEncrypt, customDecrypt });
+    if (clientConfiguration.getCipherKey() || clientConfiguration.secretKey) {
+      crypto = new Crypto({
+        secretKey: clientConfiguration.secretKey,
+        cipherKey: clientConfiguration.getCipherKey(),
+        useRandomIVs: clientConfiguration.getUseRandomIVs(),
+        customEncrypt: clientConfiguration.getCustomEncrypt(),
+        customDecrypt: clientConfiguration.getCustomDecrypt(),
+      });
     }
 
     // Setup transport layer.
     const transportMiddleware = new PubNubMiddleware({
       clientConfiguration,
       tokenManager,
-      transport: new ReactNativeTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity!),
+      transport: new WebReactNativeTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity!),
     });
 
     super({

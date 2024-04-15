@@ -45,6 +45,11 @@ enum RequestOperation {
   PNHereNowOperation = 'PNHereNowOperation',
 
   /**
+   * Fetch global presence information REST API operation.
+   */
+  PNGlobalHereNowOperation = 'PNGlobalHereNowOperation',
+
+  /**
    * Update user's information associated with specified channel REST API operation.
    */
   PNSetStateOperation = 'PNSetStateOperation',

@@ -144,7 +144,7 @@ export abstract class AbstractRequest<ResponseType> implements Request<ResponseT
     return {};
   }
 
-  protected get formData(): Record<string, string> | undefined {
+  protected get formData(): Record<string, string>[] | undefined {
     return undefined;
   }
 
@@ -166,7 +166,7 @@ export abstract class AbstractRequest<ResponseType> implements Request<ResponseT
    */
   protected deserializeResponse<ServiceResponse>(response: TransportResponse): ServiceResponse | undefined {
     const contentType = response.headers['content-type'];
-    if (contentType.indexOf('javascript') === -1 && contentType.indexOf('json') === -1) {
+    if (!contentType || (contentType.indexOf('javascript') === -1 && contentType.indexOf('json') === -1)) {
       return undefined;
     }
 

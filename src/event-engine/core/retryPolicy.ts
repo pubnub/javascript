@@ -1,4 +1,4 @@
-import { PubnubError } from '../../errors/pubnub-error';
+import { PubNubError } from '../../errors/pubnub-error';
 
 export class RetryPolicy {
   static LinearRetryPolicy(
@@ -85,7 +85,7 @@ export type RequestRetryPolicy = {
    *
    * @returns `true` if another request retry attempt can be done.
    */
-  shouldRetry(reason: PubnubError & { retryAfter?: number }, attempt: number): boolean;
+  shouldRetry(reason: PubNubError & { retryAfter?: number }, attempt: number): boolean;
 
   /**
    * Computed delay for next request retry attempt.
@@ -95,7 +95,7 @@ export type RequestRetryPolicy = {
    *
    * @returns Delay before next request retry attempt in milliseconds.
    */
-  getDelay(attempt: number, reason: PubnubError & { retryAfter?: number }): number;
+  getDelay(attempt: number, reason: PubNubError & { retryAfter?: number }): number;
 
   /**
    * Identify reason why another retry attempt can't be made.
@@ -105,7 +105,7 @@ export type RequestRetryPolicy = {
    *
    * @returns Give up reason.
    */
-  getGiveupReason(reason: PubnubError & { retryAfter?: number }, attempt: number): string;
+  getGiveupReason(reason: PubNubError & { retryAfter?: number }, attempt: number): string;
 
   /**
    * Validate retry policy parameters.

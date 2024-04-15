@@ -1,7 +1,7 @@
 import { State } from '../core/state';
 import { Effects } from '../effects';
 import { Events, reconnect, restore, subscriptionChange, unsubscribeAll } from '../events';
-import { PubnubError } from '../../errors/pubnub-error';
+import { PubNubError } from '../../errors/pubnub-error';
 import { HandshakingState } from './handshaking';
 import { UnsubscribedState } from './unsubscribed';
 import * as Subscription from '../../core/types/api/subscription';
@@ -11,7 +11,7 @@ export type ReceiveFailedStateContext = {
   groups: string[];
   cursor: Subscription.SubscriptionCursor;
 
-  reason: PubnubError;
+  reason: PubNubError;
 };
 
 export const ReceiveFailedState = new State<ReceiveFailedStateContext, Events, Effects>('RECEIVE_FAILED');

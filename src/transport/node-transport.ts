@@ -8,8 +8,9 @@ import { Buffer } from 'buffer';
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
 import { Transport, TransportKeepAlive } from '../core/interfaces/transport';
 import { TransportResponse } from '../core/types/transport-response';
-import { queryStringFromObject } from '../core/utils';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
+import { PubNubFileInterface } from '../core/types/file';
+import { queryStringFromObject } from '../core/utils';
 
 /**
  * Class representing a fetch-based Node.js transport provider.
@@ -120,32 +121,30 @@ export class NodeTransport implements Transport {
    * @returns Request object generated from the {@link TransportRequest} object.
    */
   private async requestFromTransportRequest(req: TransportRequest): Promise<Request> {
-    let headers: Record<string, string> | undefined = undefined;
+    let headers: Record<string, string> | undefined = req.headers;
     let body: string | ArrayBuffer | FormData | undefined;
     let path = req.path;
 
-    if (req.headers) {
-      headers = {};
-      for (const [key, value] of Object.entries(req.headers)) headers[key] = value;
+    // Create multipart request body.
+    if (req.formData && req.formData.length > 0) {
+      // Reset query parameters to conform to signed URL
+      req.queryParameters = {};
+
+      const file = req.body as PubNubFileInterface;
+      const fileData = await file.toArrayBuffer();
+      const formData = new FormData();
+      for (const { key, value } of req.formData) formData.append(key, value);
+
+      formData.append('file', Buffer.from(fileData), { contentType: 'application/octet-stream', filename: file.name });
+      body = formData;
+
+      headers = formData.getHeaders(headers ?? {});
     }
+    // Handle regular body payload (if passed).
+    else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) body = req.body;
 
     if (req.queryParameters && Object.keys(req.queryParameters).length !== 0)
       path = `${path}?${queryStringFromObject(req.queryParameters)}`;
-
-    if (req.body && typeof req.body === 'object') {
-      if (req.body instanceof ArrayBuffer) body = req.body;
-      else {
-        // Create multipart request body.
-        const fileData = await req.body.toArrayBuffer();
-        const formData = new FormData();
-        for (const [key, value] of Object.entries(req.formData ?? {})) formData.append(key, value);
-
-        formData.append('file', Buffer.from(fileData), { contentType: req.body.mimeType, filename: req.body.name });
-        body = formData;
-
-        headers = formData.getHeaders(headers);
-      }
-    } else body = req.body;
 
     return new Request(`${req.origin!}${path}`, {
       agent: this.agentForTransportRequest(req),

@@ -2,13 +2,14 @@
  * Get Presence State REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import { KeySet, Payload, Query } from '../../types/api';
 import * as Presence from '../../types/api/presence';
-import { encodeString } from '../../utils';
+import { encodeNames } from '../../utils';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -80,23 +81,22 @@ export class GetPresenceStateRequest extends AbstractRequest<Presence.GetPresenc
     } = this.parameters;
 
     if (!subscribeKey) return 'Missing Subscribe Key';
-    if (channels && channels.length > 0 && channelGroups && channelGroups.length > 0)
-      return 'Only `channels` or `channelGroups` can be specified at once.';
   }
 
   async parse(response: TransportResponse): Promise<Presence.GetPresenceStateResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
-    const { channels, channelGroups } = this.parameters;
+    const { channels = [], channelGroups = [] } = this.parameters;
     const state: { channels: Record<string, Payload> } = { channels: {} };
 
-    if (channels?.length === 1 && channelGroups?.length === 0) state.channels[channels[0]] = serviceResponse.payload;
+    if (channels.length === 1 && channelGroups.length === 0) state.channels[channels[0]] = serviceResponse.payload;
     else state.channels = serviceResponse.payload as Record<string, Payload>;
 
     return state;
@@ -108,9 +108,8 @@ export class GetPresenceStateRequest extends AbstractRequest<Presence.GetPresenc
       uuid,
       channels,
     } = this.parameters;
-    const stringifiedChannels = channels && channels.length > 0 ? encodeString(channels.join(',')) : ',';
 
-    return `/v2/presence/sub-key/${subscribeKey}/channel/${stringifiedChannels}/uuid/${uuid}`;
+    return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels ?? [], ',')}/uuid/${uuid}`;
   }
 
   protected get queryParameters(): Query {

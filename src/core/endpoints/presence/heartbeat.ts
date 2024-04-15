@@ -2,13 +2,14 @@
  * Announce heartbeat REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import * as Presence from '../../types/api/presence';
 import { KeySet, Query } from '../../types/api';
-import { encodeString } from '../../utils';
+import { encodeNames } from '../../utils';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -58,23 +59,24 @@ export class HeartbeatRequest extends AbstractRequest<Presence.PresenceHeartbeat
   validate(): string | undefined {
     const {
       keySet: { subscribeKey },
-      channels,
-      channelGroups,
+      channels = [],
+      channelGroups = [],
     } = this.parameters;
 
     if (!subscribeKey) return 'Missing Subscribe Key';
-    if (channels?.length === 0 && channelGroups?.length === 0)
+    if (channels.length === 0 && channelGroups.length === 0)
       return 'Please provide a list of channels and/or channel-groups';
   }
 
   async parse(response: TransportResponse): Promise<Presence.PresenceHeartbeatResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     return {};
   }
@@ -84,16 +86,15 @@ export class HeartbeatRequest extends AbstractRequest<Presence.PresenceHeartbeat
       keySet: { subscribeKey },
       channels,
     } = this.parameters;
-    const stringifiedChannels = channels && channels.length > 0 ? encodeString(channels.join(',')) : ',';
 
-    return `/v2/presence/sub-key/${subscribeKey}/channel/${stringifiedChannels}/heartbeat`;
+    return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels ?? [], ',')}/heartbeat`;
   }
 
   protected get queryParameters(): Query {
     const { channelGroups, state, heartbeat } = this.parameters;
     const query: Record<string, string> = { heartbeat: `${heartbeat}` };
 
-    if (channelGroups && channelGroups.length === 0) query['channel-group'] = channelGroups.join(',');
+    if (channelGroups && channelGroups.length !== 0) query['channel-group'] = channelGroups.join(',');
     if (state) query.state = JSON.stringify(state);
 
     return query;

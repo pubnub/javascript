@@ -9,6 +9,7 @@ import {
 } from '../core/interfaces/configuration';
 import { CryptoModule } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 import { TransportKeepAlive } from '../core/interfaces/transport';
+import { Payload } from '../core/types/api';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -65,7 +66,7 @@ export type PubNubConfiguration = UserConfiguration & {
    *
    * @deprecated Instead use {@link cryptoModule} for data encryption.
    */
-  customEncrypt?: (data: string) => string;
+  customEncrypt?: (data: string | Payload) => string;
 
   /**
    * Custom data decryption method.

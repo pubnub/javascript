@@ -2,15 +2,17 @@ import { PrivateClientConfiguration } from '../../core/interfaces/configuration'
 import { asyncHandler, Dispatcher, Engine } from '../core';
 import PNOperations from '../../core/constants/operations';
 import * as Presence from '../../core/types/api/presence';
-import { PubnubError } from '../../errors/pubnub-error';
-import { Payload } from '../../core/types/api';
+import { PubNubError } from '../../errors/pubnub-error';
+import { Payload, ResultCallback } from '../../core/types/api';
 import * as effects from './effects';
 import * as events from './events';
+import StatusCategory from '../../core/constants/categories';
 
 export type Dependencies = {
   heartbeat: (
     parameters: Presence.PresenceHeartbeatParameters,
-  ) => Promise<Presence.PresenceHeartbeatResponse | undefined>;
+    callback?: ResultCallback<Presence.PresenceHeartbeatResponse>,
+  ) => Promise<Presence.PresenceHeartbeatResponse | void>;
   leave: (parameters: Presence.PresenceLeaveParameters) => void;
   heartbeatDelay: () => Promise<void>;
 
@@ -39,7 +41,7 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
           });
           engine.transition(events.heartbeatSuccess(200));
         } catch (e) {
-          if (e instanceof PubnubError) {
+          if (e instanceof PubNubError) {
             return engine.transition(events.heartbeatFailure(e));
           }
         }
@@ -91,11 +93,8 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
             });
             return engine.transition(events.heartbeatSuccess(200));
           } catch (e) {
-            if (e instanceof Error && e.message === 'Aborted') {
-              return;
-            }
-
-            if (e instanceof PubnubError) {
+            if (e instanceof PubNubError) {
+              if (e.status && e.status.category == StatusCategory.PNCancelledCategory) return;
               return engine.transition(events.heartbeatFailure(e));
             }
           }

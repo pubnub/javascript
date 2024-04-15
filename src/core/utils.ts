@@ -13,6 +13,20 @@ export const encodeString = (input: string | number) => {
   return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
 };
 
+/**
+ * Percent-encode list of names (channels).
+ *
+ * @param names - List of names which should be encoded.
+ *
+ * @param [defaultString] - String which should be used in case if {@link names} is empty.
+ *
+ * @returns String which contains encoded names joined by non-encoded `,`.
+ */
+export const encodeNames = (names: string[], defaultString?: string) => {
+  const encodedNames = names.map((name) => encodeString(name));
+  return encodedNames.length ? encodedNames.join(',') : defaultString ?? '';
+};
+
 export const removeSingleOccurance = (source: string[], elementsToRemove: string[]) => {
   const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
 

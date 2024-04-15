@@ -3,7 +3,7 @@ import CborReader from 'cbor-sync';
 import { makeConfiguration } from '../core/components/configuration';
 import { TitaniumTransport } from '../transport/titanium-transport';
 import { PubNubConfiguration, setDefaults } from './configuration';
-import TokenManager from '../core/components/token_manager';
+import { TokenManager } from '../core/components/token_manager';
 import { PubNubMiddleware } from '../transport/middleware';
 import { PubNubCore } from '../core/pubnub-common';
 import Cbor from '../cbor/common';

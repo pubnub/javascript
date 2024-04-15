@@ -36,14 +36,14 @@ export type CryptorConfiguration = {
    *
    * @deprecated Instead use {@link cryptoModule} for data encryption.
    */
-  get customEncrypt(): ((data: string) => string) | undefined;
+  customEncrypt?: (data: string | Payload) => string;
 
   /**
    * Custom data decryption method.
    *
    * @deprecated Instead use {@link cryptoModule} for data decryption.
    */
-  get customDecrypt(): ((data: string) => string) | undefined;
+  customDecrypt?: (data: string) => string;
 };
 
 /**

@@ -2,7 +2,7 @@
  * Time REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
 import { AbstractRequest } from '../components/request';
 import RequestOperation from '../constants/operations';
@@ -41,7 +41,7 @@ export class TimeRequest extends AbstractRequest<TimeResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
     if (!serviceResponse)
-      throw new PubnubError(
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );

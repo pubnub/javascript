@@ -2,13 +2,14 @@
  * Set Presence State REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import { KeySet, Payload, Query } from '../../types/api';
+import { encodeNames, encodeString } from '../../utils';
 import * as Presence from '../../types/api/presence';
-import { encodeString } from '../../utils';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -72,8 +73,8 @@ export class SetPresenceStateRequest extends AbstractRequest<Presence.SetPresenc
     const {
       keySet: { subscribeKey },
       state,
-      channels,
-      channelGroups,
+      channels = [],
+      channelGroups = [],
     } = this.parameters;
 
     if (!subscribeKey) return 'Missing Subscribe Key';
@@ -85,11 +86,12 @@ export class SetPresenceStateRequest extends AbstractRequest<Presence.SetPresenc
   async parse(response: TransportResponse): Promise<Presence.SetPresenceStateResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     return { state: serviceResponse.payload };
   }
@@ -100,16 +102,17 @@ export class SetPresenceStateRequest extends AbstractRequest<Presence.SetPresenc
       uuid,
       channels,
     } = this.parameters;
-    const stringifiedChannels = channels && channels.length > 0 ? encodeString(channels.join(',')) : ',';
-
-    return `/v2/presence/sub-key/${subscribeKey}/channel/${stringifiedChannels}/uuid/${uuid}/data`;
+    return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(
+      channels ?? [],
+      ',',
+    )}/uuid/${encodeString(uuid)}/data`;
   }
 
   protected get queryParameters(): Query {
     const { channelGroups, state } = this.parameters;
     const query: Query = { state: JSON.stringify(state) };
 
-    if (channelGroups && channelGroups.length === 0) query['channel-group'] = channelGroups.join(',');
+    if (channelGroups && channelGroups.length !== 0) query['channel-group'] = channelGroups.join(',');
 
     return query;
   }

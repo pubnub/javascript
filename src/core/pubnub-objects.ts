@@ -16,6 +16,8 @@ import { KeySet, ResultCallback, SendRequestFunction } from './types/api';
 import { GetUUIDMetadataRequest } from './endpoints/objects/uuid/get';
 import { PrivateClientConfiguration } from './interfaces/configuration';
 import * as AppContext from './types/api/app-context';
+import { ChannelMetadataObject } from './types/api/app-context';
+import { SetUUIDMetadataRequest } from './endpoints/objects/uuid/set';
 
 export default class PubNubObjects {
   /**
@@ -52,7 +54,7 @@ export default class PubNubObjects {
    * @param callback - Request completion handler callback.
    */
   public getAllUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
-    parameters: AppContext.GetAllMetadataParameters,
+    parameters: AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>>,
     callback: ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
   ): void;
 
@@ -64,7 +66,7 @@ export default class PubNubObjects {
    * @returns Asynchronous get all UUID metadata response.
    */
   public async getAllUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
-    parameters?: AppContext.GetAllMetadataParameters,
+    parameters?: AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>>,
   ): Promise<AppContext.GetAllUUIDMetadataResponse<Custom>>;
 
   /**
@@ -77,7 +79,7 @@ export default class PubNubObjects {
    */
   async getAllUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parametersOrCallback?:
-      | AppContext.GetAllMetadataParameters
+      | AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>>
       | ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllUUIDMetadataResponse<Custom> | void> {
@@ -95,12 +97,12 @@ export default class PubNubObjects {
    */
   async _getAllUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parametersOrCallback?:
-      | AppContext.GetAllMetadataParameters
+      | AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>>
       | ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllUUIDMetadataResponse<Custom> | void> {
     // Get user request parameters.
-    const parameters: AppContext.GetAllMetadataParameters =
+    const parameters: AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>> =
       parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
 
@@ -245,7 +247,7 @@ export default class PubNubObjects {
     if (parameters.userId) parameters.uuid = parameters.userId;
     parameters.uuid ??= this.configuration.userId;
 
-    const request = new GetUUIDMetadataRequest({ ...parameters, keySet: this.keySet });
+    const request = new SetUUIDMetadataRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -352,7 +354,7 @@ export default class PubNubObjects {
    * @param callback - Request completion handler callback.
    */
   public getAllChannelMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
-    parameters: AppContext.GetAllMetadataParameters,
+    parameters: AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>>,
     callback: ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
   ): void;
 
@@ -364,7 +366,7 @@ export default class PubNubObjects {
    * @returns Asynchronous get all Channel metadata response.
    */
   public async getAllChannelMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
-    parameters?: AppContext.GetAllMetadataParameters,
+    parameters?: AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>>,
   ): Promise<AppContext.GetAllChannelMetadataResponse<Custom>>;
 
   /**
@@ -378,7 +380,7 @@ export default class PubNubObjects {
    */
   async getAllChannelMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parametersOrCallback?:
-      | AppContext.GetAllMetadataParameters
+      | AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>>
       | ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllChannelMetadataResponse<Custom> | void> {
@@ -396,12 +398,12 @@ export default class PubNubObjects {
    */
   async _getAllChannelMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parametersOrCallback?:
-      | AppContext.GetAllMetadataParameters
+      | AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>>
       | ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllChannelMetadataResponse<Custom> | void> {
     // Get user request parameters.
-    const parameters: AppContext.GetAllMetadataParameters =
+    const parameters: AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>> =
       parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
 

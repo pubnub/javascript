@@ -192,7 +192,7 @@ export default class PubNubFile implements PubNubFileInterface {
    * @returns Asynchronous results of conversion to the {@link ArrayBuffer}.
    */
   async toArrayBuffer(): Promise<ArrayBuffer> {
-    return this.toBuffer().then((buffer) => buffer.buffer);
+    return this.toBuffer().then((buffer) => buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.length));
   }
 
   /**
@@ -200,7 +200,7 @@ export default class PubNubFile implements PubNubFileInterface {
    *
    * @returns Asynchronous results of conversion to the {@link string}.
    */
-  async toString(encoding: BufferEncoding = 'utf8') {
+  async toString(encoding: BufferEncoding = 'utf8'): Promise<string> {
     return this.toBuffer().then((buffer) => buffer.toString(encoding));
   }
 
@@ -242,7 +242,7 @@ export default class PubNubFile implements PubNubFileInterface {
    *
    * @throws Error because file `Uri` not available in Node.js environment.
    */
-  async toFileUri() {
+  async toFileUri(): Promise<Record<string, unknown>> {
     throw new Error('This feature is only supported in React Native environments.');
   }
 

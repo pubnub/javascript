@@ -292,32 +292,27 @@ type PagedResponse<ObjectType> = ObjectResponse<ObjectType[]> & {
 /**
  * Key-value pair of a property to sort by, and a sort direction.
  */
-type MetadataSortingOptions =
-  | 'id'
-  | 'name'
-  | 'updated'
-  | {
-      /**
-       * Sort results by `id` in ascending (`asc`) or descending (`desc`) order.
-       *
-       * Specify `null` for default sorting direction (ascending).
-       */
-      id?: 'asc' | 'desc' | null;
+type MetadataSortingOptions<T> =
+  | keyof Omit<T, 'id' | 'custom' | 'eTag'>
+  | ({ [K in keyof Omit<T, 'id' | 'custom' | 'eTag'>]?: 'asc' | 'desc' | null } & {
+      [key: `custom.${string}`]: 'asc' | 'desc' | null;
+    });
 
-      /**
-       * Sort results by `name` in ascending (`asc`) or descending (`desc`) order.
-       *
-       * Specify `null` for default sorting direction (ascending).
-       */
-      name?: 'asc' | 'desc' | null;
+type RelationSortingOptions<T, O extends string> = {
+  [K in keyof Omit<T, 'id' | 'custom' | 'eTag'> as `${O}.${string & K}`]: 'asc' | 'desc' | null;
+};
 
-      /**
-       * Sort results by `updated` in ascending (`asc`) or descending (`desc`) order.
-       *
-       * Specify `null` for default sorting direction (ascending).
-       */
-      updated?: 'asc' | 'desc' | null;
-    };
+/**
+ * Key-value pair of a property to sort by, and a sort direction.
+ */
+type MembershipsSortingOptions2<T> =
+  | keyof RelationSortingOptions<T, 'channel'>
+  | keyof RelationSortingOptions<T, 'space'>
+  | (RelationSortingOptions<T, 'channel'> &
+      RelationSortingOptions<T, 'space'> & {
+        [key: `channel.custom.${string}`]: 'asc' | 'desc' | null;
+        [key: `space.custom.${string}`]: 'asc' | 'desc' | null;
+      });
 
 /**
  * Key-value pair of a property to sort by, and a sort direction.
@@ -325,9 +320,11 @@ type MetadataSortingOptions =
 type MembershipsSortingOptions =
   | 'channel.id'
   | 'channel.name'
+  | 'channel.description'
   | 'channel.updated'
   | 'space.id'
   | 'space.name'
+  | 'space.description'
   | 'space.updated'
   | 'updated'
   | {
@@ -344,6 +341,13 @@ type MembershipsSortingOptions =
        * Specify `null` for default sorting direction (ascending).
        */
       'channel.name'?: 'asc' | 'desc' | null;
+
+      /**
+       * Sort results by channel's `description` in ascending (`asc`) or descending (`desc`) order.
+       *
+       * Specify `null` for default sorting direction (ascending).
+       */
+      'channel.description'?: 'asc' | 'desc' | null;
 
       /**
        * Sort results by channel's `update` in ascending (`asc`) or descending (`desc`) order.
@@ -369,6 +373,15 @@ type MembershipsSortingOptions =
        * @deprecated Use `channel.name` instead.
        */
       'space.name'?: 'asc' | 'desc' | null;
+
+      /**
+       * Sort results by channel's `description` in ascending (`asc`) or descending (`desc`) order.
+       *
+       * Specify `null` for default sorting direction (ascending).
+       *
+       * @deprecated Use `channel.name` instead.
+       */
+      'space.description'?: 'asc' | 'desc' | null;
 
       /**
        * Sort results by channel's `update` in ascending (`asc`) or descending (`desc`) order.
@@ -462,7 +475,10 @@ type MembersSortingOptions =
 /**
  * Fetch All UUID or Channel Metadata request parameters.
  */
-export type GetAllMetadataParameters = PagedRequestParameters<IncludeOptions, MetadataSortingOptions>;
+export type GetAllMetadataParameters<AppContextObject> = PagedRequestParameters<
+  IncludeOptions,
+  MetadataSortingOptions<AppContextObject>
+>;
 
 // --------------------------------------------------------
 // ---------------------- UUID API ------------------------

@@ -8,7 +8,7 @@ import { Subscription } from './Subscription';
 export class SubscriptionSet extends SubscribeCapable {
   protected channelNames: string[] = [];
   protected groupNames: string[] = [];
-  protected options: SubscriptionOptions;
+  protected options?: SubscriptionOptions;
   protected pubnub: PubNub<unknown, unknown>;
   protected eventEmitter: EventEmitter;
   protected subscriptionList: Subscription[] = [];
@@ -21,9 +21,9 @@ export class SubscriptionSet extends SubscribeCapable {
     eventEmitter,
     pubnub,
   }: {
-    channels: string[];
-    channelGroups: string[];
-    subscriptionOptions: SubscriptionOptions;
+    channels?: string[];
+    channelGroups?: string[];
+    subscriptionOptions?: SubscriptionOptions;
     eventEmitter: EventEmitter;
     pubnub: PubNub<unknown, unknown>;
   }) {

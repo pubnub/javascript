@@ -6,7 +6,7 @@ import { TransportResponse } from '../core/types/transport-response';
 import RequestOperation from '../core/constants/operations';
 import StatusCategory from '../core/constants/categories';
 import { Payload, Status } from '../core/types/api';
-import { PubnubError } from './pubnub-error';
+import { PubNubError } from './pubnub-error';
 
 /**
  * PubNub REST API call error.
@@ -41,6 +41,7 @@ export class PubNubAPIError extends Error {
     let errorName = 'Error';
 
     if (!error) return new PubNubAPIError(message, category, 0);
+    else if (error instanceof PubNubAPIError) return error;
 
     if (error instanceof Error) {
       message = error.message;
@@ -59,9 +60,10 @@ export class PubNubAPIError extends Error {
     } else if (errorName === 'FetchError') {
       const errorCode = (error as Record<string, string>).code;
 
-      if (errorCode in ['ECONNREFUSED', 'ENOTFOUND', 'ECONNRESET', 'EAI_AGAIN'])
+      if (['ECONNREFUSED', 'ENETUNREACH', 'ENOTFOUND', 'ECONNRESET', 'EAI_AGAIN'].includes(errorCode))
         category = StatusCategory.PNNetworkIssuesCategory;
       if (errorCode === 'ECONNREFUSED') message = 'Connection refused';
+      else if (errorCode === 'ENETUNREACH') message = 'Network not reachable';
       else if (errorCode === 'ENOTFOUND') message = 'Server not found';
       else if (errorCode === 'ECONNRESET') message = 'Connection reset by peer';
       else if (errorCode === 'EAI_AGAIN') message = 'Name resolution error';
@@ -100,7 +102,7 @@ export class PubNubAPIError extends Error {
       message = 'Access denied';
     }
 
-    // Try get more information about error from service response.
+    // Try to get more information about error from service response.
     if (data && data.byteLength > 0) {
       const decoded = new TextDecoder().decode(data);
 
@@ -190,7 +192,7 @@ export class PubNubAPIError extends Error {
    *
    * @returns Client-facing pre-formatted endpoint call error.
    */
-  public toPubNubError(operation: RequestOperation, message?: string): PubnubError {
-    return new PubnubError(message ?? this.message, this.toStatus(operation));
+  public toPubNubError(operation: RequestOperation, message?: string): PubNubError {
+    return new PubNubError(message ?? this.message, this.toStatus(operation));
   }
 }

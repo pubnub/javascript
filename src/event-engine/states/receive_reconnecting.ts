@@ -1,4 +1,4 @@
-import { PubnubError } from '../../errors/pubnub-error';
+import { PubNubError } from '../../errors/pubnub-error';
 import { State } from '../core/state';
 import { Effects, emitMessages, receiveReconnect, emitStatus } from '../effects';
 import {
@@ -24,7 +24,7 @@ export type ReceiveReconnectingStateContext = {
   cursor: Subscription.SubscriptionCursor;
 
   attempts: number;
-  reason: PubnubError;
+  reason: PubNubError;
 };
 
 export const ReceiveReconnectingState = new State<ReceiveReconnectingStateContext, Events, Effects>(

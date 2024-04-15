@@ -2,7 +2,7 @@
  * Publish REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
 import { TransportMethod } from '../types/transport-request';
 import { CryptoModule } from '../interfaces/crypto-module';
@@ -18,19 +18,9 @@ import { encodeString } from '../utils';
 // region Defaults
 
 /**
- * Whether published data should be stored in history or not.
- */
-const STORE_IN_HISTORY = true;
-
-/**
  * Whether data is published used `POST` body or not.
  */
 const SEND_BY_POST = false;
-
-/**
- * Whether published data should be replicated across all data centers or not.
- */
-const SHOULD_REPLICATE = true;
 // endregion
 
 // --------------------------------------------------------
@@ -148,11 +138,7 @@ export class PublishRequest extends AbstractRequest<PublishResponse> {
     super({ method: parameters.sendByPost ? TransportMethod.POST : TransportMethod.GET });
 
     // Apply default request parameters.
-    this.parameters.storeInHistory ??= STORE_IN_HISTORY;
     this.parameters.sendByPost ??= SEND_BY_POST;
-
-    // Apply defaults to the deprecated parameter.
-    this.parameters.replicate ??= SHOULD_REPLICATE;
   }
 
   operation(): RequestOperation {
@@ -166,7 +152,7 @@ export class PublishRequest extends AbstractRequest<PublishResponse> {
       keySet: { publishKey },
     } = this.parameters;
 
-    if (!channel) return "Missing 'channel''";
+    if (!channel) return "Missing 'channel'";
     if (!message) return "Missing 'message'";
     if (!publishKey) return "Missing 'publishKey'";
   }
@@ -175,7 +161,7 @@ export class PublishRequest extends AbstractRequest<PublishResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
     if (!serviceResponse)
-      throw new PubnubError(
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
@@ -194,13 +180,14 @@ export class PublishRequest extends AbstractRequest<PublishResponse> {
 
   protected get queryParameters(): Query {
     const { meta, replicate, storeInHistory, ttl } = this.parameters;
+    const query: Query = {};
 
-    return {
-      store: storeInHistory ? '1' : '0',
-      ...(ttl !== undefined ? { ttl } : {}),
-      ...(!replicate ? { norep: 'true' } : {}),
-      ...(meta && typeof meta === 'object' ? { meta: JSON.stringify(meta) } : {}),
-    };
+    if (storeInHistory !== undefined) query.store = storeInHistory ? '1' : '0';
+    if (ttl !== undefined) query.ttl = ttl;
+    if (replicate !== undefined && !replicate) query.norep = 'true';
+    if (meta && typeof meta === 'object') query.meta = JSON.stringify(meta);
+
+    return query;
   }
 
   protected get headers(): Record<string, string> | undefined {

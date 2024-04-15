@@ -2,8 +2,9 @@
  * PAM Grant Token REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { TransportMethod } from '../../types/transport-request';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
@@ -143,11 +144,12 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse> {
   async parse(response: TransportResponse): Promise<PAM.GrantTokenResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     return serviceResponse.data.token;
   }
@@ -183,6 +185,14 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse> {
       let channelGroupsPermissions: Record<string, PAM.ChannelGroupTokenPermissions> = {};
       let uuidsPermissions: Record<string, PAM.UuidTokenPermissions> = {};
 
+      if (!target.channels) target.channels = {};
+      if (!target.groups) target.groups = {};
+      if (!target.uuids) target.uuids = {};
+      // @ts-expect-error Not used, needed for api backward compatibility
+      if (!target.users) target.users = {};
+      // @ts-expect-error Not used, needed for api backward compatibility
+      if (!target.spaces) target.spaces = {};
+
       if (refPerm) {
         // Check whether working with legacy Objects permissions.
         if ('spaces' in refPerm || 'users' in refPerm) {
@@ -209,7 +219,9 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse> {
     });
 
     if (uuid) permissions.uuid = `${uuid}`;
-    if (meta) permissions.meta = meta;
+    permissions.resources = resourcePermissions;
+    permissions.patterns = patternPermissions;
+    permissions.meta = meta ?? {};
     body.permissions = permissions;
 
     return JSON.stringify(body);

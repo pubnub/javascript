@@ -4,7 +4,7 @@
 
 import RequestOperation from '../../constants/operations';
 import { BaseSubscribeRequest } from '../subscribe';
-import { encodeString } from '../../utils';
+import { encodeNames } from '../../utils';
 import { Query } from '../../types/api';
 
 /**
@@ -29,7 +29,7 @@ export class ReceiveMessagesSubscribeRequest extends BaseSubscribeRequest {
       channels,
     } = this.parameters;
 
-    return `/v2/subscribe/${subscribeKey}/${encodeString(channels!.length > 0 ? channels!.join(',') : ',')}/0`;
+    return `/v2/subscribe/${subscribeKey}/${encodeNames(channels!, ',')}/0`;
   }
 
   protected get queryParameters(): Query {

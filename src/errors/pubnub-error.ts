@@ -1,7 +1,7 @@
 import { Status } from '../core/types/api';
 import StatusCategory from '../core/constants/categories';
 
-export class PubnubError extends Error {
+export class PubNubError extends Error {
   constructor(
     message: string,
     public status?: Status,

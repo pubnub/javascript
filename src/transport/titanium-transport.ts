@@ -1,3 +1,5 @@
+/** global Ti */
+
 /**
  * Titanium Transport provider module.
  */

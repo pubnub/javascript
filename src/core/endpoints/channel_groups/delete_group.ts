@@ -2,8 +2,9 @@
  * Delete channel group REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import * as ChannelGroups from '../../types/api/channel-groups';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
@@ -71,11 +72,12 @@ export class DeleteChannelGroupRequest extends AbstractRequest<ChannelGroups.Del
   async parse(response: TransportResponse): Promise<ChannelGroups.DeleteChannelGroupResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     return {};
   }

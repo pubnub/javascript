@@ -79,7 +79,12 @@ export default class AesCbcCryptor implements ICryptor {
 
     if (data.byteLength <= 0) throw new Error('Decryption error: empty content');
     const aes = createDecipheriv(this.algo, this.getKey(), input.metadata!);
-    return Uint8Array.from(Buffer.concat([aes.update(data), aes.final()])).buffer;
+    const decryptedDataBuffer = Buffer.concat([aes.update(data), aes.final()]);
+
+    return decryptedDataBuffer.buffer.slice(
+      decryptedDataBuffer.byteOffset,
+      decryptedDataBuffer.byteOffset + decryptedDataBuffer.length,
+    );
   }
 
   async decryptStream(stream: EncryptedStream) {

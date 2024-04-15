@@ -2,15 +2,16 @@
  * Fetch messages REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
+import { PubNubAPIError } from '../../errors/pubnub-api-error';
 import { CryptoModule } from '../interfaces/crypto-module';
 import { AbstractRequest } from '../components/request';
 import * as FileSharing from '../types/api/file-sharing';
 import RequestOperation from '../constants/operations';
 import { KeySet, Payload, Query } from '../types/api';
 import * as History from '../types/api/history';
-import { encodeString } from '../utils';
+import { encodeNames } from '../utils';
 
 // --------------------------------------------------------
 // ---------------------- Defaults ------------------------
@@ -21,11 +22,6 @@ import { encodeString } from '../utils';
  * Whether verbose logging enabled or not.
  */
 const LOG_VERBOSITY = false;
-
-/**
- * Whether associated message metadata should be returned or not.
- */
-const INCLUDE_METADATA = true;
 
 /**
  * Whether message type should be returned or not.
@@ -174,9 +170,9 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
     // Apply defaults.
     const includeMessageActions = parameters.includeMessageActions ?? false;
     const defaultCount =
-      parameters.channels.length === 1 && includeMessageActions
-        ? SINGLE_CHANNEL_MESSAGES_COUNT
-        : MULTIPLE_CHANNELS_MESSAGES_COUNT;
+      parameters.channels.length > 1 || includeMessageActions
+        ? MULTIPLE_CHANNELS_MESSAGES_COUNT
+        : SINGLE_CHANNEL_MESSAGES_COUNT;
     if (!parameters.count) parameters.count = defaultCount;
     else parameters.count = Math.min(parameters.count, defaultCount);
 
@@ -184,7 +180,6 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
     else parameters.includeUUID ??= INCLUDE_UUID;
     parameters.stringifiedTimeToken ??= STRINGIFY_TIMETOKENS;
     parameters.includeMessageType ??= INCLUDE_MESSAGE_TYPE;
-    parameters.includeMeta ??= INCLUDE_METADATA;
     parameters.logVerbosity ??= LOG_VERBOSITY;
   }
 
@@ -201,7 +196,7 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
 
     if (!subscribeKey) return 'Missing Subscribe Key';
     if (!channels) return 'Missing channels';
-    if (includeMessageActions! && channels.length > 1)
+    if (includeMessageActions !== undefined && includeMessageActions && channels.length > 1)
       return (
         'History can return actions data for a single channel only. Either pass a single channel ' +
         'or disable the includeMessageActions flag.'
@@ -211,11 +206,12 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
   async parse(response: TransportResponse): Promise<History.FetchMessagesResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     const responseChannels = serviceResponse.channels ?? {};
     const channels: History.FetchMessagesResponse['channels'] = {};
@@ -252,9 +248,9 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
     });
 
     if (serviceResponse.more)
-      return { channels: responseChannels, more: serviceResponse.more } as History.FetchMessagesWithActionsResponse;
+      return { channels, more: serviceResponse.more } as History.FetchMessagesWithActionsResponse;
 
-    return { channels: responseChannels } as History.FetchMessagesResponse;
+    return { channels } as History.FetchMessagesResponse;
   }
 
   protected get path(): string {
@@ -265,7 +261,7 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
     } = this.parameters;
     const endpoint = !includeMessageActions! ? 'history' : 'history-with-actions';
 
-    return `/v3/${endpoint}/sub-key/${subscribeKey}/channel/${encodeString(channels.join(','))}`;
+    return `/v3/${endpoint}/sub-key/${subscribeKey}/channel/${encodeNames(channels)}`;
   }
 
   protected get queryParameters(): Query {
@@ -276,7 +272,7 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
       ...(start ? { start } : {}),
       ...(end ? { end } : {}),
       ...(stringifiedTimeToken! ? { string_message_token: 'true' } : {}),
-      ...(includeMeta! ? { include_meta: 'true' } : {}),
+      ...(includeMeta !== undefined && includeMeta ? { include_meta: 'true' } : {}),
       ...(includeUUID! ? { include_uuid: 'true' } : {}),
       ...(includeMessageType! ? { include_message_type: 'true' } : {}),
     };

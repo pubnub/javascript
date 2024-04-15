@@ -2,8 +2,9 @@
  * Get All UUID Metadata REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../../errors/pubnub-error';
 import { TransportResponse } from '../../../types/transport-response';
+import { PubNubAPIError } from '../../../../errors/pubnub-api-error';
 import { AbstractRequest } from '../../../components/request';
 import RequestOperation from '../../../constants/operations';
 import * as AppContext from '../../../types/api/app-context';
@@ -20,11 +21,6 @@ import { KeySet, Query } from '../../../types/api';
 const INCLUDE_CUSTOM_FIELDS = false;
 
 /**
- * Whether to fetch total count or not.
- */
-const INCLUDE_TOTAL_COUNT = false;
-
-/**
  * Number of objects to return in response.
  */
 const LIMIT = 100;
@@ -38,12 +34,13 @@ const LIMIT = 100;
 /**
  * Request configuration parameters.
  */
-type RequestParameters = AppContext.GetAllMetadataParameters & {
-  /**
-   * PubNub REST API access key set.
-   */
-  keySet: KeySet;
-};
+type RequestParameters<Custom extends AppContext.CustomData = AppContext.CustomData> =
+  AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>> & {
+    /**
+     * PubNub REST API access key set.
+     */
+    keySet: KeySet;
+  };
 // endregion
 
 export class GetAllUUIDMetadataRequest<
@@ -56,7 +53,6 @@ export class GetAllUUIDMetadataRequest<
     // Apply default request parameters.
     parameters.include ??= {};
     parameters.include.customFields ??= INCLUDE_CUSTOM_FIELDS;
-    parameters.include.totalCount ??= INCLUDE_TOTAL_COUNT;
     parameters.limit ??= LIMIT;
   }
 
@@ -67,11 +63,12 @@ export class GetAllUUIDMetadataRequest<
   async parse(response: TransportResponse): Promise<Response> {
     const serviceResponse = this.deserializeResponse<Response>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     return serviceResponse;
   }
@@ -88,7 +85,7 @@ export class GetAllUUIDMetadataRequest<
 
     return {
       include: ['status', 'type', ...(include!.customFields ? ['custom'] : [])].join(','),
-      count: `${include!.totalCount!}`,
+      ...(include!.totalCount !== undefined ? { count: `${include!.totalCount}` } : {}),
       ...(filter ? { filter } : {}),
       ...(page?.next ? { start: page.next } : {}),
       ...(page?.prev ? { end: page.prev } : {}),

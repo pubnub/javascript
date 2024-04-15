@@ -2,8 +2,9 @@
  * Add Message Action REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { TransportMethod } from '../../types/transport-request';
 import * as MessageAction from '../../types/api/message-action';
 import { AbstractRequest } from '../../components/request';
@@ -65,7 +66,7 @@ export class AddMessageActionRequest extends AbstractRequest<MessageAction.AddMe
     if (!subscribeKey) return 'Missing Subscribe Key';
     if (!channel) return 'Missing message channel';
     if (!messageTimetoken) return 'Missing message timetoken';
-    if (!action) return 'Missing Action.value';
+    if (!action) return 'Missing Action';
     if (!action.value) return 'Missing Action.value';
     if (!action.type) return 'Missing Action.type';
     if (action.type.length > 15) return 'Action.type value exceed maximum length of 15';
@@ -74,11 +75,12 @@ export class AddMessageActionRequest extends AbstractRequest<MessageAction.AddMe
   async parse(response: TransportResponse): Promise<MessageAction.AddMessageActionResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     return { data: serviceResponse.data };
   }

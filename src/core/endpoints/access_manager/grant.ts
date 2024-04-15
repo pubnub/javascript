@@ -2,8 +2,9 @@
  * PAM Grant REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import * as PAM from '../../types/api/access-panager';
@@ -118,30 +119,31 @@ export class GrantRequest extends AbstractRequest<PAM.PermissionsResponse> {
   validate(): string | undefined {
     const {
       keySet: { subscribeKey, publishKey, secretKey },
-      uuids,
-      channels,
-      channelGroups,
+      uuids = [],
+      channels = [],
+      channelGroups = [],
+      authKeys = [],
     } = this.parameters;
 
     if (!subscribeKey) return 'Missing Subscribe Key';
     if (!publishKey) return 'Missing Publish Key';
     if (!secretKey) return 'Missing Secret Key';
 
-    if (uuids?.length !== 0 && this.parameters.authKeys?.length === 0)
-      return 'authKeys are required for grant request on uuids';
+    if (uuids.length !== 0 && authKeys.length === 0) return 'authKeys are required for grant request on uuids';
 
-    if (uuids?.length && (channels?.length !== 0 || channelGroups?.length !== 0))
+    if (uuids.length && (channels.length !== 0 || channelGroups.length !== 0))
       return 'Both channel/channel group and uuid cannot be used in the same request';
   }
 
   async parse(response: TransportResponse): Promise<PAM.PermissionsResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     return serviceResponse.payload;
   }

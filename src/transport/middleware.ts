@@ -1,6 +1,6 @@
 import { TransportMethod, TransportRequest } from '../core/types/transport-request';
 import { PrivateClientConfiguration } from '../core/interfaces/configuration';
-import TokenManager from '../core/components/token_manager';
+import { TokenManager } from '../core/components/token_manager';
 import { Transport } from '../core/interfaces/transport';
 import { encodeString } from '../core/utils';
 import { Query } from '../core/types/api';
@@ -111,12 +111,15 @@ export class PubNubMiddleware implements Transport {
 
   request(req: TransportRequest): TransportRequest {
     const { clientConfiguration } = this.configuration;
+
+    // Get request patched by transport provider.
+    req = this.configuration.transport.request(req);
     if (!req.queryParameters) req.queryParameters = {};
 
     // Modify request with required information.
     if (clientConfiguration.useInstanceId) req.queryParameters['instanceid'] = clientConfiguration.instanceId!;
-    if (!req.queryParameters['uuid']) req.queryParameters['uuid'] = clientConfiguration.userId;
-    req.queryParameters['requestid'] = req.identifier;
+    if (!req.queryParameters['uuid']) req.queryParameters['uuid'] = clientConfiguration.userId!;
+    if (clientConfiguration.useRequestId) req.queryParameters['requestid'] = req.identifier;
     req.queryParameters['pnsdk'] = this.generatePNSDK();
     req.origin ??= clientConfiguration.origin as string;
 
@@ -164,7 +167,7 @@ export class PubNubMiddleware implements Transport {
 
     let base = `PubNub-JS-${clientConfiguration.sdkFamily}`;
     if (clientConfiguration.partnerId) base += `-${clientConfiguration.partnerId}`;
-    base += `/${clientConfiguration.version}`;
+    base += `/${clientConfiguration.getVersion()}`;
 
     const pnsdkSuffix = clientConfiguration._getPnsdkSuffix(' ');
     if (pnsdkSuffix.length > 0) base += pnsdkSuffix;

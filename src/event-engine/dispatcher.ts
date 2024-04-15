@@ -1,10 +1,11 @@
 import { PrivateClientConfiguration } from '../core/interfaces/configuration';
 import * as Subscription from '../core/types/api/subscription';
-import { PubnubError } from '../errors/pubnub-error';
+import { PubNubError } from '../errors/pubnub-error';
 import { asyncHandler, Dispatcher, Engine } from './core';
 import * as effects from './effects';
 import * as events from './events';
 import { Payload, StatusEvent } from '../core/types/api';
+import StatusCategory from '../core/constants/categories';
 
 export type Dependencies = {
   handshake: (parameters: Subscription.CancelableSubscribeParameters) => Promise<Subscription.SubscriptionCursor>;
@@ -42,11 +43,8 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
           });
           return engine.transition(events.handshakeSuccess(result));
         } catch (e) {
-          if (e instanceof Error && e.message === 'Aborted') {
-            return;
-          }
-
-          if (e instanceof PubnubError) {
+          if (e instanceof PubNubError) {
+            if (e.status && e.status.category == StatusCategory.PNCancelledCategory) return;
             return engine.transition(events.handshakeFailure(e));
           }
         }
@@ -73,7 +71,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             return;
           }
 
-          if (error instanceof PubnubError && !abortSignal.aborted) {
+          if (error instanceof PubNubError && !abortSignal.aborted) {
             return engine.transition(events.receiveFailure(error));
           }
         }
@@ -122,14 +120,14 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
               return;
             }
 
-            if (error instanceof PubnubError) {
+            if (error instanceof PubNubError) {
               return engine.transition(events.receiveReconnectFailure(error));
             }
           }
         } else {
           return engine.transition(
             events.receiveReconnectGiveup(
-              new PubnubError(
+              new PubNubError(
                 config.retryConfiguration
                   ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
                   : 'Unable to complete subscribe messages receive.',
@@ -165,14 +163,14 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
               return;
             }
 
-            if (error instanceof PubnubError) {
+            if (error instanceof PubNubError) {
               return engine.transition(events.handshakeReconnectFailure(error));
             }
           }
         } else {
           return engine.transition(
             events.handshakeReconnectGiveup(
-              new PubnubError(
+              new PubNubError(
                 config.retryConfiguration
                   ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
                   : 'Unable to complete subscribe handshake',

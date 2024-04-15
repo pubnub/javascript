@@ -134,9 +134,16 @@ export default class NodeCryptography implements Cryptography<string | ArrayBuff
   // --------------------------------------------------------
   // region Decryption
 
-  public async decrypt(key: string, input: string | Buffer | Readable) {
+  public async decrypt(key: string, input: string | ArrayBuffer | Buffer | Readable) {
     const bKey = this.getKey(key);
+    if (input instanceof ArrayBuffer) {
+      const decryptedBuffer = this.decryptBuffer(bKey, Buffer.from(input));
 
+      return decryptedBuffer.buffer.slice(
+        decryptedBuffer.byteOffset,
+        decryptedBuffer.byteOffset + decryptedBuffer.length,
+      );
+    }
     if (input instanceof Buffer) return this.decryptBuffer(bKey, input);
     if (input instanceof Readable) return this.decryptStream(bKey, input);
     if (typeof input === 'string') return this.decryptString(bKey, input);

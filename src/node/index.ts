@@ -8,15 +8,16 @@ import PubNubFile, { PubNubFileParameters } from '../file/modules/node';
 import { CryptorConfiguration } from '../core/interfaces/crypto-module';
 import { makeConfiguration } from '../core/components/configuration';
 import { PubNubConfiguration, setDefaults } from './configuration';
-import TokenManager from '../core/components/token_manager';
+import { TokenManager } from '../core/components/token_manager';
 import { NodeTransport } from '../transport/node-transport';
 import { PubNubMiddleware } from '../transport/middleware';
 import { decode } from '../core/components/base64_codec';
 import NodeCryptography from '../crypto/modules/node';
 import Crypto from '../core/components/cryptography';
-import { PubnubError } from '../errors/pubnub-error';
+import { PubNubError } from '../errors/pubnub-error';
 import { PubNubCore } from '../core/pubnub-common';
 import Cbor from '../cbor/common';
+import { PubNubFileConstructor } from '../core/types/file';
 
 /**
  * PubNub client for Node.js platform.
@@ -30,6 +31,11 @@ export default class PubNub extends PubNubCore<
    * Data encryption / decryption module constructor.
    */
   static CryptoModule = CryptoModule;
+
+  /**
+   * PubNub File constructor.
+   */
+  public File: PubNubFileConstructor<PubNubFile, PubNubFileParameters> = PubNubFile;
 
   /**
    * Actual underlying transport provider.
@@ -59,11 +65,13 @@ export default class PubNub extends PubNubCore<
     );
 
     // Legacy crypto (legacy data encryption / decryption and request signature support).
-    let crypto: Crypto | undefined;
-    if (clientConfiguration.cipherKey || clientConfiguration.secretKey) {
-      const { secretKey, cipherKey, useRandomIVs, customEncrypt, customDecrypt } = clientConfiguration;
-      crypto = new Crypto({ secretKey, cipherKey, useRandomIVs, customEncrypt, customDecrypt });
-    }
+    const crypto = new Crypto({
+      secretKey: clientConfiguration.secretKey,
+      cipherKey: clientConfiguration.getCipherKey(),
+      useRandomIVs: clientConfiguration.getUseRandomIVs(),
+      customEncrypt: clientConfiguration.getCustomEncrypt(),
+      customDecrypt: clientConfiguration.getCustomDecrypt(),
+    });
 
     // Setup transport provider.
     const transport = new NodeTransport(configuration.keepAlive, configuration.keepAliveSettings);
@@ -71,7 +79,7 @@ export default class PubNub extends PubNubCore<
       clientConfiguration,
       tokenManager,
       transport,
-      shaHMAC: crypto?.HMACSHA256,
+      shaHMAC: crypto?.HMACSHA256.bind(crypto),
     });
 
     super({
@@ -95,7 +103,7 @@ export default class PubNub extends PubNubCore<
    */
   public setProxy(configuration?: ProxyAgentOptions) {
     if (configuration && (this._configuration.keepAlive ?? false))
-      throw new PubnubError("Can't set 'proxy' because already configured for 'keepAlive'");
+      throw new PubNubError("Can't set 'proxy' because already configured for 'keepAlive'");
 
     this.nodeTransport.setProxy(configuration);
     this.reconnect();

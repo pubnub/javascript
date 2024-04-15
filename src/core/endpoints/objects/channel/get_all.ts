@@ -2,8 +2,9 @@
  * Get All Channel Metadata REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../../errors/pubnub-error';
 import { TransportResponse } from '../../../types/transport-response';
+import { PubNubAPIError } from '../../../../errors/pubnub-api-error';
 import { AbstractRequest } from '../../../components/request';
 import RequestOperation from '../../../constants/operations';
 import * as AppContext from '../../../types/api/app-context';
@@ -38,12 +39,13 @@ const LIMIT = 100;
 /**
  * Request configuration parameters.
  */
-type RequestParameters = AppContext.GetAllMetadataParameters & {
-  /**
-   * PubNub REST API access key set.
-   */
-  keySet: KeySet;
-};
+type RequestParameters<Custom extends AppContext.CustomData = AppContext.CustomData> =
+  AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>> & {
+    /**
+     * PubNub REST API access key set.
+     */
+    keySet: KeySet;
+  };
 // endregion
 
 /**
@@ -70,11 +72,12 @@ export class GetAllChannelsMetadataRequest<
   async parse(response: TransportResponse): Promise<Response> {
     const serviceResponse = this.deserializeResponse<Response>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     return serviceResponse;
   }

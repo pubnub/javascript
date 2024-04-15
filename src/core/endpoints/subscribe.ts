@@ -2,7 +2,7 @@
  * Subscription REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
 import { CryptoModule } from '../interfaces/crypto-module';
 import * as Subscription from '../types/api/subscription';
@@ -11,7 +11,7 @@ import * as FileSharing from '../types/api/file-sharing';
 import RequestOperation from '../constants/operations';
 import * as AppContext from '../types/api/app-context';
 import { KeySet, Payload, Query } from '../types/api';
-import { encodeString } from '../utils';
+import { encodeNames } from '../utils';
 
 // --------------------------------------------------------
 // ---------------------- Defaults ------------------------
@@ -151,12 +151,17 @@ type PresenceChangeData = {
   uuid: string;
 
   /**
+   * The current occupancy after the presence change is updated.
+   */
+  occupancy: number;
+
+  /**
    * The user's state associated with the channel has been updated.
    *
    * @deprecated Use set state methods to specify associated user's data instead of passing to
    * subscribe.
    */
-  data: { [p: string]: Payload };
+  data?: { [p: string]: Payload };
 };
 
 /**
@@ -181,7 +186,7 @@ type PresenceStateChangeData = {
   /**
    * The user's state associated with the channel has been updated.
    */
-  data: { [p: string]: Payload };
+  state: { [p: string]: Payload };
 };
 
 /**
@@ -587,13 +592,22 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
   }
 
   async parse(response: TransportResponse): Promise<Subscription.SubscriptionResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
+    let serviceResponse: ServiceResponse | undefined;
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    try {
+      const json = AbstractRequest.decoder.decode(response.body);
+      const parsedJson = JSON.parse(json);
+      serviceResponse = parsedJson as ServiceResponse;
+    } catch (error) {
+      console.error('Error parsing JSON response:', error);
+    }
+
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    }
 
     const events: Subscription.SubscriptionResponse['messages'] = serviceResponse.m.map((envelope) => {
       let { e: eventType } = envelope;
@@ -653,6 +667,10 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     };
   }
 
+  protected get headers(): Record<string, string> | undefined {
+    return { accept: 'text/javascript' };
+  }
+
   // --------------------------------------------------------
   // ------------------ Envelope parsing --------------------
   // --------------------------------------------------------
@@ -660,18 +678,23 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
 
   private presenceEventFromEnvelope(envelope: Envelope): Subscription.Presence {
     const { d: payload } = envelope;
-    let [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
+    const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
 
     // Clean up channel and subscription name from presence suffix.
-    channel = channel.replace('-pnpres', '');
-    if (subscription) subscription = subscription.replace('-pnpres', '');
+    const trimmedChannel = channel.replace('-pnpres', '');
 
     // Backward compatibility with deprecated properties.
-    const actualChannel = subscription !== null ? channel : null;
-    const subscribedChannel = subscription !== null ? subscription : channel;
+    const actualChannel = subscription !== null ? trimmedChannel : null;
+    const subscribedChannel = subscription !== null ? subscription : trimmedChannel;
+
+    if (typeof payload !== 'string' && 'data' in payload) {
+      // @ts-expect-error This is `state-change` object which should have `state` field.
+      payload['state'] = payload.data;
+      delete payload.data;
+    }
 
     return {
-      channel,
+      channel: trimmedChannel,
       subscription,
       actualChannel,
       subscribedChannel,
@@ -696,10 +719,10 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       subscribedChannel,
       timetoken: envelope.p.t,
       publisher: envelope.i,
-      userMetadata: envelope.u,
       message,
     };
 
+    if (envelope.u) event.userMetadata = envelope.u;
     if (decryptionError) event.error = decryptionError;
 
     return event;
@@ -708,14 +731,17 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
   private signalFromEnvelope(envelope: Envelope): Subscription.Signal {
     const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
 
-    return {
+    const event: Subscription.Signal = {
       channel,
       subscription,
       timetoken: envelope.p.t,
       publisher: envelope.i,
-      userMetadata: envelope.u,
       message: envelope.d,
     };
+
+    if (envelope.u) event.userMetadata = envelope.u;
+
+    return event;
   }
 
   private messageActionFromEnvelope(envelope: Envelope): Subscription.MessageAction {
@@ -758,9 +784,9 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       subscription,
       timetoken: envelope.p.t,
       publisher: envelope.i,
-      userMetadata: envelope.u,
     };
 
+    if (envelope.u) event.userMetadata = envelope.u;
     if (!file) errorMessage ??= `File information payload is missing.`;
     else if (typeof file === 'string') errorMessage ??= `Unexpected file information payload data type.`;
     else {
@@ -781,7 +807,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
   // endregion
 
   private subscriptionChannelFromEnvelope(envelope: Envelope): [string, string | null] {
-    return [envelope.c, envelope.b === undefined || envelope.b === envelope.c ? null : envelope.b];
+    return [envelope.c, envelope.b === undefined ? envelope.c : envelope.b];
   }
 
   /**
@@ -805,7 +831,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
           : decryptedData;
     } catch (err) {
       payload = null;
-      error = `Error while decrypting file message content: ${(err as Error).message}`;
+      error = `Error while decrypting message content: ${(err as Error).message}`;
     }
 
     return [(payload ?? data) as T, error];
@@ -822,19 +848,20 @@ export class SubscribeRequest extends BaseSubscribeRequest {
       channels,
     } = this.parameters;
 
-    return `/v2/subscribe/${subscribeKey}/${encodeString(channels!.length > 0 ? channels!.join(',') : ',')}/0`;
+    return `/v2/subscribe/${subscribeKey}/${encodeNames(channels?.sort() ?? [], ',')}/0`;
   }
 
   protected get queryParameters(): Query {
-    const { channelGroups, filterExpression, state, timetoken, region } = this.parameters;
+    const { channelGroups, filterExpression, heartbeat, state, timetoken, region } = this.parameters;
     const query: Query = {};
 
-    if (channelGroups && channelGroups.length > 0) query['channel-group'] = channelGroups.join(',');
+    if (channelGroups && channelGroups.length > 0) query['channel-group'] = channelGroups.sort().join(',');
     if (filterExpression && filterExpression.length > 0) query['filter-expr'] = filterExpression;
+    if (heartbeat) query.heartbeat = heartbeat;
     if (state && Object.keys(state).length > 0) query['state'] = JSON.stringify(state);
-    if (typeof timetoken === 'string') {
-      if (timetoken && timetoken.length > 0) query['tt'] = timetoken;
-    } else if (timetoken && timetoken > 0) query['tt'] = timetoken;
+    if (timetoken !== undefined && typeof timetoken === 'string') {
+      if (timetoken.length > 0 && timetoken !== '0') query['tt'] = timetoken;
+    } else if (timetoken !== undefined && timetoken > 0) query['tt'] = timetoken;
 
     if (region) query['tr'] = region;
 

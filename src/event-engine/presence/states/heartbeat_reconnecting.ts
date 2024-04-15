@@ -1,4 +1,4 @@
-import { PubnubError } from '../../../errors/pubnub-error';
+import { PubNubError } from '../../../errors/pubnub-error';
 import { State } from '../../core/state';
 import {
   Events,
@@ -22,7 +22,7 @@ export type HeartbeatReconnectingStateContext = {
   groups: string[];
 
   attempts: number;
-  reason: PubnubError;
+  reason: PubNubError;
 };
 
 export const HearbeatReconnectingState = new State<HeartbeatReconnectingStateContext, Events, Effects>(

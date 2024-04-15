@@ -2,8 +2,9 @@
  * Generate file upload URL REST API request.
  */
 
-import { createValidationError, PubnubError } from '../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { TransportMethod } from '../../types/transport-request';
 import { AbstractRequest } from '../../components/request';
 import * as FileSharing from '../../types/api/file-sharing';
@@ -117,11 +118,12 @@ export class GenerateFileUploadUrlRequest extends AbstractRequest<FileSharing.Ge
   async parse(response: TransportResponse): Promise<FileSharing.GenerateFileUploadUrlResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     return {
       id: serviceResponse.data.id,

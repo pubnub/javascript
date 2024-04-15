@@ -79,10 +79,10 @@ export type TransportRequest = {
   /**
    * Multipart form data fields.
    *
-   * **Important:** `Content-Types` header should be sent the {@link body} data type when
+   * **Important:** `Content-Type` header should be sent the {@link body} data type when
    * `multipart/form-data` should request should be sent.
    */
-  formData?: Record<string, string>;
+  formData?: Record<string, string>[];
 
   /**
    * Body to be sent with the request.

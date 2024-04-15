@@ -2,13 +2,14 @@
  * Messages count REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import * as History from '../../types/api/history';
 import { KeySet, Query } from '../../types/api';
-import { encodeString } from '../../utils';
+import { encodeNames } from '../../utils';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -88,25 +89,26 @@ export class MessageCountRequest extends AbstractRequest<History.MessageCountRes
     if (!channels) return 'Missing channels';
     if (timetoken && channelTimetokens) return '`timetoken` and `channelTimetokens` are incompatible together';
     if (!timetoken && !channelTimetokens) return '`timetoken` or `channelTimetokens` need to be set';
-    if (channelTimetokens && channelTimetokens.length && channelTimetokens.length !== channels.length)
+    if (channelTimetokens && channelTimetokens.length > 1 && channelTimetokens.length !== channels.length)
       return 'Length of `channelTimetokens` and `channels` do not match';
   }
 
   async parse(response: TransportResponse): Promise<History.MessageCountResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     return { channels: serviceResponse.channels };
   }
 
   protected get path(): string {
-    return `/v3/history/sub-key/${this.parameters.keySet.subscribeKey}/message-counts/${encodeString(
-      this.parameters.channels.join(','),
+    return `/v3/history/sub-key/${this.parameters.keySet.subscribeKey}/message-counts/${encodeNames(
+      this.parameters.channels,
     )}`;
   }
 

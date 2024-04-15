@@ -3,16 +3,18 @@
 
 import CborReader from 'cbor-js';
 
-import { WebCryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/WebCryptoModule/webCryptoModule';
+import { SubscriptionServiceWorkerMiddleware } from '../transport/service-worker/subscription-service-worker-middleware';
+import { AesCbcCryptor, LegacyCryptor, WebCryptoModule } from '../crypto/modules/WebCryptoModule/webCryptoModule';
+import { WebReactNativeTransport } from '../transport/web-react-native-transport';
 import { stringifyBufferKeys } from '../core/components/stringify_buffer_keys';
+import { PubNubConfiguration, setDefaults } from './components/configuration';
 import { CryptorConfiguration } from '../core/interfaces/crypto-module';
-import { PubNubFileParameters, PubNubFile } from '../file/modules/web';
+import { PubNubFile, PubNubFileParameters } from '../file/modules/web';
 import { makeConfiguration } from '../core/components/configuration';
-import { PubNubConfiguration, setDefaults } from './configuration';
-import TokenManager from '../core/components/token_manager';
+import { TokenManager } from '../core/components/token_manager';
 import { PubNubMiddleware } from '../transport/middleware';
-import { WebTransport } from '../transport/web-transport';
 import { decode } from '../core/components/base64_codec';
+import { Transport } from '../core/interfaces/transport';
 import Crypto from '../core/components/cryptography';
 import WebCryptography from '../crypto/modules/web';
 import { PubNubCore } from '../core/pubnub-common';
@@ -51,16 +53,36 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
 
     // Legacy crypto (legacy data encryption / decryption and request signature support).
     let crypto: Crypto | undefined;
-    if (clientConfiguration.cipherKey || clientConfiguration.secretKey) {
-      const { secretKey, cipherKey, useRandomIVs, customEncrypt, customDecrypt } = clientConfiguration;
-      crypto = new Crypto({ secretKey, cipherKey, useRandomIVs, customEncrypt, customDecrypt });
+    if (clientConfiguration.getCipherKey() || clientConfiguration.secretKey) {
+      crypto = new Crypto({
+        secretKey: clientConfiguration.secretKey,
+        cipherKey: clientConfiguration.getCipherKey(),
+        useRandomIVs: clientConfiguration.getUseRandomIVs(),
+        customEncrypt: clientConfiguration.getCustomEncrypt(),
+        customDecrypt: clientConfiguration.getCustomDecrypt(),
+      });
     }
 
     // Setup transport provider.
+    let transport: Transport = new WebReactNativeTransport(
+      clientConfiguration.keepAlive,
+      clientConfiguration.logVerbosity!,
+    );
+    if (configurationCopy.enableServiceWorker) {
+      // Inject subscription service worker into transport provider stack.
+      transport = new SubscriptionServiceWorkerMiddleware({
+        clientIdentifier: clientConfiguration._instanceId,
+        subscriptionKey: clientConfiguration.subscribeKey,
+        sdkVersion: clientConfiguration.getVersion(),
+        logVerbosity: clientConfiguration.logVerbosity!,
+        transport,
+      });
+    }
+
     const transportMiddleware = new PubNubMiddleware({
       clientConfiguration,
       tokenManager,
-      transport: new WebTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity!),
+      transport,
     });
 
     super({

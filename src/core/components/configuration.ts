@@ -6,6 +6,7 @@ import { ExtendedConfiguration, PlatformConfiguration, PrivateClientConfiguratio
 import { CryptoModule, CryptorConfiguration } from '../interfaces/crypto-module';
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
 import uuidGenerator from './uuid';
+import { Payload } from '../types/api';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -80,6 +81,9 @@ export const makeConfiguration = (
   // Override origin value.
   base.origin = standardOrigin(base.ssl ?? false, base.origin!);
 
+  const cryptoModule = base.cryptoModule;
+  if (cryptoModule) delete base.cryptoModule;
+
   const clientConfiguration: PrivateClientConfiguration & PrivateConfigurationFields = {
     ...base,
     _pnsdkSuffix: {},
@@ -92,7 +96,7 @@ export const makeConfiguration = (
       return undefined;
     },
     getUserId() {
-      return this.userId;
+      return this.userId!;
     },
     setUserId(value: string) {
       if (!value || typeof value !== 'string' || value.trim().length === 0)
@@ -112,7 +116,7 @@ export const makeConfiguration = (
     setFilterExpression(expression: string | null | undefined) {
       this.filterExpression = expression;
     },
-    get cipherKey(): string | undefined {
+    getCipherKey(): string | undefined {
       return this._cipherKey;
     },
     setCipherKey(key: string) {
@@ -126,15 +130,19 @@ export const makeConfiguration = (
       this._cryptoModule = this._setupCryptoModule({
         cipherKey: key,
         useRandomIVs: base.useRandomIVs,
-        customEncrypt: this.customEncrypt,
-        customDecrypt: this.customDecrypt,
+        customEncrypt: this.getCustomEncrypt(),
+        customDecrypt: this.getCustomDecrypt(),
       });
     },
-    get cryptoModule(): CryptoModule | undefined {
+    getCryptoModule(): CryptoModule | undefined {
       return this._cryptoModule;
     },
-    get useRandomIVs(): boolean | undefined {
+    getUseRandomIVs(): boolean | undefined {
       return base.useRandomIVs;
+    },
+    setPresenceTimeout(value: number): void {
+      this.heartbeatInterval = value / 2 - 1;
+      this.presenceTimeout = value;
     },
     getPresenceTimeout(): number {
       return this.presenceTimeout!;
@@ -164,7 +172,8 @@ export const makeConfiguration = (
       this._pnsdkSuffix[name] = `${suffix}`;
     },
     _getPnsdkSuffix(separator: string): string {
-      return Object.values(this._pnsdkSuffix).join(separator);
+      const sdk = Object.values(this._pnsdkSuffix).join(separator);
+      return sdk.length > 0 ? separator + sdk : '';
     },
 
     // --------------------------------------------------------
@@ -178,10 +187,10 @@ export const makeConfiguration = (
     setUUID(value: string) {
       this.setUserId(value);
     },
-    get customEncrypt(): ((data: string) => string) | undefined {
+    getCustomEncrypt(): ((data: string | Payload) => string) | undefined {
       return base.customEncrypt;
     },
-    get customDecrypt(): ((data: string) => string) | undefined {
+    getCustomDecrypt(): ((data: string) => string) | undefined {
       return base.customDecrypt;
     },
     // endregion
@@ -189,6 +198,7 @@ export const makeConfiguration = (
 
   // Setup `CryptoModule` if possible.
   if (base.cipherKey) clientConfiguration.setCipherKey(base.cipherKey);
+  else if (cryptoModule) clientConfiguration._cryptoModule = cryptoModule;
 
   return clientConfiguration;
 };

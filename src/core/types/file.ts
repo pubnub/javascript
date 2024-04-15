@@ -39,8 +39,21 @@ export interface PubNubFileInterface {
    * Convert {@link PubNub} file object content to {@link ArrayBuffer}.
    *
    * @returns Asynchronous results of conversion to the {@link ArrayBuffer}.
+   *
+   * @throws Error if provided {@link PubNub} File object content is not supported for this
+   * operation.
    */
   toArrayBuffer(): Promise<ArrayBuffer>;
+
+  /**
+   * Convert {@link PubNub} File object content to file `Uri`.
+   *
+   * @returns Asynchronous results of conversion to file `Uri`.
+   *
+   * @throws Error if provided {@link PubNub} File object content is not supported for this
+   * operation.
+   */
+  toFileUri(): Promise<Record<string, unknown>>;
 }
 
 /**

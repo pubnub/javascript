@@ -5,7 +5,8 @@
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
 import { RequestRetryPolicy } from '../../event-engine/core/retryPolicy';
 import { CryptoModule } from './crypto-module';
-import { KeySet } from '../types/api';
+import { KeySet, Payload } from '../types/api';
+import { PubNubError } from '../../errors/pubnub-error';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -86,7 +87,7 @@ const USE_INSTANCE_ID = false;
 /**
  * Whether unique identifier should be added to the request or not.
  */
-const USE_REQUEST_ID = false;
+const USE_REQUEST_ID = true;
 
 /**
  * Transactional requests timeout.
@@ -157,7 +158,7 @@ export type UserConfiguration = {
    *
    * If you don't set the `userId`, you won't be able to connect to PubNub.
    */
-  userId: string;
+  userId?: string;
 
   /**
    * If Access Manager enabled, this key will be used on all requests.
@@ -429,7 +430,7 @@ export type PlatformConfiguration = {
    *
    * @deprecated Instead use {@link cryptoModule} for data encryption.
    */
-  customEncrypt?: (data: string) => string;
+  customEncrypt?: (data: string | Payload) => string;
 
   /**
    * Custom data decryption method.
@@ -564,7 +565,7 @@ export interface PrivateClientConfiguration
    *
    * @returns Data processing crypto module (if set).
    */
-  get cryptoModule(): CryptoModule | undefined;
+  getCryptoModule(): CryptoModule | undefined;
 
   /**
    * Retrieve user's presence timeout.
@@ -572,6 +573,13 @@ export interface PrivateClientConfiguration
    * @returns User's presence timeout value.
    */
   getPresenceTimeout(): number;
+
+  /**
+   * Change user's presence timeout.
+   *
+   * @param timeout - New timeout for user's presence.
+   */
+  setPresenceTimeout(timeout: number): void;
 
   /**
    * Retrieve heartbeat requests interval.
@@ -641,7 +649,7 @@ export interface PrivateClientConfiguration
    *
    * @deprecated Pass it to `cryptoModule` instead.
    */
-  get cipherKey(): string | undefined;
+  getCipherKey(): string | undefined;
 
   /**
    * When `true` the initialization vector (IV) is random for all requests (not just for file
@@ -652,22 +660,21 @@ export interface PrivateClientConfiguration
    *
    * @deprecated Pass it to `cryptoModule` instead.
    */
-  get useRandomIVs(): boolean | undefined;
+  getUseRandomIVs(): boolean | undefined;
 
   /**
    * Custom data encryption method.
    *
    * @deprecated Instead use {@link cryptoModule} for data encryption.
    */
-  get customEncrypt(): ((data: string) => string) | undefined;
+  getCustomEncrypt(): ((data: string | Payload) => string) | undefined;
 
   /**
    * Custom data decryption method.
    *
    * @deprecated Instead use {@link cryptoModule} for data decryption.
    */
-  get customDecrypt(): ((data: string) => string) | undefined;
-
+  getCustomDecrypt(): ((data: string) => string) | undefined;
   // endregion
 }
 
@@ -692,6 +699,15 @@ export const setDefaults = (configuration: UserConfiguration): ExtendedConfigura
   configurationCopy.maintainPresenceState ??= MAINTAIN_PRESENCE_STATE;
   configurationCopy.keepAlive ??= KEEP_ALIVE;
 
+  if (configurationCopy.userId && configurationCopy.uuid)
+    throw new PubNubError("PubNub client configuration error: use only 'userId'");
+
+  configurationCopy.userId ??= configurationCopy.uuid;
+
+  if (!configurationCopy.userId) throw new PubNubError("PubNub client configuration error: 'userId' not set");
+  else if (configurationCopy.userId?.trim().length === 0)
+    throw new PubNubError("PubNub client configuration error: 'userId' is empty");
+
   // Generate default origin subdomains.
   if (!configurationCopy.origin)
     configurationCopy.origin = Array.from({ length: 20 }, (_, i) => `ps${i + 1}.pndsn.com`);
@@ -702,14 +718,13 @@ export const setDefaults = (configuration: UserConfiguration): ExtendedConfigura
     secretKey: configurationCopy.secretKey,
   };
 
-  if (configurationCopy.presenceTimeout && configurationCopy.presenceTimeout < PRESENCE_TIMEOUT_MINIMUM) {
+  if (configurationCopy.presenceTimeout !== undefined && configurationCopy.presenceTimeout < PRESENCE_TIMEOUT_MINIMUM) {
     configurationCopy.presenceTimeout = PRESENCE_TIMEOUT_MINIMUM;
     // eslint-disable-next-line no-console
     console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', PRESENCE_TIMEOUT_MINIMUM);
   }
-  if (configurationCopy.presenceTimeout) {
-    configurationCopy.heartbeatInterval = configurationCopy.presenceTimeout / 2 - 1;
-  } else configurationCopy.presenceTimeout = PRESENCE_TIMEOUT;
+
+  configurationCopy.presenceTimeout ??= PRESENCE_TIMEOUT;
 
   // Apply extended configuration defaults.
   let announceSuccessfulHeartbeats = ANNOUNCE_HEARTBEAT_SUCCESS;
@@ -720,20 +735,20 @@ export const setDefaults = (configuration: UserConfiguration): ExtendedConfigura
   let useRequestId = USE_REQUEST_ID;
 
   // @ts-expect-error Not documented legacy configuration options.
-  if (configurationCopy.dedupeOnSubscribe && typeof configurationCopy.dedupeOnSubscribe === 'boolean') {
+  if (configurationCopy.dedupeOnSubscribe !== undefined && typeof configurationCopy.dedupeOnSubscribe === 'boolean') {
     // @ts-expect-error Not documented legacy configuration options.
     dedupeOnSubscribe = configurationCopy.dedupeOnSubscribe;
   }
 
   // @ts-expect-error Not documented legacy configuration options.
-  if (configurationCopy.useRequestId && typeof configurationCopy.useRequestId === 'boolean') {
+  if (configurationCopy.useRequestId !== undefined && typeof configurationCopy.useRequestId === 'boolean') {
     // @ts-expect-error Not documented legacy configuration options.
     useRequestId = configurationCopy.useRequestId;
   }
 
   if (
     // @ts-expect-error Not documented legacy configuration options.
-    configurationCopy.announceSuccessfulHeartbeats &&
+    configurationCopy.announceSuccessfulHeartbeats !== undefined &&
     // @ts-expect-error Not documented legacy configuration options.
     typeof configurationCopy.announceSuccessfulHeartbeats === 'boolean'
   ) {
@@ -741,15 +756,19 @@ export const setDefaults = (configuration: UserConfiguration): ExtendedConfigura
     announceSuccessfulHeartbeats = configurationCopy.announceSuccessfulHeartbeats;
   }
 
-  // @ts-expect-error Not documented legacy configuration options.
-  if (configurationCopy.announceFailedHeartbeats && typeof configurationCopy.announceFailedHeartbeats === 'boolean') {
+  if (
+    // @ts-expect-error Not documented legacy configuration options.
+    configurationCopy.announceFailedHeartbeats !== undefined &&
+    // @ts-expect-error Not documented legacy configuration options.
+    typeof configurationCopy.announceFailedHeartbeats === 'boolean'
+  ) {
     // @ts-expect-error Not documented legacy configuration options.
     announceFailedHeartbeats = configurationCopy.announceFailedHeartbeats;
   }
 
   if (
     // @ts-expect-error Not documented legacy configuration options.
-    configurationCopy.fileUploadPublishRetryLimit &&
+    configurationCopy.fileUploadPublishRetryLimit !== undefined &&
     // @ts-expect-error Not documented legacy configuration options.
     typeof configurationCopy.fileUploadPublishRetryLimit === 'number'
   ) {

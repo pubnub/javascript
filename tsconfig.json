@@ -10,13 +10,23 @@
     "esModuleInterop": true,
     "outDir": "./lib",
     "downlevelIteration": true,
+    "removeComments": true
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "src/titanium",
+    "src/crypto/modules/WebCryptoModule/**/*",
+    "src/crypto/modules/web.ts",
+    "src/file/modules/react-native.ts",
+    "src/file/modules/web.ts",
+    "src/titanium/**/*",
+    "src/nativescript/**/*",
+    "src/react_native/**/*",
+    "src/transport/service-worker/**/*",
     "src/transport/titanium-transport.ts",
+    "src/transport/web-react-native-transport.ts",
+    "src/web/**/*"
   ]
 }

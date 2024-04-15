@@ -4,7 +4,7 @@ import { CryptoModule } from '../../interfaces/crypto-module';
 import { Cryptography } from '../../interfaces/cryptography';
 import { AbstractRequest } from '../../components/request';
 import * as FileSharing from '../../types/api/file-sharing';
-import { PubnubError } from '../../../errors/pubnub-error';
+import { PubNubError } from '../../../errors/pubnub-error';
 import RequestOperation from '../../constants/operations';
 import { UploadFileRequest } from './upload-file';
 import { PubNubAPIError } from '../../../errors/pubnub-api-error';
@@ -100,10 +100,23 @@ export class SendFileRequest<FileConstructorParameters> {
         fileId = result.id;
         return this.uploadFile(result);
       })
+      .then((result) => {
+        if (result.status !== 204) {
+          throw new PubNubError('Upload to bucket was unsuccessful', {
+            error: true,
+            statusCode: result.status,
+            category: StatusCategory.PNUnknownCategory,
+            operation: RequestOperation.PNPublishFileOperation,
+            errorData: { message: result.message },
+          });
+        }
+      })
       .then(() => this.publishFileMessage(fileId!, fileName!))
       .catch((error: Error) => {
-        const errorStatus = PubNubAPIError.create(error).toStatus(RequestOperation.PNPublishFileOperation);
-        throw new PubnubError('File upload error.', errorStatus);
+        if (error instanceof PubNubError) throw error;
+
+        const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
+        throw new PubNubError('File upload error.', apiError.toStatus(RequestOperation.PNPublishFileOperation));
       });
   }
 
@@ -154,7 +167,7 @@ export class SendFileRequest<FileConstructorParameters> {
   private async publishFileMessage(fileId: string, fileName: string): Promise<FileSharing.SendFileResponse> {
     let result: FileSharing.PublishFileMessageResponse = { timetoken: '0' };
     let retries = this.parameters.fileUploadPublishRetryLimit;
-    let publishError: PubnubError | undefined;
+    let publishError: PubNubError | undefined;
     let wasSuccessful = false;
 
     do {
@@ -162,13 +175,13 @@ export class SendFileRequest<FileConstructorParameters> {
         result = await this.parameters.publishFile({ ...this.parameters, fileId, fileName });
         wasSuccessful = true;
       } catch (error: unknown) {
-        if (error instanceof PubnubError) publishError = error;
+        if (error instanceof PubNubError) publishError = error;
         retries -= 1;
       }
     } while (!wasSuccessful && retries > 0);
 
     if (!wasSuccessful) {
-      throw new PubnubError(
+      throw new PubNubError(
         'Publish failed. You may want to execute that operation manually using pubnub.publishFile',
         {
           error: true,

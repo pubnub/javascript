@@ -106,10 +106,10 @@ export default class {
    *
    * @returns Encrypted `data`.
    */
-  public encrypt(data: string, customCipherKey?: string, options?: CryptoConfiguration) {
+  public encrypt(data: string | Payload, customCipherKey?: string, options?: CryptoConfiguration) {
     if (this.configuration.customEncrypt) return this.configuration.customEncrypt(data);
 
-    return this.pnEncrypt(data, customCipherKey, options);
+    return this.pnEncrypt(data as string, customCipherKey, options);
   }
 
   /**

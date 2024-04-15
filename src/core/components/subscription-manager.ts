@@ -58,12 +58,12 @@ export class SubscriptionManager {
   /**
    * New list of channel groups to which manager will try to subscribe,
    */
-  private pendingChannelGroupSubscriptions: string[];
+  private pendingChannelGroupSubscriptions: Set<string>;
 
   /**
    * New list of channels to which manager will try to subscribe,
    */
-  private pendingChannelSubscriptions: string[];
+  private pendingChannelSubscriptions: Set<string>;
 
   /**
    * List of channel groups for which real-time events should be observed.
@@ -147,8 +147,8 @@ export class SubscriptionManager {
     this.presenceChannels = {};
     this.heartbeatTimer = null;
     this.presenceState = {};
-    this.pendingChannelGroupSubscriptions = [];
-    this.pendingChannelSubscriptions = [];
+    this.pendingChannelGroupSubscriptions = new Set();
+    this.pendingChannelSubscriptions = new Set();
     this.channelGroups = {};
     this.channels = {};
 
@@ -210,7 +210,7 @@ export class SubscriptionManager {
     }
 
     channels?.forEach((channel) => {
-      this.pendingChannelSubscriptions.push(channel);
+      this.pendingChannelSubscriptions.add(channel);
       this.channels[channel] = {};
 
       if (withPresence) this.presenceChannels[channel] = {};
@@ -218,7 +218,7 @@ export class SubscriptionManager {
     });
 
     channelGroups?.forEach((group) => {
-      this.pendingChannelGroupSubscriptions.push(group);
+      this.pendingChannelGroupSubscriptions.add(group);
       this.channelGroups[group] = {};
 
       if (withPresence) this.presenceChannelGroups[group] = {};
@@ -230,15 +230,15 @@ export class SubscriptionManager {
   }
 
   public unsubscribe(parameters: Presence.PresenceLeaveParameters, isOffline?: boolean) {
-    const { channels, channelGroups } = parameters;
+    let { channels, channelGroups } = parameters;
 
-    const actualChannelGroups: string[] = [];
-    const actualChannels: string[] = [];
+    const actualChannelGroups: Set<string> = new Set();
+    const actualChannels: Set<string> = new Set();
 
     channels?.forEach((channel) => {
       if (channel in this.channels) {
         delete this.channels[channel];
-        actualChannels.push(channel);
+        actualChannels.add(channel);
 
         if (channel in this.heartbeatChannels) delete this.heartbeatChannels[channel];
       }
@@ -246,14 +246,14 @@ export class SubscriptionManager {
       if (channel in this.presenceState) delete this.presenceState[channel];
       if (channel in this.presenceChannels) {
         delete this.presenceChannels[channel];
-        actualChannels.push(channel);
+        actualChannels.add(channel);
       }
     });
 
     channelGroups?.forEach((group) => {
       if (group in this.channelGroups) {
         delete this.channelGroups[group];
-        actualChannelGroups.push(group);
+        actualChannelGroups.add(group);
 
         if (group in this.heartbeatChannelGroups) delete this.heartbeatChannelGroups[group];
       }
@@ -261,15 +261,18 @@ export class SubscriptionManager {
       if (group in this.presenceState) delete this.presenceState[group];
       if (group in this.presenceChannelGroups) {
         delete this.presenceChannelGroups[group];
-        actualChannelGroups.push(group);
+        actualChannelGroups.add(group);
       }
     });
 
     // There is no need to unsubscribe to empty list of data sources.
-    if (actualChannels.length === 0 && actualChannelGroups.length === 0) return;
+    if (actualChannels.size === 0 && actualChannelGroups.size === 0) return;
 
     if (this.configuration.suppressLeaveEvents === false && !isOffline) {
-      this.leaveCall({ channels: actualChannels, channelGroups: actualChannelGroups }, (status) => {
+      channelGroups = Array.from(actualChannelGroups);
+      channels = Array.from(actualChannels);
+
+      this.leaveCall({ channels, channelGroups }, (status) => {
         const { error, ...restOfStatus } = status;
         let errorMessage: string | undefined;
 
@@ -286,9 +289,9 @@ export class SubscriptionManager {
 
         this.listenerManager.announceStatus({
           ...restOfStatus,
-          error: errorMessage,
-          affectedChannels: actualChannels,
-          affectedChannelGroups: actualChannelGroups,
+          error: errorMessage ?? false,
+          affectedChannels: channels,
+          affectedChannelGroups: channelGroups,
           currentTimetoken: this.currentTimetoken,
           lastTimetoken: this.lastTimetoken,
         } as StatusEvent);
@@ -337,6 +340,7 @@ export class SubscriptionManager {
         channels,
         channelGroups,
         state: this.presenceState,
+        heartbeat: this.configuration.getPresenceTimeout(),
         timetoken: this.currentTimetoken,
         region: this.region !== null ? this.region : undefined,
         filterExpression: this.configuration.filterExpression,
@@ -420,9 +424,9 @@ export class SubscriptionManager {
       const connected: StatusEvent = {
         category: StatusCategory.PNConnectedCategory,
         operation: status.operation,
-        affectedChannels: this.pendingChannelSubscriptions,
+        affectedChannels: Array.from(this.pendingChannelSubscriptions),
         subscribedChannels: this.subscribedChannels,
-        affectedChannelGroups: this.pendingChannelGroupSubscriptions,
+        affectedChannelGroups: Array.from(this.pendingChannelGroupSubscriptions),
         lastTimetoken: this.lastTimetoken,
         currentTimetoken: this.currentTimetoken,
       };
@@ -431,8 +435,8 @@ export class SubscriptionManager {
       this.listenerManager.announceStatus(connected);
 
       // Clear pending channels and groups.
-      this.pendingChannelGroupSubscriptions = [];
-      this.pendingChannelSubscriptions = [];
+      this.pendingChannelGroupSubscriptions.clear();
+      this.pendingChannelSubscriptions.clear();
     }
 
     const { messages } = result!;
@@ -445,14 +449,24 @@ export class SubscriptionManager {
       });
     }
 
-    messages.forEach((message) => {
-      if (dedupeOnSubscribe) {
-        if (this.dedupingManager.isDuplicate(message)) return;
-        this.dedupingManager.addEntry(message);
-      }
+    try {
+      messages.forEach((message) => {
+        if (dedupeOnSubscribe) {
+          if (this.dedupingManager.isDuplicate(message.data)) return;
+          this.dedupingManager.addEntry(message.data);
+        }
 
-      this.eventEmitter.emitEvent(message);
-    });
+        this.eventEmitter.emitEvent(message);
+      });
+    } catch (e) {
+      const errorStatus: Status = {
+        error: true,
+        category: StatusCategory.PNUnknownCategory,
+        errorData: e as Error,
+        statusCode: 0,
+      };
+      this.listenerManager.announceStatus(errorStatus);
+    }
 
     this.region = result!.cursor.region;
     this.startSubscribeLoop();
@@ -486,7 +500,6 @@ export class SubscriptionManager {
       channels?.forEach((channel) => {
         if (channel in this.heartbeatChannels) delete this.heartbeatChannels[channel];
       });
-
       channelGroups?.forEach((group) => {
         if (group in this.heartbeatChannelGroups) delete this.heartbeatChannelGroups[group];
       });
@@ -547,7 +560,8 @@ export class SubscriptionManager {
           this.reconnect();
         }
 
-        if (!status.error && this.configuration.announceSuccessfulHeartbeats) this.listenerManager.announceNetworkUp();
+        if (!status.error && this.configuration.announceSuccessfulHeartbeats)
+          this.listenerManager.announceStatus(status);
       },
     );
   }

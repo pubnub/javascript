@@ -2,13 +2,14 @@
  * Channels / channel groups presence REST API module.
  */
 
-import { createValidationError, PubnubError } from '../../../errors/pubnub-error';
+import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import { KeySet, Payload, Query } from '../../types/api';
 import * as Presence from '../../types/api/presence';
-import { encodeString } from '../../utils';
+import { encodeNames } from '../../utils';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -134,7 +135,10 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse> {
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNHereNowOperation;
+    const { channels = [], channelGroups = [] } = this.parameters;
+    return channels.length === 0 && channelGroups.length === 0
+      ? RequestOperation.PNGlobalHereNowOperation
+      : RequestOperation.PNHereNowOperation;
   }
 
   validate(): string | undefined {
@@ -144,11 +148,12 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse> {
   async parse(response: TransportResponse): Promise<Presence.HereNowResponse> {
     const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
 
-    if (!serviceResponse)
-      throw new PubnubError(
+    if (!serviceResponse) {
+      throw new PubNubError(
         'Service response error, check status for details',
         createValidationError('Unable to deserialize service response'),
       );
+    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
 
     // Extract general presence information.
     const totalChannels = 'occupancy' in serviceResponse ? 1 : serviceResponse.payload.total_channels;
@@ -166,10 +171,12 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse> {
     Object.keys(channels).forEach((channel) => {
       const channelEntry = channels[channel];
       channelsPresence[channel] = {
-        occupants: channelEntry.uuids.map((uuid) => {
-          if (typeof uuid === 'string') return { uuid, state: null };
-          return uuid;
-        }),
+        occupants: this.parameters.includeUUIDs!
+          ? channelEntry.uuids.map((uuid) => {
+              if (typeof uuid === 'string') return { uuid, state: null };
+              return uuid;
+            })
+          : [],
         name: channel,
         occupancy: channelEntry.occupancy,
       };
@@ -190,10 +197,8 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse> {
     } = this.parameters;
     let path = `/v2/presence/sub-key/${subscribeKey}`;
 
-    if ((channels && channels.length > 0) || (channelGroups && channelGroups.length > 0)) {
-      const stringifiedChannels = channels && channels.length > 0 ? encodeString(channels.join(',')) : ',';
-      path += `/channel/${stringifiedChannels}`;
-    }
+    if ((channels && channels.length > 0) || (channelGroups && channelGroups.length > 0))
+      path += `/channel/${encodeNames(channels ?? [], ',')}`;
 
     return path;
   }

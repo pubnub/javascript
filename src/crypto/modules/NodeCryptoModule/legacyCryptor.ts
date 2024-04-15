@@ -7,7 +7,7 @@ import { CryptorConfiguration } from '../../../core/interfaces/crypto-module';
 import Crypto from '../../../core/components/cryptography/index';
 import { PubNubFileConstructor } from '../../../core/types/file';
 import { encode } from '../../../core/components/base64_codec';
-import { PubnubError } from '../../../errors/pubnub-error';
+import { PubNubError } from '../../../errors/pubnub-error';
 import { ILegacyCryptor } from './ILegacyCryptor';
 import { EncryptedDataType } from './ICryptor';
 import FileCryptor from '../node';
@@ -52,7 +52,7 @@ export default class LegacyCryptor implements ILegacyCryptor {
   }
 
   async encryptFile(file: PubNubFile, File: PubNubFileConstructor<PubNubFile, PubNubFileParameters>) {
-    if (!this.config.cipherKey) throw new PubnubError('File encryption error: cipher key not set.');
+    if (!this.config.cipherKey) throw new PubNubError('File encryption error: cipher key not set.');
 
     return this.fileCryptor.encryptFile(this.config.cipherKey, file, File);
   }
@@ -70,7 +70,7 @@ export default class LegacyCryptor implements ILegacyCryptor {
   }
 
   async decryptFile(file: PubNubFile, File: PubNubFileConstructor<PubNubFile, PubNubFileParameters>) {
-    if (!this.config.cipherKey) throw new PubnubError('File decryption error: cipher key not set.');
+    if (!this.config.cipherKey) throw new PubNubError('File decryption error: cipher key not set.');
 
     return this.fileCryptor.decryptFile(this.config.cipherKey, file, File);
   }
