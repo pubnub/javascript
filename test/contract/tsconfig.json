@@ -1,9 +1,11 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
     "resolveJsonModule": true,
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noStrictGenericChecks": true,
     "target": "es5",
     "sourceMap": true,
     "esModuleInterop": true,
@@ -11,5 +13,7 @@
     "allowJs": true,
     "noEmit": true
   },
-  "exclude": ["../../lib"]
+  "exclude": [
+    "../../lib"
+  ]
 }

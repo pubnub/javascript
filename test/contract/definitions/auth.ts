@@ -1,4 +1,5 @@
-import { binding, given, then, when } from 'cucumber-tsflow';
+import { binding, given, then, when } from '@lynxwall/cucumber-tsflow';
+// import { binding, given, then, when } from 'cucumber-tsflow';
 import { expect } from 'chai';
 
 import { AccessManagerKeyset } from '../shared/keysets';
@@ -19,7 +20,10 @@ class AuthSteps {
 
   private token?: string;
 
-  constructor(private manager: PubNubManager, private keyset: AccessManagerKeyset) {}
+  constructor(
+    private manager: PubNubManager,
+    private keyset: AccessManagerKeyset,
+  ) {}
 
   @when('I publish a message using that auth token with channel {string}')
   public publishMessage() {
