@@ -3,6 +3,7 @@
 
 import CborReader from 'cbor-js';
 
+// eslint-disable-next-line max-len
 import { SubscriptionServiceWorkerMiddleware } from '../transport/service-worker/subscription-service-worker-middleware';
 import { AesCbcCryptor, LegacyCryptor, WebCryptoModule } from '../crypto/modules/WebCryptoModule/webCryptoModule';
 import { WebReactNativeTransport } from '../transport/web-react-native-transport';
