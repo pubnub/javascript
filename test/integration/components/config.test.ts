@@ -7,7 +7,7 @@ import PubNub from '../../../src/node/index';
 describe('components/config', () => {
   describe('AuthKey parameter', () => {
     it('get/set', () => {
-      let pubnub = new PubNub({
+      const pubnub = new PubNub({
         subscribeKey: 'mySubKey',
         publishKey: 'myPublishKey',
         authKey: 'authKey1',
@@ -21,7 +21,7 @@ describe('components/config', () => {
 
   describe('uuid Parameter', () => {
     it('throws when not provided value', () => {
-      let config = {
+      const config = {
         subscribeKey: 'mySubKey',
         publishKey: 'myPublishKey',
         authKey: 'authKey1',
@@ -32,7 +32,7 @@ describe('components/config', () => {
     });
 
     it('get/set', () => {
-      let pubnub = new PubNub({
+      const pubnub = new PubNub({
         subscribeKey: 'mySubKey',
         publishKey: 'myPublishKey',
         uuid: 'uuid1',
@@ -43,7 +43,7 @@ describe('components/config', () => {
     });
 
     it('get/set userId', () => {
-      let pubnub = new PubNub({
+      const pubnub = new PubNub({
         subscribeKey: 'mySubKey',
         publishKey: 'myPublishKey',
         userId: 'userId1',
@@ -54,7 +54,7 @@ describe('components/config', () => {
     });
 
     it('throws when both userId and uuid are provided', () => {
-      let config = { subscribeKey: 'demo', publishKey: 'demo', uuid: 'myUuid', userId: 'myUserId' };
+      const config = { subscribeKey: 'demo', publishKey: 'demo', uuid: 'myUuid', userId: 'myUserId' };
 
       assert.throws(() => {
         new PubNub(config);
@@ -62,7 +62,7 @@ describe('components/config', () => {
     });
 
     it('throws when invalid value provided', () => {
-      let config = {
+      const config = {
         subscribeKey: 'mySubKey',
         publishKey: 'myPublishKey',
         uuid: ' ',
@@ -73,7 +73,7 @@ describe('components/config', () => {
     });
 
     it('setUUID throws while trying to set invalid uuid', () => {
-      let pubnub = new PubNub({
+      const pubnub = new PubNub({
         subscribeKey: 'mySubKey',
         publishKey: 'myPublishKey',
         uuid: 'myUUID',

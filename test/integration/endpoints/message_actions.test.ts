@@ -166,9 +166,13 @@ describe('message actions endpoints', () => {
             messageTimetoken: '1234567890',
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Missing Action');
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Missing Action");
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 
@@ -188,9 +192,13 @@ describe('message actions endpoints', () => {
             action,
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Missing Action.type');
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Missing Action.type");
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 
@@ -209,9 +217,13 @@ describe('message actions endpoints', () => {
             action,
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Action.type value exceed maximum length of 15');
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Action.type value exceed maximum length of 15");
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 
@@ -231,9 +243,13 @@ describe('message actions endpoints', () => {
             action,
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Missing Action.value');
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Missing Action.value");
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 
@@ -252,9 +268,13 @@ describe('message actions endpoints', () => {
             action,
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Missing message timetoken');
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Missing message timetoken");
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 
@@ -273,9 +293,13 @@ describe('message actions endpoints', () => {
             action,
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Missing message channel');
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Missing message channel");
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
     });
@@ -288,15 +312,19 @@ describe('message actions endpoints', () => {
         pubnub.addMessageAction(
           { channel, messageTimetoken: timetokens[0], action: messageAction },
           (status, response) => {
-            assert.equal(status.error, false);
-            assert(response !== null);
-            assert.equal(response.data.type, messageAction.type);
-            assert.equal(response.data.value, messageAction.value);
-            assert.equal(response.data.uuid, pubnub.getUUID());
-            assert.equal(response.data.messageTimetoken, timetokens[0]);
-            assert(response.data.actionTimetoken);
+            try {
+              assert.equal(status.error, false);
+              assert(response !== null);
+              assert.equal(response.data.type, messageAction.type);
+              assert.equal(response.data.value, messageAction.value);
+              assert.equal(response.data.uuid, pubnub.getUUID());
+              assert.equal(response.data.messageTimetoken, timetokens[0]);
+              assert(response.data.actionTimetoken);
 
-            done();
+              done();
+            } catch (error) {
+              done(error);
+            }
           },
         );
       });
@@ -310,15 +338,19 @@ describe('message actions endpoints', () => {
         pubnub.addMessageAction(
           { channel, messageTimetoken: timetokens[0], action: messageAction },
           (status, response) => {
-            assert.equal(status.error, false);
-            assert(response !== null);
-            assert.equal(response.data.type, messageAction.type);
-            assert.equal(response.data.value, messageAction.value);
-            assert.equal(response.data.uuid, pubnub.getUUID());
-            assert.equal(response.data.messageTimetoken, timetokens[0]);
-            assert(response.data.actionTimetoken);
+            try {
+              assert.equal(status.error, false);
+              assert(response !== null);
+              assert.equal(response.data.type, messageAction.type);
+              assert.equal(response.data.value, messageAction.value);
+              assert.equal(response.data.uuid, pubnub.getUUID());
+              assert.equal(response.data.messageTimetoken, timetokens[0]);
+              assert(response.data.actionTimetoken);
 
-            done();
+              done();
+            } catch (error) {
+              done(error);
+            }
           },
         );
       });
@@ -352,13 +384,17 @@ describe('message actions endpoints', () => {
       pubnub.addMessageAction(
         { channel: 'test-channel', messageTimetoken: '1234567890', action: { type: 'custom', value: 'test' } },
         (status) => {
-          assert.equal(scope.isDone(), true);
-          assert.equal(status.statusCode, 207);
+          try {
+            assert.equal(scope.isDone(), true);
+            assert.equal(status.statusCode, 207);
 
-          // @ts-expect-error `errorData` may contain a dictionary (Payload) with an arbitrary set of fields.
-          assert(status.errorData!.message);
+            // @ts-expect-error `errorData` may contain a dictionary (Payload) with an arbitrary set of fields.
+            assert(status.errorData!.message);
 
-          done();
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     });
@@ -380,16 +416,20 @@ describe('message actions endpoints', () => {
           }
         },
         messageAction: (messageActionEvent) => {
-          assert(messageActionEvent.data);
-          assert.equal(messageActionEvent.data.type, messageAction.type);
-          assert.equal(messageActionEvent.data.value, messageAction.value);
-          assert.equal(messageActionEvent.data.uuid, pubnub.getUUID());
-          assert.equal(messageActionEvent.data.messageTimetoken, messageTimetoken);
-          assert(messageActionEvent.data.actionTimetoken);
-          assert.equal(messageActionEvent.event, 'added');
-          pubnub.unsubscribeAll();
+          try {
+            assert(messageActionEvent.data);
+            assert.equal(messageActionEvent.data.type, messageAction.type);
+            assert.equal(messageActionEvent.data.value, messageAction.value);
+            assert.equal(messageActionEvent.data.uuid, pubnub.getUUID());
+            assert.equal(messageActionEvent.data.messageTimetoken, messageTimetoken);
+            assert(messageActionEvent.data.actionTimetoken);
+            assert.equal(messageActionEvent.event, "added");
+            pubnub.unsubscribeAll();
 
-          done();
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       });
 
@@ -413,10 +453,14 @@ describe('message actions endpoints', () => {
             actionTimetoken: '1234567890',
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Missing message timetoken');
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Missing message timetoken");
 
-            done();
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 
@@ -434,10 +478,14 @@ describe('message actions endpoints', () => {
             messageTimetoken: '1234567890',
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Missing action timetoken');
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Missing action timetoken");
 
-            done();
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 
@@ -455,10 +503,14 @@ describe('message actions endpoints', () => {
             actionTimetoken: '12345678901',
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Missing message action channel');
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Missing message action channel");
 
-            done();
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
     });
@@ -480,11 +532,15 @@ describe('message actions endpoints', () => {
 
                 setTimeout(() => {
                   pubnub.getMessageActions({ channel }, (getMessagesStatus, getMessagesResponse) => {
-                    assert.equal(getMessagesStatus.error, false);
-                    assert(getMessagesResponse !== null);
-                    assert.equal(getMessagesResponse.data.length, 0);
+                    try {
+                      assert.equal(getMessagesStatus.error, false);
+                      assert(getMessagesResponse !== null);
+                      assert.equal(getMessagesResponse.data.length, 0);
 
-                    done();
+                      done();
+                    } catch (error) {
+                      done(error);
+                    }
                   });
                 }, 2000);
               },
@@ -511,11 +567,15 @@ describe('message actions endpoints', () => {
 
                 setTimeout(() => {
                   pubnub.getMessageActions({ channel }, (getMessagesStatus, getMessagesResponse) => {
-                    assert.equal(getMessagesStatus.error, false);
-                    assert(getMessagesResponse !== null);
-                    assert.equal(getMessagesResponse.data.length, 0);
+                    try {
+                      assert.equal(getMessagesStatus.error, false);
+                      assert(getMessagesResponse !== null);
+                      assert.equal(getMessagesResponse.data.length, 0);
 
-                    done();
+                      done();
+                    } catch (error) {
+                      done(error);
+                    }
                   });
                 }, 2000);
               },
@@ -542,14 +602,18 @@ describe('message actions endpoints', () => {
               }
             },
             messageAction: (messageActionEvent) => {
-              assert(messageActionEvent.data);
-              assert.equal(messageActionEvent.data.uuid, pubnub.getUUID());
-              assert.equal(messageActionEvent.data.messageTimetoken, messageTimetokens[0]);
-              assert.equal(messageActionEvent.data.actionTimetoken, actionTimetokens[0]);
-              assert.equal(messageActionEvent.event, 'removed');
-              pubnub.unsubscribeAll();
+              try {
+                assert(messageActionEvent.data);
+                assert.equal(messageActionEvent.data.uuid, pubnub.getUUID());
+                assert.equal(messageActionEvent.data.messageTimetoken, messageTimetokens[0]);
+                assert.equal(messageActionEvent.data.actionTimetoken, actionTimetokens[0]);
+                assert.equal(messageActionEvent.event, "removed");
+                pubnub.unsubscribeAll();
 
-              done();
+                done();
+              } catch (error) {
+                done(error);
+              }
             },
           });
 
@@ -567,10 +631,14 @@ describe('message actions endpoints', () => {
 
         // @ts-expect-error Intentionally don't include `channel`.
         pubnub.getMessageActions({}).catch((err) => {
-          assert.equal(scope.isDone(), false);
-          assert.equal(err.status.message, 'Missing message channel');
+          try {
+            assert.equal(scope.isDone(), false);
+            assert.equal(err.status.message, "Missing message channel");
 
-          done();
+            done();
+          } catch (error) {
+            done(error);
+          }
         });
       });
     });
@@ -584,17 +652,21 @@ describe('message actions endpoints', () => {
           const firstPublishedActionTimetoken = actionTimetokens[0];
 
           pubnub.getMessageActions({ channel }, (status, response) => {
-            assert.equal(status.error, false);
-            assert(response !== null);
-            const firstFetchedActionTimetoken = response.data[0].actionTimetoken;
-            const lastFetchedActionTimetoken = response.data[response.data.length - 1].actionTimetoken;
-            assert.equal(firstFetchedActionTimetoken, firstPublishedActionTimetoken);
-            assert.equal(lastFetchedActionTimetoken, lastPublishedActionTimetoken);
-            assert.equal(response.data.length, actionTimetokens.length);
-            assert.equal(response.start, firstPublishedActionTimetoken);
-            assert.equal(response.end, lastPublishedActionTimetoken);
+            try {
+              assert.equal(status.error, false);
+              assert(response !== null);
+              const firstFetchedActionTimetoken = response.data[0].actionTimetoken;
+              const lastFetchedActionTimetoken = response.data[response.data.length - 1].actionTimetoken;
+              assert.equal(firstFetchedActionTimetoken, firstPublishedActionTimetoken);
+              assert.equal(lastFetchedActionTimetoken, lastPublishedActionTimetoken);
+              assert.equal(response.data.length, actionTimetokens.length);
+              assert.equal(response.start, firstPublishedActionTimetoken);
+              assert.equal(response.end, lastPublishedActionTimetoken);
 
-            done();
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
         });
       });
@@ -609,17 +681,21 @@ describe('message actions endpoints', () => {
           const firstPublishedActionTimetoken = actionTimetokens[0];
 
           pubnub.getMessageActions({ channel }, (status, response) => {
-            assert.equal(status.error, false);
-            assert(response !== null);
-            const firstFetchedActionTimetoken = response.data[0].actionTimetoken;
-            const lastFetchedActionTimetoken = response.data[response.data.length - 1].actionTimetoken;
-            assert.equal(firstFetchedActionTimetoken, firstPublishedActionTimetoken);
-            assert.equal(lastFetchedActionTimetoken, lastPublishedActionTimetoken);
-            assert.equal(response.data.length, actionTimetokens.length);
-            assert.equal(response.start, firstPublishedActionTimetoken);
-            assert.equal(response.end, lastPublishedActionTimetoken);
+            try {
+              assert.equal(status.error, false);
+              assert(response !== null);
+              const firstFetchedActionTimetoken = response.data[0].actionTimetoken;
+              const lastFetchedActionTimetoken = response.data[response.data.length - 1].actionTimetoken;
+              assert.equal(firstFetchedActionTimetoken, firstPublishedActionTimetoken);
+              assert.equal(lastFetchedActionTimetoken, lastPublishedActionTimetoken);
+              assert.equal(response.data.length, actionTimetokens.length);
+              assert.equal(response.start, firstPublishedActionTimetoken);
+              assert.equal(response.end, lastPublishedActionTimetoken);
 
-            done();
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
         });
       });
@@ -650,18 +726,22 @@ describe('message actions endpoints', () => {
             pubnub.getMessageActions(
               { channel, start: middlePublishedActionTimetoken, limit: halfSize },
               (getMessageActionsStatus, getMessageActionsResponse) => {
-                assert.equal(getMessageActionsStatus.error, false);
-                assert(getMessageActionsResponse !== null);
-                firstFetchedActionTimetoken = getMessageActionsResponse.data[0].actionTimetoken;
-                lastFetchedActionTimetoken =
-                  getMessageActionsResponse.data[getMessageActionsResponse.data.length - 1].actionTimetoken;
-                assert.equal(firstFetchedActionTimetoken, firstPublishedActionTimetoken);
-                assert.equal(lastFetchedActionTimetoken, middleMinusOnePublishedActionTimetoken);
-                assert.equal(getMessageActionsResponse.data.length, halfSize);
-                assert.equal(getMessageActionsResponse.start, firstPublishedActionTimetoken);
-                assert.equal(getMessageActionsResponse.end, middleMinusOnePublishedActionTimetoken);
+                try {
+                  assert.equal(getMessageActionsStatus.error, false);
+                  assert(getMessageActionsResponse !== null);
+                  firstFetchedActionTimetoken = getMessageActionsResponse.data[0].actionTimetoken;
+                  lastFetchedActionTimetoken =
+                    getMessageActionsResponse.data[getMessageActionsResponse.data.length - 1].actionTimetoken;
+                  assert.equal(firstFetchedActionTimetoken, firstPublishedActionTimetoken);
+                  assert.equal(lastFetchedActionTimetoken, middleMinusOnePublishedActionTimetoken);
+                  assert.equal(getMessageActionsResponse.data.length, halfSize);
+                  assert.equal(getMessageActionsResponse.start, firstPublishedActionTimetoken);
+                  assert.equal(getMessageActionsResponse.end, middleMinusOnePublishedActionTimetoken);
 
-                done();
+                  done();
+                } catch (error) {
+                  done(error);
+                }
               },
             );
           });

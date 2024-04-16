@@ -185,53 +185,57 @@ describe('fetch messages endpoints', () => {
       );
 
     pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10 }, (status, response) => {
-      assert.equal(status.error, false);
-      assert.deepEqual(response, {
-        channels: {
-          ch1: [
-            {
-              channel: 'ch1',
-              message: {
-                text: 'hey1',
+      try {
+        assert.equal(status.error, false);
+        assert.deepEqual(response, {
+          channels: {
+            ch1: [
+              {
+                channel: "ch1",
+                message: {
+                  text: "hey1"
+                },
+                timetoken: "11",
+                messageType: undefined,
+                uuid: undefined
               },
-              timetoken: '11',
-              messageType: undefined,
-              uuid: undefined,
-            },
-            {
-              channel: 'ch1',
-              message: {
-                text: 'hey2',
+              {
+                channel: "ch1",
+                message: {
+                  text: "hey2"
+                },
+                timetoken: "12",
+                messageType: undefined,
+                uuid: undefined
+              }
+            ],
+            ch2: [
+              {
+                channel: "ch2",
+                message: {
+                  text: "hey3"
+                },
+                timetoken: "21",
+                messageType: undefined,
+                uuid: undefined
               },
-              timetoken: '12',
-              messageType: undefined,
-              uuid: undefined,
-            },
-          ],
-          ch2: [
-            {
-              channel: 'ch2',
-              message: {
-                text: 'hey3',
-              },
-              timetoken: '21',
-              messageType: undefined,
-              uuid: undefined,
-            },
-            {
-              channel: 'ch2',
-              message: {
-                text: 'hey2',
-              },
-              timetoken: '22',
-              messageType: undefined,
-              uuid: undefined,
-            },
-          ],
-        },
-      });
-      assert.equal(scope.isDone(), true);
-      done();
+              {
+                channel: "ch2",
+                message: {
+                  text: "hey2"
+                },
+                timetoken: "22",
+                messageType: undefined,
+                uuid: undefined
+              }
+            ]
+          }
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -255,53 +259,57 @@ describe('fetch messages endpoints', () => {
 
     pubnub.setCipherKey('cipherKey');
     pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10 }, (status, response) => {
-      assert.equal(status.error, false);
-      assert.deepEqual(response, {
-        channels: {
-          ch1: [
-            {
-              channel: 'ch1',
-              message: {
-                text: 'hey',
+      try {
+        assert.equal(status.error, false);
+        assert.deepEqual(response, {
+          channels: {
+            ch1: [
+              {
+                channel: "ch1",
+                message: {
+                  text: "hey"
+                },
+                timetoken: "11",
+                messageType: undefined,
+                uuid: undefined
               },
-              timetoken: '11',
-              messageType: undefined,
-              uuid: undefined,
-            },
-            {
-              channel: 'ch1',
-              message: {
-                text: 'hey',
+              {
+                channel: "ch1",
+                message: {
+                  text: "hey"
+                },
+                timetoken: "12",
+                messageType: undefined,
+                uuid: undefined
+              }
+            ],
+            ch2: [
+              {
+                channel: "ch2",
+                message: {
+                  text2: "hey2"
+                },
+                timetoken: "21",
+                messageType: undefined,
+                uuid: undefined
               },
-              timetoken: '12',
-              messageType: undefined,
-              uuid: undefined,
-            },
-          ],
-          ch2: [
-            {
-              channel: 'ch2',
-              message: {
-                text2: 'hey2',
-              },
-              timetoken: '21',
-              messageType: undefined,
-              uuid: undefined,
-            },
-            {
-              channel: 'ch2',
-              message: {
-                text2: 'hey2',
-              },
-              timetoken: '22',
-              messageType: undefined,
-              uuid: undefined,
-            },
-          ],
-        },
-      });
-      assert.equal(scope.isDone(), true);
-      done();
+              {
+                channel: "ch2",
+                message: {
+                  text2: "hey2"
+                },
+                timetoken: "22",
+                messageType: undefined,
+                uuid: undefined
+              }
+            ]
+          }
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -311,12 +319,16 @@ describe('fetch messages endpoints', () => {
 
     publishMessagesToChannel(pubnub, expectedMessagesCount, channel, (messages) => {
       pubnub.fetchMessages({ channels: [channel], count: 25, includeMeta: true }, (_, response) => {
-        assert(response !== null);
-        const channelMessages = response.channels[channel];
+        try {
+          assert(response !== null);
+          const channelMessages = response.channels[channel];
 
-        assert.deepEqual(channelMessages[0].meta, { time: messages[0].message.time });
-        assert(!channelMessages[1].meta);
-        done();
+          assert.deepEqual(channelMessages[0].meta, { time: messages[0].message.time });
+          assert(!channelMessages[1].meta);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   }).timeout(60000);
@@ -349,35 +361,39 @@ describe('fetch messages endpoints', () => {
       addActionsInChannel(pubnub, expectedActionsCount, messageTimetokens, channel, (actions) => {
         setTimeout(() => {
           pubnub.fetchMessages({ channels: [channel], includeMessageActions: true }, (status, response) => {
-            assert.equal(status.error, false);
-            assert(response !== null);
-            const fetchedMessages = response.channels[channel];
-            // TypeScript types system now requires to figure out type of object before using it.
-            assert('actions' in fetchedMessages[0]);
-            const actionsByType = fetchedMessages[0].data ?? {};
-            let historyActionsCount = 0;
+            try {
+              assert.equal(status.error, false);
+              assert(response !== null);
+              const fetchedMessages = response.channels[channel];
+              // TypeScript types system now requires to figure out type of object before using it.
+              assert("actions" in fetchedMessages[0]);
+              const actionsByType = fetchedMessages[0].data ?? {};
+              let historyActionsCount = 0;
 
-            Object.keys(actionsByType).forEach((actionType) => {
-              Object.keys(actionsByType[actionType]).forEach((actionValue) => {
-                let actionFound = false;
-                historyActionsCount += 1;
+              Object.keys(actionsByType).forEach((actionType) => {
+                Object.keys(actionsByType[actionType]).forEach((actionValue) => {
+                  let actionFound = false;
+                  historyActionsCount += 1;
 
-                actions.forEach((action) => {
-                  if (action.value === actionValue) actionFound = true;
+                  actions.forEach((action) => {
+                    if (action.value === actionValue) actionFound = true;
+                  });
+
+                  assert.equal(actionFound, true);
                 });
-
-                assert.equal(actionFound, true);
               });
-            });
 
-            assert.equal(historyActionsCount, expectedActionsCount);
-            assert.equal(fetchedMessages[0].timetoken, messageTimetokens[0]);
-            assert.equal(
-              fetchedMessages[fetchedMessages.length - 1].timetoken,
-              messageTimetokens[messageTimetokens.length - 1],
-            );
+              assert.equal(historyActionsCount, expectedActionsCount);
+              assert.equal(fetchedMessages[0].timetoken, messageTimetokens[0]);
+              assert.equal(
+                fetchedMessages[fetchedMessages.length - 1].timetoken,
+                messageTimetokens[messageTimetokens.length - 1]
+              );
 
-            done();
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
         }, 2000);
       });
@@ -395,37 +411,41 @@ describe('fetch messages endpoints', () => {
       addActionsInChannel(pubnub, expectedActionsCount, messageTimetokens, channel, (actions) => {
         setTimeout(() => {
           pubnub.fetchMessages({ channels: [channel], includeMessageActions: true }, (status, response) => {
-            assert.equal(status.error, false);
-            assert(response !== null);
-            const fetchedMessages = response.channels[channel];
-            // TypeScript types system now requires to figure out type of object before using it.
-            assert('actions' in fetchedMessages[0]);
-            const actionsByType = fetchedMessages[0].actions ?? {};
-            let historyActionsCount = 0;
+            try {
+              assert.equal(status.error, false);
+              assert(response !== null);
+              const fetchedMessages = response.channels[channel];
+              // TypeScript types system now requires to figure out type of object before using it.
+              assert("actions" in fetchedMessages[0]);
+              const actionsByType = fetchedMessages[0].actions ?? {};
+              let historyActionsCount = 0;
 
-            Object.keys(actionsByType).forEach((actionType) => {
-              Object.keys(actionsByType[actionType]).forEach((actionValue) => {
-                let actionFound = false;
-                historyActionsCount += 1;
+              Object.keys(actionsByType).forEach((actionType) => {
+                Object.keys(actionsByType[actionType]).forEach((actionValue) => {
+                  let actionFound = false;
+                  historyActionsCount += 1;
 
-                actions.forEach((action) => {
-                  if (action.value === actionValue) {
-                    actionFound = true;
-                  }
+                  actions.forEach((action) => {
+                    if (action.value === actionValue) {
+                      actionFound = true;
+                    }
+                  });
+
+                  assert.equal(actionFound, true);
                 });
-
-                assert.equal(actionFound, true);
               });
-            });
 
-            assert.equal(historyActionsCount, expectedActionsCount);
-            assert.equal(fetchedMessages[0].timetoken, messageTimetokens[0]);
-            assert.equal(
-              fetchedMessages[fetchedMessages.length - 1].timetoken,
-              messageTimetokens[messageTimetokens.length - 1],
-            );
+              assert.equal(historyActionsCount, expectedActionsCount);
+              assert.equal(fetchedMessages[0].timetoken, messageTimetokens[0]);
+              assert.equal(
+                fetchedMessages[fetchedMessages.length - 1].timetoken,
+                messageTimetokens[messageTimetokens.length - 1]
+              );
 
-            done();
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
         }, 2000);
       });
@@ -451,15 +471,19 @@ describe('fetch messages endpoints', () => {
       );
 
     pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true }, (status, response) => {
-      assert.equal(scope.isDone(), true);
-      assert.equal(status.error, false);
-      assert(response !== null);
-      // TypeScript types system now requires to figure out type of object before using it.
-      assert('more' in response);
-      assert.equal(response.more.url, '/v3/history-with-actions/sub-key/s/channel/c?start=15610547826970000&max=98');
-      assert.equal(response.more.start, '15610547826970000');
-      assert.equal(response.more.max, 98);
-      done();
+      try {
+        assert.equal(scope.isDone(), true);
+        assert.equal(status.error, false);
+        assert(response !== null);
+        // TypeScript types system now requires to figure out type of object before using it.
+        assert("more" in response);
+        assert.equal(response.more.url, "/v3/history-with-actions/sub-key/s/channel/c?start=15610547826970000&max=98");
+        assert.equal(response.more.start, "15610547826970000");
+        assert.equal(response.more.max, 98);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -481,9 +505,13 @@ describe('fetch messages endpoints', () => {
         { 'content-type': 'text/javascript' },
       );
     pubnub.fetchMessages({ channels: ['ch1'] }, (status) => {
-      assert.equal(scope.isDone(), true);
-      assert.equal(status.error, false);
-      done();
+      try {
+        assert.equal(scope.isDone(), true);
+        assert.equal(status.error, false);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -505,9 +533,13 @@ describe('fetch messages endpoints', () => {
         { 'content-type': 'text/javascript' },
       );
     pubnub.fetchMessages({ channels: ['ch1', 'ch2'] }, (status) => {
-      assert.equal(scope.isDone(), true);
-      assert.equal(status.error, false);
-      done();
+      try {
+        assert.equal(scope.isDone(), true);
+        assert.equal(status.error, false);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -529,9 +561,13 @@ describe('fetch messages endpoints', () => {
         { 'content-type': 'text/javascript' },
       );
     pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true }, (status) => {
-      assert.equal(scope.isDone(), true);
-      assert.equal(status.error, false);
-      done();
+      try {
+        assert.equal(scope.isDone(), true);
+        assert.equal(status.error, false);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -553,9 +589,13 @@ describe('fetch messages endpoints', () => {
         { 'content-type': 'text/javascript' },
       );
     pubnub.fetchMessages({ channels: ['ch1'], includeMessageActions: true, count: 10 }, (status) => {
-      assert.equal(scope.isDone(), true);
-      assert.equal(status.error, false);
-      done();
+      try {
+        assert.equal(scope.isDone(), true);
+        assert.equal(status.error, false);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -577,9 +617,13 @@ describe('fetch messages endpoints', () => {
         { 'content-type': 'text/javascript' },
       );
     pubnub.fetchMessages({ channels: ['ch1'], count: 10 }, (status) => {
-      assert.equal(scope.isDone(), true);
-      assert.equal(status.error, false);
-      done();
+      try {
+        assert.equal(scope.isDone(), true);
+        assert.equal(status.error, false);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -601,9 +645,13 @@ describe('fetch messages endpoints', () => {
         { 'content-type': 'text/javascript' },
       );
     pubnub.fetchMessages({ channels: ['ch1', 'ch2'], count: 10 }, (status) => {
-      assert.equal(scope.isDone(), true);
-      assert.equal(status.error, false);
-      done();
+      try {
+        assert.equal(scope.isDone(), true);
+        assert.equal(status.error, false);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -627,31 +675,35 @@ describe('fetch messages endpoints', () => {
 
     pubnub.setCipherKey('cipherKey');
     pubnub.fetchMessages({ channels: ['ch1'], count: 10 }, (status, response) => {
-      assert.equal(status.error, false);
-      assert.deepEqual(response, {
-        channels: {
-          ch1: [
-            {
-              channel: 'ch1',
-              message: 'hello',
-              timetoken: '11',
-              messageType: undefined,
-              uuid: undefined,
-              error: 'Error while decrypting message content: Decryption error: invalid header version',
-            },
-            {
-              channel: 'ch1',
-              message: 'hey',
-              timetoken: '12',
-              messageType: undefined,
-              uuid: undefined,
-              error: 'Error while decrypting message content: Decryption error: invalid header version',
-            },
-          ],
-        },
-      });
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert.deepEqual(response, {
+          channels: {
+            ch1: [
+              {
+                channel: "ch1",
+                message: "hello",
+                timetoken: "11",
+                messageType: undefined,
+                uuid: undefined,
+                error: "Error while decrypting message content: Decryption error: invalid header version"
+              },
+              {
+                channel: "ch1",
+                message: "hey",
+                timetoken: "12",
+                messageType: undefined,
+                uuid: undefined,
+                error: "Error while decrypting message content: Decryption error: invalid header version"
+              }
+            ]
+          }
+        });
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 });

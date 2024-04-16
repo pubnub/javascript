@@ -116,10 +116,15 @@ describe('File Upload API v1 tests', () => {
           file: { data: testContent, name: 'someFile.txt', mimeType: 'text/plain' },
         },
         (err, result) => {
-          expect(err.error).to.be.false;
+          try {
+            expect(err.error).to.be.false;
 
-          assert(result !== null);
-          expect(result.name).to.equal('someFile.txt');
+            assert(result !== null);
+            expect(result.name).to.equal('someFile.txt');
+          } catch (error) {
+            done(error);
+            return;
+          }
 
           pubnub.downloadFile(
             {
@@ -133,9 +138,13 @@ describe('File Upload API v1 tests', () => {
 
               assert(file !== null);
               const output = file.toString('utf8').then((output) => {
-                expect(output).to.equal(testContent);
+                try {
+                  expect(output).to.equal(testContent);
 
-                done();
+                  done();
+                } catch (error) {
+                  done(error);
+                }
               });
             },
           );
@@ -165,27 +174,35 @@ describe('File Upload API v1 tests', () => {
           cipherKey: 'cipherKey',
         },
         (err, result) => {
-          expect(err.error).to.be.false;
+          try {
+            expect(err.error).to.be.false;
 
-          assert(result !== null);
-          expect(result.name).to.equal('someFile.txt');
+            assert(result !== null);
+            expect(result.name).to.equal('someFile.txt');
+          } catch (error) {
+            done(error);
+          }
 
           pubnub.downloadFile(
             {
               channel: CHANNEL_1,
-              id: result.id,
-              name: result.name,
+              id: result!.id,
+              name: result!.name,
               cipherKey: 'cipherKey',
             },
             (err2, file) => {
-              fileId = result.id;
-              fileName = result.name;
+              fileId = result!.id;
+              fileName = result!.name;
 
               assert(file !== null);
               const output = file.toString('utf8').then((output) => {
-                expect(output).to.equal(testContent);
+                try {
+                  expect(output).to.equal(testContent);
 
-                done();
+                  done();
+                } catch (error) {
+                  done(error);
+                }
               });
             },
           );

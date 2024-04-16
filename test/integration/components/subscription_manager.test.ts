@@ -132,49 +132,53 @@ describe('#components/subscription_manager', () => {
         incomingPayloads.push(messagePayload);
 
         if (incomingPayloads.length === 3) {
-          assert.equal(scope1.isDone(), true);
-          assert.equal(scope2.isDone(), true);
-          assert.equal(scope3.isDone(), true);
-          assert.deepEqual(incomingPayloads, [
-            {
-              actualChannel: 'coolChannel',
-              message: {
-                text: 'Message',
+          try {
+            assert.equal(scope1.isDone(), true);
+            assert.equal(scope2.isDone(), true);
+            assert.equal(scope3.isDone(), true);
+            assert.deepEqual(incomingPayloads, [
+              {
+                actualChannel: "coolChannel",
+                message: {
+                  text: "Message"
+                },
+                subscribedChannel: "coolChan-bnel",
+                channel: "coolChannel",
+                subscription: "coolChan-bnel",
+                timetoken: "14607577960925503",
+                publisher: "client1"
               },
-              subscribedChannel: 'coolChan-bnel',
-              channel: 'coolChannel',
-              subscription: 'coolChan-bnel',
-              timetoken: '14607577960925503',
-              publisher: 'client1',
-            },
-            {
-              actualChannel: 'coolChannel',
-              message: {
-                text: 'Message3',
+              {
+                actualChannel: "coolChannel",
+                message: {
+                  text: "Message3"
+                },
+                subscribedChannel: "coolChan-bnel",
+                channel: "coolChannel",
+                subscription: "coolChan-bnel",
+                timetoken: "14607577960925503",
+                publisher: "client2"
               },
-              subscribedChannel: 'coolChan-bnel',
-              channel: 'coolChannel',
-              subscription: 'coolChan-bnel',
-              timetoken: '14607577960925503',
-              publisher: 'client2',
-            },
-            {
-              actualChannel: 'coolChannel',
-              message: {
-                text: 'Message10',
-              },
-              userMetadata: {
-                cool: 'meta',
-              },
-              subscribedChannel: 'coolChan-bnel',
-              channel: 'coolChannel',
-              subscription: 'coolChan-bnel',
-              timetoken: '14607577960925503',
-              publisher: 'client3',
-            },
-          ]);
+              {
+                actualChannel: "coolChannel",
+                message: {
+                  text: "Message10"
+                },
+                userMetadata: {
+                  cool: "meta"
+                },
+                subscribedChannel: "coolChan-bnel",
+                channel: "coolChannel",
+                subscription: "coolChan-bnel",
+                timetoken: "14607577960925503",
+                publisher: "client3"
+              }
+            ]);
 
-          done();
+            done();
+          } catch (error) {
+            done(error);
+          }
         }
       },
     });
@@ -199,22 +203,26 @@ describe('#components/subscription_manager', () => {
 
     pubnub.addListener({
       presence(presencePayload) {
-        assert.equal(scope.isDone(), true);
-        assert.deepEqual(
-          {
-            channel: 'coolChannel',
-            subscription: 'coolChannel-pnpres',
-            actualChannel: 'coolChannel',
-            occupancy: 1,
-            subscribedChannel: 'coolChannel-pnpres',
-            timestamp: 1461451222,
-            timetoken: '14614512228418349',
-            uuid: '4a6d5df7-e301-4e73-a7b7-6af9ab484eb0',
-            action: 'join',
-          },
-          presencePayload,
-        );
-        done();
+        try {
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(
+            {
+              channel: "coolChannel",
+              subscription: "coolChannel-pnpres",
+              actualChannel: "coolChannel",
+              occupancy: 1,
+              subscribedChannel: "coolChannel-pnpres",
+              timestamp: 1461451222,
+              timetoken: "14614512228418349",
+              uuid: "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0",
+              action: "join"
+            },
+            presencePayload
+          );
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     });
 
@@ -272,10 +280,14 @@ describe('#components/subscription_manager', () => {
       },
       status(status) {
         if (status.category === PubNub.CATEGORIES.PNUnknownCategory && 'statusCode' in status) {
-          assert.equal(status.errorData instanceof Error, true);
-          if (!callDone) {
-            callDone = true;
-            done();
+          try {
+            assert.equal(status.errorData instanceof Error, true);
+            if (!callDone) {
+              callDone = true;
+              done();
+            }
+          } catch (error) {
+            done(error);
           }
         } else if (status.category === PubNub.CATEGORIES.PNConnectedCategory) {
           pubnub.publish({ message: { such: 'object' }, channel: 'ch1' }, () => {});
@@ -319,21 +331,24 @@ describe('#components/subscription_manager', () => {
     pubnub.addListener({
       presence(presencePayload) {
         if (presencePayload.action !== 'state-change') return;
-
-        assert.equal(scope1.isDone(), true);
-        assert.deepEqual(presencePayload, {
-          channel: 'ch10',
-          subscription: 'ch10-pnpres',
-          actualChannel: 'ch10',
-          occupancy: 3,
-          subscribedChannel: 'ch10-pnpres',
-          timestamp: 1463753674,
-          timetoken: '14637536741726901',
-          uuid: '24c9bb19-1fcd-4c40-a6f1-522a8a1329ef',
-          action: 'state-change',
-          state: { state: 'cool' },
-        });
-        done();
+        try {
+          assert.equal(scope1.isDone(), true);
+          assert.deepEqual(presencePayload, {
+            channel: "ch10",
+            subscription: "ch10-pnpres",
+            actualChannel: "ch10",
+            occupancy: 3,
+            subscribedChannel: "ch10-pnpres",
+            timestamp: 1463753674,
+            timetoken: "14637536741726901",
+            uuid: "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef",
+            action: "state-change",
+            state: { state: "cool" }
+          });
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     });
 
@@ -356,15 +371,19 @@ describe('#components/subscription_manager', () => {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
 
         let statusWithoutError = _.omit(statusPayload, 'errorData', 'statusCode');
-        assert.deepEqual(
-          {
-            category: PubNub.CATEGORIES.PNUnknownCategory,
-            error: true,
-            operation: PubNub.OPERATIONS.PNHeartbeatOperation,
-          },
-          statusWithoutError,
-        );
-        done();
+        try {
+          assert.deepEqual(
+            {
+              category: PubNub.CATEGORIES.PNUnknownCategory,
+              error: true,
+              operation: PubNub.OPERATIONS.PNHeartbeatOperation
+            },
+            statusWithoutError
+          );
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     });
 
@@ -392,17 +411,21 @@ describe('#components/subscription_manager', () => {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
 
         let statusWithoutError = _.omit(statusPayload, 'errorData');
-        assert.equal(scope.isDone(), true);
-        assert.deepEqual(
-          {
-            category: PubNub.CATEGORIES.PNBadRequestCategory,
-            error: true,
-            operation: PubNub.OPERATIONS.PNHeartbeatOperation,
-            statusCode: 400,
-          },
-          statusWithoutError,
-        );
-        done();
+        try {
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(
+            {
+              category: PubNub.CATEGORIES.PNBadRequestCategory,
+              error: true,
+              operation: PubNub.OPERATIONS.PNHeartbeatOperation,
+              statusCode: 400
+            },
+            statusWithoutError
+          );
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     });
 
@@ -429,17 +452,21 @@ describe('#components/subscription_manager', () => {
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
 
-        assert.equal(scope.isDone(), true);
-        assert.deepEqual(
-          {
-            error: false,
-            operation: PubNub.OPERATIONS.PNHeartbeatOperation,
-            category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
-            statusCode: 200,
-          },
-          statusPayload,
-        );
-        done();
+        try {
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(
+            {
+              error: false,
+              operation: PubNub.OPERATIONS.PNHeartbeatOperation,
+              category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
+              statusCode: 200
+            },
+            statusPayload
+          );
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     });
 
@@ -466,17 +493,21 @@ describe('#components/subscription_manager', () => {
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
 
-        assert.equal(scope.isDone(), true);
-        assert.deepEqual(
-          {
-            error: false,
-            operation: PubNub.OPERATIONS.PNHeartbeatOperation,
-            category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
-            statusCode: 200,
-          },
-          statusPayload,
-        );
-        done();
+        try {
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(
+            {
+              error: false,
+              operation: PubNub.OPERATIONS.PNHeartbeatOperation,
+              category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
+              statusCode: 200
+            },
+            statusPayload
+          );
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     });
 
@@ -503,17 +534,21 @@ describe('#components/subscription_manager', () => {
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
 
-        assert.equal(scope.isDone(), true);
-        assert.deepEqual(
-          {
-            error: false,
-            operation: PubNub.OPERATIONS.PNHeartbeatOperation,
-            category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
-            statusCode: 200,
-          },
-          statusPayload,
-        );
-        done();
+        try {
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(
+            {
+              error: false,
+              operation: PubNub.OPERATIONS.PNHeartbeatOperation,
+              category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
+              statusCode: 200
+            },
+            statusPayload
+          );
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     });
 
@@ -552,10 +587,14 @@ describe('#components/subscription_manager', () => {
       status(statusPayload) {
         if (statusPayload.category !== PubNub.CATEGORIES.PNRequestMessageCountExceededCategory) return;
 
-        assert.equal(scope.isDone(), true);
-        assert.equal(statusPayload.category, PubNub.CATEGORIES.PNRequestMessageCountExceededCategory);
-        assert.equal(statusPayload.operation, PubNub.OPERATIONS.PNSubscribeOperation);
-        done();
+        try {
+          assert.equal(scope.isDone(), true);
+          assert.equal(statusPayload.category, PubNub.CATEGORIES.PNRequestMessageCountExceededCategory);
+          assert.equal(statusPayload.operation, PubNub.OPERATIONS.PNSubscribeOperation);
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     });
 
@@ -611,7 +650,7 @@ describe('#components/subscription_manager', () => {
     setTimeout(() => {
       if (messageCount === 1) {
         done();
-      }
+      } else done(new Error(`Received unexpected number of messages: ${messageCount} (expected: 1)`));
     }, 250);
   });
 
@@ -659,7 +698,7 @@ describe('#components/subscription_manager', () => {
     setTimeout(() => {
       if (messageCount === 3) {
         done();
-      }
+      } else done(new Error(`Received unexpected number of messages: ${messageCount} (expected: 3)`));
     }, 250);
   });
 
@@ -711,7 +750,7 @@ describe('#components/subscription_manager', () => {
     setTimeout(() => {
       if (messageCount === 4) {
         done();
-      }
+      } else done(new Error(`Received unexpected number of messages: ${messageCount} (expected: 4)`));
     }, 250);
   });
 
@@ -736,20 +775,24 @@ describe('#components/subscription_manager', () => {
       message(messagePayload) {
         incomingPayloads.push(messagePayload);
         if (incomingPayloads.length === 1) {
-          assert.equal(scope.isDone(), true);
-          assert.deepEqual(incomingPayloads, [
-            {
-              actualChannel: 'coolChannel',
-              message: 'hello',
-              subscribedChannel: 'coolChan-bnel',
-              channel: 'coolChannel',
-              subscription: 'coolChan-bnel',
-              timetoken: '14607577960925503',
-              publisher: 'client1',
-              error: 'Error while decrypting message content: Decryption error: invalid header version',
-            },
-          ]);
-          done();
+          try {
+            assert.equal(scope.isDone(), true);
+            assert.deepEqual(incomingPayloads, [
+              {
+                actualChannel: "coolChannel",
+                message: "hello",
+                subscribedChannel: "coolChan-bnel",
+                channel: "coolChannel",
+                subscription: "coolChan-bnel",
+                timetoken: "14607577960925503",
+                publisher: "client1",
+                error: "Error while decrypting message content: Decryption error: invalid header version"
+              }
+            ]);
+            done();
+          } catch (error) {
+            done(error);
+          }
         }
       },
     });
@@ -779,20 +822,24 @@ describe('#components/subscription_manager', () => {
       message(messagePayload) {
         incomingPayloads.push(messagePayload);
         if (incomingPayloads.length === 1) {
-          assert.equal(scope.isDone(), true);
-          assert.deepEqual(incomingPayloads, [
-            {
-              actualChannel: 'coolChannel',
-              message: 'hello',
-              subscribedChannel: 'coolChan-bnel',
-              channel: 'coolChannel',
-              subscription: 'coolChan-bnel',
-              timetoken: '14607577960925503',
-              publisher: 'client1',
-              error: 'Error while decrypting message content: Decryption error: invalid header version',
-            },
-          ]);
-          done();
+          try {
+            assert.equal(scope.isDone(), true);
+            assert.deepEqual(incomingPayloads, [
+              {
+                actualChannel: "coolChannel",
+                message: "hello",
+                subscribedChannel: "coolChan-bnel",
+                channel: "coolChannel",
+                subscription: "coolChan-bnel",
+                timetoken: "14607577960925503",
+                publisher: "client1",
+                error: "Error while decrypting message content: Decryption error: invalid header version"
+              }
+            ]);
+            done();
+          } catch (error) {
+            done(error);
+          }
         }
       },
     });
@@ -821,19 +868,23 @@ describe('#components/subscription_manager', () => {
       message(messagePayload) {
         incomingPayloads.push(messagePayload);
         if (incomingPayloads.length === 1) {
-          assert.equal(scope.isDone(), true);
-          assert.deepEqual(incomingPayloads, [
-            {
-              actualChannel: 'coolChannel',
-              message: 'hello',
-              subscribedChannel: 'coolChan-bnel',
-              channel: 'coolChannel',
-              subscription: 'coolChan-bnel',
-              timetoken: '14607577960925503',
-              publisher: 'client1',
-            },
-          ]);
-          done();
+          try {
+            assert.equal(scope.isDone(), true);
+            assert.deepEqual(incomingPayloads, [
+              {
+                actualChannel: "coolChannel",
+                message: "hello",
+                subscribedChannel: "coolChan-bnel",
+                channel: "coolChannel",
+                subscription: "coolChan-bnel",
+                timetoken: "14607577960925503",
+                publisher: "client1"
+              }
+            ]);
+            done();
+          } catch (error) {
+            done(error);
+          }
         }
       },
     });

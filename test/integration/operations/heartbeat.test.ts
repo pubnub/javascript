@@ -79,9 +79,13 @@ describe('heartbeat', () => {
       pubnub.addListener({
         status(status) {
           if (status.operation === 'PNHeartbeatOperation' && !status.error) {
-            assert.equal(status.error, false);
-            assert.equal(scope.isDone(), true);
-            done();
+            try {
+              assert.equal(status.error, false);
+              assert.equal(scope.isDone(), true);
+              done();
+            } catch (error) {
+              done(error);
+            }
           }
         },
       });
@@ -106,9 +110,13 @@ describe('heartbeat', () => {
       pubnub.addListener({
         status(status) {
           if (status.operation === 'PNHeartbeatOperation' && !status.error) {
-            assert.equal(status.error, false);
-            assert.equal(scope.isDone(), true);
-            done();
+            try {
+              assert.equal(status.error, false);
+              assert.equal(scope.isDone(), true);
+              done();
+            } catch (error) {
+              done(error);
+            }
           }
         },
       });
@@ -134,9 +142,13 @@ describe('heartbeat', () => {
       pubnub.addListener({
         status(status) {
           if (status.operation === 'PNHeartbeatOperation' && !status.error) {
-            assert.equal(status.error, false);
-            assert.equal(scope.isDone(), true);
-            done();
+            try {
+              assert.equal(status.error, false);
+              assert.equal(scope.isDone(), true);
+              done();
+            } catch (error) {
+              done(error);
+            }
           }
         },
       });
@@ -162,9 +174,13 @@ describe('heartbeat', () => {
       pubnub.addListener({
         status(status) {
           if (status.operation === 'PNHeartbeatOperation' && !status.error) {
-            assert.equal(status.error, false);
-            assert.equal(scope.isDone(), true);
-            done();
+            try {
+              assert.equal(status.error, false);
+              assert.equal(scope.isDone(), true);
+              done();
+            } catch (error) {
+              done(error);
+            }
           }
         },
       });

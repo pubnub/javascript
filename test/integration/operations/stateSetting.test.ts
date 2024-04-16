@@ -32,9 +32,13 @@ describe('setting state operation', () => {
   describe('#setState', () => {
     it('fails if no channels are provided', (done) => {
       pubnub.setState({ state: { hello: 'there' } }, (status) => {
-        assert.equal(status.error, true);
-        assert.equal(status.message, 'Please provide a list of channels and/or channel-groups');
-        done();
+        try {
+          assert.equal(status.error, true);
+          assert.equal(status.message, "Please provide a list of channels and/or channel-groups");
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -54,11 +58,15 @@ describe('setting state operation', () => {
         );
 
       pubnub.setState({ channels: ['ch1'], state: { hello: 'there' } }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.state, { age: 20, status: 'online' });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -78,11 +86,15 @@ describe('setting state operation', () => {
         );
 
       pubnub.setState({ channels: ['ch1', 'ch2'], state: { hello: 'there' } }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.state, { age: 20, status: 'online' });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -103,11 +115,15 @@ describe('setting state operation', () => {
         );
 
       pubnub.setState({ channelGroups: ['cg1'], state: { hello: 'there' } }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.state, { age: 20, status: 'online' });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -128,11 +144,15 @@ describe('setting state operation', () => {
         );
 
       pubnub.setState({ channelGroups: ['cg1', 'cg2'], state: { hello: 'there' } }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.state, { age: 20, status: 'online' });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 

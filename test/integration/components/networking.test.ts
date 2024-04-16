@@ -61,9 +61,13 @@ describe('#components/networking', () => {
         .reply(200, ['14570763868573725'], { 'content-type': 'text/javascript' });
 
       pubnubPartner.time((status) => {
-        assert.equal(status.error, false);
-        assert.equal(status.statusCode, 200);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(status.statusCode, 200);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -77,9 +81,13 @@ describe('#components/networking', () => {
         .reply(200, ['14570763868573725'], { 'content-type': 'text/javascript' });
 
       pubnubSDKName.time((status) => {
-        assert.equal(status.error, false);
-        assert.equal(status.statusCode, 200);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(status.statusCode, 200);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -93,9 +101,13 @@ describe('#components/networking', () => {
         .reply(200, ['14570763868573725'], { 'content-type': 'text/javascript' });
 
       pubnub.time((status) => {
-        assert.equal(status.error, false);
-        assert.equal(status.statusCode, 200);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(status.statusCode, 200);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -107,10 +119,14 @@ describe('#components/networking', () => {
         .reply(403, ['14570763868573725'], { 'content-type': 'text/javascript' });
 
       pubnub.time((status) => {
-        assert.equal(status.error, true);
-        assert.equal(status.statusCode, 403);
-        assert.equal(status.category, 'PNAccessDeniedCategory');
-        done();
+        try {
+          assert.equal(status.error, true);
+          assert.equal(status.statusCode, 403);
+          assert.equal(status.category, "PNAccessDeniedCategory");
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -122,10 +138,14 @@ describe('#components/networking', () => {
         .reply(400, ['14570763868573725'], { 'content-type': 'text/javascript' });
 
       pubnub.time((status) => {
-        assert.equal(status.error, true);
-        assert.equal(status.statusCode, 400);
-        assert.equal(status.category, 'PNBadRequestCategory');
-        done();
+        try {
+          assert.equal(status.error, true);
+          assert.equal(status.statusCode, 400);
+          assert.equal(status.category, "PNBadRequestCategory");
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });

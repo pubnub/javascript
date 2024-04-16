@@ -31,9 +31,13 @@ describe('#distribution test (rkt-native)', function () {
   it('should have to subscribe a channel', (done) => {
     pubnub.addListener({
       status: (st) => {
-        expect(st.operation).to.be.equal('PNSubscribeOperation');
-        pubnub.unsubscribeAll()
-        done();
+        try {
+          expect(st.operation).to.be.equal('PNSubscribeOperation');
+          pubnub.unsubscribeAll()
+          done();
+        } catch (error) {
+          done(error);
+        }
       }
     });
     pubnub.subscribe({channels: [myChannel1]});
@@ -47,10 +51,14 @@ describe('#distribution test (rkt-native)', function () {
         }
       },
       message: (m) => {
-        expect(m.channel).to.be.equal(myChannel2);
-        expect(m.message.text).to.be.equal('hello React-Native SDK');
-        pubnub.unsubscribeAll()
-        done();
+        try {
+          expect(m.channel).to.be.equal(myChannel2);
+          expect(m.message.text).to.be.equal('hello React-Native SDK');
+          pubnub.unsubscribeAll()
+          done();
+        } catch (error) {
+          done(error);
+        }
       }
     });
     pubnub.subscribe({channels: [myChannel2]});
@@ -58,17 +66,25 @@ describe('#distribution test (rkt-native)', function () {
 
   it('should have to set state', (done) => {
     pubnub.setState({ channels: [myChannel1], state: { hello: 'there' } }, (status, response) => {
-      expect(status.error).to.be.equal(false);
-      expect(response.state.hello).to.be.equal('there');
-      done();
+      try {
+        expect(status.error).to.be.equal(false);
+        expect(response.state.hello).to.be.equal("there");
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
   it('should have to get the time', (done) => {
     pubnub.time((status) => {
-      expect(status.operation).to.be.equal('PNTimeOperation');
-      expect(status.statusCode).to.be.equal(200);
-      done();
+      try {
+        expect(status.operation).to.be.equal("PNTimeOperation");
+        expect(status.statusCode).to.be.equal(200);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -80,8 +96,12 @@ describe('#distribution test (rkt-native)', function () {
         count: 1,
         reverse: false
       }, function(status, response) {
-        expect(response.messages).to.have.length(1);
-        done();
+        try {
+          expect(response.messages).to.have.length(1);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     }, 3000);
   });

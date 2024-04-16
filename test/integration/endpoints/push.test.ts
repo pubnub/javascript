@@ -43,9 +43,13 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]', { 'content-type': 'text/javascript' });
 
       pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' }, (status) => {
-        assert.equal(status.error, false);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -66,9 +70,13 @@ describe('push endpoints', () => {
       pubnub.push.addChannels(
         { channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns2', topic: 'com.test.apns' },
         (status) => {
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     });
@@ -86,9 +94,13 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]', { 'content-type': 'text/javascript' });
 
       pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
-        assert.equal(status.error, false);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -106,11 +118,15 @@ describe('push endpoints', () => {
         .reply(200, '["ch1", "ch2", "ch3"]', { 'content-type': 'text/javascript' });
 
       pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'apns' }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, ["ch1", "ch2", "ch3"]);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -130,11 +146,15 @@ describe('push endpoints', () => {
       pubnub.push.listChannels(
         { device: 'coolDevice', pushGateway: 'apns2', environment: 'production', topic: 'com.test.apns' },
         (status, response) => {
-          assert.equal(status.error, false);
-          assert(response !== null);
-          assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
-          assert.equal(scope.isDone(), true);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert(response !== null);
+            assert.deepEqual(response.channels, ["ch1", "ch2", "ch3"]);
+            assert.equal(scope.isDone(), true);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     });
@@ -151,11 +171,15 @@ describe('push endpoints', () => {
         .reply(200, '["ch1", "ch2", "ch3"]', { 'content-type': 'text/javascript' });
 
       pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'gcm' }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, ["ch1", "ch2", "ch3"]);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -174,9 +198,13 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]', { 'content-type': 'text/javascript' });
 
       pubnub.push.removeChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns' }, (status) => {
-        assert.equal(status.error, false);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -197,9 +225,13 @@ describe('push endpoints', () => {
       pubnub.push.removeChannels(
         { channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'apns2', topic: 'com.test.apns' },
         (status) => {
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     });
@@ -223,9 +255,13 @@ describe('push endpoints', () => {
           pushGateway: 'gcm',
         },
         (status) => {
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     });
@@ -244,9 +280,13 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]', { 'content-type': 'text/javascript' });
 
       pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'apns' }, (status) => {
-        assert.equal(status.error, false);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -266,9 +306,13 @@ describe('push endpoints', () => {
       pubnub.push.deleteDevice(
         { device: 'niceDevice', pushGateway: 'apns2', environment: 'production', topic: 'com.test.apns' },
         (status) => {
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     });
@@ -285,9 +329,13 @@ describe('push endpoints', () => {
         .reply(200, '[1, "Modified Channels"]', { 'content-type': 'text/javascript' });
 
       pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
-        assert.equal(status.error, false);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });

@@ -28,8 +28,12 @@ describe('#distribution test (titanium)', function () {
   it('should have to subscribe a channel', function (done) {
     listener = {
       status: function (st) {
-        expect(st.operation).to.be.equal('PNSubscribeOperation');
-        done();
+        try {
+          expect(st.operation).to.be.equal("PNSubscribeOperation");
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     };
 
@@ -44,9 +48,13 @@ describe('#distribution test (titanium)', function () {
 
     listener = pubnub.addListener({
       message: function (m) {
-        expect(m.channel).to.be.equal(myChannel2);
-        expect(m.message.text).to.be.equal('hello Titanium SDK');
-        done();
+        try {
+          expect(m.channel).to.be.equal(myChannel2);
+          expect(m.message.text).to.be.equal("hello Titanium SDK");
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     });
 
@@ -58,17 +66,25 @@ describe('#distribution test (titanium)', function () {
 
   it('should have to set state', function (done) {
     pubnub.setState({ channels: [myChannel1], state: { hello: 'there' } }, function (status, response) {
-      expect(status.error).to.be.equal(false);
-      expect(response.state.hello).to.be.equal('there');
-      done();
+      try {
+        expect(status.error).to.be.equal(false);
+        expect(response.state.hello).to.be.equal("there");
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
   it('should have to get the time', function (done) {
     pubnub.time(function (status) {
-      expect(status.operation).to.be.equal('PNTimeOperation');
-      expect(status.statusCode).to.be.equal(200);
-      done();
+      try {
+        expect(status.operation).to.be.equal("PNTimeOperation");
+        expect(status.statusCode).to.be.equal(200);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -82,8 +98,12 @@ describe('#distribution test (titanium)', function () {
           reverse: false,
         },
         function (status, response) {
-          expect(response.messages).to.have.length(1);
-          done();
+          try {
+            expect(response.messages).to.have.length(1);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     }, 3000);
@@ -121,8 +141,12 @@ describe('#distribution test (titanium)', function () {
   it('should have to change the UUID', function (done) {
     pubnub.setUUID('CustomUUID');
 
-    expect(pubnub.getUUID()).to.be.equal('CustomUUID');
-    done();
+    try {
+      expect(pubnub.getUUID()).to.be.equal("CustomUUID");
+      done();
+    } catch (error) {
+      done(error);
+    }
   });
 
   it('should have to unsubscribe', function (done) {
@@ -134,12 +158,16 @@ describe('#distribution test (titanium)', function () {
 
     pubnub.addListener({
       status: function (st) {
-        expect(st.operation).to.be.equal('PNUnsubscribeOperation');
+        try {
+          expect(st.operation).to.be.equal("PNUnsubscribeOperation");
 
-        if (!finished) {
-          // prevent calling done twice
-          finished = true;
-          done();
+          if (!finished) {
+            // prevent calling done twice
+            finished = true;
+            done();
+          }
+        } catch (error) {
+          done(error);
         }
       },
     });

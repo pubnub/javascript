@@ -7,6 +7,7 @@ import nock from 'nock';
 import PubNub from '../../../src/node/index';
 import utils from '../../utils';
 
+
 describe('channel group endpoints', () => {
   let pubnub: PubNub;
 
@@ -44,9 +45,13 @@ describe('channel group endpoints', () => {
         });
 
       pubnub.channelGroups.addChannels({ channels: ['a', 'b'], channelGroup: 'cg1' }, (status) => {
-        assert.equal(status.error, false);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -65,9 +70,13 @@ describe('channel group endpoints', () => {
         });
 
       pubnub.channelGroups.deleteGroup({ channelGroup: 'cg1' }, (status) => {
-        assert.equal(status.error, false);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -86,11 +95,15 @@ describe('channel group endpoints', () => {
         });
 
       pubnub.channelGroups.listGroups((status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.groups, ['a', 'b']);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.groups, ["a", "b"]);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -113,11 +126,15 @@ describe('channel group endpoints', () => {
         );
 
       pubnub.channelGroups.listChannels({ channelGroup: 'cg1' }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, ['a', 'b']);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, ["a", "b"]);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -137,9 +154,13 @@ describe('channel group endpoints', () => {
         });
 
       pubnub.channelGroups.removeChannels({ channels: ['a', 'b'], channelGroup: 'cg1' }, (status) => {
-        assert.equal(status.error, false);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });

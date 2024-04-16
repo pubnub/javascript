@@ -60,12 +60,15 @@ describe('unsubscribe', () => {
       pubnub.addListener({
         status(status) {
           if (status.category !== PubNub.CATEGORIES.PNConnectedCategory) {
-            // console.log('status', JSON.stringify(status));
-            assert.equal(status.error, false);
-            assert.equal(scope.isDone(), true);
-            assert.deepEqual(status.affectedChannels, ['ch1']);
-            assert.deepEqual(status.affectedChannelGroups, []);
-            done();
+            try {
+              assert.equal(status.error, false);
+              assert.equal(scope.isDone(), true);
+              assert.deepEqual(status.affectedChannels, ["ch1"]);
+              assert.deepEqual(status.affectedChannelGroups, []);
+              done();
+            } catch (error) {
+              done(error);
+            }
           } else pubnub.unsubscribe({ channels: ['ch1'] });
         },
       });
@@ -97,11 +100,15 @@ describe('unsubscribe', () => {
       pubnub.addListener({
         status(status) {
           if (status.category !== PubNub.CATEGORIES.PNConnectedCategory) {
-            assert.equal(status.error, false);
-            assert.equal(scope.isDone(), true);
-            assert.deepEqual(status.affectedChannels, ['ch1', 'ch2']);
-            assert.deepEqual(status.affectedChannelGroups, []);
-            done();
+            try {
+              assert.equal(status.error, false);
+              assert.equal(scope.isDone(), true);
+              assert.deepEqual(status.affectedChannels, ["ch1", "ch2"]);
+              assert.deepEqual(status.affectedChannelGroups, []);
+              done();
+            } catch (error) {
+              done(error);
+            }
           } else pubnub.unsubscribe({ channels: ['ch1', 'ch2'] });
         },
       });
@@ -135,11 +142,15 @@ describe('unsubscribe', () => {
       pubnub.addListener({
         status(status) {
           if (status.category !== PubNub.CATEGORIES.PNConnectedCategory) {
-            assert.equal(status.error, false);
-            assert.equal(scope.isDone(), true);
-            assert.deepEqual(status.affectedChannels, []);
-            assert.deepEqual(status.affectedChannelGroups, ['cg1']);
-            done();
+            try {
+              assert.equal(status.error, false);
+              assert.equal(scope.isDone(), true);
+              assert.deepEqual(status.affectedChannels, []);
+              assert.deepEqual(status.affectedChannelGroups, ["cg1"]);
+              done();
+            } catch (error) {
+              done(error);
+            }
           } else pubnub.unsubscribe({ channelGroups: ['cg1'] });
         },
       });
@@ -173,11 +184,15 @@ describe('unsubscribe', () => {
       pubnub.addListener({
         status(status) {
           if (status.category !== PubNub.CATEGORIES.PNConnectedCategory) {
-            assert.equal(status.error, false);
-            assert.equal(scope.isDone(), true);
-            assert.deepEqual(status.affectedChannels, []);
-            assert.deepEqual(status.affectedChannelGroups, ['cg1', 'cg2']);
-            done();
+            try {
+              assert.equal(status.error, false);
+              assert.equal(scope.isDone(), true);
+              assert.deepEqual(status.affectedChannels, []);
+              assert.deepEqual(status.affectedChannelGroups, ["cg1", "cg2"]);
+              done();
+            } catch (error) {
+              done(error);
+            }
           } else pubnub.unsubscribe({ channelGroups: ['cg1', 'cg2'] });
         },
       });
@@ -202,11 +217,15 @@ describe('unsubscribe', () => {
             return;
           }
 
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          assert.deepEqual(status.affectedChannels, ['ch1']);
-          assert.deepEqual(status.affectedChannelGroups, []);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            assert.deepEqual(status.affectedChannels, ["ch1"]);
+            assert.deepEqual(status.affectedChannelGroups, []);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       });
 
@@ -230,11 +249,15 @@ describe('unsubscribe', () => {
             pubnub.unsubscribe({ channelGroups: ['cg1', 'cg3'] });
             return;
           }
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          assert.deepEqual(status.affectedChannels, []);
-          assert.deepEqual(status.affectedChannelGroups, ['cg1']);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            assert.deepEqual(status.affectedChannels, []);
+            assert.deepEqual(status.affectedChannelGroups, ["cg1"]);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       });
 
@@ -257,11 +280,15 @@ describe('unsubscribe', () => {
       pubnub.addListener({
         status(status) {
           if (status.operation !== PubNub.OPERATIONS.PNUnsubscribeOperation) return;
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          assert.deepEqual(status.affectedChannels, ['ch1', 'ch2']);
-          assert.deepEqual(status.affectedChannelGroups, ['cg1', 'cg2']);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            assert.deepEqual(status.affectedChannels, ["ch1", "ch2"]);
+            assert.deepEqual(status.affectedChannelGroups, ["cg1", "cg2"]);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       });
 

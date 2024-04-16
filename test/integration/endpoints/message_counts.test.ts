@@ -43,11 +43,15 @@ describe('message counts', () => {
       });
 
     pubnub.messageCounts({ channels: ['ch1'], timetoken: '15495750401727535' }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.channels, { ch1: 0 });
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.channels, { ch1: 0 });
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -65,11 +69,15 @@ describe('message counts', () => {
       });
 
     pubnub.messageCounts({ channels: ['ch1', 'ch2', 'ch3'], timetoken: '15495750401727535' }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.channels, { ch1: 0, ch2: 0, ch3: 0 });
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.channels, { ch1: 0, ch2: 0, ch3: 0 });
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -87,11 +95,15 @@ describe('message counts', () => {
       });
 
     pubnub.messageCounts({ channels: ['ch1'], channelTimetokens: ['15495750401727535'] }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.channels, { ch1: 2 });
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.channels, { ch1: 2 });
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -114,11 +126,15 @@ describe('message counts', () => {
         channelTimetokens: ['15495750401727535'],
       },
       (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, { ch1: 0, ch2: 3, ch3: 0 });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, { ch1: 0, ch2: 3, ch3: 0 });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     );
   });
@@ -142,11 +158,15 @@ describe('message counts', () => {
         channelTimetokens: ['15495750401727535', '15495750401727536', '15495750401727537'],
       },
       (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, { ch1: 0, ch2: 0, ch3: 4 });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, { ch1: 0, ch2: 0, ch3: 4 });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     );
   });

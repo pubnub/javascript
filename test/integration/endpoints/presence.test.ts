@@ -42,11 +42,15 @@ describe('presence endpoints', () => {
         });
 
       pubnub.whereNow({}, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, ['a', 'b']);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, ["a", "b"]);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -71,11 +75,15 @@ describe('presence endpoints', () => {
       });
 
       pubnubClient.whereNow({}, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, ['a', 'b']);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, ["a", "b"]);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -92,11 +100,15 @@ describe('presence endpoints', () => {
         });
 
       pubnub.whereNow({ uuid: 'otherUUID' }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, ['a', 'b']);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, ["a", "b"]);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -113,11 +125,15 @@ describe('presence endpoints', () => {
         });
 
       pubnub.whereNow({ uuid: '' }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, []);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, []);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -139,11 +155,15 @@ describe('presence endpoints', () => {
         );
 
       pubnub.setState({ channels: ['testChannel'], state: { new: 'state' } }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.state, { age: 20, status: 'online' });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -171,11 +191,15 @@ describe('presence endpoints', () => {
       });
 
       pubnubClient.setState({ channels: ['testChannel#1'], state: { new: 'state' } }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.state, { age: 20, status: 'online' });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -196,14 +220,18 @@ describe('presence endpoints', () => {
         );
 
       pubnub.setState({ channels: ['ch1', 'ch2'], state: { new: 'state' } }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.state, {
-          ch1: { age: 20, status: 'online' },
-          ch2: { age: 100, status: 'offline' },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.state, {
+            ch1: { age: 20, status: "online" },
+            ch2: { age: 100, status: "offline" }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -230,11 +258,15 @@ describe('presence endpoints', () => {
           state: { new: 'state' },
         },
         (status, response) => {
-          assert.equal(status.error, false);
-          assert(response !== null);
-          assert.deepEqual(response.state, { age: 20, status: 'online' });
-          assert.equal(scope.isDone(), true);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert(response !== null);
+            assert.deepEqual(response.state, { age: 20, status: "online" });
+            assert.equal(scope.isDone(), true);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     });
@@ -256,13 +288,17 @@ describe('presence endpoints', () => {
         );
 
       pubnub.getState({ channels: ['testChannel'] }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          testChannel: { age: 20, status: 'online' },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            testChannel: { age: 20, status: "online" }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -281,13 +317,17 @@ describe('presence endpoints', () => {
         );
 
       pubnub.getState({ uuid: 'otherUUID', channels: ['testChannel'] }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          testChannel: { age: 20, status: 'online' },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            testChannel: { age: 20, status: "online" }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -306,14 +346,18 @@ describe('presence endpoints', () => {
         );
 
       pubnub.getState({ channels: ['ch1', 'ch2'] }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          ch1: { age: 20, status: 'online' },
-          ch2: { age: 100, status: 'offline' },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            ch1: { age: 20, status: "online" },
+            ch2: { age: 100, status: "offline" }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -333,14 +377,18 @@ describe('presence endpoints', () => {
         );
 
       pubnub.getState({ channels: ['ch1', 'ch2'], channelGroups: ['cg1', 'cg2'] }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          ch1: { age: 20, status: 'online' },
-          ch2: { age: 100, status: 'offline' },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            ch1: { age: 20, status: "online" },
+            ch2: { age: 100, status: "offline" }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -361,22 +409,26 @@ describe('presence endpoints', () => {
         );
 
       pubnub.hereNow({ channels: ['game1'] }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          game1: {
-            name: 'game1',
-            occupancy: 1,
-            occupants: [
-              {
-                state: null,
-                uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e',
-              },
-            ],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            game1: {
+              name: "game1",
+              occupancy: 1,
+              occupants: [
+                {
+                  state: null,
+                  uuid: "a3ffd012-a3b9-478c-8705-64089f24d71e"
+                }
+              ]
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -393,17 +445,21 @@ describe('presence endpoints', () => {
         });
 
       pubnub.hereNow({ channels: ['game1'] }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          game1: {
-            name: 'game1',
-            occupancy: 1,
-            occupants: [],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            game1: {
+              name: "game1",
+              occupancy: 1,
+              occupants: []
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -422,22 +478,26 @@ describe('presence endpoints', () => {
         );
 
       pubnub.hereNow({ channels: ['ch1', 'ch2'] }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          game1: {
-            name: 'game1',
-            occupancy: 1,
-            occupants: [
-              {
-                state: null,
-                uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e',
-              },
-            ],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            game1: {
+              name: "game1",
+              occupancy: 1,
+              occupants: [
+                {
+                  state: null,
+                  uuid: "a3ffd012-a3b9-478c-8705-64089f24d71e"
+                }
+              ]
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -457,33 +517,37 @@ describe('presence endpoints', () => {
         );
 
       pubnub.hereNow({ channels: ['ch1', 'ch2'], includeState: true }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          ch1: {
-            name: 'ch1',
-            occupancy: 1,
-            occupants: [
-              {
-                uuid: 'user1',
-              },
-            ],
-          },
-          ch2: {
-            name: 'ch2',
-            occupancy: 2,
-            occupants: [
-              {
-                uuid: 'user1',
-              },
-              {
-                uuid: 'user3',
-              },
-            ],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            ch1: {
+              name: "ch1",
+              occupancy: 1,
+              occupants: [
+                {
+                  uuid: "user1"
+                }
+              ]
+            },
+            ch2: {
+              name: "ch2",
+              occupancy: 2,
+              occupants: [
+                {
+                  uuid: "user1"
+                },
+                {
+                  uuid: "user3"
+                }
+              ]
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -503,22 +567,26 @@ describe('presence endpoints', () => {
         );
 
       pubnub.hereNow({ channels: ['ch1', 'ch2'], includeUUIDs: false }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          ch1: {
-            name: 'ch1',
-            occupancy: 1,
-            occupants: [],
-          },
-          ch2: {
-            name: 'ch2',
-            occupancy: 2,
-            occupants: [],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            ch1: {
+              name: "ch1",
+              occupancy: 1,
+              occupants: []
+            },
+            ch2: {
+              name: "ch2",
+              occupancy: 2,
+              occupants: []
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -538,22 +606,26 @@ describe('presence endpoints', () => {
         );
 
       pubnub.hereNow({ channelGroups: ['cg1'] }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          ch1: {
-            name: 'ch1',
-            occupancy: 1,
-            occupants: [
-              {
-                state: null,
-                uuid: 'a581c974-e2f9-4088-9cc8-9632708e012d',
-              },
-            ],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            ch1: {
+              name: "ch1",
+              occupancy: 1,
+              occupants: [
+                {
+                  state: null,
+                  uuid: "a581c974-e2f9-4088-9cc8-9632708e012d"
+                }
+              ]
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -572,32 +644,36 @@ describe('presence endpoints', () => {
         );
 
       pubnub.hereNow({}, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          bot_object: {
-            name: 'bot_object',
-            occupancy: 1,
-            occupants: [
-              {
-                state: null,
-                uuid: 'fb49e109-756f-483e-92dc-d966d73a119d',
-              },
-            ],
-          },
-          ch10: {
-            name: 'ch10',
-            occupancy: 1,
-            occupants: [
-              {
-                state: null,
-                uuid: '2c3b136e-dc9e-4e97-939c-752dbb47acbd',
-              },
-            ],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            bot_object: {
+              name: "bot_object",
+              occupancy: 1,
+              occupants: [
+                {
+                  state: null,
+                  uuid: "fb49e109-756f-483e-92dc-d966d73a119d"
+                }
+              ]
+            },
+            ch10: {
+              name: "ch10",
+              occupancy: 1,
+              occupants: [
+                {
+                  state: null,
+                  uuid: "2c3b136e-dc9e-4e97-939c-752dbb47acbd"
+                }
+              ]
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -617,22 +693,26 @@ describe('presence endpoints', () => {
         );
 
       pubnub.hereNow({ includeUUIDs: false }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          bot_object: {
-            name: 'bot_object',
-            occupancy: 1,
-            occupants: [],
-          },
-          ch10: {
-            name: 'ch10',
-            occupancy: 1,
-            occupants: [],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            bot_object: {
+              name: "bot_object",
+              occupancy: 1,
+              occupants: []
+            },
+            ch10: {
+              name: "ch10",
+              occupancy: 1,
+              occupants: []
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -650,9 +730,13 @@ describe('presence endpoints', () => {
         });
 
       pubnub.hereNow({ includeUUIDs: false }, (status) => {
-        assert.equal(status.error, true);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, true);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -675,12 +759,16 @@ describe('presence endpoints', () => {
       let expected =
         'This feature is not turned on for this account. Contact support@pubnub.com to activate this feature.';
       pubnub.hereNow({ channels: [] }, (status) => {
-        assert.equal(status.error, true);
-        assert(status.errorData);
-        // @ts-expect-error `errorData` may contain a dictionary (Payload) with an arbitrary set of fields.
-        assert.equal(status.errorData.message, expected);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, true);
+          assert(status.errorData);
+          // @ts-expect-error `errorData` may contain a dictionary (Payload) with an arbitrary set of fields.
+          assert.equal(status.errorData.message, expected);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -700,22 +788,26 @@ describe('presence endpoints', () => {
         );
 
       pubnub.hereNow({ channels: ['game1'], queryParameters: { test: 'param' } }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.channels, {
-          game1: {
-            name: 'game1',
-            occupancy: 1,
-            occupants: [
-              {
-                state: null,
-                uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e',
-              },
-            ],
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            game1: {
+              name: "game1",
+              occupancy: 1,
+              occupants: [
+                {
+                  state: null,
+                  uuid: "a3ffd012-a3b9-478c-8705-64089f24d71e"
+                }
+              ]
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });

@@ -40,9 +40,13 @@ describe('publish endpoints', () => {
 
       // @ts-expect-error Intentionally don't include `channel`.
       pubnub.publish({ message: { such: 'object' } }).catch((err) => {
-        assert.equal(scope.isDone(), false);
-        assert.equal(err.status.message, "Missing 'channel'");
-        done();
+        try {
+          assert.equal(scope.isDone(), false);
+          assert.equal(err.status.message, "Missing 'channel'");
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -59,11 +63,15 @@ describe('publish endpoints', () => {
       .reply(200, '[1,"Sent","14647523059145592"]', { 'content-type': 'text/javascript' });
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1' }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.timetoken, '14647523059145592');
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -80,11 +88,15 @@ describe('publish endpoints', () => {
       .reply(200, '[1,"Sent","14647523059145592"]', { 'content-type': 'text/javascript' });
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1', replicate: false }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.timetoken, '14647523059145592');
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -102,11 +114,15 @@ describe('publish endpoints', () => {
     pubnub.setCipherKey('myCipherKey');
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1' }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.timetoken, '14647523059145592');
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -124,11 +140,15 @@ describe('publish endpoints', () => {
 
     pubnub.setCipherKey('myCipherKey');
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1', ttl: 10 }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.timetoken, '14647523059145592');
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -147,11 +167,15 @@ describe('publish endpoints', () => {
     pubnub.setCipherKey('myCipherKey');
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1', storeInHistory: false }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.timetoken, '14647523059145592');
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -170,11 +194,15 @@ describe('publish endpoints', () => {
     pubnub.setCipherKey('myCipherKey');
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1', storeInHistory: true }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.timetoken, '14647523059145592');
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -190,11 +218,15 @@ describe('publish endpoints', () => {
       .reply(200, '[1,"Sent","14647523059145592"]', { 'content-type': 'text/javascript' });
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1', sendByPost: true }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.timetoken, '14647523059145592');
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -212,11 +244,15 @@ describe('publish endpoints', () => {
     pubnub.setCipherKey('myCipherKey');
 
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1', sendByPost: true }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.timetoken, '14647523059145592');
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -235,11 +271,15 @@ describe('publish endpoints', () => {
         .reply(200, '[1,"Sent","14647523059145592"]', { 'content-type': 'text/javascript' });
 
       pubnub.fire({ message: { such: 'object' }, channel: 'ch1' }, (status, response) => {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.timetoken, '14647523059145592');
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.timetoken, "14647523059145592");
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });

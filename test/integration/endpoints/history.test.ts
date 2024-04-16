@@ -106,16 +106,20 @@ describe('history endpoints', () => {
       );
 
     pubnub.history({ channel: 'ch1', stringifiedTimeToken: true }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.startTimeToken, '14648503433058358');
-      assert.deepEqual(response.endTimeToken, '14649346364851578');
-      assert.deepEqual(response.messages, [
-        { timetoken: '14648503433058358', entry: { text: 'hey' } },
-        { timetoken: '14648503433058359', entry: { text2: 'hey2' } },
-      ]);
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.startTimeToken, "14648503433058358");
+        assert.deepEqual(response.endTimeToken, "14649346364851578");
+        assert.deepEqual(response.messages, [
+          { timetoken: "14648503433058358", entry: { text: "hey" } },
+          { timetoken: "14648503433058359", entry: { text2: "hey2" } }
+        ]);
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -139,16 +143,20 @@ describe('history endpoints', () => {
 
     pubnub.setCipherKey('cipherKey');
     pubnub.history({ channel: 'ch1', stringifiedTimeToken: true }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.startTimeToken, '14649369736959785');
-      assert.deepEqual(response.endTimeToken, '14649369766426772');
-      assert.deepEqual(response.messages, [
-        { timetoken: '14649369736959785', entry: { text: 'hey' } },
-        { timetoken: '14649369766426772', entry: { text2: 'hey2' } },
-      ]);
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.startTimeToken, "14649369736959785");
+        assert.deepEqual(response.endTimeToken, "14649369766426772");
+        assert.deepEqual(response.messages, [
+          { timetoken: "14649369736959785", entry: { text: "hey" } },
+          { timetoken: "14649369766426772", entry: { text2: "hey2" } }
+        ]);
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 
@@ -158,10 +166,14 @@ describe('history endpoints', () => {
 
     publishMessagesToChannel(pubnub, expectedMessagesCount, channel, (messages) => {
       pubnub.history({ channel, includeMeta: true }, (_, response) => {
-        assert(response !== null);
-        assert.deepEqual(response.messages[0].meta, { time: messages[0].message.time });
-        assert(!response.messages[1].meta);
-        done();
+        try {
+          assert(response !== null);
+          assert.deepEqual(response.messages[0].meta, { time: messages[0].message.time });
+          assert(!response.messages[1].meta);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   }).timeout(60000);
@@ -185,20 +197,24 @@ describe('history endpoints', () => {
       );
     pubnub.setCipherKey('cipherKey');
     pubnub.history({ channel: 'ch1', stringifiedTimeToken: true }, (status, response) => {
-      assert.equal(status.error, false);
-      assert(response !== null);
-      assert.deepEqual(response.startTimeToken, '14648503433058358');
-      assert.deepEqual(response.endTimeToken, '14649346364851578');
-      assert.deepEqual(response.messages, [
-        { timetoken: '14648503433058358', entry: { text: 'hey' } },
-        {
-          timetoken: '14648503433058359',
-          entry: 'hello',
-          error: 'Error while decrypting message content: Decryption error: invalid header version',
-        },
-      ]);
-      assert.equal(scope.isDone(), true);
-      done();
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.startTimeToken, "14648503433058358");
+        assert.deepEqual(response.endTimeToken, "14649346364851578");
+        assert.deepEqual(response.messages, [
+          { timetoken: "14648503433058358", entry: { text: "hey" } },
+          {
+            timetoken: "14648503433058359",
+            entry: "hello",
+            error: "Error while decrypting message content: Decryption error: invalid header version"
+          }
+        ]);
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
   });
 });

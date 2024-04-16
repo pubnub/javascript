@@ -63,9 +63,13 @@ describe('grant token endpoint', () => {
             ttl: 1440,
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Missing values for either Resources or Patterns');
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Missing values for either Resources or Patterns");
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 
@@ -96,9 +100,13 @@ describe('grant token endpoint', () => {
             },
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Missing values for either Resources or Patterns');
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Missing values for either Resources or Patterns");
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 
@@ -129,9 +137,13 @@ describe('grant token endpoint', () => {
             },
           })
           .catch((err) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, 'Missing values for either Resources or Patterns');
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(err.status.message, "Missing values for either Resources or Patterns");
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 

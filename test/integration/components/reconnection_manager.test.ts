@@ -57,24 +57,28 @@ describe('#components/reconnection_manger', () => {
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNSubscribeOperation) return;
         let statusWithoutError = _.omit(statusPayload, ['errorData', 'statusCode']);
-        assert.deepEqual(
-          {
-            category: PubNub.CATEGORIES.PNNetworkIssuesCategory,
-            error: true,
-            operation: PubNub.OPERATIONS.PNSubscribeOperation,
-          },
-          statusWithoutError,
-        );
+        try {
+          assert.deepEqual(
+            {
+              category: PubNub.CATEGORIES.PNNetworkIssuesCategory,
+              error: true,
+              operation: PubNub.OPERATIONS.PNSubscribeOperation
+            },
+            statusWithoutError
+          );
 
-        utils
-          .createNock()
-          .get('/v2/presence/sub-key/mySubKey/channel/ch1,ch2/leave')
-          .query(true)
-          .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}', {
-            'content-type': 'text/javascript',
-          });
+          utils
+            .createNock()
+            .get("/v2/presence/sub-key/mySubKey/channel/ch1,ch2/leave")
+            .query(true)
+            .reply(200, "{\"status\": 200, \"message\": \"OK\", \"service\": \"Presence\"}", {
+              "content-type": "text/javascript"
+            });
 
-        done();
+          done();
+        } catch (error) {
+          done(error);
+        }
       },
     });
 
@@ -124,25 +128,29 @@ describe('#components/reconnection_manger', () => {
           // Advance the clock so that _performTimeLoop() executes
           clock.tick(3500);
         } else if (statusPayload.category === PubNub.CATEGORIES.PNReconnectedCategory) {
-          assert.deepEqual(
-            {
-              category: PubNub.CATEGORIES.PNReconnectedCategory,
-              operation: PubNub.OPERATIONS.PNSubscribeOperation,
-              currentTimetoken: 0,
-              lastTimetoken: 0,
-            },
-            statusPayload,
-          );
+          try {
+            assert.deepEqual(
+              {
+                category: PubNub.CATEGORIES.PNReconnectedCategory,
+                operation: PubNub.OPERATIONS.PNSubscribeOperation,
+                currentTimetoken: 0,
+                lastTimetoken: 0
+              },
+              statusPayload
+            );
 
-          utils
-            .createNock()
-            .get('/v2/presence/sub-key/mySubKey/channel/ch1,ch2/leave')
-            .query(true)
-            .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}', {
-              'content-type': 'text/javascript',
-            });
+            utils
+              .createNock()
+              .get("/v2/presence/sub-key/mySubKey/channel/ch1,ch2/leave")
+              .query(true)
+              .reply(200, "{\"status\": 200, \"message\": \"OK\", \"service\": \"Presence\"}", {
+                "content-type": "text/javascript"
+              });
 
-          done();
+            done();
+          } catch (error) {
+            done(error);
+          }
         }
       },
     });

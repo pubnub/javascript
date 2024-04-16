@@ -55,22 +55,26 @@ describe('access endpoints', () => {
         );
 
       pubnub.audit({ channel: 'ch1' }, (status, response) => {
-        assert.equal(status.error, false);
-        assert.deepEqual(response, {
-          level: 'channel-group+auth',
-          subscribe_key: 'mySubscribeKey',
-          'channel-group': 'cg2',
-          auths: {
-            key1: {
-              r: 1,
-              m: 1,
-              w: 1,
-              d: 1,
-            },
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.deepEqual(response, {
+            level: "channel-group+auth",
+            subscribe_key: "mySubscribeKey",
+            "channel-group": "cg2",
+            auths: {
+              key1: {
+                r: 1,
+                m: 1,
+                w: 1,
+                d: 1
+              }
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -92,22 +96,26 @@ describe('access endpoints', () => {
         );
 
       pubnub.audit({ channelGroup: 'cg1' }, (status, response) => {
-        assert.equal(status.error, false);
-        assert.deepEqual(response, {
-          level: 'channel-group+auth',
-          subscribe_key: 'mySubscribeKey',
-          'channel-group': 'cg2',
-          auths: {
-            key1: {
-              r: 1,
-              m: 1,
-              w: 1,
-              d: 1,
-            },
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.deepEqual(response, {
+            level: "channel-group+auth",
+            subscribe_key: "mySubscribeKey",
+            "channel-group": "cg2",
+            auths: {
+              key1: {
+                r: 1,
+                m: 1,
+                w: 1,
+                d: 1
+              }
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -129,22 +137,26 @@ describe('access endpoints', () => {
         );
 
       pubnub.audit({ authKeys: ['key1', 'key2'] }, (status, response) => {
-        assert.equal(status.error, false);
-        assert.deepEqual(response, {
-          level: 'channel-group+auth',
-          subscribe_key: 'mySubscribeKey',
-          'channel-group': 'cg2',
-          auths: {
-            key1: {
-              r: 1,
-              m: 1,
-              w: 1,
-              d: 1,
-            },
-          },
-        });
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.deepEqual(response, {
+            level: "channel-group+auth",
+            subscribe_key: "mySubscribeKey",
+            "channel-group": "cg2",
+            auths: {
+              key1: {
+                r: 1,
+                m: 1,
+                w: 1,
+                d: 1
+              }
+            }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
   });
@@ -176,9 +188,13 @@ describe('access endpoints', () => {
         );
 
       pubnub.grant({ channels: ['ch1', 'ch2'], authKeys: ['key1', 'key2'] }, (status) => {
-        assert.equal(status.error, false);
-        assert.equal(scope.isDone(), true);
-        done();
+        try {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
     });
 
@@ -215,9 +231,13 @@ describe('access endpoints', () => {
           write: true,
         },
         (status) => {
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     });
@@ -257,9 +277,13 @@ describe('access endpoints', () => {
           ttl: 1337,
         },
         (status) => {
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     });
@@ -292,9 +316,13 @@ describe('access endpoints', () => {
       pubnub.grant(
         { uuids: ['uuid-1', 'uuid-2'], authKeys: ['key1', 'key2'], get: true, update: true, delete: true },
         (status) => {
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     });
@@ -334,9 +362,13 @@ describe('access endpoints', () => {
           ttl: 1337,
         },
         (status) => {
-          assert.equal(status.error, false);
-          assert.equal(scope.isDone(), true);
-          done();
+          try {
+            assert.equal(status.error, false);
+            assert.equal(scope.isDone(), true);
+            done();
+          } catch (error) {
+            done(error);
+          }
         },
       );
     });
@@ -378,12 +410,16 @@ describe('access endpoints', () => {
             ttl: 1337,
           })
           .catch((error) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(
-              error.status.message,
-              'Both channel/channel group and uuid cannot be used in the same request',
-            );
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(
+                error.status.message,
+                "Both channel/channel group and uuid cannot be used in the same request"
+              );
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 
@@ -423,12 +459,16 @@ describe('access endpoints', () => {
             ttl: 1337,
           })
           .catch((error) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(
-              error.status.message,
-              'Both channel/channel group and uuid cannot be used in the same request',
-            );
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(
+                error.status.message,
+                "Both channel/channel group and uuid cannot be used in the same request"
+              );
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
 
@@ -464,9 +504,13 @@ describe('access endpoints', () => {
             ttl: 1337,
           })
           .catch((error) => {
-            assert.equal(scope.isDone(), false);
-            assert.equal(error.status.message, 'authKeys are required for grant request on uuids');
-            done();
+            try {
+              assert.equal(scope.isDone(), false);
+              assert.equal(error.status.message, "authKeys are required for grant request on uuids");
+              done();
+            } catch (error) {
+              done(error);
+            }
           });
       });
     });
