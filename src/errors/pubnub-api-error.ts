@@ -124,16 +124,9 @@ export class PubNubAPIError extends Error {
             ) {
               errorData = errorResponse;
               status = errorResponse.status;
-            }
+            } else errorData = errorResponse;
 
-            if (
-              'error' in errorResponse &&
-              typeof errorResponse.error === 'object' &&
-              !Array.isArray(errorResponse.error!) &&
-              'message' in errorResponse.error!
-            ) {
-              errorData = errorResponse.error;
-            }
+            if ('error' in errorResponse && errorResponse.error instanceof Error) errorData = errorResponse.error;
           }
         } catch (_) {
           errorData = decoded;
@@ -164,6 +157,7 @@ export class PubNubAPIError extends Error {
     public readonly errorData?: Error | Payload,
   ) {
     super(message);
+
     this.name = 'PubNubAPIError';
   }
 
