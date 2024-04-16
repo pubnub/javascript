@@ -327,6 +327,7 @@ describe('fetch messages endpoints', () => {
           assert(!channelMessages[1].meta);
           done();
         } catch (error) {
+          console.dir(response);
           done(error);
         }
       });
