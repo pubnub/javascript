@@ -43,6 +43,7 @@ type PubNubMiddlewareConfiguration = {
    */
   transport: Transport;
 };
+
 // endregion
 
 /**

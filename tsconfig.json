@@ -19,14 +19,11 @@
     "node_modules",
     "src/crypto/modules/WebCryptoModule/**/*",
     "src/crypto/modules/web.ts",
-    "src/file/modules/react-native.ts",
     "src/file/modules/web.ts",
-    "src/titanium/**/*",
     "src/nativescript/**/*",
-    "src/react_native/**/*",
+    "src/titanium/**/*",
     "src/transport/service-worker/**/*",
     "src/transport/titanium-transport.ts",
-    "src/transport/web-react-native-transport.ts",
     "src/web/**/*"
   ]
 }

@@ -1,5 +1,5 @@
 /* eslint no-bitwise: ["error", { "allow": ["~", "&", ">>"] }] */
-/* global navigator, window */
+/* global navigator */
 
 import CborReader from 'cbor-js';
 

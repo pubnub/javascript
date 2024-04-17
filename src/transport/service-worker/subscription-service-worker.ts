@@ -1,3 +1,4 @@
+/// <reference lib="webworker" />
 /**
  * Subscription Service Worker Transport provider.
  *
