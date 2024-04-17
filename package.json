@@ -58,7 +58,8 @@
     "form-data": "^4.0.0",
     "lil-uuid": "^0.1.1",
     "node-fetch": "^3.3.2",
-    "proxy-agent": "^6.3.0"
+    "proxy-agent": "^6.3.0",
+    "text-encoding": "^0.7.0"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^10.4.0",
@@ -81,6 +82,7 @@
     "@types/node-fetch": "^2.6.11",
     "@types/pubnub": "^7.2.0",
     "@types/sinon": "^17.0.3",
+    "@types/text-encoding": "^0.0.39",
     "@types/underscore": "^1.11.15",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",

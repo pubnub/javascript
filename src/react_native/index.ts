@@ -1,3 +1,4 @@
+import { TextEncoder, TextDecoder } from 'text-encoding';
 import CborReader from 'cbor-js';
 import { Buffer } from 'buffer';
 
@@ -15,6 +16,9 @@ import { PubNubCore } from '../core/pubnub-common';
 import { setDefaults } from './configuration';
 import Cbor from '../cbor/common';
 
+// Polyfill global environment
+global.TextEncoder = global.TextEncoder || TextEncoder;
+global.TextDecoder = global.TextDecoder || TextDecoder;
 global.Buffer = global.Buffer || Buffer;
 
 /**
