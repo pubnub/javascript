@@ -36,7 +36,10 @@ class EventEngineSteps {
   private changelog: Change<any, any>[] = [];
   private configuration: any = {};
 
-  constructor(private manager: PubNubManager, private keyset: DemoKeyset) {}
+  constructor(
+    private manager: PubNubManager,
+    private keyset: DemoKeyset,
+  ) {}
 
   private async testDelay(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time * 1000));

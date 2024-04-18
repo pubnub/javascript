@@ -1,4 +1,5 @@
 import { TextEncoder, TextDecoder } from 'text-encoding';
+import 'react-native-url-polyfill/auto';
 import CborReader from 'cbor-js';
 import { Buffer } from 'buffer';
 

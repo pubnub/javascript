@@ -59,6 +59,7 @@
     "lil-uuid": "^0.1.1",
     "node-fetch": "^2.7.0",
     "proxy-agent": "^6.3.0",
+    "react-native-url-polyfill": "^2.0.0",
     "text-encoding": "^0.7.0"
   },
   "devDependencies": {
