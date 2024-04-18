@@ -1,3 +1,9 @@
+## v7.6.3
+April 18 2024
+
+#### Fixed
+- Fixes issue of add or remove listener of subscription to/from subscriptionSet.
+
 ## v7.6.2
 March 28 2024
 

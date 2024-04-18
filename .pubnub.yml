@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2024-04-18
+    version: v7.6.3
+    changes:
+      - type: bug
+        text: "Fixes issue of add or remove listener of subscription to/from subscriptionSet."
   - date: 2024-03-28
     version: v7.6.2
     changes:
@@ -953,7 +958,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '7.6.2'
+version: '7.6.3'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -969,7 +974,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v7.6.2.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v7.6.3.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1640,7 +1645,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v7.6.2/pubnub.7.6.2.js
+            location: https://github.com/pubnub/javascript/releases/download/v7.6.3/pubnub.7.6.3.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
