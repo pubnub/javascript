@@ -114,7 +114,7 @@ class EventEngineSteps {
   @then('I observe the following Events and Invocations of the Presence EE:')
   async thenIObservePresenceEE(dataTable: DataTable) {
     const expectedChangelog = dataTable.hashes();
-    const actualChangelog = [];
+    const actualChangelog: { type: string; name: string }[] = [];
     for (const entry of this.changelog) {
       if (entry.type === 'eventReceived') {
         actualChangelog.push({ type: 'event', name: entry.event.type });
@@ -225,7 +225,7 @@ class EventEngineSteps {
   thenIObserve(dataTable: DataTable) {
     const expectedChangelog = dataTable.hashes();
 
-    const actualChangelog = [];
+    const actualChangelog: { type: string; name: string }[] = [];
     for (const entry of this.changelog) {
       if (entry.type === 'eventReceived') {
         actualChangelog.push({ type: 'event', name: entry.event.type });
@@ -242,7 +242,7 @@ class EventEngineSteps {
 
   @then("I don't observe any Events and Invocations of the Presence EE")
   noeventInvocations() {
-    const actualChangelog = [];
+    const actualChangelog: { type: string; name: string }[] = [];
     for (const entry of this.changelog) {
       if (entry.type === 'eventReceived') {
         actualChangelog.push({ type: 'event', name: entry.event.type });
