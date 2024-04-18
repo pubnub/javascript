@@ -185,7 +185,7 @@ class EventEngineSteps {
     });
   }
 
-  @when('I subscribe with timetoken {int}')
+  @when(/I subscribe with timetoken (\d*)/)
   async whenISubscribeWithTimetoken(timetoken: number) {
     this.statusPromise = new Promise<StatusEvent>((resolveStatus) => {
       this.messagePromise = new Promise<MessageEvent>((resolveMessage) => {
