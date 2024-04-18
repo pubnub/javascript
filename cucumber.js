@@ -1,7 +1,6 @@
 module.exports = {
   default: [
     'test/specs/features/**/*.feature',
-    '--require-module ts-node/register',
     '--require test/contract/setup.js',
     '--require test/contract/definitions/**/*.ts',
     '--require test/contract/shared/**/*.ts',

@@ -66,6 +66,7 @@ describe('#components/networking', () => {
           assert.equal(status.statusCode, 200);
           done();
         } catch (error) {
+          console.dir(status);
           done(error);
         }
       });
@@ -122,7 +123,7 @@ describe('#components/networking', () => {
         try {
           assert.equal(status.error, true);
           assert.equal(status.statusCode, 403);
-          assert.equal(status.category, "PNAccessDeniedCategory");
+          assert.equal(status.category, 'PNAccessDeniedCategory');
           done();
         } catch (error) {
           done(error);
@@ -141,7 +142,7 @@ describe('#components/networking', () => {
         try {
           assert.equal(status.error, true);
           assert.equal(status.statusCode, 400);
-          assert.equal(status.category, "PNBadRequestCategory");
+          assert.equal(status.category, 'PNBadRequestCategory');
           done();
         } catch (error) {
           done(error);

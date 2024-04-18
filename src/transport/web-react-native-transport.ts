@@ -56,10 +56,7 @@ export class WebReactNativeTransport implements Transport {
           }, req.timeout * 1000);
         });
 
-        return Promise.race([
-          fetch(request, { signal: abortController?.signal, keepalive: this.keepAlive }),
-          requestTimeout,
-        ])
+        return Promise.race([fetch(request, { signal: abortController?.signal }), requestTimeout])
           .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer] =>
             response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]),
           )

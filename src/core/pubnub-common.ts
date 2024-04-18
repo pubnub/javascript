@@ -2854,11 +2854,13 @@ export class PubNubCore<
         if (callback) return callback(status, response);
         return response;
       })
-      .catch((error: PubNubAPIError) => {
-        const errorStatus = error.toStatus(status.operation!);
+      .catch((error: unknown) => {
+        let errorStatus: Status | undefined;
+        if (error instanceof PubNubError) errorStatus = error.status;
+        else if (error instanceof PubNubAPIError) errorStatus = error.toStatus(status.operation!);
 
         // Notify callback (if possible).
-        if (callback) callback(errorStatus, null);
+        if (callback && errorStatus) callback(errorStatus, null);
 
         throw new PubNubError('REST API request processing error, check status for details', errorStatus);
       });

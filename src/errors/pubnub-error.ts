@@ -7,7 +7,7 @@ export class PubNubError extends Error {
     public status?: Status,
   ) {
     super(message);
-    this.name = 'PubnubError';
+    this.name = 'PubNubError';
     this.message = message;
 
     Object.setPrototypeOf(this, new.target.prototype);
