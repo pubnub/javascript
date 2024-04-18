@@ -1,3 +1,21 @@
+## v7.6.3
+April 18 2024
+
+#### Fixed
+- Fixes issue of add or remove listener of subscription to/from subscriptionSet.
+
+## v7.6.2
+March 28 2024
+
+#### Added
+- Added support for pagination params for listChannels api of push notification devices.
+
+## v7.6.1
+February 26 2024
+
+#### Fixed
+- Fixes issue of App context event handling for channel and membership.
+
 ## v7.6.0
 February 21 2024
 

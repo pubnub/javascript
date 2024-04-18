@@ -1,5 +1,4 @@
-import { binding, given, then, when } from '@lynxwall/cucumber-tsflow';
-// import { binding, given, then, when } from 'cucumber-tsflow';
+import { binding, given, then, when } from 'cucumber-tsflow';
 import { expect } from 'chai';
 
 import { AccessManagerKeyset } from '../shared/keysets';
