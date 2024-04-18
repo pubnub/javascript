@@ -106,12 +106,12 @@ describe('EventEngine', () => {
     });
   }
 
-  it(' presence event_engine should work correctly', async () => {
+  it('presence event_engine should work correctly', async () => {
     utils
       .createNock()
       .get('/v2/presence/sub-key/demo/channel/test/heartbeat')
       .query(true)
-      .reply(200, '{"message":"OK", "service":"Presence"}');
+      .reply(200, '{"message":"OK", "service":"Presence"}', { 'content-type': 'text/javascript' });
 
     // @ts-expect-error Intentional access to the private interface.
     pubnub.join({ channels: ['test'] });
