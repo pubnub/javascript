@@ -5440,9 +5440,8 @@
 	     */
 	    deserializeResponse(response) {
 	        const contentType = response.headers['content-type'];
-	        if (!contentType || (contentType.indexOf('javascript') === -1 && contentType.indexOf('json') === -1)) {
+	        if (!contentType || (contentType.indexOf('javascript') === -1 && contentType.indexOf('json') === -1))
 	            return undefined;
-	        }
 	        const json = AbstractRequest.decoder.decode(response.body);
 	        try {
 	            const parsedJson = JSON.parse(json);
@@ -6454,6 +6453,8 @@
 	            }
 	            catch (e) {
 	                if (e instanceof PubNubError) {
+	                    if (e.status && e.status.category == StatusCategory$1.PNCancelledCategory)
+	                        return;
 	                    return engine.transition(heartbeatFailure(e));
 	                }
 	            }
@@ -6822,11 +6823,11 @@
 	                engine.transition(receiveSuccess(result.cursor, result.messages));
 	            }
 	            catch (error) {
-	                if (error instanceof Error && error.message === 'Aborted') {
-	                    return;
-	                }
-	                if (error instanceof PubNubError && !abortSignal.aborted) {
-	                    return engine.transition(receiveFailure(error));
+	                if (error instanceof PubNubError) {
+	                    if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
+	                        return;
+	                    if (!abortSignal.aborted)
+	                        return engine.transition(receiveFailure(error));
 	                }
 	            }
 	        })));
@@ -6855,10 +6856,9 @@
 	                    return engine.transition(receiveReconnectSuccess(result.cursor, result.messages));
 	                }
 	                catch (error) {
-	                    if (error instanceof Error && error.message === 'Aborted') {
-	                        return;
-	                    }
 	                    if (error instanceof PubNubError) {
+	                        if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
+	                            return;
 	                        return engine.transition(receiveReconnectFailure(error));
 	                    }
 	                }
@@ -6879,10 +6879,9 @@
 	                    return engine.transition(handshakeReconnectSuccess(result));
 	                }
 	                catch (error) {
-	                    if (error instanceof Error && error.message === 'Aborted') {
-	                        return;
-	                    }
 	                    if (error instanceof PubNubError) {
+	                        if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
+	                            return;
 	                        return engine.transition(handshakeReconnectFailure(error));
 	                    }
 	                }
@@ -7443,14 +7442,14 @@
 	            return 'region can not be empty';
 	    }
 	    get path() {
-	        const { keySet: { subscribeKey }, channels, } = this.parameters;
-	        return `/v2/subscribe/${subscribeKey}/${encodeNames(channels, ',')}/0`;
+	        const { keySet: { subscribeKey }, channels = [], } = this.parameters;
+	        return `/v2/subscribe/${subscribeKey}/${encodeNames(channels.sort(), ',')}/0`;
 	    }
 	    get queryParameters() {
 	        const { channelGroups, filterExpression, timetoken, region } = this.parameters;
 	        const query = { ee: '' };
 	        if (channelGroups && channelGroups.length > 0)
-	            query['channel-group'] = channelGroups.join(',');
+	            query['channel-group'] = channelGroups.sort().join(',');
 	        if (filterExpression && filterExpression.length > 0)
 	            query['filter-expr'] = filterExpression;
 	        if (typeof timetoken === 'string') {
@@ -7478,14 +7477,14 @@
 	        return RequestOperation$1.PNHandshakeOperation;
 	    }
 	    get path() {
-	        const { keySet: { subscribeKey }, channels, } = this.parameters;
-	        return `/v2/subscribe/${subscribeKey}/${encodeNames(channels, ',')}/0`;
+	        const { keySet: { subscribeKey }, channels = [], } = this.parameters;
+	        return `/v2/subscribe/${subscribeKey}/${encodeNames(channels.sort(), ',')}/0`;
 	    }
 	    get queryParameters() {
 	        const { channelGroups, filterExpression, state } = this.parameters;
 	        const query = { tt: 0, ee: '' };
 	        if (channelGroups && channelGroups.length > 0)
-	            query['channel-group'] = channelGroups.join(',');
+	            query['channel-group'] = channelGroups.sort().join(',');
 	        if (filterExpression && filterExpression.length > 0)
 	            query['filter-expr'] = filterExpression;
 	        if (state && Object.keys(state).length > 0)
@@ -11343,7 +11342,7 @@
 	            if (heartbeatInterval) {
 	                this.presenceEventEngine = new PresenceEventEngine({
 	                    heartbeat: this.heartbeat.bind(this),
-	                    leave: this.unsubscribe.bind(this),
+	                    leave: (parameters) => this.makeUnsubscribe(parameters, () => { }),
 	                    heartbeatDelay: () => new Promise((resolve, reject) => {
 	                        heartbeatInterval = this._configuration.getHeartbeatInterval();
 	                        if (!heartbeatInterval)
@@ -12246,9 +12245,6 @@
 	     */
 	    heartbeat(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            // Manual presence management possible only with subscription manager.
-	            if (!this.subscriptionManager)
-	                return;
 	            const request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
 	            if (callback)
 	                return this.sendRequest(request, callback);

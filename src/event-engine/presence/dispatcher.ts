@@ -42,6 +42,7 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
           engine.transition(events.heartbeatSuccess(200));
         } catch (e) {
           if (e instanceof PubNubError) {
+            if (e.status && e.status.category == StatusCategory.PNCancelledCategory) return;
             return engine.transition(events.heartbeatFailure(e));
           }
         }

@@ -6,7 +6,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noStrictGenericChecks": true,
-    "target": "es5",
+    "target": "es6",
     "sourceMap": true,
     "esModuleInterop": true,
     "strict": true,

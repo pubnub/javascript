@@ -66,7 +66,6 @@ describe('#components/networking', () => {
           assert.equal(status.statusCode, 200);
           done();
         } catch (error) {
-          console.dir(status);
           done(error);
         }
       });

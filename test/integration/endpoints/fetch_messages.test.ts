@@ -191,45 +191,45 @@ describe('fetch messages endpoints', () => {
           channels: {
             ch1: [
               {
-                channel: "ch1",
+                channel: 'ch1',
                 message: {
-                  text: "hey1"
+                  text: 'hey1',
                 },
-                timetoken: "11",
+                timetoken: '11',
                 messageType: undefined,
-                uuid: undefined
+                uuid: undefined,
               },
               {
-                channel: "ch1",
+                channel: 'ch1',
                 message: {
-                  text: "hey2"
+                  text: 'hey2',
                 },
-                timetoken: "12",
+                timetoken: '12',
                 messageType: undefined,
-                uuid: undefined
-              }
+                uuid: undefined,
+              },
             ],
             ch2: [
               {
-                channel: "ch2",
+                channel: 'ch2',
                 message: {
-                  text: "hey3"
+                  text: 'hey3',
                 },
-                timetoken: "21",
+                timetoken: '21',
                 messageType: undefined,
-                uuid: undefined
+                uuid: undefined,
               },
               {
-                channel: "ch2",
+                channel: 'ch2',
                 message: {
-                  text: "hey2"
+                  text: 'hey2',
                 },
-                timetoken: "22",
+                timetoken: '22',
                 messageType: undefined,
-                uuid: undefined
-              }
-            ]
-          }
+                uuid: undefined,
+              },
+            ],
+          },
         });
         assert.equal(scope.isDone(), true);
         done();
@@ -265,45 +265,45 @@ describe('fetch messages endpoints', () => {
           channels: {
             ch1: [
               {
-                channel: "ch1",
+                channel: 'ch1',
                 message: {
-                  text: "hey"
+                  text: 'hey',
                 },
-                timetoken: "11",
+                timetoken: '11',
                 messageType: undefined,
-                uuid: undefined
+                uuid: undefined,
               },
               {
-                channel: "ch1",
+                channel: 'ch1',
                 message: {
-                  text: "hey"
+                  text: 'hey',
                 },
-                timetoken: "12",
+                timetoken: '12',
                 messageType: undefined,
-                uuid: undefined
-              }
+                uuid: undefined,
+              },
             ],
             ch2: [
               {
-                channel: "ch2",
+                channel: 'ch2',
                 message: {
-                  text2: "hey2"
+                  text2: 'hey2',
                 },
-                timetoken: "21",
+                timetoken: '21',
                 messageType: undefined,
-                uuid: undefined
+                uuid: undefined,
               },
               {
-                channel: "ch2",
+                channel: 'ch2',
                 message: {
-                  text2: "hey2"
+                  text2: 'hey2',
                 },
-                timetoken: "22",
+                timetoken: '22',
                 messageType: undefined,
-                uuid: undefined
-              }
-            ]
-          }
+                uuid: undefined,
+              },
+            ],
+          },
         });
         assert.equal(scope.isDone(), true);
         done();
@@ -327,7 +327,6 @@ describe('fetch messages endpoints', () => {
           assert(!channelMessages[1].meta);
           done();
         } catch (error) {
-          console.dir(response);
           done(error);
         }
       });
@@ -367,7 +366,7 @@ describe('fetch messages endpoints', () => {
               assert(response !== null);
               const fetchedMessages = response.channels[channel];
               // TypeScript types system now requires to figure out type of object before using it.
-              assert("actions" in fetchedMessages[0]);
+              assert('actions' in fetchedMessages[0]);
               const actionsByType = fetchedMessages[0].data ?? {};
               let historyActionsCount = 0;
 
@@ -388,7 +387,7 @@ describe('fetch messages endpoints', () => {
               assert.equal(fetchedMessages[0].timetoken, messageTimetokens[0]);
               assert.equal(
                 fetchedMessages[fetchedMessages.length - 1].timetoken,
-                messageTimetokens[messageTimetokens.length - 1]
+                messageTimetokens[messageTimetokens.length - 1],
               );
 
               done();
@@ -417,7 +416,7 @@ describe('fetch messages endpoints', () => {
               assert(response !== null);
               const fetchedMessages = response.channels[channel];
               // TypeScript types system now requires to figure out type of object before using it.
-              assert("actions" in fetchedMessages[0]);
+              assert('actions' in fetchedMessages[0]);
               const actionsByType = fetchedMessages[0].actions ?? {};
               let historyActionsCount = 0;
 
@@ -440,7 +439,7 @@ describe('fetch messages endpoints', () => {
               assert.equal(fetchedMessages[0].timetoken, messageTimetokens[0]);
               assert.equal(
                 fetchedMessages[fetchedMessages.length - 1].timetoken,
-                messageTimetokens[messageTimetokens.length - 1]
+                messageTimetokens[messageTimetokens.length - 1],
               );
 
               done();
@@ -477,9 +476,9 @@ describe('fetch messages endpoints', () => {
         assert.equal(status.error, false);
         assert(response !== null);
         // TypeScript types system now requires to figure out type of object before using it.
-        assert("more" in response);
-        assert.equal(response.more.url, "/v3/history-with-actions/sub-key/s/channel/c?start=15610547826970000&max=98");
-        assert.equal(response.more.start, "15610547826970000");
+        assert('more' in response);
+        assert.equal(response.more.url, '/v3/history-with-actions/sub-key/s/channel/c?start=15610547826970000&max=98');
+        assert.equal(response.more.start, '15610547826970000');
         assert.equal(response.more.max, 98);
         done();
       } catch (error) {
@@ -682,23 +681,23 @@ describe('fetch messages endpoints', () => {
           channels: {
             ch1: [
               {
-                channel: "ch1",
-                message: "hello",
-                timetoken: "11",
+                channel: 'ch1',
+                message: 'hello',
+                timetoken: '11',
                 messageType: undefined,
                 uuid: undefined,
-                error: "Error while decrypting message content: Decryption error: invalid header version"
+                error: 'Error while decrypting message content: Decryption error: invalid header version',
               },
               {
-                channel: "ch1",
-                message: "hey",
-                timetoken: "12",
+                channel: 'ch1',
+                message: 'hey',
+                timetoken: '12',
                 messageType: undefined,
                 uuid: undefined,
-                error: "Error while decrypting message content: Decryption error: invalid header version"
-              }
-            ]
-          }
+                error: 'Error while decrypting message content: Decryption error: invalid header version',
+              },
+            ],
+          },
         });
         assert.equal(scope.isDone(), true);
         done();

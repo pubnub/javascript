@@ -67,12 +67,9 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
           engine.transition(events.receiveSuccess(result.cursor, result.messages));
         } catch (error) {
-          if (error instanceof Error && error.message === 'Aborted') {
-            return;
-          }
-
-          if (error instanceof PubNubError && !abortSignal.aborted) {
-            return engine.transition(events.receiveFailure(error));
+          if (error instanceof PubNubError) {
+            if (error.status && error.status.category == StatusCategory.PNCancelledCategory) return;
+            if (!abortSignal.aborted) return engine.transition(events.receiveFailure(error));
           }
         }
       }),
@@ -116,11 +113,8 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
             return engine.transition(events.receiveReconnectSuccess(result.cursor, result.messages));
           } catch (error) {
-            if (error instanceof Error && error.message === 'Aborted') {
-              return;
-            }
-
             if (error instanceof PubNubError) {
+              if (error.status && error.status.category == StatusCategory.PNCancelledCategory) return;
               return engine.transition(events.receiveReconnectFailure(error));
             }
           }
@@ -159,11 +153,8 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
             return engine.transition(events.handshakeReconnectSuccess(result));
           } catch (error) {
-            if (error instanceof Error && error.message === 'Aborted') {
-              return;
-            }
-
             if (error instanceof PubNubError) {
+              if (error.status && error.status.category == StatusCategory.PNCancelledCategory) return;
               return engine.transition(events.handshakeReconnectFailure(error));
             }
           }

@@ -295,7 +295,7 @@ export class PubNubCore<
       if (heartbeatInterval) {
         this.presenceEventEngine = new PresenceEventEngine({
           heartbeat: this.heartbeat.bind(this),
-          leave: this.unsubscribe.bind(this),
+          leave: (parameters) => this.makeUnsubscribe(parameters, () => {}),
           heartbeatDelay: () =>
             new Promise((resolve, reject) => {
               heartbeatInterval = this._configuration.getHeartbeatInterval();
@@ -1703,9 +1703,6 @@ export class PubNubCore<
     parameters: Presence.PresenceHeartbeatParameters,
     callback?: ResultCallback<Presence.PresenceHeartbeatResponse>,
   ) {
-    // Manual presence management possible only with subscription manager.
-    if (!this.subscriptionManager) return;
-
     const request = new HeartbeatRequest({
       ...parameters,
       keySet: this._configuration.keySet,

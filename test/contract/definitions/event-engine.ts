@@ -261,7 +261,9 @@ class EventEngineSteps {
 
   @after()
   dispose() {
-    (this.pubnub as any).removeAllListeners();
-    (this.pubnub as any).eventEngine.dispose();
+    if (this.pubnub) {
+      (this.pubnub as any).removeAllListeners();
+      (this.pubnub as any).eventEngine.dispose();
+    }
   }
 }

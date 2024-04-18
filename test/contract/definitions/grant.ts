@@ -26,7 +26,10 @@ class GrantTokenSteps {
   private resourceName?: string;
   private resourceType?: ResourceType;
 
-  constructor(private manager: PubNubManager, private keyset: AccessManagerKeyset) {}
+  constructor(
+    private manager: PubNubManager,
+    private keyset: AccessManagerKeyset,
+  ) {}
 
   @given('the authorized UUID {string}')
   public givenAuthorizedUUID(authorizedUUID: string) {

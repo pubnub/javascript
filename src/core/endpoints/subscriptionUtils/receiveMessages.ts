@@ -26,17 +26,17 @@ export class ReceiveMessagesSubscribeRequest extends BaseSubscribeRequest {
   protected get path(): string {
     const {
       keySet: { subscribeKey },
-      channels,
+      channels = [],
     } = this.parameters;
 
-    return `/v2/subscribe/${subscribeKey}/${encodeNames(channels!, ',')}/0`;
+    return `/v2/subscribe/${subscribeKey}/${encodeNames(channels.sort(), ',')}/0`;
   }
 
   protected get queryParameters(): Query {
     const { channelGroups, filterExpression, timetoken, region } = this.parameters;
     const query: Query = { ee: '' };
 
-    if (channelGroups && channelGroups.length > 0) query['channel-group'] = channelGroups.join(',');
+    if (channelGroups && channelGroups.length > 0) query['channel-group'] = channelGroups.sort().join(',');
     if (filterExpression && filterExpression.length > 0) query['filter-expr'] = filterExpression;
     if (typeof timetoken === 'string') {
       if (timetoken && timetoken.length > 0) query['tt'] = timetoken;

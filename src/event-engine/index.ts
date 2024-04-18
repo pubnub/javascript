@@ -46,6 +46,7 @@ export class EventEngine {
   }): void {
     this.channels = [...this.channels, ...(channels ?? [])];
     this.groups = [...this.groups, ...(channelGroups ?? [])];
+
     if (withPresence) {
       this.channels.map((c) => this.channels.push(`${c}-pnpres`));
       this.groups.map((g) => this.groups.push(`${g}-pnpres`));
@@ -79,6 +80,7 @@ export class EventEngine {
       ...channels,
       ...channels.map((c) => `${c}-pnpres`),
     ]);
+
     const filteredGroups = utils.removeSingleOccurance(this.groups, [
       ...channelGroups,
       ...channelGroups.map((c) => `${c}-pnpres`),
