@@ -173,10 +173,10 @@ class EventEngineSteps {
       this.messagePromise = new Promise<MessageEvent>((resolveMessage) => {
         this.pubnub?.addListener({
           message(messageEvent) {
-            resolveMessage(messageEvent);
+            setTimeout(() => resolveMessage(messageEvent), 100);
           },
           status(statusEvent) {
-            resolveStatus(statusEvent);
+            setTimeout(() => resolveStatus(statusEvent), 100);
           },
         });
 
@@ -191,10 +191,10 @@ class EventEngineSteps {
       this.messagePromise = new Promise<MessageEvent>((resolveMessage) => {
         this.pubnub?.addListener({
           message(messageEvent) {
-            resolveMessage(messageEvent);
+            setTimeout(() => resolveMessage(messageEvent), 100);
           },
           status(statusEvent) {
-            resolveStatus(statusEvent);
+            setTimeout(() => resolveStatus(statusEvent), 100);
           },
         });
 
