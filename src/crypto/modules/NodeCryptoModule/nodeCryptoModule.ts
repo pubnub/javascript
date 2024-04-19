@@ -123,7 +123,7 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
     }
 
     if (file.data instanceof Readable) {
-      if (file.contentLength === 0) throw new Error('Encryption error: empty content');
+      if (!file.contentLength || file.contentLength === 0) throw new Error('Encryption error: empty content');
 
       const encryptedStream = await (this.defaultCryptor as ICryptor).encryptStream(file.data);
       const header = CryptorHeader.from(this.defaultCryptor.identifier, encryptedStream.metadata!);

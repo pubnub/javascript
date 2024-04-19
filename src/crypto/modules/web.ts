@@ -109,7 +109,7 @@ export default class WebCryptography implements Cryptography<ArrayBuffer | strin
     file: PubNubFile,
     File: PubNubFileConstructor<PubNubFile, PubNubFileParameters>,
   ) {
-    if (file.contentLength ?? 0 <= 0) throw new Error('encryption error. empty content');
+    if ((file.contentLength ?? 0) <= 0) throw new Error('encryption error. empty content');
     const bKey = await this.getKey(key);
     const abPlaindata = await file.toArrayBuffer();
     const abCipherdata = await this.encryptArrayBuffer(bKey, abPlaindata);

@@ -100,21 +100,24 @@ export class PubNubFile implements PubNubFileInterface {
   }
 
   constructor(file: PubNubFileParameters) {
+    let fileData: PubNubFile['data'] | undefined;
+    let contentLength: number | undefined;
     let fileMimeType: string | undefined;
     let fileName: string | undefined;
-    let fileData: PubNubFile['data'] | undefined;
 
     if (file instanceof File) {
       fileData = file;
 
       fileName = file.name;
       fileMimeType = file.type;
+      contentLength = file.size;
     } else if ('data' in file) {
       const contents = file.data;
 
       fileMimeType = file.mimeType;
       fileName = file.name;
       fileData = new File([contents], fileName, { type: fileMimeType });
+      contentLength = fileData.size;
     } else if ('uri' in file) {
       fileMimeType = file.mimeType;
       fileName = file.name;
@@ -128,6 +131,7 @@ export class PubNubFile implements PubNubFileInterface {
     if (fileData === undefined) throw new Error("Couldn't construct a file out of supplied options.");
     if (fileName === undefined) throw new Error("Couldn't guess filename out of the options. Please provide one.");
 
+    if (contentLength) this.contentLength = contentLength;
     this.mimeType = fileMimeType!;
     this.data = fileData;
     this.name = fileName;

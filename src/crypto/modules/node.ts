@@ -116,7 +116,7 @@ export default class NodeCryptography implements Cryptography<string | ArrayBuff
     }
 
     if (file.data instanceof Readable) {
-      if (file.contentLength === 0) throw new Error('Encryption error: empty content.');
+      if (!file.contentLength || file.contentLength === 0) throw new Error('Encryption error: empty content.');
 
       return File.create({
         name: file.name,

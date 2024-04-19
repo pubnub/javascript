@@ -9,7 +9,7 @@ export type EncryptedDataType = {
   /**
    * Encrypted data.
    */
-  data: ArrayBuffer;
+  data: ArrayBuffer | string;
 
   /**
    * Used cryptor's metadata.

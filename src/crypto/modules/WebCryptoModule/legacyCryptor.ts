@@ -56,7 +56,7 @@ export default class LegacyCryptor implements ILegacyCryptor {
     const stringData = typeof data === 'string' ? data : LegacyCryptor.decoder.decode(data);
 
     return {
-      data: LegacyCryptor.encoder.encode(this.cryptor.encrypt(stringData)),
+      data: this.cryptor.encrypt(stringData),
       metadata: null,
     };
   }

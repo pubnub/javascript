@@ -87,6 +87,8 @@ export class WebCryptoModule extends AbstractCryptoModule<CryptorType> {
         : (this.defaultCryptor as ICryptor).encrypt(data);
 
     if (!encrypted.metadata) return encrypted.data;
+    else if (typeof encrypted.data === 'string')
+      throw new Error('Encryption error: encrypted data should be ArrayBuffed.');
 
     const headerData = this.getHeaderData(encrypted);
 
@@ -103,6 +105,7 @@ export class WebCryptoModule extends AbstractCryptoModule<CryptorType> {
 
     const fileData = await this.getFileData(file);
     const encrypted = await (this.defaultCryptor as ICryptor).encryptFileData(fileData);
+    if (typeof encrypted.data === 'string') throw new Error('Encryption error: encrypted data should be ArrayBuffed.');
 
     return File.create({
       name: file.name,

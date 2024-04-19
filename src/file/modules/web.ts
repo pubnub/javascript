@@ -93,6 +93,7 @@ export class PubNubFile implements PubNubFileInterface {
   }
 
   constructor(file: PubNubFileParameters) {
+    let contentLength: number | undefined;
     let fileMimeType: string | undefined;
     let fileName: string | undefined;
     let fileData: File | undefined;
@@ -102,17 +103,20 @@ export class PubNubFile implements PubNubFileInterface {
 
       fileName = file.name;
       fileMimeType = file.type;
+      contentLength = file.size;
     } else if ('data' in file) {
       const contents = file.data;
 
       fileMimeType = file.mimeType;
       fileName = file.name;
       fileData = new File([contents], fileName, { type: fileMimeType });
+      contentLength = fileData.size;
     }
 
     if (fileData === undefined) throw new Error("Couldn't construct a file out of supplied options.");
     if (fileName === undefined) throw new Error("Couldn't guess filename out of the options. Please provide one.");
 
+    if (contentLength) this.contentLength = contentLength;
     this.mimeType = fileMimeType!;
     this.data = fileData;
     this.name = fileName;

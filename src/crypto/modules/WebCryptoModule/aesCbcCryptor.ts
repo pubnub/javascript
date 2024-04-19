@@ -80,6 +80,9 @@ export default class AesCbcCryptor implements ICryptor {
   // region Decryption
 
   decrypt(encryptedData: EncryptedDataType) {
+    if (typeof encryptedData.data === 'string')
+      throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
+
     const iv = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.metadata!));
     const data = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.data));
 
@@ -92,6 +95,9 @@ export default class AesCbcCryptor implements ICryptor {
   }
 
   async decryptFileData(encryptedData: EncryptedDataType): Promise<ArrayBuffer> {
+    if (typeof encryptedData.data === 'string')
+      throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
+
     const key = await this.getKey();
     return crypto.subtle.decrypt({ name: this.algo, iv: encryptedData.metadata! }, key, encryptedData.data);
   }

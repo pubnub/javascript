@@ -1060,6 +1060,7 @@
 	        return new PubNubFile(file);
 	    }
 	    constructor(file) {
+	        let contentLength;
 	        let fileMimeType;
 	        let fileName;
 	        let fileData;
@@ -1067,17 +1068,21 @@
 	            fileData = file;
 	            fileName = file.name;
 	            fileMimeType = file.type;
+	            contentLength = file.size;
 	        }
 	        else if ('data' in file) {
 	            const contents = file.data;
 	            fileMimeType = file.mimeType;
 	            fileName = file.name;
 	            fileData = new File([contents], fileName, { type: fileMimeType });
+	            contentLength = fileData.size;
 	        }
 	        if (fileData === undefined)
 	            throw new Error("Couldn't construct a file out of supplied options.");
 	        if (fileName === undefined)
 	            throw new Error("Couldn't guess filename out of the options. Please provide one.");
+	        if (contentLength)
+	            this.contentLength = contentLength;
 	        this.mimeType = fileMimeType;
 	        this.data = fileData;
 	        this.name = fileName;
@@ -2251,6 +2256,8 @@
 	    // --------------------------------------------------------
 	    // region Decryption
 	    decrypt(encryptedData) {
+	        if (typeof encryptedData.data === 'string')
+	            throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
 	        const iv = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.metadata));
 	        const data = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.data));
 	        return AesCbcCryptor.encoder.encode(this.CryptoJS.AES.decrypt({ ciphertext: data }, this.encryptedKey, {
@@ -2260,6 +2267,8 @@
 	    }
 	    decryptFileData(encryptedData) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            if (typeof encryptedData.data === 'string')
+	                throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
 	            const key = yield this.getKey();
 	            return crypto.subtle.decrypt({ name: this.algo, iv: encryptedData.metadata }, key, encryptedData.data);
 	        });
@@ -2679,7 +2688,7 @@
 	    encryptFile(key, file, File) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a, _b;
-	            if ((_a = file.contentLength) !== null && _a !== void 0 ? _a : 0 <= 0)
+	            if (((_a = file.contentLength) !== null && _a !== void 0 ? _a : 0) <= 0)
 	                throw new Error('encryption error. empty content');
 	            const bKey = yield this.getKey(key);
 	            const abPlaindata = yield file.toArrayBuffer();
@@ -2826,7 +2835,7 @@
 	    encrypt(data) {
 	        const stringData = typeof data === 'string' ? data : LegacyCryptor.decoder.decode(data);
 	        return {
-	            data: LegacyCryptor.encoder.encode(this.cryptor.encrypt(stringData)),
+	            data: this.cryptor.encrypt(stringData),
 	            metadata: null,
 	        };
 	    }
@@ -2925,6 +2934,8 @@
 	            : this.defaultCryptor.encrypt(data);
 	        if (!encrypted.metadata)
 	            return encrypted.data;
+	        else if (typeof encrypted.data === 'string')
+	            throw new Error('Encryption error: encrypted data should be ArrayBuffed.');
 	        const headerData = this.getHeaderData(encrypted);
 	        return this.concatArrayBuffer(headerData, encrypted.data);
 	    }
@@ -2938,6 +2949,8 @@
 	                return this.defaultCryptor.encryptFile(file, File);
 	            const fileData = yield this.getFileData(file);
 	            const encrypted = yield this.defaultCryptor.encryptFileData(fileData);
+	            if (typeof encrypted.data === 'string')
+	                throw new Error('Encryption error: encrypted data should be ArrayBuffed.');
 	            return File.create({
 	                name: file.name,
 	                mimeType: 'application/octet-stream',
