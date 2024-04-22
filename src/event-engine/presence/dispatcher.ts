@@ -20,7 +20,6 @@ export type Dependencies = {
   config: PrivateClientConfiguration;
   presenceState: Record<string, Payload>;
 
-  // TODO: Find out actual `status` type.
   /* eslint-disable  @typescript-eslint/no-explicit-any */
   emitStatus: (status: any) => void;
 };

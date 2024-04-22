@@ -20,7 +20,7 @@
       "clearedSuffix": false
     }
   ],
-  "src/core/components/config.js": [
+  "src/core/components/configuration.ts": [
     {
       "pattern": "^\\s{2,}return '(v?(\\.?\\d+){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?)';$",
       "clearedPrefix": true,

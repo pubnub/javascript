@@ -7,7 +7,6 @@ export class RetryPolicy {
     return {
       delay: configuration.delay,
       maximumRetry: configuration.maximumRetry,
-      // TODO: Find out actual `error` type.
       /* eslint-disable  @typescript-eslint/no-explicit-any */
       shouldRetry(error: any, attempt: number) {
         if (error?.status?.statusCode === 403) {
@@ -19,7 +18,6 @@ export class RetryPolicy {
         const delay = reason.retryAfter ?? this.delay;
         return (delay + Math.random()) * 1000;
       },
-      // TODO: Find out actual `error` type.
       /* eslint-disable  @typescript-eslint/no-explicit-any */
       getGiveupReason(error: any, attempt: number) {
         if (this.maximumRetry <= attempt) {

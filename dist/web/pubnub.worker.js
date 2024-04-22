@@ -90,12 +90,13 @@
     var uuidGenerator$1 = /*@__PURE__*/getDefaultExportFromCjs(uuidExports);
 
     var uuidGenerator = {
-      createUUID() {
-        if (uuidGenerator$1.uuid) {
-          return uuidGenerator$1.uuid();
-        }
-        return uuidGenerator$1();
-      },
+        createUUID() {
+            if (uuidGenerator$1.uuid) {
+                return uuidGenerator$1.uuid();
+            }
+            // @ts-expect-error Depending on module type it may be callable.
+            return uuidGenerator$1();
+        },
     };
 
     /// <reference lib="webworker" />
@@ -208,6 +209,11 @@
             markRequestCompleted(clients, requestOrId.identifier);
         });
     };
+    /**
+     * Handle client request to leave request.
+     *
+     * @param event - Leave event details.
+     */
     const handleSendLeaveRequestEvent = (event) => {
         const data = event.data;
         const request = leaveTransportRequestFromEvent(data);
@@ -222,7 +228,10 @@
             result.url = `${data.request.origin}${data.request.path}`;
             result.clientIdentifier = data.clientIdentifier;
             result.identifier = data.request.identifier;
-            publishClientEvent(event.source.id, result);
+            publishClientEvent(event.source.id, result).then((sent) => {
+                if (sent)
+                    invalidateClient(client.subscriptionKey, client.clientIdentifier, client.userId);
+            });
             return;
         }
         sendRequest(request, () => [client], (clients, response) => {
@@ -504,10 +513,11 @@
      * @param event - Service worker event object.
      */
     const publishClientEvent = (identifier, event) => {
-        self.clients.get(identifier).then((client) => {
+        return self.clients.get(identifier).then((client) => {
             if (!client)
-                return;
+                return false;
             client.postMessage(event);
+            return true;
         });
     };
     /**
@@ -559,7 +569,10 @@
             const { request: clientRequest } = client.subscription;
             const decidedRequest = clientRequest !== null && clientRequest !== void 0 ? clientRequest : request;
             if (client.logVerbosity && serviceWorkerClientId && decidedRequest) {
-                publishClientEvent(serviceWorkerClientId, Object.assign(Object.assign({}, event), { clientIdentifier: client.clientIdentifier, url: `${decidedRequest.origin}${decidedRequest.path}`, query: decidedRequest.queryParameters }));
+                publishClientEvent(serviceWorkerClientId, Object.assign(Object.assign({}, event), { clientIdentifier: client.clientIdentifier, url: `${decidedRequest.origin}${decidedRequest.path}`, query: decidedRequest.queryParameters })).then((sent) => {
+                    if (sent)
+                        invalidateClient(client.subscriptionKey, client.clientIdentifier, client.userId);
+                });
             }
         });
     };
@@ -590,7 +603,10 @@
             const { request: clientRequest } = client.subscription;
             const decidedRequest = clientRequest !== null && clientRequest !== void 0 ? clientRequest : request;
             if (serviceWorkerClientId && decidedRequest) {
-                publishClientEvent(serviceWorkerClientId, Object.assign(Object.assign({}, result), { clientIdentifier: client.clientIdentifier, identifier: decidedRequest.identifier, url: `${decidedRequest.origin}${decidedRequest.path}` }));
+                publishClientEvent(serviceWorkerClientId, Object.assign(Object.assign({}, result), { clientIdentifier: client.clientIdentifier, identifier: decidedRequest.identifier, url: `${decidedRequest.origin}${decidedRequest.path}` })).then((sent) => {
+                    if (sent)
+                        invalidateClient(client.subscriptionKey, client.clientIdentifier, client.userId);
+                });
             }
         });
     };
@@ -696,7 +712,6 @@
                 userId: query.uuid,
                 authKey: ((_c = query.auth) !== null && _c !== void 0 ? _c : ''),
                 logVerbosity: information.logVerbosity,
-                lastAvailabilityCheck: new Date().getTime(),
                 subscription: {
                     path: !isPresenceLeave ? information.request.path : '',
                     channelGroupQuery: !isPresenceLeave ? channelGroupQuery : '',
@@ -728,7 +743,6 @@
             client.subscription.filterExpression = ((_o = query['filter-expr']) !== null && _o !== void 0 ? _o : '');
             client.subscription.previousTimetoken = client.subscription.timetoken;
             client.subscription.timetoken = ((_p = query.tt) !== null && _p !== void 0 ? _p : '0');
-            client.lastAvailabilityCheck = new Date().getTime();
             client.subscription.request = information.request;
             client.authKey = ((_q = query.auth) !== null && _q !== void 0 ? _q : '');
             client.userId = query.uuid;
@@ -757,6 +771,40 @@
                     delete userState[objectName];
                 client.subscription.objectsWithState = [];
             }
+        }
+    };
+    /**
+     * Clean up resources used by registered PubNub client instance.
+     *
+     * @param subscriptionKey - Subscription key which has been used by the
+     * invalidated instance.
+     * @param clientId - Unique PubNub client identifier.
+     * @param userId - Unique identifier of the user used by PubNub client instance.
+     */
+    const invalidateClient = (subscriptionKey, clientId, userId) => {
+        delete pubNubClients[clientId];
+        let clients = pubNubClientsBySubscriptionKey[subscriptionKey];
+        if (clients) {
+            // Clean up linkage between client and subscription key.
+            clients = clients.filter((client) => client.clientIdentifier !== clientId);
+            if (clients.length > 0)
+                pubNubClientsBySubscriptionKey[subscriptionKey] = clients;
+            else
+                delete pubNubClientsBySubscriptionKey[subscriptionKey];
+            // Clean up presence state information if not in use anymore.
+            if (clients.length === 0)
+                delete presenceState[subscriptionKey];
+            // Clean up service workers client linkage to PubNub clients.
+            if (clients.length > 0) {
+                const workerClients = serviceWorkerClients[subscriptionKey];
+                if (workerClients) {
+                    delete workerClients[clientId];
+                    if (Object.keys(workerClients).length === 0)
+                        delete serviceWorkerClients[subscriptionKey];
+                }
+            }
+            else
+                delete serviceWorkerClients[subscriptionKey];
         }
     };
     /**

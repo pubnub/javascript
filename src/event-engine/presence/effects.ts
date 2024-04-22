@@ -12,7 +12,6 @@ export const leave = createEffect('LEAVE', (channels: string[], groups: string[]
   groups,
 }));
 
-// TODO: Find out actual `status` type.
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 export const emitStatus = createEffect('EMIT_STATUS', (status: any) => status);
 

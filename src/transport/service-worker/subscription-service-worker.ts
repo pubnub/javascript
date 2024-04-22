@@ -285,11 +285,6 @@ type PubNubClientState = {
   logVerbosity: boolean;
 
   /**
-   * Last time, PubNub client instance responded to the `ping` event.
-   */
-  lastAvailabilityCheck: number;
-
-  /**
    * Current subscription session information.
    *
    * **Note:** Information updated each time when PubNub client instance schedule `subscribe` or
@@ -518,6 +513,11 @@ const handleSendSubscribeRequestEvent = (event: SendRequestEvent) => {
   );
 };
 
+/**
+ * Handle client request to leave request.
+ *
+ * @param event - Leave event details.
+ */
 const handleSendLeaveRequestEvent = (event: ExtendableMessageEvent) => {
   const data = event.data as SendRequestEvent;
   const request = leaveTransportRequestFromEvent(data);
@@ -533,7 +533,9 @@ const handleSendLeaveRequestEvent = (event: ExtendableMessageEvent) => {
     result.clientIdentifier = data.clientIdentifier;
     result.identifier = data.request.identifier;
 
-    publishClientEvent((event.source! as Client).id, result);
+    publishClientEvent((event.source! as Client).id, result).then((sent) => {
+      if (sent) invalidateClient(client.subscriptionKey, client.clientIdentifier, client.userId);
+    });
     return;
   }
 
@@ -867,9 +869,11 @@ const leaveTransportRequestFromEvent = (event: SendRequestEvent): TransportReque
  * @param event - Service worker event object.
  */
 const publishClientEvent = (identifier: string, event: ServiceWorkerEvent) => {
-  self.clients.get(identifier).then((client) => {
-    if (!client) return;
+  return self.clients.get(identifier).then((client) => {
+    if (!client) return false;
+
     client.postMessage(event);
+    return true;
   });
 };
 
@@ -939,6 +943,8 @@ const notifyRequestProcessing = (
         clientIdentifier: client.clientIdentifier,
         url: `${decidedRequest.origin}${decidedRequest.path}`,
         query: decidedRequest.queryParameters,
+      }).then((sent) => {
+        if (sent) invalidateClient(client.subscriptionKey, client.clientIdentifier, client.userId);
       });
     }
   });
@@ -982,6 +988,8 @@ const notifyRequestProcessingResult = (
         clientIdentifier: client.clientIdentifier,
         identifier: decidedRequest.identifier,
         url: `${decidedRequest.origin}${decidedRequest.path}`,
+      }).then((sent) => {
+        if (sent) invalidateClient(client.subscriptionKey, client.clientIdentifier, client.userId);
       });
     }
   });
@@ -1099,7 +1107,6 @@ const registerClientIfRequired = (event: ExtendableMessageEvent) => {
       userId: query.uuid as string,
       authKey: (query.auth ?? '') as string,
       logVerbosity: information.logVerbosity,
-      lastAvailabilityCheck: new Date().getTime(),
       subscription: {
         path: !isPresenceLeave ? information.request.path : '',
         channelGroupQuery: !isPresenceLeave ? channelGroupQuery : '',
@@ -1134,7 +1141,6 @@ const registerClientIfRequired = (event: ExtendableMessageEvent) => {
     client.subscription.filterExpression = (query['filter-expr'] ?? '') as string;
     client.subscription.previousTimetoken = client.subscription.timetoken;
     client.subscription.timetoken = (query.tt ?? '0') as string;
-    client.lastAvailabilityCheck = new Date().getTime();
     client.subscription.request = information.request;
     client.authKey = (query.auth ?? '') as string;
     client.userId = query.uuid as string;
@@ -1166,6 +1172,39 @@ const registerClientIfRequired = (event: ExtendableMessageEvent) => {
       for (const objectName of client.subscription.objectsWithState) delete userState[objectName];
       client.subscription.objectsWithState = [];
     }
+  }
+};
+
+/**
+ * Clean up resources used by registered PubNub client instance.
+ *
+ * @param subscriptionKey - Subscription key which has been used by the
+ * invalidated instance.
+ * @param clientId - Unique PubNub client identifier.
+ * @param userId - Unique identifier of the user used by PubNub client instance.
+ */
+const invalidateClient = (subscriptionKey: string, clientId: string, userId: string) => {
+  delete pubNubClients[clientId];
+  let clients = pubNubClientsBySubscriptionKey[subscriptionKey];
+
+  if (clients) {
+    // Clean up linkage between client and subscription key.
+    clients = clients.filter((client) => client.clientIdentifier !== clientId);
+    if (clients.length > 0) pubNubClientsBySubscriptionKey[subscriptionKey] = clients;
+    else delete pubNubClientsBySubscriptionKey[subscriptionKey];
+
+    // Clean up presence state information if not in use anymore.
+    if (clients.length === 0) delete presenceState[subscriptionKey];
+
+    // Clean up service workers client linkage to PubNub clients.
+    if (clients.length > 0) {
+      const workerClients = serviceWorkerClients[subscriptionKey];
+      if (workerClients) {
+        delete workerClients[clientId];
+
+        if (Object.keys(workerClients).length === 0) delete serviceWorkerClients[subscriptionKey];
+      }
+    } else delete serviceWorkerClients[subscriptionKey];
   }
 };
 

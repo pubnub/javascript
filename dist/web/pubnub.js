@@ -3672,12 +3672,13 @@
 	var uuidGenerator$1 = /*@__PURE__*/getDefaultExportFromCjs(uuidExports);
 
 	var uuidGenerator = {
-	  createUUID() {
-	    if (uuidGenerator$1.uuid) {
-	      return uuidGenerator$1.uuid();
-	    }
-	    return uuidGenerator$1();
-	  },
+	    createUUID() {
+	        if (uuidGenerator$1.uuid) {
+	            return uuidGenerator$1.uuid();
+	        }
+	        // @ts-expect-error Depending on module type it may be callable.
+	        return uuidGenerator$1();
+	    },
 	};
 
 	/**
@@ -6450,7 +6451,6 @@
 	    channels,
 	    groups,
 	}));
-	// TODO: Find out actual `status` type.
 	/* eslint-disable  @typescript-eslint/no-explicit-any */
 	const emitStatus$1 = createEffect('EMIT_STATUS', (status) => status);
 	const wait = createManagedEffect('WAIT', () => ({}));
@@ -6685,7 +6685,6 @@
 	        return {
 	            delay: configuration.delay,
 	            maximumRetry: configuration.maximumRetry,
-	            // TODO: Find out actual `error` type.
 	            /* eslint-disable  @typescript-eslint/no-explicit-any */
 	            shouldRetry(error, attempt) {
 	                var _a;
@@ -6699,7 +6698,6 @@
 	                const delay = (_a = reason.retryAfter) !== null && _a !== void 0 ? _a : this.delay;
 	                return (delay + Math.random()) * 1000;
 	            },
-	            // TODO: Find out actual `error` type.
 	            /* eslint-disable  @typescript-eslint/no-explicit-any */
 	            getGiveupReason(error, attempt) {
 	                var _a;
