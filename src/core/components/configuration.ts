@@ -163,7 +163,7 @@ export const makeConfiguration = (
       return base.PubNubFile;
     },
     get version(): string {
-      return '7.6.3';
+      return '8.0.0';
     },
     getVersion(): string {
       return this.version;
