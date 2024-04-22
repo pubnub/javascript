@@ -1,3 +1,11 @@
+## v8.0.0
+April 22 2024
+
+#### Added
+- Upgraded the network layer, replacing the `superagent` module with the `Fetch API` for browser integrations and node-fetch for `npm` integrations, ensuring enhanced performance and reliability.
+- Added service worker .
+- Enhanced the subscribe feature with service worker support, improving user experience across multiple browser windows and tabs.           The client interface rewritten with TypeScript, which gives an up-to-date interface.
+
 ## v7.6.3
 April 18 2024
 
