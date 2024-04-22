@@ -14,12 +14,12 @@ import { HandshakeStoppedState } from './handshake_stopped';
 import { ReceivingState } from './receiving';
 import { UnsubscribedState } from './unsubscribed';
 import categoryConstants from '../../core/constants/categories';
-import { Cursor } from '../../models/Cursor';
+import * as Subscription from '../../core/types/api/subscription';
 
 export type HandshakingStateContext = {
   channels: string[];
   groups: string[];
-  cursor?: Cursor;
+  cursor?: Subscription.SubscriptionCursor;
 };
 
 export const HandshakingState = new State<HandshakingStateContext, Events, Effects>('HANDSHAKING');

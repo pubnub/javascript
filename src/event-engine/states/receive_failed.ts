@@ -1,15 +1,15 @@
 import { State } from '../core/state';
-import { Cursor } from '../../models/Cursor';
 import { Effects } from '../effects';
 import { Events, reconnect, restore, subscriptionChange, unsubscribeAll } from '../events';
-import { PubNubError } from '../../core/components/endpoint';
+import { PubNubError } from '../../errors/pubnub-error';
 import { HandshakingState } from './handshaking';
 import { UnsubscribedState } from './unsubscribed';
+import * as Subscription from '../../core/types/api/subscription';
 
 export type ReceiveFailedStateContext = {
   channels: string[];
   groups: string[];
-  cursor: Cursor;
+  cursor: Subscription.SubscriptionCursor;
 
   reason: PubNubError;
 };

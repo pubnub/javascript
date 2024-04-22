@@ -19,7 +19,10 @@ class AuthSteps {
 
   private token?: string;
 
-  constructor(private manager: PubNubManager, private keyset: AccessManagerKeyset) {}
+  constructor(
+    private manager: PubNubManager,
+    private keyset: AccessManagerKeyset,
+  ) {}
 
   @when('I publish a message using that auth token with channel {string}')
   public publishMessage() {

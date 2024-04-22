@@ -1,10 +1,12 @@
 import nock from 'nock';
-import utils from '../utils';
+
 import PubNub from '../../src/node/index';
+import utils from '../utils';
 
 describe('EventEngine', () => {
-  let pubnub: PubNub;
+  // @ts-expect-error Access event engine core for test purpose.
   let engine: PubNub['presenceEventEngine']['engine'];
+  let pubnub: PubNub;
 
   before(() => {
     nock.disableNetConnect();
@@ -14,7 +16,8 @@ describe('EventEngine', () => {
     nock.enableNetConnect();
   });
 
-  let unsub;
+  let unsub: () => void;
+
   beforeEach(() => {
     nock.cleanAll();
 
@@ -27,10 +30,12 @@ describe('EventEngine', () => {
       logVerbosity: true,
     });
 
+    // @ts-expect-error Access event engine core for test purpose.
     engine = pubnub.presenceEventEngine._engine;
 
-    unsub = engine.subscribe((change) => {
-      console.log(change);
+    unsub = engine.subscribe((_change: Record<string, any>) => {
+      // FOR DEBUG
+      // console.dir(change);
     });
   });
 
@@ -40,9 +45,9 @@ describe('EventEngine', () => {
 
   function forEvent(eventLabel: string, timeout?: number) {
     return new Promise<void>((resolve, reject) => {
-      let timeoutId = null;
+      let timeoutId: NodeJS.Timeout | null = null;
 
-      const unsubscribe = engine.subscribe((change) => {
+      const unsubscribe = engine.subscribe((change: { type: string; event: { type: string } }) => {
         if (change.type === 'eventReceived' && change.event.type === eventLabel) {
           if (timeoutId) clearTimeout(timeoutId);
           unsubscribe();
@@ -61,9 +66,9 @@ describe('EventEngine', () => {
 
   function forState(stateLabel: string, timeout?: number) {
     return new Promise<void>((resolve, reject) => {
-      let timeoutId = null;
+      let timeoutId: NodeJS.Timeout | null = null;
 
-      const unsubscribe = engine.subscribe((change) => {
+      const unsubscribe = engine.subscribe((change: { type: string; toState: { label: string } }) => {
         if (change.type === 'transitionDone' && change.toState.label === stateLabel) {
           if (timeoutId) clearTimeout(timeoutId);
           unsubscribe();
@@ -82,9 +87,9 @@ describe('EventEngine', () => {
 
   function forInvocation(invocationLabel: string, timeout?: number) {
     return new Promise<void>((resolve, reject) => {
-      let timeoutId = null;
+      let timeoutId: NodeJS.Timeout | null = null;
 
-      const unsubscribe = engine.subscribe((change) => {
+      const unsubscribe = engine.subscribe((change: { type: string; invocation: { type: string } }) => {
         if (change.type === 'invocationDispatched' && change.invocation.type === invocationLabel) {
           if (timeoutId) clearTimeout(timeoutId);
           unsubscribe();
@@ -101,13 +106,14 @@ describe('EventEngine', () => {
     });
   }
 
-  it(' presence event_engine should work correctly', async () => {
+  it('presence event_engine should work correctly', async () => {
     utils
       .createNock()
       .get('/v2/presence/sub-key/demo/channel/test/heartbeat')
       .query(true)
-      .reply(200, '{"message":"OK", "service":"Presence"}');
+      .reply(200, '{"message":"OK", "service":"Presence"}', { 'content-type': 'text/javascript' });
 
+    // @ts-expect-error Intentional access to the private interface.
     pubnub.join({ channels: ['test'] });
 
     await forEvent('JOINED', 1000);
@@ -118,10 +124,9 @@ describe('EventEngine', () => {
 
     await forState('HEARTBEAT_COOLDOWN', 1000);
 
+    // @ts-expect-error Intentional access to the private interface.
     pubnub.leaveAll();
 
     await forEvent('LEFT_ALL', 2000);
-
   });
-
 });

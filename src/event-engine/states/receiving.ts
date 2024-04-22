@@ -1,5 +1,4 @@
 import { State } from '../core/state';
-import { Cursor } from '../../models/Cursor';
 import { Effects, emitMessages, emitStatus, receiveMessages } from '../effects';
 import {
   disconnect,
@@ -14,11 +13,12 @@ import { UnsubscribedState } from './unsubscribed';
 import { ReceiveReconnectingState } from './receive_reconnecting';
 import { ReceiveStoppedState } from './receive_stopped';
 import categoryConstants from '../../core/constants/categories';
+import * as Subscription from '../../core/types/api/subscription';
 
 export type ReceivingStateContext = {
   channels: string[];
   groups: string[];
-  cursor: Cursor;
+  cursor: Subscription.SubscriptionCursor;
 };
 
 export const ReceivingState = new State<ReceivingStateContext, Events, Effects>('RECEIVING');

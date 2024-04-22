@@ -1,14 +1,30 @@
 {
   "compilerOptions": {
-    "target": "ES5",
-    "module": "ESNext",
+    "target": "ES6",
+    "module": "ES6",
     "moduleResolution": "Node",
-
     "allowJs": true,
     "noEmitOnError": true,
     "strict": true,
-    "outDir": "./lib"
+    "esModuleInterop": true,
+    "outDir": "./lib",
+    "lib": [
+      "es6",
+      "webworker",
+      "dom"
+    ]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "src/node/**/*"]
+  "exclude": [
+    "node_modules",
+    "test",
+    "src/file/modules/node.ts",
+    "src/file/modules/react-native.ts",
+    "src/node/**/*",
+    "src/react_native/**/*",
+    "src/nativescript/**/*",
+    "src/titanium/**/*",
+    "src/transport/node-transport.ts",
+    "src/transport/titanium-transport.ts"
+  ]
 }

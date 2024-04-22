@@ -1,8 +1,8 @@
-import { decode } from '../../src/core/components/base64_codec';
-
 import assert from 'assert';
 
-function assertBufferEqual(actual, expected) {
+import { decode } from '../../src/core/components/base64_codec';
+
+function assertBufferEqual(actual: ArrayBuffer, expected: number[]) {
   assert.deepStrictEqual(new Uint8Array(actual), Uint8Array.from(expected));
 }
 

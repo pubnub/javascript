@@ -1,5 +1,5 @@
-import { PubNubError } from '../core/components/endpoint';
-import { Cursor } from '../models/Cursor';
+import * as Subscription from '../core/types/api/subscription';
+import { PubNubError } from '../errors/pubnub-error';
 import { createEvent, MapOf } from './core';
 
 export const subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', (channels: string[], groups: string[]) => ({
@@ -9,7 +9,7 @@ export const subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', (channels:
 
 export const restore = createEvent(
   'SUBSCRIPTION_RESTORED',
-  (channels: string[], groups: string[], timetoken: string, region?: number) => ({
+  (channels: string[], groups: string[], timetoken: string | number, region?: number) => ({
     channels,
     groups,
     cursor: {
@@ -19,25 +19,34 @@ export const restore = createEvent(
   }),
 );
 
-export const handshakeSuccess = createEvent('HANDSHAKE_SUCCESS', (cursor: Cursor) => cursor);
+export const handshakeSuccess = createEvent('HANDSHAKE_SUCCESS', (cursor: Subscription.SubscriptionCursor) => cursor);
 export const handshakeFailure = createEvent('HANDSHAKE_FAILURE', (error: PubNubError) => error);
 
-export const handshakeReconnectSuccess = createEvent('HANDSHAKE_RECONNECT_SUCCESS', (cursor: Cursor) => ({
-  cursor,
-}));
+export const handshakeReconnectSuccess = createEvent(
+  'HANDSHAKE_RECONNECT_SUCCESS',
+  (cursor: Subscription.SubscriptionCursor) => ({
+    cursor,
+  }),
+);
 export const handshakeReconnectFailure = createEvent('HANDSHAKE_RECONNECT_FAILURE', (error: PubNubError) => error);
 export const handshakeReconnectGiveup = createEvent('HANDSHAKE_RECONNECT_GIVEUP', (error: PubNubError) => error);
 
-export const receiveSuccess = createEvent('RECEIVE_SUCCESS', (cursor: Cursor, events: any[]) => ({
-  cursor,
-  events,
-}));
+export const receiveSuccess = createEvent(
+  'RECEIVE_SUCCESS',
+  (cursor: Subscription.SubscriptionCursor, events: Subscription.SubscriptionResponse['messages']) => ({
+    cursor,
+    events,
+  }),
+);
 export const receiveFailure = createEvent('RECEIVE_FAILURE', (error: PubNubError) => error);
 
-export const receiveReconnectSuccess = createEvent('RECEIVE_RECONNECT_SUCCESS', (cursor: Cursor, events: any[]) => ({
-  cursor,
-  events,
-}));
+export const receiveReconnectSuccess = createEvent(
+  'RECEIVE_RECONNECT_SUCCESS',
+  (cursor: Subscription.SubscriptionCursor, events: Subscription.SubscriptionResponse['messages']) => ({
+    cursor,
+    events,
+  }),
+);
 export const receiveReconnectFailure = createEvent('RECEIVE_RECONNECT_FAILURE', (error: PubNubError) => error);
 export const receiveReconnectGiveup = createEvent('RECEIVING_RECONNECT_GIVEUP', (error: PubNubError) => error);
 export const disconnect = createEvent('DISCONNECT', () => ({}));

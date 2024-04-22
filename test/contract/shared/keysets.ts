@@ -1,9 +1,9 @@
 import { Keyset } from './pubnub';
 
 export class AccessManagerKeyset implements Keyset {
-  publishKey = process.env.PUBLISH_KEY_ACCESS || 'pub-key';
-  subscribeKey = process.env.SUBSCRIBE_KEY_ACCESS || 'sub-key';
-  secretKey = process.env.SECRET_KEY_ACCESS || 'secret-key';
+  subscribeKey = process.env.PAM_SUBSCRIBE_KEY || 'sub-key';
+  secretKey = process.env.PAM_SECRET_KEY || 'secret-key';
+  publishKey = process.env.PAM_PUBLISH_KEY || 'pub-key';
 }
 
 export class DemoKeyset implements Keyset {

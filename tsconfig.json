@@ -1,20 +1,29 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES5",
+    "target": "ES6",
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "esModuleInterop": true,
     "allowJs": true,
     "noEmitOnError": true,
     "strict": true,
+    "esModuleInterop": true,
     "outDir": "./lib",
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "removeComments": true
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/crypto/modules/WebCryptoModule/**/*",
+    "src/crypto/modules/web.ts",
+    "src/file/modules/web.ts",
+    "src/nativescript/**/*",
+    "src/titanium/**/*",
+    "src/transport/service-worker/**/*",
+    "src/transport/titanium-transport.ts",
+    "src/web/**/*"
   ]
 }

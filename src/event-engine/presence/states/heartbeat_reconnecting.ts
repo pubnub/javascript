@@ -1,5 +1,5 @@
+import { PubNubError } from '../../../errors/pubnub-error';
 import { State } from '../../core/state';
-import { PubNubError } from '../../../core/components/endpoint';
 import {
   Events,
   disconnect,

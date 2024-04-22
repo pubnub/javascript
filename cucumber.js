@@ -7,6 +7,6 @@ module.exports = {
     '--format summary',
     '--format progress-bar',
     // '--format @cucumber/pretty-formatter',
-    '--publish-quiet',
+    // '--publish-quiet',
   ].join(' '),
 };

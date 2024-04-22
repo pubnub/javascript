@@ -1,5 +1,4 @@
-import type PubNubType from 'pubnub';
-import PubNub from '../../../lib/node/index.js';
+import PubNubCore from '../../../lib/node/index.js';
 
 export interface Keyset {
   subscribeKey?: string;
@@ -35,8 +34,8 @@ const defaultConfig: Config = {
 
 export class PubNubManager {
   getInstance(config: Config = {}) {
-    return new (PubNub as any)({ ...defaultConfig, ...config });
+    return new (PubNubCore as any)({ ...defaultConfig, ...config });
   }
 }
 
-export type PubNub = PubNubType;
+export type PubNub = PubNubCore;

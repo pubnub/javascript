@@ -1,13 +1,15 @@
-import { EventEmitter, Listener, SubscriptionOptions } from './commonTypes';
-import PubNubType from 'pubnub';
-import type PubNub from '../core/pubnub-common';
+import type { PubNubCore as PubNub } from '../core/pubnub-common';
+import { Listener } from '../core/components/listener_manager';
+import * as Subscription from '../core/types/api/subscription';
+import EventEmitter from '../core/components/eventEmitter';
+import { SubscriptionOptions } from './commonTypes';
 
 export abstract class SubscribeCapable {
   protected abstract channelNames: string[];
   protected abstract groupNames: string[];
   protected abstract listener: Listener;
   protected abstract eventEmitter: EventEmitter;
-  protected abstract pubnub: PubNub;
+  protected abstract pubnub: PubNub<unknown, unknown>;
   protected abstract options?: SubscriptionOptions;
 
   subscribe() {
@@ -24,27 +26,27 @@ export abstract class SubscribeCapable {
     });
   }
 
-  set onMessage(onMessagelistener: (messageEvent: PubNubType.MessageEvent) => void) {
-    this.listener.message = onMessagelistener;
+  set onMessage(onMessageListener: (messageEvent: Subscription.Message) => void) {
+    this.listener.message = onMessageListener;
   }
 
-  set onPresence(onPresencelistener: (presenceEvent: PubNubType.PresenceEvent) => void) {
-    this.listener.presence = onPresencelistener;
+  set onPresence(onPresenceListener: (presenceEvent: Subscription.Presence) => void) {
+    this.listener.presence = onPresenceListener;
   }
 
-  set onSignal(onSignalListener: (signalEvent: PubNubType.SignalEvent) => void) {
+  set onSignal(onSignalListener: (signalEvent: Subscription.Signal) => void) {
     this.listener.signal = onSignalListener;
   }
 
-  set onObjects(onObjectsListener: (objectsEvent: PubNubType.ObjectsEvent) => void) {
+  set onObjects(onObjectsListener: (objectsEvent: Subscription.AppContextObject) => void) {
     this.listener.objects = onObjectsListener;
   }
 
-  set onMessageAction(messageActionEventListener: (messageActionEvent: PubNubType.MessageActionEvent) => void) {
+  set onMessageAction(messageActionEventListener: (messageActionEvent: Subscription.MessageAction) => void) {
     this.listener.messageAction = messageActionEventListener;
   }
 
-  set onFile(fileEventListener: (fileEvent: PubNubType.FileEvent) => void) {
+  set onFile(fileEventListener: (fileEvent: Subscription.File) => void) {
     this.listener.file = fileEventListener;
   }
 

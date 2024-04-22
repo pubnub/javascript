@@ -1,4 +1,4 @@
-import { PubNubError } from '../../core/components/endpoint';
+import { PubNubError } from '../../errors/pubnub-error';
 import { createEvent, MapOf } from '../core';
 
 export const reconnect = createEvent('RECONNECT', () => ({}));

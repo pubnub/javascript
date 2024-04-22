@@ -36,7 +36,10 @@ class EventEngineSteps {
   private changelog: Change<any, any>[] = [];
   private configuration: any = {};
 
-  constructor(private manager: PubNubManager, private keyset: DemoKeyset) {}
+  constructor(
+    private manager: PubNubManager,
+    private keyset: DemoKeyset,
+  ) {}
 
   private async testDelay(time: number) {
     return new Promise((resolve) => setTimeout(resolve, time * 1000));
@@ -114,7 +117,7 @@ class EventEngineSteps {
   @then('I observe the following Events and Invocations of the Presence EE:')
   async thenIObservePresenceEE(dataTable: DataTable) {
     const expectedChangelog = dataTable.hashes();
-    const actualChangelog = [];
+    const actualChangelog: { type: string; name: string }[] = [];
     for (const entry of this.changelog) {
       if (entry.type === 'eventReceived') {
         actualChangelog.push({ type: 'event', name: entry.event.type });
@@ -170,10 +173,10 @@ class EventEngineSteps {
       this.messagePromise = new Promise<MessageEvent>((resolveMessage) => {
         this.pubnub?.addListener({
           message(messageEvent) {
-            resolveMessage(messageEvent);
+            setTimeout(() => resolveMessage(messageEvent), 100);
           },
           status(statusEvent) {
-            resolveStatus(statusEvent);
+            setTimeout(() => resolveStatus(statusEvent), 100);
           },
         });
 
@@ -182,16 +185,16 @@ class EventEngineSteps {
     });
   }
 
-  @when('I subscribe with timetoken {int}')
+  @when(/I subscribe with timetoken (\d*)/)
   async whenISubscribeWithTimetoken(timetoken: number) {
     this.statusPromise = new Promise<StatusEvent>((resolveStatus) => {
       this.messagePromise = new Promise<MessageEvent>((resolveMessage) => {
         this.pubnub?.addListener({
           message(messageEvent) {
-            resolveMessage(messageEvent);
+            setTimeout(() => resolveMessage(messageEvent), 100);
           },
           status(statusEvent) {
-            resolveStatus(statusEvent);
+            setTimeout(() => resolveStatus(statusEvent), 100);
           },
         });
 
@@ -225,7 +228,7 @@ class EventEngineSteps {
   thenIObserve(dataTable: DataTable) {
     const expectedChangelog = dataTable.hashes();
 
-    const actualChangelog = [];
+    const actualChangelog: { type: string; name: string }[] = [];
     for (const entry of this.changelog) {
       if (entry.type === 'eventReceived') {
         actualChangelog.push({ type: 'event', name: entry.event.type });
@@ -242,7 +245,7 @@ class EventEngineSteps {
 
   @then("I don't observe any Events and Invocations of the Presence EE")
   noeventInvocations() {
-    const actualChangelog = [];
+    const actualChangelog: { type: string; name: string }[] = [];
     for (const entry of this.changelog) {
       if (entry.type === 'eventReceived') {
         actualChangelog.push({ type: 'event', name: entry.event.type });
@@ -258,7 +261,9 @@ class EventEngineSteps {
 
   @after()
   dispose() {
-    (this.pubnub as any).removeAllListeners();
-    (this.pubnub as any).eventEngine.dispose();
+    if (this.pubnub) {
+      (this.pubnub as any).removeAllListeners();
+      (this.pubnub as any).eventEngine.dispose();
+    }
   }
 }

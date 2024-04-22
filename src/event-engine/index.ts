@@ -15,7 +15,7 @@ export class EventEngine {
     return this.engine;
   }
 
-  private _unsubscribeEngine!: () => void;
+  private readonly _unsubscribeEngine!: () => void;
 
   constructor(dependencies: Dependencies) {
     this.dependencies = dependencies;
@@ -41,11 +41,12 @@ export class EventEngine {
   }: {
     channels?: string[];
     channelGroups?: string[];
-    timetoken?: string;
+    timetoken?: string | number;
     withPresence?: boolean;
   }): void {
     this.channels = [...this.channels, ...(channels ?? [])];
     this.groups = [...this.groups, ...(channelGroups ?? [])];
+
     if (withPresence) {
       this.channels.map((c) => this.channels.push(`${c}-pnpres`));
       this.groups.map((g) => this.groups.push(`${g}-pnpres`));
@@ -79,6 +80,7 @@ export class EventEngine {
       ...channels,
       ...channels.map((c) => `${c}-pnpres`),
     ]);
+
     const filteredGroups = utils.removeSingleOccurance(this.groups, [
       ...channelGroups,
       ...channelGroups.map((c) => `${c}-pnpres`),
@@ -116,7 +118,9 @@ export class EventEngine {
     this.groups = [];
 
     if (this.dependencies.presenceState) {
-      this.dependencies.presenceState = {};
+      Object.keys(this.dependencies.presenceState).forEach((objectName) => {
+        delete this.dependencies.presenceState[objectName];
+      });
     }
     this.engine.transition(events.subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
     if (this.dependencies.leaveAll) {
@@ -136,11 +140,11 @@ export class EventEngine {
   }
 
   getSubscribedChannels(): string[] {
-    return Array.from(new Set(this.channels));
+    return Array.from(new Set(this.channels.slice(0)));
   }
 
   getSubscribedChannelGroups(): string[] {
-    return Array.from(new Set(this.groups));
+    return Array.from(new Set(this.groups.slice(0)));
   }
 
   dispose(): void {

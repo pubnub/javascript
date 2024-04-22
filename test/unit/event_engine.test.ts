@@ -1,10 +1,13 @@
 import nock from 'nock';
-import utils from '../utils';
+
+import { Payload } from '../../src/core/types/api';
 import PubNub from '../../src/node/index';
+import utils from '../utils';
 
 describe('EventEngine', () => {
-  let pubnub: PubNub;
+  // @ts-expect-error Access event engine core for test purpose.
   let engine: PubNub['eventEngine']['engine'];
+  let pubnub: PubNub;
 
   before(() => {
     nock.disableNetConnect();
@@ -14,7 +17,8 @@ describe('EventEngine', () => {
     nock.enableNetConnect();
   });
 
-  let unsub;
+  let unsub: () => void;
+
   beforeEach(() => {
     nock.cleanAll();
 
@@ -25,10 +29,12 @@ describe('EventEngine', () => {
       enableEventEngine: true,
     });
 
-    engine = pubnub.eventEngine._engine;
+    // @ts-expect-error Access event engine core for test purpose.
+    engine = pubnub.eventEngine!._engine;
 
-    unsub = engine.subscribe((change) => {
-      console.log(change);
+    unsub = engine.subscribe((_change: Record<string, any>) => {
+      // FOR DEBUG
+      // console.dir(_change);
     });
   });
 
@@ -38,9 +44,9 @@ describe('EventEngine', () => {
 
   function forEvent(eventLabel: string, timeout?: number) {
     return new Promise<void>((resolve, reject) => {
-      let timeoutId = null;
+      let timeoutId: NodeJS.Timeout | null = null;
 
-      const unsubscribe = engine.subscribe((change) => {
+      const unsubscribe = engine.subscribe((change: { type: string; event: { type: string } }) => {
         if (change.type === 'eventReceived' && change.event.type === eventLabel) {
           if (timeoutId) clearTimeout(timeoutId);
           unsubscribe();
@@ -59,9 +65,9 @@ describe('EventEngine', () => {
 
   function forState(stateLabel: string, timeout?: number) {
     return new Promise<void>((resolve, reject) => {
-      let timeoutId = null;
+      let timeoutId: NodeJS.Timeout | null = null;
 
-      const unsubscribe = engine.subscribe((change) => {
+      const unsubscribe = engine.subscribe((change: { type: string; toState: { label: string } }) => {
         if (change.type === 'transitionDone' && change.toState.label === stateLabel) {
           if (timeoutId) clearTimeout(timeoutId);
           unsubscribe();
@@ -80,9 +86,9 @@ describe('EventEngine', () => {
 
   function forInvocation(invocationLabel: string, timeout?: number) {
     return new Promise<void>((resolve, reject) => {
-      let timeoutId = null;
+      let timeoutId: NodeJS.Timeout | null = null;
 
-      const unsubscribe = engine.subscribe((change) => {
+      const unsubscribe = engine.subscribe((change: { type: string; invocation: { type: string } }) => {
         if (change.type === 'invocationDispatched' && change.invocation.type === invocationLabel) {
           if (timeoutId) clearTimeout(timeoutId);
           unsubscribe();

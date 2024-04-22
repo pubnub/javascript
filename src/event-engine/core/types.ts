@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { State } from './state';
-
 export type Event<T, P> = { type: T; payload: P };
 export type Invocation<T, P> = { type: T; payload: P; managed: boolean };
 

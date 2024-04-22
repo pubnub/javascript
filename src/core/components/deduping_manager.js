@@ -1,7 +1,5 @@
 /*       */
 
-import Config from './config';
-
 const hashCode = (payload) => {
   let hash = 0;
   if (payload.length === 0) return hash;
@@ -24,8 +22,8 @@ export default class {
   }
 
   getKey(message) {
-    const hashedPayload = hashCode(JSON.stringify(message.payload)).toString();
-    const timetoken = message.publishMetaData.publishTimetoken;
+    const hashedPayload = hashCode(JSON.stringify(message.message)).toString();
+    const timetoken = message.timetoken;
     return `${timetoken}-${hashedPayload}`;
   }
 

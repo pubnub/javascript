@@ -1,68 +1,124 @@
-import LegacyCryptor from './legacyCryptor';
-import AesCbcCryptor from './aesCbcCryptor';
-import { EncryptedDataType, ICryptor } from './ICryptor';
-import { ILegacyCryptor, PubNubFileType } from './ILegacyCryptor';
-import { decode } from '../../../core/components/base64_codec';
+/**
+ * Browser crypto module.
+ */
 
+import { AbstractCryptoModule, CryptorConfiguration } from '../../../core/interfaces/crypto-module';
+import { PubNubFile, PubNubFileParameters } from '../../../file/modules/web';
+import { PubNubFileConstructor } from '../../../core/types/file';
+import { decode } from '../../../core/components/base64_codec';
+import { PubNubError } from '../../../errors/pubnub-error';
+import { EncryptedDataType, ICryptor } from './ICryptor';
+import { ILegacyCryptor } from './ILegacyCryptor';
+import AesCbcCryptor from './aesCbcCryptor';
+import LegacyCryptor from './legacyCryptor';
+
+/**
+ * Re-export bundled cryptors.
+ */
 export { LegacyCryptor, AesCbcCryptor };
 
-type CryptorType = ICryptor | ILegacyCryptor<PubNubFileType>;
+/**
+ * Crypto module cryptors interface.
+ */
+type CryptorType = ICryptor | ILegacyCryptor;
 
-type CryptoModuleConfiguration = {
-  default: CryptorType;
-  cryptors?: Array<CryptorType>;
-};
-
-export class CryptoModule {
+/**
+ * CryptoModule for browser platform.
+ */
+export class WebCryptoModule extends AbstractCryptoModule<CryptorType> {
+  /**
+   * {@link LegacyCryptor|Legacy} cryptor identifier.
+   */
   static LEGACY_IDENTIFIER = '';
-  static encoder = new TextEncoder();
-  static decoder = new TextDecoder();
-  defaultCryptor: CryptorType;
-  cryptors: Array<CryptorType>;
 
-  constructor(cryptoModuleConfiguration: CryptoModuleConfiguration) {
-    this.defaultCryptor = cryptoModuleConfiguration.default;
-    this.cryptors = cryptoModuleConfiguration.cryptors ?? [];
-  }
+  // --------------------------------------------------------
+  // --------------- Convenience functions ------------------
+  // -------------------------------------------------------
+  // region Convenience functions
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //@ts-ignore: type detection issue with old Config type assignment
-  static legacyCryptoModule(config) {
-    return new this({
+  static legacyCryptoModule(config: CryptorConfiguration) {
+    if (!config.cipherKey) throw new PubNubError('Crypto module error: cipher key not set.');
+
+    return new WebCryptoModule({
       default: new LegacyCryptor({
-        cipherKey: config.cipherKey,
+        ...config,
         useRandomIVs: config.useRandomIVs ?? true,
       }),
       cryptors: [new AesCbcCryptor({ cipherKey: config.cipherKey })],
     });
   }
 
-  static aesCbcCryptoModule(config: any) {
-    return new this({
+  static aesCbcCryptoModule(config: CryptorConfiguration) {
+    if (!config.cipherKey) throw new PubNubError('Crypto module error: cipher key not set.');
+
+    return new WebCryptoModule({
       default: new AesCbcCryptor({ cipherKey: config.cipherKey }),
       cryptors: [
         new LegacyCryptor({
-          cipherKey: config.cipherKey,
+          ...config,
           useRandomIVs: config.useRandomIVs ?? true,
         }),
       ],
     });
   }
 
+  /**
+   * Construct crypto module with `cryptor` as default for data encryption and decryption.
+   *
+   * @param defaultCryptor - Default cryptor for data encryption and decryption.
+   *
+   * @returns Crypto module with pre-configured default cryptor.
+   */
   static withDefaultCryptor(defaultCryptor: CryptorType) {
     return new this({ default: defaultCryptor });
   }
+  // endregion
 
-  private getAllCryptors() {
-    return [this.defaultCryptor, ...this.cryptors];
-  }
+  // --------------------------------------------------------
+  // --------------------- Encryption -----------------------
+  // --------------------------------------------------------
+  // region Encryption
 
   encrypt(data: ArrayBuffer | string) {
-    const encrypted = (this.defaultCryptor as ICryptor).encrypt(data);
+    // Encrypt data.
+    const encrypted =
+      data instanceof ArrayBuffer && this.defaultCryptor.identifier === WebCryptoModule.LEGACY_IDENTIFIER
+        ? (this.defaultCryptor as ILegacyCryptor).encrypt(WebCryptoModule.decoder.decode(data))
+        : (this.defaultCryptor as ICryptor).encrypt(data);
+
     if (!encrypted.metadata) return encrypted.data;
+    else if (typeof encrypted.data === 'string')
+      throw new Error('Encryption error: encrypted data should be ArrayBuffed.');
+
     const headerData = this.getHeaderData(encrypted);
+
     return this.concatArrayBuffer(headerData!, encrypted.data);
   }
+
+  async encryptFile(file: PubNubFile, File: PubNubFileConstructor<PubNubFile, PubNubFileParameters>) {
+    /**
+     * Files handled differently in case of Legacy cryptor.
+     * (as long as we support legacy need to check on instance type)
+     */
+    if (this.defaultCryptor.identifier === CryptorHeader.LEGACY_IDENTIFIER)
+      return (this.defaultCryptor as ILegacyCryptor).encryptFile(file, File);
+
+    const fileData = await this.getFileData(file);
+    const encrypted = await (this.defaultCryptor as ICryptor).encryptFileData(fileData);
+    if (typeof encrypted.data === 'string') throw new Error('Encryption error: encrypted data should be ArrayBuffed.');
+
+    return File.create({
+      name: file.name,
+      mimeType: 'application/octet-stream',
+      data: this.concatArrayBuffer(this.getHeaderData(encrypted)!, encrypted.data),
+    });
+  }
+  // endregion
+
+  // --------------------------------------------------------
+  // --------------------- Decryption -----------------------
+  // --------------------------------------------------------
+  // region Decryption
 
   decrypt(data: ArrayBuffer | string) {
     const encryptedData = typeof data === 'string' ? decode(data) : data;
@@ -72,34 +128,29 @@ export class CryptoModule {
       header.length > 0
         ? encryptedData.slice(header.length - (header as CryptorHeaderV1).metadataLength, header.length)
         : null;
-    if (encryptedData.slice(header.length).byteLength <= 0) throw new Error('decryption error. empty content');
+
+    if (encryptedData.slice(header.length).byteLength <= 0) throw new Error('Decryption error: empty content');
+
     return cryptor!.decrypt({
       data: encryptedData.slice(header.length),
       metadata: metadata,
     });
   }
 
-  async encryptFile(file: PubNubFileType, File: PubNubFileType) {
-    if (this.defaultCryptor.identifier === CryptorHeader.LEGACY_IDENTIFIER)
-      return (this.defaultCryptor as ILegacyCryptor<PubNubFileType>).encryptFile(file, File);
-    const fileData = await this.getFileData(file.data);
-    const encrypted = await (this.defaultCryptor as ICryptor).encryptFileData(fileData);
-    return File.create({
-      name: file.name,
-      mimeType: 'application/octet-stream',
-      data: this.concatArrayBuffer(this.getHeaderData(encrypted)!, encrypted.data),
-    });
-  }
-
-  async decryptFile(file: PubNubFileType, File: PubNubFileType) {
+  async decryptFile(file: PubNubFile, File: PubNubFileConstructor<PubNubFile, PubNubFileParameters>) {
     const data = await file.data.arrayBuffer();
     const header = CryptorHeader.tryParse(data);
     const cryptor = this.getCryptor(header);
-    if (cryptor?.identifier === CryptoModule.LEGACY_IDENTIFIER) {
-      return (cryptor as ILegacyCryptor<PubNubFileType>).decryptFile(file, File);
-    }
+    /**
+     * Files handled differently in case of Legacy cryptor.
+     * (as long as we support legacy need to check on instance type)
+     */
+    if (cryptor?.identifier === CryptorHeader.LEGACY_IDENTIFIER)
+      return (cryptor as ILegacyCryptor).decryptFile(file, File);
+
     const fileData = await this.getFileData(data);
     const metadata = fileData.slice(header.length - (header as CryptorHeaderV1).metadataLength, header.length);
+
     return File.create({
       name: file.name,
       data: await (this.defaultCryptor as ICryptor).decryptFileData({
@@ -108,34 +159,54 @@ export class CryptoModule {
       }),
     });
   }
+  // endregion
 
-  private getCryptor(header: string | CryptorHeaderV1) {
-    if (header === '') {
-      const cryptor = this.getAllCryptors().find((c) => c.identifier === '');
+  // --------------------------------------------------------
+  // ----------------------- Helpers ------------------------
+  // --------------------------------------------------------
+  // region Helpers
+
+  /**
+   * Retrieve registered cryptor by its identifier.
+   *
+   * @param id - Unique cryptor identifier.
+   *
+   * @returns Registered cryptor with specified identifier.
+   *
+   * @throws Error if cryptor with specified {@link id} can't be found.
+   */
+  private getCryptorFromId(id: string) {
+    const cryptor = this.getAllCryptors().find((cryptor) => id === cryptor.identifier);
+    if (cryptor) return cryptor;
+
+    throw Error('Unknown cryptor error');
+  }
+
+  /**
+   * Retrieve cryptor by its identifier.
+   *
+   * @param header - Header with cryptor-defined data or raw cryptor identifier.
+   *
+   * @returns Cryptor which correspond to provided {@link header}.
+   */
+  private getCryptor(header: CryptorHeader | string) {
+    if (typeof header === 'string') {
+      const cryptor = this.getAllCryptors().find((cryptor) => cryptor.identifier === header);
       if (cryptor) return cryptor;
-      throw new Error('unknown cryptor error');
+
+      throw new Error('Unknown cryptor error');
     } else if (header instanceof CryptorHeaderV1) {
       return this.getCryptorFromId(header.identifier);
     }
   }
 
-  private getCryptorFromId(id: string) {
-    const cryptor = this.getAllCryptors().find((c) => id === c.identifier);
-    if (cryptor) {
-      return cryptor;
-    }
-    throw Error('unknown cryptor error');
-  }
-
-  private concatArrayBuffer(ab1: ArrayBuffer, ab2: ArrayBuffer) {
-    const tmp = new Uint8Array(ab1.byteLength + ab2.byteLength);
-
-    tmp.set(new Uint8Array(ab1), 0);
-    tmp.set(new Uint8Array(ab2), ab1.byteLength);
-
-    return tmp.buffer;
-  }
-
+  /**
+   * Create cryptor header data.
+   *
+   * @param encrypted - Encryption data object as source for header data.
+   *
+   * @returns Binary representation of the cryptor header data.
+   */
   private getHeaderData(encrypted: EncryptedDataType) {
     if (!encrypted.metadata) return;
     const header = CryptorHeader.from(this.defaultCryptor.identifier, encrypted.metadata);
@@ -147,24 +218,43 @@ export class CryptoModule {
     return headerData.buffer;
   }
 
-  private async getFileData(input: any) {
-    if (input instanceof Blob) {
-      const fileData = await input.arrayBuffer();
-      return fileData;
-    }
-    if (input instanceof ArrayBuffer) {
-      return input;
-    }
-    if (typeof input === 'string') {
-      return CryptoModule.encoder.encode(input);
-    }
+  /**
+   * Merge two {@link ArrayBuffer} instances.
+   *
+   * @param ab1 - First {@link ArrayBuffer}.
+   * @param ab2 - Second {@link ArrayBuffer}.
+   *
+   * @returns Merged data as {@link ArrayBuffer}.
+   */
+  private concatArrayBuffer(ab1: ArrayBuffer, ab2: ArrayBuffer): ArrayBuffer {
+    const tmp = new Uint8Array(ab1.byteLength + ab2.byteLength);
+
+    tmp.set(new Uint8Array(ab1), 0);
+    tmp.set(new Uint8Array(ab2), ab1.byteLength);
+
+    return tmp.buffer;
+  }
+
+  /**
+   * Retrieve file content.
+   *
+   * @param file - Content of the {@link PubNub} File object.
+   *
+   * @returns Normalized file {@link data} as {@link ArrayBuffer};
+   */
+  private async getFileData(file: PubNubFile | ArrayBuffer) {
+    if (file instanceof ArrayBuffer) return file;
+    else if (file instanceof PubNubFile) return file.toArrayBuffer();
+
     throw new Error(
       'Cannot decrypt/encrypt file. In browsers file encrypt/decrypt supported for string, ArrayBuffer or Blob',
     );
   }
 }
 
-// CryptorHeader Utility
+/**
+ * CryptorHeader Utility
+ */
 class CryptorHeader {
   static SENTINEL = 'PNED';
   static LEGACY_IDENTIFIER = '';
@@ -180,37 +270,33 @@ class CryptorHeader {
 
   static tryParse(data: ArrayBuffer) {
     const encryptedData = new Uint8Array(data);
-    let sentinel: any = '';
+    let sentinel: Uint8Array;
     let version = null;
+
     if (encryptedData.byteLength >= 4) {
       sentinel = encryptedData.slice(0, 4);
-      if (this.decoder.decode(sentinel) !== CryptorHeader.SENTINEL) return '';
+      if (this.decoder.decode(sentinel) !== CryptorHeader.SENTINEL) return WebCryptoModule.LEGACY_IDENTIFIER;
     }
-    if (encryptedData.byteLength >= 5) {
-      version = (encryptedData as Uint8Array)[4] as number;
-    } else {
-      throw new Error('decryption error. invalid header version');
-    }
-    if (version > CryptorHeader.MAX_VERSION) throw new Error('unknown cryptor error');
 
-    let identifier: any = '';
+    if (encryptedData.byteLength >= 5) version = (encryptedData as Uint8Array)[4] as number;
+    else throw new Error('Decryption error: invalid header version');
+
+    if (version > CryptorHeader.MAX_VERSION) throw new Error('Decryption error: Unknown cryptor error');
+
+    let identifier: Uint8Array;
     let pos = 5 + CryptorHeader.IDENTIFIER_LENGTH;
-    if (encryptedData.byteLength >= pos) {
-      identifier = encryptedData.slice(5, pos);
-    } else {
-      throw new Error('decryption error. invalid crypto identifier');
-    }
+    if (encryptedData.byteLength >= pos) identifier = encryptedData.slice(5, pos);
+    else throw new Error('Decryption error: invalid crypto identifier');
+
     let metadataLength = null;
-    if (encryptedData.byteLength >= pos + 1) {
-      metadataLength = (encryptedData as Uint8Array)[pos];
-    } else {
-      throw new Error('decryption error. invalid metadata length');
-    }
+    if (encryptedData.byteLength >= pos + 1) metadataLength = (encryptedData as Uint8Array)[pos];
+    else throw new Error('Decryption error: invalid metadata length');
+
     pos += 1;
     if (metadataLength === 255 && encryptedData.byteLength >= pos + 2) {
       metadataLength = new Uint16Array(encryptedData.slice(pos, pos + 2)).reduce((acc, val) => (acc << 8) + val, 0);
-      pos += 2;
     }
+
     return new CryptorHeaderV1(this.decoder.decode(identifier), metadataLength);
   }
 }
@@ -266,14 +352,15 @@ class CryptorHeaderV1 {
     pos += CryptorHeader.SENTINEL.length;
     header[pos] = this.version;
     pos++;
+
     if (this.identifier) header.set(encoder.encode(this.identifier), pos);
-    pos += CryptorHeader.IDENTIFIER_LENGTH;
+
     const metadataLength = this.metadataLength;
-    if (metadataLength < 255) {
-      header[pos] = metadataLength;
-    } else {
-      header.set([255, metadataLength >> 8, metadataLength & 0xff], pos);
-    }
+    pos += CryptorHeader.IDENTIFIER_LENGTH;
+
+    if (metadataLength < 255) header[pos] = metadataLength;
+    else header.set([255, metadataLength >> 8, metadataLength & 0xff], pos);
+
     return header;
   }
 }

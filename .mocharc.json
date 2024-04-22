@@ -1,0 +1,10 @@
+{
+  "require": "tsx",
+  "spec": "test/**/*.test.ts",
+  "exclude": [
+    "test/dist/*.{js,ts}",
+    "test/feature/*.{js,ts}"
+  ],
+  "timeout": 5000,
+  "reporter": "spec"
+}

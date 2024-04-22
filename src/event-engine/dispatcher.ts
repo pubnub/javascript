@@ -1,21 +1,27 @@
-import { PubNubError } from '../core/components/endpoint';
+import { PrivateClientConfiguration } from '../core/interfaces/configuration';
+import * as Subscription from '../core/types/api/subscription';
+import { PubNubError } from '../errors/pubnub-error';
 import { asyncHandler, Dispatcher, Engine } from './core';
 import * as effects from './effects';
 import * as events from './events';
+import { Payload, StatusEvent } from '../core/types/api';
+import StatusCategory from '../core/constants/categories';
 
 export type Dependencies = {
-  handshake: any;
-  receiveMessages: any;
-  join: any;
-  leave: any;
-  leaveAll: any;
-  presenceState: any;
-  config: any;
+  handshake: (parameters: Subscription.CancelableSubscribeParameters) => Promise<Subscription.SubscriptionCursor>;
+  receiveMessages: (
+    parameters: Subscription.CancelableSubscribeParameters,
+  ) => Promise<Subscription.SubscriptionResponse>;
+  join?: (parameters: { channels?: string[]; groups?: string[] }) => void;
+  leave?: (parameters: { channels?: string[]; groups?: string[] }) => void;
+  leaveAll?: () => void;
+  presenceState: Record<string, Payload>;
+  config: PrivateClientConfiguration;
 
   delay: (milliseconds: number) => Promise<void>;
 
-  emitMessages: (events: any[]) => void;
-  emitStatus: (status: any) => void;
+  emitMessages: (events: Subscription.SubscriptionResponse['messages']) => void;
+  emitStatus: (status: StatusEvent) => void;
 };
 
 export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependencies> {
@@ -37,11 +43,8 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
           });
           return engine.transition(events.handshakeSuccess(result));
         } catch (e) {
-          if (e instanceof Error && e.message === 'Aborted') {
-            return;
-          }
-
           if (e instanceof PubNubError) {
+            if (e.status && e.status.category == StatusCategory.PNCancelledCategory) return;
             return engine.transition(events.handshakeFailure(e));
           }
         }
@@ -62,14 +65,11 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             filterExpression: config.filterExpression,
           });
 
-          engine.transition(events.receiveSuccess(result.metadata, result.messages));
+          engine.transition(events.receiveSuccess(result.cursor, result.messages));
         } catch (error) {
-          if (error instanceof Error && error.message === 'Aborted') {
-            return;
-          }
-
-          if (error instanceof PubNubError && !abortSignal.aborted) {
-            return engine.transition(events.receiveFailure(error));
+          if (error instanceof PubNubError) {
+            if (error.status && error.status.category == StatusCategory.PNCancelledCategory) return;
+            if (!abortSignal.aborted) return engine.transition(events.receiveFailure(error));
           }
         }
       }),
@@ -111,20 +111,21 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
               filterExpression: config.filterExpression,
             });
 
-            return engine.transition(events.receiveReconnectSuccess(result.metadata, result.messages));
+            return engine.transition(events.receiveReconnectSuccess(result.cursor, result.messages));
           } catch (error) {
-            if (error instanceof Error && error.message === 'Aborted') {
-              return;
-            }
-
             if (error instanceof PubNubError) {
+              if (error.status && error.status.category == StatusCategory.PNCancelledCategory) return;
               return engine.transition(events.receiveReconnectFailure(error));
             }
           }
         } else {
           return engine.transition(
             events.receiveReconnectGiveup(
-              new PubNubError(config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)),
+              new PubNubError(
+                config.retryConfiguration
+                  ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
+                  : 'Unable to complete subscribe messages receive.',
+              ),
             ),
           );
         }
@@ -152,18 +153,19 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
             return engine.transition(events.handshakeReconnectSuccess(result));
           } catch (error) {
-            if (error instanceof Error && error.message === 'Aborted') {
-              return;
-            }
-
             if (error instanceof PubNubError) {
+              if (error.status && error.status.category == StatusCategory.PNCancelledCategory) return;
               return engine.transition(events.handshakeReconnectFailure(error));
             }
           }
         } else {
           return engine.transition(
             events.handshakeReconnectGiveup(
-              new PubNubError(config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)),
+              new PubNubError(
+                config.retryConfiguration
+                  ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
+                  : 'Unable to complete subscribe handshake',
+              ),
             ),
           );
         }

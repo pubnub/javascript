@@ -1,13 +1,11 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "ES5",
-    "module": "commonjs",
-    "moduleResolution": "Node",
-    "allowJs": true,
-    "noEmitOnError": true,
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "noEmit": true,
     "strict": true,
-    "esModuleInterop": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "include": ["test/**/*"]
 }

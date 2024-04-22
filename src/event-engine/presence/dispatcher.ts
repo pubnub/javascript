@@ -1,18 +1,26 @@
-import { PubNubError } from '../../core/components/endpoint';
+import { PrivateClientConfiguration } from '../../core/interfaces/configuration';
 import { asyncHandler, Dispatcher, Engine } from '../core';
 import PNOperations from '../../core/constants/operations';
+import * as Presence from '../../core/types/api/presence';
+import { PubNubError } from '../../errors/pubnub-error';
+import { Payload, ResultCallback } from '../../core/types/api';
 import * as effects from './effects';
 import * as events from './events';
+import StatusCategory from '../../core/constants/categories';
 
 export type Dependencies = {
-  heartbeat: any;
-  leave: any;
+  heartbeat: (
+    parameters: Presence.PresenceHeartbeatParameters,
+    callback?: ResultCallback<Presence.PresenceHeartbeatResponse>,
+  ) => Promise<Presence.PresenceHeartbeatResponse | void>;
+  leave: (parameters: Presence.PresenceLeaveParameters) => void;
   heartbeatDelay: () => Promise<void>;
 
   retryDelay: (milliseconds: number) => Promise<void>;
-  config: any;
-  presenceState: any;
+  config: PrivateClientConfiguration;
+  presenceState: Record<string, Payload>;
 
+  /* eslint-disable  @typescript-eslint/no-explicit-any */
   emitStatus: (status: any) => void;
 };
 
@@ -28,10 +36,12 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
             channels: payload.channels,
             channelGroups: payload.groups,
             ...(config.maintainPresenceState && { state: presenceState }),
+            heartbeat: config.presenceTimeout!,
           });
           engine.transition(events.heartbeatSuccess(200));
         } catch (e) {
           if (e instanceof PubNubError) {
+            if (e.status && e.status.category == StatusCategory.PNCancelledCategory) return;
             return engine.transition(events.heartbeatFailure(e));
           }
         }
@@ -43,7 +53,7 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
       asyncHandler(async (payload, _, { leave, config }) => {
         if (!config.suppressLeaveEvents) {
           try {
-            const result = await leave({
+            leave({
               channels: payload.channels,
               channelGroups: payload.groups,
             });
@@ -70,21 +80,21 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
       asyncHandler(async (payload, abortSignal, { heartbeat, retryDelay, presenceState, config }) => {
         if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
           abortSignal.throwIfAborted();
+
           await retryDelay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
+
           abortSignal.throwIfAborted();
           try {
             const result = await heartbeat({
               channels: payload.channels,
               channelGroups: payload.groups,
               ...(config.maintainPresenceState && { state: presenceState }),
+              heartbeat: config.presenceTimeout!,
             });
             return engine.transition(events.heartbeatSuccess(200));
           } catch (e) {
-            if (e instanceof Error && e.message === 'Aborted') {
-              return;
-            }
-
             if (e instanceof PubNubError) {
+              if (e.status && e.status.category == StatusCategory.PNCancelledCategory) return;
               return engine.transition(events.heartbeatFailure(e));
             }
           }

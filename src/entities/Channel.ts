@@ -1,17 +1,19 @@
+import type { PubNubCore as PubNub } from '../core/pubnub-common';
+import EventEmitter from '../core/components/eventEmitter';
+import { SubscriptionOptions } from './commonTypes';
 import { Subscription } from './Subscription';
-import { SubscriptionOptions, EventEmitter } from './commonTypes';
-import type PubNub from '../core/pubnub-common';
 
 export class Channel {
-  private name: string;
-  private eventEmitter: EventEmitter;
-  private pubnub: PubNub;
+  private readonly name: string;
 
-  constructor(channelName: string, eventEmitter: EventEmitter, pubnub: PubNub) {
+  constructor(
+    channelName: string,
+    private readonly eventEmitter: EventEmitter,
+    private readonly pubnub: PubNub<unknown, unknown>,
+  ) {
     this.name = channelName;
-    this.eventEmitter = eventEmitter;
-    this.pubnub = pubnub;
   }
+
   subscription(subscriptionOptions?: SubscriptionOptions) {
     return new Subscription({
       channels: subscriptionOptions?.receivePresenceEvents ? [this.name, `${this.name}-pnpres`] : [this.name],
