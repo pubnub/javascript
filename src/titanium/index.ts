@@ -11,7 +11,7 @@ import Cbor from '../cbor/common';
 /**
  * PubNub client for Titanium.
  */
-export default class PubNub extends PubNubCore<null, null> {
+export class PubNub extends PubNubCore<null, null> {
   constructor(configuration: PubNubConfiguration) {
     const configurationCopy = setDefaults(configuration);
     const platformConfiguration = { ...configurationCopy, sdkFamily: 'TitaniumSDK' };
@@ -38,3 +38,5 @@ export default class PubNub extends PubNubCore<null, null> {
     });
   }
 }
+
+export { PubNub as default };

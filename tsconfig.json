@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "target": "ES6",
-    "module": "ES6",
+    "module": "CommonJS",
     "moduleResolution": "Node",
     "allowJs": true,
     "noEmitOnError": true,

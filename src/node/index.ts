@@ -11,22 +11,18 @@ import { PubNubConfiguration, setDefaults } from './configuration';
 import { TokenManager } from '../core/components/token_manager';
 import { NodeTransport } from '../transport/node-transport';
 import { PubNubMiddleware } from '../transport/middleware';
+import { PubNubFileConstructor } from '../core/types/file';
 import { decode } from '../core/components/base64_codec';
 import NodeCryptography from '../crypto/modules/node';
 import Crypto from '../core/components/cryptography';
 import { PubNubError } from '../errors/pubnub-error';
 import { PubNubCore } from '../core/pubnub-common';
 import Cbor from '../cbor/common';
-import { PubNubFileConstructor } from '../core/types/file';
 
 /**
  * PubNub client for Node.js platform.
  */
-export default class PubNub extends PubNubCore<
-  string | ArrayBuffer | Buffer | Readable,
-  PubNubFileParameters,
-  PubNubFile
-> {
+export = class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNubFileParameters, PubNubFile> {
   /**
    * Data encryption / decryption module constructor.
    */
@@ -108,4 +104,4 @@ export default class PubNub extends PubNubCore<
     this.nodeTransport.setProxy(configuration);
     this.reconnect();
   }
-}
+};

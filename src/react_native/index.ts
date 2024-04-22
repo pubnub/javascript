@@ -3,8 +3,8 @@ import 'react-native-url-polyfill/auto';
 import CborReader from 'cbor-js';
 import { Buffer } from 'buffer';
 
-import { stringifyBufferKeys } from '../core/components/stringify_buffer_keys';
 import { WebReactNativeTransport } from '../transport/web-react-native-transport';
+import { stringifyBufferKeys } from '../core/components/stringify_buffer_keys';
 import { makeConfiguration } from '../core/components/configuration';
 import { PubNubFileParameters } from '../file/modules/react-native';
 import { TokenManager } from '../core/components/token_manager';
