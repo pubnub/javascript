@@ -12,9 +12,6 @@ chai.use(chaiAsPromised);
 chai.use(chaiNock);
 
 describe('File Upload API v1 tests', () => {
-  const SUBSCRIBE_KEY = 'demo';
-  const PUBLISH_KEY = 'demo';
-
   const ORIGIN = undefined;
 
   const TEST_PREFIX = 'javascript-fileUploadApiV1-tests';
@@ -29,8 +26,8 @@ describe('File Upload API v1 tests', () => {
 
   describe('with encryption', () => {
     pubnub = new PubNub({
-      subscribeKey: SUBSCRIBE_KEY,
-      publishKey: PUBLISH_KEY,
+      subscribeKey: process.env.SUBSCRIBE_KEY || 'demo',
+      publishKey: process.env.PUBLISH_KEY || 'demo',
       uuid: UUID,
       origin: ORIGIN,
       cipherKey: 'abcdef',
@@ -42,8 +39,8 @@ describe('File Upload API v1 tests', () => {
 
   describe('without encryption', () => {
     pubnub = new PubNub({
-      subscribeKey: SUBSCRIBE_KEY,
-      publishKey: PUBLISH_KEY,
+      subscribeKey: process.env.SUBSCRIBE_KEY || 'demo',
+      publishKey: process.env.PUBLISH_KEY || 'demo',
       origin: ORIGIN,
       uuid: UUID,
     });

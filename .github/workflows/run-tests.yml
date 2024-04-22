@@ -11,10 +11,11 @@ defaults:
     shell: bash
 env:
   CXX: 'g++-4.8'
-  PAM_SUBSCRIBE_KEY: ${{ secrets.TESTS_PAM_SUBSCRIBE_KEY }}
-  PAM_PUBLISH_KEY: ${{ secrets.TESTS_PAM_PUBLISH_KEY }}
-  SUBSCRIBE_KEY: ${{ secrets.TESTS_PUBLISH_KEY }}
-  PUBLISH_KEY: ${{ secrets.TESTS_SUBSCRIBE_KEY }}
+  PAM_SUBSCRIBE_KEY: ${{ secrets.SDK_PAM_SUB_KEY }}
+  PAM_PUBLISH_KEY: ${{ secrets.SDK_PAM_PUB_KEY }}
+  PAM_SECRET_KEY: ${{ secrets.SDK_PAM_SEC_KEY }}
+  SUBSCRIBE_KEY: ${{ secrets.SDK_SUB_KEY }}
+  PUBLISH_KEY: ${{ secrets.SDK_PUB_KEY }}
 
 jobs:
   tests:

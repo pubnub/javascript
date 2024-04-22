@@ -12,9 +12,6 @@ chai.use(chaiAsPromised);
 chai.use(chaiNock);
 
 describe('Objects V2 system tests', () => {
-  const SUBSCRIBE_KEY = 'sub-c-d86a1698-889e-11ea-b883-d2d532c9a1bf';
-  const PUBLISH_KEY = 'pub-c-5397272a-7664-4b57-bc91-944977fb3f25';
-
   const TEST_PREFIX = 'objectsV2tests';
   const UUID = `${TEST_PREFIX}-main`;
   const UUID_1 = `${TEST_PREFIX}-uuid-1`;
@@ -32,8 +29,8 @@ describe('Objects V2 system tests', () => {
 
   before(() => {
     pubnub = new PubNub({
-      subscribeKey: SUBSCRIBE_KEY,
-      publishKey: PUBLISH_KEY,
+      subscribeKey: process.env.SUBSCRIBE_KEY || 'demo',
+      publishKey: process.env.PUBLISH_KEY || 'demo',
       uuid: UUID,
       // logVerbosity: true
     });

@@ -13,9 +13,6 @@ function urlToFile(url, filename, mimeType) {
 }
 
 describe('test', () => {
-  const SUBSCRIBE_KEY = 'demo-36';
-  const PUBLISH_KEY = 'demo-36';
-
   const TEST_PREFIX = 'javascript-fileUploadApiV1-tests';
   const UUID = `${TEST_PREFIX}-main`;
   const UUID_1 = `${TEST_PREFIX}-uuid-1`;
@@ -24,7 +21,7 @@ describe('test', () => {
 
   const FILE_1 = `${TEST_PREFIX}-file-1`;
 
-  let pubnub        ;
+  let pubnub;
 
   after(() => {
     pubnub.unsubscribeAll();
@@ -33,8 +30,8 @@ describe('test', () => {
 
   describe('with encryption', () => {
     pubnub = new PubNub({
-      subscribeKey: SUBSCRIBE_KEY,
-      publishKey: PUBLISH_KEY,
+      subscribeKey: process.env.SUBSCRIBE_KEY || 'demo',
+      publishKey: process.env.PUBLISH_KEY || 'demo',
       uuid: UUID,
       cipherKey: 'abcdef',
     });
@@ -44,8 +41,8 @@ describe('test', () => {
 
   describe('without encryption', () => {
     pubnub = new PubNub({
-      subscribeKey: SUBSCRIBE_KEY,
-      publishKey: PUBLISH_KEY,
+      subscribeKey: process.env.SUBSCRIBE_KEY || 'demo',
+      publishKey: process.env.PUBLISH_KEY || 'demo',
       uuid: UUID,
     });
 
@@ -166,7 +163,7 @@ describe('test', () => {
       const result = await pubnub.sendFile({
         channel: CHANNEL_1,
         file: { data: testContent, name: 'someFile.txt', mimeType: 'text/plain' },
-        cipherKey: 'cipherKey'
+        cipherKey: 'cipherKey',
       });
 
       expect(result.name).to.equal('someFile.txt');
@@ -175,7 +172,7 @@ describe('test', () => {
         channel: CHANNEL_1,
         id: result.id,
         name: result.name,
-        cipherKey: 'cipherKey'
+        cipherKey: 'cipherKey',
       });
 
       fileId = result.id;
