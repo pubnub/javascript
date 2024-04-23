@@ -1,3 +1,9 @@
+## v8.0.1
+April 23 2024
+
+#### Modified
+- Provider configuration option to set service worker from the URL (because of browser restrictions for worker files to be registered from the same domain).
+
 ## v8.0.0
 April 22 2024
 
