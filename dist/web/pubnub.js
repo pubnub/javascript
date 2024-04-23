@@ -837,7 +837,7 @@
 	            return;
 	        const serviceWorkerContainer = navigator.serviceWorker;
 	        serviceWorkerContainer
-	            .register(`https://cdn.pubnub.com/sdk/javascript/dist/web/pubnub.worker.js`, {
+	            .register(this.configuration.serviceWorkerUrl, {
 	            scope: `/pubnub-${this.configuration.sdkVersion}`,
 	        })
 	            .then((registration) => {
@@ -3600,11 +3600,6 @@
 	 */
 	const LISTEN_TO_BROWSER_NETWORK_EVENTS = true;
 	/**
-	 * Whether PubNub client should spawn `Subscription` service worker for better user presence
-	 * experience or not.
-	 */
-	const ENABLE_SERVICE_WORKER = false;
-	/**
 	 * Whether PubNub client should try to utilize existing TCP connection for new requests or not.
 	 */
 	const KEEP_ALIVE = true;
@@ -3614,13 +3609,13 @@
 	 * @param configuration - User-provided configuration.
 	 */
 	const setDefaults = (configuration) => {
-	    var _a, _b, _c, _d;
+	    var _a, _b;
 	    // Force disable service workers if environment doesn't support them.
-	    if (((_a = configuration.enableServiceWorker) !== null && _a !== void 0 ? _a : ENABLE_SERVICE_WORKER) && !('serviceWorker' in navigator))
-	        configuration.enableServiceWorker = false;
+	    if (configuration.serviceWorkerUrl && !('serviceWorker' in navigator))
+	        configuration.serviceWorkerUrl = null;
 	    return Object.assign(Object.assign({}, setDefaults$1(configuration)), { 
 	        // Set platform-specific options.
-	        listenToBrowserNetworkEvents: (_b = configuration.listenToBrowserNetworkEvents) !== null && _b !== void 0 ? _b : LISTEN_TO_BROWSER_NETWORK_EVENTS, enableServiceWorker: (_c = configuration.enableServiceWorker) !== null && _c !== void 0 ? _c : ENABLE_SERVICE_WORKER, keepAlive: (_d = configuration.keepAlive) !== null && _d !== void 0 ? _d : KEEP_ALIVE });
+	        listenToBrowserNetworkEvents: (_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : LISTEN_TO_BROWSER_NETWORK_EVENTS, serviceWorkerUrl: configuration.serviceWorkerUrl, keepAlive: (_b = configuration.keepAlive) !== null && _b !== void 0 ? _b : KEEP_ALIVE });
 	};
 
 	var uuid = {exports: {}};
@@ -3782,7 +3777,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '7.6.3';
+	            return '8.0.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -13030,11 +13025,12 @@
 	        }
 	        // Setup transport provider.
 	        let transport = new WebReactNativeTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity);
-	        if (configurationCopy.enableServiceWorker) {
+	        if (configurationCopy.serviceWorkerUrl) {
 	            // Inject subscription service worker into transport provider stack.
 	            transport = new SubscriptionServiceWorkerMiddleware({
 	                clientIdentifier: clientConfiguration._instanceId,
 	                subscriptionKey: clientConfiguration.subscribeKey,
+	                serviceWorkerUrl: configurationCopy.serviceWorkerUrl,
 	                sdkVersion: clientConfiguration.getVersion(),
 	                logVerbosity: clientConfiguration.logVerbosity,
 	                transport,

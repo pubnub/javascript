@@ -29,6 +29,11 @@ type PubNubMiddlewareConfiguration = {
   subscriptionKey: string;
 
   /**
+   * Url of the hoster `Subscription` service worker file.
+   */
+  serviceWorkerUrl: string;
+
+  /**
    * Current PubNub client version.
    */
   sdkVersion: string;
@@ -190,7 +195,7 @@ export class SubscriptionServiceWorkerMiddleware implements Transport {
     if (!('serviceWorker' in navigator)) return;
     const serviceWorkerContainer = navigator.serviceWorker as ServiceWorkerContainer;
     serviceWorkerContainer
-      .register(`SERVICE_WORKER_CDN/SERVICE_WORKER_FILE_PLACEHOLDER`, {
+      .register(this.configuration.serviceWorkerUrl, {
         scope: `/pubnub-${this.configuration.sdkVersion}`,
       })
       .then((registration) => {

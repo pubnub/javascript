@@ -18,12 +18,6 @@ import {
 const LISTEN_TO_BROWSER_NETWORK_EVENTS = true;
 
 /**
- * Whether PubNub client should spawn `Subscription` service worker for better user presence
- * experience or not.
- */
-const ENABLE_SERVICE_WORKER = false;
-
-/**
  * Whether PubNub client should try to utilize existing TCP connection for new requests or not.
  */
 const KEEP_ALIVE = true;
@@ -43,12 +37,15 @@ export type PubNubConfiguration = UserConfiguration & {
   listenToBrowserNetworkEvents?: boolean;
 
   /**
-   * Whether PubNub client should spawn `Subscription` service worker for better user presence
-   * experience or not.
+   * Path to the hosted PubNub `Subscription` service worker.
    *
-   * @default `true` (if supported)
+   * **Important:** Serving server should add `Service-Worker-Allowed: /` to response on service worker file request to
+   * make it possible for PubNub SDK use own `scope`.
+   * **Important:** Service worker file should be server from the same domain where PubNub client will be used. If
+   * statics provided from `subdomain.main.com` and page loaded from `account.main.com` - then server should be
+   * configured to serve worker file from `account.main.com`.
    */
-  enableServiceWorker?: boolean;
+  serviceWorkerUrl?: string | null;
 
   /**
    * If set to `true`, SDK will use the same TCP connection for each HTTP request, instead of
@@ -66,15 +63,14 @@ export type PubNubConfiguration = UserConfiguration & {
  */
 export const setDefaults = (configuration: PubNubConfiguration): PubNubConfiguration & ExtendedConfiguration => {
   // Force disable service workers if environment doesn't support them.
-  if ((configuration.enableServiceWorker ?? ENABLE_SERVICE_WORKER) && !('serviceWorker' in navigator))
-    configuration.enableServiceWorker = false;
+  if (configuration.serviceWorkerUrl && !('serviceWorker' in navigator)) configuration.serviceWorkerUrl = null;
 
   return {
     // Set base configuration defaults.
     ...setBaseDefaults(configuration),
     // Set platform-specific options.
     listenToBrowserNetworkEvents: configuration.listenToBrowserNetworkEvents ?? LISTEN_TO_BROWSER_NETWORK_EVENTS,
-    enableServiceWorker: configuration.enableServiceWorker ?? ENABLE_SERVICE_WORKER,
+    serviceWorkerUrl: configuration.serviceWorkerUrl,
     keepAlive: configuration.keepAlive ?? KEEP_ALIVE,
   };
 };

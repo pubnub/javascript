@@ -69,11 +69,12 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
       clientConfiguration.keepAlive,
       clientConfiguration.logVerbosity!,
     );
-    if (configurationCopy.enableServiceWorker) {
+    if (configurationCopy.serviceWorkerUrl) {
       // Inject subscription service worker into transport provider stack.
       transport = new SubscriptionServiceWorkerMiddleware({
         clientIdentifier: clientConfiguration._instanceId,
         subscriptionKey: clientConfiguration.subscribeKey,
+        serviceWorkerUrl: configurationCopy.serviceWorkerUrl,
         sdkVersion: clientConfiguration.getVersion(),
         logVerbosity: clientConfiguration.logVerbosity!,
         transport,
