@@ -1,3 +1,8 @@
+/**
+ * Real-time events deduplication manager.
+ *
+ * @internal
+ */
 export default class _default {
     constructor({ config }: {
         config: any;

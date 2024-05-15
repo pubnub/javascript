@@ -1,1 +1,4 @@
+/**
+ * Subscription manager module.
+ */
 export {};

@@ -13,6 +13,8 @@ export type PubNubConfiguration = UserConfiguration;
  * Apply configuration default values.
  *
  * @param configuration - User-provided configuration.
+ *
+ * @internal
  */
 export const setDefaults = (configuration: PubNubConfiguration): PubNubConfiguration & ExtendedConfiguration => {
   return setBaseDefaults(configuration);

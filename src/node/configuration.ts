@@ -83,6 +83,8 @@ export type PubNubConfiguration = UserConfiguration & {
  * @param configuration - User-provided configuration.
  *
  * @returns Extended {@link PubNub} client configuration object pre-filled with default values.
+ *
+ * @internal
  */
 export const setDefaults = (configuration: PubNubConfiguration): PubNubConfiguration & ExtendedConfiguration => {
   return {

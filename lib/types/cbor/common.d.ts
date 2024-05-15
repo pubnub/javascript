@@ -1,1 +1,4 @@
+/**
+ * Cbor decoder module.
+ */
 export {};

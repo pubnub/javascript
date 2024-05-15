@@ -1,3 +1,5 @@
-import { ExtendedConfiguration, UserConfiguration } from '../core/interfaces/configuration';
+import { UserConfiguration } from '../core/interfaces/configuration';
+/**
+ * React Native platform PubNub client configuration.
+ */
 export type PubNubConfiguration = UserConfiguration;
-export declare const setDefaults: (configuration: PubNubConfiguration) => PubNubConfiguration & ExtendedConfiguration;
