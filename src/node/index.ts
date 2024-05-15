@@ -22,7 +22,7 @@ import Cbor from '../cbor/common';
 /**
  * PubNub client for Node.js platform.
  */
-export = class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNubFileParameters, PubNubFile> {
+class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNubFileParameters, PubNubFile> {
   /**
    * Data encryption / decryption module constructor.
    */
@@ -104,4 +104,6 @@ export = class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readabl
     this.nodeTransport.setProxy(configuration);
     this.reconnect();
   }
-};
+}
+
+export = PubNub;

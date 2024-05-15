@@ -11,6 +11,8 @@ import { PubNubFileInterface } from '../../types/file';
 
 /**
  * File Upload request.
+ *
+ * @internal
  */
 export class UploadFileRequest extends AbstractRequest<FileSharing.UploadFileResponse> {
   constructor(private readonly parameters: FileSharing.UploadFileParameters) {

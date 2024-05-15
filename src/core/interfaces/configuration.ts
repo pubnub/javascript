@@ -325,6 +325,8 @@ export type UserConfiguration = {
  * Extended client configuration.
  *
  * Extended configuration contains unannounced configuration options.
+ *
+ * @internal
  */
 export type ExtendedConfiguration = UserConfiguration & {
   /**

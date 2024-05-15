@@ -50,6 +50,8 @@ type ServiceResponse = {
 
 /**
  * Delete messages from channel history.
+ *
+ * @internal
  */
 export class DeleteMessageRequest extends AbstractRequest<History.DeleteMessagesResponse> {
   constructor(private readonly parameters: RequestParameters) {

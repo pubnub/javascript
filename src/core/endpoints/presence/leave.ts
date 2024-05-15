@@ -52,6 +52,11 @@ type ServiceResponse = {
 };
 // endregion
 
+/**
+ * Announce user leave request.
+ *
+ * @internal
+ */
 export class PresenceLeaveRequest extends AbstractRequest<Presence.PresenceLeaveResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();

@@ -66,6 +66,8 @@ type RequestParameters = AppContext.SetMembershipsParameters<AppContext.CustomDa
 
 /**
  * Set UUID Memberships request.
+ *
+ * @internal
  */
 export class SetUUIDMembershipsRequest<
   Response extends AppContext.SetMembershipsResponse<MembersCustom, UUIDCustom>,

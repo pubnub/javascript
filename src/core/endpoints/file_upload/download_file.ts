@@ -45,6 +45,8 @@ type RequestParameters = FileSharing.DownloadFileParameters & {
 
 /**
  * Download File request.
+ *
+ * @internal
  */
 export class DownloadFileRequest<
   PlatformFile extends Partial<PubNubFileInterface> = Record<string, unknown>,

@@ -30,6 +30,8 @@ type RequestParameters = FileSharing.FileUrlParameters & {
  * File download Url generation request.
  *
  * Local request which generates Url to download shared file from the specific channel.
+ *
+ * @internal
  */
 export class GetFileDownloadUrlRequest extends AbstractRequest<FileSharing.FileUrlResponse> {
   /**

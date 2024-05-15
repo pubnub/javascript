@@ -49,6 +49,8 @@ type ServiceResponse = {
 
 /**
  * Fetch channel message actions request.
+ *
+ * @internal
  */
 export class GetMessageActionsRequest extends AbstractRequest<MessageAction.GetMessageActionsResponse> {
   constructor(private readonly parameters: RequestParameters) {

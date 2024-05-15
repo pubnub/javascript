@@ -88,6 +88,8 @@ type ServiceResponse = {
 
 /**
  * Grant token permissions request.
+ *
+ * @internal
  */
 export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse> {
   constructor(private readonly parameters: RequestParameters) {

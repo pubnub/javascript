@@ -57,6 +57,11 @@ type RequestParameters = SignalParameters & {
 type ServiceResponse = [0 | 1, string, string];
 // endregion
 
+/**
+ * Signal data (size-limited) publish request.
+ *
+ * @internal
+ */
 export class SignalRequest extends AbstractRequest<SignalResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();

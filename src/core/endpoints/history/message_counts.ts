@@ -68,6 +68,11 @@ type ServiceResponse = {
 };
 // endregion
 
+/**
+ * Count messages request.
+ *
+ * @internal
+ */
 export class MessageCountRequest extends AbstractRequest<History.MessageCountResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();

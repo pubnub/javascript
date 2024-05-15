@@ -4,8 +4,8 @@
 import CborReader from 'cbor-js';
 
 // eslint-disable-next-line max-len
-import { SubscriptionServiceWorkerMiddleware } from '../transport/service-worker/subscription-service-worker-middleware';
 import { AesCbcCryptor, LegacyCryptor, WebCryptoModule } from '../crypto/modules/WebCryptoModule/webCryptoModule';
+import { SubscriptionWorkerMiddleware } from '../transport/subscription-worker/subscription-worker-middleware';
 import { WebReactNativeTransport } from '../transport/web-react-native-transport';
 import { stringifyBufferKeys } from '../core/components/stringify_buffer_keys';
 import { PubNubConfiguration, setDefaults } from './components/configuration';
@@ -69,14 +69,17 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
       clientConfiguration.keepAlive,
       clientConfiguration.logVerbosity!,
     );
-    if (configurationCopy.serviceWorkerUrl) {
-      // Inject subscription service worker into transport provider stack.
-      transport = new SubscriptionServiceWorkerMiddleware({
+
+    if (configurationCopy.subscriptionWorkerUrl) {
+      // Inject subscription worker into transport provider stack.
+      transport = new SubscriptionWorkerMiddleware({
         clientIdentifier: clientConfiguration._instanceId,
         subscriptionKey: clientConfiguration.subscribeKey,
-        serviceWorkerUrl: configurationCopy.serviceWorkerUrl,
+        userId: clientConfiguration.getUserId(),
+        workerUrl: configurationCopy.subscriptionWorkerUrl,
         sdkVersion: clientConfiguration.getVersion(),
         logVerbosity: clientConfiguration.logVerbosity!,
+        workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity!,
         transport,
       });
     }

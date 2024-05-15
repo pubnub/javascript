@@ -75,6 +75,8 @@ type RequestParameters = AppContext.GetMembersParameters & {
 
 /**
  * Get Channel Members request.
+ *
+ * @internal
  */
 export class GetChannelMembersRequest<
   Response extends AppContext.GetMembersResponse<MembersCustom, UUIDCustom>,

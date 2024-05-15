@@ -7,9 +7,9 @@ import {
   ExtendedConfiguration,
   setDefaults as setBaseDefaults,
 } from '../core/interfaces/configuration';
-import { CryptoModule } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 import { TransportKeepAlive } from '../core/interfaces/transport';
 import { Payload } from '../core/types/api';
+import { CryptoModule } from '../core/interfaces/crypto-module';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------

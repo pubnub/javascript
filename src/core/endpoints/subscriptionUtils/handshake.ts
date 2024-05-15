@@ -11,6 +11,8 @@ import { Query } from '../../types/api';
  * Handshake subscribe request.
  *
  * Separate subscribe request required by Event Engine.
+ *
+ * @internal
  */
 export class HandshakeSubscribeRequest extends BaseSubscribeRequest {
   operation(): RequestOperation {

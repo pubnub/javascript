@@ -100,6 +100,8 @@ type ServiceResponse = {
 
 /**
  * Generate File Upload Url request.
+ *
+ * @internal
  */
 export class GenerateFileUploadUrlRequest extends AbstractRequest<FileSharing.GenerateFileUploadUrlResponse> {
   constructor(private readonly parameters: RequestParameters) {

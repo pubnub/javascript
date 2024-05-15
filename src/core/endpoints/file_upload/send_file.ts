@@ -72,6 +72,8 @@ type RequestParameters<FileParameters> = FileSharing.SendFileParameters<FilePara
 
 /**
  * Send file composed request.
+ *
+ * @internal
  */
 export class SendFileRequest<FileConstructorParameters> {
   /**

@@ -103,6 +103,8 @@ type ServiceResponse = [
 
 /**
  * Get single channel messages request.
+ *
+ * @internal
  */
 export class GetHistoryRequest extends AbstractRequest<History.GetHistoryResponse> {
   constructor(private readonly parameters: RequestParameters) {

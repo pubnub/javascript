@@ -32,6 +32,8 @@ type ServiceResponse = [0 | 1, string];
 
 /**
  * Unregister channels from device push request.
+ *
+ * @internal
  */
 // prettier-ignore
 export class RemoveDevicePushNotificationChannelsRequest extends BasePushNotificationChannelsRequest<

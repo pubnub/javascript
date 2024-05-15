@@ -10,7 +10,10 @@
     "esModuleInterop": true,
     "outDir": "./lib",
     "downlevelIteration": true,
-    "removeComments": true
+    "removeComments": true,
+    "declaration": true,
+    "declarationDir": "./lib/types",
+    "stripInternal": true
   },
   "include": [
     "src/**/*"
@@ -22,7 +25,7 @@
     "src/file/modules/web.ts",
     "src/nativescript/**/*",
     "src/titanium/**/*",
-    "src/transport/service-worker/**/*",
+    "src/transport/subscription-worker/**/*",
     "src/transport/titanium-transport.ts",
     "src/web/**/*"
   ]

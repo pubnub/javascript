@@ -30,6 +30,8 @@ type RequestParameters = AppContext.RemoveChannelMetadataParameters & {
 
 /**
  * Remove Channel Metadata request.
+ *
+ * @internal
  */
 export class RemoveChannelMetadataRequest<
   Response extends AppContext.RemoveChannelMetadataResponse,

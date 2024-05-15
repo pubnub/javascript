@@ -8,6 +8,8 @@ import uuidGenerator from './uuid';
 
 /**
  * Base REST API request class.
+ *
+ * @internal
  */
 export abstract class AbstractRequest<ResponseType> implements Request<ResponseType> {
   /**

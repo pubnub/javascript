@@ -59,6 +59,8 @@ type ServiceResponse = {
 
 /**
  * Set `uuid` presence state request.
+ *
+ * @internal
  */
 export class SetPresenceStateRequest extends AbstractRequest<Presence.SetPresenceStateResponse> {
   constructor(private readonly parameters: RequestParameters) {

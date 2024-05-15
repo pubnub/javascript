@@ -127,6 +127,8 @@ type ServiceResponse = [0 | 1, string, string];
  *
  * Request will normalize and encrypt (if required) provided data and push it to the specified
  * channel.
+ *
+ * @internal
  */
 export class PublishRequest extends AbstractRequest<PublishResponse> {
   /**

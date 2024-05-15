@@ -50,6 +50,8 @@ type RequestParameters<Custom extends AppContext.CustomData = AppContext.CustomD
 
 /**
  * Get All Channels Metadata request.
+ *
+ * @internal
  */
 export class GetAllChannelsMetadataRequest<
   Response extends AppContext.GetAllChannelMetadataResponse<Custom>,

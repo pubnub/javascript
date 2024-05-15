@@ -5,6 +5,8 @@ const BASE64_CHARMAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123
  *
  * @param paddedInput Base64 string with padding
  * @returns ArrayBuffer with decoded data
+ *
+ * @internal
  */
 export function decode(paddedInput: string): ArrayBuffer {
   // Remove up to last two equal signs.
@@ -54,6 +56,14 @@ export function decode(paddedInput: string): ArrayBuffer {
   return data;
 }
 
+/**
+ * Encode `ArrayBuffer` as a Base64 encoded string.
+ *
+ * @param input ArrayBuffer with source data.
+ * @returns Base64 string with padding.
+ *
+ * @internal
+ */
 export function encode(input: ArrayBuffer): string {
   let base64 = '';
   const encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';

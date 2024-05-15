@@ -32,6 +32,8 @@ type ServiceResponse = [0 | 1, string];
 
 /**
  * Register channels with device push request.
+ *
+ * @internal
  */
 // prettier-ignore
 export class AddDevicePushNotificationChannelsRequest extends BasePushNotificationChannelsRequest<

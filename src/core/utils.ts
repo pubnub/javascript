@@ -27,7 +27,7 @@ export const encodeNames = (names: string[], defaultString?: string) => {
   return encodedNames.length ? encodedNames.join(',') : defaultString ?? '';
 };
 
-export const removeSingleOccurance = (source: string[], elementsToRemove: string[]) => {
+export const removeSingleOccurrence = (source: string[], elementsToRemove: string[]) => {
   const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
 
   return source.filter((e) => {

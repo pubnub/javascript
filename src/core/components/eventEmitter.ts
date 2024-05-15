@@ -2,6 +2,14 @@ import { Listener, ListenerManager } from './listener_manager';
 import * as Subscription from '../types/api/subscription';
 import { PubNubEventType } from '../endpoints/subscribe';
 
+/**
+ * Real-time events' emitter.
+ *
+ * Emitter responsible for forwarding received real-time events to the closures which has been
+ * registered for specific events handling.
+ *
+ * @internal
+ */
 export default class EventEmitter {
   /**
    * Map of channels to listener callbacks for them.

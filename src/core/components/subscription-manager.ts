@@ -18,6 +18,8 @@ import EventEmitter from './eventEmitter';
 
 /**
  * Subscription loop manager.
+ *
+ * @internal
  */
 export class SubscriptionManager {
   /**

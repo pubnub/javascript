@@ -47,6 +47,8 @@ type RequestParameters = (Push.ManageDeviceChannelsParameters | Push.RemoveDevic
 
 /**
  * Base push notification request.
+ *
+ * @internal
  */
 export class BasePushNotificationChannelsRequest<R> extends AbstractRequest<R> {
   constructor(private readonly parameters: RequestParameters) {

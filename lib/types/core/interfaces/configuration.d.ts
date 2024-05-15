@@ -1,0 +1,74 @@
+import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
+import { RequestRetryPolicy } from '../../event-engine/core/retryPolicy';
+import { CryptoModule } from './crypto-module';
+import { Payload } from '../types/api';
+export type UserConfiguration = {
+    subscribeKey: string;
+    subscribe_key?: string;
+    publishKey?: string;
+    publish_key?: string;
+    secretKey?: string;
+    secret_key?: string;
+    userId?: string;
+    authKey?: string | null;
+    logVerbosity?: boolean;
+    ssl?: boolean;
+    origin?: string | string[];
+    presenceTimeout?: number;
+    heartbeatInterval?: number;
+    transactionalRequestTimeout?: number;
+    subscribeRequestTimeout?: number;
+    restore?: boolean;
+    useInstanceId?: boolean;
+    suppressLeaveEvents?: boolean;
+    requestMessageCountThreshold?: number;
+    autoNetworkDetection?: boolean;
+    enableEventEngine?: boolean;
+    retryConfiguration?: RequestRetryPolicy;
+    maintainPresenceState?: boolean;
+    uuid?: string;
+    keepAlive?: boolean;
+    sdkName?: string;
+    partnerId?: string;
+};
+export type PlatformConfiguration = {
+    sdkFamily: string;
+    cryptoModule?: CryptoModule;
+    PubNubFile?: PubNubFileConstructor<PubNubFileInterface, any>;
+    cipherKey?: string;
+    useRandomIVs?: boolean;
+    customEncrypt?: (data: string | Payload) => string;
+    customDecrypt?: (data: string) => string;
+};
+export interface ClientConfiguration {
+    getUserId(): string;
+    setUserId(value: string): void;
+    setAuthKey(authKey: string | null): void;
+    getFilterExpression(): string | undefined | null;
+    setFilterExpression(expression: string | null | undefined): void;
+    setCipherKey(key: string | undefined): void;
+    get version(): string;
+    getVersion(): string;
+    _addPnsdkSuffix(name: string, suffix: string | number): void;
+    getUUID(): string;
+    setUUID(value: string): void;
+}
+export interface PrivateClientConfiguration extends ClientConfiguration, Omit<ExtendedConfiguration, 'subscribe_key' | 'publish_key' | 'secret_key' | 'uuid'> {
+    getAuthKey(): string | undefined | null;
+    getCryptoModule(): CryptoModule | undefined;
+    getPresenceTimeout(): number;
+    setPresenceTimeout(timeout: number): void;
+    getHeartbeatInterval(): number | undefined;
+    setHeartbeatInterval(interval: number): void;
+    getTransactionTimeout(): number;
+    getSubscribeTimeout(): number;
+    get PubNubFile(): PubNubFileConstructor<PubNubFileInterface, unknown> | undefined;
+    get instanceId(): string | undefined;
+    get sdkFamily(): string;
+    _getPnsdkSuffix(separator: string): string;
+    getCipherKey(): string | undefined;
+    getUseRandomIVs(): boolean | undefined;
+    getCustomEncrypt(): ((data: string | Payload) => string) | undefined;
+    getCustomDecrypt(): ((data: string) => string) | undefined;
+}
+export declare const setDefaults: (configuration: UserConfiguration) => ExtendedConfiguration;

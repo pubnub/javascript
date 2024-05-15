@@ -75,6 +75,8 @@ type RequestParameters = AppContext.GetMembershipsParameters & {
 
 /**
  * Get UUID Memberships request.
+ *
+ * @internal
  */
 export class GetUUIDMembershipsRequest<
   Response extends AppContext.GetMembershipsResponse<MembersCustom, UUIDCustom>,

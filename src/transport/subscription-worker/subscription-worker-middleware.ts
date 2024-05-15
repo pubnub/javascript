@@ -1,16 +1,16 @@
 /**
- * Subscription Service Worker transport middleware module.
+ * Subscription Worker transport middleware module.
  *
- * Middleware optimize subscription feature requests utilizing `Subscription Service Worker` if available and not
- * disabled by user.
+ * Middleware optimize subscription feature requests utilizing `Subscription Worker` if available and not disabled
+ * by user.
  */
 
 import { CancellationController, TransportRequest } from '../../core/types/transport-request';
-import * as PubNubSubscriptionServiceWorker from './subscription-service-worker';
 import { TransportResponse } from '../../core/types/transport-response';
-import { Transport } from '../../core/interfaces/transport';
+import * as PubNubSubscriptionWorker from './subscription-worker';
 import { PubNubAPIError } from '../../errors/pubnub-api-error';
 import StatusCategory from '../../core/constants/categories';
+import { Transport } from '../../core/interfaces/transport';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -29,9 +29,14 @@ type PubNubMiddlewareConfiguration = {
   subscriptionKey: string;
 
   /**
-   * Url of the hoster `Subscription` service worker file.
+   * Unique identifier of the user for which PubNub SDK client has been created.
    */
-  serviceWorkerUrl: string;
+  userId: string;
+
+  /**
+   * Url of the hosted `Subscription` worker file.
+   */
+  workerUrl: string;
 
   /**
    * Current PubNub client version.
@@ -44,6 +49,11 @@ type PubNubMiddlewareConfiguration = {
   logVerbosity: boolean;
 
   /**
+   * Whether verbose logging should be enabled for `Subscription` worker should print debug messages or not.
+   */
+  workerLogVerbosity: boolean;
+
+  /**
    * Platform-specific transport for requests processing.
    */
   transport: Transport;
@@ -52,33 +62,38 @@ type PubNubMiddlewareConfiguration = {
 // endregion
 
 /**
- * Subscription Service Worker transport middleware.
+ * Subscription Worker transport middleware.
  */
-export class SubscriptionServiceWorkerMiddleware implements Transport {
+export class SubscriptionWorkerMiddleware implements Transport {
   /**
    * Scheduled requests result handling callback.
    */
   callbacks?: Map<string, { resolve: (value: TransportResponse) => void; reject: (value: Error) => void }>;
 
   /**
-   * Subscription service worker.
+   * Subscription shared worker.
    *
-   * **Note:** Web PubNub SDK Transport provider adjustment for explicit subscription feature support.
+   * **Note:** Browser PubNub SDK Transport provider adjustment for explicit subscription / leave features support.
    */
-  serviceWorkerRegistration?: ServiceWorkerRegistration;
+  subscriptionWorker?: SharedWorker;
 
   /**
    * Queue of events for service worker.
    *
    * Keep list of events which should be sent to the worker after its activation.
    */
-  serviceWorkerEventsQueue: PubNubSubscriptionServiceWorker.ClientEvent[];
+  workerEventsQueue: PubNubSubscriptionWorker.ClientEvent[];
+
+  /**
+   * Whether subscription worker has been initialized and ready to handle events.
+   */
+  subscriptionWorkerReady: boolean = false;
 
   constructor(private readonly configuration: PubNubMiddlewareConfiguration) {
-    this.serviceWorkerEventsQueue = [];
+    this.workerEventsQueue = [];
     this.callbacks = new Map();
 
-    this.setupServiceWorker();
+    this.setupSubscriptionWorker();
   }
 
   makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
@@ -87,7 +102,7 @@ export class SubscriptionServiceWorkerMiddleware implements Transport {
       return this.configuration.transport.makeSendable(req);
 
     let controller: CancellationController | undefined;
-    const sendRequestEvent: PubNubSubscriptionServiceWorker.SendRequestEvent = {
+    const sendRequestEvent: PubNubSubscriptionWorker.SendRequestEvent = {
       type: 'send-request',
       clientIdentifier: this.configuration.clientIdentifier,
       subscriptionKey: this.configuration.subscriptionKey,
@@ -98,7 +113,7 @@ export class SubscriptionServiceWorkerMiddleware implements Transport {
     if (req.cancellable) {
       controller = {
         abort: () => {
-          const cancelRequest: PubNubSubscriptionServiceWorker.CancelRequestEvent = {
+          const cancelRequest: PubNubSubscriptionWorker.CancelRequestEvent = {
             type: 'cancel-request',
             clientIdentifier: this.configuration.clientIdentifier,
             subscriptionKey: this.configuration.subscriptionKey,
@@ -130,42 +145,42 @@ export class SubscriptionServiceWorkerMiddleware implements Transport {
   }
 
   /**
-   * Schedule {@link event} publish to the service worker.
+   * Schedule {@link event} publish to the subscription worker.
    *
-   * Service worker may not be ready for events processing and this method build queue for the time when worker will be
-   * ready.
+   * Subscription worker may not be ready for events processing and this method build queue for the time when worker
+   * will be ready.
    *
-   * @param event - Event payload for service worker.
+   * @param event - Event payload for the subscription worker.
    * @param outOfOrder - Whether event should be processed first then enqueued queue.
    */
-  private scheduleEventPost(event: PubNubSubscriptionServiceWorker.ClientEvent, outOfOrder: boolean = false) {
-    // Trigger request processing by Web Worker.
-    const serviceWorker = this.serviceWorker;
-    if (serviceWorker) serviceWorker.postMessage(event);
+  private scheduleEventPost(event: PubNubSubscriptionWorker.ClientEvent, outOfOrder: boolean = false) {
+    // Trigger request processing by subscription worker.
+    const subscriptionWorker = this.sharedSubscriptionWorker;
+    if (subscriptionWorker) subscriptionWorker.port.postMessage(event);
     else {
-      if (outOfOrder) this.serviceWorkerEventsQueue.splice(0, 0, event);
-      else this.serviceWorkerEventsQueue.push(event);
+      if (outOfOrder) this.workerEventsQueue.splice(0, 0, event);
+      else this.workerEventsQueue.push(event);
     }
   }
 
   /**
-   * Dequeue and post events from the queue to the service worker.
+   * Dequeue and post events from the queue to the subscription worker.
    */
   private flushScheduledEvents(): void {
-    // Trigger request processing by Web Worker.
-    const serviceWorker = this.serviceWorker;
-    if (!serviceWorker || this.serviceWorkerEventsQueue.length === 0) return;
+    // Trigger request processing by subscription worker.
+    const subscriptionWorker = this.sharedSubscriptionWorker;
+    if (!subscriptionWorker || this.workerEventsQueue.length === 0) return;
 
     // Clean up from cancelled events.
-    const outdatedEvents: PubNubSubscriptionServiceWorker.ClientEvent[] = [];
-    for (let i = 0; i < this.serviceWorkerEventsQueue.length; i++) {
-      const event = this.serviceWorkerEventsQueue[i];
+    const outdatedEvents: PubNubSubscriptionWorker.ClientEvent[] = [];
+    for (let i = 0; i < this.workerEventsQueue.length; i++) {
+      const event = this.workerEventsQueue[i];
 
       // Check whether found request cancel event to search for request send event it cancels.
       if (event.type !== 'cancel-request' || i === 0) continue;
 
       for (let j = 0; j < i; j++) {
-        const otherEvent = this.serviceWorkerEventsQueue[j];
+        const otherEvent = this.workerEventsQueue[j];
         if (otherEvent.type !== 'send-request') continue;
 
         // Collect outdated events if identifiers match.
@@ -177,73 +192,77 @@ export class SubscriptionServiceWorkerMiddleware implements Transport {
     }
 
     // Actualizing events queue.
-    this.serviceWorkerEventsQueue = this.serviceWorkerEventsQueue.filter((event) => !outdatedEvents.includes(event));
-    this.serviceWorkerEventsQueue.forEach((event) => serviceWorker.postMessage(event));
-    this.serviceWorkerEventsQueue = [];
+    this.workerEventsQueue = this.workerEventsQueue.filter((event) => !outdatedEvents.includes(event));
+    this.workerEventsQueue.forEach((event) => subscriptionWorker.port.postMessage(event));
+    this.workerEventsQueue = [];
   }
 
   /**
-   * Subscription service worker.
+   * Subscription worker.
    *
-   * @returns Service worker which has been registered by the PubNub SDK.
+   * @returns Worker which has been registered by the PubNub SDK.
    */
-  private get serviceWorker() {
-    return this.serviceWorkerRegistration ? this.serviceWorkerRegistration.active : null;
+  private get sharedSubscriptionWorker() {
+    return this.subscriptionWorkerReady ? this.subscriptionWorker : null;
   }
 
-  private setupServiceWorker(): void {
-    if (!('serviceWorker' in navigator)) return;
-    const serviceWorkerContainer = navigator.serviceWorker as ServiceWorkerContainer;
-    serviceWorkerContainer
-      .register(this.configuration.serviceWorkerUrl, {
-        scope: `/pubnub-${this.configuration.sdkVersion}`,
-      })
-      .then((registration) => {
-        this.serviceWorkerRegistration = registration;
+  private setupSubscriptionWorker(): void {
+    if (typeof SharedWorker === 'undefined') return;
 
-        // Flush any pending service worker events.
-        if (registration.active) this.flushScheduledEvents();
+    this.subscriptionWorker = new SharedWorker(
+      this.configuration.workerUrl,
+      `/pubnub-${this.configuration.sdkVersion}`,
+    );
 
-        /**
-         * Listening for service worker code update.
-         *
-         * It is possible that one of the tabs will open with newer SDK version and Subscription Service Worker
-         * will be re-installed - in this case we need to "rehydrate" it.
-         *
-         * After re-installation of new service worker it will lose all accumulated state and client need to
-         * re-introduce itself and its state.
-         */
-        this.serviceWorkerRegistration.addEventListener('updatefound', () => {
-          if (!this.serviceWorkerRegistration) return;
+    this.subscriptionWorker.port.start();
 
-          // New service installing right now.
-          const serviceWorker = this.serviceWorkerRegistration.installing!;
+    // Register PubNub client within subscription worker.
+    this.scheduleEventPost(
+      {
+        type: 'client-register',
+        clientIdentifier: this.configuration.clientIdentifier,
+        subscriptionKey: this.configuration.subscriptionKey,
+        userId: this.configuration.userId,
+        logVerbosity: this.configuration.logVerbosity,
+        workerLogVerbosity: this.configuration.workerLogVerbosity,
+      },
+      true,
+    );
 
-          const stateChangeListener = () => {
-            // Flush any pending service worker events.
-            if (serviceWorker.state === 'activated') {
-              // Flush any pending service worker events.
-              this.flushScheduledEvents();
-            } else if (serviceWorker.state === 'redundant') {
-              // Clean up listener from deprecated service worker version.
-              serviceWorker.removeEventListener('statechange', stateChangeListener);
-            }
-          };
-
-          serviceWorker.addEventListener('statechange', stateChangeListener);
-        });
-      });
-
-    serviceWorkerContainer.addEventListener('message', (event) => this.handleServiceWorkerEvent(event));
+    this.subscriptionWorker.port.onmessage = (event) => this.handleWorkerEvent(event);
   }
 
-  private handleServiceWorkerEvent(event: MessageEvent<PubNubSubscriptionServiceWorker.ServiceWorkerEvent>) {
+  private handleWorkerEvent(event: MessageEvent<PubNubSubscriptionWorker.SubscriptionWorkerEvent>) {
     const { data } = event;
 
     // Ignoring updates not related to this instance.
-    if (data.clientIdentifier !== this.configuration.clientIdentifier) return;
+    if (
+      data.type !== 'shared-worker-ping' &&
+      data.type !== 'shared-worker-connected' &&
+      data.type !== 'shared-worker-console-log' &&
+      data.type !== 'shared-worker-console-dir' &&
+      data.clientIdentifier !== this.configuration.clientIdentifier
+    )
+      return;
 
-    if (data.type === 'request-progress-start' || data.type === 'request-progress-end') {
+    if (data.type === 'shared-worker-connected') {
+      this.subscriptionWorkerReady = true;
+      this.flushScheduledEvents();
+    } else if (data.type === 'shared-worker-console-log') {
+      console.log(`[SharedWorker] ${data.message}`);
+    } else if (data.type === 'shared-worker-console-dir') {
+      if (data.message) console.log(`[SharedWorker] ${data.message}`);
+      console.dir(data.data);
+    } else if (data.type === 'shared-worker-ping') {
+      const { logVerbosity, subscriptionKey, clientIdentifier } = this.configuration;
+
+      this.scheduleEventPost({
+        type: 'client-pong',
+        subscriptionKey,
+        clientIdentifier,
+        logVerbosity,
+      });
+    } else if (data.type === 'request-progress-start' || data.type === 'request-progress-end') {
       this.logRequestProgress(data);
     } else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
       const { resolve, reject } = this.callbacks!.get(data.identifier)!;
@@ -289,9 +308,9 @@ export class SubscriptionServiceWorkerMiddleware implements Transport {
   /**
    * Print request progress information.
    *
-   * @param information - Request progress information from Web Worker.
+   * @param information - Request progress information from worker.
    */
-  private logRequestProgress(information: PubNubSubscriptionServiceWorker.RequestSendingProgress) {
+  private logRequestProgress(information: PubNubSubscriptionWorker.RequestSendingProgress) {
     if (information.type === 'request-progress-start') {
       console.log('<<<<<');
       console.log(`[${information.timestamp}] ${information.url}\n${JSON.stringify(information.query ?? {})}`);

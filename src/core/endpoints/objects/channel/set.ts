@@ -41,6 +41,8 @@ type RequestParameters = AppContext.SetChannelMetadataParameters<AppContext.Cust
 
 /**
  * Set Channel Metadata request.
+ *
+ * @internal
  */
 export class SetChannelMetadataRequest<
   Response extends AppContext.SetChannelMetadataResponse<Custom>,
