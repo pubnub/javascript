@@ -49,6 +49,11 @@ type RequestParameters = FileSharing.PublishFileMessageParameters & {
 type ServiceResponse = [0 | 1, string, string];
 // endregion
 
+/**
+ * Publish shared file information request.
+ *
+ * @internal
+ */
 export class PublishFileMessageRequest extends AbstractRequest<FileSharing.PublishFileMessageResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();

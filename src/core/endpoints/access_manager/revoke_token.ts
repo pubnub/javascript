@@ -52,6 +52,8 @@ type ServiceResponse = {
  * Access token revoke request.
  *
  * Invalidate token and permissions which has been granted for it.
+ *
+ * @internal
  */
 export class RevokeTokenRequest extends AbstractRequest<PAM.RevokeTokenResponse> {
   constructor(private readonly parameters: RequestParameters) {

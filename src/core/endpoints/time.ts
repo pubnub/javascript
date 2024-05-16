@@ -28,6 +28,11 @@ export type TimeResponse = {
 type ServiceResponse = [string];
 // endregion
 
+/**
+ * Get current PubNub high-precision time request.
+ *
+ * @internal
+ */
 export class TimeRequest extends AbstractRequest<TimeResponse> {
   constructor() {
     super();

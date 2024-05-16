@@ -45,6 +45,8 @@ type ServiceResponse = {
 
 /**
  * Add Message Reaction request.
+ *
+ * @internal
  */
 export class AddMessageActionRequest extends AbstractRequest<MessageAction.AddMessageActionResponse> {
   constructor(private readonly parameters: RequestParameters) {

@@ -32,6 +32,8 @@ type ServiceResponse = string[];
 
 /**
  * List device push enabled channels request.
+ *
+ * @internal
  */
 // prettier-ignore
 export class ListDevicePushNotificationChannelsRequest extends BasePushNotificationChannelsRequest<

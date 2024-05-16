@@ -41,6 +41,8 @@ type RequestParameters = AppContext.SetUUIDMetadataParameters<AppContext.CustomD
 
 /**
  * Set UUID Metadata request.
+ *
+ * @internal
  */
 export class SetUUIDMetadataRequest<
   Response extends AppContext.SetUUIDMetadataResponse<Custom>,

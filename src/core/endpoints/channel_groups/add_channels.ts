@@ -54,6 +54,8 @@ type ServiceResponse = {
 
 /**
  * Add channel group channels request.
+ *
+ * @internal
  */
 export class AddChannelGroupChannelsRequest extends AbstractRequest<ChannelGroups.ManageChannelGroupChannelsResponse> {
   constructor(private readonly parameters: RequestParameters) {

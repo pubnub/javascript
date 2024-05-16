@@ -45,6 +45,8 @@ type ServiceResponse = {
 
 /**
  * Remove specific message action request.
+ *
+ * @internal
  */
 export class RemoveMessageAction extends AbstractRequest<MessageAction.RemoveMessageActionResponse> {
   constructor(private readonly parameters: RequestParameters) {

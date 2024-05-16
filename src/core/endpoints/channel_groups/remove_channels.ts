@@ -54,6 +54,8 @@ type ServiceResponse = {
 
 /**
  * Remove channel group channels request.
+ *
+ * @internal
  */
 // prettier-ignore
 export class RemoveChannelGroupChannelsRequest extends AbstractRequest<

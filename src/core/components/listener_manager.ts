@@ -95,6 +95,8 @@ export type Listener = {
 
 /**
  * Real-time listeners' manager.
+ *
+ * @internal
  */
 export class ListenerManager {
   /**

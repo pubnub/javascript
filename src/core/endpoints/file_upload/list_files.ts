@@ -65,6 +65,8 @@ type ServiceResponse = {
 
 /**
  * Files List request.
+ *
+ * @internal
  */
 export class FilesListRequest extends AbstractRequest<FileSharing.ListFilesResponse> {
   constructor(private readonly parameters: RequestParameters) {

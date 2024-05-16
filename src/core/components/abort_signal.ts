@@ -10,6 +10,11 @@ export class AbortError extends Error {
   }
 }
 
+/**
+ * Event Engine stored effect processing cancellation signal.
+ *
+ * @internal
+ */
 export class AbortSignal extends Subject<AbortError> {
   private _aborted = false;
 

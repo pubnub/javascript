@@ -423,522 +423,6 @@
 	var cborExports = cbor.exports;
 	var CborReader = /*@__PURE__*/getDefaultExportFromCjs(cborExports);
 
-	/**
-	 * Request processing status categories.
-	 */
-	var StatusCategory;
-	(function (StatusCategory) {
-	    /**
-	     * Call failed when network was unable to complete the call.
-	     */
-	    StatusCategory["PNNetworkIssuesCategory"] = "PNNetworkIssuesCategory";
-	    /**
-	     * Network call timed out.
-	     */
-	    StatusCategory["PNTimeoutCategory"] = "PNTimeoutCategory";
-	    /**
-	     * Request has been cancelled.
-	     */
-	    StatusCategory["PNCancelledCategory"] = "PNCancelledCategory";
-	    /**
-	     * Server responded with bad response.
-	     */
-	    StatusCategory["PNBadRequestCategory"] = "PNBadRequestCategory";
-	    /**
-	     * Server responded with access denied.
-	     */
-	    StatusCategory["PNAccessDeniedCategory"] = "PNAccessDeniedCategory";
-	    /**
-	     * Incomplete parameters provided for used endpoint.
-	     */
-	    StatusCategory["PNValidationErrorCategory"] = "PNValidationErrorCategory";
-	    /**
-	     * PubNub request acknowledgment status.
-	     *
-	     * Some API endpoints respond with request processing status w/o useful data.
-	     */
-	    StatusCategory["PNAcknowledgmentCategory"] = "PNAcknowledgmentCategory";
-	    /**
-	     * Something strange happened; please check the logs.
-	     */
-	    StatusCategory["PNUnknownCategory"] = "PNUnknownCategory";
-	    // --------------------------------------------------------
-	    // --------------------- Network status -------------------
-	    // --------------------------------------------------------
-	    /**
-	     * SDK will announce when the network appears to be connected again.
-	     */
-	    StatusCategory["PNNetworkUpCategory"] = "PNNetworkUpCategory";
-	    /**
-	     * SDK will announce when the network appears to down.
-	     */
-	    StatusCategory["PNNetworkDownCategory"] = "PNNetworkDownCategory";
-	    // --------------------------------------------------------
-	    // -------------------- Real-time events ------------------
-	    // --------------------------------------------------------
-	    /**
-	     * PubNub client reconnected to the real-time updates stream.
-	     */
-	    StatusCategory["PNReconnectedCategory"] = "PNReconnectedCategory";
-	    /**
-	     * PubNub client connected to the real-time updates stream.
-	     */
-	    StatusCategory["PNConnectedCategory"] = "PNConnectedCategory";
-	    /**
-	     * Received real-time updates exceed specified threshold.
-	     *
-	     * After temporary disconnection and catchup, this category means that potentially some
-	     * real-time updates have been pushed into `storage` and need to be requested separately.
-	     */
-	    StatusCategory["PNRequestMessageCountExceededCategory"] = "PNRequestMessageCountExceededCategory";
-	    /**
-	     * PubNub client disconnected from the real-time updates streams.
-	     */
-	    StatusCategory["PNDisconnectedCategory"] = "PNDisconnectedCategory";
-	    /**
-	     * PubNub client wasn't able to connect to the real-time updates streams.
-	     */
-	    StatusCategory["PNConnectionErrorCategory"] = "PNConnectionErrorCategory";
-	    /**
-	     * PubNub client unexpectedly disconnected from the real-time updates streams.
-	     */
-	    StatusCategory["PNDisconnectedUnexpectedlyCategory"] = "PNDisconnectedUnexpectedlyCategory";
-	})(StatusCategory || (StatusCategory = {}));
-	var StatusCategory$1 = StatusCategory;
-
-	class PubNubError extends Error {
-	    constructor(message, status) {
-	        super(message);
-	        this.status = status;
-	        this.name = 'PubNubError';
-	        this.message = message;
-	        Object.setPrototypeOf(this, new.target.prototype);
-	    }
-	}
-	function createError(errorPayload) {
-	    var _a;
-	    (_a = errorPayload.statusCode) !== null && _a !== void 0 ? _a : (errorPayload.statusCode = 0);
-	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category: StatusCategory$1.PNValidationErrorCategory, error: true });
-	}
-	function createValidationError(message, statusCode) {
-	    return createError(Object.assign({ message }, (statusCode !== undefined ? { statusCode } : {})));
-	}
-
-	/**
-	 * REST API endpoint use error module.
-	 */
-	/**
-	 * PubNub REST API call error.
-	 */
-	class PubNubAPIError extends Error {
-	    /**
-	     * Construct API from known error object or {@link PubNub} service error response.
-	     *
-	     * @param errorOrResponse - `Error` or service error response object from which error information
-	     * should be extracted.
-	     * @param data - Preprocessed service error response.
-	     *
-	     * @returns `PubNubAPIError` object with known error category and additional information (if
-	     * available).
-	     */
-	    static create(errorOrResponse, data) {
-	        if (errorOrResponse instanceof Error)
-	            return PubNubAPIError.createFromError(errorOrResponse);
-	        else
-	            return PubNubAPIError.createFromServiceResponse(errorOrResponse, data);
-	    }
-	    /**
-	     * Create API error instance from other error object.
-	     *
-	     * @param error - `Error` object provided by network provider (mostly) or other {@link PubNub} client components.
-	     *
-	     * @returns `PubNubAPIError` object with known error category and additional information (if
-	     * available).
-	     */
-	    static createFromError(error) {
-	        let category = StatusCategory$1.PNUnknownCategory;
-	        let message = 'Unknown error';
-	        let errorName = 'Error';
-	        if (!error)
-	            return new PubNubAPIError(message, category, 0);
-	        else if (error instanceof PubNubAPIError)
-	            return error;
-	        if (error instanceof Error) {
-	            message = error.message;
-	            errorName = error.name;
-	        }
-	        if (errorName === 'AbortError' || message.indexOf('Aborted') !== -1) {
-	            category = StatusCategory$1.PNCancelledCategory;
-	            message = 'Request cancelled';
-	        }
-	        else if (message.indexOf('timeout') !== -1) {
-	            category = StatusCategory$1.PNTimeoutCategory;
-	            message = 'Request timeout';
-	        }
-	        else if (message.indexOf('network') !== -1) {
-	            category = StatusCategory$1.PNNetworkIssuesCategory;
-	            message = 'Network issues';
-	        }
-	        else if (errorName === 'TypeError') {
-	            category = StatusCategory$1.PNBadRequestCategory;
-	        }
-	        else if (errorName === 'FetchError') {
-	            const errorCode = error.code;
-	            if (['ECONNREFUSED', 'ENETUNREACH', 'ENOTFOUND', 'ECONNRESET', 'EAI_AGAIN'].includes(errorCode))
-	                category = StatusCategory$1.PNNetworkIssuesCategory;
-	            if (errorCode === 'ECONNREFUSED')
-	                message = 'Connection refused';
-	            else if (errorCode === 'ENETUNREACH')
-	                message = 'Network not reachable';
-	            else if (errorCode === 'ENOTFOUND')
-	                message = 'Server not found';
-	            else if (errorCode === 'ECONNRESET')
-	                message = 'Connection reset by peer';
-	            else if (errorCode === 'EAI_AGAIN')
-	                message = 'Name resolution error';
-	            else if (errorCode === 'ETIMEDOUT') {
-	                category = StatusCategory$1.PNTimeoutCategory;
-	                message = 'Request timeout';
-	            }
-	            else
-	                message = `Unknown system error: ${error}`;
-	        }
-	        else if (message === 'Request timeout')
-	            category = StatusCategory$1.PNTimeoutCategory;
-	        return new PubNubAPIError(message, category, 0, error);
-	    }
-	    /**
-	     * Construct API from known {@link PubNub} service error response.
-	     *
-	     * @param response - Service error response object from which error information should be
-	     * extracted.
-	     * @param data - Preprocessed service error response.
-	     *
-	     * @returns `PubNubAPIError` object with known error category and additional information (if
-	     * available).
-	     */
-	    static createFromServiceResponse(response, data) {
-	        let category = StatusCategory$1.PNUnknownCategory;
-	        let errorData;
-	        let message = 'Unknown error';
-	        let { status } = response;
-	        data !== null && data !== void 0 ? data : (data = response.body);
-	        if (status === 402)
-	            message = 'Not available for used key set. Contact support@pubnub.com';
-	        else if (status === 400) {
-	            category = StatusCategory$1.PNBadRequestCategory;
-	            message = 'Bad request';
-	        }
-	        else if (status === 403) {
-	            category = StatusCategory$1.PNAccessDeniedCategory;
-	            message = 'Access denied';
-	        }
-	        // Try to get more information about error from service response.
-	        if (data && data.byteLength > 0) {
-	            const decoded = new TextDecoder().decode(data);
-	            if (response.headers['content-type'].indexOf('text/javascript') !== -1 ||
-	                response.headers['content-type'].indexOf('application/json') !== -1) {
-	                try {
-	                    const errorResponse = JSON.parse(decoded);
-	                    if (typeof errorResponse === 'object' && !Array.isArray(errorResponse)) {
-	                        if ('error' in errorResponse &&
-	                            (errorResponse.error === 1 || errorResponse.error === true) &&
-	                            'status' in errorResponse &&
-	                            typeof errorResponse.status === 'number' &&
-	                            'message' in errorResponse &&
-	                            'service' in errorResponse) {
-	                            errorData = errorResponse;
-	                            status = errorResponse.status;
-	                        }
-	                        else
-	                            errorData = errorResponse;
-	                        if ('error' in errorResponse && errorResponse.error instanceof Error)
-	                            errorData = errorResponse.error;
-	                    }
-	                }
-	                catch (_) {
-	                    errorData = decoded;
-	                }
-	            }
-	            else if (response.headers['content-type'].indexOf('xml') !== -1) {
-	                const reason = /<Message>(.*)<\/Message>/gi.exec(decoded);
-	                message = reason ? `Upload to bucket failed: ${reason[1]}` : 'Upload to bucket failed.';
-	            }
-	            else {
-	                errorData = decoded;
-	            }
-	        }
-	        return new PubNubAPIError(message, category, status, errorData);
-	    }
-	    /**
-	     * Construct PubNub endpoint error.
-	     *
-	     * @param message - Short API call error description.
-	     * @param category - Error category.
-	     * @param statusCode - Response HTTP status code.
-	     * @param errorData - Error information.
-	     */
-	    constructor(message, category, statusCode, errorData) {
-	        super(message);
-	        this.category = category;
-	        this.statusCode = statusCode;
-	        this.errorData = errorData;
-	        this.name = 'PubNubAPIError';
-	    }
-	    /**
-	     * Convert API error object to API callback status object.
-	     *
-	     * @param operation - Request operation during which error happened.
-	     *
-	     * @returns Pre-formatted API callback status object.
-	     */
-	    toStatus(operation) {
-	        return {
-	            error: true,
-	            category: this.category,
-	            operation,
-	            statusCode: this.statusCode,
-	            errorData: this.errorData,
-	        };
-	    }
-	    /**
-	     * Convert API error object to PubNub client error object.
-	     *
-	     * @param operation - Request operation during which error happened.
-	     * @param message - Custom error message.
-	     *
-	     * @returns Client-facing pre-formatted endpoint call error.
-	     */
-	    toPubNubError(operation, message) {
-	        return new PubNubError(message !== null && message !== void 0 ? message : this.message, this.toStatus(operation));
-	    }
-	}
-
-	/**
-	 * Subscription Service Worker transport middleware module.
-	 *
-	 * Middleware optimize subscription feature requests utilizing `Subscription Service Worker` if available and not
-	 * disabled by user.
-	 */
-	// endregion
-	/**
-	 * Subscription Service Worker transport middleware.
-	 */
-	class SubscriptionServiceWorkerMiddleware {
-	    constructor(configuration) {
-	        this.configuration = configuration;
-	        this.serviceWorkerEventsQueue = [];
-	        this.callbacks = new Map();
-	        this.setupServiceWorker();
-	    }
-	    makeSendable(req) {
-	        // Use default request flow for non-subscribe / presence leave requests.
-	        if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/leave'))
-	            return this.configuration.transport.makeSendable(req);
-	        let controller;
-	        const sendRequestEvent = {
-	            type: 'send-request',
-	            clientIdentifier: this.configuration.clientIdentifier,
-	            subscriptionKey: this.configuration.subscriptionKey,
-	            logVerbosity: this.configuration.logVerbosity,
-	            request: req,
-	        };
-	        if (req.cancellable) {
-	            controller = {
-	                abort: () => {
-	                    const cancelRequest = {
-	                        type: 'cancel-request',
-	                        clientIdentifier: this.configuration.clientIdentifier,
-	                        subscriptionKey: this.configuration.subscriptionKey,
-	                        logVerbosity: this.configuration.logVerbosity,
-	                        identifier: req.identifier,
-	                    };
-	                    // Cancel active request with specified identifier.
-	                    this.scheduleEventPost(cancelRequest);
-	                },
-	            };
-	        }
-	        return [
-	            new Promise((resolve, reject) => {
-	                // Associate Promise resolution / reject with request identifier for future usage in
-	                // `onmessage` handler block to return results.
-	                this.callbacks.set(req.identifier, { resolve, reject });
-	                // Trigger request processing by Service Worker.
-	                this.scheduleEventPost(sendRequestEvent);
-	            }),
-	            controller,
-	        ];
-	    }
-	    request(req) {
-	        return req;
-	    }
-	    /**
-	     * Schedule {@link event} publish to the service worker.
-	     *
-	     * Service worker may not be ready for events processing and this method build queue for the time when worker will be
-	     * ready.
-	     *
-	     * @param event - Event payload for service worker.
-	     * @param outOfOrder - Whether event should be processed first then enqueued queue.
-	     */
-	    scheduleEventPost(event, outOfOrder = false) {
-	        // Trigger request processing by Web Worker.
-	        const serviceWorker = this.serviceWorker;
-	        if (serviceWorker)
-	            serviceWorker.postMessage(event);
-	        else {
-	            if (outOfOrder)
-	                this.serviceWorkerEventsQueue.splice(0, 0, event);
-	            else
-	                this.serviceWorkerEventsQueue.push(event);
-	        }
-	    }
-	    /**
-	     * Dequeue and post events from the queue to the service worker.
-	     */
-	    flushScheduledEvents() {
-	        // Trigger request processing by Web Worker.
-	        const serviceWorker = this.serviceWorker;
-	        if (!serviceWorker || this.serviceWorkerEventsQueue.length === 0)
-	            return;
-	        // Clean up from cancelled events.
-	        const outdatedEvents = [];
-	        for (let i = 0; i < this.serviceWorkerEventsQueue.length; i++) {
-	            const event = this.serviceWorkerEventsQueue[i];
-	            // Check whether found request cancel event to search for request send event it cancels.
-	            if (event.type !== 'cancel-request' || i === 0)
-	                continue;
-	            for (let j = 0; j < i; j++) {
-	                const otherEvent = this.serviceWorkerEventsQueue[j];
-	                if (otherEvent.type !== 'send-request')
-	                    continue;
-	                // Collect outdated events if identifiers match.
-	                if (otherEvent.request.identifier === event.identifier) {
-	                    outdatedEvents.push(event, otherEvent);
-	                    break;
-	                }
-	            }
-	        }
-	        // Actualizing events queue.
-	        this.serviceWorkerEventsQueue = this.serviceWorkerEventsQueue.filter((event) => !outdatedEvents.includes(event));
-	        this.serviceWorkerEventsQueue.forEach((event) => serviceWorker.postMessage(event));
-	        this.serviceWorkerEventsQueue = [];
-	    }
-	    /**
-	     * Subscription service worker.
-	     *
-	     * @returns Service worker which has been registered by the PubNub SDK.
-	     */
-	    get serviceWorker() {
-	        return this.serviceWorkerRegistration ? this.serviceWorkerRegistration.active : null;
-	    }
-	    setupServiceWorker() {
-	        if (!('serviceWorker' in navigator))
-	            return;
-	        const serviceWorkerContainer = navigator.serviceWorker;
-	        serviceWorkerContainer
-	            .register(this.configuration.serviceWorkerUrl, {
-	            scope: `/pubnub-${this.configuration.sdkVersion}`,
-	        })
-	            .then((registration) => {
-	            this.serviceWorkerRegistration = registration;
-	            // Flush any pending service worker events.
-	            if (registration.active)
-	                this.flushScheduledEvents();
-	            /**
-	             * Listening for service worker code update.
-	             *
-	             * It is possible that one of the tabs will open with newer SDK version and Subscription Service Worker
-	             * will be re-installed - in this case we need to "rehydrate" it.
-	             *
-	             * After re-installation of new service worker it will lose all accumulated state and client need to
-	             * re-introduce itself and its state.
-	             */
-	            this.serviceWorkerRegistration.addEventListener('updatefound', () => {
-	                if (!this.serviceWorkerRegistration)
-	                    return;
-	                // New service installing right now.
-	                const serviceWorker = this.serviceWorkerRegistration.installing;
-	                const stateChangeListener = () => {
-	                    // Flush any pending service worker events.
-	                    if (serviceWorker.state === 'activated') {
-	                        // Flush any pending service worker events.
-	                        this.flushScheduledEvents();
-	                    }
-	                    else if (serviceWorker.state === 'redundant') {
-	                        // Clean up listener from deprecated service worker version.
-	                        serviceWorker.removeEventListener('statechange', stateChangeListener);
-	                    }
-	                };
-	                serviceWorker.addEventListener('statechange', stateChangeListener);
-	            });
-	        });
-	        serviceWorkerContainer.addEventListener('message', (event) => this.handleServiceWorkerEvent(event));
-	    }
-	    handleServiceWorkerEvent(event) {
-	        const { data } = event;
-	        // Ignoring updates not related to this instance.
-	        if (data.clientIdentifier !== this.configuration.clientIdentifier)
-	            return;
-	        if (data.type === 'request-progress-start' || data.type === 'request-progress-end') {
-	            this.logRequestProgress(data);
-	        }
-	        else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
-	            const { resolve, reject } = this.callbacks.get(data.identifier);
-	            if (data.type === 'request-process-success') {
-	                resolve({
-	                    status: data.response.status,
-	                    url: data.url,
-	                    headers: data.response.headers,
-	                    body: data.response.body,
-	                });
-	            }
-	            else {
-	                let category = StatusCategory$1.PNUnknownCategory;
-	                let message = 'Unknown error';
-	                // Handle client-side issues (if any).
-	                if (data.error) {
-	                    if (data.error.type === 'NETWORK_ISSUE')
-	                        category = StatusCategory$1.PNNetworkIssuesCategory;
-	                    else if (data.error.type === 'TIMEOUT')
-	                        category = StatusCategory$1.PNTimeoutCategory;
-	                    else if (data.error.type === 'ABORTED')
-	                        category = StatusCategory$1.PNCancelledCategory;
-	                    message = `${data.error.message} (${data.identifier})`;
-	                }
-	                // Handle service error response.
-	                else if (data.response) {
-	                    return reject(PubNubAPIError.create({
-	                        url: data.url,
-	                        headers: data.response.headers,
-	                        body: data.response.body,
-	                        status: data.response.status,
-	                    }, data.response.body));
-	                }
-	                reject(new PubNubAPIError(message, category, 0, new Error(message)));
-	            }
-	        }
-	    }
-	    /**
-	     * Print request progress information.
-	     *
-	     * @param information - Request progress information from Web Worker.
-	     */
-	    logRequestProgress(information) {
-	        var _a, _b;
-	        if (information.type === 'request-progress-start') {
-	            console.log('<<<<<');
-	            console.log(`[${information.timestamp}] ${information.url}\n${JSON.stringify((_a = information.query) !== null && _a !== void 0 ? _a : {})}`);
-	            console.log('-----');
-	        }
-	        else {
-	            console.log('>>>>>>');
-	            console.log(`[${information.timestamp} / ${information.duration}] ${information.url}\n${JSON.stringify((_b = information.query) !== null && _b !== void 0 ? _b : {})}\n${information.response}`);
-	            console.log('-----');
-	        }
-	    }
-	}
-
 	/******************************************************************************
 	Copyright (c) Microsoft Corporation.
 
@@ -1217,6 +701,8 @@
 	 *
 	 * @param paddedInput Base64 string with padding
 	 * @returns ArrayBuffer with decoded data
+	 *
+	 * @internal
 	 */
 	function decode(paddedInput) {
 	    // Remove up to last two equal signs.
@@ -1257,6 +743,14 @@
 	    }
 	    return data;
 	}
+	/**
+	 * Encode `ArrayBuffer` as a Base64 encoded string.
+	 *
+	 * @param input ArrayBuffer with source data.
+	 * @returns Base64 string with padding.
+	 *
+	 * @internal
+	 */
 	function encode(input) {
 	    let base64 = '';
 	    const encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -1295,6 +789,107 @@
 	        base64 += encodings[a] + encodings[b] + encodings[c] + '=';
 	    }
 	    return base64;
+	}
+
+	/**
+	 * Request processing status categories.
+	 */
+	var StatusCategory;
+	(function (StatusCategory) {
+	    /**
+	     * Call failed when network was unable to complete the call.
+	     */
+	    StatusCategory["PNNetworkIssuesCategory"] = "PNNetworkIssuesCategory";
+	    /**
+	     * Network call timed out.
+	     */
+	    StatusCategory["PNTimeoutCategory"] = "PNTimeoutCategory";
+	    /**
+	     * Request has been cancelled.
+	     */
+	    StatusCategory["PNCancelledCategory"] = "PNCancelledCategory";
+	    /**
+	     * Server responded with bad response.
+	     */
+	    StatusCategory["PNBadRequestCategory"] = "PNBadRequestCategory";
+	    /**
+	     * Server responded with access denied.
+	     */
+	    StatusCategory["PNAccessDeniedCategory"] = "PNAccessDeniedCategory";
+	    /**
+	     * Incomplete parameters provided for used endpoint.
+	     */
+	    StatusCategory["PNValidationErrorCategory"] = "PNValidationErrorCategory";
+	    /**
+	     * PubNub request acknowledgment status.
+	     *
+	     * Some API endpoints respond with request processing status w/o useful data.
+	     */
+	    StatusCategory["PNAcknowledgmentCategory"] = "PNAcknowledgmentCategory";
+	    /**
+	     * Something strange happened; please check the logs.
+	     */
+	    StatusCategory["PNUnknownCategory"] = "PNUnknownCategory";
+	    // --------------------------------------------------------
+	    // --------------------- Network status -------------------
+	    // --------------------------------------------------------
+	    /**
+	     * SDK will announce when the network appears to be connected again.
+	     */
+	    StatusCategory["PNNetworkUpCategory"] = "PNNetworkUpCategory";
+	    /**
+	     * SDK will announce when the network appears to down.
+	     */
+	    StatusCategory["PNNetworkDownCategory"] = "PNNetworkDownCategory";
+	    // --------------------------------------------------------
+	    // -------------------- Real-time events ------------------
+	    // --------------------------------------------------------
+	    /**
+	     * PubNub client reconnected to the real-time updates stream.
+	     */
+	    StatusCategory["PNReconnectedCategory"] = "PNReconnectedCategory";
+	    /**
+	     * PubNub client connected to the real-time updates stream.
+	     */
+	    StatusCategory["PNConnectedCategory"] = "PNConnectedCategory";
+	    /**
+	     * Received real-time updates exceed specified threshold.
+	     *
+	     * After temporary disconnection and catchup, this category means that potentially some
+	     * real-time updates have been pushed into `storage` and need to be requested separately.
+	     */
+	    StatusCategory["PNRequestMessageCountExceededCategory"] = "PNRequestMessageCountExceededCategory";
+	    /**
+	     * PubNub client disconnected from the real-time updates streams.
+	     */
+	    StatusCategory["PNDisconnectedCategory"] = "PNDisconnectedCategory";
+	    /**
+	     * PubNub client wasn't able to connect to the real-time updates streams.
+	     */
+	    StatusCategory["PNConnectionErrorCategory"] = "PNConnectionErrorCategory";
+	    /**
+	     * PubNub client unexpectedly disconnected from the real-time updates streams.
+	     */
+	    StatusCategory["PNDisconnectedUnexpectedlyCategory"] = "PNDisconnectedUnexpectedlyCategory";
+	})(StatusCategory || (StatusCategory = {}));
+	var StatusCategory$1 = StatusCategory;
+
+	class PubNubError extends Error {
+	    constructor(message, status) {
+	        super(message);
+	        this.status = status;
+	        this.name = 'PubNubError';
+	        this.message = message;
+	        Object.setPrototypeOf(this, new.target.prototype);
+	    }
+	}
+	function createError(errorPayload) {
+	    var _a;
+	    (_a = errorPayload.statusCode) !== null && _a !== void 0 ? _a : (errorPayload.statusCode = 0);
+	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category: StatusCategory$1.PNValidationErrorCategory, error: true });
+	}
+	function createValidationError(message, statusCode) {
+	    return createError(Object.assign({ message }, (statusCode !== undefined ? { statusCode } : {})));
 	}
 
 	/*eslint-disable */
@@ -3189,6 +2784,423 @@
 	CryptorHeaderV1.SENTINEL = 'PNED';
 
 	/**
+	 * REST API endpoint use error module.
+	 */
+	/**
+	 * PubNub REST API call error.
+	 */
+	class PubNubAPIError extends Error {
+	    /**
+	     * Construct API from known error object or {@link PubNub} service error response.
+	     *
+	     * @param errorOrResponse - `Error` or service error response object from which error information
+	     * should be extracted.
+	     * @param data - Preprocessed service error response.
+	     *
+	     * @returns `PubNubAPIError` object with known error category and additional information (if
+	     * available).
+	     */
+	    static create(errorOrResponse, data) {
+	        if (errorOrResponse instanceof Error)
+	            return PubNubAPIError.createFromError(errorOrResponse);
+	        else
+	            return PubNubAPIError.createFromServiceResponse(errorOrResponse, data);
+	    }
+	    /**
+	     * Create API error instance from other error object.
+	     *
+	     * @param error - `Error` object provided by network provider (mostly) or other {@link PubNub} client components.
+	     *
+	     * @returns `PubNubAPIError` object with known error category and additional information (if
+	     * available).
+	     */
+	    static createFromError(error) {
+	        let category = StatusCategory$1.PNUnknownCategory;
+	        let message = 'Unknown error';
+	        let errorName = 'Error';
+	        if (!error)
+	            return new PubNubAPIError(message, category, 0);
+	        else if (error instanceof PubNubAPIError)
+	            return error;
+	        if (error instanceof Error) {
+	            message = error.message;
+	            errorName = error.name;
+	        }
+	        if (errorName === 'AbortError' || message.indexOf('Aborted') !== -1) {
+	            category = StatusCategory$1.PNCancelledCategory;
+	            message = 'Request cancelled';
+	        }
+	        else if (message.indexOf('timeout') !== -1) {
+	            category = StatusCategory$1.PNTimeoutCategory;
+	            message = 'Request timeout';
+	        }
+	        else if (message.indexOf('network') !== -1) {
+	            category = StatusCategory$1.PNNetworkIssuesCategory;
+	            message = 'Network issues';
+	        }
+	        else if (errorName === 'TypeError') {
+	            category = StatusCategory$1.PNBadRequestCategory;
+	        }
+	        else if (errorName === 'FetchError') {
+	            const errorCode = error.code;
+	            if (['ECONNREFUSED', 'ENETUNREACH', 'ENOTFOUND', 'ECONNRESET', 'EAI_AGAIN'].includes(errorCode))
+	                category = StatusCategory$1.PNNetworkIssuesCategory;
+	            if (errorCode === 'ECONNREFUSED')
+	                message = 'Connection refused';
+	            else if (errorCode === 'ENETUNREACH')
+	                message = 'Network not reachable';
+	            else if (errorCode === 'ENOTFOUND')
+	                message = 'Server not found';
+	            else if (errorCode === 'ECONNRESET')
+	                message = 'Connection reset by peer';
+	            else if (errorCode === 'EAI_AGAIN')
+	                message = 'Name resolution error';
+	            else if (errorCode === 'ETIMEDOUT') {
+	                category = StatusCategory$1.PNTimeoutCategory;
+	                message = 'Request timeout';
+	            }
+	            else
+	                message = `Unknown system error: ${error}`;
+	        }
+	        else if (message === 'Request timeout')
+	            category = StatusCategory$1.PNTimeoutCategory;
+	        return new PubNubAPIError(message, category, 0, error);
+	    }
+	    /**
+	     * Construct API from known {@link PubNub} service error response.
+	     *
+	     * @param response - Service error response object from which error information should be
+	     * extracted.
+	     * @param data - Preprocessed service error response.
+	     *
+	     * @returns `PubNubAPIError` object with known error category and additional information (if
+	     * available).
+	     */
+	    static createFromServiceResponse(response, data) {
+	        let category = StatusCategory$1.PNUnknownCategory;
+	        let errorData;
+	        let message = 'Unknown error';
+	        let { status } = response;
+	        data !== null && data !== void 0 ? data : (data = response.body);
+	        if (status === 402)
+	            message = 'Not available for used key set. Contact support@pubnub.com';
+	        else if (status === 400) {
+	            category = StatusCategory$1.PNBadRequestCategory;
+	            message = 'Bad request';
+	        }
+	        else if (status === 403) {
+	            category = StatusCategory$1.PNAccessDeniedCategory;
+	            message = 'Access denied';
+	        }
+	        // Try to get more information about error from service response.
+	        if (data && data.byteLength > 0) {
+	            const decoded = new TextDecoder().decode(data);
+	            if (response.headers['content-type'].indexOf('text/javascript') !== -1 ||
+	                response.headers['content-type'].indexOf('application/json') !== -1) {
+	                try {
+	                    const errorResponse = JSON.parse(decoded);
+	                    if (typeof errorResponse === 'object' && !Array.isArray(errorResponse)) {
+	                        if ('error' in errorResponse &&
+	                            (errorResponse.error === 1 || errorResponse.error === true) &&
+	                            'status' in errorResponse &&
+	                            typeof errorResponse.status === 'number' &&
+	                            'message' in errorResponse &&
+	                            'service' in errorResponse) {
+	                            errorData = errorResponse;
+	                            status = errorResponse.status;
+	                        }
+	                        else
+	                            errorData = errorResponse;
+	                        if ('error' in errorResponse && errorResponse.error instanceof Error)
+	                            errorData = errorResponse.error;
+	                    }
+	                }
+	                catch (_) {
+	                    errorData = decoded;
+	                }
+	            }
+	            else if (response.headers['content-type'].indexOf('xml') !== -1) {
+	                const reason = /<Message>(.*)<\/Message>/gi.exec(decoded);
+	                message = reason ? `Upload to bucket failed: ${reason[1]}` : 'Upload to bucket failed.';
+	            }
+	            else {
+	                errorData = decoded;
+	            }
+	        }
+	        return new PubNubAPIError(message, category, status, errorData);
+	    }
+	    /**
+	     * Construct PubNub endpoint error.
+	     *
+	     * @param message - Short API call error description.
+	     * @param category - Error category.
+	     * @param statusCode - Response HTTP status code.
+	     * @param errorData - Error information.
+	     */
+	    constructor(message, category, statusCode, errorData) {
+	        super(message);
+	        this.category = category;
+	        this.statusCode = statusCode;
+	        this.errorData = errorData;
+	        this.name = 'PubNubAPIError';
+	    }
+	    /**
+	     * Convert API error object to API callback status object.
+	     *
+	     * @param operation - Request operation during which error happened.
+	     *
+	     * @returns Pre-formatted API callback status object.
+	     */
+	    toStatus(operation) {
+	        return {
+	            error: true,
+	            category: this.category,
+	            operation,
+	            statusCode: this.statusCode,
+	            errorData: this.errorData,
+	        };
+	    }
+	    /**
+	     * Convert API error object to PubNub client error object.
+	     *
+	     * @param operation - Request operation during which error happened.
+	     * @param message - Custom error message.
+	     *
+	     * @returns Client-facing pre-formatted endpoint call error.
+	     */
+	    toPubNubError(operation, message) {
+	        return new PubNubError(message !== null && message !== void 0 ? message : this.message, this.toStatus(operation));
+	    }
+	}
+
+	/**
+	 * Subscription Worker transport middleware module.
+	 *
+	 * Middleware optimize subscription feature requests utilizing `Subscription Worker` if available and not disabled
+	 * by user.
+	 */
+	// endregion
+	/**
+	 * Subscription Worker transport middleware.
+	 */
+	class SubscriptionWorkerMiddleware {
+	    constructor(configuration) {
+	        this.configuration = configuration;
+	        /**
+	         * Whether subscription worker has been initialized and ready to handle events.
+	         */
+	        this.subscriptionWorkerReady = false;
+	        this.workerEventsQueue = [];
+	        this.callbacks = new Map();
+	        this.setupSubscriptionWorker();
+	    }
+	    makeSendable(req) {
+	        // Use default request flow for non-subscribe / presence leave requests.
+	        if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/leave'))
+	            return this.configuration.transport.makeSendable(req);
+	        let controller;
+	        const sendRequestEvent = {
+	            type: 'send-request',
+	            clientIdentifier: this.configuration.clientIdentifier,
+	            subscriptionKey: this.configuration.subscriptionKey,
+	            logVerbosity: this.configuration.logVerbosity,
+	            request: req,
+	        };
+	        if (req.cancellable) {
+	            controller = {
+	                abort: () => {
+	                    const cancelRequest = {
+	                        type: 'cancel-request',
+	                        clientIdentifier: this.configuration.clientIdentifier,
+	                        subscriptionKey: this.configuration.subscriptionKey,
+	                        logVerbosity: this.configuration.logVerbosity,
+	                        identifier: req.identifier,
+	                    };
+	                    // Cancel active request with specified identifier.
+	                    this.scheduleEventPost(cancelRequest);
+	                },
+	            };
+	        }
+	        return [
+	            new Promise((resolve, reject) => {
+	                // Associate Promise resolution / reject with request identifier for future usage in
+	                // `onmessage` handler block to return results.
+	                this.callbacks.set(req.identifier, { resolve, reject });
+	                // Trigger request processing by Service Worker.
+	                this.scheduleEventPost(sendRequestEvent);
+	            }),
+	            controller,
+	        ];
+	    }
+	    request(req) {
+	        return req;
+	    }
+	    /**
+	     * Schedule {@link event} publish to the subscription worker.
+	     *
+	     * Subscription worker may not be ready for events processing and this method build queue for the time when worker
+	     * will be ready.
+	     *
+	     * @param event - Event payload for the subscription worker.
+	     * @param outOfOrder - Whether event should be processed first then enqueued queue.
+	     */
+	    scheduleEventPost(event, outOfOrder = false) {
+	        // Trigger request processing by subscription worker.
+	        const subscriptionWorker = this.sharedSubscriptionWorker;
+	        if (subscriptionWorker)
+	            subscriptionWorker.port.postMessage(event);
+	        else {
+	            if (outOfOrder)
+	                this.workerEventsQueue.splice(0, 0, event);
+	            else
+	                this.workerEventsQueue.push(event);
+	        }
+	    }
+	    /**
+	     * Dequeue and post events from the queue to the subscription worker.
+	     */
+	    flushScheduledEvents() {
+	        // Trigger request processing by subscription worker.
+	        const subscriptionWorker = this.sharedSubscriptionWorker;
+	        if (!subscriptionWorker || this.workerEventsQueue.length === 0)
+	            return;
+	        // Clean up from cancelled events.
+	        const outdatedEvents = [];
+	        for (let i = 0; i < this.workerEventsQueue.length; i++) {
+	            const event = this.workerEventsQueue[i];
+	            // Check whether found request cancel event to search for request send event it cancels.
+	            if (event.type !== 'cancel-request' || i === 0)
+	                continue;
+	            for (let j = 0; j < i; j++) {
+	                const otherEvent = this.workerEventsQueue[j];
+	                if (otherEvent.type !== 'send-request')
+	                    continue;
+	                // Collect outdated events if identifiers match.
+	                if (otherEvent.request.identifier === event.identifier) {
+	                    outdatedEvents.push(event, otherEvent);
+	                    break;
+	                }
+	            }
+	        }
+	        // Actualizing events queue.
+	        this.workerEventsQueue = this.workerEventsQueue.filter((event) => !outdatedEvents.includes(event));
+	        this.workerEventsQueue.forEach((event) => subscriptionWorker.port.postMessage(event));
+	        this.workerEventsQueue = [];
+	    }
+	    /**
+	     * Subscription worker.
+	     *
+	     * @returns Worker which has been registered by the PubNub SDK.
+	     */
+	    get sharedSubscriptionWorker() {
+	        return this.subscriptionWorkerReady ? this.subscriptionWorker : null;
+	    }
+	    setupSubscriptionWorker() {
+	        if (typeof SharedWorker === 'undefined')
+	            return;
+	        this.subscriptionWorker = new SharedWorker(this.configuration.workerUrl, `/pubnub-${this.configuration.sdkVersion}`);
+	        this.subscriptionWorker.port.start();
+	        // Register PubNub client within subscription worker.
+	        this.scheduleEventPost({
+	            type: 'client-register',
+	            clientIdentifier: this.configuration.clientIdentifier,
+	            subscriptionKey: this.configuration.subscriptionKey,
+	            userId: this.configuration.userId,
+	            logVerbosity: this.configuration.logVerbosity,
+	            workerLogVerbosity: this.configuration.workerLogVerbosity,
+	        }, true);
+	        this.subscriptionWorker.port.onmessage = (event) => this.handleWorkerEvent(event);
+	    }
+	    handleWorkerEvent(event) {
+	        const { data } = event;
+	        // Ignoring updates not related to this instance.
+	        if (data.type !== 'shared-worker-ping' &&
+	            data.type !== 'shared-worker-connected' &&
+	            data.type !== 'shared-worker-console-log' &&
+	            data.type !== 'shared-worker-console-dir' &&
+	            data.clientIdentifier !== this.configuration.clientIdentifier)
+	            return;
+	        if (data.type === 'shared-worker-connected') {
+	            this.subscriptionWorkerReady = true;
+	            this.flushScheduledEvents();
+	        }
+	        else if (data.type === 'shared-worker-console-log') {
+	            console.log(`[SharedWorker] ${data.message}`);
+	        }
+	        else if (data.type === 'shared-worker-console-dir') {
+	            if (data.message)
+	                console.log(`[SharedWorker] ${data.message}`);
+	            console.dir(data.data);
+	        }
+	        else if (data.type === 'shared-worker-ping') {
+	            const { logVerbosity, subscriptionKey, clientIdentifier } = this.configuration;
+	            this.scheduleEventPost({
+	                type: 'client-pong',
+	                subscriptionKey,
+	                clientIdentifier,
+	                logVerbosity,
+	            });
+	        }
+	        else if (data.type === 'request-progress-start' || data.type === 'request-progress-end') {
+	            this.logRequestProgress(data);
+	        }
+	        else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
+	            const { resolve, reject } = this.callbacks.get(data.identifier);
+	            if (data.type === 'request-process-success') {
+	                resolve({
+	                    status: data.response.status,
+	                    url: data.url,
+	                    headers: data.response.headers,
+	                    body: data.response.body,
+	                });
+	            }
+	            else {
+	                let category = StatusCategory$1.PNUnknownCategory;
+	                let message = 'Unknown error';
+	                // Handle client-side issues (if any).
+	                if (data.error) {
+	                    if (data.error.type === 'NETWORK_ISSUE')
+	                        category = StatusCategory$1.PNNetworkIssuesCategory;
+	                    else if (data.error.type === 'TIMEOUT')
+	                        category = StatusCategory$1.PNTimeoutCategory;
+	                    else if (data.error.type === 'ABORTED')
+	                        category = StatusCategory$1.PNCancelledCategory;
+	                    message = `${data.error.message} (${data.identifier})`;
+	                }
+	                // Handle service error response.
+	                else if (data.response) {
+	                    return reject(PubNubAPIError.create({
+	                        url: data.url,
+	                        headers: data.response.headers,
+	                        body: data.response.body,
+	                        status: data.response.status,
+	                    }, data.response.body));
+	                }
+	                reject(new PubNubAPIError(message, category, 0, new Error(message)));
+	            }
+	        }
+	    }
+	    /**
+	     * Print request progress information.
+	     *
+	     * @param information - Request progress information from worker.
+	     */
+	    logRequestProgress(information) {
+	        var _a, _b;
+	        if (information.type === 'request-progress-start') {
+	            console.log('<<<<<');
+	            console.log(`[${information.timestamp}] ${information.url}\n${JSON.stringify((_a = information.query) !== null && _a !== void 0 ? _a : {})}`);
+	            console.log('-----');
+	        }
+	        else {
+	            console.log('>>>>>>');
+	            console.log(`[${information.timestamp} / ${information.duration}] ${information.url}\n${JSON.stringify((_b = information.query) !== null && _b !== void 0 ? _b : {})}\n${information.response}`);
+	            console.log('-----');
+	        }
+	    }
+	}
+
+	/**
 	 * Percent-encode input string.
 	 *
 	 * **Note:** Encode content in accordance of the `PubNub` service requirements.
@@ -3213,7 +3225,7 @@
 	    const encodedNames = names.map((name) => encodeString(name));
 	    return encodedNames.length ? encodedNames.join(',') : defaultString !== null && defaultString !== void 0 ? defaultString : '';
 	};
-	const removeSingleOccurance = (source, elementsToRemove) => {
+	const removeSingleOccurrence = (source, elementsToRemove) => {
 	    const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
 	    return source.filter((e) => {
 	        if (elementsToRemove.includes(e) && !removed[e]) {
@@ -3387,6 +3399,15 @@
 	 */
 	WebReactNativeTransport.decoder = new TextDecoder();
 
+	/**
+	 * Re-map CBOR object keys from potentially C buffer strings to actual strings.
+	 *
+	 * @param obj CBOR which should be remapped to stringified keys.
+	 *
+	 * @returns Dictionary with stringified keys.
+	 *
+	 * @internal
+	 */
 	function stringifyBufferKeys(obj) {
 	    const isObject = (value) => typeof value === 'object' && value !== null && value.constructor === Object;
 	    const isString = (value) => typeof value === 'string' || value instanceof String;
@@ -3500,6 +3521,8 @@
 	 * Apply configuration default values.
 	 *
 	 * @param configuration - User-provided configuration.
+	 *
+	 * @internal
 	 */
 	const setDefaults$1 = (configuration) => {
 	    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
@@ -3600,6 +3623,10 @@
 	 */
 	const LISTEN_TO_BROWSER_NETWORK_EVENTS = true;
 	/**
+	 * Whether verbose logging should be enabled for `Subscription` worker to print debug messages or not.
+	 */
+	const SUBSCRIPTION_WORKER_LOG_VERBOSITY = false;
+	/**
 	 * Whether PubNub client should try to utilize existing TCP connection for new requests or not.
 	 */
 	const KEEP_ALIVE = true;
@@ -3607,15 +3634,17 @@
 	 * Apply configuration default values.
 	 *
 	 * @param configuration - User-provided configuration.
+	 *
+	 * @internal
 	 */
 	const setDefaults = (configuration) => {
-	    var _a, _b;
+	    var _a, _b, _c;
 	    // Force disable service workers if environment doesn't support them.
-	    if (configuration.serviceWorkerUrl && !('serviceWorker' in navigator))
-	        configuration.serviceWorkerUrl = null;
+	    if (configuration.subscriptionWorkerUrl && typeof SharedWorker === 'undefined')
+	        configuration.subscriptionWorkerUrl = null;
 	    return Object.assign(Object.assign({}, setDefaults$1(configuration)), { 
 	        // Set platform-specific options.
-	        listenToBrowserNetworkEvents: (_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : LISTEN_TO_BROWSER_NETWORK_EVENTS, serviceWorkerUrl: configuration.serviceWorkerUrl, keepAlive: (_b = configuration.keepAlive) !== null && _b !== void 0 ? _b : KEEP_ALIVE });
+	        listenToBrowserNetworkEvents: (_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : LISTEN_TO_BROWSER_NETWORK_EVENTS, subscriptionWorkerUrl: configuration.subscriptionWorkerUrl, subscriptionWorkerLogVerbosity: (_b = configuration.subscriptionWorkerLogVerbosity) !== null && _b !== void 0 ? _b : SUBSCRIPTION_WORKER_LOG_VERBOSITY, keepAlive: (_c = configuration.keepAlive) !== null && _c !== void 0 ? _c : KEEP_ALIVE });
 	};
 
 	var uuid = {exports: {}};
@@ -3685,6 +3714,8 @@
 	// region Defaults
 	/**
 	 * Whether encryption (if set) should use random initialization vector or not.
+	 *
+	 * @internal
 	 */
 	const USE_RANDOM_INITIALIZATION_VECTOR = true;
 	/**
@@ -3694,6 +3725,8 @@
 	 * @param setupCryptoModule - Platform-provided {@link CryptoModule} configuration block.
 	 *
 	 * @returns `PubNub` client private configuration.
+	 *
+	 * @internal
 	 */
 	const makeConfiguration = (base, setupCryptoModule) => {
 	    var _a, _b, _c;
@@ -3777,7 +3810,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.0.1';
+	            return '8.1.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -3835,6 +3868,8 @@
 	 * REST API access token manager.
 	 *
 	 * Manager maintains active access token and let parse it to get information about permissions.
+	 *
+	 * @internal
 	 */
 	class TokenManager {
 	    constructor(cbor) {
@@ -4127,6 +4162,8 @@
 	 */
 	/**
 	 * Real-time listeners' manager.
+	 *
+	 * @internal
 	 */
 	class ListenerManager {
 	    constructor() {
@@ -4311,6 +4348,13 @@
 	 *
 	 * **Note:** Reconnection manger rely on legacy time-based availability check.
 	 */
+	/**
+	 * Network "discovery" manager.
+	 *
+	 * Manager perform periodic `time` API calls to identify network availability.
+	 *
+	 * @internal
+	 */
 	class ReconnectionManager {
 	    constructor(time) {
 	        this.time = time;
@@ -4361,6 +4405,11 @@
 	  return hash;
 	};
 
+	/**
+	 * Real-time events deduplication manager.
+	 *
+	 * @internal
+	 */
 	class DedupingManager {
 	  _config;
 
@@ -4399,6 +4448,8 @@
 	 */
 	/**
 	 * Subscription loop manager.
+	 *
+	 * @internal
 	 */
 	class SubscriptionManager {
 	    constructor(configuration, listenerManager, eventEmitter, subscribeCall, heartbeatCall, leaveCall, time) {
@@ -5309,6 +5360,8 @@
 
 	/**
 	 * Base REST API request class.
+	 *
+	 * @internal
 	 */
 	class AbstractRequest {
 	    /**
@@ -5725,6 +5778,8 @@
 	// region Types
 	/**
 	 * PubNub-defined event types by payload.
+	 *
+	 * @internal
 	 */
 	var PubNubEventType;
 	(function (PubNubEventType) {
@@ -5762,6 +5817,8 @@
 	 * Subscription request used in small variations in two cases:
 	 * - subscription manager
 	 * - event engine
+	 *
+	 * @internal
 	 */
 	class BaseSubscribeRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -6000,6 +6057,8 @@
 	}
 	/**
 	 * Subscribe request.
+	 *
+	 * @internal
 	 */
 	class SubscribeRequest extends BaseSubscribeRequest {
 	    get path() {
@@ -6030,6 +6089,14 @@
 	    }
 	}
 
+	/**
+	 * Real-time events' emitter.
+	 *
+	 * Emitter responsible for forwarding received real-time events to the closures which has been
+	 * registered for specific events handling.
+	 *
+	 * @internal
+	 */
 	class EventEmitter {
 	    constructor(listenerManager) {
 	        this.listenerManager = listenerManager;
@@ -6190,6 +6257,9 @@
 	    }
 	}
 
+	/**
+	 * @internal
+	 */
 	class Subject {
 	    constructor(sync = false) {
 	        this.sync = sync;
@@ -6379,6 +6449,11 @@
 	        Object.setPrototypeOf(this, new.target.prototype);
 	    }
 	}
+	/**
+	 * Event Engine stored effect processing cancellation signal.
+	 *
+	 * @internal
+	 */
 	class AbortSignal extends Subject {
 	    constructor() {
 	        super(...arguments);
@@ -7234,11 +7309,11 @@
 	        }
 	    }
 	    unsubscribe({ channels = [], channelGroups = [] }) {
-	        const filteredChannels = removeSingleOccurance(this.channels, [
+	        const filteredChannels = removeSingleOccurrence(this.channels, [
 	            ...channels,
 	            ...channels.map((c) => `${c}-pnpres`),
 	        ]);
-	        const filteredGroups = removeSingleOccurance(this.groups, [
+	        const filteredGroups = removeSingleOccurrence(this.groups, [
 	            ...channelGroups,
 	            ...channelGroups.map((c) => `${c}-pnpres`),
 	        ]);
@@ -7313,6 +7388,8 @@
 	 *
 	 * Request will normalize and encrypt (if required) provided data and push it to the specified
 	 * channel.
+	 *
+	 * @internal
 	 */
 	class PublishRequest extends AbstractRequest {
 	    /**
@@ -7396,6 +7473,11 @@
 	 * Signal REST API module.
 	 */
 	// endregion
+	/**
+	 * Signal data (size-limited) publish request.
+	 *
+	 * @internal
+	 */
 	class SignalRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super();
@@ -7433,6 +7515,8 @@
 	 */
 	/**
 	 * Receive messages subscribe request.
+	 *
+	 * @internal
 	 */
 	class ReceiveMessagesSubscribeRequest extends BaseSubscribeRequest {
 	    operation() {
@@ -7477,6 +7561,8 @@
 	 * Handshake subscribe request.
 	 *
 	 * Separate subscribe request required by Event Engine.
+	 *
+	 * @internal
 	 */
 	class HandshakeSubscribeRequest extends BaseSubscribeRequest {
 	    operation() {
@@ -7505,6 +7591,8 @@
 	// endregion
 	/**
 	 * Get `uuid` presence state request.
+	 *
+	 * @internal
 	 */
 	class GetPresenceStateRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -7559,6 +7647,8 @@
 	// endregion
 	/**
 	 * Set `uuid` presence state request.
+	 *
+	 * @internal
 	 */
 	class SetPresenceStateRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -7605,6 +7695,11 @@
 	 * Announce heartbeat REST API module.
 	 */
 	// endregion
+	/**
+	 * Announce `uuid` presence request.
+	 *
+	 * @internal
+	 */
 	class HeartbeatRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super();
@@ -7650,6 +7745,11 @@
 	 * Announce leave REST API module.
 	 */
 	// endregion
+	/**
+	 * Announce user leave request.
+	 *
+	 * @internal
+	 */
 	class PresenceLeaveRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super();
@@ -7697,6 +7797,11 @@
 	 * `uuid` presence REST API module.
 	 */
 	// endregion
+	/**
+	 * Get `uuid` presence request.
+	 *
+	 * @internal
+	 */
 	class WhereNowRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super();
@@ -7744,6 +7849,11 @@
 	 */
 	const INCLUDE_STATE = false;
 	// endregion
+	/**
+	 * Channel presence request.
+	 *
+	 * @internal
+	 */
 	class HereNowRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        var _a, _b, _c;
@@ -7826,6 +7936,8 @@
 	// endregion
 	/**
 	 * Delete messages from channel history.
+	 *
+	 * @internal
 	 */
 	class DeleteMessageRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -7866,6 +7978,11 @@
 	 * Messages count REST API module.
 	 */
 	// endregion
+	/**
+	 * Count messages request.
+	 *
+	 * @internal
+	 */
 	class MessageCountRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super();
@@ -7935,6 +8052,8 @@
 	// endregion
 	/**
 	 * Get single channel messages request.
+	 *
+	 * @internal
 	 */
 	class GetHistoryRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -8080,6 +8199,8 @@
 	// endregion
 	/**
 	 * Fetch messages from channels request.
+	 *
+	 * @internal
 	 */
 	class FetchMessagesRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -8230,6 +8351,8 @@
 	// endregion
 	/**
 	 * Fetch channel message actions request.
+	 *
+	 * @internal
 	 */
 	class GetMessageActionsRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -8283,6 +8406,8 @@
 	// endregion
 	/**
 	 * Add Message Reaction request.
+	 *
+	 * @internal
 	 */
 	class AddMessageActionRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -8338,6 +8463,8 @@
 	// endregion
 	/**
 	 * Remove specific message action request.
+	 *
+	 * @internal
 	 */
 	class RemoveMessageAction extends AbstractRequest {
 	    constructor(parameters) {
@@ -8387,6 +8514,11 @@
 	 */
 	const STORE_IN_HISTORY = true;
 	// endregion
+	/**
+	 * Publish shared file information request.
+	 *
+	 * @internal
+	 */
 	class PublishFileMessageRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        var _a;
@@ -8456,6 +8588,8 @@
 	 * File download Url generation request.
 	 *
 	 * Local request which generates Url to download shared file from the specific channel.
+	 *
+	 * @internal
 	 */
 	class GetFileDownloadUrlRequest extends AbstractRequest {
 	    /**
@@ -8496,6 +8630,8 @@
 	// endregion
 	/**
 	 * Delete File request.
+	 *
+	 * @internal
 	 */
 	class DeleteFileRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -8545,6 +8681,8 @@
 	// endregion
 	/**
 	 * Files List request.
+	 *
+	 * @internal
 	 */
 	class FilesListRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -8589,6 +8727,8 @@
 	// endregion
 	/**
 	 * Generate File Upload Url request.
+	 *
+	 * @internal
 	 */
 	class GenerateFileUploadUrlRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -8634,6 +8774,8 @@
 	 */
 	/**
 	 * File Upload request.
+	 *
+	 * @internal
 	 */
 	class UploadFileRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -8689,6 +8831,8 @@
 	// endregion
 	/**
 	 * Send file composed request.
+	 *
+	 * @internal
 	 */
 	class SendFileRequest {
 	    constructor(parameters) {
@@ -8813,6 +8957,8 @@
 	 * Access token revoke request.
 	 *
 	 * Invalidate token and permissions which has been granted for it.
+	 *
+	 * @internal
 	 */
 	class RevokeTokenRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -8851,6 +8997,8 @@
 	// endregion
 	/**
 	 * Grant token permissions request.
+	 *
+	 * @internal
 	 */
 	class GrantTokenRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -9049,6 +9197,8 @@
 	// endregion
 	/**
 	 * Grant permissions request.
+	 *
+	 * @internal
 	 */
 	class GrantRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -9118,6 +9268,8 @@
 	// endregion
 	/**
 	 * Permissions audit request.
+	 *
+	 * @internal
 	 */
 	class AuditRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -9355,6 +9507,8 @@
 	// endregion
 	/**
 	 * Remove channel group channels request.
+	 *
+	 * @internal
 	 */
 	// prettier-ignore
 	class RemoveChannelGroupChannelsRequest extends AbstractRequest {
@@ -9400,6 +9554,8 @@
 	// endregion
 	/**
 	 * Add channel group channels request.
+	 *
+	 * @internal
 	 */
 	class AddChannelGroupChannelsRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -9444,6 +9600,8 @@
 	// endregion
 	/**
 	 * List Channel Group Channels request.
+	 *
+	 * @internal
 	 */
 	class ListChannelGroupChannels extends AbstractRequest {
 	    constructor(parameters) {
@@ -9482,6 +9640,8 @@
 	// endregion
 	/**
 	 * Channel group delete request.
+	 *
+	 * @internal
 	 */
 	class DeleteChannelGroupRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -9520,6 +9680,8 @@
 	// endregion
 	/**
 	 * List all channel groups request.
+	 *
+	 * @internal
 	 */
 	class ListChannelGroupsRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -9663,6 +9825,8 @@
 	// endregion
 	/**
 	 * Base push notification request.
+	 *
+	 * @internal
 	 */
 	class BasePushNotificationChannelsRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -9726,6 +9890,8 @@
 	// endregion
 	/**
 	 * Unregister channels from device push request.
+	 *
+	 * @internal
 	 */
 	// prettier-ignore
 	class RemoveDevicePushNotificationChannelsRequest extends BasePushNotificationChannelsRequest {
@@ -9751,6 +9917,8 @@
 	// endregion
 	/**
 	 * List device push enabled channels request.
+	 *
+	 * @internal
 	 */
 	// prettier-ignore
 	class ListDevicePushNotificationChannelsRequest extends BasePushNotificationChannelsRequest {
@@ -9776,6 +9944,8 @@
 	// endregion
 	/**
 	 * Register channels with device push request.
+	 *
+	 * @internal
 	 */
 	// prettier-ignore
 	class AddDevicePushNotificationChannelsRequest extends BasePushNotificationChannelsRequest {
@@ -9801,6 +9971,8 @@
 	// endregion
 	/**
 	 * Unregister device push notifications request.
+	 *
+	 * @internal
 	 */
 	// prettier-ignore
 	class RemoveDevicePushNotificationRequest extends BasePushNotificationChannelsRequest {
@@ -9912,6 +10084,8 @@
 	// endregion
 	/**
 	 * Get All Channels Metadata request.
+	 *
+	 * @internal
 	 */
 	class GetAllChannelsMetadataRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -9955,6 +10129,8 @@
 	// endregion
 	/**
 	 * Remove Channel Metadata request.
+	 *
+	 * @internal
 	 */
 	class RemoveChannelMetadataRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -10027,6 +10203,8 @@
 	// endregion
 	/**
 	 * Get UUID Memberships request.
+	 *
+	 * @internal
 	 */
 	class GetUUIDMembershipsRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -10120,6 +10298,8 @@
 	// endregion
 	/**
 	 * Set UUID Memberships request.
+	 *
+	 * @internal
 	 */
 	class SetUUIDMembershipsRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -10206,6 +10386,11 @@
 	 */
 	const LIMIT$2 = 100;
 	// endregion
+	/**
+	 * Get All UUIDs Metadata request.
+	 *
+	 * @internal
+	 */
 	class GetAllUUIDMetadataRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        var _a, _b, _c;
@@ -10255,6 +10440,8 @@
 	// endregion
 	/**
 	 * Get Channel Metadata request.
+	 *
+	 * @internal
 	 */
 	class GetChannelMetadataRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -10309,6 +10496,8 @@
 	// endregion
 	/**
 	 * Set Channel Metadata request.
+	 *
+	 * @internal
 	 */
 	class SetChannelMetadataRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -10360,6 +10549,8 @@
 	// endregion
 	/**
 	 * Remove UUID Metadata request.
+	 *
+	 * @internal
 	 */
 	class RemoveUUIDMetadataRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -10435,6 +10626,8 @@
 	// endregion
 	/**
 	 * Get Channel Members request.
+	 *
+	 * @internal
 	 */
 	class GetChannelMembersRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -10525,6 +10718,8 @@
 	// endregion
 	/**
 	 * Set Channel Members request.
+	 *
+	 * @internal
 	 */
 	class SetChannelMembersRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -10606,6 +10801,8 @@
 	// endregion
 	/**
 	 * Get UUID Metadata request.
+	 *
+	 * @internal
 	 */
 	class GetUUIDMetadataRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -10662,6 +10859,8 @@
 	// endregion
 	/**
 	 * Set UUID Metadata request.
+	 *
+	 * @internal
 	 */
 	class SetUUIDMetadataRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -11233,6 +11432,11 @@
 	 * Time REST API module.
 	 */
 	// endregion
+	/**
+	 * Get current PubNub high-precision time request.
+	 *
+	 * @internal
+	 */
 	class TimeRequest extends AbstractRequest {
 	    constructor() {
 	        super();
@@ -11259,6 +11463,8 @@
 	// endregion
 	/**
 	 * Download File request.
+	 *
+	 * @internal
 	 */
 	class DownloadFileRequest extends AbstractRequest {
 	    constructor(parameters) {
@@ -12937,7 +13143,9 @@
 	    }
 	}
 	/**
-	 *  {@link ArrayBuffer} to {@link string} decoder.
+	 * {@link ArrayBuffer} to {@link string} decoder.
+	 *
+	 * @internal
 	 */
 	PubNubCore.decoder = new TextDecoder();
 	// --------------------------------------------------------
@@ -12966,6 +13174,8 @@
 	 */
 	/**
 	 * CBOR data decoder.
+	 *
+	 * @internal
 	 */
 	class Cbor {
 	    constructor(decode, base64ToBinary) {
@@ -13025,14 +13235,16 @@
 	        }
 	        // Setup transport provider.
 	        let transport = new WebReactNativeTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity);
-	        if (configurationCopy.serviceWorkerUrl) {
-	            // Inject subscription service worker into transport provider stack.
-	            transport = new SubscriptionServiceWorkerMiddleware({
+	        if (configurationCopy.subscriptionWorkerUrl) {
+	            // Inject subscription worker into transport provider stack.
+	            transport = new SubscriptionWorkerMiddleware({
 	                clientIdentifier: clientConfiguration._instanceId,
 	                subscriptionKey: clientConfiguration.subscribeKey,
-	                serviceWorkerUrl: configurationCopy.serviceWorkerUrl,
+	                userId: clientConfiguration.getUserId(),
+	                workerUrl: configurationCopy.subscriptionWorkerUrl,
 	                sdkVersion: clientConfiguration.getVersion(),
 	                logVerbosity: clientConfiguration.logVerbosity,
+	                workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
 	                transport,
 	            });
 	        }

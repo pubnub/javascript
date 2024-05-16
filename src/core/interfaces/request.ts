@@ -4,6 +4,8 @@ import RequestOperation from '../constants/operations';
 
 /**
  * General REST API call request interface.
+ *
+ * @internal
  */
 export interface Request<ResponseType> {
   /**

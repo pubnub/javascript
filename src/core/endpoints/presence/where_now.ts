@@ -57,6 +57,11 @@ type ServiceResponse = {
 };
 // endregion
 
+/**
+ * Get `uuid` presence request.
+ *
+ * @internal
+ */
 export class WhereNowRequest extends AbstractRequest<Presence.WhereNowResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();

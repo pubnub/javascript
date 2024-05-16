@@ -150,6 +150,8 @@ export class PubNubCore<
 > {
   /**
    * PubNub client configuration.
+   *
+   * @internal
    */
   protected readonly _configuration: PrivateClientConfiguration;
 
@@ -157,71 +159,98 @@ export class PubNubCore<
    * Subscription loop manager.
    *
    * **Note:** Manager created when EventEngine is off.
+   *
+   * @internal
    */
   private readonly subscriptionManager?: SubscriptionManager;
 
   /**
    * Transport for network requests processing.
+   *
+   * @internal
    */
   protected readonly transport: Transport;
 
   /**
    * REST API endpoints access tokens manager.
+   *
+   * @internal
    */
   private readonly tokenManager: TokenManager;
 
   /**
    * Legacy crypto module implementation.
+   *
+   * @internal
    */
   private readonly cryptography?: Cryptography<CryptographyTypes>;
 
   /**
    * Legacy crypto (legacy data encryption / decryption and request signature support).
+   *
+   * @internal
    */
   private readonly crypto?: Crypto;
 
   /**
    * Real-time event listeners manager.
+   *
+   * @internal
    */
   protected readonly listenerManager: ListenerManager;
 
   /**
    * User's presence event engine.
+   *
+   * @internal
    */
   private presenceEventEngine?: PresenceEventEngine;
 
   /**
    * Subscription event engine.
+   *
+   * @internal
    */
   private readonly eventEngine?: EventEngine;
 
   /**
    * Client-managed presence information.
+   *
+   * @internal
    */
   private readonly presenceState?: Record<string, Payload>;
 
   /**
    * Real-time events emitter.
+   *
+   * @internal
    */
   private readonly eventEmitter: EventEmitter;
 
   /**
    * PubNub App Context REST API entry point.
+   *
+   * @internal
    */
   private readonly _objects: PubNubObjects;
 
   /**
    * PubNub Channel Group REST API entry point.
    */
+  // @internal @ts-ignore
   private readonly _channelGroups: PubNubChannelGroups;
 
   /**
    * PubNub Push Notification REST API entry point.
+   *
+   * @internal
    */
   private readonly _push: PubNubPushNotifications;
 
   /**
-   *  {@link ArrayBuffer} to {@link string} decoder.
+   * {@link ArrayBuffer} to {@link string} decoder.
+   *
+   * @internal
    */
   private static decoder = new TextDecoder();
 

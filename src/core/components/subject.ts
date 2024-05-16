@@ -1,5 +1,8 @@
 type Listener<T> = (event: T) => void;
 
+/**
+ * @internal
+ */
 export class Subject<T> {
   protected listeners: Set<Listener<T>> = new Set();
 

@@ -54,6 +54,8 @@ type ServiceResponse = {
 
 /**
  * Channel group delete request.
+ *
+ * @internal
  */
 export class DeleteChannelGroupRequest extends AbstractRequest<ChannelGroups.DeleteChannelGroupResponse> {
   constructor(private readonly parameters: RequestParameters) {

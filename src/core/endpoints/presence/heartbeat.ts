@@ -47,6 +47,11 @@ type ServiceResponse = {
 };
 // endregion
 
+/**
+ * Announce `uuid` presence request.
+ *
+ * @internal
+ */
 export class HeartbeatRequest extends AbstractRequest<Presence.PresenceHeartbeatResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();

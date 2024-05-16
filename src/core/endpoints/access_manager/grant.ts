@@ -94,6 +94,8 @@ type ServiceResponse = {
 
 /**
  * Grant permissions request.
+ *
+ * @internal
  */
 export class GrantRequest extends AbstractRequest<PAM.PermissionsResponse> {
   constructor(private readonly parameters: RequestParameters) {

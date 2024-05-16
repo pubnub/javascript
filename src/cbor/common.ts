@@ -4,6 +4,8 @@
 
 /**
  * CBOR data decoder.
+ *
+ * @internal
  */
 export default class Cbor {
   constructor(

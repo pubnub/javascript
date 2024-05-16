@@ -66,6 +66,8 @@ type RequestParameters = AppContext.SetChannelMembersParameters<AppContext.Custo
 
 /**
  * Set Channel Members request.
+ *
+ * @internal
  */
 export class SetChannelMembersRequest<
   Response extends AppContext.SetMembersResponse<MembersCustom, UUIDCustom>,

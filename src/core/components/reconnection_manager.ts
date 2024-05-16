@@ -6,6 +6,13 @@
 
 import { PubNubCore } from '../pubnub-common';
 
+/**
+ * Network "discovery" manager.
+ *
+ * Manager perform periodic `time` API calls to identify network availability.
+ *
+ * @internal
+ */
 export class ReconnectionManager {
   /**
    * Successful availability check callback.

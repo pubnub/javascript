@@ -15,6 +15,8 @@ import { Payload } from '../types/api';
 
 /**
  * Whether encryption (if set) should use random initialization vector or not.
+ *
+ * @internal
  */
 const USE_RANDOM_INITIALIZATION_VECTOR = true;
 // endregion
@@ -23,6 +25,8 @@ const USE_RANDOM_INITIALIZATION_VECTOR = true;
  * Crypto Module instance configuration function.
  *
  * Function will be used each time when `cipherKey` will be changed.
+ *
+ * @internal
  */
 type SetupCryptoModule = (configuration: CryptorConfiguration) => CryptoModule | undefined;
 
@@ -69,6 +73,8 @@ type PrivateConfigurationFields = {
  * @param setupCryptoModule - Platform-provided {@link CryptoModule} configuration block.
  *
  * @returns `PubNub` client private configuration.
+ *
+ * @internal
  */
 export const makeConfiguration = (
   base: ExtendedConfiguration & PlatformConfiguration,
@@ -163,7 +169,7 @@ export const makeConfiguration = (
       return base.PubNubFile;
     },
     get version(): string {
-      return '8.0.1';
+      return '8.1.0';
     },
     getVersion(): string {
       return this.version;

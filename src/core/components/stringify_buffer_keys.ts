@@ -1,3 +1,12 @@
+/**
+ * Re-map CBOR object keys from potentially C buffer strings to actual strings.
+ *
+ * @param obj CBOR which should be remapped to stringified keys.
+ *
+ * @returns Dictionary with stringified keys.
+ *
+ * @internal
+ */
 export function stringifyBufferKeys(obj: unknown): Record<string, unknown> {
   const isObject = (value: unknown): value is Record<string, unknown> =>
     typeof value === 'object' && value !== null && value.constructor === Object;

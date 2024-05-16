@@ -9,6 +9,8 @@ import { Query } from '../../types/api';
 
 /**
  * Receive messages subscribe request.
+ *
+ * @internal
  */
 export class ReceiveMessagesSubscribeRequest extends BaseSubscribeRequest {
   operation(): RequestOperation {

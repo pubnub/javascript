@@ -76,12 +76,12 @@ export class EventEngine {
   }
 
   unsubscribe({ channels = [], channelGroups = [] }: { channels?: string[]; channelGroups?: string[] }): void {
-    const filteredChannels = utils.removeSingleOccurance(this.channels, [
+    const filteredChannels = utils.removeSingleOccurrence(this.channels, [
       ...channels,
       ...channels.map((c) => `${c}-pnpres`),
     ]);
 
-    const filteredGroups = utils.removeSingleOccurance(this.groups, [
+    const filteredGroups = utils.removeSingleOccurrence(this.groups, [
       ...channelGroups,
       ...channelGroups.map((c) => `${c}-pnpres`),
     ]);

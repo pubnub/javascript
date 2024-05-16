@@ -30,6 +30,8 @@ type RequestParameters = AppContext.RemoveUUIDMetadataParameters & {
 
 /**
  * Remove UUID Metadata request.
+ *
+ * @internal
  */
 export class RemoveUUIDMetadataRequest<
   Response extends AppContext.RemoveUUIDMetadataResponse,

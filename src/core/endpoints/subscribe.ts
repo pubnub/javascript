@@ -32,6 +32,8 @@ const WITH_PRESENCE = false;
 
 /**
  * PubNub-defined event types by payload.
+ *
+ * @internal
  */
 export enum PubNubEventType {
   /**
@@ -191,6 +193,8 @@ type PresenceStateChangeData = {
 
 /**
  * Channel presence service response.
+ *
+ * @internal
  */
 export type PresenceData = PresenceIntervalData | PresenceChangeData | PresenceStateChangeData;
 // endregion
@@ -198,6 +202,8 @@ export type PresenceData = PresenceIntervalData | PresenceChangeData | PresenceS
 // region Message Actions service response
 /**
  * Message reaction change service response.
+ *
+ * @internal
  */
 export type MessageActionData = {
   /**
@@ -303,6 +309,8 @@ type ChannelObjectData = ObjectData<
 
 /**
  * `Space` object change real-time service response.
+ *
+ * @internal
  */
 export type SpaceObjectData = ObjectData<
   AppContextVSPEvents,
@@ -317,6 +325,8 @@ type UuidObjectData = ObjectData<AppContextEvents, 'uuid', AppContext.UUIDMetada
 
 /**
  * `User` object change real-time service response.
+ *
+ * @internal
  */
 export type UserObjectData = ObjectData<
   AppContextVSPEvents,
@@ -355,6 +365,8 @@ type MembershipObjectData = ObjectData<
 
 /**
  * VSP `Membership` object change real-time service response.
+ *
+ * @internal
  */
 export type VSPMembershipObjectData = ObjectData<
   AppContextVSPEvents,
@@ -384,6 +396,8 @@ export type VSPMembershipObjectData = ObjectData<
 
 /**
  * App Context service response.
+ *
+ * @internal
  */
 export type AppContextObjectData = ChannelObjectData | UuidObjectData | MembershipObjectData;
 // endregion
@@ -391,6 +405,8 @@ export type AppContextObjectData = ChannelObjectData | UuidObjectData | Membersh
 // region File service response
 /**
  * File service response.
+ *
+ * @internal
  */
 export type FileData = {
   /**
@@ -518,6 +534,8 @@ type ServiceResponse = {
 
 /**
  * Request configuration parameters.
+ *
+ * @internal
  */
 export type RequestParameters = Subscription.SubscribeParameters & {
   /**
@@ -565,6 +583,8 @@ export type RequestParameters = Subscription.SubscribeParameters & {
  * Subscription request used in small variations in two cases:
  * - subscription manager
  * - event engine
+ *
+ * @internal
  */
 export class BaseSubscribeRequest extends AbstractRequest<Subscription.SubscriptionResponse> {
   constructor(protected readonly parameters: RequestParameters) {
@@ -840,6 +860,8 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
 
 /**
  * Subscribe request.
+ *
+ * @internal
  */
 export class SubscribeRequest extends BaseSubscribeRequest {
   protected get path(): string {

@@ -54,7 +54,7 @@ export default [
     ],
   },
   {
-    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    input: 'src/transport/subscription-worker/subscription-worker.ts',
     output: {
       file: join(dirname(browser), basename(browser, '.min.js') + '.worker.min.js'),
       format: 'umd',
@@ -69,7 +69,7 @@ export default [
     ],
   },
   {
-    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    input: 'src/transport/subscription-worker/subscription-worker.ts',
     output: {
       file: join(dirname(browser), basename(browser, '.min.js') + '.worker.js'),
       format: 'umd',
@@ -158,7 +158,7 @@ export default [
     ],
   },
   {
-    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    input: 'src/transport/subscription-worker/subscription-worker.ts',
     output: {
       file: `upload/gzip/pubnub.worker.${version}.min.js`,
       format: 'umd',
@@ -174,7 +174,7 @@ export default [
     ],
   },
   {
-    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    input: 'src/transport/subscription-worker/subscription-worker.ts',
     output: {
       file: `upload/gzip/pubnub.worker.${version}.js`,
       format: 'umd',
@@ -189,7 +189,7 @@ export default [
     ],
   },
   {
-    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    input: 'src/transport/subscription-worker/subscription-worker.ts',
     output: {
       file: `upload/normal/pubnub.worker.${version}.min.js`,
       format: 'umd',
@@ -204,7 +204,7 @@ export default [
     ],
   },
   {
-    input: 'src/transport/service-worker/subscription-service-worker.ts',
+    input: 'src/transport/subscription-worker/subscription-worker.ts',
     output: {
       file: `upload/normal/pubnub.worker.${version}.js`,
       format: 'umd',

@@ -7,9 +7,9 @@ import {
   ExtendedConfiguration,
   setDefaults as setBaseDefaults,
 } from '../core/interfaces/configuration';
-import { CryptoModule } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 import { TransportKeepAlive } from '../core/interfaces/transport';
 import { Payload } from '../core/types/api';
+import { CryptoModule } from '../core/interfaces/crypto-module';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -83,6 +83,8 @@ export type PubNubConfiguration = UserConfiguration & {
  * @param configuration - User-provided configuration.
  *
  * @returns Extended {@link PubNub} client configuration object pre-filled with default values.
+ *
+ * @internal
  */
 export const setDefaults = (configuration: PubNubConfiguration): PubNubConfiguration & ExtendedConfiguration => {
   return {

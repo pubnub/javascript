@@ -124,6 +124,11 @@ type MultipleChannelServiceResponse = BasicServiceResponse & {
 type ServiceResponse = SingleChannelServiceResponse | MultipleChannelServiceResponse;
 // endregion
 
+/**
+ * Channel presence request.
+ *
+ * @internal
+ */
 export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();

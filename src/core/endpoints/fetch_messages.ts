@@ -162,6 +162,8 @@ type ServiceResponse = {
 
 /**
  * Fetch messages from channels request.
+ *
+ * @internal
  */
 export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesResponse> {
   constructor(private readonly parameters: RequestParameters) {

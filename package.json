@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "8.0.1",
+  "version": "8.1.0",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "scripts": {
@@ -40,6 +40,7 @@
     "type": "git",
     "url": "git://github.com/pubnub/javascript.git"
   },
+
   "keywords": [
     "cloud",
     "publish",

@@ -43,6 +43,11 @@ type RequestParameters<Custom extends AppContext.CustomData = AppContext.CustomD
   };
 // endregion
 
+/**
+ * Get All UUIDs Metadata request.
+ *
+ * @internal
+ */
 export class GetAllUUIDMetadataRequest<
   Response extends AppContext.GetAllUUIDMetadataResponse<Custom>,
   Custom extends AppContext.CustomData = AppContext.CustomData,

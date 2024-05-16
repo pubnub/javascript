@@ -64,6 +64,8 @@ type ServiceResponse = {
 
 /**
  * Permissions audit request.
+ *
+ * @internal
  */
 export class AuditRequest extends AbstractRequest<PAM.PermissionsResponse> {
   constructor(private readonly parameters: RequestParameters) {

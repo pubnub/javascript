@@ -192,6 +192,8 @@ type RawToken = {
  * REST API access token manager.
  *
  * Manager maintains active access token and let parse it to get information about permissions.
+ *
+ * @internal
  */
 export class TokenManager {
   /**

@@ -325,6 +325,8 @@ export type UserConfiguration = {
  * Extended client configuration.
  *
  * Extended configuration contains unannounced configuration options.
+ *
+ * @internal
  */
 export type ExtendedConfiguration = UserConfiguration & {
   /**
@@ -382,6 +384,8 @@ export type ExtendedConfiguration = UserConfiguration & {
  * Platform-specific PubNub client configuration.
  *
  * Part of configuration which is added by platform-specific PubNub client initialization code.
+ *
+ * @internal
  */
 export type PlatformConfiguration = {
   /**
@@ -548,6 +552,8 @@ export interface ClientConfiguration {
 
 /**
  * Internal PubNub client configuration object interface.
+ *
+ * @internal
  */
 export interface PrivateClientConfiguration
   extends ClientConfiguration,
@@ -682,6 +688,8 @@ export interface PrivateClientConfiguration
  * Apply configuration default values.
  *
  * @param configuration - User-provided configuration.
+ *
+ * @internal
  */
 export const setDefaults = (configuration: UserConfiguration): ExtendedConfiguration => {
   // Copy configuration.

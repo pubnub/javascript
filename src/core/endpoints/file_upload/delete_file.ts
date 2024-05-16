@@ -40,6 +40,8 @@ type ServiceResponse = {
 
 /**
  * Delete File request.
+ *
+ * @internal
  */
 export class DeleteFileRequest extends AbstractRequest<FileSharing.DeleteFileResponse> {
   constructor(private readonly parameters: RequestParameters) {
