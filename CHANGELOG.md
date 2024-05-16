@@ -1,3 +1,13 @@
+## v8.1.0
+May 16 2024
+
+#### Added
+- Use `SharedWorker` instead of `Service Worker` for better PubNub client instances feedback.
+- Add configuration option to enable debug log output from the subscription `SharedWorker`.
+
+#### Modified
+- Create types declaration files.
+
 ## v8.0.1
 April 23 2024
 

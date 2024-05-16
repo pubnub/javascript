@@ -3810,7 +3810,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.0.1';
+	            return '8.1.0';
 	        },
 	        getVersion() {
 	            return this.version;
