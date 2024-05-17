@@ -11,7 +11,7 @@ import terser from '@rollup/plugin-terser';
 
 import { browser, version } from './package.json';
 
-const enableTreeShaking = true;
+const enableTreeShaking = false;
 const replaceConfiguration = {
   'process.env.CRYPTO_MODULE': JSON.stringify(process.env.CRYPTO_MODULE ?? 'enabled'),
   'process.env.SHARED_WORKER': JSON.stringify(process.env.SHARED_WORKER ?? 'enabled'),
@@ -35,7 +35,6 @@ export default [
       file: browser,
       format: 'umd',
       name: 'PubNub',
-      sourcemap: true,
     },
     plugins: [
       json(),
@@ -55,7 +54,6 @@ export default [
       file: join(dirname(browser), basename(browser, '.min.js') + '.js'),
       format: 'umd',
       name: 'PubNub',
-      sourcemap: true,
     },
     plugins: [
       json(),

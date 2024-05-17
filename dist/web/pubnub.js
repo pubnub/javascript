@@ -872,6 +872,7 @@
 	     */
 	    StatusCategory["PNDisconnectedUnexpectedlyCategory"] = "PNDisconnectedUnexpectedlyCategory";
 	})(StatusCategory || (StatusCategory = {}));
+	var StatusCategory$1 = StatusCategory;
 
 	class PubNubError extends Error {
 	    constructor(message, status) {
@@ -885,7 +886,7 @@
 	function createError(errorPayload) {
 	    var _a;
 	    (_a = errorPayload.statusCode) !== null && _a !== void 0 ? _a : (errorPayload.statusCode = 0);
-	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category: StatusCategory.PNValidationErrorCategory, error: true });
+	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category: StatusCategory$1.PNValidationErrorCategory, error: true });
 	}
 	function createValidationError(message, statusCode) {
 	    return createError(Object.assign({ message }, (statusCode !== undefined ? { statusCode } : {})));
@@ -2814,7 +2815,7 @@
 	     * available).
 	     */
 	    static createFromError(error) {
-	        let category = StatusCategory.PNUnknownCategory;
+	        let category = StatusCategory$1.PNUnknownCategory;
 	        let message = 'Unknown error';
 	        let errorName = 'Error';
 	        if (!error)
@@ -2826,24 +2827,24 @@
 	            errorName = error.name;
 	        }
 	        if (errorName === 'AbortError' || message.indexOf('Aborted') !== -1) {
-	            category = StatusCategory.PNCancelledCategory;
+	            category = StatusCategory$1.PNCancelledCategory;
 	            message = 'Request cancelled';
 	        }
 	        else if (message.indexOf('timeout') !== -1) {
-	            category = StatusCategory.PNTimeoutCategory;
+	            category = StatusCategory$1.PNTimeoutCategory;
 	            message = 'Request timeout';
 	        }
 	        else if (message.indexOf('network') !== -1) {
-	            category = StatusCategory.PNNetworkIssuesCategory;
+	            category = StatusCategory$1.PNNetworkIssuesCategory;
 	            message = 'Network issues';
 	        }
 	        else if (errorName === 'TypeError') {
-	            category = StatusCategory.PNBadRequestCategory;
+	            category = StatusCategory$1.PNBadRequestCategory;
 	        }
 	        else if (errorName === 'FetchError') {
 	            const errorCode = error.code;
 	            if (['ECONNREFUSED', 'ENETUNREACH', 'ENOTFOUND', 'ECONNRESET', 'EAI_AGAIN'].includes(errorCode))
-	                category = StatusCategory.PNNetworkIssuesCategory;
+	                category = StatusCategory$1.PNNetworkIssuesCategory;
 	            if (errorCode === 'ECONNREFUSED')
 	                message = 'Connection refused';
 	            else if (errorCode === 'ENETUNREACH')
@@ -2855,14 +2856,14 @@
 	            else if (errorCode === 'EAI_AGAIN')
 	                message = 'Name resolution error';
 	            else if (errorCode === 'ETIMEDOUT') {
-	                category = StatusCategory.PNTimeoutCategory;
+	                category = StatusCategory$1.PNTimeoutCategory;
 	                message = 'Request timeout';
 	            }
 	            else
 	                message = `Unknown system error: ${error}`;
 	        }
 	        else if (message === 'Request timeout')
-	            category = StatusCategory.PNTimeoutCategory;
+	            category = StatusCategory$1.PNTimeoutCategory;
 	        return new PubNubAPIError(message, category, 0, error);
 	    }
 	    /**
@@ -2876,7 +2877,7 @@
 	     * available).
 	     */
 	    static createFromServiceResponse(response, data) {
-	        let category = StatusCategory.PNUnknownCategory;
+	        let category = StatusCategory$1.PNUnknownCategory;
 	        let errorData;
 	        let message = 'Unknown error';
 	        let { status } = response;
@@ -2884,11 +2885,11 @@
 	        if (status === 402)
 	            message = 'Not available for used key set. Contact support@pubnub.com';
 	        else if (status === 400) {
-	            category = StatusCategory.PNBadRequestCategory;
+	            category = StatusCategory$1.PNBadRequestCategory;
 	            message = 'Bad request';
 	        }
 	        else if (status === 403) {
-	            category = StatusCategory.PNAccessDeniedCategory;
+	            category = StatusCategory$1.PNAccessDeniedCategory;
 	            message = 'Access denied';
 	        }
 	        // Try to get more information about error from service response.
@@ -3154,16 +3155,16 @@
 	                });
 	            }
 	            else {
-	                let category = StatusCategory.PNUnknownCategory;
+	                let category = StatusCategory$1.PNUnknownCategory;
 	                let message = 'Unknown error';
 	                // Handle client-side issues (if any).
 	                if (data.error) {
 	                    if (data.error.type === 'NETWORK_ISSUE')
-	                        category = StatusCategory.PNNetworkIssuesCategory;
+	                        category = StatusCategory$1.PNNetworkIssuesCategory;
 	                    else if (data.error.type === 'TIMEOUT')
-	                        category = StatusCategory.PNTimeoutCategory;
+	                        category = StatusCategory$1.PNTimeoutCategory;
 	                    else if (data.error.type === 'ABORTED')
-	                        category = StatusCategory.PNCancelledCategory;
+	                        category = StatusCategory$1.PNCancelledCategory;
 	                    message = `${data.error.message} (${data.identifier})`;
 	                }
 	                // Handle service error response.
@@ -4280,7 +4281,7 @@
 	        this.listeners.forEach((listener) => {
 	            if (listener.status) {
 	                listener.status({
-	                    category: StatusCategory.PNNetworkUpCategory,
+	                    category: StatusCategory$1.PNNetworkUpCategory,
 	                });
 	            }
 	        });
@@ -4292,7 +4293,7 @@
 	        this.listeners.forEach((listener) => {
 	            if (listener.status) {
 	                listener.status({
-	                    category: StatusCategory.PNNetworkDownCategory,
+	                    category: StatusCategory$1.PNNetworkDownCategory,
 	                });
 	            }
 	        });
@@ -4641,12 +4642,12 @@
 	            if ((typeof status.errorData === 'object' &&
 	                'name' in status.errorData &&
 	                status.errorData.name === 'AbortError') ||
-	                status.category === StatusCategory.PNCancelledCategory)
+	                status.category === StatusCategory$1.PNCancelledCategory)
 	                return;
-	            if (status.category === StatusCategory.PNTimeoutCategory) {
+	            if (status.category === StatusCategory$1.PNTimeoutCategory) {
 	                this.startSubscribeLoop();
 	            }
-	            else if (status.category === StatusCategory.PNNetworkIssuesCategory) {
+	            else if (status.category === StatusCategory$1.PNNetworkIssuesCategory) {
 	                this.disconnect();
 	                if (status.error && this.configuration.autoNetworkDetection && this.isOnline) {
 	                    this.isOnline = false;
@@ -4660,7 +4661,7 @@
 	                    this.reconnect();
 	                    this.subscriptionStatusAnnounced = true;
 	                    const reconnectedAnnounce = {
-	                        category: StatusCategory.PNReconnectedCategory,
+	                        category: StatusCategory$1.PNReconnectedCategory,
 	                        operation: status.operation,
 	                        lastTimetoken: this.lastTimetoken,
 	                        currentTimetoken: this.currentTimetoken,
@@ -4670,7 +4671,7 @@
 	                this.reconnectionManager.startPolling();
 	                this.listenerManager.announceStatus(status);
 	            }
-	            else if (status.category === StatusCategory.PNBadRequestCategory) {
+	            else if (status.category === StatusCategory$1.PNBadRequestCategory) {
 	                this.stopHeartbeatTimer();
 	                this.listenerManager.announceStatus(status);
 	            }
@@ -4689,7 +4690,7 @@
 	        }
 	        if (!this.subscriptionStatusAnnounced) {
 	            const connected = {
-	                category: StatusCategory.PNConnectedCategory,
+	                category: StatusCategory$1.PNConnectedCategory,
 	                operation: status.operation,
 	                affectedChannels: Array.from(this.pendingChannelSubscriptions),
 	                subscribedChannels: this.subscribedChannels,
@@ -4707,7 +4708,7 @@
 	        const { requestMessageCountThreshold, dedupeOnSubscribe } = this.configuration;
 	        if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
 	            this.listenerManager.announceStatus({
-	                category: StatusCategory.PNRequestMessageCountExceededCategory,
+	                category: StatusCategory$1.PNRequestMessageCountExceededCategory,
 	                operation: status.operation,
 	            });
 	        }
@@ -4724,7 +4725,7 @@
 	        catch (e) {
 	            const errorStatus = {
 	                error: true,
-	                category: StatusCategory.PNUnknownCategory,
+	                category: StatusCategory$1.PNUnknownCategory,
 	                errorData: e,
 	                statusCode: 0,
 	            };
@@ -5757,6 +5758,7 @@
 	    RequestOperation["PNHandshakeOperation"] = "PNHandshakeOperation";
 	    RequestOperation["PNReceiveMessagesOperation"] = "PNReceiveMessagesOperation";
 	})(RequestOperation || (RequestOperation = {}));
+	var RequestOperation$1 = RequestOperation;
 
 	/**
 	 * Subscription REST API module.
@@ -5830,7 +5832,7 @@
 	        (_c = (_f = this.parameters).channels) !== null && _c !== void 0 ? _c : (_f.channels = []);
 	    }
 	    operation() {
-	        return RequestOperation.PNSubscribeOperation;
+	        return RequestOperation$1.PNSubscribeOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, channelGroups, } = this.parameters;
@@ -6534,7 +6536,7 @@
 	            }
 	            catch (e) {
 	                if (e instanceof PubNubError) {
-	                    if (e.status && e.status.category == StatusCategory.PNCancelledCategory)
+	                    if (e.status && e.status.category == StatusCategory$1.PNCancelledCategory)
 	                        return;
 	                    return engine.transition(heartbeatFailure(e));
 	                }
@@ -6568,7 +6570,7 @@
 	                }
 	                catch (e) {
 	                    if (e instanceof PubNubError) {
-	                        if (e.status && e.status.category == StatusCategory.PNCancelledCategory)
+	                        if (e.status && e.status.category == StatusCategory$1.PNCancelledCategory)
 	                            return;
 	                        return engine.transition(heartbeatFailure(e));
 	                    }
@@ -6584,7 +6586,7 @@
 	                emitStatus(payload.status);
 	            }
 	            else if (config.announceSuccessfulHeartbeats && payload.statusCode === 200) {
-	                emitStatus(Object.assign(Object.assign({}, payload), { operation: RequestOperation.PNHeartbeatOperation, error: false }));
+	                emitStatus(Object.assign(Object.assign({}, payload), { operation: RequestOperation$1.PNHeartbeatOperation, error: false }));
 	            }
 	        })));
 	    }
@@ -6882,7 +6884,7 @@
 	            }
 	            catch (e) {
 	                if (e instanceof PubNubError) {
-	                    if (e.status && e.status.category == StatusCategory.PNCancelledCategory)
+	                    if (e.status && e.status.category == StatusCategory$1.PNCancelledCategory)
 	                        return;
 	                    return engine.transition(handshakeFailure(e));
 	                }
@@ -6903,7 +6905,7 @@
 	            }
 	            catch (error) {
 	                if (error instanceof PubNubError) {
-	                    if (error.status && error.status.category == StatusCategory.PNCancelledCategory)
+	                    if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
 	                        return;
 	                    if (!abortSignal.aborted)
 	                        return engine.transition(receiveFailure(error));
@@ -6936,7 +6938,7 @@
 	                }
 	                catch (error) {
 	                    if (error instanceof PubNubError) {
-	                        if (error.status && error.status.category == StatusCategory.PNCancelledCategory)
+	                        if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
 	                            return;
 	                        return engine.transition(receiveReconnectFailure(error));
 	                    }
@@ -6959,7 +6961,7 @@
 	                }
 	                catch (error) {
 	                    if (error instanceof PubNubError) {
-	                        if (error.status && error.status.category == StatusCategory.PNCancelledCategory)
+	                        if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
 	                            return;
 	                        return engine.transition(handshakeReconnectFailure(error));
 	                    }
@@ -7088,13 +7090,13 @@
 	        channels: context.channels,
 	        cursor: context.cursor,
 	        reason: event.payload,
-	    }, [emitStatus({ category: StatusCategory.PNDisconnectedUnexpectedlyCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
+	    }, [emitStatus({ category: StatusCategory$1.PNDisconnectedUnexpectedlyCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
 	});
 	ReceiveReconnectingState.on(disconnect.type, (context) => ReceiveStoppedState.with({
 	    channels: context.channels,
 	    groups: context.groups,
 	    cursor: context.cursor,
-	}, [emitStatus({ category: StatusCategory.PNDisconnectedCategory })]));
+	}, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
 	ReceiveReconnectingState.on(restore.type, (context, event) => ReceivingState.with({
 	    channels: event.payload.channels,
 	    groups: event.payload.groups,
@@ -7108,7 +7110,7 @@
 	    groups: event.payload.groups,
 	    cursor: context.cursor,
 	}));
-	ReceiveReconnectingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory.PNDisconnectedCategory })]));
+	ReceiveReconnectingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
 
 	const ReceivingState = new State('RECEIVING');
 	ReceivingState.onEnter((context) => receiveMessages(context.channels, context.groups, context.cursor));
@@ -7149,9 +7151,9 @@
 	        channels: context.channels,
 	        groups: context.groups,
 	        cursor: context.cursor,
-	    }, [emitStatus({ category: StatusCategory.PNDisconnectedCategory })]);
+	    }, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]);
 	});
-	ReceivingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory.PNDisconnectedCategory })]));
+	ReceivingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
 
 	const HandshakeReconnectingState = new State('HANDSHAKE_RECONNECTING');
 	HandshakeReconnectingState.onEnter((context) => handshakeReconnect(context));
@@ -7166,7 +7168,7 @@
 	        channels: context.channels,
 	        groups: context.groups,
 	        cursor: cursor,
-	    }, [emitStatus({ category: StatusCategory.PNConnectedCategory })]);
+	    }, [emitStatus({ category: StatusCategory$1.PNConnectedCategory })]);
 	});
 	HandshakeReconnectingState.on(handshakeReconnectFailure.type, (context, event) => HandshakeReconnectingState.with(Object.assign(Object.assign({}, context), { attempts: context.attempts + 1, reason: event.payload })));
 	HandshakeReconnectingState.on(handshakeReconnectGiveup.type, (context, event) => {
@@ -7176,7 +7178,7 @@
 	        channels: context.channels,
 	        cursor: context.cursor,
 	        reason: event.payload,
-	    }, [emitStatus({ category: StatusCategory.PNConnectionErrorCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
+	    }, [emitStatus({ category: StatusCategory$1.PNConnectionErrorCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
 	});
 	HandshakeReconnectingState.on(disconnect.type, (context) => HandshakeStoppedState.with({
 	    channels: context.channels,
@@ -7225,7 +7227,7 @@
 	        },
 	    }, [
 	        emitStatus({
-	            category: StatusCategory.PNConnectedCategory,
+	            category: StatusCategory$1.PNConnectedCategory,
 	        }),
 	    ]);
 	});
@@ -7404,7 +7406,7 @@
 	        (_a = (_b = this.parameters).sendByPost) !== null && _a !== void 0 ? _a : (_b.sendByPost = SEND_BY_POST);
 	    }
 	    operation() {
-	        return RequestOperation.PNPublishOperation;
+	        return RequestOperation$1.PNPublishOperation;
 	    }
 	    validate() {
 	        const { message, channel, keySet: { publishKey }, } = this.parameters;
@@ -7482,7 +7484,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNSignalOperation;
+	        return RequestOperation$1.PNSignalOperation;
 	    }
 	    validate() {
 	        const { message, channel, keySet: { publishKey }, } = this.parameters;
@@ -7518,7 +7520,7 @@
 	 */
 	class ReceiveMessagesSubscribeRequest extends BaseSubscribeRequest {
 	    operation() {
-	        return RequestOperation.PNReceiveMessagesOperation;
+	        return RequestOperation$1.PNReceiveMessagesOperation;
 	    }
 	    validate() {
 	        const validationResult = super.validate();
@@ -7564,7 +7566,7 @@
 	 */
 	class HandshakeSubscribeRequest extends BaseSubscribeRequest {
 	    operation() {
-	        return RequestOperation.PNHandshakeOperation;
+	        return RequestOperation$1.PNHandshakeOperation;
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channels = [], } = this.parameters;
@@ -7603,7 +7605,7 @@
 	        (_b = (_d = this.parameters).channelGroups) !== null && _b !== void 0 ? _b : (_d.channelGroups = []);
 	    }
 	    operation() {
-	        return RequestOperation.PNGetStateOperation;
+	        return RequestOperation$1.PNGetStateOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, channelGroups, } = this.parameters;
@@ -7654,7 +7656,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNSetStateOperation;
+	        return RequestOperation$1.PNSetStateOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, state, channels = [], channelGroups = [], } = this.parameters;
@@ -7704,7 +7706,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNHeartbeatOperation;
+	        return RequestOperation$1.PNHeartbeatOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels = [], channelGroups = [], } = this.parameters;
@@ -7758,7 +7760,7 @@
 	            this.parameters.channels = Array.from(new Set(this.parameters.channels));
 	    }
 	    operation() {
-	        return RequestOperation.PNUnsubscribeOperation;
+	        return RequestOperation$1.PNUnsubscribeOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels = [], channelGroups = [], } = this.parameters;
@@ -7806,7 +7808,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNWhereNowOperation;
+	        return RequestOperation$1.PNWhereNowOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -7866,8 +7868,8 @@
 	    operation() {
 	        const { channels = [], channelGroups = [] } = this.parameters;
 	        return channels.length === 0 && channelGroups.length === 0
-	            ? RequestOperation.PNGlobalHereNowOperation
-	            : RequestOperation.PNHereNowOperation;
+	            ? RequestOperation$1.PNGlobalHereNowOperation
+	            : RequestOperation$1.PNHereNowOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -7943,7 +7945,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNDeleteMessagesOperation;
+	        return RequestOperation$1.PNDeleteMessagesOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -7987,7 +7989,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNMessageCounts;
+	        return RequestOperation$1.PNMessageCounts;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, timetoken, channelTimetokens, } = this.parameters;
@@ -8068,7 +8070,7 @@
 	        (_c = parameters.logVerbosity) !== null && _c !== void 0 ? _c : (parameters.logVerbosity = LOG_VERBOSITY$1);
 	    }
 	    operation() {
-	        return RequestOperation.PNHistoryOperation;
+	        return RequestOperation$1.PNHistoryOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -8223,7 +8225,7 @@
 	        (_e = parameters.logVerbosity) !== null && _e !== void 0 ? _e : (parameters.logVerbosity = LOG_VERBOSITY);
 	    }
 	    operation() {
-	        return RequestOperation.PNFetchMessagesOperation;
+	        return RequestOperation$1.PNFetchMessagesOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, includeMessageActions, } = this.parameters;
@@ -8358,7 +8360,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNGetMessageActionsOperation;
+	        return RequestOperation$1.PNGetMessageActionsOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -8413,7 +8415,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNAddMessageActionOperation;
+	        return RequestOperation$1.PNAddMessageActionOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, action, channel, messageTimetoken, } = this.parameters;
@@ -8470,7 +8472,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNRemoveMessageActionOperation;
+	        return RequestOperation$1.PNRemoveMessageActionOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channel, messageTimetoken, actionTimetoken, } = this.parameters;
@@ -8527,7 +8529,7 @@
 	        (_a = (_b = this.parameters).storeInHistory) !== null && _a !== void 0 ? _a : (_b.storeInHistory = STORE_IN_HISTORY);
 	    }
 	    operation() {
-	        return RequestOperation.PNPublishFileMessageOperation;
+	        return RequestOperation$1.PNPublishFileMessageOperation;
 	    }
 	    validate() {
 	        const { channel, fileId, fileName } = this.parameters;
@@ -8600,7 +8602,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNGetFileUrlOperation;
+	        return RequestOperation$1.PNGetFileUrlOperation;
 	    }
 	    validate() {
 	        const { channel, id, name } = this.parameters;
@@ -8637,7 +8639,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNDeleteFileOperation;
+	        return RequestOperation$1.PNDeleteFileOperation;
 	    }
 	    validate() {
 	        const { channel, id, name } = this.parameters;
@@ -8692,7 +8694,7 @@
 	        (_a = (_b = this.parameters).limit) !== null && _a !== void 0 ? _a : (_b.limit = LIMIT$6);
 	    }
 	    operation() {
-	        return RequestOperation.PNListFilesOperation;
+	        return RequestOperation$1.PNListFilesOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -8734,7 +8736,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNGenerateUploadUrlOperation;
+	        return RequestOperation$1.PNGenerateUploadUrlOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -8790,7 +8792,7 @@
 	        }
 	    }
 	    operation() {
-	        return RequestOperation.PNPublishFileOperation;
+	        return RequestOperation$1.PNPublishFileOperation;
 	    }
 	    validate() {
 	        const { fileId, fileName, file, uploadUrl } = this.parameters;
@@ -8860,8 +8862,8 @@
 	                    throw new PubNubError('Upload to bucket was unsuccessful', {
 	                        error: true,
 	                        statusCode: result.status,
-	                        category: StatusCategory.PNUnknownCategory,
-	                        operation: RequestOperation.PNPublishFileOperation,
+	                        category: StatusCategory$1.PNUnknownCategory,
+	                        operation: RequestOperation$1.PNPublishFileOperation,
 	                        errorData: { message: result.message },
 	                    });
 	                }
@@ -8871,7 +8873,7 @@
 	                if (error instanceof PubNubError)
 	                    throw error;
 	                const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
-	                throw new PubNubError('File upload error.', apiError.toStatus(RequestOperation.PNPublishFileOperation));
+	                throw new PubNubError('File upload error.', apiError.toStatus(RequestOperation$1.PNPublishFileOperation));
 	            });
 	        });
 	    }
@@ -8934,7 +8936,7 @@
 	            if (!wasSuccessful) {
 	                throw new PubNubError('Publish failed. You may want to execute that operation manually using pubnub.publishFile', {
 	                    error: true,
-	                    category: (_b = (_a = publishError.status) === null || _a === void 0 ? void 0 : _a.category) !== null && _b !== void 0 ? _b : StatusCategory.PNUnknownCategory,
+	                    category: (_b = (_a = publishError.status) === null || _a === void 0 ? void 0 : _a.category) !== null && _b !== void 0 ? _b : StatusCategory$1.PNUnknownCategory,
 	                    statusCode: (_d = (_c = publishError.status) === null || _c === void 0 ? void 0 : _c.statusCode) !== null && _d !== void 0 ? _d : 0,
 	                    channel: this.parameters.channel,
 	                    id: fileId,
@@ -8964,7 +8966,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNAccessManagerRevokeToken;
+	        return RequestOperation$1.PNAccessManagerRevokeToken;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.secretKey)
@@ -9009,7 +9011,7 @@
 	        (_b = (_d = this.parameters).patterns) !== null && _b !== void 0 ? _b : (_d.patterns = {});
 	    }
 	    operation() {
-	        return RequestOperation.PNAccessManagerGrantToken;
+	        return RequestOperation$1.PNAccessManagerGrantToken;
 	    }
 	    validate() {
 	        var _a, _b, _c, _d, _e, _f;
@@ -9217,7 +9219,7 @@
 	        (_k = (_v = this.parameters).join) !== null && _k !== void 0 ? _k : (_v.join = JOIN_PERMISSION);
 	    }
 	    operation() {
-	        return RequestOperation.PNAccessManagerGrant;
+	        return RequestOperation$1.PNAccessManagerGrant;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey, publishKey, secretKey }, uuids = [], channels = [], channelGroups = [], authKeys = [], } = this.parameters;
@@ -9279,7 +9281,7 @@
 	        (_a = (_b = this.parameters).authKeys) !== null && _a !== void 0 ? _a : (_b.authKeys = AUTH_KEYS);
 	    }
 	    operation() {
-	        return RequestOperation.PNAccessManagerAudit;
+	        return RequestOperation$1.PNAccessManagerAudit;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -9523,7 +9525,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNRemoveChannelsFromGroupOperation;
+	        return RequestOperation$1.PNRemoveChannelsFromGroupOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, channelGroup, } = this.parameters;
@@ -9569,7 +9571,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNAddChannelsToGroupOperation;
+	        return RequestOperation$1.PNAddChannelsToGroupOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, channelGroup, } = this.parameters;
@@ -9615,7 +9617,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNChannelsForGroupOperation;
+	        return RequestOperation$1.PNChannelsForGroupOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -9655,7 +9657,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNRemoveGroupOperation;
+	        return RequestOperation$1.PNRemoveGroupOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -9695,7 +9697,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNChannelGroupsOperation;
+	        return RequestOperation$1.PNChannelGroupsOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -9905,7 +9907,7 @@
 	        super(Object.assign(Object.assign({}, parameters), { action: 'remove' }));
 	    }
 	    operation() {
-	        return RequestOperation.PNRemovePushNotificationEnabledChannelsOperation;
+	        return RequestOperation$1.PNRemovePushNotificationEnabledChannelsOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -9932,7 +9934,7 @@
 	        super(Object.assign(Object.assign({}, parameters), { action: 'list' }));
 	    }
 	    operation() {
-	        return RequestOperation.PNPushNotificationEnabledChannelsOperation;
+	        return RequestOperation$1.PNPushNotificationEnabledChannelsOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -9959,7 +9961,7 @@
 	        super(Object.assign(Object.assign({}, parameters), { action: 'add' }));
 	    }
 	    operation() {
-	        return RequestOperation.PNAddPushNotificationEnabledChannelsOperation;
+	        return RequestOperation$1.PNAddPushNotificationEnabledChannelsOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -9986,7 +9988,7 @@
 	        super(Object.assign(Object.assign({}, parameters), { action: 'remove-device' }));
 	    }
 	    operation() {
-	        return RequestOperation.PNRemoveAllPushNotificationsOperation;
+	        return RequestOperation$1.PNRemoveAllPushNotificationsOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -10106,7 +10108,7 @@
 	        (_d = parameters.limit) !== null && _d !== void 0 ? _d : (parameters.limit = LIMIT$5);
 	    }
 	    operation() {
-	        return RequestOperation.PNGetAllChannelMetadataOperation;
+	        return RequestOperation$1.PNGetAllChannelMetadataOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -10144,7 +10146,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNRemoveChannelMetadataOperation;
+	        return RequestOperation$1.PNRemoveChannelMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -10233,7 +10235,7 @@
 	            this.parameters.uuid = this.parameters.userId;
 	    }
 	    operation() {
-	        return RequestOperation.PNGetMembershipsOperation;
+	        return RequestOperation$1.PNGetMembershipsOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.uuid)
@@ -10325,7 +10327,7 @@
 	            this.parameters.uuid = this.parameters.userId;
 	    }
 	    operation() {
-	        return RequestOperation.PNSetMembershipsOperation;
+	        return RequestOperation$1.PNSetMembershipsOperation;
 	    }
 	    validate() {
 	        const { uuid, channels } = this.parameters;
@@ -10409,7 +10411,7 @@
 	        (_c = parameters.limit) !== null && _c !== void 0 ? _c : (parameters.limit = LIMIT$2);
 	    }
 	    operation() {
-	        return RequestOperation.PNGetAllUUIDMetadataOperation;
+	        return RequestOperation$1.PNGetAllUUIDMetadataOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -10460,7 +10462,7 @@
 	        (_b = (_c = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_c.customFields = INCLUDE_CUSTOM_FIELDS$5);
 	    }
 	    operation() {
-	        return RequestOperation.PNGetChannelMetadataOperation;
+	        return RequestOperation$1.PNGetChannelMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -10516,7 +10518,7 @@
 	        (_b = (_c = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_c.customFields = INCLUDE_CUSTOM_FIELDS$4);
 	    }
 	    operation() {
-	        return RequestOperation.PNSetChannelMetadataOperation;
+	        return RequestOperation$1.PNSetChannelMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -10567,7 +10569,7 @@
 	            this.parameters.uuid = this.parameters.userId;
 	    }
 	    operation() {
-	        return RequestOperation.PNRemoveUUIDMetadataOperation;
+	        return RequestOperation$1.PNRemoveUUIDMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.uuid)
@@ -10653,7 +10655,7 @@
 	        (_j = parameters.limit) !== null && _j !== void 0 ? _j : (parameters.limit = LIMIT$1);
 	    }
 	    operation() {
-	        return RequestOperation.PNSetMembersOperation;
+	        return RequestOperation$1.PNSetMembersOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -10742,7 +10744,7 @@
 	        (_f = parameters.limit) !== null && _f !== void 0 ? _f : (parameters.limit = LIMIT);
 	    }
 	    operation() {
-	        return RequestOperation.PNSetMembersOperation;
+	        return RequestOperation$1.PNSetMembersOperation;
 	    }
 	    validate() {
 	        const { channel, uuids } = this.parameters;
@@ -10824,7 +10826,7 @@
 	            this.parameters.uuid = this.parameters.userId;
 	    }
 	    operation() {
-	        return RequestOperation.PNGetUUIDMetadataOperation;
+	        return RequestOperation$1.PNGetUUIDMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.uuid)
@@ -10882,7 +10884,7 @@
 	            this.parameters.uuid = this.parameters.userId;
 	    }
 	    operation() {
-	        return RequestOperation.PNSetUUIDMetadataOperation;
+	        return RequestOperation$1.PNSetUUIDMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.uuid)
@@ -11448,7 +11450,7 @@
 	        super();
 	    }
 	    operation() {
-	        return RequestOperation.PNTimeOperation;
+	        return RequestOperation$1.PNTimeOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -11478,7 +11480,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation.PNDownloadFileOperation;
+	        return RequestOperation$1.PNDownloadFileOperation;
 	    }
 	    validate() {
 	        const { channel, id, name } = this.parameters;
@@ -11593,7 +11595,7 @@
 	                        catch (e) {
 	                            const errorStatus = {
 	                                error: true,
-	                                category: StatusCategory.PNUnknownCategory,
+	                                category: StatusCategory$1.PNUnknownCategory,
 	                                errorData: e,
 	                                statusCode: 0,
 	                            };
@@ -11926,7 +11928,7 @@
 	                transportRequest.timeout = 300;
 	            }
 	            else {
-	                if (request.operation() === RequestOperation.PNSubscribeOperation)
+	                if (request.operation() === RequestOperation$1.PNSubscribeOperation)
 	                    transportRequest.timeout = this._configuration.getSubscribeTimeout();
 	                else
 	                    transportRequest.timeout = this._configuration.getTransactionTimeout();
@@ -11935,7 +11937,7 @@
 	            const status = {
 	                error: false,
 	                operation: request.operation(),
-	                category: StatusCategory.PNAcknowledgmentCategory,
+	                category: StatusCategory$1.PNAcknowledgmentCategory,
 	                statusCode: 0,
 	            };
 	            const [sendableRequest, cancellationController] = this.transport.makeSendable(transportRequest);
@@ -12977,8 +12979,8 @@
 	                const sendFileRequest = new SendFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, PubNubFile: this._configuration.PubNubFile, fileUploadPublishRetryLimit: this._configuration.fileUploadPublishRetryLimit, file: parameters.file, sendRequest: this.sendRequest.bind(this), publishFile: this.publishFile.bind(this), crypto: this._configuration.getCryptoModule(), cryptography: this.cryptography ? this.cryptography : undefined }));
 	                const status = {
 	                    error: false,
-	                    operation: RequestOperation.PNPublishFileOperation,
-	                    category: StatusCategory.PNAcknowledgmentCategory,
+	                    operation: RequestOperation$1.PNPublishFileOperation,
+	                    category: StatusCategory$1.PNAcknowledgmentCategory,
 	                    statusCode: 0,
 	                };
 	                return sendFileRequest
@@ -13246,11 +13248,11 @@
 	/**
 	 * Type of REST API endpoint which reported status.
 	 */
-	PubNubCore.OPERATIONS = RequestOperation;
+	PubNubCore.OPERATIONS = RequestOperation$1;
 	/**
 	 * API call status category.
 	 */
-	PubNubCore.CATEGORIES = StatusCategory;
+	PubNubCore.CATEGORIES = StatusCategory$1;
 	/**
 	 * Exponential retry policy constructor.
 	 */
@@ -13393,4 +13395,3 @@
 	return PubNub;
 
 }));
-//# sourceMappingURL=pubnub.js.map
