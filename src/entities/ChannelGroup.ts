@@ -15,12 +15,14 @@ export class ChannelGroup {
   }
 
   subscription(subscriptionOptions?: SubscriptionOptions) {
-    return new Subscription({
-      channels: [],
-      channelGroups: subscriptionOptions?.receivePresenceEvents ? [this.name, `${this.name}-pnpres`] : [this.name],
-      subscriptionOptions: subscriptionOptions,
-      eventEmitter: this.eventEmitter,
-      pubnub: this.pubnub,
-    });
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      return new Subscription({
+        channels: [],
+        channelGroups: subscriptionOptions?.receivePresenceEvents ? [this.name, `${this.name}-pnpres`] : [this.name],
+        subscriptionOptions: subscriptionOptions,
+        eventEmitter: this.eventEmitter,
+        pubnub: this.pubnub,
+      });
+    } else throw new Error('Subscription error: subscription module disabled');
   }
 }

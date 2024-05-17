@@ -11,7 +11,22 @@ import terser from '@rollup/plugin-terser';
 
 import { browser, version } from './package.json';
 
-const SERVICE_WORKER_CDN = 'https://cdn.pubnub.com/sdk/javascript';
+const enableTreeShaking = true;
+const replaceConfiguration = {
+  'process.env.CRYPTO_MODULE': JSON.stringify(process.env.CRYPTO_MODULE ?? 'enabled'),
+  'process.env.SHARED_WORKER': JSON.stringify(process.env.SHARED_WORKER ?? 'enabled'),
+  'process.env.PUBLISH_MODULE': JSON.stringify(process.env.PUBLISH_MODULE ?? 'enabled'),
+  'process.env.SUBSCRIBE_MODULE': JSON.stringify(process.env.SUBSCRIBE_MODULE ?? 'enabled'),
+  'process.env.PRESENCE_MODULE': JSON.stringify(process.env.PRESENCE_MODULE ?? 'enabled'),
+  'process.env.PAM_MODULE': JSON.stringify(process.env.PAM_MODULE ?? 'enabled'),
+  'process.env.CHANNEL_GROUPS_MODULE': JSON.stringify(process.env.CHANNEL_GROUPS_MODULE ?? 'enabled'),
+  'process.env.MESSAGE_PERSISTENCE_MODULE': JSON.stringify(process.env.MESSAGE_PERSISTENCE_MODULE ?? 'enabled'),
+  'process.env.MOBILE_PUSH_MODULE': JSON.stringify(process.env.MOBILE_PUSH_MODULE ?? 'enabled'),
+  'process.env.APP_CONTEXT_MODULE': JSON.stringify(process.env.APP_CONTEXT_MODULE ?? 'enabled'),
+  'process.env.FILE_SHARING_MODULE': JSON.stringify(process.env.FILE_SHARING_MODULE ?? 'enabled'),
+  'process.env.MESSAGE_REACTIONS_MODULE': JSON.stringify(process.env.MESSAGE_REACTIONS_MODULE ?? 'enabled'),
+  preventAssignment: true,
+};
 
 export default [
   {
@@ -20,19 +35,19 @@ export default [
       file: browser,
       format: 'umd',
       name: 'PubNub',
+      sourcemap: true,
     },
     plugins: [
       json(),
       resolve({ browser: true }),
-      replace({
-        SERVICE_WORKER_FILE_PLACEHOLDER: join(dirname(browser), basename(browser, '.min.js') + '.worker.min.js'),
-        SERVICE_WORKER_CDN,
-        preventAssignment: true,
-      }),
+      replace(replaceConfiguration),
       commonjs(),
       typescript({ tsconfig: 'tsconfig.rollup.json' }),
       terser(),
     ],
+    treeshake: {
+      moduleSideEffects: !enableTreeShaking,
+    },
   },
   {
     input: 'src/web/index.ts',
@@ -40,18 +55,18 @@ export default [
       file: join(dirname(browser), basename(browser, '.min.js') + '.js'),
       format: 'umd',
       name: 'PubNub',
+      sourcemap: true,
     },
     plugins: [
       json(),
       resolve({ browser: true }),
-      replace({
-        SERVICE_WORKER_FILE_PLACEHOLDER: join(dirname(browser), basename(browser, '.min.js') + '.worker.js'),
-        SERVICE_WORKER_CDN,
-        preventAssignment: true,
-      }),
+      replace(replaceConfiguration),
       commonjs(),
       typescript({ tsconfig: 'tsconfig.rollup.json' }),
     ],
+    treeshake: {
+      moduleSideEffects: !enableTreeShaking,
+    },
   },
   {
     input: 'src/transport/subscription-worker/subscription-worker.ts',
@@ -87,16 +102,15 @@ export default [
     plugins: [
       json(),
       resolve({ browser: true }),
-      replace({
-        SERVICE_WORKER_FILE_PLACEHOLDER: `pubnub.worker.${version}.min.js`,
-        SERVICE_WORKER_CDN,
-        preventAssignment: true,
-      }),
+      replace(replaceConfiguration),
       commonjs(),
       typescript({ tsconfig: 'tsconfig.rollup.json' }),
       terser(),
       gzipPlugin({ fileName: '' }),
     ],
+    treeshake: {
+      moduleSideEffects: !enableTreeShaking,
+    },
   },
   {
     input: 'src/web/index.ts',
@@ -108,15 +122,14 @@ export default [
     plugins: [
       json(),
       resolve({ browser: true }),
-      replace({
-        SERVICE_WORKER_FILE_PLACEHOLDER: `pubnub.worker.${version}.js`,
-        SERVICE_WORKER_CDN,
-        preventAssignment: true,
-      }),
+      replace(replaceConfiguration),
       commonjs(),
       typescript({ tsconfig: 'tsconfig.rollup.json' }),
       gzipPlugin({ fileName: '' }),
     ],
+    treeshake: {
+      moduleSideEffects: !enableTreeShaking,
+    },
   },
   {
     input: 'src/web/index.ts',
@@ -128,15 +141,14 @@ export default [
     plugins: [
       json(),
       resolve({ browser: true }),
-      replace({
-        SERVICE_WORKER_FILE_PLACEHOLDER: `pubnub.worker.${version}.min.js`,
-        SERVICE_WORKER_CDN,
-        preventAssignment: true,
-      }),
+      replace(replaceConfiguration),
       commonjs(),
       typescript({ tsconfig: 'tsconfig.rollup.json' }),
       terser(),
     ],
+    treeshake: {
+      moduleSideEffects: !enableTreeShaking,
+    },
   },
   {
     input: 'src/web/index.ts',
@@ -148,14 +160,13 @@ export default [
     plugins: [
       json(),
       resolve({ browser: true }),
-      replace({
-        SERVICE_WORKER_FILE_PLACEHOLDER: `pubnub.worker.${version}.js`,
-        SERVICE_WORKER_CDN,
-        preventAssignment: true,
-      }),
+      replace(replaceConfiguration),
       commonjs(),
       typescript({ tsconfig: 'tsconfig.rollup.json' }),
     ],
+    treeshake: {
+      moduleSideEffects: !enableTreeShaking,
+    },
   },
   {
     input: 'src/transport/subscription-worker/subscription-worker.ts',

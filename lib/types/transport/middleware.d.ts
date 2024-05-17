@@ -13,7 +13,7 @@ type PubNubMiddlewareConfiguration = {
     /**
      * REST API endpoints access tokens manager.
      */
-    tokenManager: TokenManager;
+    tokenManager?: TokenManager;
     /**
      * HMAC-SHA256 hash generator from provided `data`.
      */

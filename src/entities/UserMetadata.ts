@@ -11,12 +11,14 @@ export class UserMetadata {
   ) {}
 
   subscription(subscriptionOptions?: SubscriptionOptions) {
-    return new Subscription({
-      channels: [this.id],
-      channelGroups: [],
-      subscriptionOptions: subscriptionOptions,
-      eventEmitter: this.eventEmitter,
-      pubnub: this.pubnub,
-    });
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      return new Subscription({
+        channels: [this.id],
+        channelGroups: [],
+        subscriptionOptions: subscriptionOptions,
+        eventEmitter: this.eventEmitter,
+        pubnub: this.pubnub,
+      });
+    } else throw new Error('Subscription error: subscription module disabled');
   }
 }

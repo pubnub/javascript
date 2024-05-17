@@ -872,7 +872,6 @@
 	     */
 	    StatusCategory["PNDisconnectedUnexpectedlyCategory"] = "PNDisconnectedUnexpectedlyCategory";
 	})(StatusCategory || (StatusCategory = {}));
-	var StatusCategory$1 = StatusCategory;
 
 	class PubNubError extends Error {
 	    constructor(message, status) {
@@ -886,7 +885,7 @@
 	function createError(errorPayload) {
 	    var _a;
 	    (_a = errorPayload.statusCode) !== null && _a !== void 0 ? _a : (errorPayload.statusCode = 0);
-	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category: StatusCategory$1.PNValidationErrorCategory, error: true });
+	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category: StatusCategory.PNValidationErrorCategory, error: true });
 	}
 	function createValidationError(message, statusCode) {
 	    return createError(Object.assign({ message }, (statusCode !== undefined ? { statusCode } : {})));
@@ -2815,7 +2814,7 @@
 	     * available).
 	     */
 	    static createFromError(error) {
-	        let category = StatusCategory$1.PNUnknownCategory;
+	        let category = StatusCategory.PNUnknownCategory;
 	        let message = 'Unknown error';
 	        let errorName = 'Error';
 	        if (!error)
@@ -2827,24 +2826,24 @@
 	            errorName = error.name;
 	        }
 	        if (errorName === 'AbortError' || message.indexOf('Aborted') !== -1) {
-	            category = StatusCategory$1.PNCancelledCategory;
+	            category = StatusCategory.PNCancelledCategory;
 	            message = 'Request cancelled';
 	        }
 	        else if (message.indexOf('timeout') !== -1) {
-	            category = StatusCategory$1.PNTimeoutCategory;
+	            category = StatusCategory.PNTimeoutCategory;
 	            message = 'Request timeout';
 	        }
 	        else if (message.indexOf('network') !== -1) {
-	            category = StatusCategory$1.PNNetworkIssuesCategory;
+	            category = StatusCategory.PNNetworkIssuesCategory;
 	            message = 'Network issues';
 	        }
 	        else if (errorName === 'TypeError') {
-	            category = StatusCategory$1.PNBadRequestCategory;
+	            category = StatusCategory.PNBadRequestCategory;
 	        }
 	        else if (errorName === 'FetchError') {
 	            const errorCode = error.code;
 	            if (['ECONNREFUSED', 'ENETUNREACH', 'ENOTFOUND', 'ECONNRESET', 'EAI_AGAIN'].includes(errorCode))
-	                category = StatusCategory$1.PNNetworkIssuesCategory;
+	                category = StatusCategory.PNNetworkIssuesCategory;
 	            if (errorCode === 'ECONNREFUSED')
 	                message = 'Connection refused';
 	            else if (errorCode === 'ENETUNREACH')
@@ -2856,14 +2855,14 @@
 	            else if (errorCode === 'EAI_AGAIN')
 	                message = 'Name resolution error';
 	            else if (errorCode === 'ETIMEDOUT') {
-	                category = StatusCategory$1.PNTimeoutCategory;
+	                category = StatusCategory.PNTimeoutCategory;
 	                message = 'Request timeout';
 	            }
 	            else
 	                message = `Unknown system error: ${error}`;
 	        }
 	        else if (message === 'Request timeout')
-	            category = StatusCategory$1.PNTimeoutCategory;
+	            category = StatusCategory.PNTimeoutCategory;
 	        return new PubNubAPIError(message, category, 0, error);
 	    }
 	    /**
@@ -2877,7 +2876,7 @@
 	     * available).
 	     */
 	    static createFromServiceResponse(response, data) {
-	        let category = StatusCategory$1.PNUnknownCategory;
+	        let category = StatusCategory.PNUnknownCategory;
 	        let errorData;
 	        let message = 'Unknown error';
 	        let { status } = response;
@@ -2885,11 +2884,11 @@
 	        if (status === 402)
 	            message = 'Not available for used key set. Contact support@pubnub.com';
 	        else if (status === 400) {
-	            category = StatusCategory$1.PNBadRequestCategory;
+	            category = StatusCategory.PNBadRequestCategory;
 	            message = 'Bad request';
 	        }
 	        else if (status === 403) {
-	            category = StatusCategory$1.PNAccessDeniedCategory;
+	            category = StatusCategory.PNAccessDeniedCategory;
 	            message = 'Access denied';
 	        }
 	        // Try to get more information about error from service response.
@@ -3155,16 +3154,16 @@
 	                });
 	            }
 	            else {
-	                let category = StatusCategory$1.PNUnknownCategory;
+	                let category = StatusCategory.PNUnknownCategory;
 	                let message = 'Unknown error';
 	                // Handle client-side issues (if any).
 	                if (data.error) {
 	                    if (data.error.type === 'NETWORK_ISSUE')
-	                        category = StatusCategory$1.PNNetworkIssuesCategory;
+	                        category = StatusCategory.PNNetworkIssuesCategory;
 	                    else if (data.error.type === 'TIMEOUT')
-	                        category = StatusCategory$1.PNTimeoutCategory;
+	                        category = StatusCategory.PNTimeoutCategory;
 	                    else if (data.error.type === 'ABORTED')
-	                        category = StatusCategory$1.PNCancelledCategory;
+	                        category = StatusCategory.PNCancelledCategory;
 	                    message = `${data.error.message} (${data.identifier})`;
 	                }
 	                // Handle service error response.
@@ -4119,7 +4118,7 @@
 	        if (req.path.startsWith('/v2/auth/') || req.path.startsWith('/v3/pam/') || req.path.startsWith('/time'))
 	            return;
 	        const { clientConfiguration, tokenManager } = this.configuration;
-	        const accessKey = (_a = tokenManager.getToken()) !== null && _a !== void 0 ? _a : clientConfiguration.authKey;
+	        const accessKey = (_a = (tokenManager && tokenManager.getToken())) !== null && _a !== void 0 ? _a : clientConfiguration.authKey;
 	        if (accessKey)
 	            req.queryParameters['auth'] = accessKey;
 	    }
@@ -4281,7 +4280,7 @@
 	        this.listeners.forEach((listener) => {
 	            if (listener.status) {
 	                listener.status({
-	                    category: StatusCategory$1.PNNetworkUpCategory,
+	                    category: StatusCategory.PNNetworkUpCategory,
 	                });
 	            }
 	        });
@@ -4293,7 +4292,7 @@
 	        this.listeners.forEach((listener) => {
 	            if (listener.status) {
 	                listener.status({
-	                    category: StatusCategory$1.PNNetworkDownCategory,
+	                    category: StatusCategory.PNNetworkDownCategory,
 	                });
 	            }
 	        });
@@ -4642,12 +4641,12 @@
 	            if ((typeof status.errorData === 'object' &&
 	                'name' in status.errorData &&
 	                status.errorData.name === 'AbortError') ||
-	                status.category === StatusCategory$1.PNCancelledCategory)
+	                status.category === StatusCategory.PNCancelledCategory)
 	                return;
-	            if (status.category === StatusCategory$1.PNTimeoutCategory) {
+	            if (status.category === StatusCategory.PNTimeoutCategory) {
 	                this.startSubscribeLoop();
 	            }
-	            else if (status.category === StatusCategory$1.PNNetworkIssuesCategory) {
+	            else if (status.category === StatusCategory.PNNetworkIssuesCategory) {
 	                this.disconnect();
 	                if (status.error && this.configuration.autoNetworkDetection && this.isOnline) {
 	                    this.isOnline = false;
@@ -4661,7 +4660,7 @@
 	                    this.reconnect();
 	                    this.subscriptionStatusAnnounced = true;
 	                    const reconnectedAnnounce = {
-	                        category: StatusCategory$1.PNReconnectedCategory,
+	                        category: StatusCategory.PNReconnectedCategory,
 	                        operation: status.operation,
 	                        lastTimetoken: this.lastTimetoken,
 	                        currentTimetoken: this.currentTimetoken,
@@ -4671,7 +4670,7 @@
 	                this.reconnectionManager.startPolling();
 	                this.listenerManager.announceStatus(status);
 	            }
-	            else if (status.category === StatusCategory$1.PNBadRequestCategory) {
+	            else if (status.category === StatusCategory.PNBadRequestCategory) {
 	                this.stopHeartbeatTimer();
 	                this.listenerManager.announceStatus(status);
 	            }
@@ -4690,7 +4689,7 @@
 	        }
 	        if (!this.subscriptionStatusAnnounced) {
 	            const connected = {
-	                category: StatusCategory$1.PNConnectedCategory,
+	                category: StatusCategory.PNConnectedCategory,
 	                operation: status.operation,
 	                affectedChannels: Array.from(this.pendingChannelSubscriptions),
 	                subscribedChannels: this.subscribedChannels,
@@ -4708,7 +4707,7 @@
 	        const { requestMessageCountThreshold, dedupeOnSubscribe } = this.configuration;
 	        if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
 	            this.listenerManager.announceStatus({
-	                category: StatusCategory$1.PNRequestMessageCountExceededCategory,
+	                category: StatusCategory.PNRequestMessageCountExceededCategory,
 	                operation: status.operation,
 	            });
 	        }
@@ -4725,7 +4724,7 @@
 	        catch (e) {
 	            const errorStatus = {
 	                error: true,
-	                category: StatusCategory$1.PNUnknownCategory,
+	                category: StatusCategory.PNUnknownCategory,
 	                errorData: e,
 	                statusCode: 0,
 	            };
@@ -5758,7 +5757,6 @@
 	    RequestOperation["PNHandshakeOperation"] = "PNHandshakeOperation";
 	    RequestOperation["PNReceiveMessagesOperation"] = "PNReceiveMessagesOperation";
 	})(RequestOperation || (RequestOperation = {}));
-	var RequestOperation$1 = RequestOperation;
 
 	/**
 	 * Subscription REST API module.
@@ -5832,7 +5830,7 @@
 	        (_c = (_f = this.parameters).channels) !== null && _c !== void 0 ? _c : (_f.channels = []);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNSubscribeOperation;
+	        return RequestOperation.PNSubscribeOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, channelGroups, } = this.parameters;
@@ -6536,7 +6534,7 @@
 	            }
 	            catch (e) {
 	                if (e instanceof PubNubError) {
-	                    if (e.status && e.status.category == StatusCategory$1.PNCancelledCategory)
+	                    if (e.status && e.status.category == StatusCategory.PNCancelledCategory)
 	                        return;
 	                    return engine.transition(heartbeatFailure(e));
 	                }
@@ -6570,7 +6568,7 @@
 	                }
 	                catch (e) {
 	                    if (e instanceof PubNubError) {
-	                        if (e.status && e.status.category == StatusCategory$1.PNCancelledCategory)
+	                        if (e.status && e.status.category == StatusCategory.PNCancelledCategory)
 	                            return;
 	                        return engine.transition(heartbeatFailure(e));
 	                    }
@@ -6586,7 +6584,7 @@
 	                emitStatus(payload.status);
 	            }
 	            else if (config.announceSuccessfulHeartbeats && payload.statusCode === 200) {
-	                emitStatus(Object.assign(Object.assign({}, payload), { operation: RequestOperation$1.PNHeartbeatOperation, error: false }));
+	                emitStatus(Object.assign(Object.assign({}, payload), { operation: RequestOperation.PNHeartbeatOperation, error: false }));
 	            }
 	        })));
 	    }
@@ -6884,7 +6882,7 @@
 	            }
 	            catch (e) {
 	                if (e instanceof PubNubError) {
-	                    if (e.status && e.status.category == StatusCategory$1.PNCancelledCategory)
+	                    if (e.status && e.status.category == StatusCategory.PNCancelledCategory)
 	                        return;
 	                    return engine.transition(handshakeFailure(e));
 	                }
@@ -6905,7 +6903,7 @@
 	            }
 	            catch (error) {
 	                if (error instanceof PubNubError) {
-	                    if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
+	                    if (error.status && error.status.category == StatusCategory.PNCancelledCategory)
 	                        return;
 	                    if (!abortSignal.aborted)
 	                        return engine.transition(receiveFailure(error));
@@ -6938,7 +6936,7 @@
 	                }
 	                catch (error) {
 	                    if (error instanceof PubNubError) {
-	                        if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
+	                        if (error.status && error.status.category == StatusCategory.PNCancelledCategory)
 	                            return;
 	                        return engine.transition(receiveReconnectFailure(error));
 	                    }
@@ -6961,7 +6959,7 @@
 	                }
 	                catch (error) {
 	                    if (error instanceof PubNubError) {
-	                        if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
+	                        if (error.status && error.status.category == StatusCategory.PNCancelledCategory)
 	                            return;
 	                        return engine.transition(handshakeReconnectFailure(error));
 	                    }
@@ -7090,13 +7088,13 @@
 	        channels: context.channels,
 	        cursor: context.cursor,
 	        reason: event.payload,
-	    }, [emitStatus({ category: StatusCategory$1.PNDisconnectedUnexpectedlyCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
+	    }, [emitStatus({ category: StatusCategory.PNDisconnectedUnexpectedlyCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
 	});
 	ReceiveReconnectingState.on(disconnect.type, (context) => ReceiveStoppedState.with({
 	    channels: context.channels,
 	    groups: context.groups,
 	    cursor: context.cursor,
-	}, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
+	}, [emitStatus({ category: StatusCategory.PNDisconnectedCategory })]));
 	ReceiveReconnectingState.on(restore.type, (context, event) => ReceivingState.with({
 	    channels: event.payload.channels,
 	    groups: event.payload.groups,
@@ -7110,7 +7108,7 @@
 	    groups: event.payload.groups,
 	    cursor: context.cursor,
 	}));
-	ReceiveReconnectingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
+	ReceiveReconnectingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory.PNDisconnectedCategory })]));
 
 	const ReceivingState = new State('RECEIVING');
 	ReceivingState.onEnter((context) => receiveMessages(context.channels, context.groups, context.cursor));
@@ -7151,9 +7149,9 @@
 	        channels: context.channels,
 	        groups: context.groups,
 	        cursor: context.cursor,
-	    }, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]);
+	    }, [emitStatus({ category: StatusCategory.PNDisconnectedCategory })]);
 	});
-	ReceivingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
+	ReceivingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory.PNDisconnectedCategory })]));
 
 	const HandshakeReconnectingState = new State('HANDSHAKE_RECONNECTING');
 	HandshakeReconnectingState.onEnter((context) => handshakeReconnect(context));
@@ -7168,7 +7166,7 @@
 	        channels: context.channels,
 	        groups: context.groups,
 	        cursor: cursor,
-	    }, [emitStatus({ category: StatusCategory$1.PNConnectedCategory })]);
+	    }, [emitStatus({ category: StatusCategory.PNConnectedCategory })]);
 	});
 	HandshakeReconnectingState.on(handshakeReconnectFailure.type, (context, event) => HandshakeReconnectingState.with(Object.assign(Object.assign({}, context), { attempts: context.attempts + 1, reason: event.payload })));
 	HandshakeReconnectingState.on(handshakeReconnectGiveup.type, (context, event) => {
@@ -7178,7 +7176,7 @@
 	        channels: context.channels,
 	        cursor: context.cursor,
 	        reason: event.payload,
-	    }, [emitStatus({ category: StatusCategory$1.PNConnectionErrorCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
+	    }, [emitStatus({ category: StatusCategory.PNConnectionErrorCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
 	});
 	HandshakeReconnectingState.on(disconnect.type, (context) => HandshakeStoppedState.with({
 	    channels: context.channels,
@@ -7227,7 +7225,7 @@
 	        },
 	    }, [
 	        emitStatus({
-	            category: StatusCategory$1.PNConnectedCategory,
+	            category: StatusCategory.PNConnectedCategory,
 	        }),
 	    ]);
 	});
@@ -7406,7 +7404,7 @@
 	        (_a = (_b = this.parameters).sendByPost) !== null && _a !== void 0 ? _a : (_b.sendByPost = SEND_BY_POST);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNPublishOperation;
+	        return RequestOperation.PNPublishOperation;
 	    }
 	    validate() {
 	        const { message, channel, keySet: { publishKey }, } = this.parameters;
@@ -7484,7 +7482,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNSignalOperation;
+	        return RequestOperation.PNSignalOperation;
 	    }
 	    validate() {
 	        const { message, channel, keySet: { publishKey }, } = this.parameters;
@@ -7520,7 +7518,7 @@
 	 */
 	class ReceiveMessagesSubscribeRequest extends BaseSubscribeRequest {
 	    operation() {
-	        return RequestOperation$1.PNReceiveMessagesOperation;
+	        return RequestOperation.PNReceiveMessagesOperation;
 	    }
 	    validate() {
 	        const validationResult = super.validate();
@@ -7566,7 +7564,7 @@
 	 */
 	class HandshakeSubscribeRequest extends BaseSubscribeRequest {
 	    operation() {
-	        return RequestOperation$1.PNHandshakeOperation;
+	        return RequestOperation.PNHandshakeOperation;
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channels = [], } = this.parameters;
@@ -7605,7 +7603,7 @@
 	        (_b = (_d = this.parameters).channelGroups) !== null && _b !== void 0 ? _b : (_d.channelGroups = []);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetStateOperation;
+	        return RequestOperation.PNGetStateOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, channelGroups, } = this.parameters;
@@ -7656,7 +7654,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNSetStateOperation;
+	        return RequestOperation.PNSetStateOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, state, channels = [], channelGroups = [], } = this.parameters;
@@ -7706,7 +7704,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNHeartbeatOperation;
+	        return RequestOperation.PNHeartbeatOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels = [], channelGroups = [], } = this.parameters;
@@ -7760,7 +7758,7 @@
 	            this.parameters.channels = Array.from(new Set(this.parameters.channels));
 	    }
 	    operation() {
-	        return RequestOperation$1.PNUnsubscribeOperation;
+	        return RequestOperation.PNUnsubscribeOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels = [], channelGroups = [], } = this.parameters;
@@ -7808,7 +7806,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNWhereNowOperation;
+	        return RequestOperation.PNWhereNowOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -7868,8 +7866,8 @@
 	    operation() {
 	        const { channels = [], channelGroups = [] } = this.parameters;
 	        return channels.length === 0 && channelGroups.length === 0
-	            ? RequestOperation$1.PNGlobalHereNowOperation
-	            : RequestOperation$1.PNHereNowOperation;
+	            ? RequestOperation.PNGlobalHereNowOperation
+	            : RequestOperation.PNHereNowOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -7945,7 +7943,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNDeleteMessagesOperation;
+	        return RequestOperation.PNDeleteMessagesOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -7989,7 +7987,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNMessageCounts;
+	        return RequestOperation.PNMessageCounts;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, timetoken, channelTimetokens, } = this.parameters;
@@ -8070,7 +8068,7 @@
 	        (_c = parameters.logVerbosity) !== null && _c !== void 0 ? _c : (parameters.logVerbosity = LOG_VERBOSITY$1);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNHistoryOperation;
+	        return RequestOperation.PNHistoryOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -8225,7 +8223,7 @@
 	        (_e = parameters.logVerbosity) !== null && _e !== void 0 ? _e : (parameters.logVerbosity = LOG_VERBOSITY);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNFetchMessagesOperation;
+	        return RequestOperation.PNFetchMessagesOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, includeMessageActions, } = this.parameters;
@@ -8360,7 +8358,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetMessageActionsOperation;
+	        return RequestOperation.PNGetMessageActionsOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -8415,7 +8413,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNAddMessageActionOperation;
+	        return RequestOperation.PNAddMessageActionOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, action, channel, messageTimetoken, } = this.parameters;
@@ -8472,7 +8470,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemoveMessageActionOperation;
+	        return RequestOperation.PNRemoveMessageActionOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channel, messageTimetoken, actionTimetoken, } = this.parameters;
@@ -8529,7 +8527,7 @@
 	        (_a = (_b = this.parameters).storeInHistory) !== null && _a !== void 0 ? _a : (_b.storeInHistory = STORE_IN_HISTORY);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNPublishFileMessageOperation;
+	        return RequestOperation.PNPublishFileMessageOperation;
 	    }
 	    validate() {
 	        const { channel, fileId, fileName } = this.parameters;
@@ -8602,7 +8600,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetFileUrlOperation;
+	        return RequestOperation.PNGetFileUrlOperation;
 	    }
 	    validate() {
 	        const { channel, id, name } = this.parameters;
@@ -8639,7 +8637,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNDeleteFileOperation;
+	        return RequestOperation.PNDeleteFileOperation;
 	    }
 	    validate() {
 	        const { channel, id, name } = this.parameters;
@@ -8694,7 +8692,7 @@
 	        (_a = (_b = this.parameters).limit) !== null && _a !== void 0 ? _a : (_b.limit = LIMIT$6);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNListFilesOperation;
+	        return RequestOperation.PNListFilesOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -8736,7 +8734,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGenerateUploadUrlOperation;
+	        return RequestOperation.PNGenerateUploadUrlOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -8792,7 +8790,7 @@
 	        }
 	    }
 	    operation() {
-	        return RequestOperation$1.PNPublishFileOperation;
+	        return RequestOperation.PNPublishFileOperation;
 	    }
 	    validate() {
 	        const { fileId, fileName, file, uploadUrl } = this.parameters;
@@ -8862,8 +8860,8 @@
 	                    throw new PubNubError('Upload to bucket was unsuccessful', {
 	                        error: true,
 	                        statusCode: result.status,
-	                        category: StatusCategory$1.PNUnknownCategory,
-	                        operation: RequestOperation$1.PNPublishFileOperation,
+	                        category: StatusCategory.PNUnknownCategory,
+	                        operation: RequestOperation.PNPublishFileOperation,
 	                        errorData: { message: result.message },
 	                    });
 	                }
@@ -8873,7 +8871,7 @@
 	                if (error instanceof PubNubError)
 	                    throw error;
 	                const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
-	                throw new PubNubError('File upload error.', apiError.toStatus(RequestOperation$1.PNPublishFileOperation));
+	                throw new PubNubError('File upload error.', apiError.toStatus(RequestOperation.PNPublishFileOperation));
 	            });
 	        });
 	    }
@@ -8936,7 +8934,7 @@
 	            if (!wasSuccessful) {
 	                throw new PubNubError('Publish failed. You may want to execute that operation manually using pubnub.publishFile', {
 	                    error: true,
-	                    category: (_b = (_a = publishError.status) === null || _a === void 0 ? void 0 : _a.category) !== null && _b !== void 0 ? _b : StatusCategory$1.PNUnknownCategory,
+	                    category: (_b = (_a = publishError.status) === null || _a === void 0 ? void 0 : _a.category) !== null && _b !== void 0 ? _b : StatusCategory.PNUnknownCategory,
 	                    statusCode: (_d = (_c = publishError.status) === null || _c === void 0 ? void 0 : _c.statusCode) !== null && _d !== void 0 ? _d : 0,
 	                    channel: this.parameters.channel,
 	                    id: fileId,
@@ -8966,7 +8964,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNAccessManagerRevokeToken;
+	        return RequestOperation.PNAccessManagerRevokeToken;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.secretKey)
@@ -9011,7 +9009,7 @@
 	        (_b = (_d = this.parameters).patterns) !== null && _b !== void 0 ? _b : (_d.patterns = {});
 	    }
 	    operation() {
-	        return RequestOperation$1.PNAccessManagerGrantToken;
+	        return RequestOperation.PNAccessManagerGrantToken;
 	    }
 	    validate() {
 	        var _a, _b, _c, _d, _e, _f;
@@ -9219,7 +9217,7 @@
 	        (_k = (_v = this.parameters).join) !== null && _k !== void 0 ? _k : (_v.join = JOIN_PERMISSION);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNAccessManagerGrant;
+	        return RequestOperation.PNAccessManagerGrant;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey, publishKey, secretKey }, uuids = [], channels = [], channelGroups = [], authKeys = [], } = this.parameters;
@@ -9281,7 +9279,7 @@
 	        (_a = (_b = this.parameters).authKeys) !== null && _a !== void 0 ? _a : (_b.authKeys = AUTH_KEYS);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNAccessManagerAudit;
+	        return RequestOperation.PNAccessManagerAudit;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -9440,13 +9438,15 @@
 	        this.pubnub = pubnub;
 	    }
 	    subscription(subscriptionOptions) {
-	        return new Subscription({
-	            channels: [this.id],
-	            channelGroups: [],
-	            subscriptionOptions: subscriptionOptions,
-	            eventEmitter: this.eventEmitter,
-	            pubnub: this.pubnub,
-	        });
+	        {
+	            return new Subscription({
+	                channels: [this.id],
+	                channelGroups: [],
+	                subscriptionOptions: subscriptionOptions,
+	                eventEmitter: this.eventEmitter,
+	                pubnub: this.pubnub,
+	            });
+	        }
 	    }
 	}
 
@@ -9457,13 +9457,15 @@
 	        this.name = channelGroup;
 	    }
 	    subscription(subscriptionOptions) {
-	        return new Subscription({
-	            channels: [],
-	            channelGroups: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, `${this.name}-pnpres`] : [this.name],
-	            subscriptionOptions: subscriptionOptions,
-	            eventEmitter: this.eventEmitter,
-	            pubnub: this.pubnub,
-	        });
+	        {
+	            return new Subscription({
+	                channels: [],
+	                channelGroups: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, `${this.name}-pnpres`] : [this.name],
+	                subscriptionOptions: subscriptionOptions,
+	                eventEmitter: this.eventEmitter,
+	                pubnub: this.pubnub,
+	            });
+	        }
 	    }
 	}
 
@@ -9474,13 +9476,15 @@
 	        this.pubnub = pubnub;
 	    }
 	    subscription(subscriptionOptions) {
-	        return new Subscription({
-	            channels: [this.id],
-	            channelGroups: [],
-	            subscriptionOptions: subscriptionOptions,
-	            eventEmitter: this.eventEmitter,
-	            pubnub: this.pubnub,
-	        });
+	        {
+	            return new Subscription({
+	                channels: [this.id],
+	                channelGroups: [],
+	                subscriptionOptions: subscriptionOptions,
+	                eventEmitter: this.eventEmitter,
+	                pubnub: this.pubnub,
+	            });
+	        }
 	    }
 	}
 
@@ -9491,13 +9495,15 @@
 	        this.name = channelName;
 	    }
 	    subscription(subscriptionOptions) {
-	        return new Subscription({
-	            channels: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, `${this.name}-pnpres`] : [this.name],
-	            channelGroups: [],
-	            subscriptionOptions: subscriptionOptions,
-	            eventEmitter: this.eventEmitter,
-	            pubnub: this.pubnub,
-	        });
+	        {
+	            return new Subscription({
+	                channels: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, `${this.name}-pnpres`] : [this.name],
+	                channelGroups: [],
+	                subscriptionOptions: subscriptionOptions,
+	                eventEmitter: this.eventEmitter,
+	                pubnub: this.pubnub,
+	            });
+	        }
 	    }
 	}
 
@@ -9517,7 +9523,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemoveChannelsFromGroupOperation;
+	        return RequestOperation.PNRemoveChannelsFromGroupOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, channelGroup, } = this.parameters;
@@ -9563,7 +9569,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNAddChannelsToGroupOperation;
+	        return RequestOperation.PNAddChannelsToGroupOperation;
 	    }
 	    validate() {
 	        const { keySet: { subscribeKey }, channels, channelGroup, } = this.parameters;
@@ -9609,7 +9615,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNChannelsForGroupOperation;
+	        return RequestOperation.PNChannelsForGroupOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -9649,7 +9655,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemoveGroupOperation;
+	        return RequestOperation.PNRemoveGroupOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -9689,7 +9695,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNChannelGroupsOperation;
+	        return RequestOperation.PNChannelGroupsOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.keySet.subscribeKey)
@@ -9899,7 +9905,7 @@
 	        super(Object.assign(Object.assign({}, parameters), { action: 'remove' }));
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemovePushNotificationEnabledChannelsOperation;
+	        return RequestOperation.PNRemovePushNotificationEnabledChannelsOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -9926,7 +9932,7 @@
 	        super(Object.assign(Object.assign({}, parameters), { action: 'list' }));
 	    }
 	    operation() {
-	        return RequestOperation$1.PNPushNotificationEnabledChannelsOperation;
+	        return RequestOperation.PNPushNotificationEnabledChannelsOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -9953,7 +9959,7 @@
 	        super(Object.assign(Object.assign({}, parameters), { action: 'add' }));
 	    }
 	    operation() {
-	        return RequestOperation$1.PNAddPushNotificationEnabledChannelsOperation;
+	        return RequestOperation.PNAddPushNotificationEnabledChannelsOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -9980,7 +9986,7 @@
 	        super(Object.assign(Object.assign({}, parameters), { action: 'remove-device' }));
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemoveAllPushNotificationsOperation;
+	        return RequestOperation.PNRemoveAllPushNotificationsOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -10100,7 +10106,7 @@
 	        (_d = parameters.limit) !== null && _d !== void 0 ? _d : (parameters.limit = LIMIT$5);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetAllChannelMetadataOperation;
+	        return RequestOperation.PNGetAllChannelMetadataOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -10138,7 +10144,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemoveChannelMetadataOperation;
+	        return RequestOperation.PNRemoveChannelMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -10227,7 +10233,7 @@
 	            this.parameters.uuid = this.parameters.userId;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetMembershipsOperation;
+	        return RequestOperation.PNGetMembershipsOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.uuid)
@@ -10319,7 +10325,7 @@
 	            this.parameters.uuid = this.parameters.userId;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNSetMembershipsOperation;
+	        return RequestOperation.PNSetMembershipsOperation;
 	    }
 	    validate() {
 	        const { uuid, channels } = this.parameters;
@@ -10403,7 +10409,7 @@
 	        (_c = parameters.limit) !== null && _c !== void 0 ? _c : (parameters.limit = LIMIT$2);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetAllUUIDMetadataOperation;
+	        return RequestOperation.PNGetAllUUIDMetadataOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -10454,7 +10460,7 @@
 	        (_b = (_c = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_c.customFields = INCLUDE_CUSTOM_FIELDS$5);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetChannelMetadataOperation;
+	        return RequestOperation.PNGetChannelMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -10510,7 +10516,7 @@
 	        (_b = (_c = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_c.customFields = INCLUDE_CUSTOM_FIELDS$4);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNSetChannelMetadataOperation;
+	        return RequestOperation.PNSetChannelMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -10561,7 +10567,7 @@
 	            this.parameters.uuid = this.parameters.userId;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemoveUUIDMetadataOperation;
+	        return RequestOperation.PNRemoveUUIDMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.uuid)
@@ -10647,7 +10653,7 @@
 	        (_j = parameters.limit) !== null && _j !== void 0 ? _j : (parameters.limit = LIMIT$1);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNSetMembersOperation;
+	        return RequestOperation.PNSetMembersOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.channel)
@@ -10736,7 +10742,7 @@
 	        (_f = parameters.limit) !== null && _f !== void 0 ? _f : (parameters.limit = LIMIT);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNSetMembersOperation;
+	        return RequestOperation.PNSetMembersOperation;
 	    }
 	    validate() {
 	        const { channel, uuids } = this.parameters;
@@ -10818,7 +10824,7 @@
 	            this.parameters.uuid = this.parameters.userId;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetUUIDMetadataOperation;
+	        return RequestOperation.PNGetUUIDMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.uuid)
@@ -10876,7 +10882,7 @@
 	            this.parameters.uuid = this.parameters.userId;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNSetUUIDMetadataOperation;
+	        return RequestOperation.PNSetUUIDMetadataOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.uuid)
@@ -11442,7 +11448,7 @@
 	        super();
 	    }
 	    operation() {
-	        return RequestOperation$1.PNTimeOperation;
+	        return RequestOperation.PNTimeOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -11472,7 +11478,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNDownloadFileOperation;
+	        return RequestOperation.PNDownloadFileOperation;
 	    }
 	    validate() {
 	        const { channel, id, name } = this.parameters;
@@ -11545,57 +11551,61 @@
 	        this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
 	        this._channelGroups = new PubnubChannelGroups(this._configuration.keySet, this.sendRequest.bind(this));
 	        this._push = new PubNubPushNotifications(this._configuration.keySet, this.sendRequest.bind(this));
-	        // Prepare for real-time events announcement.
-	        this.listenerManager = new ListenerManager();
-	        this.eventEmitter = new EventEmitter(this.listenerManager);
-	        if (this._configuration.enableEventEngine) {
-	            let heartbeatInterval = this._configuration.getHeartbeatInterval();
-	            this.presenceState = {};
-	            if (heartbeatInterval) {
-	                this.presenceEventEngine = new PresenceEventEngine({
-	                    heartbeat: this.heartbeat.bind(this),
-	                    leave: (parameters) => this.makeUnsubscribe(parameters, () => { }),
-	                    heartbeatDelay: () => new Promise((resolve, reject) => {
-	                        heartbeatInterval = this._configuration.getHeartbeatInterval();
-	                        if (!heartbeatInterval)
-	                            reject(new PubNubError('Heartbeat interval has been reset.'));
-	                        else
-	                            setTimeout(resolve, heartbeatInterval * 1000);
-	                    }),
-	                    retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-	                    emitStatus: (status) => this.listenerManager.announceStatus(status),
-	                    config: this._configuration,
+	        {
+	            // Prepare for real-time events announcement.
+	            this.listenerManager = new ListenerManager();
+	            this.eventEmitter = new EventEmitter(this.listenerManager);
+	            if (this._configuration.enableEventEngine) {
+	                let heartbeatInterval = this._configuration.getHeartbeatInterval();
+	                this.presenceState = {};
+	                {
+	                    if (heartbeatInterval) {
+	                        this.presenceEventEngine = new PresenceEventEngine({
+	                            heartbeat: this.heartbeat.bind(this),
+	                            leave: (parameters) => this.makeUnsubscribe(parameters, () => { }),
+	                            heartbeatDelay: () => new Promise((resolve, reject) => {
+	                                heartbeatInterval = this._configuration.getHeartbeatInterval();
+	                                if (!heartbeatInterval)
+	                                    reject(new PubNubError('Heartbeat interval has been reset.'));
+	                                else
+	                                    setTimeout(resolve, heartbeatInterval * 1000);
+	                            }),
+	                            retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+	                            emitStatus: (status) => this.listenerManager.announceStatus(status),
+	                            config: this._configuration,
+	                            presenceState: this.presenceState,
+	                        });
+	                    }
+	                }
+	                this.eventEngine = new EventEngine({
+	                    handshake: this.subscribeHandshake.bind(this),
+	                    receiveMessages: this.subscribeReceiveMessages.bind(this),
+	                    delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+	                    join: this.join.bind(this),
+	                    leave: this.leave.bind(this),
+	                    leaveAll: this.leaveAll.bind(this),
 	                    presenceState: this.presenceState,
+	                    config: this._configuration,
+	                    emitMessages: (events) => {
+	                        try {
+	                            events.forEach((event) => this.eventEmitter.emitEvent(event));
+	                        }
+	                        catch (e) {
+	                            const errorStatus = {
+	                                error: true,
+	                                category: StatusCategory.PNUnknownCategory,
+	                                errorData: e,
+	                                statusCode: 0,
+	                            };
+	                            this.listenerManager.announceStatus(errorStatus);
+	                        }
+	                    },
+	                    emitStatus: (status) => this.listenerManager.announceStatus(status),
 	                });
 	            }
-	            this.eventEngine = new EventEngine({
-	                handshake: this.subscribeHandshake.bind(this),
-	                receiveMessages: this.subscribeReceiveMessages.bind(this),
-	                delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-	                join: this.join.bind(this),
-	                leave: this.leave.bind(this),
-	                leaveAll: this.leaveAll.bind(this),
-	                presenceState: this.presenceState,
-	                config: this._configuration,
-	                emitMessages: (events) => {
-	                    try {
-	                        events.forEach((event) => this.eventEmitter.emitEvent(event));
-	                    }
-	                    catch (e) {
-	                        const errorStatus = {
-	                            error: true,
-	                            category: StatusCategory$1.PNUnknownCategory,
-	                            errorData: e,
-	                            statusCode: 0,
-	                        };
-	                        this.listenerManager.announceStatus(errorStatus);
-	                    }
-	                },
-	                emitStatus: (status) => this.listenerManager.announceStatus(status),
-	            });
-	        }
-	        else {
-	            this.subscriptionManager = new SubscriptionManager(this._configuration, this.listenerManager, this.eventEmitter, this.makeSubscribe.bind(this), this.heartbeat.bind(this), this.makeUnsubscribe.bind(this), this.time.bind(this));
+	            else {
+	                this.subscriptionManager = new SubscriptionManager(this._configuration, this.listenerManager, this.eventEmitter, this.makeSubscribe.bind(this), this.heartbeat.bind(this), this.makeUnsubscribe.bind(this), this.time.bind(this));
+	            }
 	        }
 	    }
 	    // --------------------------------------------------------
@@ -11885,7 +11895,9 @@
 	     * @param parameters - Subscriptions set configuration parameters.
 	     */
 	    subscriptionSet(parameters) {
-	        return new SubscriptionSet(Object.assign(Object.assign({}, parameters), { eventEmitter: this.eventEmitter, pubnub: this }));
+	        {
+	            return new SubscriptionSet(Object.assign(Object.assign({}, parameters), { eventEmitter: this.eventEmitter, pubnub: this }));
+	        }
 	    }
 	    /**
 	     * Schedule request execution.
@@ -11914,7 +11926,7 @@
 	                transportRequest.timeout = 300;
 	            }
 	            else {
-	                if (request.operation() === RequestOperation$1.PNSubscribeOperation)
+	                if (request.operation() === RequestOperation.PNSubscribeOperation)
 	                    transportRequest.timeout = this._configuration.getSubscribeTimeout();
 	                else
 	                    transportRequest.timeout = this._configuration.getTransactionTimeout();
@@ -11923,7 +11935,7 @@
 	            const status = {
 	                error: false,
 	                operation: request.operation(),
-	                category: StatusCategory$1.PNAcknowledgmentCategory,
+	                category: StatusCategory.PNAcknowledgmentCategory,
 	                statusCode: 0,
 	            };
 	            const [sendableRequest, cancellationController] = this.transport.makeSendable(transportRequest);
@@ -11969,12 +11981,14 @@
 	     * @param [isOffline] - Whether `offline` presence should be notified or not.
 	     */
 	    destroy(isOffline) {
-	        if (this.subscriptionManager) {
-	            this.subscriptionManager.unsubscribeAll(isOffline);
-	            this.subscriptionManager.disconnect();
+	        {
+	            if (this.subscriptionManager) {
+	                this.subscriptionManager.unsubscribeAll(isOffline);
+	                this.subscriptionManager.disconnect();
+	            }
+	            else if (this.eventEngine)
+	                this.eventEngine.dispose();
 	        }
-	        else if (this.eventEngine)
-	            this.eventEngine.dispose();
 	    }
 	    /**
 	     * Unsubscribe from all channels and groups.
@@ -12021,10 +12035,12 @@
 	     */
 	    publish(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new PublishRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new PublishRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12037,10 +12053,12 @@
 	     */
 	    signal(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new SignalRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new SignalRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12070,10 +12088,12 @@
 	     * @returns List of active channels.
 	     */
 	    getSubscribedChannels() {
-	        if (this.subscriptionManager)
-	            return this.subscriptionManager.subscribedChannels;
-	        else if (this.eventEngine)
-	            return this.eventEngine.getSubscribedChannels();
+	        {
+	            if (this.subscriptionManager)
+	                return this.subscriptionManager.subscribedChannels;
+	            else if (this.eventEngine)
+	                return this.eventEngine.getSubscribedChannels();
+	        }
 	        return [];
 	    }
 	    /**
@@ -12082,10 +12102,12 @@
 	     * @returns List of active channel groups.
 	     */
 	    getSubscribedChannelGroups() {
-	        if (this.subscriptionManager)
-	            return this.subscriptionManager.subscribedChannelGroups;
-	        else if (this.eventEngine)
-	            return this.eventEngine.getSubscribedChannelGroups();
+	        {
+	            if (this.subscriptionManager)
+	                return this.subscriptionManager.subscribedChannelGroups;
+	            else if (this.eventEngine)
+	                return this.eventEngine.getSubscribedChannelGroups();
+	        }
 	        return [];
 	    }
 	    /**
@@ -12094,10 +12116,12 @@
 	     * @param parameters - Request configuration parameters.
 	     */
 	    subscribe(parameters) {
-	        if (this.subscriptionManager)
-	            this.subscriptionManager.subscribe(parameters);
-	        else if (this.eventEngine)
-	            this.eventEngine.subscribe(parameters);
+	        {
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.subscribe(parameters);
+	            else if (this.eventEngine)
+	                this.eventEngine.subscribe(parameters);
+	        }
 	    }
 	    /**
 	     * Perform subscribe request.
@@ -12108,24 +12132,26 @@
 	     * @param callback - Request completion handler callback.
 	     */
 	    makeSubscribe(parameters, callback) {
-	        const request = new SubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
-	        this.sendRequest(request, (status, result) => {
-	            var _a;
-	            if (this.subscriptionManager && ((_a = this.subscriptionManager.abort) === null || _a === void 0 ? void 0 : _a.identifier) === request.requestIdentifier)
-	                this.subscriptionManager.abort = null;
-	            callback(status, result);
-	        });
-	        /**
-	         * Allow subscription cancellation.
-	         *
-	         * **Note:** Had to be done after scheduling because transport provider return cancellation
-	         * controller only when schedule new request.
-	         */
-	        if (this.subscriptionManager) {
-	            // Creating identifiable abort caller.
-	            const callableAbort = () => request.abort();
-	            callableAbort.identifier = request.requestIdentifier;
-	            this.subscriptionManager.abort = callableAbort;
+	        {
+	            const request = new SubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
+	            this.sendRequest(request, (status, result) => {
+	                var _a;
+	                if (this.subscriptionManager && ((_a = this.subscriptionManager.abort) === null || _a === void 0 ? void 0 : _a.identifier) === request.requestIdentifier)
+	                    this.subscriptionManager.abort = null;
+	                callback(status, result);
+	            });
+	            /**
+	             * Allow subscription cancellation.
+	             *
+	             * **Note:** Had to be done after scheduling because transport provider return cancellation
+	             * controller only when schedule new request.
+	             */
+	            if (this.subscriptionManager) {
+	                // Creating identifiable abort caller.
+	                const callableAbort = () => request.abort();
+	                callableAbort.identifier = request.requestIdentifier;
+	                this.subscriptionManager.abort = callableAbort;
+	            }
 	        }
 	    }
 	    /**
@@ -12134,10 +12160,12 @@
 	     * @param parameters - Request configuration parameters.
 	     */
 	    unsubscribe(parameters) {
-	        if (this.subscriptionManager)
-	            this.subscriptionManager.unsubscribe(parameters);
-	        else if (this.eventEngine)
-	            this.eventEngine.unsubscribe(parameters);
+	        {
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.unsubscribe(parameters);
+	            else if (this.eventEngine)
+	                this.eventEngine.unsubscribe(parameters);
+	        }
 	    }
 	    /**
 	     * Perform unsubscribe request.
@@ -12148,25 +12176,31 @@
 	     * @param callback - Request completion handler callback.
 	     */
 	    makeUnsubscribe(parameters, callback) {
-	        this.sendRequest(new PresenceLeaveRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet })), callback);
+	        {
+	            this.sendRequest(new PresenceLeaveRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet })), callback);
+	        }
 	    }
 	    /**
 	     * Unsubscribe from all channels and groups.
 	     */
 	    unsubscribeAll() {
-	        if (this.subscriptionManager)
-	            this.subscriptionManager.unsubscribeAll();
-	        else if (this.eventEngine)
-	            this.eventEngine.unsubscribeAll();
+	        {
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.unsubscribeAll();
+	            else if (this.eventEngine)
+	                this.eventEngine.unsubscribeAll();
+	        }
 	    }
 	    /**
 	     * Temporarily disconnect from real-time events stream.
 	     */
 	    disconnect() {
-	        if (this.subscriptionManager)
-	            this.subscriptionManager.disconnect();
-	        else if (this.eventEngine)
-	            this.eventEngine.disconnect();
+	        {
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.disconnect();
+	            else if (this.eventEngine)
+	                this.eventEngine.disconnect();
+	        }
 	    }
 	    /**
 	     * Restore connection to the real-time events stream.
@@ -12175,10 +12209,12 @@
 	     * enabled event engine.
 	     */
 	    reconnect(parameters) {
-	        if (this.subscriptionManager)
-	            this.subscriptionManager.reconnect();
-	        else if (this.eventEngine)
-	            this.eventEngine.reconnect(parameters !== null && parameters !== void 0 ? parameters : {});
+	        {
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.reconnect();
+	            else if (this.eventEngine)
+	                this.eventEngine.reconnect(parameters !== null && parameters !== void 0 ? parameters : {});
+	        }
 	    }
 	    /**
 	     * Event engine handshake subscribe.
@@ -12187,21 +12223,23 @@
 	     */
 	    subscribeHandshake(parameters) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new HandshakeSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
-	            const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
-	                request.abort();
-	            });
-	            /**
-	             * Allow subscription cancellation.
-	             *
-	             * **Note:** Had to be done after scheduling because transport provider return cancellation
-	             * controller only when schedule new request.
-	             */
-	            const handshakeResponse = this.sendRequest(request);
-	            return handshakeResponse.then((response) => {
-	                abortUnsubscribe();
-	                return response.cursor;
-	            });
+	            {
+	                const request = new HandshakeSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
+	                const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
+	                    request.abort();
+	                });
+	                /**
+	                 * Allow subscription cancellation.
+	                 *
+	                 * **Note:** Had to be done after scheduling because transport provider return cancellation
+	                 * controller only when schedule new request.
+	                 */
+	                const handshakeResponse = this.sendRequest(request);
+	                return handshakeResponse.then((response) => {
+	                    abortUnsubscribe();
+	                    return response.cursor;
+	                });
+	            }
 	        });
 	    }
 	    /**
@@ -12211,21 +12249,23 @@
 	     */
 	    subscribeReceiveMessages(parameters) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new ReceiveMessagesSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
-	            const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
-	                request.abort();
-	            });
-	            /**
-	             * Allow subscription cancellation.
-	             *
-	             * **Note:** Had to be done after scheduling because transport provider return cancellation
-	             * controller only when schedule new request.
-	             */
-	            const handshakeResponse = this.sendRequest(request);
-	            return handshakeResponse.then((response) => {
-	                abortUnsubscribe();
-	                return response;
-	            });
+	            {
+	                const request = new ReceiveMessagesSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
+	                const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
+	                    request.abort();
+	                });
+	                /**
+	                 * Allow subscription cancellation.
+	                 *
+	                 * **Note:** Had to be done after scheduling because transport provider return cancellation
+	                 * controller only when schedule new request.
+	                 */
+	                const handshakeResponse = this.sendRequest(request);
+	                return handshakeResponse.then((response) => {
+	                    abortUnsubscribe();
+	                    return response;
+	                });
+	            }
 	        });
 	    }
 	    /**
@@ -12238,10 +12278,12 @@
 	     */
 	    getMessageActions(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new GetMessageActionsRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new GetMessageActionsRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12254,10 +12296,12 @@
 	     */
 	    addMessageAction(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new AddMessageActionRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new AddMessageActionRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12270,10 +12314,12 @@
 	     */
 	    removeMessageAction(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new RemoveMessageAction(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new RemoveMessageAction(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12286,10 +12332,12 @@
 	     */
 	    fetchMessages(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new FetchMessagesRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new FetchMessagesRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12304,10 +12352,12 @@
 	     */
 	    deleteMessages(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new DeleteMessageRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new DeleteMessageRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12320,10 +12370,12 @@
 	     */
 	    messageCounts(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new MessageCountRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new MessageCountRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12338,10 +12390,12 @@
 	     */
 	    history(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new GetHistoryRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new GetHistoryRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12354,10 +12408,12 @@
 	     */
 	    hereNow(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new HereNowRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new HereNowRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12373,13 +12429,15 @@
 	    whereNow(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
-	            const request = new WhereNowRequest({
-	                uuid: (_a = parameters.uuid) !== null && _a !== void 0 ? _a : this._configuration.userId,
-	                keySet: this._configuration.keySet,
-	            });
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new WhereNowRequest({
+	                    uuid: (_a = parameters.uuid) !== null && _a !== void 0 ? _a : this._configuration.userId,
+	                    keySet: this._configuration.keySet,
+	                });
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12393,10 +12451,12 @@
 	    getState(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
-	            const request = new GetPresenceStateRequest(Object.assign(Object.assign({}, parameters), { uuid: (_a = parameters.uuid) !== null && _a !== void 0 ? _a : this._configuration.userId, keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new GetPresenceStateRequest(Object.assign(Object.assign({}, parameters), { uuid: (_a = parameters.uuid) !== null && _a !== void 0 ? _a : this._configuration.userId, keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12410,30 +12470,32 @@
 	    setState(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a, _b;
-	            const { keySet, userId: userId } = this._configuration;
-	            const heartbeat = this._configuration.getPresenceTimeout();
-	            let request;
-	            // Maintain presence information (if required).
-	            if (this._configuration.enableEventEngine && this.presenceState) {
-	                const presenceState = this.presenceState;
-	                (_a = parameters.channels) === null || _a === void 0 ? void 0 : _a.forEach((channel) => (presenceState[channel] = parameters.state));
-	                if ('channelGroups' in parameters) {
-	                    (_b = parameters.channelGroups) === null || _b === void 0 ? void 0 : _b.forEach((group) => (presenceState[group] = parameters.state));
+	            {
+	                const { keySet, userId: userId } = this._configuration;
+	                const heartbeat = this._configuration.getPresenceTimeout();
+	                let request;
+	                // Maintain presence information (if required).
+	                if (this._configuration.enableEventEngine && this.presenceState) {
+	                    const presenceState = this.presenceState;
+	                    (_a = parameters.channels) === null || _a === void 0 ? void 0 : _a.forEach((channel) => (presenceState[channel] = parameters.state));
+	                    if ('channelGroups' in parameters) {
+	                        (_b = parameters.channelGroups) === null || _b === void 0 ? void 0 : _b.forEach((group) => (presenceState[group] = parameters.state));
+	                    }
 	                }
+	                // Check whether state should be set with heartbeat or not.
+	                if ('withHeartbeat' in parameters) {
+	                    request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { keySet, heartbeat }));
+	                }
+	                else {
+	                    request = new SetPresenceStateRequest(Object.assign(Object.assign({}, parameters), { keySet, uuid: userId }));
+	                }
+	                // Update state used by subscription manager.
+	                if (this.subscriptionManager)
+	                    this.subscriptionManager.setState(parameters);
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
 	            }
-	            // Check whether state should be set with heartbeat or not.
-	            if ('withHeartbeat' in parameters) {
-	                request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { keySet, heartbeat }));
-	            }
-	            else {
-	                request = new SetPresenceStateRequest(Object.assign(Object.assign({}, parameters), { keySet, uuid: userId }));
-	            }
-	            // Update state used by subscription manager.
-	            if (this.subscriptionManager)
-	                this.subscriptionManager.setState(parameters);
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
 	        });
 	    }
 	    // endregion
@@ -12457,10 +12519,12 @@
 	     */
 	    heartbeat(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    // endregion
@@ -12504,10 +12568,12 @@
 	     */
 	    grantToken(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new GrantTokenRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new GrantTokenRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12520,10 +12586,12 @@
 	     */
 	    revokeToken(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new RevokeTokenRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new RevokeTokenRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    // endregion
@@ -12534,7 +12602,7 @@
 	     * @returns Previously configured access token using {@link setToken} method.
 	     */
 	    get token() {
-	        return this.tokenManager.getToken();
+	        return this.tokenManager && this.tokenManager.getToken();
 	    }
 	    /**
 	     * Get current access token.
@@ -12550,7 +12618,8 @@
 	     * @param token - New access token which should be used with next REST API endpoint calls.
 	     */
 	    set token(token) {
-	        this.tokenManager.setToken(token);
+	        if (this.tokenManager)
+	            this.tokenManager.setToken(token);
 	    }
 	    /**
 	     * Set current access token.
@@ -12570,7 +12639,7 @@
 	     * @returns Token's permissions information for the resources.
 	     */
 	    parseToken(token) {
-	        return this.tokenManager.parseToken(token);
+	        return this.tokenManager && this.tokenManager.parseToken(token);
 	    }
 	    /**
 	     * Grant auth key(s) permission.
@@ -12584,10 +12653,12 @@
 	     */
 	    grant(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new GrantRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new GrantRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12602,10 +12673,12 @@
 	     */
 	    audit(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new AuditRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new AuditRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    // endregion
@@ -12841,26 +12914,28 @@
 	    removeMemberships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a, _b, _c;
-	            if ('spaceId' in parameters) {
-	                const spaceParameters = parameters;
+	            {
+	                if ('spaceId' in parameters) {
+	                    const spaceParameters = parameters;
+	                    const requestParameters = {
+	                        channel: (_a = spaceParameters.spaceId) !== null && _a !== void 0 ? _a : spaceParameters.channel,
+	                        uuids: (_b = spaceParameters.userIds) !== null && _b !== void 0 ? _b : spaceParameters.uuids,
+	                        limit: 0,
+	                    };
+	                    if (callback)
+	                        return this.objects.removeChannelMembers(requestParameters, callback);
+	                    return this.objects.removeChannelMembers(requestParameters);
+	                }
+	                const userParameters = parameters;
 	                const requestParameters = {
-	                    channel: (_a = spaceParameters.spaceId) !== null && _a !== void 0 ? _a : spaceParameters.channel,
-	                    uuids: (_b = spaceParameters.userIds) !== null && _b !== void 0 ? _b : spaceParameters.uuids,
+	                    uuid: userParameters.userId,
+	                    channels: (_c = userParameters.spaceIds) !== null && _c !== void 0 ? _c : userParameters.channels,
 	                    limit: 0,
 	                };
 	                if (callback)
-	                    return this.objects.removeChannelMembers(requestParameters, callback);
-	                return this.objects.removeChannelMembers(requestParameters);
+	                    return this.objects.removeMemberships(requestParameters, callback);
+	                return this.objects.removeMemberships(requestParameters);
 	            }
-	            const userParameters = parameters;
-	            const requestParameters = {
-	                uuid: userParameters.userId,
-	                channels: (_c = userParameters.spaceIds) !== null && _c !== void 0 ? _c : userParameters.channels,
-	                limit: 0,
-	            };
-	            if (callback)
-	                return this.objects.removeMemberships(requestParameters, callback);
-	            return this.objects.removeMemberships(requestParameters);
 	        });
 	    }
 	    // endregion
@@ -12896,34 +12971,36 @@
 	     */
 	    sendFile(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            if (!this._configuration.PubNubFile)
-	                throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
-	            const sendFileRequest = new SendFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, PubNubFile: this._configuration.PubNubFile, fileUploadPublishRetryLimit: this._configuration.fileUploadPublishRetryLimit, file: parameters.file, sendRequest: this.sendRequest.bind(this), publishFile: this.publishFile.bind(this), crypto: this._configuration.getCryptoModule(), cryptography: this.cryptography ? this.cryptography : undefined }));
-	            const status = {
-	                error: false,
-	                operation: RequestOperation$1.PNPublishFileOperation,
-	                category: StatusCategory$1.PNAcknowledgmentCategory,
-	                statusCode: 0,
-	            };
-	            return sendFileRequest
-	                .process()
-	                .then((response) => {
-	                status.statusCode = response.status;
-	                if (callback)
-	                    return callback(status, response);
-	                return response;
-	            })
-	                .catch((error) => {
-	                let errorStatus;
-	                if (error instanceof PubNubError)
-	                    errorStatus = error.status;
-	                else if (error instanceof PubNubAPIError)
-	                    errorStatus = error.toStatus(status.operation);
-	                // Notify callback (if possible).
-	                if (callback && errorStatus)
-	                    callback(errorStatus, null);
-	                throw new PubNubError('REST API request processing error, check status for details', errorStatus);
-	            });
+	            {
+	                if (!this._configuration.PubNubFile)
+	                    throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+	                const sendFileRequest = new SendFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, PubNubFile: this._configuration.PubNubFile, fileUploadPublishRetryLimit: this._configuration.fileUploadPublishRetryLimit, file: parameters.file, sendRequest: this.sendRequest.bind(this), publishFile: this.publishFile.bind(this), crypto: this._configuration.getCryptoModule(), cryptography: this.cryptography ? this.cryptography : undefined }));
+	                const status = {
+	                    error: false,
+	                    operation: RequestOperation.PNPublishFileOperation,
+	                    category: StatusCategory.PNAcknowledgmentCategory,
+	                    statusCode: 0,
+	                };
+	                return sendFileRequest
+	                    .process()
+	                    .then((response) => {
+	                    status.statusCode = response.status;
+	                    if (callback)
+	                        return callback(status, response);
+	                    return response;
+	                })
+	                    .catch((error) => {
+	                    let errorStatus;
+	                    if (error instanceof PubNubError)
+	                        errorStatus = error.status;
+	                    else if (error instanceof PubNubAPIError)
+	                        errorStatus = error.toStatus(status.operation);
+	                    // Notify callback (if possible).
+	                    if (callback && errorStatus)
+	                        callback(errorStatus, null);
+	                    throw new PubNubError('REST API request processing error, check status for details', errorStatus);
+	                });
+	            }
 	        });
 	    }
 	    /**
@@ -12936,12 +13013,14 @@
 	     */
 	    publishFile(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            if (!this._configuration.PubNubFile)
-	                throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
-	            const request = new PublishFileMessageRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                if (!this._configuration.PubNubFile)
+	                    throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+	                const request = new PublishFileMessageRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12954,10 +13033,12 @@
 	     */
 	    listFiles(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new FilesListRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new FilesListRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    // endregion
@@ -12971,17 +13052,19 @@
 	     */
 	    getFileUrl(parameters) {
 	        var _a;
-	        const request = this.transport.request(new GetFileDownloadUrlRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet })).request());
-	        const query = (_a = request.queryParameters) !== null && _a !== void 0 ? _a : {};
-	        const queryString = Object.keys(query)
-	            .map((key) => {
-	            const queryValue = query[key];
-	            if (!Array.isArray(queryValue))
-	                return `${key}=${encodeString(queryValue)}`;
-	            return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
-	        })
-	            .join('&');
-	        return `${request.origin}${request.path}?${queryString}`;
+	        {
+	            const request = this.transport.request(new GetFileDownloadUrlRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet })).request());
+	            const query = (_a = request.queryParameters) !== null && _a !== void 0 ? _a : {};
+	            const queryString = Object.keys(query)
+	                .map((key) => {
+	                const queryValue = query[key];
+	                if (!Array.isArray(queryValue))
+	                    return `${key}=${encodeString(queryValue)}`;
+	                return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
+	            })
+	                .join('&');
+	            return `${request.origin}${request.path}?${queryString}`;
+	        }
 	    }
 	    /**
 	     * Download shared file from specific channel.
@@ -12993,12 +13076,14 @@
 	     */
 	    downloadFile(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            if (!this._configuration.PubNubFile)
-	                throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
-	            const request = new DownloadFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, PubNubFile: this._configuration.PubNubFile, cryptography: this.cryptography ? this.cryptography : undefined, crypto: this._configuration.getCryptoModule() }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return (yield this.sendRequest(request));
+	            {
+	                if (!this._configuration.PubNubFile)
+	                    throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+	                const request = new DownloadFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, PubNubFile: this._configuration.PubNubFile, cryptography: this.cryptography ? this.cryptography : undefined, crypto: this._configuration.getCryptoModule() }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return (yield this.sendRequest(request));
+	            }
 	        });
 	    }
 	    /**
@@ -13011,10 +13096,12 @@
 	     */
 	    deleteFile(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new DeleteFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new DeleteFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -13056,7 +13143,9 @@
 	        }
 	        if (!this.crypto)
 	            throw new Error('Encryption error: cypher key not set');
-	        return this.crypto.encrypt(data, customCipherKey);
+	        {
+	            return this.crypto.encrypt(data, customCipherKey);
+	        }
 	    }
 	    /**
 	     * Decrypt data.
@@ -13075,7 +13164,9 @@
 	        }
 	        if (!this.crypto)
 	            throw new Error('Decryption error: cypher key not set');
-	        return this.crypto.decrypt(data, customCipherKey);
+	        {
+	            return this.crypto.decrypt(data, customCipherKey);
+	        }
 	    }
 	    /**
 	     * Encrypt file content.
@@ -13155,11 +13246,11 @@
 	/**
 	 * Type of REST API endpoint which reported status.
 	 */
-	PubNubCore.OPERATIONS = RequestOperation$1;
+	PubNubCore.OPERATIONS = RequestOperation;
 	/**
 	 * API call status category.
 	 */
-	PubNubCore.CATEGORIES = StatusCategory$1;
+	PubNubCore.CATEGORIES = StatusCategory;
 	/**
 	 * Exponential retry policy constructor.
 	 */
@@ -13210,43 +13301,55 @@
 	    constructor(configuration) {
 	        var _a;
 	        const configurationCopy = setDefaults(configuration);
-	        const platformConfiguration = Object.assign(Object.assign({}, configurationCopy), { sdkFamily: 'Web', PubNubFile });
+	        const platformConfiguration = Object.assign(Object.assign({}, configurationCopy), { sdkFamily: 'Web' });
+	        platformConfiguration.PubNubFile = PubNubFile;
 	        // Prepare full client configuration.
 	        const clientConfiguration = makeConfiguration(platformConfiguration, (cryptoConfiguration) => {
 	            if (!cryptoConfiguration.cipherKey)
 	                return undefined;
-	            return new WebCryptoModule({
-	                default: new LegacyCryptor(Object.assign({}, cryptoConfiguration)),
-	                cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
-	            });
+	            {
+	                return new WebCryptoModule({
+	                    default: new LegacyCryptor(Object.assign({}, cryptoConfiguration)),
+	                    cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
+	                });
+	            }
 	        });
 	        // Prepare Token manager.
-	        const tokenManager = new TokenManager(new Cbor((arrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)), decode));
+	        let tokenManager;
+	        {
+	            tokenManager = new TokenManager(new Cbor((arrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)), decode));
+	        }
 	        // Legacy crypto (legacy data encryption / decryption and request signature support).
 	        let crypto;
-	        if (clientConfiguration.getCipherKey() || clientConfiguration.secretKey) {
-	            crypto = new Crypto({
-	                secretKey: clientConfiguration.secretKey,
-	                cipherKey: clientConfiguration.getCipherKey(),
-	                useRandomIVs: clientConfiguration.getUseRandomIVs(),
-	                customEncrypt: clientConfiguration.getCustomEncrypt(),
-	                customDecrypt: clientConfiguration.getCustomDecrypt(),
-	            });
+	        {
+	            if (clientConfiguration.getCipherKey() || clientConfiguration.secretKey) {
+	                crypto = new Crypto({
+	                    secretKey: clientConfiguration.secretKey,
+	                    cipherKey: clientConfiguration.getCipherKey(),
+	                    useRandomIVs: clientConfiguration.getUseRandomIVs(),
+	                    customEncrypt: clientConfiguration.getCustomEncrypt(),
+	                    customDecrypt: clientConfiguration.getCustomDecrypt(),
+	                });
+	            }
 	        }
+	        let cryptography;
+	        cryptography = new WebCryptography();
 	        // Setup transport provider.
 	        let transport = new WebReactNativeTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity);
-	        if (configurationCopy.subscriptionWorkerUrl) {
-	            // Inject subscription worker into transport provider stack.
-	            transport = new SubscriptionWorkerMiddleware({
-	                clientIdentifier: clientConfiguration._instanceId,
-	                subscriptionKey: clientConfiguration.subscribeKey,
-	                userId: clientConfiguration.getUserId(),
-	                workerUrl: configurationCopy.subscriptionWorkerUrl,
-	                sdkVersion: clientConfiguration.getVersion(),
-	                logVerbosity: clientConfiguration.logVerbosity,
-	                workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
-	                transport,
-	            });
+	        {
+	            if (configurationCopy.subscriptionWorkerUrl) {
+	                // Inject subscription worker into transport provider stack.
+	                transport = new SubscriptionWorkerMiddleware({
+	                    clientIdentifier: clientConfiguration._instanceId,
+	                    subscriptionKey: clientConfiguration.subscribeKey,
+	                    userId: clientConfiguration.getUserId(),
+	                    workerUrl: configurationCopy.subscriptionWorkerUrl,
+	                    sdkVersion: clientConfiguration.getVersion(),
+	                    logVerbosity: clientConfiguration.logVerbosity,
+	                    workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
+	                    transport,
+	                });
+	            }
 	        }
 	        const transportMiddleware = new PubNubMiddleware({
 	            clientConfiguration,
@@ -13256,7 +13359,7 @@
 	        super({
 	            configuration: clientConfiguration,
 	            transport: transportMiddleware,
-	            cryptography: new WebCryptography(),
+	            cryptography,
 	            tokenManager,
 	            crypto,
 	        });
@@ -13284,8 +13387,10 @@
 	/**
 	 * Data encryption / decryption module constructor.
 	 */
-	PubNub.CryptoModule = WebCryptoModule;
+	// @ts-expect-error Allowed to simplify interface when module can be disabled.
+	PubNub.CryptoModule = WebCryptoModule ;
 
 	return PubNub;
 
 }));
+//# sourceMappingURL=pubnub.js.map

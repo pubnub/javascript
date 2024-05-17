@@ -20,9 +20,13 @@ export class PubNub extends PubNubCore<null, null> {
     const clientConfiguration = makeConfiguration(platformConfiguration);
 
     // Prepare Token manager.
-    const tokenManager = new TokenManager(
-      new Cbor(CborReader.decode, (base64String: string) => Buffer.from(base64String, 'base64')),
-    );
+
+    let tokenManager: TokenManager | undefined;
+    if (process.env.CRYPTO_MODULE !== 'disabled') {
+      tokenManager = new TokenManager(
+        new Cbor(CborReader.decode, (base64String: string) => Buffer.from(base64String, 'base64')),
+      );
+    }
 
     // Setup transport layer.
     const transportMiddleware = new PubNubMiddleware({

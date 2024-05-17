@@ -4,6 +4,8 @@ import { Readable } from 'stream';
 import { Buffer } from 'buffer';
 
 import { CryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
+import type { CryptoModule as CryptoModuleType } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
+
 import PubNubFile, { PubNubFileParameters } from '../file/modules/node';
 import { CryptorConfiguration } from '../core/interfaces/crypto-module';
 import { makeConfiguration } from '../core/components/configuration';
@@ -18,6 +20,8 @@ import Crypto from '../core/components/cryptography';
 import { PubNubError } from '../errors/pubnub-error';
 import { PubNubCore } from '../core/pubnub-common';
 import Cbor from '../cbor/common';
+import { ExtendedConfiguration, PlatformConfiguration } from '../core/interfaces/configuration';
+import { Cryptography } from '../core/interfaces/cryptography';
 
 /**
  * PubNub client for Node.js platform.
@@ -26,7 +30,8 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
   /**
    * Data encryption / decryption module constructor.
    */
-  static CryptoModule = CryptoModule;
+  // @ts-expect-error Allowed to simplify interface when module can be disabled.
+  static CryptoModule: typeof CryptoModuleType = process.env.CRYPTO_MODULE !== 'disabled' ? CryptoModule : undefined;
 
   /**
    * PubNub File constructor.
@@ -40,7 +45,12 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
 
   constructor(configuration: PubNubConfiguration) {
     const configurationCopy = setDefaults(configuration);
-    const platformConfiguration = { ...configurationCopy, sdkFamily: 'Nodejs', PubNubFile };
+    const platformConfiguration: ExtendedConfiguration & PlatformConfiguration = {
+      ...configurationCopy,
+      sdkFamily: 'Nodejs',
+    };
+
+    if (process.env.FILE_SHARING_MODULE !== 'disabled') platformConfiguration.PubNubFile = PubNubFile;
 
     // Prepare full client configuration.
     const clientConfiguration = makeConfiguration(
@@ -48,26 +58,37 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
       (cryptoConfiguration: CryptorConfiguration) => {
         if (!cryptoConfiguration.cipherKey) return undefined;
 
-        return new CryptoModule({
-          default: new LegacyCryptor({ ...cryptoConfiguration }),
-          cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
-        });
+        if (process.env.CRYPTO_MODULE !== 'disabled') {
+          return new CryptoModule({
+            default: new LegacyCryptor({ ...cryptoConfiguration }),
+            cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
+          });
+        } else return undefined;
       },
     );
 
     // Prepare Token manager.
-    const tokenManager = new TokenManager(
-      new Cbor((buffer: ArrayBuffer) => CborReader.decode(Buffer.from(buffer)), decode),
-    );
+    let tokenManager: TokenManager | undefined;
+    if (process.env.CRYPTO_MODULE !== 'disabled') {
+      tokenManager = new TokenManager(
+        new Cbor((buffer: ArrayBuffer) => CborReader.decode(Buffer.from(buffer)), decode),
+      );
+    }
 
     // Legacy crypto (legacy data encryption / decryption and request signature support).
-    const crypto = new Crypto({
-      secretKey: clientConfiguration.secretKey,
-      cipherKey: clientConfiguration.getCipherKey(),
-      useRandomIVs: clientConfiguration.getUseRandomIVs(),
-      customEncrypt: clientConfiguration.getCustomEncrypt(),
-      customDecrypt: clientConfiguration.getCustomDecrypt(),
-    });
+    let crypto: Crypto | undefined;
+    if (process.env.CRYPTO_MODULE !== 'disabled') {
+      crypto = new Crypto({
+        secretKey: clientConfiguration.secretKey,
+        cipherKey: clientConfiguration.getCipherKey(),
+        useRandomIVs: clientConfiguration.getUseRandomIVs(),
+        customEncrypt: clientConfiguration.getCustomEncrypt(),
+        customDecrypt: clientConfiguration.getCustomDecrypt(),
+      });
+    }
+
+    let cryptography: Cryptography<string | ArrayBuffer | Buffer | Readable> | undefined;
+    if (process.env.CRYPTO_MODULE !== 'disabled') cryptography = new NodeCryptography();
 
     // Setup transport provider.
     const transport = new NodeTransport(configuration.keepAlive, configuration.keepAliveSettings);
@@ -75,13 +96,13 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
       clientConfiguration,
       tokenManager,
       transport,
-      shaHMAC: crypto?.HMACSHA256.bind(crypto),
+      shaHMAC: process.env.CRYPTO_MODULE !== 'disabled' ? crypto?.HMACSHA256.bind(crypto) : undefined,
     });
 
     super({
       configuration: clientConfiguration,
       transport: transportMiddleware,
-      cryptography: new NodeCryptography(),
+      cryptography,
       tokenManager,
       crypto,
     });
