@@ -11,7 +11,7 @@ export class UserMetadata {
   ) {}
 
   subscription(subscriptionOptions?: SubscriptionOptions) {
-    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
       return new Subscription({
         channels: [this.id],
         channelGroups: [],
@@ -19,6 +19,6 @@ export class UserMetadata {
         eventEmitter: this.eventEmitter,
         pubnub: this.pubnub,
       });
-    } else throw new Error('Subscription error: subscription module disabled');
+    } else throw new Error('Subscription error: subscription event engine module disabled');
   }
 }

@@ -4027,6 +4027,11 @@
 	    TransportMethod["LOCAL"] = "LOCAL";
 	})(TransportMethod || (TransportMethod = {}));
 
+	/**
+	 * Request signature generator.
+	 *
+	 * @internal
+	 */
 	class RequestSignature {
 	    constructor(publishKey, secretKey, hasher) {
 	        this.publishKey = publishKey;
@@ -4085,8 +4090,10 @@
 	    constructor(configuration) {
 	        this.configuration = configuration;
 	        const { clientConfiguration: { keySet }, shaHMAC, } = configuration;
-	        if (keySet.secretKey && shaHMAC)
-	            this.signatureGenerator = new RequestSignature(keySet.publishKey, keySet.secretKey, shaHMAC);
+	        {
+	            if (keySet.secretKey && shaHMAC)
+	                this.signatureGenerator = new RequestSignature(keySet.publishKey, keySet.secretKey, shaHMAC);
+	        }
 	    }
 	    makeSendable(req) {
 	        return this.configuration.transport.makeSendable(this.request(req));
@@ -8949,364 +8956,6 @@
 	    }
 	}
 
-	/**
-	 * PAM Revoke Token REST API module.
-	 */
-	// endregion
-	/**
-	 * Access token revoke request.
-	 *
-	 * Invalidate token and permissions which has been granted for it.
-	 *
-	 * @internal
-	 */
-	class RevokeTokenRequest extends AbstractRequest {
-	    constructor(parameters) {
-	        super({ method: TransportMethod.DELETE });
-	        this.parameters = parameters;
-	    }
-	    operation() {
-	        return RequestOperation$1.PNAccessManagerRevokeToken;
-	    }
-	    validate() {
-	        if (!this.parameters.keySet.secretKey)
-	            return 'Missing Secret Key';
-	        if (!this.parameters.token)
-	            return "token can't be empty";
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return {};
-	        });
-	    }
-	    get path() {
-	        const { keySet: { subscribeKey }, token, } = this.parameters;
-	        return `/v3/pam/${subscribeKey}/grant/${encodeString(token)}`;
-	    }
-	}
-
-	/**
-	 * PAM Grant Token REST API module.
-	 */
-	// endregion
-	/**
-	 * Grant token permissions request.
-	 *
-	 * @internal
-	 */
-	class GrantTokenRequest extends AbstractRequest {
-	    constructor(parameters) {
-	        var _a, _b;
-	        var _c, _d;
-	        super({ method: TransportMethod.POST });
-	        this.parameters = parameters;
-	        // Apply defaults.
-	        (_a = (_c = this.parameters).resources) !== null && _a !== void 0 ? _a : (_c.resources = {});
-	        (_b = (_d = this.parameters).patterns) !== null && _b !== void 0 ? _b : (_d.patterns = {});
-	    }
-	    operation() {
-	        return RequestOperation$1.PNAccessManagerGrantToken;
-	    }
-	    validate() {
-	        var _a, _b, _c, _d, _e, _f;
-	        const { keySet: { subscribeKey, publishKey, secretKey }, resources, patterns, } = this.parameters;
-	        if (!subscribeKey)
-	            return 'Missing Subscribe Key';
-	        if (!publishKey)
-	            return 'Missing Publish Key';
-	        if (!secretKey)
-	            return 'Missing Secret Key';
-	        if (!resources && !patterns)
-	            return 'Missing either Resources or Patterns';
-	        if (this.isVspPermissions(this.parameters) &&
-	            ('channels' in ((_a = this.parameters.resources) !== null && _a !== void 0 ? _a : {}) ||
-	                'uuids' in ((_b = this.parameters.resources) !== null && _b !== void 0 ? _b : {}) ||
-	                'groups' in ((_c = this.parameters.resources) !== null && _c !== void 0 ? _c : {}) ||
-	                'channels' in ((_d = this.parameters.patterns) !== null && _d !== void 0 ? _d : {}) ||
-	                'uuids' in ((_e = this.parameters.patterns) !== null && _e !== void 0 ? _e : {}) ||
-	                'groups' in ((_f = this.parameters.patterns) !== null && _f !== void 0 ? _f : {})))
-	            return ('Cannot mix `users`, `spaces` and `authorizedUserId` with `uuids`, `channels`,' +
-	                ' `groups` and `authorized_uuid`');
-	        let permissionsEmpty = true;
-	        [this.parameters.resources, this.parameters.patterns].forEach((refPerm) => {
-	            Object.keys(refPerm !== null && refPerm !== void 0 ? refPerm : {}).forEach((scope) => {
-	                var _a;
-	                // @ts-expect-error Permissions with backward compatibility.
-	                if (refPerm && permissionsEmpty && Object.keys((_a = refPerm[scope]) !== null && _a !== void 0 ? _a : {}).length > 0) {
-	                    permissionsEmpty = false;
-	                }
-	            });
-	        });
-	        if (permissionsEmpty)
-	            return 'Missing values for either Resources or Patterns';
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse.data.token;
-	        });
-	    }
-	    get path() {
-	        return `/v3/pam/${this.parameters.keySet.subscribeKey}/grant`;
-	    }
-	    get body() {
-	        const { ttl, meta } = this.parameters;
-	        const body = Object.assign({}, (ttl || ttl === 0 ? { ttl } : {}));
-	        const uuid = this.isVspPermissions(this.parameters)
-	            ? this.parameters.authorizedUserId
-	            : this.parameters.authorized_uuid;
-	        const permissions = {};
-	        const resourcePermissions = {};
-	        const patternPermissions = {};
-	        const mapPermissions = (name, permissionBit, type, permissions) => {
-	            if (!permissions[type])
-	                permissions[type] = {};
-	            permissions[type][name] = permissionBit;
-	        };
-	        const { resources, patterns } = this.parameters;
-	        [resources, patterns].forEach((refPerm, idx) => {
-	            var _a, _b, _c, _d, _e;
-	            const target = idx === 0 ? resourcePermissions : patternPermissions;
-	            let channelsPermissions = {};
-	            let channelGroupsPermissions = {};
-	            let uuidsPermissions = {};
-	            if (!target.channels)
-	                target.channels = {};
-	            if (!target.groups)
-	                target.groups = {};
-	            if (!target.uuids)
-	                target.uuids = {};
-	            // @ts-expect-error Not used, needed for api backward compatibility
-	            if (!target.users)
-	                target.users = {};
-	            // @ts-expect-error Not used, needed for api backward compatibility
-	            if (!target.spaces)
-	                target.spaces = {};
-	            if (refPerm) {
-	                // Check whether working with legacy Objects permissions.
-	                if ('spaces' in refPerm || 'users' in refPerm) {
-	                    channelsPermissions = (_a = refPerm.spaces) !== null && _a !== void 0 ? _a : {};
-	                    uuidsPermissions = (_b = refPerm.users) !== null && _b !== void 0 ? _b : {};
-	                }
-	                else if ('channels' in refPerm || 'uuids' in refPerm || 'groups' in refPerm) {
-	                    channelsPermissions = (_c = refPerm.channels) !== null && _c !== void 0 ? _c : {};
-	                    channelGroupsPermissions = (_d = refPerm.groups) !== null && _d !== void 0 ? _d : {};
-	                    uuidsPermissions = (_e = refPerm.uuids) !== null && _e !== void 0 ? _e : {};
-	                }
-	            }
-	            Object.keys(channelsPermissions).forEach((channel) => mapPermissions(channel, this.extractPermissions(channelsPermissions[channel]), 'channels', target));
-	            Object.keys(channelGroupsPermissions).forEach((groups) => mapPermissions(groups, this.extractPermissions(channelGroupsPermissions[groups]), 'groups', target));
-	            Object.keys(uuidsPermissions).forEach((uuids) => mapPermissions(uuids, this.extractPermissions(uuidsPermissions[uuids]), 'uuids', target));
-	        });
-	        if (uuid)
-	            permissions.uuid = `${uuid}`;
-	        permissions.resources = resourcePermissions;
-	        permissions.patterns = patternPermissions;
-	        permissions.meta = meta !== null && meta !== void 0 ? meta : {};
-	        body.permissions = permissions;
-	        return JSON.stringify(body);
-	    }
-	    /**
-	     * Extract permissions bit from permission configuration object.
-	     *
-	     * @param permissions - User provided scope-based permissions.
-	     *
-	     * @returns Permissions bit.
-	     */
-	    extractPermissions(permissions) {
-	        let permissionsResult = 0;
-	        if ('join' in permissions && permissions.join)
-	            permissionsResult |= 128;
-	        if ('update' in permissions && permissions.update)
-	            permissionsResult |= 64;
-	        if ('get' in permissions && permissions.get)
-	            permissionsResult |= 32;
-	        if ('delete' in permissions && permissions.delete)
-	            permissionsResult |= 8;
-	        if ('manage' in permissions && permissions.manage)
-	            permissionsResult |= 4;
-	        if ('write' in permissions && permissions.write)
-	            permissionsResult |= 2;
-	        if ('read' in permissions && permissions.read)
-	            permissionsResult |= 1;
-	        return permissionsResult;
-	    }
-	    /**
-	     * Check whether provided parameters is part of legacy VSP access token configuration.
-	     *
-	     * @param parameters - Parameters which should be checked.
-	     *
-	     * @returns VSP request parameters if it is legacy configuration.
-	     */
-	    isVspPermissions(parameters) {
-	        var _a, _b, _c, _d;
-	        return ('authorizedUserId' in parameters ||
-	            'spaces' in ((_a = parameters.resources) !== null && _a !== void 0 ? _a : {}) ||
-	            'users' in ((_b = parameters.resources) !== null && _b !== void 0 ? _b : {}) ||
-	            'spaces' in ((_c = parameters.patterns) !== null && _c !== void 0 ? _c : {}) ||
-	            'users' in ((_d = parameters.patterns) !== null && _d !== void 0 ? _d : {}));
-	    }
-	}
-
-	/**
-	 * PAM Grant REST API module.
-	 */
-	// --------------------------------------------------------
-	// ----------------------- Defaults -----------------------
-	// --------------------------------------------------------
-	// region Defaults
-	/**
-	 * Resources `read` permission.
-	 */
-	const READ_PERMISSION = false;
-	/**
-	 * Resources `write` permission.
-	 */
-	const WRITE_PERMISSION = false;
-	/**
-	 * Resources `delete` permission.
-	 */
-	const DELETE_PERMISSION = false;
-	/**
-	 * Resources `get` permission.
-	 */
-	const GET_PERMISSION = false;
-	/**
-	 * Resources `update` permission.
-	 */
-	const UPDATE_PERMISSION = false;
-	/**
-	 * Resources `manage` permission.
-	 */
-	const MANAGE_PERMISSION = false;
-	/**
-	 * Resources `join` permission.
-	 */
-	const JOIN_PERMISSION = false;
-	// endregion
-	/**
-	 * Grant permissions request.
-	 *
-	 * @internal
-	 */
-	class GrantRequest extends AbstractRequest {
-	    constructor(parameters) {
-	        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
-	        var _l, _m, _o, _p, _q, _r, _s, _t, _u, _v;
-	        super();
-	        this.parameters = parameters;
-	        // Apply defaults.
-	        (_a = (_l = this.parameters).channels) !== null && _a !== void 0 ? _a : (_l.channels = []);
-	        (_b = (_m = this.parameters).channelGroups) !== null && _b !== void 0 ? _b : (_m.channelGroups = []);
-	        (_c = (_o = this.parameters).uuids) !== null && _c !== void 0 ? _c : (_o.uuids = []);
-	        (_d = (_p = this.parameters).read) !== null && _d !== void 0 ? _d : (_p.read = READ_PERMISSION);
-	        (_e = (_q = this.parameters).write) !== null && _e !== void 0 ? _e : (_q.write = WRITE_PERMISSION);
-	        (_f = (_r = this.parameters).delete) !== null && _f !== void 0 ? _f : (_r.delete = DELETE_PERMISSION);
-	        (_g = (_s = this.parameters).get) !== null && _g !== void 0 ? _g : (_s.get = GET_PERMISSION);
-	        (_h = (_t = this.parameters).update) !== null && _h !== void 0 ? _h : (_t.update = UPDATE_PERMISSION);
-	        (_j = (_u = this.parameters).manage) !== null && _j !== void 0 ? _j : (_u.manage = MANAGE_PERMISSION);
-	        (_k = (_v = this.parameters).join) !== null && _k !== void 0 ? _k : (_v.join = JOIN_PERMISSION);
-	    }
-	    operation() {
-	        return RequestOperation$1.PNAccessManagerGrant;
-	    }
-	    validate() {
-	        const { keySet: { subscribeKey, publishKey, secretKey }, uuids = [], channels = [], channelGroups = [], authKeys = [], } = this.parameters;
-	        if (!subscribeKey)
-	            return 'Missing Subscribe Key';
-	        if (!publishKey)
-	            return 'Missing Publish Key';
-	        if (!secretKey)
-	            return 'Missing Secret Key';
-	        if (uuids.length !== 0 && authKeys.length === 0)
-	            return 'authKeys are required for grant request on uuids';
-	        if (uuids.length && (channels.length !== 0 || channelGroups.length !== 0))
-	            return 'Both channel/channel group and uuid cannot be used in the same request';
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse.payload;
-	        });
-	    }
-	    get path() {
-	        return `/v2/auth/grant/sub-key/${this.parameters.keySet.subscribeKey}`;
-	    }
-	    get queryParameters() {
-	        const { channels, channelGroups, authKeys, uuids, read, write, manage, delete: del, get, join, update, ttl, } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (channels && (channels === null || channels === void 0 ? void 0 : channels.length) > 0 ? { channel: channels.join(',') } : {})), (channelGroups && (channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.length) > 0 ? { 'channel-group': channelGroups.join(',') } : {})), (authKeys && (authKeys === null || authKeys === void 0 ? void 0 : authKeys.length) > 0 ? { auth: authKeys.join(',') } : {})), (uuids && (uuids === null || uuids === void 0 ? void 0 : uuids.length) > 0 ? { 'target-uuid': uuids.join(',') } : {})), { r: read ? '1' : '0', w: write ? '1' : '0', m: manage ? '1' : '0', d: del ? '1' : '0', g: get ? '1' : '0', j: join ? '1' : '0', u: update ? '1' : '0' }), (ttl || ttl === 0 ? { ttl } : {}));
-	    }
-	}
-
-	/**
-	 * PAM Audit REST API module.
-	 */
-	// --------------------------------------------------------
-	// ----------------------- Defaults -----------------------
-	// --------------------------------------------------------
-	// region Defaults
-	/**
-	 * Auth keys for which permissions should be audited.
-	 */
-	const AUTH_KEYS = [];
-	// endregion
-	/**
-	 * Permissions audit request.
-	 *
-	 * @internal
-	 */
-	class AuditRequest extends AbstractRequest {
-	    constructor(parameters) {
-	        var _a;
-	        var _b;
-	        super();
-	        this.parameters = parameters;
-	        // Apply default request parameters.
-	        (_a = (_b = this.parameters).authKeys) !== null && _a !== void 0 ? _a : (_b.authKeys = AUTH_KEYS);
-	    }
-	    operation() {
-	        return RequestOperation$1.PNAccessManagerAudit;
-	    }
-	    validate() {
-	        if (!this.parameters.keySet.subscribeKey)
-	            return 'Missing Subscribe Key';
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse.payload;
-	        });
-	    }
-	    get path() {
-	        return `/v2/auth/audit/sub-key/${this.parameters.keySet.subscribeKey}`;
-	    }
-	    get queryParameters() {
-	        const { channel, channelGroup, authKeys } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign({}, (channel ? { channel } : {})), (channelGroup ? { 'channel-group': channelGroup } : {})), (authKeys && authKeys.length ? { auth: authKeys.join(',') } : {}));
-	    }
-	}
-
 	class SubscribeCapable {
 	    subscribe() {
 	        var _a, _b;
@@ -11532,7 +11181,9 @@
 	     * @returns Pre-formatted message payload which will trigger push notification.
 	     */
 	    static notificationPayload(title, body) {
-	        return new NotificationsPayload(title, body);
+	        {
+	            return new NotificationsPayload(title, body);
+	        }
 	    }
 	    /**
 	     * Generate unique identifier.
@@ -11558,55 +11209,59 @@
 	            this.listenerManager = new ListenerManager();
 	            this.eventEmitter = new EventEmitter(this.listenerManager);
 	            if (this._configuration.enableEventEngine) {
-	                let heartbeatInterval = this._configuration.getHeartbeatInterval();
-	                this.presenceState = {};
 	                {
-	                    if (heartbeatInterval) {
-	                        this.presenceEventEngine = new PresenceEventEngine({
-	                            heartbeat: this.heartbeat.bind(this),
-	                            leave: (parameters) => this.makeUnsubscribe(parameters, () => { }),
-	                            heartbeatDelay: () => new Promise((resolve, reject) => {
-	                                heartbeatInterval = this._configuration.getHeartbeatInterval();
-	                                if (!heartbeatInterval)
-	                                    reject(new PubNubError('Heartbeat interval has been reset.'));
-	                                else
-	                                    setTimeout(resolve, heartbeatInterval * 1000);
-	                            }),
-	                            retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-	                            emitStatus: (status) => this.listenerManager.announceStatus(status),
-	                            config: this._configuration,
-	                            presenceState: this.presenceState,
-	                        });
+	                    let heartbeatInterval = this._configuration.getHeartbeatInterval();
+	                    this.presenceState = {};
+	                    {
+	                        if (heartbeatInterval) {
+	                            this.presenceEventEngine = new PresenceEventEngine({
+	                                heartbeat: this.heartbeat.bind(this),
+	                                leave: (parameters) => this.makeUnsubscribe(parameters, () => { }),
+	                                heartbeatDelay: () => new Promise((resolve, reject) => {
+	                                    heartbeatInterval = this._configuration.getHeartbeatInterval();
+	                                    if (!heartbeatInterval)
+	                                        reject(new PubNubError('Heartbeat interval has been reset.'));
+	                                    else
+	                                        setTimeout(resolve, heartbeatInterval * 1000);
+	                                }),
+	                                retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+	                                emitStatus: (status) => this.listenerManager.announceStatus(status),
+	                                config: this._configuration,
+	                                presenceState: this.presenceState,
+	                            });
+	                        }
 	                    }
+	                    this.eventEngine = new EventEngine({
+	                        handshake: this.subscribeHandshake.bind(this),
+	                        receiveMessages: this.subscribeReceiveMessages.bind(this),
+	                        delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+	                        join: this.join.bind(this),
+	                        leave: this.leave.bind(this),
+	                        leaveAll: this.leaveAll.bind(this),
+	                        presenceState: this.presenceState,
+	                        config: this._configuration,
+	                        emitMessages: (events) => {
+	                            try {
+	                                events.forEach((event) => this.eventEmitter.emitEvent(event));
+	                            }
+	                            catch (e) {
+	                                const errorStatus = {
+	                                    error: true,
+	                                    category: StatusCategory$1.PNUnknownCategory,
+	                                    errorData: e,
+	                                    statusCode: 0,
+	                                };
+	                                this.listenerManager.announceStatus(errorStatus);
+	                            }
+	                        },
+	                        emitStatus: (status) => this.listenerManager.announceStatus(status),
+	                    });
 	                }
-	                this.eventEngine = new EventEngine({
-	                    handshake: this.subscribeHandshake.bind(this),
-	                    receiveMessages: this.subscribeReceiveMessages.bind(this),
-	                    delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-	                    join: this.join.bind(this),
-	                    leave: this.leave.bind(this),
-	                    leaveAll: this.leaveAll.bind(this),
-	                    presenceState: this.presenceState,
-	                    config: this._configuration,
-	                    emitMessages: (events) => {
-	                        try {
-	                            events.forEach((event) => this.eventEmitter.emitEvent(event));
-	                        }
-	                        catch (e) {
-	                            const errorStatus = {
-	                                error: true,
-	                                category: StatusCategory$1.PNUnknownCategory,
-	                                errorData: e,
-	                                statusCode: 0,
-	                            };
-	                            this.listenerManager.announceStatus(errorStatus);
-	                        }
-	                    },
-	                    emitStatus: (status) => this.listenerManager.announceStatus(status),
-	                });
 	            }
 	            else {
-	                this.subscriptionManager = new SubscriptionManager(this._configuration, this.listenerManager, this.eventEmitter, this.makeSubscribe.bind(this), this.heartbeat.bind(this), this.makeUnsubscribe.bind(this), this.time.bind(this));
+	                {
+	                    this.subscriptionManager = new SubscriptionManager(this._configuration, this.listenerManager, this.eventEmitter, this.makeSubscribe.bind(this), this.heartbeat.bind(this), this.makeUnsubscribe.bind(this), this.time.bind(this));
+	                }
 	            }
 	        }
 	    }
@@ -12570,12 +12225,7 @@
 	     */
 	    grantToken(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            {
-	                const request = new GrantTokenRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
-	            }
+	            throw new Error('Grant Token error: PAM module disabled');
 	        });
 	    }
 	    /**
@@ -12588,12 +12238,7 @@
 	     */
 	    revokeToken(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            {
-	                const request = new RevokeTokenRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
-	            }
+	            throw new Error('Revoke Token error: PAM module disabled');
 	        });
 	    }
 	    // endregion
@@ -12655,12 +12300,7 @@
 	     */
 	    grant(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            {
-	                const request = new GrantRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
-	            }
+	            throw new Error('Grant error: PAM module disabled');
 	        });
 	    }
 	    /**
@@ -12675,12 +12315,7 @@
 	     */
 	    audit(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            {
-	                const request = new AuditRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
-	            }
+	            throw new Error('Grant Permissions error: PAM module disabled');
 	        });
 	    }
 	    // endregion

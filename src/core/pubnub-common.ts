@@ -294,7 +294,9 @@ export class PubNubCore<
    * @returns Pre-formatted message payload which will trigger push notification.
    */
   static notificationPayload(title: string, body: string) {
-    return new NotificationsPayload(title, body);
+    if (process.env.PUBLISH_MODULE !== 'disabled') {
+      return new NotificationsPayload(title, body);
+    } else throw new Error('Notification Payload error: publish module disabled');
   }
 
   /**
@@ -328,62 +330,66 @@ export class PubNubCore<
       this.eventEmitter = new EventEmitter(this.listenerManager);
 
       if (this._configuration.enableEventEngine) {
-        let heartbeatInterval = this._configuration.getHeartbeatInterval();
-        this.presenceState = {};
+        if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+          let heartbeatInterval = this._configuration.getHeartbeatInterval();
+          this.presenceState = {};
 
-        if (process.env.PRESENCE_MODULE !== 'disabled') {
-          if (heartbeatInterval) {
-            this.presenceEventEngine = new PresenceEventEngine({
-              heartbeat: this.heartbeat.bind(this),
-              leave: (parameters) => this.makeUnsubscribe(parameters, () => {}),
-              heartbeatDelay: () =>
-                new Promise((resolve, reject) => {
-                  heartbeatInterval = this._configuration.getHeartbeatInterval();
-                  if (!heartbeatInterval) reject(new PubNubError('Heartbeat interval has been reset.'));
-                  else setTimeout(resolve, heartbeatInterval * 1000);
-                }),
-              retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-              emitStatus: (status) => this.listenerManager.announceStatus(status),
-              config: this._configuration,
-              presenceState: this.presenceState,
-            });
-          }
-        }
-
-        this.eventEngine = new EventEngine({
-          handshake: this.subscribeHandshake.bind(this),
-          receiveMessages: this.subscribeReceiveMessages.bind(this),
-          delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-          join: this.join.bind(this),
-          leave: this.leave.bind(this),
-          leaveAll: this.leaveAll.bind(this),
-          presenceState: this.presenceState,
-          config: this._configuration,
-          emitMessages: (events) => {
-            try {
-              events.forEach((event) => this.eventEmitter.emitEvent(event));
-            } catch (e) {
-              const errorStatus: Status = {
-                error: true,
-                category: StatusCategory.PNUnknownCategory,
-                errorData: e as Error,
-                statusCode: 0,
-              };
-              this.listenerManager.announceStatus(errorStatus);
+          if (process.env.PRESENCE_MODULE !== 'disabled') {
+            if (heartbeatInterval) {
+              this.presenceEventEngine = new PresenceEventEngine({
+                heartbeat: this.heartbeat.bind(this),
+                leave: (parameters) => this.makeUnsubscribe(parameters, () => {}),
+                heartbeatDelay: () =>
+                  new Promise((resolve, reject) => {
+                    heartbeatInterval = this._configuration.getHeartbeatInterval();
+                    if (!heartbeatInterval) reject(new PubNubError('Heartbeat interval has been reset.'));
+                    else setTimeout(resolve, heartbeatInterval * 1000);
+                  }),
+                retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+                emitStatus: (status) => this.listenerManager.announceStatus(status),
+                config: this._configuration,
+                presenceState: this.presenceState,
+              });
             }
-          },
-          emitStatus: (status) => this.listenerManager.announceStatus(status),
-        });
+          }
+
+          this.eventEngine = new EventEngine({
+            handshake: this.subscribeHandshake.bind(this),
+            receiveMessages: this.subscribeReceiveMessages.bind(this),
+            delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+            join: this.join.bind(this),
+            leave: this.leave.bind(this),
+            leaveAll: this.leaveAll.bind(this),
+            presenceState: this.presenceState,
+            config: this._configuration,
+            emitMessages: (events) => {
+              try {
+                events.forEach((event) => this.eventEmitter.emitEvent(event));
+              } catch (e) {
+                const errorStatus: Status = {
+                  error: true,
+                  category: StatusCategory.PNUnknownCategory,
+                  errorData: e as Error,
+                  statusCode: 0,
+                };
+                this.listenerManager.announceStatus(errorStatus);
+              }
+            },
+            emitStatus: (status) => this.listenerManager.announceStatus(status),
+          });
+        } else throw new Error('Event Engine error: subscription event engine module disabled');
       } else {
-        this.subscriptionManager = new SubscriptionManager(
-          this._configuration,
-          this.listenerManager,
-          this.eventEmitter,
-          this.makeSubscribe.bind(this),
-          this.heartbeat.bind(this),
-          this.makeUnsubscribe.bind(this),
-          this.time.bind(this),
-        );
+        if (process.env.SUBSCRIBE_MANAGER_MODULE !== 'disabled') {
+          this.subscriptionManager = new SubscriptionManager(
+            this._configuration,
+            this.listenerManager,
+            this.eventEmitter,
+            this.makeSubscribe.bind(this),
+            this.heartbeat.bind(this),
+            this.makeUnsubscribe.bind(this),
+            this.time.bind(this),
+          );
+        } else throw new Error('Subscription Manager error: subscription manager module disabled');
       }
     }
   }
@@ -708,9 +714,9 @@ export class PubNubCore<
     channelGroups?: string[];
     subscriptionOptions?: SubscriptionOptions;
   }): SubscriptionSet {
-    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
       return new SubscriptionSet({ ...parameters, eventEmitter: this.eventEmitter, pubnub: this });
-    } else throw new Error('Subscription error: subscription module disabled');
+    } else throw new Error('Subscription error: subscription event engine module disabled');
   }
   // endregion
 
@@ -1081,7 +1087,7 @@ export class PubNubCore<
     parameters: Omit<SubscribeRequestParameters, 'crypto' | 'timeout' | 'keySet' | 'getFileUrl'>,
     callback: ResultCallback<Subscription.SubscriptionResponse>,
   ): void {
-    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+    if (process.env.SUBSCRIBE_MANAGER_MODULE !== 'disabled') {
       const request = new SubscribeRequest({
         ...parameters,
         keySet: this._configuration.keySet,
@@ -1109,7 +1115,7 @@ export class PubNubCore<
 
         this.subscriptionManager.abort = callableAbort;
       }
-    } else throw new Error('Subscription error: subscription module disabled');
+    } else throw new Error('Subscription error: subscription manager module disabled');
   }
 
   /**
@@ -1183,7 +1189,7 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    */
   private async subscribeHandshake(parameters: Subscription.CancelableSubscribeParameters) {
-    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
       const request = new HandshakeSubscribeRequest({
         ...parameters,
         keySet: this._configuration.keySet,
@@ -1206,7 +1212,7 @@ export class PubNubCore<
         abortUnsubscribe();
         return response.cursor;
       });
-    } else throw new Error('Subscription error: subscription module disabled');
+    } else throw new Error('Subscription error: subscription event engine module disabled');
   }
 
   /**
@@ -1215,7 +1221,7 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    */
   private async subscribeReceiveMessages(parameters: Subscription.CancelableSubscribeParameters) {
-    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
       const request = new ReceiveMessagesSubscribeRequest({
         ...parameters,
         keySet: this._configuration.keySet,
@@ -1238,7 +1244,7 @@ export class PubNubCore<
         abortUnsubscribe();
         return response;
       });
-    } else throw new Error('Subscription error: subscription module disabled');
+    } else throw new Error('Subscription error: subscription event engine module disabled');
   }
   // endregion
 
@@ -1785,8 +1791,8 @@ export class PubNubCore<
    * @param parameters - Desired presence state for provided list of channels and groups.
    */
   public presence(parameters: { connected: boolean; channels?: string[]; channelGroups?: string[] }) {
-    if (process.env.SUBSCRIBE_MODULE !== 'disabled') this.subscriptionManager?.changePresence(parameters);
-    else throw new Error('Change UUID presence error: subscription module disabled');
+    if (process.env.SUBSCRIBE_MANAGER_MODULE !== 'disabled') this.subscriptionManager?.changePresence(parameters);
+    else throw new Error('Change UUID presence error: subscription manager module disabled');
   }
   // endregion
 

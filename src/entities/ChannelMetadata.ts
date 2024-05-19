@@ -11,7 +11,7 @@ export class ChannelMetadata {
   ) {}
 
   subscription(subscriptionOptions?: SubscriptionOptions) {
-    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
       return new Subscription({
         channels: [this.id],
         channelGroups: [],

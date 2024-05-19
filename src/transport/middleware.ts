@@ -30,7 +30,12 @@ type PubNubMiddlewareConfiguration = {
   transport: Transport;
 };
 
-export class RequestSignature {
+/**
+ * Request signature generator.
+ *
+ * @internal
+ */
+class RequestSignature {
   private static textDecoder = new TextDecoder('utf-8');
   constructor(
     private publishKey: string,
@@ -101,8 +106,10 @@ export class PubNubMiddleware implements Transport {
       shaHMAC,
     } = configuration;
 
-    if (keySet.secretKey && shaHMAC)
-      this.signatureGenerator = new RequestSignature(keySet.publishKey!, keySet.secretKey, shaHMAC);
+    if (process.env.CRYPTO_MODULE !== 'disabled') {
+      if (keySet.secretKey && shaHMAC)
+        this.signatureGenerator = new RequestSignature(keySet.publishKey!, keySet.secretKey, shaHMAC);
+    }
   }
 
   makeSendable(req: TransportRequest) {

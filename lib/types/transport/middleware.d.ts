@@ -23,27 +23,6 @@ type PubNubMiddlewareConfiguration = {
      */
     transport: Transport;
 };
-export declare class RequestSignature {
-    private publishKey;
-    private secretKey;
-    private hasher;
-    private static textDecoder;
-    constructor(publishKey: string, secretKey: string, hasher: (input: string, secret: string) => string);
-    /**
-     * Compute request signature.
-     *
-     * @param req - Request which will be used to compute signature.
-     * @returns {string} `v2` request signature.
-     */
-    signature(req: TransportRequest): string;
-    /**
-     * Prepare request query parameters for signature.
-     *
-     * @param query - Key / value pair of the request query parameters.
-     * @private
-     */
-    private queryParameters;
-}
 export declare class PubNubMiddleware implements Transport {
     private configuration;
     /**
