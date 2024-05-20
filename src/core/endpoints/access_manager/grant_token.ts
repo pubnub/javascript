@@ -160,6 +160,10 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse> {
     return `/v3/pam/${this.parameters.keySet.subscribeKey}/grant`;
   }
 
+  protected get headers(): Record<string, string> | undefined {
+    return { 'Content-Type': 'application/json' };
+  }
+
   protected get body(): string {
     const { ttl, meta } = this.parameters;
     const body: Record<string, unknown> = { ...(ttl || ttl === 0 ? { ttl } : {}) };
