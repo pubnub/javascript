@@ -1,3 +1,12 @@
+## v8.2.0
+May 21 2024
+
+#### Added
+- Add environment flags processing to opt-out feature modules from built bundles.
+
+#### Fixed
+- Add `application/json` content type for `Grant Token`, `Add Message Action` and `Generate File Upload URL` endpoints. Fixed the following issues reported by [@SpaseESG](https://github.com/SpaseESG): [#373](https://github.com/pubnub/javascript/issues/373).
+
 ## v8.1.0
 May 16 2024
 

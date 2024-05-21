@@ -3,6 +3,7 @@ import 'react-native-url-polyfill/auto';
 import CborReader from 'cbor-js';
 import { Buffer } from 'buffer';
 
+import { ExtendedConfiguration, PlatformConfiguration } from '../core/interfaces/configuration';
 import { WebReactNativeTransport } from '../transport/web-react-native-transport';
 import { stringifyBufferKeys } from '../core/components/stringify_buffer_keys';
 import { makeConfiguration } from '../core/components/configuration';
@@ -28,26 +29,36 @@ global.Buffer = global.Buffer || Buffer;
 export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
   constructor(configuration: PubNubConfiguration) {
     const configurationCopy = setDefaults(configuration);
-    const platformConfiguration = { ...configurationCopy, sdkFamily: 'ReactNative', PubNubFile };
+    const platformConfiguration: ExtendedConfiguration & PlatformConfiguration = {
+      ...configurationCopy,
+      sdkFamily: 'ReactNative',
+    };
+
+    if (process.env.FILE_SHARING_MODULE !== 'disabled') platformConfiguration.PubNubFile = PubNubFile;
 
     // Prepare full client configuration.
     const clientConfiguration = makeConfiguration(platformConfiguration);
 
     // Prepare Token manager.
-    const tokenManager = new TokenManager(
-      new Cbor((arrayBuffer: ArrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)), decode),
-    );
+    let tokenManager: TokenManager | undefined;
+    if (process.env.CRYPTO_MODULE !== 'disabled') {
+      tokenManager = new TokenManager(
+        new Cbor((arrayBuffer: ArrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)), decode),
+      );
+    }
 
     // Legacy crypto (legacy data encryption / decryption and request signature support).
     let crypto: Crypto | undefined;
-    if (clientConfiguration.getCipherKey() || clientConfiguration.secretKey) {
-      crypto = new Crypto({
-        secretKey: clientConfiguration.secretKey,
-        cipherKey: clientConfiguration.getCipherKey(),
-        useRandomIVs: clientConfiguration.getUseRandomIVs(),
-        customEncrypt: clientConfiguration.getCustomEncrypt(),
-        customDecrypt: clientConfiguration.getCustomDecrypt(),
-      });
+    if (process.env.CRYPTO_MODULE !== 'disabled') {
+      if (clientConfiguration.getCipherKey() || clientConfiguration.secretKey) {
+        crypto = new Crypto({
+          secretKey: clientConfiguration.secretKey,
+          cipherKey: clientConfiguration.getCipherKey(),
+          useRandomIVs: clientConfiguration.getUseRandomIVs(),
+          customEncrypt: clientConfiguration.getCustomEncrypt(),
+          customDecrypt: clientConfiguration.getCustomDecrypt(),
+        });
+      }
     }
 
     // Setup transport layer.

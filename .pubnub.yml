@@ -1,5 +1,12 @@
 ---
 changelog:
+  - date: 2024-05-21
+    version: v8.2.0
+    changes:
+      - type: feature
+        text: "Add environment flags processing to opt-out feature modules from built bundles."
+      - type: bug
+        text: "Add `application/json` content type for `Grant Token`, `Add Message Action` and `Generate File Upload URL` endpoints."
   - date: 2024-05-16
     version: v8.1.0
     changes:
@@ -981,7 +988,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '8.1.0'
+version: '8.2.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -997,7 +1004,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.1.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.2.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1668,7 +1675,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v8.1.0/pubnub.8.1.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v8.2.0/pubnub.8.2.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
