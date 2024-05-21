@@ -144,6 +144,10 @@ export class GenerateFileUploadUrlRequest extends AbstractRequest<FileSharing.Ge
     return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/generate-upload-url`;
   }
 
+  protected get headers(): Record<string, string> | undefined {
+    return { 'Content-Type': 'application/json' };
+  }
+
   protected get body(): ArrayBuffer | string | undefined {
     return JSON.stringify({ name: this.parameters.name });
   }

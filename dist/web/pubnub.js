@@ -8452,12 +8452,12 @@
 	            return { data: serviceResponse.data };
 	        });
 	    }
-	    get headers() {
-	        return { 'Content-Type': 'application/json' };
-	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, messageTimetoken, } = this.parameters;
 	        return `/v1/message-actions/${subscribeKey}/channel/${encodeString(channel)}/message/${messageTimetoken}`;
+	    }
+	    get headers() {
+	        return { 'Content-Type': 'application/json' };
 	    }
 	    get body() {
 	        return JSON.stringify(this.parameters.action);
@@ -8770,6 +8770,9 @@
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, } = this.parameters;
 	        return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/generate-upload-url`;
+	    }
+	    get headers() {
+	        return { 'Content-Type': 'application/json' };
 	    }
 	    get body() {
 	        return JSON.stringify({ name: this.parameters.name });

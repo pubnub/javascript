@@ -87,10 +87,6 @@ export class AddMessageActionRequest extends AbstractRequest<MessageAction.AddMe
     return { data: serviceResponse.data };
   }
 
-  protected get headers(): Record<string, string> | undefined {
-    return { 'Content-Type': 'application/json' };
-  }
-
   protected get path(): string {
     const {
       keySet: { subscribeKey },
@@ -99,6 +95,10 @@ export class AddMessageActionRequest extends AbstractRequest<MessageAction.AddMe
     } = this.parameters;
 
     return `/v1/message-actions/${subscribeKey}/channel/${encodeString(channel)}/message/${messageTimetoken}`;
+  }
+
+  protected get headers(): Record<string, string> | undefined {
+    return { 'Content-Type': 'application/json' };
   }
 
   protected get body(): ArrayBuffer | string | undefined {
