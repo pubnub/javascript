@@ -1824,33 +1824,33 @@ export class PubNubCore<
   /**
    * Revoke token permission.
    *
-   * @param parameters - Request configuration parameters.
+   * @param token - Access token for which permissions should be revoked.
    * @param callback - Request completion handler callback.
    */
-  public revokeToken(parameters: PAM.RevokeParameters, callback: ResultCallback<PAM.RevokeTokenResponse>): void;
+  public revokeToken(token: PAM.RevokeParameters, callback: ResultCallback<PAM.RevokeTokenResponse>): void;
 
   /**
    * Revoke token permission.
    *
-   * @param parameters - Request configuration parameters.
+   * @param token - Access token for which permissions should be revoked.
    *
    * @returns Asynchronous revoke token response.
    */
-  public async revokeToken(parameters: PAM.RevokeParameters): Promise<PAM.RevokeTokenResponse>;
+  public async revokeToken(token: PAM.RevokeParameters): Promise<PAM.RevokeTokenResponse>;
 
   /**
    * Revoke token permission.
    *
-   * @param parameters - Request configuration parameters.
+   * @param token - Access token for which permissions should be revoked.
    * @param [callback] - Request completion handler callback.
    *
    * @returns Asynchronous revoke token response or `void` in case if `callback` provided.
    */
   async revokeToken(
-    parameters: PAM.RevokeParameters,
+    token: PAM.RevokeParameters,
     callback?: ResultCallback<PAM.RevokeTokenResponse>,
   ): Promise<PAM.RevokeTokenResponse | void> {
-    const request = new RevokeTokenRequest({ ...parameters, keySet: this._configuration.keySet });
+    const request = new RevokeTokenRequest({ token, keySet: this._configuration.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);

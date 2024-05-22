@@ -12513,14 +12513,14 @@
 	    /**
 	     * Revoke token permission.
 	     *
-	     * @param parameters - Request configuration parameters.
+	     * @param token - Access token for which permissions should be revoked.
 	     * @param [callback] - Request completion handler callback.
 	     *
 	     * @returns Asynchronous revoke token response or `void` in case if `callback` provided.
 	     */
-	    revokeToken(parameters, callback) {
+	    revokeToken(token, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new RevokeTokenRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	            const request = new RevokeTokenRequest({ token, keySet: this._configuration.keySet });
 	            if (callback)
 	                return this.sendRequest(request, callback);
 	            return this.sendRequest(request);

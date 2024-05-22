@@ -20,7 +20,10 @@ import { KeySet } from '../../types/api';
 /**
  * Request configuration parameters.
  */
-type RequestParameters = PAM.RevokeParameters & {
+type RequestParameters = {
+  /// Access token for which permissions should be revoked.
+  token: string;
+
   /**
    * PubNub REST API access key set.
    */

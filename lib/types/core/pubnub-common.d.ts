@@ -692,18 +692,18 @@ export declare class PubNubCore<CryptographyTypes, FileConstructorParameters, Pl
     /**
      * Revoke token permission.
      *
-     * @param parameters - Request configuration parameters.
+     * @param token - Access token for which permissions should be revoked.
      * @param callback - Request completion handler callback.
      */
-    revokeToken(parameters: PAM.RevokeParameters, callback: ResultCallback<PAM.RevokeTokenResponse>): void;
+    revokeToken(token: PAM.RevokeParameters, callback: ResultCallback<PAM.RevokeTokenResponse>): void;
     /**
      * Revoke token permission.
      *
-     * @param parameters - Request configuration parameters.
+     * @param token - Access token for which permissions should be revoked.
      *
      * @returns Asynchronous revoke token response.
      */
-    revokeToken(parameters: PAM.RevokeParameters): Promise<PAM.RevokeTokenResponse>;
+    revokeToken(token: PAM.RevokeParameters): Promise<PAM.RevokeTokenResponse>;
     /**
      * Get current access token.
      *
