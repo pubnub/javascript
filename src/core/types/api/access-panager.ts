@@ -223,7 +223,9 @@ export type GrantTokenResponse = string;
 // endregion
 
 // region Revoke
-/// Access token for which permissions should be revoked.
+/**
+ * Access token for which permissions should be revoked.
+ */
 export type RevokeParameters = string;
 
 /**

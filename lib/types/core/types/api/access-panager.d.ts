@@ -188,6 +188,9 @@ export type GrantTokenParameters = {
  * Response with generated access token.
  */
 export type GrantTokenResponse = string;
+/**
+ * Access token for which permissions should be revoked.
+ */
 export type RevokeParameters = string;
 /**
  * Response with revoked access token.

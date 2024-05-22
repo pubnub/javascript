@@ -3,7 +3,7 @@
 import { ProxyAgentOptions } from 'proxy-agent';
 import { Readable } from 'stream';
 import { Buffer } from 'buffer';
-import { CryptoModule } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
+import type { CryptoModule as CryptoModuleType } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 import PubNubFile, { PubNubFileParameters } from '../file/modules/node';
 import { PubNubConfiguration } from './configuration';
 import { PubNubFileConstructor } from '../core/types/file';
@@ -15,7 +15,7 @@ declare class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable
     /**
      * Data encryption / decryption module constructor.
      */
-    static CryptoModule: typeof CryptoModule;
+    static CryptoModule: typeof CryptoModuleType;
     /**
      * PubNub File constructor.
      */

@@ -41,7 +41,7 @@ type ClientInstanceConfiguration<CryptographyTypes> = {
     /**
      * REST API endpoints access tokens manager.
      */
-    tokenManager: TokenManager;
+    tokenManager?: TokenManager;
     /**
      * Legacy crypto module implementation.
      */

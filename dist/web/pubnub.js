@@ -3810,7 +3810,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.1.0';
+	            return '8.2.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -4027,6 +4027,11 @@
 	    TransportMethod["LOCAL"] = "LOCAL";
 	})(TransportMethod || (TransportMethod = {}));
 
+	/**
+	 * Request signature generator.
+	 *
+	 * @internal
+	 */
 	class RequestSignature {
 	    constructor(publishKey, secretKey, hasher) {
 	        this.publishKey = publishKey;
@@ -4085,8 +4090,10 @@
 	    constructor(configuration) {
 	        this.configuration = configuration;
 	        const { clientConfiguration: { keySet }, shaHMAC, } = configuration;
-	        if (keySet.secretKey && shaHMAC)
-	            this.signatureGenerator = new RequestSignature(keySet.publishKey, keySet.secretKey, shaHMAC);
+	        {
+	            if (keySet.secretKey && shaHMAC)
+	                this.signatureGenerator = new RequestSignature(keySet.publishKey, keySet.secretKey, shaHMAC);
+	        }
 	    }
 	    makeSendable(req) {
 	        return this.configuration.transport.makeSendable(this.request(req));
@@ -4119,7 +4126,7 @@
 	        if (req.path.startsWith('/v2/auth/') || req.path.startsWith('/v3/pam/') || req.path.startsWith('/time'))
 	            return;
 	        const { clientConfiguration, tokenManager } = this.configuration;
-	        const accessKey = (_a = tokenManager.getToken()) !== null && _a !== void 0 ? _a : clientConfiguration.authKey;
+	        const accessKey = (_a = (tokenManager && tokenManager.getToken())) !== null && _a !== void 0 ? _a : clientConfiguration.authKey;
 	        if (accessKey)
 	            req.queryParameters['auth'] = accessKey;
 	    }
@@ -8445,12 +8452,12 @@
 	            return { data: serviceResponse.data };
 	        });
 	    }
-	    get headers() {
-	        return { 'Content-Type': 'application/json' };
-	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, messageTimetoken, } = this.parameters;
 	        return `/v1/message-actions/${subscribeKey}/channel/${encodeString(channel)}/message/${messageTimetoken}`;
+	    }
+	    get headers() {
+	        return { 'Content-Type': 'application/json' };
 	    }
 	    get body() {
 	        return JSON.stringify(this.parameters.action);
@@ -8764,6 +8771,9 @@
 	        const { keySet: { subscribeKey }, channel, } = this.parameters;
 	        return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/generate-upload-url`;
 	    }
+	    get headers() {
+	        return { 'Content-Type': 'application/json' };
+	    }
 	    get body() {
 	        return JSON.stringify({ name: this.parameters.name });
 	    }
@@ -8949,364 +8959,6 @@
 	    }
 	}
 
-	/**
-	 * PAM Revoke Token REST API module.
-	 */
-	// endregion
-	/**
-	 * Access token revoke request.
-	 *
-	 * Invalidate token and permissions which has been granted for it.
-	 *
-	 * @internal
-	 */
-	class RevokeTokenRequest extends AbstractRequest {
-	    constructor(parameters) {
-	        super({ method: TransportMethod.DELETE });
-	        this.parameters = parameters;
-	    }
-	    operation() {
-	        return RequestOperation$1.PNAccessManagerRevokeToken;
-	    }
-	    validate() {
-	        if (!this.parameters.keySet.secretKey)
-	            return 'Missing Secret Key';
-	        if (!this.parameters.token)
-	            return "token can't be empty";
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return {};
-	        });
-	    }
-	    get path() {
-	        const { keySet: { subscribeKey }, token, } = this.parameters;
-	        return `/v3/pam/${subscribeKey}/grant/${encodeString(token)}`;
-	    }
-	}
-
-	/**
-	 * PAM Grant Token REST API module.
-	 */
-	// endregion
-	/**
-	 * Grant token permissions request.
-	 *
-	 * @internal
-	 */
-	class GrantTokenRequest extends AbstractRequest {
-	    constructor(parameters) {
-	        var _a, _b;
-	        var _c, _d;
-	        super({ method: TransportMethod.POST });
-	        this.parameters = parameters;
-	        // Apply defaults.
-	        (_a = (_c = this.parameters).resources) !== null && _a !== void 0 ? _a : (_c.resources = {});
-	        (_b = (_d = this.parameters).patterns) !== null && _b !== void 0 ? _b : (_d.patterns = {});
-	    }
-	    operation() {
-	        return RequestOperation$1.PNAccessManagerGrantToken;
-	    }
-	    validate() {
-	        var _a, _b, _c, _d, _e, _f;
-	        const { keySet: { subscribeKey, publishKey, secretKey }, resources, patterns, } = this.parameters;
-	        if (!subscribeKey)
-	            return 'Missing Subscribe Key';
-	        if (!publishKey)
-	            return 'Missing Publish Key';
-	        if (!secretKey)
-	            return 'Missing Secret Key';
-	        if (!resources && !patterns)
-	            return 'Missing either Resources or Patterns';
-	        if (this.isVspPermissions(this.parameters) &&
-	            ('channels' in ((_a = this.parameters.resources) !== null && _a !== void 0 ? _a : {}) ||
-	                'uuids' in ((_b = this.parameters.resources) !== null && _b !== void 0 ? _b : {}) ||
-	                'groups' in ((_c = this.parameters.resources) !== null && _c !== void 0 ? _c : {}) ||
-	                'channels' in ((_d = this.parameters.patterns) !== null && _d !== void 0 ? _d : {}) ||
-	                'uuids' in ((_e = this.parameters.patterns) !== null && _e !== void 0 ? _e : {}) ||
-	                'groups' in ((_f = this.parameters.patterns) !== null && _f !== void 0 ? _f : {})))
-	            return ('Cannot mix `users`, `spaces` and `authorizedUserId` with `uuids`, `channels`,' +
-	                ' `groups` and `authorized_uuid`');
-	        let permissionsEmpty = true;
-	        [this.parameters.resources, this.parameters.patterns].forEach((refPerm) => {
-	            Object.keys(refPerm !== null && refPerm !== void 0 ? refPerm : {}).forEach((scope) => {
-	                var _a;
-	                // @ts-expect-error Permissions with backward compatibility.
-	                if (refPerm && permissionsEmpty && Object.keys((_a = refPerm[scope]) !== null && _a !== void 0 ? _a : {}).length > 0) {
-	                    permissionsEmpty = false;
-	                }
-	            });
-	        });
-	        if (permissionsEmpty)
-	            return 'Missing values for either Resources or Patterns';
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse.data.token;
-	        });
-	    }
-	    get path() {
-	        return `/v3/pam/${this.parameters.keySet.subscribeKey}/grant`;
-	    }
-	    get body() {
-	        const { ttl, meta } = this.parameters;
-	        const body = Object.assign({}, (ttl || ttl === 0 ? { ttl } : {}));
-	        const uuid = this.isVspPermissions(this.parameters)
-	            ? this.parameters.authorizedUserId
-	            : this.parameters.authorized_uuid;
-	        const permissions = {};
-	        const resourcePermissions = {};
-	        const patternPermissions = {};
-	        const mapPermissions = (name, permissionBit, type, permissions) => {
-	            if (!permissions[type])
-	                permissions[type] = {};
-	            permissions[type][name] = permissionBit;
-	        };
-	        const { resources, patterns } = this.parameters;
-	        [resources, patterns].forEach((refPerm, idx) => {
-	            var _a, _b, _c, _d, _e;
-	            const target = idx === 0 ? resourcePermissions : patternPermissions;
-	            let channelsPermissions = {};
-	            let channelGroupsPermissions = {};
-	            let uuidsPermissions = {};
-	            if (!target.channels)
-	                target.channels = {};
-	            if (!target.groups)
-	                target.groups = {};
-	            if (!target.uuids)
-	                target.uuids = {};
-	            // @ts-expect-error Not used, needed for api backward compatibility
-	            if (!target.users)
-	                target.users = {};
-	            // @ts-expect-error Not used, needed for api backward compatibility
-	            if (!target.spaces)
-	                target.spaces = {};
-	            if (refPerm) {
-	                // Check whether working with legacy Objects permissions.
-	                if ('spaces' in refPerm || 'users' in refPerm) {
-	                    channelsPermissions = (_a = refPerm.spaces) !== null && _a !== void 0 ? _a : {};
-	                    uuidsPermissions = (_b = refPerm.users) !== null && _b !== void 0 ? _b : {};
-	                }
-	                else if ('channels' in refPerm || 'uuids' in refPerm || 'groups' in refPerm) {
-	                    channelsPermissions = (_c = refPerm.channels) !== null && _c !== void 0 ? _c : {};
-	                    channelGroupsPermissions = (_d = refPerm.groups) !== null && _d !== void 0 ? _d : {};
-	                    uuidsPermissions = (_e = refPerm.uuids) !== null && _e !== void 0 ? _e : {};
-	                }
-	            }
-	            Object.keys(channelsPermissions).forEach((channel) => mapPermissions(channel, this.extractPermissions(channelsPermissions[channel]), 'channels', target));
-	            Object.keys(channelGroupsPermissions).forEach((groups) => mapPermissions(groups, this.extractPermissions(channelGroupsPermissions[groups]), 'groups', target));
-	            Object.keys(uuidsPermissions).forEach((uuids) => mapPermissions(uuids, this.extractPermissions(uuidsPermissions[uuids]), 'uuids', target));
-	        });
-	        if (uuid)
-	            permissions.uuid = `${uuid}`;
-	        permissions.resources = resourcePermissions;
-	        permissions.patterns = patternPermissions;
-	        permissions.meta = meta !== null && meta !== void 0 ? meta : {};
-	        body.permissions = permissions;
-	        return JSON.stringify(body);
-	    }
-	    /**
-	     * Extract permissions bit from permission configuration object.
-	     *
-	     * @param permissions - User provided scope-based permissions.
-	     *
-	     * @returns Permissions bit.
-	     */
-	    extractPermissions(permissions) {
-	        let permissionsResult = 0;
-	        if ('join' in permissions && permissions.join)
-	            permissionsResult |= 128;
-	        if ('update' in permissions && permissions.update)
-	            permissionsResult |= 64;
-	        if ('get' in permissions && permissions.get)
-	            permissionsResult |= 32;
-	        if ('delete' in permissions && permissions.delete)
-	            permissionsResult |= 8;
-	        if ('manage' in permissions && permissions.manage)
-	            permissionsResult |= 4;
-	        if ('write' in permissions && permissions.write)
-	            permissionsResult |= 2;
-	        if ('read' in permissions && permissions.read)
-	            permissionsResult |= 1;
-	        return permissionsResult;
-	    }
-	    /**
-	     * Check whether provided parameters is part of legacy VSP access token configuration.
-	     *
-	     * @param parameters - Parameters which should be checked.
-	     *
-	     * @returns VSP request parameters if it is legacy configuration.
-	     */
-	    isVspPermissions(parameters) {
-	        var _a, _b, _c, _d;
-	        return ('authorizedUserId' in parameters ||
-	            'spaces' in ((_a = parameters.resources) !== null && _a !== void 0 ? _a : {}) ||
-	            'users' in ((_b = parameters.resources) !== null && _b !== void 0 ? _b : {}) ||
-	            'spaces' in ((_c = parameters.patterns) !== null && _c !== void 0 ? _c : {}) ||
-	            'users' in ((_d = parameters.patterns) !== null && _d !== void 0 ? _d : {}));
-	    }
-	}
-
-	/**
-	 * PAM Grant REST API module.
-	 */
-	// --------------------------------------------------------
-	// ----------------------- Defaults -----------------------
-	// --------------------------------------------------------
-	// region Defaults
-	/**
-	 * Resources `read` permission.
-	 */
-	const READ_PERMISSION = false;
-	/**
-	 * Resources `write` permission.
-	 */
-	const WRITE_PERMISSION = false;
-	/**
-	 * Resources `delete` permission.
-	 */
-	const DELETE_PERMISSION = false;
-	/**
-	 * Resources `get` permission.
-	 */
-	const GET_PERMISSION = false;
-	/**
-	 * Resources `update` permission.
-	 */
-	const UPDATE_PERMISSION = false;
-	/**
-	 * Resources `manage` permission.
-	 */
-	const MANAGE_PERMISSION = false;
-	/**
-	 * Resources `join` permission.
-	 */
-	const JOIN_PERMISSION = false;
-	// endregion
-	/**
-	 * Grant permissions request.
-	 *
-	 * @internal
-	 */
-	class GrantRequest extends AbstractRequest {
-	    constructor(parameters) {
-	        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
-	        var _l, _m, _o, _p, _q, _r, _s, _t, _u, _v;
-	        super();
-	        this.parameters = parameters;
-	        // Apply defaults.
-	        (_a = (_l = this.parameters).channels) !== null && _a !== void 0 ? _a : (_l.channels = []);
-	        (_b = (_m = this.parameters).channelGroups) !== null && _b !== void 0 ? _b : (_m.channelGroups = []);
-	        (_c = (_o = this.parameters).uuids) !== null && _c !== void 0 ? _c : (_o.uuids = []);
-	        (_d = (_p = this.parameters).read) !== null && _d !== void 0 ? _d : (_p.read = READ_PERMISSION);
-	        (_e = (_q = this.parameters).write) !== null && _e !== void 0 ? _e : (_q.write = WRITE_PERMISSION);
-	        (_f = (_r = this.parameters).delete) !== null && _f !== void 0 ? _f : (_r.delete = DELETE_PERMISSION);
-	        (_g = (_s = this.parameters).get) !== null && _g !== void 0 ? _g : (_s.get = GET_PERMISSION);
-	        (_h = (_t = this.parameters).update) !== null && _h !== void 0 ? _h : (_t.update = UPDATE_PERMISSION);
-	        (_j = (_u = this.parameters).manage) !== null && _j !== void 0 ? _j : (_u.manage = MANAGE_PERMISSION);
-	        (_k = (_v = this.parameters).join) !== null && _k !== void 0 ? _k : (_v.join = JOIN_PERMISSION);
-	    }
-	    operation() {
-	        return RequestOperation$1.PNAccessManagerGrant;
-	    }
-	    validate() {
-	        const { keySet: { subscribeKey, publishKey, secretKey }, uuids = [], channels = [], channelGroups = [], authKeys = [], } = this.parameters;
-	        if (!subscribeKey)
-	            return 'Missing Subscribe Key';
-	        if (!publishKey)
-	            return 'Missing Publish Key';
-	        if (!secretKey)
-	            return 'Missing Secret Key';
-	        if (uuids.length !== 0 && authKeys.length === 0)
-	            return 'authKeys are required for grant request on uuids';
-	        if (uuids.length && (channels.length !== 0 || channelGroups.length !== 0))
-	            return 'Both channel/channel group and uuid cannot be used in the same request';
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse.payload;
-	        });
-	    }
-	    get path() {
-	        return `/v2/auth/grant/sub-key/${this.parameters.keySet.subscribeKey}`;
-	    }
-	    get queryParameters() {
-	        const { channels, channelGroups, authKeys, uuids, read, write, manage, delete: del, get, join, update, ttl, } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (channels && (channels === null || channels === void 0 ? void 0 : channels.length) > 0 ? { channel: channels.join(',') } : {})), (channelGroups && (channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.length) > 0 ? { 'channel-group': channelGroups.join(',') } : {})), (authKeys && (authKeys === null || authKeys === void 0 ? void 0 : authKeys.length) > 0 ? { auth: authKeys.join(',') } : {})), (uuids && (uuids === null || uuids === void 0 ? void 0 : uuids.length) > 0 ? { 'target-uuid': uuids.join(',') } : {})), { r: read ? '1' : '0', w: write ? '1' : '0', m: manage ? '1' : '0', d: del ? '1' : '0', g: get ? '1' : '0', j: join ? '1' : '0', u: update ? '1' : '0' }), (ttl || ttl === 0 ? { ttl } : {}));
-	    }
-	}
-
-	/**
-	 * PAM Audit REST API module.
-	 */
-	// --------------------------------------------------------
-	// ----------------------- Defaults -----------------------
-	// --------------------------------------------------------
-	// region Defaults
-	/**
-	 * Auth keys for which permissions should be audited.
-	 */
-	const AUTH_KEYS = [];
-	// endregion
-	/**
-	 * Permissions audit request.
-	 *
-	 * @internal
-	 */
-	class AuditRequest extends AbstractRequest {
-	    constructor(parameters) {
-	        var _a;
-	        var _b;
-	        super();
-	        this.parameters = parameters;
-	        // Apply default request parameters.
-	        (_a = (_b = this.parameters).authKeys) !== null && _a !== void 0 ? _a : (_b.authKeys = AUTH_KEYS);
-	    }
-	    operation() {
-	        return RequestOperation$1.PNAccessManagerAudit;
-	    }
-	    validate() {
-	        if (!this.parameters.keySet.subscribeKey)
-	            return 'Missing Subscribe Key';
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse.payload;
-	        });
-	    }
-	    get path() {
-	        return `/v2/auth/audit/sub-key/${this.parameters.keySet.subscribeKey}`;
-	    }
-	    get queryParameters() {
-	        const { channel, channelGroup, authKeys } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign({}, (channel ? { channel } : {})), (channelGroup ? { 'channel-group': channelGroup } : {})), (authKeys && authKeys.length ? { auth: authKeys.join(',') } : {}));
-	    }
-	}
-
 	class SubscribeCapable {
 	    subscribe() {
 	        var _a, _b;
@@ -9440,13 +9092,15 @@
 	        this.pubnub = pubnub;
 	    }
 	    subscription(subscriptionOptions) {
-	        return new Subscription({
-	            channels: [this.id],
-	            channelGroups: [],
-	            subscriptionOptions: subscriptionOptions,
-	            eventEmitter: this.eventEmitter,
-	            pubnub: this.pubnub,
-	        });
+	        {
+	            return new Subscription({
+	                channels: [this.id],
+	                channelGroups: [],
+	                subscriptionOptions: subscriptionOptions,
+	                eventEmitter: this.eventEmitter,
+	                pubnub: this.pubnub,
+	            });
+	        }
 	    }
 	}
 
@@ -9457,13 +9111,15 @@
 	        this.name = channelGroup;
 	    }
 	    subscription(subscriptionOptions) {
-	        return new Subscription({
-	            channels: [],
-	            channelGroups: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, `${this.name}-pnpres`] : [this.name],
-	            subscriptionOptions: subscriptionOptions,
-	            eventEmitter: this.eventEmitter,
-	            pubnub: this.pubnub,
-	        });
+	        {
+	            return new Subscription({
+	                channels: [],
+	                channelGroups: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, `${this.name}-pnpres`] : [this.name],
+	                subscriptionOptions: subscriptionOptions,
+	                eventEmitter: this.eventEmitter,
+	                pubnub: this.pubnub,
+	            });
+	        }
 	    }
 	}
 
@@ -9474,13 +9130,15 @@
 	        this.pubnub = pubnub;
 	    }
 	    subscription(subscriptionOptions) {
-	        return new Subscription({
-	            channels: [this.id],
-	            channelGroups: [],
-	            subscriptionOptions: subscriptionOptions,
-	            eventEmitter: this.eventEmitter,
-	            pubnub: this.pubnub,
-	        });
+	        {
+	            return new Subscription({
+	                channels: [this.id],
+	                channelGroups: [],
+	                subscriptionOptions: subscriptionOptions,
+	                eventEmitter: this.eventEmitter,
+	                pubnub: this.pubnub,
+	            });
+	        }
 	    }
 	}
 
@@ -9491,13 +9149,15 @@
 	        this.name = channelName;
 	    }
 	    subscription(subscriptionOptions) {
-	        return new Subscription({
-	            channels: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, `${this.name}-pnpres`] : [this.name],
-	            channelGroups: [],
-	            subscriptionOptions: subscriptionOptions,
-	            eventEmitter: this.eventEmitter,
-	            pubnub: this.pubnub,
-	        });
+	        {
+	            return new Subscription({
+	                channels: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, `${this.name}-pnpres`] : [this.name],
+	                channelGroups: [],
+	                subscriptionOptions: subscriptionOptions,
+	                eventEmitter: this.eventEmitter,
+	                pubnub: this.pubnub,
+	            });
+	        }
 	    }
 	}
 
@@ -11524,7 +11184,9 @@
 	     * @returns Pre-formatted message payload which will trigger push notification.
 	     */
 	    static notificationPayload(title, body) {
-	        return new NotificationsPayload(title, body);
+	        {
+	            return new NotificationsPayload(title, body);
+	        }
 	    }
 	    /**
 	     * Generate unique identifier.
@@ -11545,57 +11207,65 @@
 	        this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
 	        this._channelGroups = new PubnubChannelGroups(this._configuration.keySet, this.sendRequest.bind(this));
 	        this._push = new PubNubPushNotifications(this._configuration.keySet, this.sendRequest.bind(this));
-	        // Prepare for real-time events announcement.
-	        this.listenerManager = new ListenerManager();
-	        this.eventEmitter = new EventEmitter(this.listenerManager);
-	        if (this._configuration.enableEventEngine) {
-	            let heartbeatInterval = this._configuration.getHeartbeatInterval();
-	            this.presenceState = {};
-	            if (heartbeatInterval) {
-	                this.presenceEventEngine = new PresenceEventEngine({
-	                    heartbeat: this.heartbeat.bind(this),
-	                    leave: (parameters) => this.makeUnsubscribe(parameters, () => { }),
-	                    heartbeatDelay: () => new Promise((resolve, reject) => {
-	                        heartbeatInterval = this._configuration.getHeartbeatInterval();
-	                        if (!heartbeatInterval)
-	                            reject(new PubNubError('Heartbeat interval has been reset.'));
-	                        else
-	                            setTimeout(resolve, heartbeatInterval * 1000);
-	                    }),
-	                    retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-	                    emitStatus: (status) => this.listenerManager.announceStatus(status),
-	                    config: this._configuration,
-	                    presenceState: this.presenceState,
-	                });
+	        {
+	            // Prepare for real-time events announcement.
+	            this.listenerManager = new ListenerManager();
+	            this.eventEmitter = new EventEmitter(this.listenerManager);
+	            if (this._configuration.enableEventEngine) {
+	                {
+	                    let heartbeatInterval = this._configuration.getHeartbeatInterval();
+	                    this.presenceState = {};
+	                    {
+	                        if (heartbeatInterval) {
+	                            this.presenceEventEngine = new PresenceEventEngine({
+	                                heartbeat: this.heartbeat.bind(this),
+	                                leave: (parameters) => this.makeUnsubscribe(parameters, () => { }),
+	                                heartbeatDelay: () => new Promise((resolve, reject) => {
+	                                    heartbeatInterval = this._configuration.getHeartbeatInterval();
+	                                    if (!heartbeatInterval)
+	                                        reject(new PubNubError('Heartbeat interval has been reset.'));
+	                                    else
+	                                        setTimeout(resolve, heartbeatInterval * 1000);
+	                                }),
+	                                retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+	                                emitStatus: (status) => this.listenerManager.announceStatus(status),
+	                                config: this._configuration,
+	                                presenceState: this.presenceState,
+	                            });
+	                        }
+	                    }
+	                    this.eventEngine = new EventEngine({
+	                        handshake: this.subscribeHandshake.bind(this),
+	                        receiveMessages: this.subscribeReceiveMessages.bind(this),
+	                        delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+	                        join: this.join.bind(this),
+	                        leave: this.leave.bind(this),
+	                        leaveAll: this.leaveAll.bind(this),
+	                        presenceState: this.presenceState,
+	                        config: this._configuration,
+	                        emitMessages: (events) => {
+	                            try {
+	                                events.forEach((event) => this.eventEmitter.emitEvent(event));
+	                            }
+	                            catch (e) {
+	                                const errorStatus = {
+	                                    error: true,
+	                                    category: StatusCategory$1.PNUnknownCategory,
+	                                    errorData: e,
+	                                    statusCode: 0,
+	                                };
+	                                this.listenerManager.announceStatus(errorStatus);
+	                            }
+	                        },
+	                        emitStatus: (status) => this.listenerManager.announceStatus(status),
+	                    });
+	                }
 	            }
-	            this.eventEngine = new EventEngine({
-	                handshake: this.subscribeHandshake.bind(this),
-	                receiveMessages: this.subscribeReceiveMessages.bind(this),
-	                delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-	                join: this.join.bind(this),
-	                leave: this.leave.bind(this),
-	                leaveAll: this.leaveAll.bind(this),
-	                presenceState: this.presenceState,
-	                config: this._configuration,
-	                emitMessages: (events) => {
-	                    try {
-	                        events.forEach((event) => this.eventEmitter.emitEvent(event));
-	                    }
-	                    catch (e) {
-	                        const errorStatus = {
-	                            error: true,
-	                            category: StatusCategory$1.PNUnknownCategory,
-	                            errorData: e,
-	                            statusCode: 0,
-	                        };
-	                        this.listenerManager.announceStatus(errorStatus);
-	                    }
-	                },
-	                emitStatus: (status) => this.listenerManager.announceStatus(status),
-	            });
-	        }
-	        else {
-	            this.subscriptionManager = new SubscriptionManager(this._configuration, this.listenerManager, this.eventEmitter, this.makeSubscribe.bind(this), this.heartbeat.bind(this), this.makeUnsubscribe.bind(this), this.time.bind(this));
+	            else {
+	                {
+	                    this.subscriptionManager = new SubscriptionManager(this._configuration, this.listenerManager, this.eventEmitter, this.makeSubscribe.bind(this), this.heartbeat.bind(this), this.makeUnsubscribe.bind(this), this.time.bind(this));
+	                }
+	            }
 	        }
 	    }
 	    // --------------------------------------------------------
@@ -11885,7 +11555,9 @@
 	     * @param parameters - Subscriptions set configuration parameters.
 	     */
 	    subscriptionSet(parameters) {
-	        return new SubscriptionSet(Object.assign(Object.assign({}, parameters), { eventEmitter: this.eventEmitter, pubnub: this }));
+	        {
+	            return new SubscriptionSet(Object.assign(Object.assign({}, parameters), { eventEmitter: this.eventEmitter, pubnub: this }));
+	        }
 	    }
 	    /**
 	     * Schedule request execution.
@@ -11969,12 +11641,14 @@
 	     * @param [isOffline] - Whether `offline` presence should be notified or not.
 	     */
 	    destroy(isOffline) {
-	        if (this.subscriptionManager) {
-	            this.subscriptionManager.unsubscribeAll(isOffline);
-	            this.subscriptionManager.disconnect();
+	        {
+	            if (this.subscriptionManager) {
+	                this.subscriptionManager.unsubscribeAll(isOffline);
+	                this.subscriptionManager.disconnect();
+	            }
+	            else if (this.eventEngine)
+	                this.eventEngine.dispose();
 	        }
-	        else if (this.eventEngine)
-	            this.eventEngine.dispose();
 	    }
 	    /**
 	     * Unsubscribe from all channels and groups.
@@ -12021,10 +11695,12 @@
 	     */
 	    publish(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new PublishRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new PublishRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12037,10 +11713,12 @@
 	     */
 	    signal(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new SignalRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new SignalRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12070,10 +11748,12 @@
 	     * @returns List of active channels.
 	     */
 	    getSubscribedChannels() {
-	        if (this.subscriptionManager)
-	            return this.subscriptionManager.subscribedChannels;
-	        else if (this.eventEngine)
-	            return this.eventEngine.getSubscribedChannels();
+	        {
+	            if (this.subscriptionManager)
+	                return this.subscriptionManager.subscribedChannels;
+	            else if (this.eventEngine)
+	                return this.eventEngine.getSubscribedChannels();
+	        }
 	        return [];
 	    }
 	    /**
@@ -12082,10 +11762,12 @@
 	     * @returns List of active channel groups.
 	     */
 	    getSubscribedChannelGroups() {
-	        if (this.subscriptionManager)
-	            return this.subscriptionManager.subscribedChannelGroups;
-	        else if (this.eventEngine)
-	            return this.eventEngine.getSubscribedChannelGroups();
+	        {
+	            if (this.subscriptionManager)
+	                return this.subscriptionManager.subscribedChannelGroups;
+	            else if (this.eventEngine)
+	                return this.eventEngine.getSubscribedChannelGroups();
+	        }
 	        return [];
 	    }
 	    /**
@@ -12094,10 +11776,12 @@
 	     * @param parameters - Request configuration parameters.
 	     */
 	    subscribe(parameters) {
-	        if (this.subscriptionManager)
-	            this.subscriptionManager.subscribe(parameters);
-	        else if (this.eventEngine)
-	            this.eventEngine.subscribe(parameters);
+	        {
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.subscribe(parameters);
+	            else if (this.eventEngine)
+	                this.eventEngine.subscribe(parameters);
+	        }
 	    }
 	    /**
 	     * Perform subscribe request.
@@ -12108,24 +11792,26 @@
 	     * @param callback - Request completion handler callback.
 	     */
 	    makeSubscribe(parameters, callback) {
-	        const request = new SubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
-	        this.sendRequest(request, (status, result) => {
-	            var _a;
-	            if (this.subscriptionManager && ((_a = this.subscriptionManager.abort) === null || _a === void 0 ? void 0 : _a.identifier) === request.requestIdentifier)
-	                this.subscriptionManager.abort = null;
-	            callback(status, result);
-	        });
-	        /**
-	         * Allow subscription cancellation.
-	         *
-	         * **Note:** Had to be done after scheduling because transport provider return cancellation
-	         * controller only when schedule new request.
-	         */
-	        if (this.subscriptionManager) {
-	            // Creating identifiable abort caller.
-	            const callableAbort = () => request.abort();
-	            callableAbort.identifier = request.requestIdentifier;
-	            this.subscriptionManager.abort = callableAbort;
+	        {
+	            const request = new SubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
+	            this.sendRequest(request, (status, result) => {
+	                var _a;
+	                if (this.subscriptionManager && ((_a = this.subscriptionManager.abort) === null || _a === void 0 ? void 0 : _a.identifier) === request.requestIdentifier)
+	                    this.subscriptionManager.abort = null;
+	                callback(status, result);
+	            });
+	            /**
+	             * Allow subscription cancellation.
+	             *
+	             * **Note:** Had to be done after scheduling because transport provider return cancellation
+	             * controller only when schedule new request.
+	             */
+	            if (this.subscriptionManager) {
+	                // Creating identifiable abort caller.
+	                const callableAbort = () => request.abort();
+	                callableAbort.identifier = request.requestIdentifier;
+	                this.subscriptionManager.abort = callableAbort;
+	            }
 	        }
 	    }
 	    /**
@@ -12134,10 +11820,12 @@
 	     * @param parameters - Request configuration parameters.
 	     */
 	    unsubscribe(parameters) {
-	        if (this.subscriptionManager)
-	            this.subscriptionManager.unsubscribe(parameters);
-	        else if (this.eventEngine)
-	            this.eventEngine.unsubscribe(parameters);
+	        {
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.unsubscribe(parameters);
+	            else if (this.eventEngine)
+	                this.eventEngine.unsubscribe(parameters);
+	        }
 	    }
 	    /**
 	     * Perform unsubscribe request.
@@ -12148,25 +11836,31 @@
 	     * @param callback - Request completion handler callback.
 	     */
 	    makeUnsubscribe(parameters, callback) {
-	        this.sendRequest(new PresenceLeaveRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet })), callback);
+	        {
+	            this.sendRequest(new PresenceLeaveRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet })), callback);
+	        }
 	    }
 	    /**
 	     * Unsubscribe from all channels and groups.
 	     */
 	    unsubscribeAll() {
-	        if (this.subscriptionManager)
-	            this.subscriptionManager.unsubscribeAll();
-	        else if (this.eventEngine)
-	            this.eventEngine.unsubscribeAll();
+	        {
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.unsubscribeAll();
+	            else if (this.eventEngine)
+	                this.eventEngine.unsubscribeAll();
+	        }
 	    }
 	    /**
 	     * Temporarily disconnect from real-time events stream.
 	     */
 	    disconnect() {
-	        if (this.subscriptionManager)
-	            this.subscriptionManager.disconnect();
-	        else if (this.eventEngine)
-	            this.eventEngine.disconnect();
+	        {
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.disconnect();
+	            else if (this.eventEngine)
+	                this.eventEngine.disconnect();
+	        }
 	    }
 	    /**
 	     * Restore connection to the real-time events stream.
@@ -12175,10 +11869,12 @@
 	     * enabled event engine.
 	     */
 	    reconnect(parameters) {
-	        if (this.subscriptionManager)
-	            this.subscriptionManager.reconnect();
-	        else if (this.eventEngine)
-	            this.eventEngine.reconnect(parameters !== null && parameters !== void 0 ? parameters : {});
+	        {
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.reconnect();
+	            else if (this.eventEngine)
+	                this.eventEngine.reconnect(parameters !== null && parameters !== void 0 ? parameters : {});
+	        }
 	    }
 	    /**
 	     * Event engine handshake subscribe.
@@ -12187,21 +11883,23 @@
 	     */
 	    subscribeHandshake(parameters) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new HandshakeSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
-	            const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
-	                request.abort();
-	            });
-	            /**
-	             * Allow subscription cancellation.
-	             *
-	             * **Note:** Had to be done after scheduling because transport provider return cancellation
-	             * controller only when schedule new request.
-	             */
-	            const handshakeResponse = this.sendRequest(request);
-	            return handshakeResponse.then((response) => {
-	                abortUnsubscribe();
-	                return response.cursor;
-	            });
+	            {
+	                const request = new HandshakeSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
+	                const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
+	                    request.abort();
+	                });
+	                /**
+	                 * Allow subscription cancellation.
+	                 *
+	                 * **Note:** Had to be done after scheduling because transport provider return cancellation
+	                 * controller only when schedule new request.
+	                 */
+	                const handshakeResponse = this.sendRequest(request);
+	                return handshakeResponse.then((response) => {
+	                    abortUnsubscribe();
+	                    return response.cursor;
+	                });
+	            }
 	        });
 	    }
 	    /**
@@ -12211,21 +11909,23 @@
 	     */
 	    subscribeReceiveMessages(parameters) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new ReceiveMessagesSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
-	            const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
-	                request.abort();
-	            });
-	            /**
-	             * Allow subscription cancellation.
-	             *
-	             * **Note:** Had to be done after scheduling because transport provider return cancellation
-	             * controller only when schedule new request.
-	             */
-	            const handshakeResponse = this.sendRequest(request);
-	            return handshakeResponse.then((response) => {
-	                abortUnsubscribe();
-	                return response;
-	            });
+	            {
+	                const request = new ReceiveMessagesSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
+	                const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
+	                    request.abort();
+	                });
+	                /**
+	                 * Allow subscription cancellation.
+	                 *
+	                 * **Note:** Had to be done after scheduling because transport provider return cancellation
+	                 * controller only when schedule new request.
+	                 */
+	                const handshakeResponse = this.sendRequest(request);
+	                return handshakeResponse.then((response) => {
+	                    abortUnsubscribe();
+	                    return response;
+	                });
+	            }
 	        });
 	    }
 	    /**
@@ -12238,10 +11938,12 @@
 	     */
 	    getMessageActions(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new GetMessageActionsRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new GetMessageActionsRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12254,10 +11956,12 @@
 	     */
 	    addMessageAction(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new AddMessageActionRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new AddMessageActionRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12270,10 +11974,12 @@
 	     */
 	    removeMessageAction(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new RemoveMessageAction(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new RemoveMessageAction(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12286,10 +11992,12 @@
 	     */
 	    fetchMessages(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new FetchMessagesRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new FetchMessagesRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12304,10 +12012,12 @@
 	     */
 	    deleteMessages(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new DeleteMessageRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new DeleteMessageRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12320,10 +12030,12 @@
 	     */
 	    messageCounts(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new MessageCountRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new MessageCountRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12338,10 +12050,12 @@
 	     */
 	    history(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new GetHistoryRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new GetHistoryRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12354,10 +12068,12 @@
 	     */
 	    hereNow(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new HereNowRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new HereNowRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12373,13 +12089,15 @@
 	    whereNow(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
-	            const request = new WhereNowRequest({
-	                uuid: (_a = parameters.uuid) !== null && _a !== void 0 ? _a : this._configuration.userId,
-	                keySet: this._configuration.keySet,
-	            });
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new WhereNowRequest({
+	                    uuid: (_a = parameters.uuid) !== null && _a !== void 0 ? _a : this._configuration.userId,
+	                    keySet: this._configuration.keySet,
+	                });
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12393,10 +12111,12 @@
 	    getState(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
-	            const request = new GetPresenceStateRequest(Object.assign(Object.assign({}, parameters), { uuid: (_a = parameters.uuid) !== null && _a !== void 0 ? _a : this._configuration.userId, keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new GetPresenceStateRequest(Object.assign(Object.assign({}, parameters), { uuid: (_a = parameters.uuid) !== null && _a !== void 0 ? _a : this._configuration.userId, keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12410,30 +12130,32 @@
 	    setState(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a, _b;
-	            const { keySet, userId: userId } = this._configuration;
-	            const heartbeat = this._configuration.getPresenceTimeout();
-	            let request;
-	            // Maintain presence information (if required).
-	            if (this._configuration.enableEventEngine && this.presenceState) {
-	                const presenceState = this.presenceState;
-	                (_a = parameters.channels) === null || _a === void 0 ? void 0 : _a.forEach((channel) => (presenceState[channel] = parameters.state));
-	                if ('channelGroups' in parameters) {
-	                    (_b = parameters.channelGroups) === null || _b === void 0 ? void 0 : _b.forEach((group) => (presenceState[group] = parameters.state));
+	            {
+	                const { keySet, userId: userId } = this._configuration;
+	                const heartbeat = this._configuration.getPresenceTimeout();
+	                let request;
+	                // Maintain presence information (if required).
+	                if (this._configuration.enableEventEngine && this.presenceState) {
+	                    const presenceState = this.presenceState;
+	                    (_a = parameters.channels) === null || _a === void 0 ? void 0 : _a.forEach((channel) => (presenceState[channel] = parameters.state));
+	                    if ('channelGroups' in parameters) {
+	                        (_b = parameters.channelGroups) === null || _b === void 0 ? void 0 : _b.forEach((group) => (presenceState[group] = parameters.state));
+	                    }
 	                }
+	                // Check whether state should be set with heartbeat or not.
+	                if ('withHeartbeat' in parameters) {
+	                    request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { keySet, heartbeat }));
+	                }
+	                else {
+	                    request = new SetPresenceStateRequest(Object.assign(Object.assign({}, parameters), { keySet, uuid: userId }));
+	                }
+	                // Update state used by subscription manager.
+	                if (this.subscriptionManager)
+	                    this.subscriptionManager.setState(parameters);
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
 	            }
-	            // Check whether state should be set with heartbeat or not.
-	            if ('withHeartbeat' in parameters) {
-	                request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { keySet, heartbeat }));
-	            }
-	            else {
-	                request = new SetPresenceStateRequest(Object.assign(Object.assign({}, parameters), { keySet, uuid: userId }));
-	            }
-	            // Update state used by subscription manager.
-	            if (this.subscriptionManager)
-	                this.subscriptionManager.setState(parameters);
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
 	        });
 	    }
 	    // endregion
@@ -12457,10 +12179,12 @@
 	     */
 	    heartbeat(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    // endregion
@@ -12504,10 +12228,7 @@
 	     */
 	    grantToken(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new GrantTokenRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            throw new Error('Grant Token error: PAM module disabled');
 	        });
 	    }
 	    /**
@@ -12520,10 +12241,7 @@
 	     */
 	    revokeToken(token, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new RevokeTokenRequest({ token, keySet: this._configuration.keySet });
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            throw new Error('Revoke Token error: PAM module disabled');
 	        });
 	    }
 	    // endregion
@@ -12534,7 +12252,7 @@
 	     * @returns Previously configured access token using {@link setToken} method.
 	     */
 	    get token() {
-	        return this.tokenManager.getToken();
+	        return this.tokenManager && this.tokenManager.getToken();
 	    }
 	    /**
 	     * Get current access token.
@@ -12550,7 +12268,8 @@
 	     * @param token - New access token which should be used with next REST API endpoint calls.
 	     */
 	    set token(token) {
-	        this.tokenManager.setToken(token);
+	        if (this.tokenManager)
+	            this.tokenManager.setToken(token);
 	    }
 	    /**
 	     * Set current access token.
@@ -12570,7 +12289,7 @@
 	     * @returns Token's permissions information for the resources.
 	     */
 	    parseToken(token) {
-	        return this.tokenManager.parseToken(token);
+	        return this.tokenManager && this.tokenManager.parseToken(token);
 	    }
 	    /**
 	     * Grant auth key(s) permission.
@@ -12584,10 +12303,7 @@
 	     */
 	    grant(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new GrantRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            throw new Error('Grant error: PAM module disabled');
 	        });
 	    }
 	    /**
@@ -12602,10 +12318,7 @@
 	     */
 	    audit(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new AuditRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            throw new Error('Grant Permissions error: PAM module disabled');
 	        });
 	    }
 	    // endregion
@@ -12841,26 +12554,28 @@
 	    removeMemberships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a, _b, _c;
-	            if ('spaceId' in parameters) {
-	                const spaceParameters = parameters;
+	            {
+	                if ('spaceId' in parameters) {
+	                    const spaceParameters = parameters;
+	                    const requestParameters = {
+	                        channel: (_a = spaceParameters.spaceId) !== null && _a !== void 0 ? _a : spaceParameters.channel,
+	                        uuids: (_b = spaceParameters.userIds) !== null && _b !== void 0 ? _b : spaceParameters.uuids,
+	                        limit: 0,
+	                    };
+	                    if (callback)
+	                        return this.objects.removeChannelMembers(requestParameters, callback);
+	                    return this.objects.removeChannelMembers(requestParameters);
+	                }
+	                const userParameters = parameters;
 	                const requestParameters = {
-	                    channel: (_a = spaceParameters.spaceId) !== null && _a !== void 0 ? _a : spaceParameters.channel,
-	                    uuids: (_b = spaceParameters.userIds) !== null && _b !== void 0 ? _b : spaceParameters.uuids,
+	                    uuid: userParameters.userId,
+	                    channels: (_c = userParameters.spaceIds) !== null && _c !== void 0 ? _c : userParameters.channels,
 	                    limit: 0,
 	                };
 	                if (callback)
-	                    return this.objects.removeChannelMembers(requestParameters, callback);
-	                return this.objects.removeChannelMembers(requestParameters);
+	                    return this.objects.removeMemberships(requestParameters, callback);
+	                return this.objects.removeMemberships(requestParameters);
 	            }
-	            const userParameters = parameters;
-	            const requestParameters = {
-	                uuid: userParameters.userId,
-	                channels: (_c = userParameters.spaceIds) !== null && _c !== void 0 ? _c : userParameters.channels,
-	                limit: 0,
-	            };
-	            if (callback)
-	                return this.objects.removeMemberships(requestParameters, callback);
-	            return this.objects.removeMemberships(requestParameters);
 	        });
 	    }
 	    // endregion
@@ -12896,34 +12611,36 @@
 	     */
 	    sendFile(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            if (!this._configuration.PubNubFile)
-	                throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
-	            const sendFileRequest = new SendFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, PubNubFile: this._configuration.PubNubFile, fileUploadPublishRetryLimit: this._configuration.fileUploadPublishRetryLimit, file: parameters.file, sendRequest: this.sendRequest.bind(this), publishFile: this.publishFile.bind(this), crypto: this._configuration.getCryptoModule(), cryptography: this.cryptography ? this.cryptography : undefined }));
-	            const status = {
-	                error: false,
-	                operation: RequestOperation$1.PNPublishFileOperation,
-	                category: StatusCategory$1.PNAcknowledgmentCategory,
-	                statusCode: 0,
-	            };
-	            return sendFileRequest
-	                .process()
-	                .then((response) => {
-	                status.statusCode = response.status;
-	                if (callback)
-	                    return callback(status, response);
-	                return response;
-	            })
-	                .catch((error) => {
-	                let errorStatus;
-	                if (error instanceof PubNubError)
-	                    errorStatus = error.status;
-	                else if (error instanceof PubNubAPIError)
-	                    errorStatus = error.toStatus(status.operation);
-	                // Notify callback (if possible).
-	                if (callback && errorStatus)
-	                    callback(errorStatus, null);
-	                throw new PubNubError('REST API request processing error, check status for details', errorStatus);
-	            });
+	            {
+	                if (!this._configuration.PubNubFile)
+	                    throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+	                const sendFileRequest = new SendFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, PubNubFile: this._configuration.PubNubFile, fileUploadPublishRetryLimit: this._configuration.fileUploadPublishRetryLimit, file: parameters.file, sendRequest: this.sendRequest.bind(this), publishFile: this.publishFile.bind(this), crypto: this._configuration.getCryptoModule(), cryptography: this.cryptography ? this.cryptography : undefined }));
+	                const status = {
+	                    error: false,
+	                    operation: RequestOperation$1.PNPublishFileOperation,
+	                    category: StatusCategory$1.PNAcknowledgmentCategory,
+	                    statusCode: 0,
+	                };
+	                return sendFileRequest
+	                    .process()
+	                    .then((response) => {
+	                    status.statusCode = response.status;
+	                    if (callback)
+	                        return callback(status, response);
+	                    return response;
+	                })
+	                    .catch((error) => {
+	                    let errorStatus;
+	                    if (error instanceof PubNubError)
+	                        errorStatus = error.status;
+	                    else if (error instanceof PubNubAPIError)
+	                        errorStatus = error.toStatus(status.operation);
+	                    // Notify callback (if possible).
+	                    if (callback && errorStatus)
+	                        callback(errorStatus, null);
+	                    throw new PubNubError('REST API request processing error, check status for details', errorStatus);
+	                });
+	            }
 	        });
 	    }
 	    /**
@@ -12936,12 +12653,14 @@
 	     */
 	    publishFile(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            if (!this._configuration.PubNubFile)
-	                throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
-	            const request = new PublishFileMessageRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                if (!this._configuration.PubNubFile)
+	                    throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+	                const request = new PublishFileMessageRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -12954,10 +12673,12 @@
 	     */
 	    listFiles(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new FilesListRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new FilesListRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    // endregion
@@ -12971,17 +12692,19 @@
 	     */
 	    getFileUrl(parameters) {
 	        var _a;
-	        const request = this.transport.request(new GetFileDownloadUrlRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet })).request());
-	        const query = (_a = request.queryParameters) !== null && _a !== void 0 ? _a : {};
-	        const queryString = Object.keys(query)
-	            .map((key) => {
-	            const queryValue = query[key];
-	            if (!Array.isArray(queryValue))
-	                return `${key}=${encodeString(queryValue)}`;
-	            return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
-	        })
-	            .join('&');
-	        return `${request.origin}${request.path}?${queryString}`;
+	        {
+	            const request = this.transport.request(new GetFileDownloadUrlRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet })).request());
+	            const query = (_a = request.queryParameters) !== null && _a !== void 0 ? _a : {};
+	            const queryString = Object.keys(query)
+	                .map((key) => {
+	                const queryValue = query[key];
+	                if (!Array.isArray(queryValue))
+	                    return `${key}=${encodeString(queryValue)}`;
+	                return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
+	            })
+	                .join('&');
+	            return `${request.origin}${request.path}?${queryString}`;
+	        }
 	    }
 	    /**
 	     * Download shared file from specific channel.
@@ -12993,12 +12716,14 @@
 	     */
 	    downloadFile(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            if (!this._configuration.PubNubFile)
-	                throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
-	            const request = new DownloadFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, PubNubFile: this._configuration.PubNubFile, cryptography: this.cryptography ? this.cryptography : undefined, crypto: this._configuration.getCryptoModule() }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return (yield this.sendRequest(request));
+	            {
+	                if (!this._configuration.PubNubFile)
+	                    throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+	                const request = new DownloadFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, PubNubFile: this._configuration.PubNubFile, cryptography: this.cryptography ? this.cryptography : undefined, crypto: this._configuration.getCryptoModule() }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return (yield this.sendRequest(request));
+	            }
 	        });
 	    }
 	    /**
@@ -13011,10 +12736,12 @@
 	     */
 	    deleteFile(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const request = new DeleteFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	            {
+	                const request = new DeleteFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                if (callback)
+	                    return this.sendRequest(request, callback);
+	                return this.sendRequest(request);
+	            }
 	        });
 	    }
 	    /**
@@ -13056,7 +12783,9 @@
 	        }
 	        if (!this.crypto)
 	            throw new Error('Encryption error: cypher key not set');
-	        return this.crypto.encrypt(data, customCipherKey);
+	        {
+	            return this.crypto.encrypt(data, customCipherKey);
+	        }
 	    }
 	    /**
 	     * Decrypt data.
@@ -13075,7 +12804,9 @@
 	        }
 	        if (!this.crypto)
 	            throw new Error('Decryption error: cypher key not set');
-	        return this.crypto.decrypt(data, customCipherKey);
+	        {
+	            return this.crypto.decrypt(data, customCipherKey);
+	        }
 	    }
 	    /**
 	     * Encrypt file content.
@@ -13210,43 +12941,55 @@
 	    constructor(configuration) {
 	        var _a;
 	        const configurationCopy = setDefaults(configuration);
-	        const platformConfiguration = Object.assign(Object.assign({}, configurationCopy), { sdkFamily: 'Web', PubNubFile });
+	        const platformConfiguration = Object.assign(Object.assign({}, configurationCopy), { sdkFamily: 'Web' });
+	        platformConfiguration.PubNubFile = PubNubFile;
 	        // Prepare full client configuration.
 	        const clientConfiguration = makeConfiguration(platformConfiguration, (cryptoConfiguration) => {
 	            if (!cryptoConfiguration.cipherKey)
 	                return undefined;
-	            return new WebCryptoModule({
-	                default: new LegacyCryptor(Object.assign({}, cryptoConfiguration)),
-	                cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
-	            });
+	            {
+	                return new WebCryptoModule({
+	                    default: new LegacyCryptor(Object.assign({}, cryptoConfiguration)),
+	                    cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
+	                });
+	            }
 	        });
 	        // Prepare Token manager.
-	        const tokenManager = new TokenManager(new Cbor((arrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)), decode));
+	        let tokenManager;
+	        {
+	            tokenManager = new TokenManager(new Cbor((arrayBuffer) => stringifyBufferKeys(CborReader.decode(arrayBuffer)), decode));
+	        }
 	        // Legacy crypto (legacy data encryption / decryption and request signature support).
 	        let crypto;
-	        if (clientConfiguration.getCipherKey() || clientConfiguration.secretKey) {
-	            crypto = new Crypto({
-	                secretKey: clientConfiguration.secretKey,
-	                cipherKey: clientConfiguration.getCipherKey(),
-	                useRandomIVs: clientConfiguration.getUseRandomIVs(),
-	                customEncrypt: clientConfiguration.getCustomEncrypt(),
-	                customDecrypt: clientConfiguration.getCustomDecrypt(),
-	            });
+	        {
+	            if (clientConfiguration.getCipherKey() || clientConfiguration.secretKey) {
+	                crypto = new Crypto({
+	                    secretKey: clientConfiguration.secretKey,
+	                    cipherKey: clientConfiguration.getCipherKey(),
+	                    useRandomIVs: clientConfiguration.getUseRandomIVs(),
+	                    customEncrypt: clientConfiguration.getCustomEncrypt(),
+	                    customDecrypt: clientConfiguration.getCustomDecrypt(),
+	                });
+	            }
 	        }
+	        let cryptography;
+	        cryptography = new WebCryptography();
 	        // Setup transport provider.
 	        let transport = new WebReactNativeTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity);
-	        if (configurationCopy.subscriptionWorkerUrl) {
-	            // Inject subscription worker into transport provider stack.
-	            transport = new SubscriptionWorkerMiddleware({
-	                clientIdentifier: clientConfiguration._instanceId,
-	                subscriptionKey: clientConfiguration.subscribeKey,
-	                userId: clientConfiguration.getUserId(),
-	                workerUrl: configurationCopy.subscriptionWorkerUrl,
-	                sdkVersion: clientConfiguration.getVersion(),
-	                logVerbosity: clientConfiguration.logVerbosity,
-	                workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
-	                transport,
-	            });
+	        {
+	            if (configurationCopy.subscriptionWorkerUrl) {
+	                // Inject subscription worker into transport provider stack.
+	                transport = new SubscriptionWorkerMiddleware({
+	                    clientIdentifier: clientConfiguration._instanceId,
+	                    subscriptionKey: clientConfiguration.subscribeKey,
+	                    userId: clientConfiguration.getUserId(),
+	                    workerUrl: configurationCopy.subscriptionWorkerUrl,
+	                    sdkVersion: clientConfiguration.getVersion(),
+	                    logVerbosity: clientConfiguration.logVerbosity,
+	                    workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
+	                    transport,
+	                });
+	            }
 	        }
 	        const transportMiddleware = new PubNubMiddleware({
 	            clientConfiguration,
@@ -13256,7 +12999,7 @@
 	        super({
 	            configuration: clientConfiguration,
 	            transport: transportMiddleware,
-	            cryptography: new WebCryptography(),
+	            cryptography,
 	            tokenManager,
 	            crypto,
 	        });
@@ -13284,7 +13027,8 @@
 	/**
 	 * Data encryption / decryption module constructor.
 	 */
-	PubNub.CryptoModule = WebCryptoModule;
+	// @ts-expect-error Allowed to simplify interface when module can be disabled.
+	PubNub.CryptoModule = WebCryptoModule ;
 
 	return PubNub;
 

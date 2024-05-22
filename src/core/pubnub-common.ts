@@ -126,7 +126,7 @@ type ClientInstanceConfiguration<CryptographyTypes> = {
   /**
    * REST API endpoints access tokens manager.
    */
-  tokenManager: TokenManager;
+  tokenManager?: TokenManager;
 
   /**
    * Legacy crypto module implementation.
@@ -176,7 +176,7 @@ export class PubNubCore<
    *
    * @internal
    */
-  private readonly tokenManager: TokenManager;
+  private readonly tokenManager?: TokenManager;
 
   /**
    * Legacy crypto module implementation.
@@ -197,6 +197,7 @@ export class PubNubCore<
    *
    * @internal
    */
+  // @ts-expect-error Allowed to simplify interface when module can be disabled.
   protected readonly listenerManager: ListenerManager;
 
   /**
@@ -225,6 +226,7 @@ export class PubNubCore<
    *
    * @internal
    */
+  // @ts-expect-error Allowed to simplify interface when module can be disabled.
   private readonly eventEmitter: EventEmitter;
 
   /**
@@ -232,12 +234,15 @@ export class PubNubCore<
    *
    * @internal
    */
+  // @ts-expect-error Allowed to simplify interface when module can be disabled.
   private readonly _objects: PubNubObjects;
 
   /**
    * PubNub Channel Group REST API entry point.
+   *
+   * @internal
    */
-  // @internal @ts-ignore
+  // @ts-expect-error Allowed to simplify interface when module can be disabled.
   private readonly _channelGroups: PubNubChannelGroups;
 
   /**
@@ -245,6 +250,7 @@ export class PubNubCore<
    *
    * @internal
    */
+  // @ts-expect-error Allowed to simplify interface when module can be disabled.
   private readonly _push: PubNubPushNotifications;
 
   /**
@@ -288,7 +294,9 @@ export class PubNubCore<
    * @returns Pre-formatted message payload which will trigger push notification.
    */
   static notificationPayload(title: string, body: string) {
-    return new NotificationsPayload(title, body);
+    if (process.env.PUBLISH_MODULE !== 'disabled') {
+      return new NotificationsPayload(title, body);
+    } else throw new Error('Notification Payload error: publish module disabled');
   }
 
   /**
@@ -309,69 +317,80 @@ export class PubNubCore<
     this.crypto = configuration.crypto;
 
     // API group entry points initialization.
-    this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
-    this._channelGroups = new PubNubChannelGroups(this._configuration.keySet, this.sendRequest.bind(this));
-    this._push = new PubNubPushNotifications(this._configuration.keySet, this.sendRequest.bind(this));
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled')
+      this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
+    if (process.env.CHANNEL_GROUPS_MODULE !== 'disabled')
+      this._channelGroups = new PubNubChannelGroups(this._configuration.keySet, this.sendRequest.bind(this));
+    if (process.env.MOBILE_PUSH_MODULE !== 'disabled')
+      this._push = new PubNubPushNotifications(this._configuration.keySet, this.sendRequest.bind(this));
 
-    // Prepare for real-time events announcement.
-    this.listenerManager = new ListenerManager();
-    this.eventEmitter = new EventEmitter(this.listenerManager);
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      // Prepare for real-time events announcement.
+      this.listenerManager = new ListenerManager();
+      this.eventEmitter = new EventEmitter(this.listenerManager);
 
-    if (this._configuration.enableEventEngine) {
-      let heartbeatInterval = this._configuration.getHeartbeatInterval();
-      this.presenceState = {};
+      if (this._configuration.enableEventEngine) {
+        if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+          let heartbeatInterval = this._configuration.getHeartbeatInterval();
+          this.presenceState = {};
 
-      if (heartbeatInterval) {
-        this.presenceEventEngine = new PresenceEventEngine({
-          heartbeat: this.heartbeat.bind(this),
-          leave: (parameters) => this.makeUnsubscribe(parameters, () => {}),
-          heartbeatDelay: () =>
-            new Promise((resolve, reject) => {
-              heartbeatInterval = this._configuration.getHeartbeatInterval();
-              if (!heartbeatInterval) reject(new PubNubError('Heartbeat interval has been reset.'));
-              else setTimeout(resolve, heartbeatInterval * 1000);
-            }),
-          retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-          emitStatus: (status) => this.listenerManager.announceStatus(status),
-          config: this._configuration,
-          presenceState: this.presenceState,
-        });
-      }
-
-      this.eventEngine = new EventEngine({
-        handshake: this.subscribeHandshake.bind(this),
-        receiveMessages: this.subscribeReceiveMessages.bind(this),
-        delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-        join: this.join.bind(this),
-        leave: this.leave.bind(this),
-        leaveAll: this.leaveAll.bind(this),
-        presenceState: this.presenceState,
-        config: this._configuration,
-        emitMessages: (events) => {
-          try {
-            events.forEach((event) => this.eventEmitter.emitEvent(event));
-          } catch (e) {
-            const errorStatus: Status = {
-              error: true,
-              category: StatusCategory.PNUnknownCategory,
-              errorData: e as Error,
-              statusCode: 0,
-            };
-            this.listenerManager.announceStatus(errorStatus);
+          if (process.env.PRESENCE_MODULE !== 'disabled') {
+            if (heartbeatInterval) {
+              this.presenceEventEngine = new PresenceEventEngine({
+                heartbeat: this.heartbeat.bind(this),
+                leave: (parameters) => this.makeUnsubscribe(parameters, () => {}),
+                heartbeatDelay: () =>
+                  new Promise((resolve, reject) => {
+                    heartbeatInterval = this._configuration.getHeartbeatInterval();
+                    if (!heartbeatInterval) reject(new PubNubError('Heartbeat interval has been reset.'));
+                    else setTimeout(resolve, heartbeatInterval * 1000);
+                  }),
+                retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+                emitStatus: (status) => this.listenerManager.announceStatus(status),
+                config: this._configuration,
+                presenceState: this.presenceState,
+              });
+            }
           }
-        },
-        emitStatus: (status) => this.listenerManager.announceStatus(status),
-      });
-    } else {
-      this.subscriptionManager = new SubscriptionManager(
-        this._configuration,
-        this.listenerManager,
-        this.eventEmitter,
-        this.makeSubscribe.bind(this),
-        this.heartbeat.bind(this),
-        this.makeUnsubscribe.bind(this),
-        this.time.bind(this),
-      );
+
+          this.eventEngine = new EventEngine({
+            handshake: this.subscribeHandshake.bind(this),
+            receiveMessages: this.subscribeReceiveMessages.bind(this),
+            delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
+            join: this.join.bind(this),
+            leave: this.leave.bind(this),
+            leaveAll: this.leaveAll.bind(this),
+            presenceState: this.presenceState,
+            config: this._configuration,
+            emitMessages: (events) => {
+              try {
+                events.forEach((event) => this.eventEmitter.emitEvent(event));
+              } catch (e) {
+                const errorStatus: Status = {
+                  error: true,
+                  category: StatusCategory.PNUnknownCategory,
+                  errorData: e as Error,
+                  statusCode: 0,
+                };
+                this.listenerManager.announceStatus(errorStatus);
+              }
+            },
+            emitStatus: (status) => this.listenerManager.announceStatus(status),
+          });
+        } else throw new Error('Event Engine error: subscription event engine module disabled');
+      } else {
+        if (process.env.SUBSCRIBE_MANAGER_MODULE !== 'disabled') {
+          this.subscriptionManager = new SubscriptionManager(
+            this._configuration,
+            this.listenerManager,
+            this.eventEmitter,
+            this.makeSubscribe.bind(this),
+            this.heartbeat.bind(this),
+            this.makeUnsubscribe.bind(this),
+            this.time.bind(this),
+          );
+        } else throw new Error('Subscription Manager error: subscription manager module disabled');
+      }
     }
   }
 
@@ -695,7 +714,9 @@ export class PubNubCore<
     channelGroups?: string[];
     subscriptionOptions?: SubscriptionOptions;
   }): SubscriptionSet {
-    return new SubscriptionSet({ ...parameters, eventEmitter: this.eventEmitter, pubnub: this });
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      return new SubscriptionSet({ ...parameters, eventEmitter: this.eventEmitter, pubnub: this });
+    } else throw new Error('Subscription error: subscription event engine module disabled');
   }
   // endregion
 
@@ -818,10 +839,12 @@ export class PubNubCore<
    * @param [isOffline] - Whether `offline` presence should be notified or not.
    */
   public destroy(isOffline?: boolean): void {
-    if (this.subscriptionManager) {
-      this.subscriptionManager.unsubscribeAll(isOffline);
-      this.subscriptionManager.disconnect();
-    } else if (this.eventEngine) this.eventEngine.dispose();
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.subscriptionManager) {
+        this.subscriptionManager.unsubscribeAll(isOffline);
+        this.subscriptionManager.disconnect();
+      } else if (this.eventEngine) this.eventEngine.dispose();
+    }
   }
 
   /**
@@ -845,7 +868,8 @@ export class PubNubCore<
    * @param listener - Listener with event callbacks to handle different types of events.
    */
   public addListener(listener: Listener): void {
-    this.listenerManager.addListener(listener);
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') this.listenerManager.addListener(listener);
+    else throw new Error('Subscription error: subscription module disabled');
   }
 
   /**
@@ -854,14 +878,16 @@ export class PubNubCore<
    * @param listener - Event listeners which should be removed.
    */
   public removeListener(listener: Listener): void {
-    this.listenerManager.removeListener(listener);
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') this.listenerManager.removeListener(listener);
+    else throw new Error('Subscription error: subscription module disabled');
   }
 
   /**
    * Clear all real-time event listeners.
    */
   public removeAllListeners(): void {
-    this.listenerManager.removeAllListeners();
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') this.listenerManager.removeAllListeners();
+    else throw new Error('Subscription error: subscription module disabled');
   }
 
   // endregion
@@ -900,14 +926,16 @@ export class PubNubCore<
     parameters: Publish.PublishParameters,
     callback?: ResultCallback<Publish.PublishResponse>,
   ): Promise<Publish.PublishResponse | void> {
-    const request = new Publish.PublishRequest({
-      ...parameters,
-      keySet: this._configuration.keySet,
-      crypto: this._configuration.getCryptoModule(),
-    });
+    if (process.env.PUBLISH_MODULE !== 'disabled') {
+      const request = new Publish.PublishRequest({
+        ...parameters,
+        keySet: this._configuration.keySet,
+        crypto: this._configuration.getCryptoModule(),
+      });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Publish error: publish module disabled');
   }
   // endregion
 
@@ -945,13 +973,15 @@ export class PubNubCore<
     parameters: Signal.SignalParameters,
     callback?: ResultCallback<Signal.SignalResponse>,
   ): Promise<Signal.SignalResponse | void> {
-    const request = new Signal.SignalRequest({
-      ...parameters,
-      keySet: this._configuration.keySet,
-    });
+    if (process.env.PUBLISH_MODULE !== 'disabled') {
+      const request = new Signal.SignalRequest({
+        ...parameters,
+        keySet: this._configuration.keySet,
+      });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Publish error: publish module disabled');
   }
   // endregion
 
@@ -1011,8 +1041,10 @@ export class PubNubCore<
    * @returns List of active channels.
    */
   public getSubscribedChannels(): string[] {
-    if (this.subscriptionManager) return this.subscriptionManager.subscribedChannels;
-    else if (this.eventEngine) return this.eventEngine.getSubscribedChannels();
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.subscriptionManager) return this.subscriptionManager.subscribedChannels;
+      else if (this.eventEngine) return this.eventEngine.getSubscribedChannels();
+    } else throw new Error('Subscription error: subscription module disabled');
 
     return [];
   }
@@ -1023,8 +1055,10 @@ export class PubNubCore<
    * @returns List of active channel groups.
    */
   public getSubscribedChannelGroups(): string[] {
-    if (this.subscriptionManager) return this.subscriptionManager.subscribedChannelGroups;
-    else if (this.eventEngine) return this.eventEngine.getSubscribedChannelGroups();
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.subscriptionManager) return this.subscriptionManager.subscribedChannelGroups;
+      else if (this.eventEngine) return this.eventEngine.getSubscribedChannelGroups();
+    } else throw new Error('Subscription error: subscription module disabled');
 
     return [];
   }
@@ -1035,8 +1069,10 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    */
   public subscribe(parameters: Subscription.SubscribeParameters): void {
-    if (this.subscriptionManager) this.subscriptionManager.subscribe(parameters);
-    else if (this.eventEngine) this.eventEngine.subscribe(parameters);
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.subscriptionManager) this.subscriptionManager.subscribe(parameters);
+      else if (this.eventEngine) this.eventEngine.subscribe(parameters);
+    } else throw new Error('Subscription error: subscription module disabled');
   }
 
   /**
@@ -1051,33 +1087,35 @@ export class PubNubCore<
     parameters: Omit<SubscribeRequestParameters, 'crypto' | 'timeout' | 'keySet' | 'getFileUrl'>,
     callback: ResultCallback<Subscription.SubscriptionResponse>,
   ): void {
-    const request = new SubscribeRequest({
-      ...parameters,
-      keySet: this._configuration.keySet,
-      crypto: this._configuration.getCryptoModule(),
-      getFileUrl: this.getFileUrl.bind(this),
-    });
+    if (process.env.SUBSCRIBE_MANAGER_MODULE !== 'disabled') {
+      const request = new SubscribeRequest({
+        ...parameters,
+        keySet: this._configuration.keySet,
+        crypto: this._configuration.getCryptoModule(),
+        getFileUrl: this.getFileUrl.bind(this),
+      });
 
-    this.sendRequest(request, (status, result) => {
-      if (this.subscriptionManager && this.subscriptionManager.abort?.identifier === request.requestIdentifier)
-        this.subscriptionManager.abort = null;
+      this.sendRequest(request, (status, result) => {
+        if (this.subscriptionManager && this.subscriptionManager.abort?.identifier === request.requestIdentifier)
+          this.subscriptionManager.abort = null;
 
-      callback(status, result);
-    });
+        callback(status, result);
+      });
 
-    /**
-     * Allow subscription cancellation.
-     *
-     * **Note:** Had to be done after scheduling because transport provider return cancellation
-     * controller only when schedule new request.
-     */
-    if (this.subscriptionManager) {
-      // Creating identifiable abort caller.
-      const callableAbort = () => request.abort();
-      callableAbort.identifier = request.requestIdentifier;
+      /**
+       * Allow subscription cancellation.
+       *
+       * **Note:** Had to be done after scheduling because transport provider return cancellation
+       * controller only when schedule new request.
+       */
+      if (this.subscriptionManager) {
+        // Creating identifiable abort caller.
+        const callableAbort = () => request.abort();
+        callableAbort.identifier = request.requestIdentifier;
 
-      this.subscriptionManager.abort = callableAbort;
-    }
+        this.subscriptionManager.abort = callableAbort;
+      }
+    } else throw new Error('Subscription error: subscription manager module disabled');
   }
 
   /**
@@ -1086,8 +1124,10 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    */
   public unsubscribe(parameters: Presence.PresenceLeaveParameters): void {
-    if (this.subscriptionManager) this.subscriptionManager.unsubscribe(parameters);
-    else if (this.eventEngine) this.eventEngine.unsubscribe(parameters);
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.subscriptionManager) this.subscriptionManager.unsubscribe(parameters);
+      else if (this.eventEngine) this.eventEngine.unsubscribe(parameters);
+    } else throw new Error('Unsubscription error: subscription module disabled');
   }
 
   /**
@@ -1099,29 +1139,35 @@ export class PubNubCore<
    * @param callback - Request completion handler callback.
    */
   private makeUnsubscribe(parameters: Presence.PresenceLeaveParameters, callback: StatusCallback): void {
-    this.sendRequest(
-      new PresenceLeaveRequest({
-        ...parameters,
-        keySet: this._configuration.keySet,
-      }),
-      callback,
-    );
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      this.sendRequest(
+        new PresenceLeaveRequest({
+          ...parameters,
+          keySet: this._configuration.keySet,
+        }),
+        callback,
+      );
+    } else throw new Error('Unsubscription error: presence module disabled');
   }
 
   /**
    * Unsubscribe from all channels and groups.
    */
   public unsubscribeAll() {
-    if (this.subscriptionManager) this.subscriptionManager.unsubscribeAll();
-    else if (this.eventEngine) this.eventEngine.unsubscribeAll();
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.subscriptionManager) this.subscriptionManager.unsubscribeAll();
+      else if (this.eventEngine) this.eventEngine.unsubscribeAll();
+    } else throw new Error('Unsubscription error: subscription module disabled');
   }
 
   /**
    * Temporarily disconnect from real-time events stream.
    */
   public disconnect(): void {
-    if (this.subscriptionManager) this.subscriptionManager.disconnect();
-    else if (this.eventEngine) this.eventEngine.disconnect();
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.subscriptionManager) this.subscriptionManager.disconnect();
+      else if (this.eventEngine) this.eventEngine.disconnect();
+    } else throw new Error('Disconnection error: subscription module disabled');
   }
 
   /**
@@ -1131,8 +1177,10 @@ export class PubNubCore<
    * enabled event engine.
    */
   public reconnect(parameters?: { timetoken?: string; region?: number }): void {
-    if (this.subscriptionManager) this.subscriptionManager.reconnect();
-    else if (this.eventEngine) this.eventEngine.reconnect(parameters ?? {});
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.subscriptionManager) this.subscriptionManager.reconnect();
+      else if (this.eventEngine) this.eventEngine.reconnect(parameters ?? {});
+    } else throw new Error('Reconnection error: subscription module disabled');
   }
 
   /**
@@ -1141,28 +1189,30 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    */
   private async subscribeHandshake(parameters: Subscription.CancelableSubscribeParameters) {
-    const request = new HandshakeSubscribeRequest({
-      ...parameters,
-      keySet: this._configuration.keySet,
-      crypto: this._configuration.getCryptoModule(),
-      getFileUrl: this.getFileUrl.bind(this),
-    });
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      const request = new HandshakeSubscribeRequest({
+        ...parameters,
+        keySet: this._configuration.keySet,
+        crypto: this._configuration.getCryptoModule(),
+        getFileUrl: this.getFileUrl.bind(this),
+      });
 
-    const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
-      request.abort();
-    });
+      const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
+        request.abort();
+      });
 
-    /**
-     * Allow subscription cancellation.
-     *
-     * **Note:** Had to be done after scheduling because transport provider return cancellation
-     * controller only when schedule new request.
-     */
-    const handshakeResponse = this.sendRequest(request);
-    return handshakeResponse.then((response) => {
-      abortUnsubscribe();
-      return response.cursor;
-    });
+      /**
+       * Allow subscription cancellation.
+       *
+       * **Note:** Had to be done after scheduling because transport provider return cancellation
+       * controller only when schedule new request.
+       */
+      const handshakeResponse = this.sendRequest(request);
+      return handshakeResponse.then((response) => {
+        abortUnsubscribe();
+        return response.cursor;
+      });
+    } else throw new Error('Subscription error: subscription event engine module disabled');
   }
 
   /**
@@ -1171,28 +1221,30 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    */
   private async subscribeReceiveMessages(parameters: Subscription.CancelableSubscribeParameters) {
-    const request = new ReceiveMessagesSubscribeRequest({
-      ...parameters,
-      keySet: this._configuration.keySet,
-      crypto: this._configuration.getCryptoModule(),
-      getFileUrl: this.getFileUrl.bind(this),
-    });
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      const request = new ReceiveMessagesSubscribeRequest({
+        ...parameters,
+        keySet: this._configuration.keySet,
+        crypto: this._configuration.getCryptoModule(),
+        getFileUrl: this.getFileUrl.bind(this),
+      });
 
-    const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
-      request.abort();
-    });
+      const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
+        request.abort();
+      });
 
-    /**
-     * Allow subscription cancellation.
-     *
-     * **Note:** Had to be done after scheduling because transport provider return cancellation
-     * controller only when schedule new request.
-     */
-    const handshakeResponse = this.sendRequest(request);
-    return handshakeResponse.then((response) => {
-      abortUnsubscribe();
-      return response;
-    });
+      /**
+       * Allow subscription cancellation.
+       *
+       * **Note:** Had to be done after scheduling because transport provider return cancellation
+       * controller only when schedule new request.
+       */
+      const handshakeResponse = this.sendRequest(request);
+      return handshakeResponse.then((response) => {
+        abortUnsubscribe();
+        return response;
+      });
+    } else throw new Error('Subscription error: subscription event engine module disabled');
   }
   // endregion
 
@@ -1236,10 +1288,12 @@ export class PubNubCore<
     parameters: MessageAction.GetMessageActionsParameters,
     callback?: ResultCallback<MessageAction.GetMessageActionsResponse>,
   ): Promise<MessageAction.GetMessageActionsResponse | void> {
-    const request = new GetMessageActionsRequest({ ...parameters, keySet: this._configuration.keySet });
+    if (process.env.MESSAGE_REACTIONS_MODULE !== 'disabled') {
+      const request = new GetMessageActionsRequest({ ...parameters, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Get Message Actions error: message reactions module disabled');
   }
   // endregion
 
@@ -1278,10 +1332,12 @@ export class PubNubCore<
     parameters: MessageAction.AddMessageActionParameters,
     callback?: ResultCallback<MessageAction.AddMessageActionResponse>,
   ): Promise<MessageAction.AddMessageActionResponse | void> {
-    const request = new AddMessageActionRequest({ ...parameters, keySet: this._configuration.keySet });
+    if (process.env.MESSAGE_REACTIONS_MODULE !== 'disabled') {
+      const request = new AddMessageActionRequest({ ...parameters, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Add Message Action error: message reactions module disabled');
   }
   // endregion
 
@@ -1320,10 +1376,12 @@ export class PubNubCore<
     parameters: MessageAction.RemoveMessageActionParameters,
     callback?: ResultCallback<MessageAction.RemoveMessageActionResponse>,
   ): Promise<MessageAction.RemoveMessageActionResponse | void> {
-    const request = new RemoveMessageAction({ ...parameters, keySet: this._configuration.keySet });
+    if (process.env.MESSAGE_REACTIONS_MODULE !== 'disabled') {
+      const request = new RemoveMessageAction({ ...parameters, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Remove Message Action error: message reactions module disabled');
   }
   // endregion
   // endregion
@@ -1366,15 +1424,17 @@ export class PubNubCore<
     parameters: History.FetchMessagesParameters,
     callback?: ResultCallback<History.FetchMessagesResponse>,
   ): Promise<History.FetchMessagesResponse | void> {
-    const request = new FetchMessagesRequest({
-      ...parameters,
-      keySet: this._configuration.keySet,
-      crypto: this._configuration.getCryptoModule(),
-      getFileUrl: this.getFileUrl.bind(this),
-    });
+    if (process.env.MESSAGE_PERSISTENCE_MODULE !== 'disabled') {
+      const request = new FetchMessagesRequest({
+        ...parameters,
+        keySet: this._configuration.keySet,
+        crypto: this._configuration.getCryptoModule(),
+        getFileUrl: this.getFileUrl.bind(this),
+      });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Fetch Messages History error: message persistence module disabled');
   }
   // endregion
 
@@ -1417,10 +1477,12 @@ export class PubNubCore<
     parameters: History.DeleteMessagesParameters,
     callback?: ResultCallback<History.DeleteMessagesResponse>,
   ): Promise<History.DeleteMessagesResponse | void> {
-    const request = new DeleteMessageRequest({ ...parameters, keySet: this._configuration.keySet });
+    if (process.env.MESSAGE_PERSISTENCE_MODULE !== 'disabled') {
+      const request = new DeleteMessageRequest({ ...parameters, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Delete Messages error: message persistence module disabled');
   }
   // endregion
 
@@ -1457,10 +1519,12 @@ export class PubNubCore<
     parameters: History.MessageCountParameters,
     callback?: ResultCallback<History.MessageCountResponse>,
   ): Promise<History.MessageCountResponse | void> {
-    const request = new MessageCountRequest({ ...parameters, keySet: this._configuration.keySet });
+    if (process.env.MESSAGE_PERSISTENCE_MODULE !== 'disabled') {
+      const request = new MessageCountRequest({ ...parameters, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Get Messages Count error: message persistence module disabled');
   }
   // endregion
 
@@ -1501,14 +1565,16 @@ export class PubNubCore<
     parameters: History.GetHistoryParameters,
     callback?: ResultCallback<History.GetHistoryResponse>,
   ): Promise<History.GetHistoryResponse | void> {
-    const request = new GetHistoryRequest({
-      ...parameters,
-      keySet: this._configuration.keySet,
-      crypto: this._configuration.getCryptoModule(),
-    });
+    if (process.env.MESSAGE_PERSISTENCE_MODULE !== 'disabled') {
+      const request = new GetHistoryRequest({
+        ...parameters,
+        keySet: this._configuration.keySet,
+        crypto: this._configuration.getCryptoModule(),
+      });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Get Messages History error: message persistence module disabled');
   }
   // endregion
   // endregion
@@ -1549,10 +1615,12 @@ export class PubNubCore<
     parameters: Presence.HereNowParameters,
     callback?: ResultCallback<Presence.HereNowResponse>,
   ): Promise<Presence.HereNowResponse | void> {
-    const request = new HereNowRequest({ ...parameters, keySet: this._configuration.keySet });
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      const request = new HereNowRequest({ ...parameters, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Get Channel Here Now error: presence module disabled');
   }
   // endregion
 
@@ -1592,13 +1660,15 @@ export class PubNubCore<
     parameters: Presence.WhereNowParameters,
     callback?: ResultCallback<Presence.WhereNowResponse>,
   ): Promise<Presence.WhereNowResponse | void> {
-    const request = new WhereNowRequest({
-      uuid: parameters.uuid ?? this._configuration.userId!,
-      keySet: this._configuration.keySet,
-    });
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      const request = new WhereNowRequest({
+        uuid: parameters.uuid ?? this._configuration.userId!,
+        keySet: this._configuration.keySet,
+      });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Get UUID Here Now error: presence module disabled');
   }
   // endregion
 
@@ -1635,14 +1705,16 @@ export class PubNubCore<
     parameters: Presence.GetPresenceStateParameters,
     callback?: ResultCallback<Presence.GetPresenceStateResponse>,
   ): Promise<Presence.GetPresenceStateResponse | void> {
-    const request = new GetPresenceStateRequest({
-      ...parameters,
-      uuid: parameters.uuid ?? this._configuration.userId,
-      keySet: this._configuration.keySet,
-    });
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      const request = new GetPresenceStateRequest({
+        ...parameters,
+        uuid: parameters.uuid ?? this._configuration.userId,
+        keySet: this._configuration.keySet,
+      });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Get UUID State error: presence module disabled');
   }
   // endregion
 
@@ -1681,32 +1753,34 @@ export class PubNubCore<
     parameters: Presence.SetPresenceStateParameters | Presence.SetPresenceStateWithHeartbeatParameters,
     callback?: ResultCallback<Presence.SetPresenceStateResponse | Presence.PresenceHeartbeatResponse>,
   ): Promise<Presence.SetPresenceStateResponse | Presence.PresenceHeartbeatResponse | void> {
-    const { keySet, userId: userId } = this._configuration;
-    const heartbeat = this._configuration.getPresenceTimeout();
-    let request: AbstractRequest<Presence.PresenceHeartbeatResponse | Presence.SetPresenceStateResponse>;
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      const { keySet, userId: userId } = this._configuration;
+      const heartbeat = this._configuration.getPresenceTimeout();
+      let request: AbstractRequest<Presence.PresenceHeartbeatResponse | Presence.SetPresenceStateResponse>;
 
-    // Maintain presence information (if required).
-    if (this._configuration.enableEventEngine && this.presenceState) {
-      const presenceState = this.presenceState;
-      parameters.channels?.forEach((channel) => (presenceState[channel] = parameters.state));
+      // Maintain presence information (if required).
+      if (this._configuration.enableEventEngine && this.presenceState) {
+        const presenceState = this.presenceState;
+        parameters.channels?.forEach((channel) => (presenceState[channel] = parameters.state));
 
-      if ('channelGroups' in parameters) {
-        parameters.channelGroups?.forEach((group) => (presenceState[group] = parameters.state));
+        if ('channelGroups' in parameters) {
+          parameters.channelGroups?.forEach((group) => (presenceState[group] = parameters.state));
+        }
       }
-    }
 
-    // Check whether state should be set with heartbeat or not.
-    if ('withHeartbeat' in parameters) {
-      request = new HeartbeatRequest({ ...parameters, keySet, heartbeat });
-    } else {
-      request = new SetPresenceStateRequest({ ...parameters, keySet, uuid: userId! });
-    }
+      // Check whether state should be set with heartbeat or not.
+      if ('withHeartbeat' in parameters) {
+        request = new HeartbeatRequest({ ...parameters, keySet, heartbeat });
+      } else {
+        request = new SetPresenceStateRequest({ ...parameters, keySet, uuid: userId! });
+      }
 
-    // Update state used by subscription manager.
-    if (this.subscriptionManager) this.subscriptionManager.setState(parameters);
+      // Update state used by subscription manager.
+      if (this.subscriptionManager) this.subscriptionManager.setState(parameters);
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Set UUID State error: presence module disabled');
   }
   // endregion
 
@@ -1717,7 +1791,8 @@ export class PubNubCore<
    * @param parameters - Desired presence state for provided list of channels and groups.
    */
   public presence(parameters: { connected: boolean; channels?: string[]; channelGroups?: string[] }) {
-    this.subscriptionManager?.changePresence(parameters);
+    if (process.env.SUBSCRIBE_MANAGER_MODULE !== 'disabled') this.subscriptionManager?.changePresence(parameters);
+    else throw new Error('Change UUID presence error: subscription manager module disabled');
   }
   // endregion
 
@@ -1732,13 +1807,15 @@ export class PubNubCore<
     parameters: Presence.PresenceHeartbeatParameters,
     callback?: ResultCallback<Presence.PresenceHeartbeatResponse>,
   ) {
-    const request = new HeartbeatRequest({
-      ...parameters,
-      keySet: this._configuration.keySet,
-    });
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      const request = new HeartbeatRequest({
+        ...parameters,
+        keySet: this._configuration.keySet,
+      });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Announce UUID Presence error: presence module disabled');
   }
   // endregion
 
@@ -1749,7 +1826,8 @@ export class PubNubCore<
    * @param parameters - List of channels and groups where `join` event should be sent.
    */
   private join(parameters: { channels?: string[]; groups?: string[] }) {
-    this.presenceEventEngine?.join(parameters);
+    if (process.env.PRESENCE_MODULE !== 'disabled') this.presenceEventEngine?.join(parameters);
+    else throw new Error('Announce UUID Presence error: presence module disabled');
   }
   // endregion
 
@@ -1760,14 +1838,16 @@ export class PubNubCore<
    * @param parameters - List of channels and groups where `leave` event should be sent.
    */
   private leave(parameters: { channels?: string[]; groups?: string[] }) {
-    this.presenceEventEngine?.leave(parameters);
+    if (process.env.PRESENCE_MODULE !== 'disabled') this.presenceEventEngine?.leave(parameters);
+    else throw new Error('Announce UUID Leave error: presence module disabled');
   }
 
   /**
    * Announce user `leave` on all subscribed channels.
    */
   private leaveAll() {
-    this.presenceEventEngine?.leaveAll();
+    if (process.env.PRESENCE_MODULE !== 'disabled') this.presenceEventEngine?.leaveAll();
+    else throw new Error('Announce UUID Leave error: presence module disabled');
   }
   // endregion
   // endregion
@@ -1813,10 +1893,12 @@ export class PubNubCore<
     parameters: PAM.GrantTokenParameters,
     callback?: ResultCallback<PAM.GrantTokenResponse>,
   ): Promise<PAM.GrantTokenResponse | void> {
-    const request = new GrantTokenRequest({ ...parameters, keySet: this._configuration.keySet });
+    if (process.env.PAM_MODULE !== 'disabled') {
+      const request = new GrantTokenRequest({ ...parameters, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Grant Token error: PAM module disabled');
   }
   // endregion
 
@@ -1850,10 +1932,12 @@ export class PubNubCore<
     token: PAM.RevokeParameters,
     callback?: ResultCallback<PAM.RevokeTokenResponse>,
   ): Promise<PAM.RevokeTokenResponse | void> {
-    const request = new RevokeTokenRequest({ token, keySet: this._configuration.keySet });
+    if (process.env.PAM_MODULE !== 'disabled') {
+      const request = new RevokeTokenRequest({ token, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Revoke Token error: PAM module disabled');
   }
   // endregion
 
@@ -1864,7 +1948,7 @@ export class PubNubCore<
    * @returns Previously configured access token using {@link setToken} method.
    */
   public get token(): string | undefined {
-    return this.tokenManager.getToken();
+    return this.tokenManager && this.tokenManager.getToken();
   }
 
   /**
@@ -1882,7 +1966,7 @@ export class PubNubCore<
    * @param token - New access token which should be used with next REST API endpoint calls.
    */
   public set token(token: string | undefined) {
-    this.tokenManager.setToken(token);
+    if (this.tokenManager) this.tokenManager.setToken(token);
   }
 
   /**
@@ -1904,7 +1988,7 @@ export class PubNubCore<
    * @returns Token's permissions information for the resources.
    */
   public parseToken(token: string) {
-    return this.tokenManager.parseToken(token);
+    return this.tokenManager && this.tokenManager.parseToken(token);
   }
   // endregion
 
@@ -1945,10 +2029,12 @@ export class PubNubCore<
     parameters: PAM.GrantParameters,
     callback?: ResultCallback<PAM.PermissionsResponse>,
   ): Promise<PAM.PermissionsResponse | void> {
-    const request = new GrantRequest({ ...parameters, keySet: this._configuration.keySet });
+    if (process.env.PAM_MODULE !== 'disabled') {
+      const request = new GrantRequest({ ...parameters, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Grant error: PAM module disabled');
   }
   // endregion
 
@@ -1988,10 +2074,12 @@ export class PubNubCore<
     parameters: PAM.AuditParameters,
     callback?: ResultCallback<PAM.PermissionsResponse>,
   ): Promise<PAM.PermissionsResponse | void> {
-    const request = new AuditRequest({ ...parameters, keySet: this._configuration.keySet });
+    if (process.env.PAM_MODULE !== 'disabled') {
+      const request = new AuditRequest({ ...parameters, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Grant Permissions error: PAM module disabled');
   }
   // endregion
   // endregion
@@ -2063,7 +2151,9 @@ export class PubNubCore<
       | ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllUUIDMetadataResponse<Custom> | void> {
-    return this.objects._getAllUUIDMetadata(parametersOrCallback, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled')
+      return this.objects._getAllUUIDMetadata(parametersOrCallback, callback);
+    else throw new Error('Fetch Users Metadata error: App Context module disabled');
   }
 
   /**
@@ -2121,7 +2211,9 @@ export class PubNubCore<
       | ResultCallback<AppContext.GetUUIDMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.GetUUIDMetadataResponse<Custom> | void> {
-    return this.objects._getUUIDMetadata(parametersOrCallback, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled')
+      return this.objects._getUUIDMetadata(parametersOrCallback, callback);
+    else throw new Error('Fetch User Metadata error: App Context module disabled');
   }
 
   /**
@@ -2167,7 +2259,8 @@ export class PubNubCore<
     parameters: AppContext.SetUUIDMetadataParameters<Custom>,
     callback?: ResultCallback<AppContext.SetUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.SetUUIDMetadataResponse<Custom> | void> {
-    return this.objects._setUUIDMetadata(parameters, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._setUUIDMetadata(parameters, callback);
+    else throw new Error('Create User Metadata error: App Context module disabled');
   }
 
   /**
@@ -2213,7 +2306,8 @@ export class PubNubCore<
     parameters: AppContext.SetUUIDMetadataParameters<Custom>,
     callback?: ResultCallback<AppContext.SetUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.SetUUIDMetadataResponse<Custom> | void> {
-    return this.objects._setUUIDMetadata(parameters, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._setUUIDMetadata(parameters, callback);
+    else throw new Error('Update User Metadata error: App Context module disabled');
   }
 
   /**
@@ -2270,7 +2364,9 @@ export class PubNubCore<
       | ResultCallback<AppContext.RemoveUUIDMetadataResponse>,
     callback?: ResultCallback<AppContext.RemoveUUIDMetadataResponse>,
   ): Promise<AppContext.RemoveUUIDMetadataResponse | void> {
-    return this.objects._removeUUIDMetadata(parametersOrCallback, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled')
+      return this.objects._removeUUIDMetadata(parametersOrCallback, callback);
+    else throw new Error('Remove User Metadata error: App Context module disabled');
   }
 
   /**
@@ -2327,7 +2423,9 @@ export class PubNubCore<
       | ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllChannelMetadataResponse<Custom> | void> {
-    return this.objects._getAllChannelMetadata(parametersOrCallback, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled')
+      return this.objects._getAllChannelMetadata(parametersOrCallback, callback);
+    else throw new Error('Fetch Spaces Metadata error: App Context module disabled');
   }
 
   /**
@@ -2370,7 +2468,8 @@ export class PubNubCore<
     parameters: AppContext.GetChannelMetadataParameters,
     callback?: ResultCallback<AppContext.GetChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.GetChannelMetadataResponse<Custom> | void> {
-    return this.objects._getChannelMetadata(parameters, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._getChannelMetadata(parameters, callback);
+    else throw new Error('Fetch Space Metadata error: App Context module disabled');
   }
 
   /**
@@ -2413,7 +2512,8 @@ export class PubNubCore<
     parameters: AppContext.SetChannelMetadataParameters<Custom>,
     callback?: ResultCallback<AppContext.SetChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.SetChannelMetadataResponse<Custom> | void> {
-    return this.objects._setChannelMetadata(parameters, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._setChannelMetadata(parameters, callback);
+    else throw new Error('Create Space Metadata error: App Context module disabled');
   }
 
   /**
@@ -2456,7 +2556,8 @@ export class PubNubCore<
     parameters: AppContext.SetChannelMetadataParameters<Custom>,
     callback?: ResultCallback<AppContext.SetChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.SetChannelMetadataResponse<Custom> | void> {
-    return this.objects._setChannelMetadata(parameters, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._setChannelMetadata(parameters, callback);
+    else throw new Error('Update Space Metadata error: App Context module disabled');
   }
 
   /**
@@ -2500,7 +2601,8 @@ export class PubNubCore<
     parameters: AppContext.RemoveChannelMetadataParameters,
     callback?: ResultCallback<AppContext.RemoveChannelMetadataResponse>,
   ): Promise<AppContext.RemoveChannelMetadataResponse | void> {
-    return this.objects._removeChannelMetadata(parameters, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._removeChannelMetadata(parameters, callback);
+    else throw new Error('Remove Space Metadata error: App Context module disabled');
   }
 
   /**
@@ -2569,7 +2671,8 @@ export class PubNubCore<
     | AppContext.UserMembersResponse<RelationCustom, MetadataCustom>
     | void
   > {
-    return this.objects.fetchMemberships(parameters, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects.fetchMemberships(parameters, callback);
+    else throw new Error('Fetch Memberships error: App Context module disabled');
   }
 
   /**
@@ -2631,7 +2734,8 @@ export class PubNubCore<
       AppContext.SetMembershipsResponse<Custom, MetadataCustom> | AppContext.SetMembersResponse<Custom, MetadataCustom>
     >,
   ) {
-    return this.objects.addMemberships(parameters, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects.addMemberships(parameters, callback);
+    else throw new Error('Add Memberships error: App Context module disabled');
   }
 
   /**
@@ -2693,7 +2797,8 @@ export class PubNubCore<
       AppContext.SetMembershipsResponse<Custom, MetadataCustom> | AppContext.SetMembersResponse<Custom, MetadataCustom>
     >,
   ) {
-    return this.objects.addMemberships(parameters, callback);
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects.addMemberships(parameters, callback);
+    else throw new Error('Update Memberships error: App Context module disabled');
   }
 
   /**
@@ -2761,25 +2866,27 @@ export class PubNubCore<
     | AppContext.RemoveMembershipsResponse<RelationCustom, MetadataCustom>
     | void
   > {
-    if ('spaceId' in parameters) {
-      const spaceParameters = parameters as AppContext.RemoveMembersParameters;
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      if ('spaceId' in parameters) {
+        const spaceParameters = parameters as AppContext.RemoveMembersParameters;
+        const requestParameters = {
+          channel: spaceParameters.spaceId ?? spaceParameters.channel,
+          uuids: spaceParameters.userIds ?? spaceParameters.uuids,
+          limit: 0,
+        };
+        if (callback) return this.objects.removeChannelMembers(requestParameters, callback);
+        return this.objects.removeChannelMembers(requestParameters);
+      }
+
+      const userParameters = parameters as AppContext.RemoveMembershipsParameters;
       const requestParameters = {
-        channel: spaceParameters.spaceId ?? spaceParameters.channel,
-        uuids: spaceParameters.userIds ?? spaceParameters.uuids,
+        uuid: userParameters.userId,
+        channels: userParameters.spaceIds ?? userParameters.channels,
         limit: 0,
       };
-      if (callback) return this.objects.removeChannelMembers(requestParameters, callback);
-      return this.objects.removeChannelMembers(requestParameters);
-    }
-
-    const userParameters = parameters as AppContext.RemoveMembershipsParameters;
-    const requestParameters = {
-      uuid: userParameters.userId,
-      channels: userParameters.spaceIds ?? userParameters.channels,
-      limit: 0,
-    };
-    if (callback) return this.objects.removeMemberships(requestParameters, callback);
-    return this.objects.removeMemberships(requestParameters);
+      if (callback) return this.objects.removeMemberships(requestParameters, callback);
+      return this.objects.removeMemberships(requestParameters);
+    } else throw new Error('Remove Memberships error: App Context module disabled');
   }
   // endregion
   // endregion
@@ -2850,46 +2957,48 @@ export class PubNubCore<
     parameters: FileSharing.SendFileParameters<FileConstructorParameters>,
     callback?: ResultCallback<FileSharing.SendFileResponse>,
   ): Promise<FileSharing.SendFileResponse | void> {
-    if (!this._configuration.PubNubFile)
-      throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+    if (process.env.FILE_SHARING_MODULE !== 'disabled') {
+      if (!this._configuration.PubNubFile)
+        throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
 
-    const sendFileRequest = new SendFileRequest<FileConstructorParameters>({
-      ...parameters,
-      keySet: this._configuration.keySet,
-      PubNubFile: this._configuration.PubNubFile,
-      fileUploadPublishRetryLimit: this._configuration.fileUploadPublishRetryLimit,
-      file: parameters.file,
-      sendRequest: this.sendRequest.bind(this),
-      publishFile: this.publishFile.bind(this),
-      crypto: this._configuration.getCryptoModule(),
-      cryptography: this.cryptography ? (this.cryptography as Cryptography<ArrayBuffer>) : undefined,
-    });
-
-    const status: Status = {
-      error: false,
-      operation: RequestOperation.PNPublishFileOperation,
-      category: StatusCategory.PNAcknowledgmentCategory,
-      statusCode: 0,
-    };
-
-    return sendFileRequest
-      .process()
-      .then((response) => {
-        status.statusCode = response.status;
-
-        if (callback) return callback(status, response);
-        return response;
-      })
-      .catch((error: unknown) => {
-        let errorStatus: Status | undefined;
-        if (error instanceof PubNubError) errorStatus = error.status;
-        else if (error instanceof PubNubAPIError) errorStatus = error.toStatus(status.operation!);
-
-        // Notify callback (if possible).
-        if (callback && errorStatus) callback(errorStatus, null);
-
-        throw new PubNubError('REST API request processing error, check status for details', errorStatus);
+      const sendFileRequest = new SendFileRequest<FileConstructorParameters>({
+        ...parameters,
+        keySet: this._configuration.keySet,
+        PubNubFile: this._configuration.PubNubFile,
+        fileUploadPublishRetryLimit: this._configuration.fileUploadPublishRetryLimit,
+        file: parameters.file,
+        sendRequest: this.sendRequest.bind(this),
+        publishFile: this.publishFile.bind(this),
+        crypto: this._configuration.getCryptoModule(),
+        cryptography: this.cryptography ? (this.cryptography as Cryptography<ArrayBuffer>) : undefined,
       });
+
+      const status: Status = {
+        error: false,
+        operation: RequestOperation.PNPublishFileOperation,
+        category: StatusCategory.PNAcknowledgmentCategory,
+        statusCode: 0,
+      };
+
+      return sendFileRequest
+        .process()
+        .then((response) => {
+          status.statusCode = response.status;
+
+          if (callback) return callback(status, response);
+          return response;
+        })
+        .catch((error: unknown) => {
+          let errorStatus: Status | undefined;
+          if (error instanceof PubNubError) errorStatus = error.status;
+          else if (error instanceof PubNubAPIError) errorStatus = error.toStatus(status.operation!);
+
+          // Notify callback (if possible).
+          if (callback && errorStatus) callback(errorStatus, null);
+
+          throw new PubNubError('REST API request processing error, check status for details', errorStatus);
+        });
+    } else throw new Error('Send File error: file sharing module disabled');
   }
   // endregion
 
@@ -2928,17 +3037,19 @@ export class PubNubCore<
     parameters: FileSharing.PublishFileMessageParameters,
     callback?: ResultCallback<FileSharing.PublishFileMessageResponse>,
   ): Promise<FileSharing.PublishFileMessageResponse | void> {
-    if (!this._configuration.PubNubFile)
-      throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+    if (process.env.FILE_SHARING_MODULE !== 'disabled') {
+      if (!this._configuration.PubNubFile)
+        throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
 
-    const request = new PublishFileMessageRequest({
-      ...parameters,
-      keySet: this._configuration.keySet,
-      crypto: this._configuration.getCryptoModule(),
-    });
+      const request = new PublishFileMessageRequest({
+        ...parameters,
+        keySet: this._configuration.keySet,
+        crypto: this._configuration.getCryptoModule(),
+      });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Publish File error: file sharing module disabled');
   }
   // endregion
 
@@ -2975,10 +3086,12 @@ export class PubNubCore<
     parameters: FileSharing.ListFilesParameters,
     callback?: ResultCallback<FileSharing.ListFilesResponse>,
   ): Promise<FileSharing.ListFilesResponse | void> {
-    const request = new FilesListRequest({ ...parameters, keySet: this._configuration.keySet });
+    if (process.env.FILE_SHARING_MODULE !== 'disabled') {
+      const request = new FilesListRequest({ ...parameters, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('List Files error: file sharing module disabled');
   }
   // endregion
 
@@ -2991,20 +3104,22 @@ export class PubNubCore<
    * @returns File download Url.
    */
   public getFileUrl(parameters: FileSharing.FileUrlParameters): FileSharing.FileUrlResponse {
-    const request = this.transport.request(
-      new GetFileDownloadUrlRequest({ ...parameters, keySet: this._configuration.keySet }).request(),
-    );
-    const query = request.queryParameters ?? {};
-    const queryString = Object.keys(query)
-      .map((key) => {
-        const queryValue = query[key];
-        if (!Array.isArray(queryValue)) return `${key}=${encodeString(queryValue)}`;
+    if (process.env.FILE_SHARING_MODULE !== 'disabled') {
+      const request = this.transport.request(
+        new GetFileDownloadUrlRequest({ ...parameters, keySet: this._configuration.keySet }).request(),
+      );
+      const query = request.queryParameters ?? {};
+      const queryString = Object.keys(query)
+        .map((key) => {
+          const queryValue = query[key];
+          if (!Array.isArray(queryValue)) return `${key}=${encodeString(queryValue)}`;
 
-        return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
-      })
-      .join('&');
+          return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
+        })
+        .join('&');
 
-    return `${request.origin}${request.path}?${queryString}`;
+      return `${request.origin}${request.path}?${queryString}`;
+    } else throw new Error('Generate File Download Url error: file sharing module disabled');
   }
   // endregion
 
@@ -3038,19 +3153,21 @@ export class PubNubCore<
     parameters: FileSharing.DownloadFileParameters,
     callback?: ResultCallback<PlatformFile>,
   ): Promise<PlatformFile | void> {
-    if (!this._configuration.PubNubFile)
-      throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+    if (process.env.FILE_SHARING_MODULE !== 'disabled') {
+      if (!this._configuration.PubNubFile)
+        throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
 
-    const request = new DownloadFileRequest<PlatformFile>({
-      ...parameters,
-      keySet: this._configuration.keySet,
-      PubNubFile: this._configuration.PubNubFile,
-      cryptography: this.cryptography ? (this.cryptography as Cryptography<ArrayBuffer>) : undefined,
-      crypto: this._configuration.getCryptoModule(),
-    });
+      const request = new DownloadFileRequest<PlatformFile>({
+        ...parameters,
+        keySet: this._configuration.keySet,
+        PubNubFile: this._configuration.PubNubFile,
+        cryptography: this.cryptography ? (this.cryptography as Cryptography<ArrayBuffer>) : undefined,
+        crypto: this._configuration.getCryptoModule(),
+      });
 
-    if (callback) return this.sendRequest(request, callback);
-    return (await this.sendRequest(request)) as PlatformFile;
+      if (callback) return this.sendRequest(request, callback);
+      return (await this.sendRequest(request)) as PlatformFile;
+    } else throw new Error('Download File error: file sharing module disabled');
   }
   // endregion
 
@@ -3087,10 +3204,12 @@ export class PubNubCore<
     parameters: FileSharing.DeleteFileParameters,
     callback?: ResultCallback<FileSharing.DeleteFileResponse>,
   ): Promise<FileSharing.DeleteFileResponse | void> {
-    const request = new DeleteFileRequest({ ...parameters, keySet: this._configuration.keySet });
+    if (process.env.FILE_SHARING_MODULE !== 'disabled') {
+      const request = new DeleteFileRequest({ ...parameters, keySet: this._configuration.keySet });
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      if (callback) return this.sendRequest(request, callback);
+      return this.sendRequest(request);
+    } else throw new Error('Delete File error: file sharing module disabled');
   }
   // endregion
   // endregion
@@ -3156,7 +3275,9 @@ export class PubNubCore<
 
     if (!this.crypto) throw new Error('Encryption error: cypher key not set');
 
-    return this.crypto.encrypt(data, customCipherKey);
+    if (process.env.CRYPTO_MODULE !== 'disabled') {
+      return this.crypto.encrypt(data, customCipherKey);
+    } else throw new Error('Encryption error: crypto module disabled');
   }
 
   /**
@@ -3178,7 +3299,9 @@ export class PubNubCore<
 
     if (!this.crypto) throw new Error('Decryption error: cypher key not set');
 
-    return this.crypto.decrypt(data, customCipherKey);
+    if (process.env.CRYPTO_MODULE !== 'disabled') {
+      return this.crypto.decrypt(data, customCipherKey);
+    } else throw new Error('Decryption error: crypto module disabled');
   }
   // endregion
 
@@ -3233,10 +3356,14 @@ export class PubNubCore<
 
     if (typeof keyOrFile === 'string') {
       if (!this.cryptography) throw new Error('File encryption error. File encryption not available');
-      return this.cryptography.encryptFile(keyOrFile, file, this._configuration.PubNubFile);
+      if (process.env.FILE_SHARING_MODULE !== 'disabled')
+        return this.cryptography.encryptFile(keyOrFile, file, this._configuration.PubNubFile);
+      else throw new Error('Encryption error: file sharing module disabled');
     }
 
-    return this._configuration.getCryptoModule()?.encryptFile(file, this._configuration.PubNubFile);
+    if (process.env.FILE_SHARING_MODULE !== 'disabled')
+      return this._configuration.getCryptoModule()?.encryptFile(file, this._configuration.PubNubFile);
+    else throw new Error('Encryption error: file sharing module disabled');
   }
 
   /**
@@ -3290,10 +3417,14 @@ export class PubNubCore<
 
     if (typeof keyOrFile === 'string') {
       if (!this.cryptography) throw new Error('File decryption error. File decryption not available');
-      return this.cryptography.decryptFile(keyOrFile, file, this._configuration.PubNubFile);
+      if (process.env.FILE_SHARING_MODULE !== 'disabled')
+        return this.cryptography.decryptFile(keyOrFile, file, this._configuration.PubNubFile);
+      else throw new Error('Decryption error: file sharing module disabled');
     }
 
-    return this._configuration.getCryptoModule()?.decryptFile(file, this._configuration.PubNubFile);
+    if (process.env.FILE_SHARING_MODULE !== 'disabled')
+      return this._configuration.getCryptoModule()?.decryptFile(file, this._configuration.PubNubFile);
+    else throw new Error('Decryption error: file sharing module disabled');
   }
   // endregion
   // endregion

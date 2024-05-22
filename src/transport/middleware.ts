@@ -17,7 +17,7 @@ type PubNubMiddlewareConfiguration = {
   /**
    * REST API endpoints access tokens manager.
    */
-  tokenManager: TokenManager;
+  tokenManager?: TokenManager;
 
   /**
    * HMAC-SHA256 hash generator from provided `data`.
@@ -30,7 +30,12 @@ type PubNubMiddlewareConfiguration = {
   transport: Transport;
 };
 
-export class RequestSignature {
+/**
+ * Request signature generator.
+ *
+ * @internal
+ */
+class RequestSignature {
   private static textDecoder = new TextDecoder('utf-8');
   constructor(
     private publishKey: string,
@@ -101,8 +106,10 @@ export class PubNubMiddleware implements Transport {
       shaHMAC,
     } = configuration;
 
-    if (keySet.secretKey && shaHMAC)
-      this.signatureGenerator = new RequestSignature(keySet.publishKey!, keySet.secretKey, shaHMAC);
+    if (process.env.CRYPTO_MODULE !== 'disabled') {
+      if (keySet.secretKey && shaHMAC)
+        this.signatureGenerator = new RequestSignature(keySet.publishKey!, keySet.secretKey, shaHMAC);
+    }
   }
 
   makeSendable(req: TransportRequest) {
@@ -137,7 +144,7 @@ export class PubNubMiddleware implements Transport {
     if (req.path.startsWith('/v2/auth/') || req.path.startsWith('/v3/pam/') || req.path.startsWith('/time')) return;
 
     const { clientConfiguration, tokenManager } = this.configuration;
-    const accessKey = tokenManager.getToken() ?? clientConfiguration.authKey;
+    const accessKey = (tokenManager && tokenManager.getToken()) ?? clientConfiguration.authKey;
     if (accessKey) req.queryParameters!['auth'] = accessKey;
   }
 

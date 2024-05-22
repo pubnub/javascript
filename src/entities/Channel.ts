@@ -15,12 +15,14 @@ export class Channel {
   }
 
   subscription(subscriptionOptions?: SubscriptionOptions) {
-    return new Subscription({
-      channels: subscriptionOptions?.receivePresenceEvents ? [this.name, `${this.name}-pnpres`] : [this.name],
-      channelGroups: [],
-      subscriptionOptions: subscriptionOptions,
-      eventEmitter: this.eventEmitter,
-      pubnub: this.pubnub,
-    });
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      return new Subscription({
+        channels: subscriptionOptions?.receivePresenceEvents ? [this.name, `${this.name}-pnpres`] : [this.name],
+        channelGroups: [],
+        subscriptionOptions: subscriptionOptions,
+        eventEmitter: this.eventEmitter,
+        pubnub: this.pubnub,
+      });
+    } else throw new Error('Subscription error: subscription event engine module disabled');
   }
 }

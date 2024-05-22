@@ -21,7 +21,9 @@ import { KeySet } from '../../types/api';
  * Request configuration parameters.
  */
 type RequestParameters = {
-  /// Access token for which permissions should be revoked.
+  /**
+   * Access token for which permissions should be revoked.
+   */
   token: string;
 
   /**
