@@ -8,7 +8,7 @@ import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { TransportMethod } from '../../types/transport-request';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
-import * as PAM from '../../types/api/access-panager';
+import * as PAM from '../../types/api/access-manager';
 import { encodeString } from '../../utils';
 import { KeySet } from '../../types/api';
 
@@ -20,7 +20,12 @@ import { KeySet } from '../../types/api';
 /**
  * Request configuration parameters.
  */
-type RequestParameters = PAM.RevokeParameters & {
+type RequestParameters = {
+  /**
+   * Access token for which permissions should be revoked.
+   */
+  token: string;
+
   /**
    * PubNub REST API access key set.
    */

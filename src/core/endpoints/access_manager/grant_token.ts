@@ -8,7 +8,7 @@ import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { TransportMethod } from '../../types/transport-request';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
-import * as PAM from '../../types/api/access-panager';
+import * as PAM from '../../types/api/access-manager';
 import { KeySet } from '../../types/api';
 
 // --------------------------------------------------------

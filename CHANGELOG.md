@@ -1,3 +1,9 @@
+## v8.2.1
+May 22 2024
+
+#### Fixed
+- Fix revoke token method signature where mistakenly expected object with `token` field.
+
 ## v8.2.0
 May 21 2024
 

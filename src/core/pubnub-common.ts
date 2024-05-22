@@ -80,7 +80,7 @@ import { RevokeTokenRequest } from './endpoints/access_manager/revoke_token';
 import { GrantTokenRequest } from './endpoints/access_manager/grant_token';
 import { GrantRequest } from './endpoints/access_manager/grant';
 import { AuditRequest } from './endpoints/access_manager/audit';
-import * as PAM from './types/api/access-panager';
+import * as PAM from './types/api/access-manager';
 // endregion
 // region Entities
 import { SubscriptionOptions } from '../entities/commonTypes';
@@ -1906,34 +1906,34 @@ export class PubNubCore<
   /**
    * Revoke token permission.
    *
-   * @param parameters - Request configuration parameters.
+   * @param token - Access token for which permissions should be revoked.
    * @param callback - Request completion handler callback.
    */
-  public revokeToken(parameters: PAM.RevokeParameters, callback: ResultCallback<PAM.RevokeTokenResponse>): void;
+  public revokeToken(token: PAM.RevokeParameters, callback: ResultCallback<PAM.RevokeTokenResponse>): void;
 
   /**
    * Revoke token permission.
    *
-   * @param parameters - Request configuration parameters.
+   * @param token - Access token for which permissions should be revoked.
    *
    * @returns Asynchronous revoke token response.
    */
-  public async revokeToken(parameters: PAM.RevokeParameters): Promise<PAM.RevokeTokenResponse>;
+  public async revokeToken(token: PAM.RevokeParameters): Promise<PAM.RevokeTokenResponse>;
 
   /**
    * Revoke token permission.
    *
-   * @param parameters - Request configuration parameters.
+   * @param token - Access token for which permissions should be revoked.
    * @param [callback] - Request completion handler callback.
    *
    * @returns Asynchronous revoke token response or `void` in case if `callback` provided.
    */
   async revokeToken(
-    parameters: PAM.RevokeParameters,
+    token: PAM.RevokeParameters,
     callback?: ResultCallback<PAM.RevokeTokenResponse>,
   ): Promise<PAM.RevokeTokenResponse | void> {
     if (process.env.PAM_MODULE !== 'disabled') {
-      const request = new RevokeTokenRequest({ ...parameters, keySet: this._configuration.keySet });
+      const request = new RevokeTokenRequest({ token, keySet: this._configuration.keySet });
 
       if (callback) return this.sendRequest(request, callback);
       return this.sendRequest(request);

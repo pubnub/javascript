@@ -17,7 +17,7 @@ import * as History from './types/api/history';
 import * as MessageAction from './types/api/message-action';
 import * as FileSharing from './types/api/file-sharing';
 import { PubNubFileInterface } from './types/file';
-import * as PAM from './types/api/access-panager';
+import * as PAM from './types/api/access-manager';
 import { SubscriptionOptions } from '../entities/commonTypes';
 import { ChannelMetadata } from '../entities/ChannelMetadata';
 import { SubscriptionSet } from '../entities/SubscriptionSet';
@@ -692,18 +692,18 @@ export declare class PubNubCore<CryptographyTypes, FileConstructorParameters, Pl
     /**
      * Revoke token permission.
      *
-     * @param parameters - Request configuration parameters.
+     * @param token - Access token for which permissions should be revoked.
      * @param callback - Request completion handler callback.
      */
-    revokeToken(parameters: PAM.RevokeParameters, callback: ResultCallback<PAM.RevokeTokenResponse>): void;
+    revokeToken(token: PAM.RevokeParameters, callback: ResultCallback<PAM.RevokeTokenResponse>): void;
     /**
      * Revoke token permission.
      *
-     * @param parameters - Request configuration parameters.
+     * @param token - Access token for which permissions should be revoked.
      *
      * @returns Asynchronous revoke token response.
      */
-    revokeToken(parameters: PAM.RevokeParameters): Promise<PAM.RevokeTokenResponse>;
+    revokeToken(token: PAM.RevokeParameters): Promise<PAM.RevokeTokenResponse>;
     /**
      * Get current access token.
      *

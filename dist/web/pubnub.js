@@ -3810,7 +3810,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.2.0';
+	            return '8.2.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -12234,12 +12234,12 @@
 	    /**
 	     * Revoke token permission.
 	     *
-	     * @param parameters - Request configuration parameters.
+	     * @param token - Access token for which permissions should be revoked.
 	     * @param [callback] - Request completion handler callback.
 	     *
 	     * @returns Asynchronous revoke token response or `void` in case if `callback` provided.
 	     */
-	    revokeToken(parameters, callback) {
+	    revokeToken(token, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            throw new Error('Revoke Token error: PAM module disabled');
 	        });
