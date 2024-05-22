@@ -80,7 +80,7 @@ import { RevokeTokenRequest } from './endpoints/access_manager/revoke_token';
 import { GrantTokenRequest } from './endpoints/access_manager/grant_token';
 import { GrantRequest } from './endpoints/access_manager/grant';
 import { AuditRequest } from './endpoints/access_manager/audit';
-import * as PAM from './types/api/access-panager';
+import * as PAM from './types/api/access-manager';
 // endregion
 // region Entities
 import { SubscriptionOptions } from '../entities/commonTypes';

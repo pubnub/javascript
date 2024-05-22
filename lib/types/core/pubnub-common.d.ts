@@ -17,7 +17,7 @@ import * as History from './types/api/history';
 import * as MessageAction from './types/api/message-action';
 import * as FileSharing from './types/api/file-sharing';
 import { PubNubFileInterface } from './types/file';
-import * as PAM from './types/api/access-panager';
+import * as PAM from './types/api/access-manager';
 import { SubscriptionOptions } from '../entities/commonTypes';
 import { ChannelMetadata } from '../entities/ChannelMetadata';
 import { SubscriptionSet } from '../entities/SubscriptionSet';
