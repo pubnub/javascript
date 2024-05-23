@@ -20,7 +20,9 @@ env:
 jobs:
   tests:
     name: Integration and Unit tests
-    runs-on: ubuntu-latest
+    runs-on:
+      group: Default Larger Runners
+      labels: ubuntu-latest-m
     strategy:
       fail-fast: true
       matrix:
@@ -31,16 +33,16 @@ jobs:
             env: 'ci:web'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout actions
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: pubnub/client-engineering-deployment-tools
           ref: v1
           token: ${{ secrets.GH_TOKEN }}
           path: .github/.release/actions
       - name: Setup NodeJS ${{ matrix.node }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: 'npm'
@@ -54,7 +56,9 @@ jobs:
         uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
   all-tests:
     name: Tests
-    runs-on: ubuntu-latest
+    runs-on:
+      group: Default Larger Runners
+      labels: ubuntu-latest-m
     needs: [tests]
     steps:
       - name: Tests summary
