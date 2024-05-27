@@ -14,7 +14,7 @@ jobs:
   pubnub-yml:
     name: 'Validate .pubnub.yml'
     runs-on:
-      group: GH-runners
+      group: ubuntu-gh
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
   all-validations:
     name: Validations
     runs-on:
-      group: GH-runners
+      group: ubuntu-gh
     needs: [pubnub-yml]
     steps:
       - name: Validations summary
