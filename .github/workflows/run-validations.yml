@@ -15,7 +15,6 @@ jobs:
     name: 'Validate .pubnub.yml'
     runs-on:
       group: GH-runners
-      labels: linux-2core-publicip-1
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -37,7 +36,6 @@ jobs:
     name: Validations
     runs-on:
       group: GH-runners
-      labels: linux-2core-publicip-1
     needs: [pubnub-yml]
     steps:
       - name: Validations summary
