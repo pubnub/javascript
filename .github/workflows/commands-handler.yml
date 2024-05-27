@@ -12,8 +12,8 @@ jobs:
     name: Process command
     if: github.event.issue.pull_request && endsWith(github.repository, '-private') != true
     runs-on:
-      group: Default Larger Runners
-      labels: ubuntu-latest-m
+      group: GH-runners
+      labels: linux-2core-publicip-1
     steps:
       - name: Check referred user
         id: user-check

@@ -9,8 +9,8 @@ jobs:
   check-release:
     name: Check release required
     runs-on:
-      group: Default Larger Runners
-      labels: ubuntu-latest-m
+      group: GH-runners
+      labels: linux-2core-publicip-1
     if: github.event.pull_request.merged && endsWith(github.repository, '-private') != true
     outputs:
       release: ${{ steps.check.outputs.ready }}
@@ -30,8 +30,8 @@ jobs:
   publish:
     name: Publish package
     runs-on:
-      group: Default Larger Runners
-      labels: ubuntu-latest-m
+      group: GH-runners
+      labels: linux-2core-publicip-1
     needs: check-release
     if: needs.check-release.outputs.release == 'true'
     steps:

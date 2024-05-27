@@ -21,8 +21,8 @@ jobs:
   tests:
     name: Integration and Unit tests
     runs-on:
-      group: Default Larger Runners
-      labels: ubuntu-latest-m
+      group: GH-runners
+      labels: linux-2core-publicip-1
     strategy:
       fail-fast: true
       matrix:
@@ -57,8 +57,8 @@ jobs:
   all-tests:
     name: Tests
     runs-on:
-      group: Default Larger Runners
-      labels: ubuntu-latest-m
+      group: GH-runners
+      labels: linux-2core-publicip-1
     needs: [tests]
     steps:
       - name: Tests summary
