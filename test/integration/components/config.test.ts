@@ -3,6 +3,7 @@
 
 import assert from 'assert';
 import PubNub from '../../../src/node/index';
+import { PrivateClientConfiguration } from '../../../src/core/interfaces/configuration';
 
 describe('components/config', () => {
   describe('AuthKey parameter', () => {
@@ -81,6 +82,27 @@ describe('components/config', () => {
       assert.throws(() => {
         pubnub.setUUID(' ');
       });
+    });
+
+    it('heartbeatInterval not set if presenceTimeout not set', () => {
+      const pubnub = new PubNub({
+        subscribeKey: 'mySubKey',
+        publishKey: 'myPublishKey',
+        uuid: 'myUUID',
+      });
+      assert.equal((pubnub.configuration as PrivateClientConfiguration).getPresenceTimeout(), 300);
+      assert.equal((pubnub.configuration as PrivateClientConfiguration).getHeartbeatInterval(), undefined);
+    });
+
+    it('heartbeatInterval is set by formula when presenceTimeout is set', () => {
+      const pubnub = new PubNub({
+        subscribeKey: 'mySubKey',
+        publishKey: 'myPublishKey',
+        presenceTimeout: 30,
+        uuid: 'myUUID',
+      });
+      assert.equal((pubnub.configuration as PrivateClientConfiguration).getPresenceTimeout(), 30);
+      assert.equal((pubnub.configuration as PrivateClientConfiguration).getHeartbeatInterval(), 30 / 2 - 1);
     });
   });
 });

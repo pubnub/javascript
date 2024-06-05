@@ -732,7 +732,9 @@ export const setDefaults = (configuration: UserConfiguration): ExtendedConfigura
     console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', PRESENCE_TIMEOUT_MINIMUM);
   }
 
-  configurationCopy.presenceTimeout ??= PRESENCE_TIMEOUT;
+  if (configurationCopy.presenceTimeout !== undefined)
+    configurationCopy.heartbeatInterval = configurationCopy.presenceTimeout / 2 - 1;
+  else configurationCopy.presenceTimeout = PRESENCE_TIMEOUT;
 
   // Apply extended configuration defaults.
   let announceSuccessfulHeartbeats = ANNOUNCE_HEARTBEAT_SUCCESS;

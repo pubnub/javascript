@@ -3525,7 +3525,7 @@
 	 * @internal
 	 */
 	const setDefaults$1 = (configuration) => {
-	    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+	    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
 	    // Copy configuration.
 	    const configurationCopy = Object.assign({}, configuration);
 	    (_a = configurationCopy.logVerbosity) !== null && _a !== void 0 ? _a : (configurationCopy.logVerbosity = USE_VERBOSE_LOGGING);
@@ -3560,7 +3560,10 @@
 	        // eslint-disable-next-line no-console
 	        console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', PRESENCE_TIMEOUT_MINIMUM);
 	    }
-	    (_q = configurationCopy.presenceTimeout) !== null && _q !== void 0 ? _q : (configurationCopy.presenceTimeout = PRESENCE_TIMEOUT);
+	    if (configurationCopy.presenceTimeout !== undefined)
+	        configurationCopy.heartbeatInterval = configurationCopy.presenceTimeout / 2 - 1;
+	    else
+	        configurationCopy.presenceTimeout = PRESENCE_TIMEOUT;
 	    // Apply extended configuration defaults.
 	    let announceSuccessfulHeartbeats = ANNOUNCE_HEARTBEAT_SUCCESS;
 	    let announceFailedHeartbeats = ANNOUNCE_HEARTBEAT_FAILURE;
@@ -3810,7 +3813,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.2.1';
+	            return '8.2.2';
 	        },
 	        getVersion() {
 	            return this.version;
