@@ -3813,7 +3813,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.2.1';
+	            return '8.2.2';
 	        },
 	        getVersion() {
 	            return this.version;

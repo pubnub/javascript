@@ -1,3 +1,9 @@
+## v8.2.2
+June 05 2024
+
+#### Fixed
+- Fix issue because of which `heartbeatInterval` wasn't computed if `presenceTimeout` provided during PubNub client configuration.
+
 ## v8.2.1
 May 22 2024
 
