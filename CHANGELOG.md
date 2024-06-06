@@ -1,3 +1,9 @@
+## v8.2.3
+June 06 2024
+
+#### Fixed
+- Fix issue because of which single string sort option wasn't serialized properly.
+
 ## v8.2.2
 June 05 2024
 
