@@ -133,9 +133,10 @@ export class GetUUIDMembershipsRequest<
 
   protected get queryParameters(): Query {
     const { include, page, filter, sort, limit } = this.parameters;
-    const sorting = Object.entries(sort ?? {}).map(([option, order]) =>
-      order !== null ? `${option}:${order}` : option,
-    );
+    let sorting: string | string[] = '';
+    if (typeof sort === 'string') sorting = sort;
+    else
+      sorting = Object.entries(sort ?? {}).map(([option, order]) => (order !== null ? `${option}:${order}` : option));
     const includeFlags: string[] = [];
 
     if (include!.statusField) includeFlags.push('status');
