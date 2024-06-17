@@ -10,7 +10,9 @@ export declare abstract class SubscribeCapable {
     protected abstract eventEmitter: EventEmitter;
     protected abstract pubnub: PubNub<unknown, unknown>;
     protected abstract options?: SubscriptionOptions;
-    subscribe(): void;
+    subscribe(subscribeParameters?: {
+        timetoken?: string;
+    }): void;
     unsubscribe(): void;
     set onMessage(onMessageListener: (messageEvent: Subscription.Message) => void);
     set onPresence(onPresenceListener: (presenceEvent: Subscription.Presence) => void);

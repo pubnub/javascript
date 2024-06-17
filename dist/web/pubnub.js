@@ -3813,7 +3813,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.2.3';
+	            return '8.2.4';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -8963,9 +8963,9 @@
 	}
 
 	class SubscribeCapable {
-	    subscribe() {
-	        var _a, _b;
-	        this.pubnub.subscribe(Object.assign({ channels: this.channelNames, channelGroups: this.groupNames }, (((_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) && { timetoken: this.options.cursor.timetoken })));
+	    subscribe(subscribeParameters) {
+	        const timetoken = subscribeParameters === null || subscribeParameters === void 0 ? void 0 : subscribeParameters.timetoken;
+	        this.pubnub.subscribe(Object.assign({ channels: this.channelNames, channelGroups: this.groupNames }, (timetoken !== null && timetoken !== '' && { timetoken: timetoken })));
 	    }
 	    unsubscribe() {
 	        this.pubnub.unsubscribe({

@@ -1,3 +1,9 @@
+## v8.2.4
+June 17 2024
+
+#### Fixed
+- Subscription/SubscriptionSet's `subscribe()` method accepts `timetoken` parameter. Instead as in subscriptionOption.
+
 ## v8.2.3
 June 06 2024
 
