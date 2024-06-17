@@ -1,4 +1,3 @@
-export type SubscriptionOptions = {
-  cursor?: { timetoken?: string; region?: number };
+export type SubscriptionOptions = {  
   receivePresenceEvents?: boolean;
 };
