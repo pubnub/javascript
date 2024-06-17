@@ -46,7 +46,6 @@ describe('subscribe endpoints', () => {
       // @ts-expect-error Force override default value.
       useRequestId: false,
       enableEventEngine: true,
-      logVerbosity: true,
     });
   });
 
@@ -75,9 +74,9 @@ describe('subscribe endpoints', () => {
         if (status.category === 'PNConnectedCategory') {
           try {
             assert.equal(scope.isDone(), true);
-            assert.deepEqual(pubnub.getSubscribedChannels(), ["coolChannel", "coolChannel2"]);
+            assert.deepEqual(pubnub.getSubscribedChannels(), ['coolChannel', 'coolChannel2']);
             assert.deepEqual(pubnub.getSubscribedChannelGroups(), []);
-            assert.deepEqual(status.affectedChannels, ["coolChannel", "coolChannel2"]);
+            assert.deepEqual(status.affectedChannels, ['coolChannel', 'coolChannel2']);
             assert.deepEqual(status.affectedChannelGroups, []);
             done();
           } catch (error) {
@@ -109,12 +108,12 @@ describe('subscribe endpoints', () => {
     pubnub.addListener({
       status(status) {
         if (status.category === 'PNConnectedCategory') {
-         try {
+          try {
             assert.equal(scope.isDone(), true);
-            assert.deepEqual(pubnub.getSubscribedChannels(), ["coolChannel", "coolChannel2"]);
-            assert.deepEqual(pubnub.getSubscribedChannelGroups(), ["cg1", "cg2"]);
-            assert.deepEqual(status.affectedChannels, ["coolChannel", "coolChannel2"]);
-            assert.deepEqual(status.affectedChannelGroups, ["cg1", "cg2"]);
+            assert.deepEqual(pubnub.getSubscribedChannels(), ['coolChannel', 'coolChannel2']);
+            assert.deepEqual(pubnub.getSubscribedChannelGroups(), ['cg1', 'cg2']);
+            assert.deepEqual(status.affectedChannels, ['coolChannel', 'coolChannel2']);
+            assert.deepEqual(status.affectedChannelGroups, ['cg1', 'cg2']);
             done();
           } catch (error) {
             done(error);
@@ -151,9 +150,9 @@ describe('subscribe endpoints', () => {
           try {
             assert.equal(scope.isDone(), true);
             assert.deepEqual(pubnub.getSubscribedChannels(), []);
-            assert.deepEqual(pubnub.getSubscribedChannelGroups(), ["cg1", "cg2"]);
+            assert.deepEqual(pubnub.getSubscribedChannelGroups(), ['cg1', 'cg2']);
             assert.deepEqual(status.affectedChannels, []);
-            assert.deepEqual(status.affectedChannelGroups, ["cg1", "cg2"]);
+            assert.deepEqual(status.affectedChannelGroups, ['cg1', 'cg2']);
             done();
           } catch (error) {
             done(error);
@@ -186,9 +185,9 @@ describe('subscribe endpoints', () => {
         if (status.category === 'PNConnectedCategory') {
           try {
             assert.equal(scope.isDone(), true);
-            assert.deepEqual(pubnubWithFiltering.getSubscribedChannels(), ["coolChannel", "coolChannel2"]);
+            assert.deepEqual(pubnubWithFiltering.getSubscribedChannels(), ['coolChannel', 'coolChannel2']);
             assert.deepEqual(pubnubWithFiltering.getSubscribedChannelGroups(), []);
-            assert.deepEqual(status.affectedChannels, ["coolChannel", "coolChannel2"]);
+            assert.deepEqual(status.affectedChannels, ['coolChannel', 'coolChannel2']);
             assert.deepEqual(status.affectedChannelGroups, []);
             done();
           } catch (error) {
@@ -248,5 +247,5 @@ describe('subscribe endpoints', () => {
     const channel = pubnubWithEE.channel('c1');
     const subscription = channel.subscription();
     subscription.subscribe({ timetoken: '1234567890' });
-  }) ;
+  });
 });
