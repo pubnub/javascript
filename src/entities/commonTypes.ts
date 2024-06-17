@@ -1,3 +1,3 @@
-export type SubscriptionOptions = {  
+export type SubscriptionOptions = {
   receivePresenceEvents?: boolean;
 };

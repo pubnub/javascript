@@ -8964,8 +8964,8 @@
 
 	class SubscribeCapable {
 	    subscribe(subscribeParameters) {
-	        let timetoken = subscribeParameters === null || subscribeParameters === void 0 ? void 0 : subscribeParameters.timetoken;
-	        this.pubnub.subscribe(Object.assign({ channels: this.channelNames, channelGroups: this.groupNames }, ((timetoken !== null && timetoken !== '') && { timetoken: timetoken })));
+	        const timetoken = subscribeParameters === null || subscribeParameters === void 0 ? void 0 : subscribeParameters.timetoken;
+	        this.pubnub.subscribe(Object.assign({ channels: this.channelNames, channelGroups: this.groupNames }, (timetoken !== null && timetoken !== '' && { timetoken: timetoken })));
 	    }
 	    unsubscribe() {
 	        this.pubnub.unsubscribe({

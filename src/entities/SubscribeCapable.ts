@@ -12,12 +12,12 @@ export abstract class SubscribeCapable {
   protected abstract pubnub: PubNub<unknown, unknown>;
   protected abstract options?: SubscriptionOptions;
 
-  subscribe(subscribeParameters?:{timetoken?: string}) {
-    let timetoken = subscribeParameters?.timetoken;
+  subscribe(subscribeParameters?: { timetoken?: string }) {
+    const timetoken = subscribeParameters?.timetoken;
     this.pubnub.subscribe({
       channels: this.channelNames,
       channelGroups: this.groupNames,
-      ...((timetoken !== null && timetoken !== '') && { timetoken: timetoken }),
+      ...(timetoken !== null && timetoken !== '' && { timetoken: timetoken }),
     });
   }
   unsubscribe() {
