@@ -636,7 +636,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       eventType ??= envelope.c.endsWith('-pnpres') ? PubNubEventType.Presence : PubNubEventType.Message;
 
       // Check whether payload is string (potentially encrypted data).
-      if (typeof envelope.d === 'string') {
+      if (eventType != PubNubEventType.Signal && typeof envelope.d === 'string') {
         if (eventType == PubNubEventType.Message) {
           return {
             type: PubNubEventType.Message,
