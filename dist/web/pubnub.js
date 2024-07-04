@@ -3813,7 +3813,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.2.4';
+	            return '8.2.5';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -5870,7 +5870,7 @@
 	                // Resolve missing event type.
 	                eventType !== null && eventType !== void 0 ? eventType : (eventType = envelope.c.endsWith('-pnpres') ? PubNubEventType.Presence : PubNubEventType.Message);
 	                // Check whether payload is string (potentially encrypted data).
-	                if (typeof envelope.d === 'string') {
+	                if (eventType != PubNubEventType.Signal && typeof envelope.d === 'string') {
 	                    if (eventType == PubNubEventType.Message) {
 	                        return {
 	                            type: PubNubEventType.Message,

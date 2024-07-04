@@ -56,23 +56,23 @@ describe('#components/reconnection_manger', () => {
     pubnub.addListener({
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNSubscribeOperation) return;
-        let statusWithoutError = _.omit(statusPayload, ['errorData', 'statusCode']);
+        const statusWithoutError = _.omit(statusPayload, ['errorData', 'statusCode']);
         try {
           assert.deepEqual(
             {
               category: PubNub.CATEGORIES.PNNetworkIssuesCategory,
               error: true,
-              operation: PubNub.OPERATIONS.PNSubscribeOperation
+              operation: PubNub.OPERATIONS.PNSubscribeOperation,
             },
-            statusWithoutError
+            statusWithoutError,
           );
 
           utils
             .createNock()
-            .get("/v2/presence/sub-key/mySubKey/channel/ch1,ch2/leave")
+            .get('/v2/presence/sub-key/mySubKey/channel/ch1,ch2/leave')
             .query(true)
-            .reply(200, "{\"status\": 200, \"message\": \"OK\", \"service\": \"Presence\"}", {
-              "content-type": "text/javascript"
+            .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}', {
+              'content-type': 'text/javascript',
             });
 
           done();
@@ -113,7 +113,7 @@ describe('#components/reconnection_manger', () => {
             .query(true)
             .reply(
               200,
-              '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+              '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
               { 'content-type': 'text/javascript' },
             );
 
@@ -134,17 +134,17 @@ describe('#components/reconnection_manger', () => {
                 category: PubNub.CATEGORIES.PNReconnectedCategory,
                 operation: PubNub.OPERATIONS.PNSubscribeOperation,
                 currentTimetoken: 0,
-                lastTimetoken: 0
+                lastTimetoken: 0,
               },
-              statusPayload
+              statusPayload,
             );
 
             utils
               .createNock()
-              .get("/v2/presence/sub-key/mySubKey/channel/ch1,ch2/leave")
+              .get('/v2/presence/sub-key/mySubKey/channel/ch1,ch2/leave')
               .query(true)
-              .reply(200, "{\"status\": 200, \"message\": \"OK\", \"service\": \"Presence\"}", {
-                "content-type": "text/javascript"
+              .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}', {
+                'content-type': 'text/javascript',
               });
 
             done();
