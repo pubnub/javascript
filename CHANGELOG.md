@@ -1,8 +1,10 @@
 ## v8.2.5
-July 04 2024
+July 18 2024
 
-#### Fixed
-- Fix issue because of which `signals` sent as `string` not handler properly. Fixed the following issues reported by [@roman-rr](https://github.com/roman-rr): [#387](https://github.com/pubnub/javascript/issues/387).
+#### Modified
+- Fix PubNub client configuration and listener documentation.
+
+
 
 ## v8.2.4
 June 17 2024
