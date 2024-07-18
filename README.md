@@ -35,10 +35,10 @@ Watch [Getting Started with PubNub JS SDK](https://app.dashcam.io/replay/64ee0d2
 
   ```javascript
   pubnub = new PubNub({
-    publishKey : "myPublishKey",
-    subscribeKey : "mySubscribeKey",
-    uuid: "myUniqueUUID"
-  })
+    publishKey: 'myPublishKey',
+    subscribeKey: 'mySubscribeKey',
+    userId: 'myUniqueUserId',
+  });
   ```
 
 ## Add event listeners
