@@ -4,7 +4,8 @@ changelog:
     version: v8.2.5
     changes:
       - type: improvement
-        text: "Fix PubNub client configuration and listener documentation."  - date: 2024-06-17
+        text: "Fix PubNub client configuration and listener documentation." 
+  - date: 2024-06-17
     version: v8.2.4
     changes:
       - type: bug
