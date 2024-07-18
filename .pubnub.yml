@@ -1,10 +1,10 @@
 ---
 changelog:
-  - date: 2024-07-04
+  - date: 2024-07-18
     version: v8.2.5
     changes:
-      - type: bug
-        text: "Fix issue because of which `signals` sent as `string` not handler properly."
+      - type: improvement
+        text: "Fix PubNub client configuration and listener documentation." 
   - date: 2024-06-17
     version: v8.2.4
     changes:
