@@ -248,4 +248,47 @@ describe('subscribe endpoints', () => {
     const subscription = channel.subscription();
     subscription.subscribe({ timetoken: '1234567890' });
   });
+
+  it('supports subscribe() with presence channelnames', () => {
+    const scope0 = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/c1,c2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: 0,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"14523669555221452","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"c1","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+        { 'content-type': 'text/javascript' },
+      );
+    const scope = utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/c1,c2-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '1234567890',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"146075779609322","r":1},"m":[{"a":"4","f":0,"i":"test","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"c1","d":{"text":"customttresponse"},"b":"c1"}]}',
+        { 'content-type': 'text/javascript' },
+      );
+
+    let subsripptionSetWithPresenceChannels = pubnubWithEE.subscriptionSet({
+      channels: ['c1', 'c2-pnpres'],
+    });
+
+    subsripptionSetWithPresenceChannels.subscribe();
+
+    assert.deepEqual(pubnubWithEE.getSubscribedChannels(), ['c1', 'c2-pnpres']);
+
+    subsripptionSetWithPresenceChannels.unsubscribe();
+    assert.deepEqual(pubnubWithEE.getSubscribedChannels(), []);
+  });
 });

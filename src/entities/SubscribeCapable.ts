@@ -22,8 +22,8 @@ export abstract class SubscribeCapable {
   }
   unsubscribe() {
     this.pubnub.unsubscribe({
-      channels: this.channelNames.filter((c) => !c.endsWith('-pnpres')),
-      channelGroups: this.groupNames.filter((cg) => !cg.endsWith('-pnpres')),
+      channels: this.channelNames,
+      channelGroups: this.groupNames,
     });
   }
 

@@ -31,20 +31,16 @@ export class SubscriptionSet extends SubscribeCapable {
     this.options = subscriptionOptions;
     this.eventEmitter = eventEmitter;
     this.pubnub = pubnub;
-    channels
-      .filter((c) => !c.endsWith('-pnpres'))
-      .forEach((c) => {
-        const subscription = this.pubnub.channel(c).subscription(this.options);
-        this.channelNames = [...this.channelNames, ...subscription.channels];
-        this.subscriptionList.push(subscription);
-      });
-    channelGroups
-      .filter((cg) => !cg.endsWith('-pnpres'))
-      .forEach((cg) => {
-        const subscription = this.pubnub.channelGroup(cg).subscription(this.options);
-        this.groupNames = [...this.groupNames, ...subscription.channelGroups];
-        this.subscriptionList.push(subscription);
-      });
+    channels.forEach((c) => {
+      const subscription = this.pubnub.channel(c).subscription(this.options);
+      this.channelNames = [...this.channelNames, ...subscription.channels];
+      this.subscriptionList.push(subscription);
+    });
+    channelGroups.forEach((cg) => {
+      const subscription = this.pubnub.channelGroup(cg).subscription(this.options);
+      this.groupNames = [...this.groupNames, ...subscription.channelGroups];
+      this.subscriptionList.push(subscription);
+    });
     this.listener = {};
     eventEmitter.addListener(
       this.listener,

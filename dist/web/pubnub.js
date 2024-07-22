@@ -8969,8 +8969,8 @@
 	    }
 	    unsubscribe() {
 	        this.pubnub.unsubscribe({
-	            channels: this.channelNames.filter((c) => !c.endsWith('-pnpres')),
-	            channelGroups: this.groupNames.filter((cg) => !cg.endsWith('-pnpres')),
+	            channels: this.channelNames,
+	            channelGroups: this.groupNames,
 	        });
 	    }
 	    set onMessage(onMessageListener) {
@@ -9014,16 +9014,12 @@
 	        this.options = subscriptionOptions;
 	        this.eventEmitter = eventEmitter;
 	        this.pubnub = pubnub;
-	        channels
-	            .filter((c) => !c.endsWith('-pnpres'))
-	            .forEach((c) => {
+	        channels.forEach((c) => {
 	            const subscription = this.pubnub.channel(c).subscription(this.options);
 	            this.channelNames = [...this.channelNames, ...subscription.channels];
 	            this.subscriptionList.push(subscription);
 	        });
-	        channelGroups
-	            .filter((cg) => !cg.endsWith('-pnpres'))
-	            .forEach((cg) => {
+	        channelGroups.forEach((cg) => {
 	            const subscription = this.pubnub.channelGroup(cg).subscription(this.options);
 	            this.groupNames = [...this.groupNames, ...subscription.channelGroups];
 	            this.subscriptionList.push(subscription);
