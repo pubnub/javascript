@@ -176,7 +176,7 @@ describe('subscribe endpoints', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -214,7 +214,7 @@ describe('subscribe endpoints', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14523669555221452","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"14523669555221452","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
     const scope = utils
@@ -247,6 +247,48 @@ describe('subscribe endpoints', () => {
     const channel = pubnubWithEE.channel('c1');
     const subscription = channel.subscription();
     subscription.subscribe({ timetoken: '1234567890' });
+  });
+
+  it('signal listener called for string signal', (done) => {
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/c1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: 0,
+      })
+      .reply(200, '{"t":{"t":"14523669555221452","r":1},"m":[]}', { 'content-type': 'text/javascript' });
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/c1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '14523669555221452',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"14523669555221453","r":1},"m":[{"a":"3","f":0,"e":1,"i":"myUniqueUserId","p":{"t":"17200339136465528","r":41},"k":"mySubKey","c":"c1","d":"typing:start"}]}',
+        { 'content-type': 'text/javascript' },
+      );
+
+    pubnubWithEE.addListener({
+      signal(signal) {
+        try {
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+    });
+
+    const channel = pubnubWithEE.channel('c1');
+    const subscription = channel.subscription();
+    subscription.subscribe();
   });
 
   it('supports subscribe() with presence channelnames', () => {

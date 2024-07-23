@@ -1,3 +1,11 @@
+## v8.2.5
+July 18 2024
+
+#### Modified
+- Fix PubNub client configuration and listener documentation.
+
+
+
 ## v8.2.4
 June 17 2024
 

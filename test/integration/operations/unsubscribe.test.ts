@@ -47,7 +47,7 @@ describe('unsubscribe', () => {
         })
         .reply(
           200,
-          '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+          '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
           { 'content-type': 'text/javascript' },
         )
         .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1/leave')
@@ -63,7 +63,7 @@ describe('unsubscribe', () => {
             try {
               assert.equal(status.error, false);
               assert.equal(scope.isDone(), true);
-              assert.deepEqual(status.affectedChannels, ["ch1"]);
+              assert.deepEqual(status.affectedChannels, ['ch1']);
               assert.deepEqual(status.affectedChannelGroups, []);
               done();
             } catch (error) {
@@ -87,7 +87,7 @@ describe('unsubscribe', () => {
         })
         .reply(
           200,
-          '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+          '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
           { 'content-type': 'text/javascript' },
         )
         .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2/leave')
@@ -103,7 +103,7 @@ describe('unsubscribe', () => {
             try {
               assert.equal(status.error, false);
               assert.equal(scope.isDone(), true);
-              assert.deepEqual(status.affectedChannels, ["ch1", "ch2"]);
+              assert.deepEqual(status.affectedChannels, ['ch1', 'ch2']);
               assert.deepEqual(status.affectedChannelGroups, []);
               done();
             } catch (error) {
@@ -128,7 +128,7 @@ describe('unsubscribe', () => {
         })
         .reply(
           200,
-          '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+          '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
           { 'content-type': 'text/javascript' },
         )
         .get('/v2/presence/sub-key/mySubscribeKey/channel/,/leave')
@@ -146,7 +146,7 @@ describe('unsubscribe', () => {
               assert.equal(status.error, false);
               assert.equal(scope.isDone(), true);
               assert.deepEqual(status.affectedChannels, []);
-              assert.deepEqual(status.affectedChannelGroups, ["cg1"]);
+              assert.deepEqual(status.affectedChannelGroups, ['cg1']);
               done();
             } catch (error) {
               done(error);
@@ -170,7 +170,7 @@ describe('unsubscribe', () => {
         })
         .reply(
           200,
-          '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+          '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
           { 'content-type': 'text/javascript' },
         )
         .get('/v2/presence/sub-key/mySubscribeKey/channel/,/leave')
@@ -188,7 +188,7 @@ describe('unsubscribe', () => {
               assert.equal(status.error, false);
               assert.equal(scope.isDone(), true);
               assert.deepEqual(status.affectedChannels, []);
-              assert.deepEqual(status.affectedChannelGroups, ["cg1", "cg2"]);
+              assert.deepEqual(status.affectedChannelGroups, ['cg1', 'cg2']);
               done();
             } catch (error) {
               done(error);
@@ -220,7 +220,7 @@ describe('unsubscribe', () => {
           try {
             assert.equal(status.error, false);
             assert.equal(scope.isDone(), true);
-            assert.deepEqual(status.affectedChannels, ["ch1"]);
+            assert.deepEqual(status.affectedChannels, ['ch1']);
             assert.deepEqual(status.affectedChannelGroups, []);
             done();
           } catch (error) {
@@ -253,7 +253,7 @@ describe('unsubscribe', () => {
             assert.equal(status.error, false);
             assert.equal(scope.isDone(), true);
             assert.deepEqual(status.affectedChannels, []);
-            assert.deepEqual(status.affectedChannelGroups, ["cg1"]);
+            assert.deepEqual(status.affectedChannelGroups, ['cg1']);
             done();
           } catch (error) {
             done(error);
@@ -283,8 +283,8 @@ describe('unsubscribe', () => {
           try {
             assert.equal(status.error, false);
             assert.equal(scope.isDone(), true);
-            assert.deepEqual(status.affectedChannels, ["ch1", "ch2"]);
-            assert.deepEqual(status.affectedChannelGroups, ["cg1", "cg2"]);
+            assert.deepEqual(status.affectedChannels, ['ch1', 'ch2']);
+            assert.deepEqual(status.affectedChannelGroups, ['cg1', 'cg2']);
             done();
           } catch (error) {
             done(error);

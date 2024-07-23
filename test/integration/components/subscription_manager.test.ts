@@ -84,7 +84,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -100,7 +100,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client2", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message3"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"10","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client2", "k":"mySubKey","c":"coolChannel","d":{"text":"Message3"},"b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -116,7 +116,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"20","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client3", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message10"},"b":"coolChan-bnel", "u": {"cool": "meta"}}]}',
+        '{"t":{"t":"20","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client3", "k":"mySubKey","c":"coolChannel","d":{"text":"Message10"},"b":"coolChan-bnel", "u": {"cool": "meta"}}]}',
         { 'content-type': 'text/javascript' },
       );
     utils
@@ -125,7 +125,7 @@ describe('#components/subscription_manager', () => {
       .query(true)
       .reply(200, '{"status": 200,"message":"OK","service":"Presence"}', { 'content-type': 'text/javascript' });
 
-    let incomingPayloads = [];
+    const incomingPayloads = [];
 
     pubnub.addListener({
       message(messagePayload) {
@@ -138,41 +138,41 @@ describe('#components/subscription_manager', () => {
             assert.equal(scope3.isDone(), true);
             assert.deepEqual(incomingPayloads, [
               {
-                actualChannel: "coolChannel",
+                actualChannel: 'coolChannel',
                 message: {
-                  text: "Message"
+                  text: 'Message',
                 },
-                subscribedChannel: "coolChan-bnel",
-                channel: "coolChannel",
-                subscription: "coolChan-bnel",
-                timetoken: "14607577960925503",
-                publisher: "client1"
+                subscribedChannel: 'coolChan-bnel',
+                channel: 'coolChannel',
+                subscription: 'coolChan-bnel',
+                timetoken: '14607577960925503',
+                publisher: 'client1',
               },
               {
-                actualChannel: "coolChannel",
+                actualChannel: 'coolChannel',
                 message: {
-                  text: "Message3"
+                  text: 'Message3',
                 },
-                subscribedChannel: "coolChan-bnel",
-                channel: "coolChannel",
-                subscription: "coolChan-bnel",
-                timetoken: "14607577960925503",
-                publisher: "client2"
+                subscribedChannel: 'coolChan-bnel',
+                channel: 'coolChannel',
+                subscription: 'coolChan-bnel',
+                timetoken: '14607577960925503',
+                publisher: 'client2',
               },
               {
-                actualChannel: "coolChannel",
+                actualChannel: 'coolChannel',
                 message: {
-                  text: "Message10"
+                  text: 'Message10',
                 },
                 userMetadata: {
-                  cool: "meta"
+                  cool: 'meta',
                 },
-                subscribedChannel: "coolChan-bnel",
-                channel: "coolChannel",
-                subscription: "coolChan-bnel",
-                timetoken: "14607577960925503",
-                publisher: "client3"
-              }
+                subscribedChannel: 'coolChan-bnel',
+                channel: 'coolChannel',
+                subscription: 'coolChan-bnel',
+                timetoken: '14607577960925503',
+                publisher: 'client3',
+              },
             ]);
 
             done();
@@ -197,7 +197,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14614512228786519","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"coolChannel-pnpres"}]}',
+        '{"t":{"t":"14614512228786519","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"mySubKey","c":"coolChannel-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"coolChannel-pnpres"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -207,17 +207,17 @@ describe('#components/subscription_manager', () => {
           assert.equal(scope.isDone(), true);
           assert.deepEqual(
             {
-              channel: "coolChannel",
-              subscription: "coolChannel-pnpres",
-              actualChannel: "coolChannel",
+              channel: 'coolChannel',
+              subscription: 'coolChannel-pnpres',
+              actualChannel: 'coolChannel',
               occupancy: 1,
-              subscribedChannel: "coolChannel-pnpres",
+              subscribedChannel: 'coolChannel-pnpres',
               timestamp: 1461451222,
-              timetoken: "14614512228418349",
-              uuid: "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0",
-              action: "join"
+              timetoken: '14614512228418349',
+              uuid: '4a6d5df7-e301-4e73-a7b7-6af9ab484eb0',
+              action: 'join',
             },
-            presencePayload
+            presencePayload,
           );
           done();
         } catch (error) {
@@ -241,7 +241,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"6","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"ch1","d":{"text":"Message"},"b":"ch1"}]}',
+        '{"t":{"t":"6","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"ch1","d":{"text":"Message"},"b":"ch1"}]}',
         { 'content-type': 'text/javascript' },
       );
     utils
@@ -334,16 +334,16 @@ describe('#components/subscription_manager', () => {
         try {
           assert.equal(scope1.isDone(), true);
           assert.deepEqual(presencePayload, {
-            channel: "ch10",
-            subscription: "ch10-pnpres",
-            actualChannel: "ch10",
+            channel: 'ch10',
+            subscription: 'ch10-pnpres',
+            actualChannel: 'ch10',
             occupancy: 3,
-            subscribedChannel: "ch10-pnpres",
+            subscribedChannel: 'ch10-pnpres',
             timestamp: 1463753674,
-            timetoken: "14637536741726901",
-            uuid: "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef",
-            action: "state-change",
-            state: { state: "cool" }
+            timetoken: '14637536741726901',
+            uuid: '24c9bb19-1fcd-4c40-a6f1-522a8a1329ef',
+            action: 'state-change',
+            state: { state: 'cool' },
           });
           done();
         } catch (error) {
@@ -370,15 +370,15 @@ describe('#components/subscription_manager', () => {
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
 
-        let statusWithoutError = _.omit(statusPayload, 'errorData', 'statusCode');
+        const statusWithoutError = _.omit(statusPayload, 'errorData', 'statusCode');
         try {
           assert.deepEqual(
             {
               category: PubNub.CATEGORIES.PNUnknownCategory,
               error: true,
-              operation: PubNub.OPERATIONS.PNHeartbeatOperation
+              operation: PubNub.OPERATIONS.PNHeartbeatOperation,
             },
-            statusWithoutError
+            statusWithoutError,
           );
           done();
         } catch (error) {
@@ -410,7 +410,7 @@ describe('#components/subscription_manager', () => {
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
 
-        let statusWithoutError = _.omit(statusPayload, 'errorData');
+        const statusWithoutError = _.omit(statusPayload, 'errorData');
         try {
           assert.equal(scope.isDone(), true);
           assert.deepEqual(
@@ -418,9 +418,9 @@ describe('#components/subscription_manager', () => {
               category: PubNub.CATEGORIES.PNBadRequestCategory,
               error: true,
               operation: PubNub.OPERATIONS.PNHeartbeatOperation,
-              statusCode: 400
+              statusCode: 400,
             },
-            statusWithoutError
+            statusWithoutError,
           );
           done();
         } catch (error) {
@@ -459,9 +459,9 @@ describe('#components/subscription_manager', () => {
               error: false,
               operation: PubNub.OPERATIONS.PNHeartbeatOperation,
               category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
-              statusCode: 200
+              statusCode: 200,
             },
-            statusPayload
+            statusPayload,
           );
           done();
         } catch (error) {
@@ -500,9 +500,9 @@ describe('#components/subscription_manager', () => {
               error: false,
               operation: PubNub.OPERATIONS.PNHeartbeatOperation,
               category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
-              statusCode: 200
+              statusCode: 200,
             },
-            statusPayload
+            statusPayload,
           );
           done();
         } catch (error) {
@@ -541,9 +541,9 @@ describe('#components/subscription_manager', () => {
               error: false,
               operation: PubNub.OPERATIONS.PNHeartbeatOperation,
               category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
-              statusCode: 200
+              statusCode: 200,
             },
-            statusPayload
+            statusPayload,
           );
           done();
         } catch (error) {
@@ -569,7 +569,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"coolChannel-pnpres"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"mySubKey","c":"coolChannel-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"coolChannel-pnpres"}]}',
         { 'content-type': 'text/javascript' },
       );
     utils
@@ -619,7 +619,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -635,7 +635,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"}]}',
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -667,7 +667,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -683,7 +683,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"}]}',
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -719,7 +719,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -735,7 +735,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message1"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message2"},"b":"coolChannel"}, {"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Message1"},"b":"coolChannel"}]}',
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message1"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message2"},"b":"coolChannel"}, {"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message1"},"b":"coolChannel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -765,11 +765,11 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":"hello","b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":"hello","b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
-    let incomingPayloads = [];
+    const incomingPayloads = [];
 
     pubnubWithCrypto.addListener({
       message(messagePayload) {
@@ -779,15 +779,15 @@ describe('#components/subscription_manager', () => {
             assert.equal(scope.isDone(), true);
             assert.deepEqual(incomingPayloads, [
               {
-                actualChannel: "coolChannel",
-                message: "hello",
-                subscribedChannel: "coolChan-bnel",
-                channel: "coolChannel",
-                subscription: "coolChan-bnel",
-                timetoken: "14607577960925503",
-                publisher: "client1",
-                error: "Error while decrypting message content: Decryption error: invalid header version"
-              }
+                actualChannel: 'coolChannel',
+                message: 'hello',
+                subscribedChannel: 'coolChan-bnel',
+                channel: 'coolChannel',
+                subscription: 'coolChan-bnel',
+                timetoken: '14607577960925503',
+                publisher: 'client1',
+                error: 'Error while decrypting message content: Decryption error: invalid header version',
+              },
             ]);
             done();
           } catch (error) {
@@ -812,11 +812,11 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":"hello","b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":"hello","b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
-    let incomingPayloads = [];
+    const incomingPayloads = [];
 
     pubnubWithCrypto.addListener({
       message(messagePayload) {
@@ -826,15 +826,15 @@ describe('#components/subscription_manager', () => {
             assert.equal(scope.isDone(), true);
             assert.deepEqual(incomingPayloads, [
               {
-                actualChannel: "coolChannel",
-                message: "hello",
-                subscribedChannel: "coolChan-bnel",
-                channel: "coolChannel",
-                subscription: "coolChan-bnel",
-                timetoken: "14607577960925503",
-                publisher: "client1",
-                error: "Error while decrypting message content: Decryption error: invalid header version"
-              }
+                actualChannel: 'coolChannel',
+                message: 'hello',
+                subscribedChannel: 'coolChan-bnel',
+                channel: 'coolChannel',
+                subscription: 'coolChan-bnel',
+                timetoken: '14607577960925503',
+                publisher: 'client1',
+                error: 'Error while decrypting message content: Decryption error: invalid header version',
+              },
             ]);
             done();
           } catch (error) {
@@ -858,11 +858,11 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":"UE5FRAFBQ1JIEIocqA6BfaybN/3U0WJRam0v3bPwfAXezgeCeGp+MztQ","b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":"UE5FRAFBQ1JIEIocqA6BfaybN/3U0WJRam0v3bPwfAXezgeCeGp+MztQ","b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
-    let incomingPayloads = [];
+    const incomingPayloads = [];
 
     pubnubWithCrypto.addListener({
       message(messagePayload) {
@@ -872,14 +872,14 @@ describe('#components/subscription_manager', () => {
             assert.equal(scope.isDone(), true);
             assert.deepEqual(incomingPayloads, [
               {
-                actualChannel: "coolChannel",
-                message: "hello",
-                subscribedChannel: "coolChan-bnel",
-                channel: "coolChannel",
-                subscription: "coolChan-bnel",
-                timetoken: "14607577960925503",
-                publisher: "client1"
-              }
+                actualChannel: 'coolChannel',
+                message: 'hello',
+                subscribedChannel: 'coolChan-bnel',
+                channel: 'coolChannel',
+                subscription: 'coolChan-bnel',
+                timetoken: '14607577960925503',
+                publisher: 'client1',
+              },
             ]);
             done();
           } catch (error) {

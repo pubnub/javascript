@@ -61,7 +61,37 @@ describe('signal endpoints', () => {
       try {
         assert.equal(status.error, false);
         assert(response !== null);
-        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.deepEqual(response.timetoken, '14647523059145592');
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
+    });
+  });
+
+  it('send signal and signal listener called', (done) => {
+    const scope = utils
+      .createNock()
+      .get('/signal/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D')
+      .query({ pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`, uuid: 'myUUID', auth: 'myAuthKey' })
+      .reply(200, '[1,"Sent","14647523059145592"]', { 'content-type': 'text/javascript' });
+
+    pubnub.addListener({
+      signal(signal) {
+        try {
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+    });
+
+    pubnub.signal({ message: { such: 'object' }, channel: 'ch1' }, (status, response) => {
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.timetoken, '14647523059145592');
         assert.equal(scope.isDone(), true);
         done();
       } catch (error) {
