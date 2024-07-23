@@ -65,7 +65,7 @@ describe('subscribe endpoints', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -101,7 +101,7 @@ describe('subscribe endpoints', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -140,7 +140,7 @@ describe('subscribe endpoints', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -303,7 +303,7 @@ describe('subscribe endpoints', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14523669555221452","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"sub-c-4cec9f8e-01fa-11e6-8180-0619f8945a4f","c":"c1","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"14523669555221452","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"c1","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
         { 'content-type': 'text/javascript' },
       );
     const scope = utils
@@ -322,7 +322,7 @@ describe('subscribe endpoints', () => {
         { 'content-type': 'text/javascript' },
       );
 
-    let subsripptionSetWithPresenceChannels = pubnubWithEE.subscriptionSet({
+    const subsripptionSetWithPresenceChannels = pubnubWithEE.subscriptionSet({
       channels: ['c1', 'c2-pnpres'],
     });
 
