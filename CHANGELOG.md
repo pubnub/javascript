@@ -1,3 +1,9 @@
+## v8.2.6
+July 23 2024
+
+#### Fixed
+- Resolves the issue of manually included presence channels not being unsubscribed from the subscription set. Fixed the following issues reported by [@roman-rr](https://github.com/roman-rr): [#390](https://github.com/pubnub/javascript/issues/390).
+
 ## v8.2.5
 July 18 2024
 
