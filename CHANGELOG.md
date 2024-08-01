@@ -1,3 +1,9 @@
+## v8.2.7
+August 01 2024
+
+#### Fixed
+- Fix issue because of which timeout enforced by browser triggered wrong error status category. Fixed the following issues reported by [@WalrusSoup](https://github.com/WalrusSoup): [#396](https://github.com/pubnub/javascript/issues/396).
+
 ## v8.2.6
 July 23 2024
 
