@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2024-08-01
+    version: v8.2.7
+    changes:
+      - type: bug
+        text: "Fix issue because of which timeout enforced by browser triggered wrong error status category."
   - date: 2024-07-23
     version: v8.2.6
     changes:
@@ -1018,7 +1023,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '8.2.6'
+version: '8.2.7'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1034,7 +1039,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.2.6.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.2.7.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1705,7 +1710,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v8.2.6/pubnub.8.2.6.js
+            location: https://github.com/pubnub/javascript/releases/download/v8.2.7/pubnub.8.2.7.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
