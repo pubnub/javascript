@@ -2839,7 +2839,10 @@
 	            message = 'Network issues';
 	        }
 	        else if (errorName === 'TypeError') {
-	            category = StatusCategory$1.PNBadRequestCategory;
+	            if (message.indexOf('Load failed') !== -1 || message.indexOf('Failed to fetch') != -1)
+	                category = StatusCategory$1.PNTimeoutCategory;
+	            else
+	                category = StatusCategory$1.PNBadRequestCategory;
 	        }
 	        else if (errorName === 'FetchError') {
 	            const errorCode = error.code;
