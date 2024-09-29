@@ -629,18 +629,56 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       );
     }
 
-    const events: Subscription.SubscriptionResponse['messages'] = serviceResponse.m.map((envelope) => {
-      let { e: eventType } = envelope;
+    const events: Subscription.SubscriptionResponse['messages'] = serviceResponse.m
+      .filter((envelope) => {
+        const subscribable = envelope.b === undefined ? envelope.c : envelope.b;
+        return (
+          this.parameters.channels!.includes(subscribable) || this.parameters.channelGroups!.includes(subscribable)
+        );
+      })
+      .map((envelope) => {
+        let { e: eventType } = envelope;
 
-      // Resolve missing event type.
-      eventType ??= envelope.c.endsWith('-pnpres') ? PubNubEventType.Presence : PubNubEventType.Message;
+        // Resolve missing event type.
+        eventType ??= envelope.c.endsWith('-pnpres') ? PubNubEventType.Presence : PubNubEventType.Message;
 
-      // Check whether payload is string (potentially encrypted data).
-      if (eventType != PubNubEventType.Signal && typeof envelope.d === 'string') {
-        if (eventType == PubNubEventType.Message) {
+        // Check whether payload is string (potentially encrypted data).
+        if (eventType != PubNubEventType.Signal && typeof envelope.d === 'string') {
+          if (eventType == PubNubEventType.Message) {
+            return {
+              type: PubNubEventType.Message,
+              data: this.messageFromEnvelope(envelope),
+            };
+          }
+
+          return {
+            type: PubNubEventType.Files,
+            data: this.fileFromEnvelope(envelope),
+          };
+        } else if (eventType == PubNubEventType.Message) {
           return {
             type: PubNubEventType.Message,
             data: this.messageFromEnvelope(envelope),
+          };
+        } else if (eventType === PubNubEventType.Presence) {
+          return {
+            type: PubNubEventType.Presence,
+            data: this.presenceEventFromEnvelope(envelope),
+          };
+        } else if (eventType == PubNubEventType.Signal) {
+          return {
+            type: PubNubEventType.Signal,
+            data: this.signalFromEnvelope(envelope),
+          };
+        } else if (eventType === PubNubEventType.AppContext) {
+          return {
+            type: PubNubEventType.AppContext,
+            data: this.appContextFromEnvelope(envelope),
+          };
+        } else if (eventType === PubNubEventType.MessageAction) {
+          return {
+            type: PubNubEventType.MessageAction,
+            data: this.messageActionFromEnvelope(envelope),
           };
         }
 
@@ -648,38 +686,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
           type: PubNubEventType.Files,
           data: this.fileFromEnvelope(envelope),
         };
-      } else if (eventType == PubNubEventType.Message) {
-        return {
-          type: PubNubEventType.Message,
-          data: this.messageFromEnvelope(envelope),
-        };
-      } else if (eventType === PubNubEventType.Presence) {
-        return {
-          type: PubNubEventType.Presence,
-          data: this.presenceEventFromEnvelope(envelope),
-        };
-      } else if (eventType == PubNubEventType.Signal) {
-        return {
-          type: PubNubEventType.Signal,
-          data: this.signalFromEnvelope(envelope),
-        };
-      } else if (eventType === PubNubEventType.AppContext) {
-        return {
-          type: PubNubEventType.AppContext,
-          data: this.appContextFromEnvelope(envelope),
-        };
-      } else if (eventType === PubNubEventType.MessageAction) {
-        return {
-          type: PubNubEventType.MessageAction,
-          data: this.messageActionFromEnvelope(envelope),
-        };
-      }
-
-      return {
-        type: PubNubEventType.Files,
-        data: this.fileFromEnvelope(envelope),
-      };
-    });
+      });
 
     return {
       cursor: { timetoken: serviceResponse.t.t, region: serviceResponse.t.r },
