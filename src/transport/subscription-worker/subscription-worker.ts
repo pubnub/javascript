@@ -628,17 +628,19 @@ self.onconnect = (event) => {
         if (data.request.path.startsWith('/v2/subscribe')) {
           updateClientStateIfRequired(data);
 
-          const { subscriptionKey, userId } = pubNubClients[data.clientIdentifier]!;
-          const timerIdentifier = `${userId}-${subscriptionKey}`;
+          const client = pubNubClients[data.clientIdentifier];
+          if (client) {
+            const timerIdentifier = `${client.userId}-${client.subscriptionKey}`;
 
-          // Check whether we need to start new aggregation timer or not.
-          if (!aggregationTimers.has(timerIdentifier)) {
-            const aggregationTimer = setTimeout(() => {
-              handleSendSubscribeRequestEvent(data);
-              aggregationTimers.delete(timerIdentifier);
-            }, subscribeAggregationTimeout);
+            // Check whether we need to start new aggregation timer or not.
+            if (!aggregationTimers.has(timerIdentifier)) {
+              const aggregationTimer = setTimeout(() => {
+                handleSendSubscribeRequestEvent(data);
+                aggregationTimers.delete(timerIdentifier);
+              }, subscribeAggregationTimeout);
 
-            aggregationTimers.set(timerIdentifier, aggregationTimer);
+              aggregationTimers.set(timerIdentifier, aggregationTimer);
+            }
           }
         } else handleSendLeaveRequestEvent(data);
       } else if (data.type === 'cancel-request') handleCancelRequestEvent(data);
@@ -1123,7 +1125,7 @@ const subscribeTransportRequestFromEvent = (event: SendRequestEvent): TransportR
     }
 
     for (const _client of clients) {
-      const { subscription: _subscription } = _client!;
+      const { subscription: _subscription } = _client;
       // Skip clients which doesn't have active subscription request.
       if (!_subscription) continue;
 
@@ -1186,8 +1188,12 @@ const subscribeTransportRequestFromEvent = (event: SendRequestEvent): TransportR
   }
 
   if (serviceRequests[serviceRequestId]) {
-    if (request.queryParameters!.tt !== undefined) {
-      serviceRequests[serviceRequestId].region = request.queryParameters!.tr as string;
+    if (
+      request.queryParameters &&
+      request.queryParameters.tt !== undefined &&
+      request.queryParameters.tr !== undefined
+    ) {
+      serviceRequests[serviceRequestId].region = request.queryParameters.tr as string;
     }
     serviceRequests[serviceRequestId].timetokenOverride = previousSubscribeTimetoken;
     serviceRequests[serviceRequestId].regionOverride = previousSubscribeRegion;

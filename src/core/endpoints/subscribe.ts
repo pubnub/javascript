@@ -633,7 +633,8 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       .filter((envelope) => {
         const subscribable = envelope.b === undefined ? envelope.c : envelope.b;
         return (
-          this.parameters.channels!.includes(subscribable) || this.parameters.channelGroups!.includes(subscribable)
+          (this.parameters.channels && this.parameters.channels.includes(subscribable)) ||
+          (this.parameters.channelGroups && this.parameters.channelGroups.includes(subscribable))
         );
       })
       .map((envelope) => {

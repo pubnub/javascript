@@ -204,15 +204,17 @@
                 else if (data.type === 'send-request') {
                     if (data.request.path.startsWith('/v2/subscribe')) {
                         updateClientStateIfRequired(data);
-                        const { subscriptionKey, userId } = pubNubClients[data.clientIdentifier];
-                        const timerIdentifier = `${userId}-${subscriptionKey}`;
-                        // Check whether we need to start new aggregation timer or not.
-                        if (!aggregationTimers.has(timerIdentifier)) {
-                            const aggregationTimer = setTimeout(() => {
-                                handleSendSubscribeRequestEvent(data);
-                                aggregationTimers.delete(timerIdentifier);
-                            }, subscribeAggregationTimeout);
-                            aggregationTimers.set(timerIdentifier, aggregationTimer);
+                        const client = pubNubClients[data.clientIdentifier];
+                        if (client) {
+                            const timerIdentifier = `${client.userId}-${client.subscriptionKey}`;
+                            // Check whether we need to start new aggregation timer or not.
+                            if (!aggregationTimers.has(timerIdentifier)) {
+                                const aggregationTimer = setTimeout(() => {
+                                    handleSendSubscribeRequestEvent(data);
+                                    aggregationTimers.delete(timerIdentifier);
+                                }, subscribeAggregationTimeout);
+                                aggregationTimers.set(timerIdentifier, aggregationTimer);
+                            }
                         }
                     }
                     else
@@ -668,7 +670,9 @@
             };
         }
         if (serviceRequests[serviceRequestId]) {
-            if (request.queryParameters.tt !== undefined) {
+            if (request.queryParameters &&
+                request.queryParameters.tt !== undefined &&
+                request.queryParameters.tr !== undefined) {
                 serviceRequests[serviceRequestId].region = request.queryParameters.tr;
             }
             serviceRequests[serviceRequestId].timetokenOverride = previousSubscribeTimetoken;
