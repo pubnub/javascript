@@ -197,7 +197,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14614512228786519","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"mySubKey","c":"ch1","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"ch1-pnpres"}]}',
+        '{"t":{"t":"14614512228786519","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"mySubKey","c":"ch1-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"ch1-pnpres"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -309,7 +309,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14637536741734954","r":1},"m":[{"a":"4","f":512,"p":{"t":"14637536740940378","r":1},"k":"demo-36","c":"ch1","d":{"action": "join", "timestamp": 1463753674, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch1-pnpres"},{"a":"4","f":512,"p":{"t":"14637536741726901","r":1},"k":"demo-36","c":"ch1","d":{"action": "state-change", "timestamp": 1463753674, "data": {"state": "cool"}, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch1-pnpres"}]}',
+        '{"t":{"t":"14637536741734954","r":1},"m":[{"a":"4","f":512,"p":{"t":"14637536740940378","r":1},"k":"demo-36","c":"ch1-pnpres","d":{"action": "join", "timestamp": 1463753674, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch1-pnpres"},{"a":"4","f":512,"p":{"t":"14637536741726901","r":1},"k":"demo-36","c":"ch1-pnpres","d":{"action": "state-change", "timestamp": 1463753674, "data": {"state": "cool"}, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch1-pnpres"}]}',
         { 'content-type': 'text/javascript' },
       );
     utils
@@ -569,7 +569,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"mySubKey","c":"ch2","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"ch2-pnpres"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"mySubKey","c":"ch2-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"ch2-pnpres"}]}',
         { 'content-type': 'text/javascript' },
       );
     utils
