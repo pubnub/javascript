@@ -84,7 +84,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"ch1","d":{"text":"Message"},"b":"ch1"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -100,7 +100,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client2", "k":"mySubKey","c":"coolChannel","d":{"text":"Message3"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"10","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client2", "k":"mySubKey","c":"ch1","d":{"text":"Message3"},"b":"ch1"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -116,7 +116,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"20","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client3", "k":"mySubKey","c":"coolChannel","d":{"text":"Message10"},"b":"coolChan-bnel", "u": {"cool": "meta"}}]}',
+        '{"t":{"t":"20","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"i": "client3", "k":"mySubKey","c":"ch1","d":{"text":"Message10"},"b":"ch1", "u": {"cool": "meta"}}]}',
         { 'content-type': 'text/javascript' },
       );
     utils
@@ -138,38 +138,38 @@ describe('#components/subscription_manager', () => {
             assert.equal(scope3.isDone(), true);
             assert.deepEqual(incomingPayloads, [
               {
-                actualChannel: 'coolChannel',
+                actualChannel: 'ch1',
                 message: {
                   text: 'Message',
                 },
-                subscribedChannel: 'coolChan-bnel',
-                channel: 'coolChannel',
-                subscription: 'coolChan-bnel',
+                subscribedChannel: 'ch1',
+                channel: 'ch1',
+                subscription: 'ch1',
                 timetoken: '14607577960925503',
                 publisher: 'client1',
               },
               {
-                actualChannel: 'coolChannel',
+                actualChannel: 'ch1',
                 message: {
                   text: 'Message3',
                 },
-                subscribedChannel: 'coolChan-bnel',
-                channel: 'coolChannel',
-                subscription: 'coolChan-bnel',
+                subscribedChannel: 'ch1',
+                channel: 'ch1',
+                subscription: 'ch1',
                 timetoken: '14607577960925503',
                 publisher: 'client2',
               },
               {
-                actualChannel: 'coolChannel',
+                actualChannel: 'ch1',
                 message: {
                   text: 'Message10',
                 },
                 userMetadata: {
                   cool: 'meta',
                 },
-                subscribedChannel: 'coolChan-bnel',
-                channel: 'coolChannel',
-                subscription: 'coolChan-bnel',
+                subscribedChannel: 'ch1',
+                channel: 'ch1',
+                subscription: 'ch1',
                 timetoken: '14607577960925503',
                 publisher: 'client3',
               },
@@ -197,7 +197,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14614512228786519","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"mySubKey","c":"coolChannel-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"coolChannel-pnpres"}]}',
+        '{"t":{"t":"14614512228786519","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"mySubKey","c":"ch1","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"ch1-pnpres"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -207,11 +207,11 @@ describe('#components/subscription_manager', () => {
           assert.equal(scope.isDone(), true);
           assert.deepEqual(
             {
-              channel: 'coolChannel',
-              subscription: 'coolChannel-pnpres',
-              actualChannel: 'coolChannel',
+              channel: 'ch1',
+              subscription: 'ch1-pnpres',
+              actualChannel: 'ch1',
               occupancy: 1,
-              subscribedChannel: 'coolChannel-pnpres',
+              subscribedChannel: 'ch1-pnpres',
               timestamp: 1461451222,
               timetoken: '14614512228418349',
               uuid: '4a6d5df7-e301-4e73-a7b7-6af9ab484eb0',
@@ -309,7 +309,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14637536741734954","r":1},"m":[{"a":"4","f":512,"p":{"t":"14637536740940378","r":1},"k":"demo-36","c":"ch10-pnpres","d":{"action": "join", "timestamp": 1463753674, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch10-pnpres"},{"a":"4","f":512,"p":{"t":"14637536741726901","r":1},"k":"demo-36","c":"ch10-pnpres","d":{"action": "state-change", "timestamp": 1463753674, "data": {"state": "cool"}, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch10-pnpres"}]}',
+        '{"t":{"t":"14637536741734954","r":1},"m":[{"a":"4","f":512,"p":{"t":"14637536740940378","r":1},"k":"demo-36","c":"ch1","d":{"action": "join", "timestamp": 1463753674, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch1-pnpres"},{"a":"4","f":512,"p":{"t":"14637536741726901","r":1},"k":"demo-36","c":"ch1","d":{"action": "state-change", "timestamp": 1463753674, "data": {"state": "cool"}, "uuid": "24c9bb19-1fcd-4c40-a6f1-522a8a1329ef", "occupancy": 3},"b":"ch1-pnpres"}]}',
         { 'content-type': 'text/javascript' },
       );
     utils
@@ -334,11 +334,11 @@ describe('#components/subscription_manager', () => {
         try {
           assert.equal(scope1.isDone(), true);
           assert.deepEqual(presencePayload, {
-            channel: 'ch10',
-            subscription: 'ch10-pnpres',
-            actualChannel: 'ch10',
+            channel: 'ch1',
+            subscription: 'ch1-pnpres',
+            actualChannel: 'ch1',
             occupancy: 3,
-            subscribedChannel: 'ch10-pnpres',
+            subscribedChannel: 'ch1-pnpres',
             timestamp: 1463753674,
             timetoken: '14637536741726901',
             uuid: '24c9bb19-1fcd-4c40-a6f1-522a8a1329ef',
@@ -569,7 +569,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"mySubKey","c":"coolChannel-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"coolChannel-pnpres"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"p":{"t":"14614512228418349","r":2},"k":"mySubKey","c":"ch2","d":{"action": "join", "timestamp": 1461451222, "uuid": "4a6d5df7-e301-4e73-a7b7-6af9ab484eb0", "occupancy": 1},"b":"ch2-pnpres"}]}',
         { 'content-type': 'text/javascript' },
       );
     utils
@@ -619,7 +619,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"ch1","d":{"text":"Message"},"b":"ch1"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -635,7 +635,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"}]}',
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"ch1","d":{"text":"Message"},"b":"ch1"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"ch1","d":{"text":"Message"},"b":"ch1"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -667,7 +667,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"ch2","d":{"text":"Message"},"b":"ch2"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -683,7 +683,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChannel"}]}',
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"ch2","d":{"text":"Message"},"b":"ch2"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"ch2","d":{"text":"Message"},"b":"ch2"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -719,7 +719,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":{"text":"Message"},"b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"ch1","d":{"text":"Message"},"b":"ch1"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -735,7 +735,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message1"},"b":"coolChannel"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message2"},"b":"coolChannel"}, {"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"coolChannel","d":{"text":"Message1"},"b":"coolChannel"}]}',
+        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"ch1","d":{"text":"Message1"},"b":"ch1"},{"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"ch1","d":{"text":"Message2"},"b":"ch1"}, {"a":"4","f":0,"i":"Publisher-A","p":{"t":"14607577960925503","r":1},"o":{"t":"14737141991877032","r":2},"k":"mySubKey","c":"ch1","d":{"text":"Message1"},"b":"ch1"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -765,7 +765,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":"hello","b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"ch1","d":"hello","b":"ch1"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -779,11 +779,11 @@ describe('#components/subscription_manager', () => {
             assert.equal(scope.isDone(), true);
             assert.deepEqual(incomingPayloads, [
               {
-                actualChannel: 'coolChannel',
+                actualChannel: 'ch1',
                 message: 'hello',
-                subscribedChannel: 'coolChan-bnel',
-                channel: 'coolChannel',
-                subscription: 'coolChan-bnel',
+                subscribedChannel: 'ch1',
+                channel: 'ch1',
+                subscription: 'ch1',
                 timetoken: '14607577960925503',
                 publisher: 'client1',
                 error: 'Error while decrypting message content: Decryption error: invalid header version',
@@ -812,7 +812,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":"hello","b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"ch1","d":"hello","b":"ch1"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -826,11 +826,11 @@ describe('#components/subscription_manager', () => {
             assert.equal(scope.isDone(), true);
             assert.deepEqual(incomingPayloads, [
               {
-                actualChannel: 'coolChannel',
+                actualChannel: 'ch1',
                 message: 'hello',
-                subscribedChannel: 'coolChan-bnel',
-                channel: 'coolChannel',
-                subscription: 'coolChan-bnel',
+                subscribedChannel: 'ch1',
+                channel: 'ch1',
+                subscription: 'ch1',
                 timetoken: '14607577960925503',
                 publisher: 'client1',
                 error: 'Error while decrypting message content: Decryption error: invalid header version',
@@ -858,7 +858,7 @@ describe('#components/subscription_manager', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"coolChannel","d":"UE5FRAFBQ1JIEIocqA6BfaybN/3U0WJRam0v3bPwfAXezgeCeGp+MztQ","b":"coolChan-bnel"}]}',
+        '{"t":{"t":"3","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1}, "i": "client1", "k":"mySubKey","c":"ch1","d":"UE5FRAFBQ1JIEIocqA6BfaybN/3U0WJRam0v3bPwfAXezgeCeGp+MztQ","b":"ch1"}]}',
         { 'content-type': 'text/javascript' },
       );
 
@@ -872,11 +872,11 @@ describe('#components/subscription_manager', () => {
             assert.equal(scope.isDone(), true);
             assert.deepEqual(incomingPayloads, [
               {
-                actualChannel: 'coolChannel',
+                actualChannel: 'ch1',
                 message: 'hello',
-                subscribedChannel: 'coolChan-bnel',
-                channel: 'coolChannel',
-                subscription: 'coolChan-bnel',
+                subscribedChannel: 'ch1',
+                channel: 'ch1',
+                subscription: 'ch1',
                 timetoken: '14607577960925503',
                 publisher: 'client1',
               },
