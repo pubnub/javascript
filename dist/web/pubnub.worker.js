@@ -109,7 +109,18 @@
     /**
      * How often PING request should be sent to the PubNub clients.
      */
-    const clientPingRequestInterval = 5000;
+    const clientPingRequestInterval = 10000;
+    /**
+     * Aggregation timer timeout.
+     *
+     * Timeout used by the timer to postpone `handleSendSubscribeRequestEvent` function call and let other clients for
+     * same subscribe key send next subscribe loop request (to make aggregation more efficient).
+     */
+    const subscribeAggregationTimeout = 50;
+    /**
+     * Map of PubNub client subscription keys to the started aggregation timeout timers.
+     */
+    const aggregationTimers = new Map();
     // region State
     /**
      * Service `ArrayBuffer` response decoder.
@@ -193,7 +204,18 @@
                 else if (data.type === 'send-request') {
                     if (data.request.path.startsWith('/v2/subscribe')) {
                         updateClientStateIfRequired(data);
-                        handleSendSubscribeRequestEvent(data);
+                        const client = pubNubClients[data.clientIdentifier];
+                        if (client) {
+                            const timerIdentifier = `${client.userId}-${client.subscriptionKey}`;
+                            // Check whether we need to start new aggregation timer or not.
+                            if (!aggregationTimers.has(timerIdentifier)) {
+                                const aggregationTimer = setTimeout(() => {
+                                    handleSendSubscribeRequestEvent(data);
+                                    aggregationTimers.delete(timerIdentifier);
+                                }, subscribeAggregationTimeout);
+                                aggregationTimers.set(timerIdentifier, aggregationTimer);
+                            }
+                        }
                     }
                     else
                         handleSendLeaveRequestEvent(data);
@@ -210,21 +232,45 @@
      * @param event - Subscription event details.
      */
     const handleSendSubscribeRequestEvent = (event) => {
+        var _a;
         const requestOrId = subscribeTransportRequestFromEvent(event);
         const client = pubNubClients[event.clientIdentifier];
-        if (client)
+        let isInitialSubscribe = false;
+        if (client) {
+            if (client.subscription)
+                isInitialSubscribe = client.subscription.timetoken === '0';
             notifyRequestProcessing('start', [client], new Date().toISOString());
+        }
         if (typeof requestOrId === 'string') {
-            if (client && client.subscription) {
-                // Updating client timetoken information.
-                client.subscription.previousTimetoken = client.subscription.timetoken;
-                client.subscription.timetoken = serviceRequests[requestOrId].timetoken;
-                client.subscription.serviceRequestId = requestOrId;
+            const scheduledRequest = serviceRequests[requestOrId];
+            if (client) {
+                if (client.subscription) {
+                    // Updating client timetoken information.
+                    client.subscription.timetoken = scheduledRequest.timetoken;
+                    client.subscription.region = scheduledRequest.region;
+                    client.subscription.serviceRequestId = requestOrId;
+                }
+                if (!isInitialSubscribe)
+                    return;
+                const body = new TextEncoder().encode(`{"t":{"t":"${scheduledRequest.timetoken}","r":${(_a = scheduledRequest.region) !== null && _a !== void 0 ? _a : '0'}},"m":[]}`);
+                const headers = new Headers({
+                    'Content-Type': 'text/javascript; charset="UTF-8"',
+                    'Content-Length': `${body.length}`,
+                });
+                const response = new Response(body, { status: 200, headers });
+                const result = requestProcessingSuccess([response, body]);
+                result.url = `${event.request.origin}${event.request.path}`;
+                result.clientIdentifier = event.clientIdentifier;
+                result.identifier = event.request.identifier;
+                notifyRequestProcessing('end', [client], new Date().toISOString(), event.request, body, headers.get('Content-Type'), 0);
+                publishClientEvent(client, result);
             }
             return;
         }
         if (event.request.cancellable)
             abortControllers.set(requestOrId.identifier, new AbortController());
+        const scheduledRequest = serviceRequests[requestOrId.identifier];
+        const { timetokenOverride, regionOverride } = scheduledRequest;
         sendRequest(requestOrId, () => clientsForRequest(requestOrId.identifier), (clients, response) => {
             // Notify each PubNub client which awaited for response.
             notifyRequestProcessingResult(clients, response);
@@ -235,8 +281,53 @@
             notifyRequestProcessingResult(clients, null, requestOrId, requestProcessingError(error));
             // Clean up scheduled request and client references to it.
             markRequestCompleted(clients, requestOrId.identifier);
+        }, (response) => {
+            let serverResponse = response;
+            if (isInitialSubscribe && timetokenOverride && timetokenOverride !== '0') {
+                serviceRequests[requestOrId.identifier];
+                serverResponse = patchInitialSubscribeResponse(serverResponse, timetokenOverride, regionOverride);
+            }
+            return serverResponse;
         });
         consoleLog(`'${Object.keys(serviceRequests).length}' subscription request currently active.`);
+    };
+    const patchInitialSubscribeResponse = (serverResponse, timetoken, region) => {
+        if (timetoken === undefined || timetoken === '0' || serverResponse[0].status >= 400) {
+            return serverResponse;
+        }
+        let json;
+        const response = serverResponse[0];
+        let decidedResponse = response;
+        let body = serverResponse[1];
+        try {
+            json = JSON.parse(new TextDecoder().decode(body));
+        }
+        catch (error) {
+            consoleLog(`Subscribe response parse error: ${error}`);
+            return serverResponse;
+        }
+        // Replace server-provided timetoken.
+        json.t.t = timetoken;
+        if (region)
+            json.t.r = parseInt(region, 10);
+        try {
+            body = new TextEncoder().encode(JSON.stringify(json)).buffer;
+            if (body.byteLength) {
+                const headers = new Headers(response.headers);
+                headers.set('Content-Length', `${body.byteLength}`);
+                // Create a new response with the original response options and modified headers
+                decidedResponse = new Response(body, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: headers,
+                });
+            }
+        }
+        catch (error) {
+            consoleLog(`Subscribe serialization error: ${error}`);
+            return serverResponse;
+        }
+        return body.byteLength > 0 ? [decidedResponse, body] : serverResponse;
     };
     /**
      * Handle client request to leave request.
@@ -244,13 +335,30 @@
      * @param data - Leave event details.
      */
     const handleSendLeaveRequestEvent = (data) => {
-        const request = leaveTransportRequestFromEvent(data);
         const client = pubNubClients[data.clientIdentifier];
+        const request = leaveTransportRequestFromEvent(data);
         if (!client)
             return;
+        // Clean up client subscription information if there is no more channels / groups to use.
+        const { subscription } = client;
+        const serviceRequestId = subscription === null || subscription === void 0 ? void 0 : subscription.serviceRequestId;
+        if (subscription) {
+            if (subscription.channels.length === 0 && subscription.channelGroups.length === 0) {
+                subscription.channelGroupQuery = '';
+                subscription.path = '';
+                subscription.previousTimetoken = '0';
+                subscription.timetoken = '0';
+                delete subscription.region;
+                delete subscription.serviceRequestId;
+                delete subscription.request;
+            }
+        }
         if (!request) {
             const body = new TextEncoder().encode('{"status": 200, "action": "leave", "message": "OK", "service":"Presence"}');
-            const headers = new Headers({ 'Content-Type': 'text/javascript; charset="UTF-8"', 'Content-Length': '74' });
+            const headers = new Headers({
+                'Content-Type': 'text/javascript; charset="UTF-8"',
+                'Content-Length': `${body.length}`,
+            });
             const response = new Response(body, { status: 200, headers });
             const result = requestProcessingSuccess([response, body]);
             result.url = `${data.request.origin}${data.request.path}`;
@@ -267,6 +375,17 @@
             notifyRequestProcessingResult(clients, null, data.request, requestProcessingError(error));
         });
         consoleLog(`Started leave request.`, client);
+        // Check whether there were active subscription with channels from this client or not.
+        if (serviceRequestId === undefined)
+            return;
+        // Update ongoing clients
+        const clients = clientsForRequest(serviceRequestId);
+        clients.forEach((client) => {
+            if (client && client.subscription)
+                delete client.subscription.serviceRequestId;
+        });
+        cancelRequest(serviceRequestId);
+        restartSubscribeRequestForClients(clients);
     };
     /**
      * Handle cancel request event.
@@ -284,16 +403,44 @@
             return;
         // Unset awaited requests.
         delete client.subscription.serviceRequestId;
-        delete client.subscription.request;
-        if (clientsForRequest(serviceRequestId).length === 0) {
-            const controller = abortControllers.get(serviceRequestId);
-            abortControllers.delete(serviceRequestId);
-            // Clean up scheduled requests.
-            delete serviceRequests[serviceRequestId];
-            // Abort request if possible.
-            if (controller)
-                controller.abort();
+        if (client.subscription.request && client.subscription.request.identifier === event.identifier) {
+            delete client.subscription.request;
         }
+        cancelRequest(serviceRequestId);
+    };
+    // endregion
+    // --------------------------------------------------------
+    // --------------------- Subscription ---------------------
+    // --------------------------------------------------------
+    // region Subscription
+    /**
+     * Try restart subscribe request for the list of clients.
+     *
+     * Subscribe restart will use previous timetoken information to schedule new subscription loop.
+     *
+     * **Note:** This function mimics behaviour when SharedWorker receives request from PubNub SDK.
+     *
+     * @param clients List of PubNub client states for which new aggregated request should be sent.
+     */
+    const restartSubscribeRequestForClients = (clients) => {
+        let clientWithRequest;
+        let request;
+        for (const client of clients) {
+            if (client.subscription && client.subscription.request) {
+                request = client.subscription.request;
+                clientWithRequest = client;
+                break;
+            }
+        }
+        if (!request || !clientWithRequest)
+            return;
+        handleSendSubscribeRequestEvent({
+            type: 'send-request',
+            clientIdentifier: clientWithRequest.clientIdentifier,
+            subscriptionKey: clientWithRequest.subscriptionKey,
+            logVerbosity: clientWithRequest.logVerbosity,
+            request,
+        });
     };
     // endregion
     // --------------------------------------------------------
@@ -307,8 +454,9 @@
      * @param getClients - Request completion PubNub client observers getter.
      * @param success - Request success completion handler.
      * @param failure - Request failure handler.
+     * @param responsePreProcess - Raw response pre-processing function which is used before calling handling callbacks.
      */
-    const sendRequest = (request, getClients, success, failure) => {
+    const sendRequest = (request, getClients, success, failure, responsePreProcess) => {
         (() => __awaiter(void 0, void 0, void 0, function* () {
             var _a;
             // Request progress support.
@@ -321,6 +469,7 @@
                 requestTimeoutTimer(request.identifier, request.timeout),
             ])
                 .then((response) => response.arrayBuffer().then((buffer) => [response, buffer]))
+                .then((response) => (responsePreProcess ? responsePreProcess(response) : response))
                 .then((response) => {
                 const responseBody = response[1].byteLength > 0 ? response[1] : undefined;
                 const clients = getClients();
@@ -336,6 +485,22 @@
                 failure(clients, error);
             });
         }))();
+    };
+    /**
+     * Cancel (abort) service request by ID.
+     *
+     * @param requestId - Unique identifier of request which should be cancelled.
+     */
+    const cancelRequest = (requestId) => {
+        if (clientsForRequest(requestId).length === 0) {
+            const controller = abortControllers.get(requestId);
+            abortControllers.delete(requestId);
+            // Clean up scheduled requests.
+            delete serviceRequests[requestId];
+            // Abort request if possible.
+            if (controller)
+                controller.abort();
+        }
     };
     /**
      * Create request timeout timer.
@@ -418,18 +583,26 @@
      * channels and groups.
      */
     const subscribeTransportRequestFromEvent = (event) => {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e;
         const client = pubNubClients[event.clientIdentifier];
         const subscription = client.subscription;
-        const clients = clientsForSendSubscribeRequestEvent(subscription.previousTimetoken, event);
+        const clients = clientsForSendSubscribeRequestEvent(subscription.timetoken, event);
         const serviceRequestId = uuidGenerator.createUUID();
         const request = Object.assign({}, event.request);
+        let previousSubscribeTimetoken;
+        let previousSubscribeRegion;
         if (clients.length > 1) {
             const activeRequestId = activeSubscriptionForEvent(clients, event);
             // Return identifier of the ongoing request.
-            if (activeRequestId)
-                return activeRequestId;
-            const state = ((_a = presenceState[client.subscriptionKey]) !== null && _a !== void 0 ? _a : {})[client.userId];
+            if (activeRequestId) {
+                const scheduledRequest = serviceRequests[activeRequestId];
+                const { channels, channelGroups } = (_a = client.subscription) !== null && _a !== void 0 ? _a : { channels: [], channelGroups: [] };
+                if ((channels.length > 0 ? includesStrings(scheduledRequest.channels, channels) : true) &&
+                    (channelGroups.length > 0 ? includesStrings(scheduledRequest.channelGroups, channelGroups) : true)) {
+                    return activeRequestId;
+                }
+            }
+            const state = ((_b = presenceState[client.subscriptionKey]) !== null && _b !== void 0 ? _b : {})[client.userId];
             const aggregatedState = {};
             const channelGroups = new Set(subscription.channelGroups);
             const channels = new Set(subscription.channels);
@@ -440,26 +613,35 @@
                         aggregatedState[name] = objectState;
                 });
             }
-            for (const client of clients) {
-                const { subscription } = client;
-                // Skip clients which already have active subscription request.
-                if (!subscription || !subscription.serviceRequestId)
+            for (const _client of clients) {
+                const { subscription: _subscription } = _client;
+                // Skip clients which doesn't have active subscription request.
+                if (!_subscription)
                     continue;
-                subscription.channelGroups.forEach(channelGroups.add, channelGroups);
-                subscription.channels.forEach(channels.add, channels);
+                // Keep track of timetoken from previous call to use it for catchup after initial subscribe.
+                if ((clients.length === 1 || _client.clientIdentifier !== client.clientIdentifier) && _subscription.timetoken) {
+                    previousSubscribeTimetoken = _subscription.timetoken;
+                    previousSubscribeRegion = _subscription.region;
+                }
+                _subscription.channelGroups.forEach(channelGroups.add, channelGroups);
+                _subscription.channels.forEach(channels.add, channels);
+                const activeServiceRequestId = _subscription.serviceRequestId;
+                _subscription.serviceRequestId = serviceRequestId;
                 // Set awaited service worker request identifier.
-                subscription.serviceRequestId = serviceRequestId;
+                if (activeServiceRequestId && serviceRequests[activeServiceRequestId]) {
+                    cancelRequest(activeServiceRequestId);
+                }
                 if (!state)
                     continue;
-                subscription.objectsWithState.forEach((name) => {
+                _subscription.objectsWithState.forEach((name) => {
                     const objectState = state[name];
                     if (objectState && !aggregatedState[name])
                         aggregatedState[name] = objectState;
                 });
             }
-            const serviceRequest = ((_b = serviceRequests[serviceRequestId]) !== null && _b !== void 0 ? _b : (serviceRequests[serviceRequestId] = {
+            const serviceRequest = ((_c = serviceRequests[serviceRequestId]) !== null && _c !== void 0 ? _c : (serviceRequests[serviceRequestId] = {
                 requestId: serviceRequestId,
-                timetoken: (_c = request.queryParameters.tt) !== null && _c !== void 0 ? _c : '0',
+                timetoken: (_d = request.queryParameters.tt) !== null && _d !== void 0 ? _d : '0',
                 channelGroups: [],
                 channels: [],
             }));
@@ -482,10 +664,19 @@
         else {
             serviceRequests[serviceRequestId] = {
                 requestId: serviceRequestId,
-                timetoken: (_d = request.queryParameters.tt) !== null && _d !== void 0 ? _d : '0',
+                timetoken: (_e = request.queryParameters.tt) !== null && _e !== void 0 ? _e : '0',
                 channelGroups: subscription.channelGroups,
                 channels: subscription.channels,
             };
+        }
+        if (serviceRequests[serviceRequestId]) {
+            if (request.queryParameters &&
+                request.queryParameters.tt !== undefined &&
+                request.queryParameters.tr !== undefined) {
+                serviceRequests[serviceRequestId].region = request.queryParameters.tr;
+            }
+            serviceRequests[serviceRequestId].timetokenOverride = previousSubscribeTimetoken;
+            serviceRequests[serviceRequestId].regionOverride = previousSubscribeRegion;
         }
         subscription.serviceRequestId = serviceRequestId;
         request.identifier = serviceRequestId;
@@ -551,7 +742,7 @@
         // Update request channels list (if required).
         if (channels.length) {
             const pathComponents = request.path.split('/');
-            pathComponents[4] = channels.join(',');
+            pathComponents[6] = channels.join(',');
             request.path = pathComponents.join('/');
         }
         // Update request channel groups list (if required).
@@ -815,7 +1006,6 @@
             client.subscription = subscription;
         }
         else {
-            subscription.previousTimetoken = subscription.timetoken;
             if (state.length > 0) {
                 const parsedState = JSON.parse(state);
                 const userState = ((_f = (_r = ((_e = presenceState[_q = client.subscriptionKey]) !== null && _e !== void 0 ? _e : (presenceState[_q] = {})))[_s = client.userId]) !== null && _f !== void 0 ? _f : (_r[_s] = {}));
@@ -845,6 +1035,8 @@
         subscription.request = event.request;
         subscription.filterExpression = ((_j = query['filter-expr']) !== null && _j !== void 0 ? _j : '');
         subscription.timetoken = ((_k = query.tt) !== null && _k !== void 0 ? _k : '0');
+        if (query.tr !== undefined)
+            subscription.region = query.tr;
         client.authKey = ((_l = query.auth) !== null && _l !== void 0 ? _l : '');
         client.userId = query.uuid;
     };
@@ -975,10 +1167,10 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
         return ((_c = pubNubClientsBySubscriptionKey[event.subscriptionKey]) !== null && _c !== void 0 ? _c : []).filter((client) => client.userId === userId &&
             client.authKey === authKey &&
             client.subscription &&
+            // Only clients with active subscription can be used.
+            (client.subscription.channels.length !== 0 || client.subscription.channelGroups.length !== 0) &&
             client.subscription.filterExpression === filterExpression &&
-            (timetoken === '0' ||
-                client.subscription.previousTimetoken === '0' ||
-                client.subscription.previousTimetoken === timetoken));
+            (timetoken === '0' || client.subscription.timetoken === '0' || client.subscription.timetoken === timetoken));
     };
     /**
      * Find PubNub client states with configuration compatible with the one in request.

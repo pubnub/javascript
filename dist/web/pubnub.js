@@ -3816,7 +3816,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.2.7';
+	            return '8.2.8';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -5868,7 +5868,13 @@
 	            if (!serviceResponse) {
 	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
 	            }
-	            const events = serviceResponse.m.map((envelope) => {
+	            const events = serviceResponse.m
+	                .filter((envelope) => {
+	                const subscribable = envelope.b === undefined ? envelope.c : envelope.b;
+	                return ((this.parameters.channels && this.parameters.channels.includes(subscribable)) ||
+	                    (this.parameters.channelGroups && this.parameters.channelGroups.includes(subscribable)));
+	            })
+	                .map((envelope) => {
 	                let { e: eventType } = envelope;
 	                // Resolve missing event type.
 	                eventType !== null && eventType !== void 0 ? eventType : (eventType = envelope.c.endsWith('-pnpres') ? PubNubEventType.Presence : PubNubEventType.Message);

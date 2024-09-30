@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "8.2.7",
+  "version": "8.2.8",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "scripts": {
@@ -32,6 +32,7 @@
     "contract:test-access-beta": "cucumber-js --require dist/cucumber dist/contract/contract/features --tags '@featureSet=access and not @na=js and @beta'"
   },
   "main": "./lib/node/index.js",
+  "types": "./lib/types/node/index.d.ts",
   "react-native": "./lib/react_native/index.js",
   "metro": "./lib/react_native/index.js",
   "nativescript": "./lib/nativescript/index.js",
@@ -40,7 +41,6 @@
     "type": "git",
     "url": "git://github.com/pubnub/javascript.git"
   },
-
   "keywords": [
     "cloud",
     "publish",
