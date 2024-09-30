@@ -1,3 +1,15 @@
+## v8.2.8
+September 30 2024
+
+#### Fixed
+- Fix issue because of which leave request modified wrong URL path component with actual channels.
+- Fix issue because of which removed channels / groups didn't cancel previous subscribe request to re-subscribe with new set of channels / groups.
+- Fix issue because of which suitable active PubNub clients subscription not has been used for aggregation and caused additional connections or wrong set of channels / groups.
+
+#### Modified
+- Pre-process entries from subscribe response to filter out updates which has been received for channels and groups which are not part of subscription loop (subscription aggregation in shared worker).
+- Point to the built-in types definition file when package used with `npm` / `yarn`.
+
 ## v8.2.7
 August 01 2024
 

@@ -1,5 +1,18 @@
 ---
 changelog:
+  - date: 2024-09-30
+    version: v8.2.8
+    changes:
+      - type: bug
+        text: "Fix issue because of which leave request modified wrong URL path component with actual channels."
+      - type: bug
+        text: "Fix issue because of which removed channels / groups didn't cancel previous subscribe request to re-subscribe with new set of channels / groups."
+      - type: bug
+        text: "Fix issue because of which suitable active PubNub clients subscription not has been used for aggregation and caused additional connections or wrong set of channels / groups."
+      - type: improvement
+        text: "Pre-process entries from subscribe response to filter out updates which has been received for channels and groups which are not part of subscription loop (subscription aggregation in shared worker)."
+      - type: improvement
+        text: "Point to the built-in types definition file when package used with `npm` / `yarn`."
   - date: 2024-08-01
     version: v8.2.7
     changes:
@@ -1023,7 +1036,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '8.2.7'
+version: '8.2.8'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1039,7 +1052,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.2.7.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.2.8.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1710,7 +1723,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v8.2.7/pubnub.8.2.7.js
+            location: https://github.com/pubnub/javascript/releases/download/v8.2.8/pubnub.8.2.8.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
