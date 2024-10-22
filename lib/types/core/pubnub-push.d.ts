@@ -1,12 +1,12 @@
 /**
  * PubNub Push Notifications API module.
  */
-import { KeySet, ResultCallback, SendRequestFunction, StatusCallback } from './types/api';
+import { ResultCallback, StatusCallback } from './types/api';
 import * as Push from './types/api/push';
+/**
+ * PubNub Push Notifications API interface.
+ */
 export default class PubNubPushNotifications {
-    private readonly keySet;
-    private readonly sendRequest;
-    constructor(keySet: KeySet, sendRequest: SendRequestFunction<any>);
     /**
      * Fetch device's push notification enabled channels.
      *

@@ -1,3 +1,9 @@
+/**
+ * Common PubNub Network Provider middleware module.
+ *
+ * @internal
+ */
+
 import { TransportMethod, TransportRequest } from '../core/types/transport-request';
 import { PrivateClientConfiguration } from '../core/interfaces/configuration';
 import { TokenManager } from '../core/components/token_manager';
@@ -7,6 +13,8 @@ import { Query } from '../core/types/api';
 
 /**
  * Transport middleware configuration options.
+ *
+ * @internal
  */
 type PubNubMiddlewareConfiguration = {
   /**
@@ -94,6 +102,11 @@ class RequestSignature {
   }
 }
 
+/**
+ * Common PubNub Network Provider middleware.
+ *
+ * @internal
+ */
 export class PubNubMiddleware implements Transport {
   /**
    * Request signature generator.

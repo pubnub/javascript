@@ -78,14 +78,6 @@ export interface CryptoModule {
     decryptFile(file: PubNubFileInterface, File: PubNubFileConstructor<PubNubFileInterface, any>): Promise<PubNubFileInterface | undefined>;
 }
 export declare abstract class AbstractCryptoModule<C> implements CryptoModule {
-    /**
-     * `String` to {@link ArrayBuffer} response decoder.
-     */
-    protected static encoder: TextEncoder;
-    /**
-     *  {@link ArrayBuffer} to {@link string} decoder.
-     */
-    protected static decoder: TextDecoder;
     defaultCryptor: C;
     cryptors: C[];
     /**
@@ -145,8 +137,4 @@ export declare abstract class AbstractCryptoModule<C> implements CryptoModule {
      * @returns Asynchronous file decryption result.
      */
     abstract decryptFile(file: PubNubFileInterface, File: PubNubFileConstructor<PubNubFileInterface, any>): Promise<PubNubFileInterface | undefined>;
-    /**
-     * Retrieve list of module's cryptors.
-     */
-    protected getAllCryptors(): C[];
 }

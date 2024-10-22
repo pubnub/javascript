@@ -1,3 +1,9 @@
+/**
+ * Presence Event Engine effects dispatcher.
+ *
+ * @internal
+ */
+
 import { PrivateClientConfiguration } from '../../core/interfaces/configuration';
 import { asyncHandler, Dispatcher, Engine } from '../core';
 import PNOperations from '../../core/constants/operations';
@@ -8,6 +14,11 @@ import * as effects from './effects';
 import * as events from './events';
 import StatusCategory from '../../core/constants/categories';
 
+/**
+ * Presence Event Engine dependencies set (configuration).
+ *
+ * @internal
+ */
 export type Dependencies = {
   heartbeat: (
     parameters: Presence.PresenceHeartbeatParameters,
@@ -24,6 +35,13 @@ export type Dependencies = {
   emitStatus: (status: any) => void;
 };
 
+/**
+ * Presence Event Engine dispatcher.
+ *
+ * Dispatcher responsible for presence events handling and corresponding effects execution.
+ *
+ * @internal
+ */
 export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, Dependencies> {
   constructor(engine: Engine<events.Events, effects.Effects>, dependencies: Dependencies) {
     super(dependencies);

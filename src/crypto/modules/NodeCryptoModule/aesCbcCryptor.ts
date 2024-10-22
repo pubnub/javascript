@@ -1,5 +1,7 @@
 /**
  * AES-CBC cryptor module.
+ *
+ * @internal
  */
 
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
@@ -11,6 +13,8 @@ import { ICryptor, EncryptedDataType, EncryptedStream } from './ICryptor';
  * AES-CBC cryptor.
  *
  * AES-CBC cryptor with enhanced cipher strength.
+ *
+ * @internal
  */
 export default class AesCbcCryptor implements ICryptor {
   /**

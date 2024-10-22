@@ -1,3 +1,9 @@
+/**
+ * Subscribe Event Engine module.
+ *
+ * @internal
+ */
+
 import { Dispatcher, Engine } from './core';
 import { Dependencies, EventEngineDispatcher } from './dispatcher';
 import * as effects from './effects';
@@ -6,6 +12,11 @@ import { UnsubscribedState } from './states/unsubscribed';
 
 import * as utils from '../core/utils';
 
+/**
+ * Subscribe Event Engine Core.
+ *
+ * @internal
+ */
 export class EventEngine {
   private engine: Engine<events.Events, effects.Effects> = new Engine();
   private dispatcher: Dispatcher<effects.Effects, Dependencies>;

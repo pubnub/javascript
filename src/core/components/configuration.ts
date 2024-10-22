@@ -1,5 +1,7 @@
 /**
  * {@link PubNub} client configuration module.
+ *
+ * @internal
  */
 
 import { ExtendedConfiguration, PlatformConfiguration, PrivateClientConfiguration } from '../interfaces/configuration';

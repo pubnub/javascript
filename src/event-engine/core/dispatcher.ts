@@ -1,13 +1,31 @@
+/**
+ * Event Engine Core Effects dispatcher module.
+ *
+ * @internal
+ */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Handler } from './handler';
 import { GenericInvocation, GenericMap, InvocationTypeFromMap } from './types';
 
+/**
+ * Effects invocation processing handler function definition.
+ *
+ * @internal
+ */
 type HandlerCreator<Payload, Dependencies> = (
   payload: Payload,
   dependencies: Dependencies,
 ) => Handler<Payload, Dependencies>;
 
+/**
+ * Event Engine effects dispatcher.
+ *
+ * Dispatcher responsible for invocation enqueue and dequeue for processing.
+ *
+ * @internal
+ */
 export class Dispatcher<
   Effects extends GenericMap,
   Dependencies,

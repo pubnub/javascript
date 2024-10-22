@@ -1,12 +1,12 @@
 /**
  * PubNub Channel Groups API module.
  */
-import { KeySet, ResultCallback, SendRequestFunction, StatusCallback } from './types/api';
+import { ResultCallback, StatusCallback } from './types/api';
 import * as ChannelGroups from './types/api/channel-groups';
-export default class PubnubChannelGroups {
-    private readonly keySet;
-    private readonly sendRequest;
-    constructor(keySet: KeySet, sendRequest: SendRequestFunction<any>);
+/**
+ * PubNub Stream / Channel group API interface.
+ */
+export default class PubNubChannelGroups {
     /**
      * Fetch channel group channels.
      *

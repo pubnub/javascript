@@ -4,6 +4,8 @@
  *
  * Service worker provides support for PubNub subscription feature to give better user experience across
  * multiple opened pages.
+ *
+ * @internal
  */
 
 import { TransportRequest } from '../../core/types/transport-request';

@@ -1,5 +1,7 @@
 /**
  * Legacy cryptor module.
+ *
+ * @internal
  */
 
 import PubNubFile, { PubNubFileParameters } from '../../../file/modules/node';
@@ -14,6 +16,8 @@ import FileCryptor from '../node';
 
 /**
  * Legacy cryptor.
+ *
+ * @internal
  */
 export default class LegacyCryptor implements ILegacyCryptor {
   /**

@@ -9,7 +9,7 @@ import type { CryptoModule as CryptoModuleType } from '../crypto/modules/NodeCry
 import PubNubFile, { PubNubFileParameters } from '../file/modules/node';
 import { CryptorConfiguration } from '../core/interfaces/crypto-module';
 import { makeConfiguration } from '../core/components/configuration';
-import { PubNubConfiguration, setDefaults } from './configuration';
+import { PubNubConfiguration, setDefaults } from './components/configuration';
 import { TokenManager } from '../core/components/token_manager';
 import { NodeTransport } from '../transport/node-transport';
 import { PubNubMiddleware } from '../transport/middleware';
@@ -40,9 +40,18 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
 
   /**
    * Actual underlying transport provider.
+   *
+   * @internal
    */
   private nodeTransport: NodeTransport;
 
+  /**
+   * Create and configure PubNub client core.
+   *
+   * @param configuration - User-provided PubNub client configuration.
+   *
+   * @returns Configured and ready to use PubNub client.
+   */
   constructor(configuration: PubNubConfiguration) {
     const configurationCopy = setDefaults(configuration);
     const platformConfiguration: ExtendedConfiguration & PlatformConfiguration = {

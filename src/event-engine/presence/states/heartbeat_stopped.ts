@@ -1,14 +1,33 @@
+/**
+ * Heartbeat stopped state module.
+ *
+ * @internal
+ */
+
 import { State } from '../../core/state';
 import { Effects } from '../effects';
 import { Events, joined, left, reconnect, leftAll } from '../events';
 import { HeartbeatInactiveState } from './heartbeat_inactive';
 import { HeartbeatingState } from './heartbeating';
 
+/**
+ * Context which represent current Presence Event Engine data state.
+ *
+ * @internal
+ */
 export type HeartbeatStoppedStateContext = {
   channels: string[];
   groups: string[];
 };
 
+/**
+ * Heartbeat stopped state.
+ *
+ * State in which Presence Event Engine still has information about active channels / groups, but doesn't wait for
+ * delayed heartbeat request sending.
+ *
+ * @internal
+ */
 export const HeartbeatStoppedState = new State<HeartbeatStoppedStateContext, Events, Effects>('HEARTBEAT_STOPPED');
 
 HeartbeatStoppedState.on(joined.type, (context, event) =>

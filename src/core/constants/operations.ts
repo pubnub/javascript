@@ -1,4 +1,6 @@
-/*       */
+/**
+ * Endpoint API operation types.
+ */
 enum RequestOperation {
   // --------------------------------------------------------
   // ---------------------- Publish API ---------------------
@@ -291,7 +293,18 @@ enum RequestOperation {
   // ---------------- Subscription Utility ------------------
   // --------------------------------------------------------
 
+  /**
+   * Initial event engine subscription handshake operation.
+   *
+   * @internal
+   */
   PNHandshakeOperation = 'PNHandshakeOperation',
+
+  /**
+   * Event engine subscription loop operation.
+   *
+   * @internal
+   */
   PNReceiveMessagesOperation = 'PNReceiveMessagesOperation',
 }
 

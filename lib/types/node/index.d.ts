@@ -5,7 +5,7 @@ import { Readable } from 'stream';
 import { Buffer } from 'buffer';
 import type { CryptoModule as CryptoModuleType } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 import PubNubFile, { PubNubFileParameters } from '../file/modules/node';
-import { PubNubConfiguration } from './configuration';
+import { PubNubConfiguration } from './components/configuration';
 import { PubNubFileConstructor } from '../core/types/file';
 import { PubNubCore } from '../core/pubnub-common';
 /**
@@ -21,9 +21,12 @@ declare class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable
      */
     File: PubNubFileConstructor<PubNubFile, PubNubFileParameters>;
     /**
-     * Actual underlying transport provider.
+     * Create and configure PubNub client core.
+     *
+     * @param configuration - User-provided PubNub client configuration.
+     *
+     * @returns Configured and ready to use PubNub client.
      */
-    private nodeTransport;
     constructor(configuration: PubNubConfiguration);
     /**
      * Update request proxy configuration.

@@ -1,17 +1,12 @@
 /**
  * PubNub Objects API module.
  */
-import { ResultCallback, SendRequestFunction } from './types/api';
-import { PrivateClientConfiguration } from './interfaces/configuration';
+import { ResultCallback } from './types/api';
 import * as AppContext from './types/api/app-context';
+/**
+ * PubNub App Context API interface.
+ */
 export default class PubNubObjects {
-    private readonly configuration;
-    private readonly sendRequest;
-    /**
-     * REST API endpoints access credentials.
-     */
-    private readonly keySet;
-    constructor(configuration: PrivateClientConfiguration, sendRequest: SendRequestFunction<any>);
     /**
      * Fetch a paginated list of UUID Metadata objects.
      *
@@ -33,16 +28,6 @@ export default class PubNubObjects {
      * @returns Asynchronous get all UUID metadata response.
      */
     getAllUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parameters?: AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>>): Promise<AppContext.GetAllUUIDMetadataResponse<Custom>>;
-    /**
-     * Fetch a paginated list of UUID Metadata objects.
-     *
-     *
-     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
-     * @param [callback] - Request completion handler callback.
-     *
-     * @returns Asynchronous get all UUID metadata response or `void` in case if `callback` provided.
-     */
-    _getAllUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parametersOrCallback?: AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>> | ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>, callback?: ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>): Promise<AppContext.GetAllUUIDMetadataResponse<Custom> | void>;
     /**
      * Fetch UUID Metadata object for currently configured PubNub client `uuid`.
      *
@@ -67,15 +52,6 @@ export default class PubNubObjects {
      */
     getUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parameters?: AppContext.GetUUIDMetadataParameters): Promise<AppContext.GetUUIDMetadataResponse<Custom>>;
     /**
-     * Fetch a specific UUID Metadata object.
-     *
-     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
-     * @param [callback] - Request completion handler callback.
-     *
-     * @returns Asynchronous get UUID metadata response or `void` in case if `callback` provided.
-     */
-    _getUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parametersOrCallback?: AppContext.GetUUIDMetadataParameters | ResultCallback<AppContext.GetUUIDMetadataResponse<Custom>>, callback?: ResultCallback<AppContext.GetUUIDMetadataResponse<Custom>>): Promise<AppContext.GetUUIDMetadataResponse<Custom> | void>;
-    /**
      * Update specific UUID Metadata object.
      *
      * @param parameters - Request configuration parameters. Will set UUID metadata for currently
@@ -92,16 +68,6 @@ export default class PubNubObjects {
      * @returns Asynchronous set UUID metadata response.
      */
     setUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parameters: AppContext.SetUUIDMetadataParameters<Custom>): Promise<AppContext.SetUUIDMetadataResponse<Custom>>;
-    /**
-     * Update specific UUID Metadata object.
-     *
-     * @param parameters - Request configuration parameters. Will set UUID metadata for currently
-     * configured PubNub client `uuid` if not set.
-     * @param [callback] - Request completion handler callback.
-     *
-     * @returns Asynchronous set UUID metadata response or `void` in case if `callback` provided.
-     */
-    _setUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parameters: AppContext.SetUUIDMetadataParameters<Custom>, callback?: ResultCallback<AppContext.SetUUIDMetadataResponse<Custom>>): Promise<AppContext.SetUUIDMetadataResponse<Custom> | void>;
     /**
      * Remove UUID Metadata object for currently configured PubNub client `uuid`.
      *
@@ -126,15 +92,6 @@ export default class PubNubObjects {
      */
     removeUUIDMetadata(parameters?: AppContext.RemoveUUIDMetadataParameters): Promise<AppContext.RemoveUUIDMetadataResponse>;
     /**
-     * Remove a specific UUID Metadata object.
-     *
-     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
-     * @param [callback] - Request completion handler callback.
-     *
-     * @returns Asynchronous UUID metadata remove response or `void` in case if `callback` provided.
-     */
-    _removeUUIDMetadata(parametersOrCallback?: AppContext.RemoveUUIDMetadataParameters | ResultCallback<AppContext.RemoveUUIDMetadataResponse>, callback?: ResultCallback<AppContext.RemoveUUIDMetadataResponse>): Promise<AppContext.RemoveUUIDMetadataResponse | void>;
-    /**
      * Fetch a paginated list of Channel Metadata objects.
      *
      * @param callback - Request completion handler callback.
@@ -156,16 +113,6 @@ export default class PubNubObjects {
      */
     getAllChannelMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parameters?: AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>>): Promise<AppContext.GetAllChannelMetadataResponse<Custom>>;
     /**
-     * Fetch a paginated list of Channel Metadata objects.
-     *
-     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
-     * @param [callback] - Request completion handler callback.
-     *
-     * @returns Asynchronous get all Channel metadata response or `void` in case if `callback`
-     * provided.
-     */
-    _getAllChannelMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parametersOrCallback?: AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>> | ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>, callback?: ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>): Promise<AppContext.GetAllChannelMetadataResponse<Custom> | void>;
-    /**
      * Fetch Channel Metadata object.
      *
      * @param parameters - Request configuration parameters.
@@ -180,15 +127,6 @@ export default class PubNubObjects {
      * @returns Asynchronous get Channel metadata response.
      */
     getChannelMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parameters: AppContext.GetChannelMetadataParameters): Promise<AppContext.GetChannelMetadataResponse<Custom>>;
-    /**
-     * Fetch Channel Metadata object.
-     *
-     * @param parameters - Request configuration parameters.
-     * @param [callback] - Request completion handler callback.
-     *
-     * @returns Asynchronous get Channel metadata response or `void` in case if `callback` provided.
-     */
-    _getChannelMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parameters: AppContext.GetChannelMetadataParameters, callback?: ResultCallback<AppContext.GetChannelMetadataResponse<Custom>>): Promise<AppContext.GetChannelMetadataResponse<Custom> | void>;
     /**
      * Update specific Channel Metadata object.
      *
@@ -205,15 +143,6 @@ export default class PubNubObjects {
      */
     setChannelMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parameters: AppContext.SetChannelMetadataParameters<Custom>): Promise<AppContext.SetChannelMetadataResponse<Custom>>;
     /**
-     * Update specific Channel Metadata object.
-     *
-     * @param parameters - Request configuration parameters.
-     * @param [callback] - Request completion handler callback.
-     *
-     * @returns Asynchronous set Channel metadata response or `void` in case if `callback` provided.
-     */
-    _setChannelMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(parameters: AppContext.SetChannelMetadataParameters<Custom>, callback?: ResultCallback<AppContext.SetChannelMetadataResponse<Custom>>): Promise<AppContext.SetChannelMetadataResponse<Custom> | void>;
-    /**
      * Remove Channel Metadata object.
      *
      * @param parameters - Request configuration parameters.
@@ -228,16 +157,6 @@ export default class PubNubObjects {
      * @returns Asynchronous Channel metadata remove response.
      */
     removeChannelMetadata(parameters: AppContext.RemoveChannelMetadataParameters): Promise<AppContext.RemoveChannelMetadataResponse>;
-    /**
-     * Remove a specific Channel Metadata object.
-     *
-     * @param parameters - Request configuration parameters.
-     * @param [callback] - Request completion handler callback.
-     *
-     * @returns Asynchronous Channel metadata remove response or `void` in case if `callback`
-     * provided.
-     */
-    _removeChannelMetadata(parameters: AppContext.RemoveChannelMetadataParameters, callback?: ResultCallback<AppContext.RemoveChannelMetadataResponse>): Promise<AppContext.RemoveChannelMetadataResponse | void>;
     /**
      * Fetch a paginated list of Channel Member objects.
      *

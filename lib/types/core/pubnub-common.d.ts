@@ -1,11 +1,10 @@
+/**
+ * Core PubNub API module.
+ */
 import { Listener } from './components/listener_manager';
 import NotificationsPayload from './components/push_payload';
-import { TokenManager } from './components/token_manager';
-import Crypto from './components/cryptography/index';
 import { Payload, ResultCallback } from './types/api';
-import { ClientConfiguration, PrivateClientConfiguration } from './interfaces/configuration';
-import { Cryptography } from './interfaces/cryptography';
-import { Transport } from './interfaces/transport';
+import { ClientConfiguration } from './interfaces/configuration';
 import RequestOperation from './constants/operations';
 import StatusCategory from './constants/categories';
 import { RetryPolicy } from '../event-engine/core/retryPolicy';
@@ -29,28 +28,6 @@ import PubNubPushNotifications from './pubnub-push';
 import * as AppContext from './types/api/app-context';
 import PubNubObjects from './pubnub-objects';
 import * as Time from './endpoints/time';
-type ClientInstanceConfiguration<CryptographyTypes> = {
-    /**
-     * Client-provided configuration.
-     */
-    configuration: PrivateClientConfiguration;
-    /**
-     * Transport provider for requests execution.
-     */
-    transport: Transport;
-    /**
-     * REST API endpoints access tokens manager.
-     */
-    tokenManager?: TokenManager;
-    /**
-     * Legacy crypto module implementation.
-     */
-    cryptography?: Cryptography<CryptographyTypes>;
-    /**
-     * Legacy crypto (legacy data encryption / decryption and request signature support).
-     */
-    crypto?: Crypto;
-};
 /**
  * Platform-agnostic PubNub client core.
  */
@@ -86,7 +63,6 @@ export declare class PubNubCore<CryptographyTypes, FileConstructorParameters, Pl
      * @returns Unique identifier.
      */
     static generateUUID(): any;
-    constructor(configuration: ClientInstanceConfiguration<CryptographyTypes>);
     /**
      * PubNub client configuration.
      *
@@ -303,15 +279,6 @@ export declare class PubNubCore<CryptographyTypes, FileConstructorParameters, Pl
         subscriptionOptions?: SubscriptionOptions;
     }): SubscriptionSet;
     /**
-     * Schedule request execution.
-     *
-     * @param request - REST API request.
-     * @param callback - Request completion handler callback.
-     *
-     * @returns Asynchronous request execution and response parsing result.
-     */
-    private sendRequest;
-    /**
      * Unsubscribe from all channels and groups.
      *
      * @param [isOffline] - Whether `offline` presence should be notified or not.
@@ -407,29 +374,11 @@ export declare class PubNubCore<CryptographyTypes, FileConstructorParameters, Pl
      */
     subscribe(parameters: Subscription.SubscribeParameters): void;
     /**
-     * Perform subscribe request.
-     *
-     * **Note:** Method passed into managers to let them use it when required.
-     *
-     * @param parameters - Request configuration parameters.
-     * @param callback - Request completion handler callback.
-     */
-    private makeSubscribe;
-    /**
      * Unsubscribe from specified channels and groups real-time events.
      *
      * @param parameters - Request configuration parameters.
      */
     unsubscribe(parameters: Presence.PresenceLeaveParameters): void;
-    /**
-     * Perform unsubscribe request.
-     *
-     * **Note:** Method passed into managers to let them use it when required.
-     *
-     * @param parameters - Request configuration parameters.
-     * @param callback - Request completion handler callback.
-     */
-    private makeUnsubscribe;
     /**
      * Unsubscribe from all channels and groups.
      */
@@ -448,18 +397,6 @@ export declare class PubNubCore<CryptographyTypes, FileConstructorParameters, Pl
         timetoken?: string;
         region?: number;
     }): void;
-    /**
-     * Event engine handshake subscribe.
-     *
-     * @param parameters - Request configuration parameters.
-     */
-    private subscribeHandshake;
-    /**
-     * Event engine receive messages subscribe.
-     *
-     * @param parameters - Request configuration parameters.
-     */
-    private subscribeReceiveMessages;
     /**
      * Get reactions to a specific message.
      *
@@ -647,29 +584,6 @@ export declare class PubNubCore<CryptographyTypes, FileConstructorParameters, Pl
         channels?: string[];
         channelGroups?: string[];
     }): void;
-    /**
-     * Announce user presence
-     *
-     * @param parameters - Desired presence state for provided list of channels and groups.
-     * @param callback - Request completion handler callback.
-     */
-    private heartbeat;
-    /**
-     * Announce user `join` on specified list of channels and groups.
-     *
-     * @param parameters - List of channels and groups where `join` event should be sent.
-     */
-    private join;
-    /**
-     * Announce user `leave` on specified list of channels and groups.
-     *
-     * @param parameters - List of channels and groups where `leave` event should be sent.
-     */
-    private leave;
-    /**
-     * Announce user `leave` on all subscribed channels.
-     */
-    private leaveAll;
     /**
      * Grant token permission.
      *
@@ -1297,4 +1211,3 @@ export declare class PubNubCore<CryptographyTypes, FileConstructorParameters, Pl
      */
     decryptFile(key: string | PubNubFileInterface, file?: PubNubFileInterface): Promise<PubNubFileInterface>;
 }
-export {};

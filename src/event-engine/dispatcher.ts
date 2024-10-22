@@ -1,3 +1,9 @@
+/**
+ * Subscribe Event Engine effects dispatcher.
+ *
+ * @internal
+ */
+
 import { PrivateClientConfiguration } from '../core/interfaces/configuration';
 import * as Subscription from '../core/types/api/subscription';
 import { PubNubError } from '../errors/pubnub-error';
@@ -7,6 +13,11 @@ import * as events from './events';
 import { Payload, StatusEvent } from '../core/types/api';
 import StatusCategory from '../core/constants/categories';
 
+/**
+ * Subscription Event Engine dependencies set (configuration).
+ *
+ * @internal
+ */
 export type Dependencies = {
   handshake: (parameters: Subscription.CancelableSubscribeParameters) => Promise<Subscription.SubscriptionCursor>;
   receiveMessages: (
@@ -24,6 +35,13 @@ export type Dependencies = {
   emitStatus: (status: StatusEvent) => void;
 };
 
+/**
+ * Subscribe Event Engine dispatcher.
+ *
+ * Dispatcher responsible for subscription events handling and corresponding effects execution.
+ *
+ * @internal
+ */
 export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependencies> {
   constructor(engine: Engine<events.Events, effects.Effects>, dependencies: Dependencies) {
     super(dependencies);

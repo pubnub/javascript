@@ -1,3 +1,9 @@
+/**
+ * Share File API module.
+ *
+ * @internal
+ */
+
 import { PubNubFileConstructor, PubNubFileInterface } from '../../types/file';
 import { GenerateFileUploadUrlRequest } from './generate_upload_url';
 import { CryptoModule } from '../../interfaces/crypto-module';

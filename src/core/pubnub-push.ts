@@ -10,12 +10,41 @@ import { RemoveDevicePushNotificationRequest } from './endpoints/push/remove_dev
 import * as PushNotifications from './types/api/push-notifications';
 import * as Push from './types/api/push';
 
+/**
+ * PubNub Push Notifications API interface.
+ */
 export default class PubNubPushNotifications {
+  /**
+   * PubNub account keys set which should be used for REST API calls.
+   *
+   * @internal
+   */
+  private readonly keySet: KeySet;
+
+  /* eslint-disable  @typescript-eslint/no-explicit-any */
+  /**
+   * Function which should be used to send REST API calls.
+   *
+   * @internal
+   */
+  private readonly sendRequest: SendRequestFunction<any>;
+
+  /**
+   * Create mobile push notifications API access object.
+   *
+   * @param keySet - PubNub account keys set which should be used for REST API calls.
+   * @param sendRequest - Function which should be used to send REST API calls.
+   *
+   * @internal
+   */
   constructor(
-    private readonly keySet: KeySet,
+    keySet: KeySet,
     /* eslint-disable  @typescript-eslint/no-explicit-any */
-    private readonly sendRequest: SendRequestFunction<any>,
-  ) {}
+    sendRequest: SendRequestFunction<any>,
+  ) {
+    this.sendRequest = sendRequest;
+    this.keySet = keySet;
+  }
 
   // --------------------------------------------------------
   // ---------------------- Audit API -----------------------

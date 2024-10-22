@@ -1,10 +1,10 @@
 /**
  * Node.js specific {@link PubNub} client configuration module.
  */
-import { UserConfiguration } from '../core/interfaces/configuration';
-import { TransportKeepAlive } from '../core/interfaces/transport';
-import { Payload } from '../core/types/api';
-import { CryptoModule } from '../core/interfaces/crypto-module';
+import { UserConfiguration } from '../../core/interfaces/configuration';
+import { TransportKeepAlive } from '../../core/interfaces/transport';
+import { Payload } from '../../core/types/api';
+import { CryptoModule } from '../../core/interfaces/crypto-module';
 /**
  * NodeJS platform PubNub client configuration.
  */

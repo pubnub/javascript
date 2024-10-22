@@ -1,5 +1,7 @@
 /**
  * Legacy cryptography module.
+ *
+ * @internal
  */
 
 import { CryptorConfiguration } from '../../interfaces/crypto-module';
@@ -13,6 +15,8 @@ import CryptoJS from './hmac-sha256';
  * @param b - Bytes array (buffer) which should be converted.
  *
  * @returns Word sized array.
+ *
+ * @internal
  */
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 function bufferToWordArray(b: string | any[] | Uint8ClampedArray) {
@@ -28,6 +32,8 @@ function bufferToWordArray(b: string | any[] | Uint8ClampedArray) {
 
 /**
  * Legacy cryptor configuration options.
+ *
+ * @internal
  */
 type CryptoConfiguration = {
   encryptKey?: boolean;
@@ -36,6 +42,11 @@ type CryptoConfiguration = {
   mode?: 'ecb' | 'cbc';
 };
 
+/**
+ * Legacy cryptography module for files and signature.
+ *
+ * @internal
+ */
 export default class {
   /**
    * Crypto initialization vector.

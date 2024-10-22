@@ -217,6 +217,8 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
    * @returns Previously registered {@link ILegacyCryptor|legacy} cryptor.
    *
    * @throws Error if legacy cryptor not registered.
+   *
+   * @internal
    */
   private getLegacyCryptor(): ILegacyCryptor | undefined {
     return this.getCryptorFromId(CryptoModule.LEGACY_IDENTIFIER) as ILegacyCryptor;
@@ -230,6 +232,8 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
    * @returns Registered cryptor with specified identifier.
    *
    * @throws Error if cryptor with specified {@link id} can't be found.
+   *
+   * @internal
    */
   private getCryptorFromId(id: string) {
     const cryptor = this.getAllCryptors().find((cryptor) => id === cryptor.identifier);
@@ -244,6 +248,8 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
    * @param header - Header with cryptor-defined data or raw cryptor identifier.
    *
    * @returns Cryptor which correspond to provided {@link header}.
+   *
+   * @internal
    */
   private getCryptor(header: CryptorHeader | string) {
     if (typeof header === 'string') {
@@ -262,6 +268,8 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
    * @param encrypted - Encryption data object as source for header data.
    *
    * @returns Binary representation of the cryptor header data.
+   *
+   * @internal
    */
   private getHeaderData(encrypted: EncryptedDataType) {
     if (!encrypted.metadata) return;
@@ -282,6 +290,8 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
    * @param ab2 - Second {@link ArrayBuffer}.
    *
    * @returns Merged data as {@link ArrayBuffer}.
+   *
+   * @internal
    */
   private concatArrayBuffer(ab1: ArrayBuffer, ab2: ArrayBuffer): ArrayBuffer {
     const tmp = new Uint8Array(ab1.byteLength + ab2.byteLength);
@@ -302,6 +312,8 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
    * @returns Decrypted data as {@link PubNub} File object.
    *
    * @throws Error if file is empty or contains unsupported data type.
+   *
+   * @internal
    */
   private async onStreamReadable(
     stream: NodeJS.ReadableStream,
@@ -347,6 +359,8 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
    * @returns Decrypted data as {@link PubNub} File object.
    *
    * @throws Error if file is empty or contains unsupported data type.
+   *
+   * @internal
    */
   private async decryptLegacyFileStream(
     stream: NodeJS.ReadableStream,
@@ -372,6 +386,8 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
 
 /**
  * CryptorHeader Utility
+ *
+ * @internal
  */
 class CryptorHeader {
   static decoder = new TextDecoder();
@@ -449,6 +465,8 @@ class CryptorHeader {
 
 /**
  * Cryptor header (v1).
+ *
+ * @internal
  */
 class CryptorHeaderV1 {
   _identifier;

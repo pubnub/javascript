@@ -1,5 +1,7 @@
 /**
  * Common browser and React Native Transport provider module.
+ *
+ * @internal
  */
 
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
@@ -11,13 +13,25 @@ import { queryStringFromObject } from '../core/utils';
 
 /**
  * Class representing a `fetch`-based browser and React Native transport provider.
+ *
+ * @internal
  */
 export class WebReactNativeTransport implements Transport {
   /**
    * Service {@link ArrayBuffer} response decoder.
+   *
+   * @internal
    */
   protected static decoder = new TextDecoder();
 
+  /**
+   * Create and configure transport provider for Web and Rect environments.
+   *
+   * @param [keepAlive] - Whether client should try to keep connections open for reuse or not.
+   * @param logVerbosity - Whether verbose logs should be printed or not.
+   *
+   * @internal
+   */
   constructor(
     private keepAlive: boolean = false,
     private readonly logVerbosity: boolean,
@@ -99,6 +113,8 @@ export class WebReactNativeTransport implements Transport {
    * @param req - The {@link TransportRequest} object containing request information.
    *
    * @returns Request object generated from the {@link TransportRequest} object.
+   *
+   * @internal
    */
   private async requestFromTransportRequest(req: TransportRequest): Promise<Request> {
     let body: string | ArrayBuffer | FormData | undefined;
@@ -145,6 +161,8 @@ export class WebReactNativeTransport implements Transport {
    * @param request - Platform-specific
    * @param [elapsed] - How many seconds passed since request processing started.
    * @param [body] - Service response (if available).
+   *
+   * @internal
    */
   protected logRequestProcessProgress(request: Request, elapsed?: number, body?: ArrayBuffer) {
     if (!this.logVerbosity) return;

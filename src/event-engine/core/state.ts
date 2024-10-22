@@ -1,7 +1,14 @@
+/**
+ * Event Engine Core state module.
+ *
+ * @internal
+ */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Event, EventOfType, GenericInvocation, GenericMap, InvocationTypeFromMap } from './types';
 
+/** @internal */
 export type TransitionFunction<
   Context,
   Events extends GenericMap,
@@ -11,12 +18,20 @@ export type TransitionFunction<
   (context: Context, event: EventType): Transition<any, Events, Effects> | void;
 };
 
+/** @internal */
 export type Transition<Context, Events extends GenericMap, Effects extends GenericMap> = [
   State<Context, Events, Effects>,
   Context,
   InvocationTypeFromMap<Effects>[],
 ];
 
+/**
+ * Event engine current state object.
+ *
+ * State contains current context and list of invocations which should be performed by the Event Engine.
+ *
+ * @internal
+ */
 export class State<Context, Events extends GenericMap, Effects extends GenericMap> {
   private transitionMap: Map<keyof Events, TransitionFunction<Context, Events, Effects, any>> = new Map();
 

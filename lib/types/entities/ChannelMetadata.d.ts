@@ -1,11 +1,18 @@
-import type { PubNubCore as PubNub } from '../core/pubnub-common';
-import EventEmitter from '../core/components/eventEmitter';
 import { SubscriptionOptions } from './commonTypes';
 import { Subscription } from './Subscription';
+/**
+ * First-class objects which provides access to the channel app context object-specific APIs.
+ */
 export declare class ChannelMetadata {
-    private readonly id;
-    private readonly eventEmitter;
-    private readonly pubnub;
-    constructor(id: string, eventEmitter: EventEmitter, pubnub: PubNub<unknown, unknown>);
+    /**
+     * Create channel's app context subscription object for real-time updates.
+     *
+     * Create subscription object which can be used to subscribe to the real-time updates sent to the specific channel
+     * app context object.
+     *
+     * @param [subscriptionOptions] - Channel's app context subscription object behavior customization options.
+     *
+     * @returns Configured and ready to use channel's app context subscription object.
+     */
     subscription(subscriptionOptions?: SubscriptionOptions): Subscription;
 }

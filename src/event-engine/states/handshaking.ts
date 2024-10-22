@@ -1,3 +1,9 @@
+/**
+ * Initial subscription handshake (disconnected) state.
+ *
+ * @internal
+ */
+
 import { State } from '../core/state';
 import { Effects, handshake, emitStatus } from '../effects';
 import {
@@ -16,12 +22,25 @@ import { UnsubscribedState } from './unsubscribed';
 import categoryConstants from '../../core/constants/categories';
 import * as Subscription from '../../core/types/api/subscription';
 
+/**
+ * Context which represent current Subscription Event Engine data state.
+ *
+ * @internal
+ */
 export type HandshakingStateContext = {
   channels: string[];
   groups: string[];
   cursor?: Subscription.SubscriptionCursor;
 };
 
+/**
+ * Initial subscription handshake (disconnected) state.
+ *
+ * State in which Subscription Event Engine tries to receive subscription cursor for next sequential subscribe REST
+ * API calls.
+ *
+ * @internal
+ */
 export const HandshakingState = new State<HandshakingStateContext, Events, Effects>('HANDSHAKING');
 
 HandshakingState.onEnter((context) => handshake(context.channels, context.groups));

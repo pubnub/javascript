@@ -2,6 +2,8 @@
  * Subscription reconnection-manager.
  *
  * **Note:** Reconnection manger rely on legacy time-based availability check.
+ *
+ * @internal
  */
 
 import { PubNubCore } from '../pubnub-common';

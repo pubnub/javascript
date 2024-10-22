@@ -1,3 +1,9 @@
+/**
+ * Receiving real-time updates (connected) state module.
+ *
+ * @internal
+ */
+
 import { State } from '../core/state';
 import { Effects, emitMessages, emitStatus, receiveMessages } from '../effects';
 import {
@@ -15,12 +21,24 @@ import { ReceiveStoppedState } from './receive_stopped';
 import categoryConstants from '../../core/constants/categories';
 import * as Subscription from '../../core/types/api/subscription';
 
+/**
+ * Context which represent current Subscription Event Engine data state.
+ *
+ * @internal
+ */
 export type ReceivingStateContext = {
   channels: string[];
   groups: string[];
   cursor: Subscription.SubscriptionCursor;
 };
 
+/**
+ * Receiving real-time updates (connected) state.
+ *
+ * State in which Subscription Event Engine processes any real-time updates.
+ *
+ * @internal
+ */
 export const ReceivingState = new State<ReceivingStateContext, Events, Effects>('RECEIVING');
 
 ReceivingState.onEnter((context) => receiveMessages(context.channels, context.groups, context.cursor));

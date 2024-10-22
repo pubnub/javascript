@@ -6,10 +6,10 @@ import {
   UserConfiguration,
   ExtendedConfiguration,
   setDefaults as setBaseDefaults,
-} from '../core/interfaces/configuration';
-import { TransportKeepAlive } from '../core/interfaces/transport';
-import { Payload } from '../core/types/api';
-import { CryptoModule } from '../core/interfaces/crypto-module';
+} from '../../core/interfaces/configuration';
+import { TransportKeepAlive } from '../../core/interfaces/transport';
+import { Payload } from '../../core/types/api';
+import { CryptoModule } from '../../core/interfaces/crypto-module';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------

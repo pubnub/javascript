@@ -6,6 +6,8 @@ import StatusCategory from '../../constants/categories';
 
 /**
  * PubNub account keyset.
+ *
+ * @internal
  */
 export type KeySet = {
   /**
@@ -26,6 +28,8 @@ export type KeySet = {
 
 /**
  * REST API request processing function.
+ *
+ * @internal
  */
 export type SendRequestFunction<ResponseType> = (
   request: AbstractRequest<ResponseType>,
@@ -132,6 +136,8 @@ export type StatusEvent = {
 
 /**
  * {@link TransportRequest} query parameter type.
+ *
+ * @internal
  */
 export type Query = Record<string, string | number | (string | number)[]>;
 

@@ -1,4 +1,6 @@
-declare const _default: {
-    createUUID(): any;
-};
-export default _default;
+/**
+ * Random identifier generator helper module.
+ *
+ * @internal
+ */
+export {};

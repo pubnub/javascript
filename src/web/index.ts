@@ -35,6 +35,13 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
   // @ts-expect-error Allowed to simplify interface when module can be disabled.
   static CryptoModule: typeof CryptoModuleType = process.env.CRYPTO_MODULE !== 'disabled' ? WebCryptoModule : undefined;
 
+  /**
+   * Create and configure PubNub client core.
+   *
+   * @param configuration - User-provided PubNub client configuration.
+   *
+   * @returns Configured and ready to use PubNub client.
+   */
   constructor(configuration: PubNubConfiguration) {
     const configurationCopy = setDefaults(configuration);
     const platformConfiguration: PubNubConfiguration & ExtendedConfiguration & PlatformConfiguration = {

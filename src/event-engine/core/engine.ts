@@ -1,3 +1,9 @@
+/**
+ * Event Engine Core module.
+ *
+ * @internal
+ */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Subject } from '../../core/components/subject';
@@ -6,6 +12,11 @@ import { Change } from './change';
 import { State } from './state';
 import { GenericMap, Event } from './types';
 
+/**
+ * Generic event engine.
+ *
+ * @internal
+ */
 export class Engine<Events extends GenericMap, Effects extends GenericMap> extends Subject<Change<Events, Effects>> {
   describe<Context>(label: string): State<Context, Events, Effects> {
     return new State<Context, Events, Effects>(label);

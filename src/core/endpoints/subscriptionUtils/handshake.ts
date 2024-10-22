@@ -1,5 +1,7 @@
 /**
  * Handshake subscribe REST API module.
+ *
+ * @internal
  */
 
 import RequestOperation from '../../constants/operations';

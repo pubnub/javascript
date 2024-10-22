@@ -1,5 +1,7 @@
 /**
  * PubNub Access Token Manager module.
+ *
+ * @internal
  */
 
 import Cbor from '../../cbor/common';

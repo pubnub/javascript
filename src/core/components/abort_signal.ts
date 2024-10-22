@@ -1,3 +1,9 @@
+/**
+ * Event Engine managed effects terminate signal module.
+ *
+ * @internal
+ */
+
 import { Subject } from './subject';
 
 export class AbortError extends Error {

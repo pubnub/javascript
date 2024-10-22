@@ -1,4 +1,10 @@
+/**
+ * Failed requests retry module.
+ */
 import { PubNubError } from '../../errors/pubnub-error';
+/**
+ * Failed request retry policy.
+ */
 export declare class RetryPolicy {
     static LinearRetryPolicy(configuration: LinearRetryPolicyConfiguration): RequestRetryPolicy & LinearRetryPolicyConfiguration;
     static ExponentialRetryPolicy(configuration: ExponentialRetryPolicyConfiguration): RequestRetryPolicy & ExponentialRetryPolicyConfiguration;
@@ -8,7 +14,7 @@ export type RequestRetryPolicy = {
      * Check whether failed request can be retried.
      *
      * @param reason - Request processing failure reason.
-     * @param attempt - Number of consequent failure.
+     * @param attempt - Number of sequential failure.
      *
      * @returns `true` if another request retry attempt can be done.
      */
@@ -18,7 +24,7 @@ export type RequestRetryPolicy = {
     /**
      * Computed delay for next request retry attempt.
      *
-     * @param attempt - Number of consequent failure.
+     * @param attempt - Number of sequential failure.
      * @param reason - Request processing failure reason.
      *
      * @returns Delay before next request retry attempt in milliseconds.
@@ -30,7 +36,7 @@ export type RequestRetryPolicy = {
      * Identify reason why another retry attempt can't be made.
      *
      * @param reason - Request processing failure reason.
-     * @param attempt - Number of consequent failure.
+     * @param attempt - Number of sequential failure.
      *
      * @returns Give up reason.
      */

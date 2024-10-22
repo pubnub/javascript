@@ -1,3 +1,9 @@
+/**
+ * Retry initial subscription handshake (disconnected) state.
+ *
+ * @internal
+ */
+
 import { PubNubError } from '../../errors/pubnub-error';
 import { State } from '../core/state';
 import { Effects, emitStatus, handshakeReconnect } from '../effects';
@@ -19,6 +25,11 @@ import { UnsubscribedState } from './unsubscribed';
 import categoryConstants from '../../core/constants/categories';
 import * as Subscription from '../../core/types/api/subscription';
 
+/**
+ * Context which represent current Subscription Event Engine data state.
+ *
+ * @internal
+ */
 export type HandshakeReconnectingStateContext = {
   channels: string[];
   groups: string[];
@@ -28,6 +39,13 @@ export type HandshakeReconnectingStateContext = {
   reason: PubNubError;
 };
 
+/**
+ * Retry initial subscription handshake (disconnected) state.
+ *
+ * State in which Subscription Event Engine tries to recover after error which happened before.
+ *
+ * @internal
+ */
 export const HandshakeReconnectingState = new State<HandshakeReconnectingStateContext, Events, Effects>(
   'HANDSHAKE_RECONNECTING',
 );

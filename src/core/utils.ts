@@ -1,3 +1,9 @@
+/**
+ * PubNub package utilities module.
+ *
+ * @internal
+ */
+
 import { Query } from './types/api';
 
 /**
@@ -8,6 +14,8 @@ import { Query } from './types/api';
  * @param input - Source string or number for encoding.
  *
  * @returns Percent-encoded string.
+ *
+ * @internal
  */
 export const encodeString = (input: string | number) => {
   return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
@@ -21,12 +29,17 @@ export const encodeString = (input: string | number) => {
  * @param [defaultString] - String which should be used in case if {@link names} is empty.
  *
  * @returns String which contains encoded names joined by non-encoded `,`.
+ *
+ * @internal
  */
 export const encodeNames = (names: string[], defaultString?: string) => {
   const encodedNames = names.map((name) => encodeString(name));
   return encodedNames.length ? encodedNames.join(',') : defaultString ?? '';
 };
 
+/**
+ * @internal
+ */
 export const removeSingleOccurrence = (source: string[], elementsToRemove: string[]) => {
   const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
 
@@ -39,6 +52,9 @@ export const removeSingleOccurrence = (source: string[], elementsToRemove: strin
   });
 };
 
+/**
+ * @internal
+ */
 export const findUniqueCommonElements = (a: string[], b: string[]) => {
   return [...a].filter(
     (value) =>
@@ -52,6 +68,8 @@ export const findUniqueCommonElements = (a: string[], b: string[]) => {
  * @param query - Key / value pairs of the request query parameters.
  *
  * @returns Stringified query key / value pairs.
+ *
+ * @internal
  */
 export const queryStringFromObject = (query: Query) => {
   return Object.keys(query)

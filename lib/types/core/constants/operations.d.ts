@@ -1,3 +1,6 @@
+/**
+ * Endpoint API operation types.
+ */
 declare enum RequestOperation {
     /**
      * Data publish REST API operation.
@@ -196,8 +199,6 @@ declare enum RequestOperation {
     /**
      * Revoke authorized token REST API operation.
      */
-    PNAccessManagerRevokeToken = "PNAccessManagerRevokeToken",
-    PNHandshakeOperation = "PNHandshakeOperation",
-    PNReceiveMessagesOperation = "PNReceiveMessagesOperation"
+    PNAccessManagerRevokeToken = "PNAccessManagerRevokeToken"
 }
 export default RequestOperation;

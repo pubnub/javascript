@@ -1,3 +1,9 @@
+/**
+ * Waiting next heartbeat state module.
+ *
+ * @internal
+ */
+
 import { State } from '../../core/state';
 import { Events, disconnect, joined, left, leftAll, timesUp } from '../events';
 import { Effects, leave, wait } from '../effects';
@@ -5,11 +11,23 @@ import { HeartbeatingState } from './heartbeating';
 import { HeartbeatStoppedState } from './heartbeat_stopped';
 import { HeartbeatInactiveState } from './heartbeat_inactive';
 
+/**
+ * Context which represent current Presence Event Engine data state.
+ *
+ * @internal
+ */
 export type HeartbeatCooldownStateContext = {
   channels: string[];
   groups: string[];
 };
 
+/**
+ * Waiting next heartbeat state.
+ *
+ * State in which Presence Event Engine is waiting when delay will run out and next heartbeat call should be done.
+ *
+ * @internal
+ */
 export const HeartbeatCooldownState = new State<HeartbeatCooldownStateContext, Events, Effects>('HEARTBEAT_COOLDOWN');
 
 HeartbeatCooldownState.onEnter(() => wait());

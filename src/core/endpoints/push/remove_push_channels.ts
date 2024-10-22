@@ -1,5 +1,7 @@
 /**
  * Unregister Channels from Device push REST API module.
+ *
+ * @internal
  */
 
 import { createValidationError, PubNubError } from '../../../errors/pubnub-error';

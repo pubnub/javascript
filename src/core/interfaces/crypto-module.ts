@@ -112,11 +112,15 @@ export interface CryptoModule {
 export abstract class AbstractCryptoModule<C> implements CryptoModule {
   /**
    * `String` to {@link ArrayBuffer} response decoder.
+   *
+   * @internal
    */
   protected static encoder = new TextEncoder();
 
   /**
    *  {@link ArrayBuffer} to {@link string} decoder.
+   *
+   * @internal
    */
   protected static decoder = new TextDecoder();
 
@@ -227,6 +231,8 @@ export abstract class AbstractCryptoModule<C> implements CryptoModule {
 
   /**
    * Retrieve list of module's cryptors.
+   *
+   * @internal
    */
   protected getAllCryptors() {
     return [this.defaultCryptor, ...this.cryptors];

@@ -1,5 +1,7 @@
 /**
  * Download File REST API module.
+ *
+ * @internal
  */
 
 import { PubNubBasicFileParameters, PubNubFileConstructor, PubNubFileInterface } from '../../types/file';

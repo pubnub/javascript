@@ -171,31 +171,6 @@ type FCMPayload = {
  */
 declare class BaseNotificationPayload {
     /**
-     * Notification main title.
-     */
-    protected _title?: string;
-    /**
-     * Notification second-line title.
-     */
-    protected _subtitle?: string;
-    /**
-     * Name of the sound which should be played for received notification.
-     */
-    protected _sound?: string;
-    /**
-     * Value which should be placed on application badge (if required).
-     */
-    protected _badge?: number | null;
-    /**
-     * Notification main body message.
-     */
-    protected _body?: string;
-    /**
-     * Object in resulting message where notification payload should be added.
-     */
-    protected _payload: unknown;
-    constructor(payload: unknown, title?: string, body?: string);
-    /**
      * Retrieve resulting notification payload content for message.
      *
      * @returns Preformatted push notification payload data.
@@ -231,33 +206,11 @@ declare class BaseNotificationPayload {
      * @param value - Name of the sound file which should be played upon notification receive.
      */
     set sound(value: string | undefined);
-    /**
-     * Platform-specific structure initialization.
-     */
-    protected setDefaultPayloadStructure(): void;
-    /**
-     * Translate data object into PubNub push notification payload object.
-     *
-     * @returns Preformatted push notification payload.
-     */
-    toObject(): unknown;
 }
 /**
  * Message payload for Apple Push Notification Service.
  */
 export declare class APNSNotificationPayload extends BaseNotificationPayload {
-    /**
-     * List with notification receivers information.
-     */
-    private _configurations?;
-    /**
-     * Type of push notification service for which payload will be created.
-     */
-    private _apnsPushType;
-    /**
-     * Whether resulting payload should trigger silent notification or not.
-     */
-    private _isSilent;
     get payload(): APNSPayload;
     /**
      * Update notification receivers configuration.
@@ -375,38 +328,11 @@ export declare class APNSNotificationPayload extends BaseNotificationPayload {
      * @param value - Whether notification should be sent as silent or not.
      */
     set silent(value: boolean);
-    protected setDefaultPayloadStructure(): void;
-    toObject(): APNSPayload | null;
-    /**
-     * Create PubNub push notification service APNS2 configuration information object.
-     *
-     * @param configuration - Source user-provided APNS2 configuration.
-     *
-     * @returns Preformatted for PubNub service APNS2 configuration information.
-     */
-    private objectFromAPNS2Configuration;
-    /**
-     * Create PubNub push notification service APNS2 target information object.
-     *
-     * @param target - Source user-provided data.
-     *
-     * @returns Preformatted for PubNub service APNS2 target information.
-     */
-    private objectFromAPNSTarget;
 }
 /**
  * Message payload for Firebase Clouse Messaging service.
  */
 export declare class FCMNotificationPayload extends BaseNotificationPayload {
-    /**
-     * Whether resulting payload should trigger silent notification or not.
-     */
-    private _isSilent?;
-    /**
-     * Name of the icon file from resource bundle which should be shown on notification.
-     */
-    private _icon?;
-    private _tag?;
     get payload(): FCMPayload;
     /**
      * Notification payload.
@@ -514,7 +440,17 @@ export declare class FCMNotificationPayload extends BaseNotificationPayload {
      * @param value - Name of the icon file which should be shown on notification.
      */
     set icon(value: string | undefined);
+    /**
+     * Retrieve notifications grouping tag.
+     *
+     * @returns Notifications grouping tag.
+     */
     get tag(): string | undefined;
+    /**
+     * Update notifications grouping tag.
+     *
+     * @param value - String which will be used to group similar notifications in notification center.
+     */
     set tag(value: string | undefined);
     /**
      * Set whether notification should be silent or not.
@@ -524,42 +460,8 @@ export declare class FCMNotificationPayload extends BaseNotificationPayload {
      * @param value - Whether notification should be sent as silent or not.
      */
     set silent(value: boolean);
-    protected setDefaultPayloadStructure(): void;
-    toObject(): FCMPayload | null;
 }
 declare class NotificationsPayload {
-    /**
-     * Resulting message payload for notification services.
-     */
-    private readonly _payload;
-    /**
-     * Whether notifications debugging session should be used or not.
-     */
-    private _debugging?;
-    /**
-     * First line title.
-     *
-     * Title which is shown in bold on the first line of notification bubble.
-     */
-    private readonly _title;
-    /**
-     * Second line title.
-     *
-     * Subtitle which is shown under main title with smaller font.
-     */
-    private _subtitle?;
-    /**
-     * Notification main body message.
-     */
-    private readonly _body;
-    /**
-     * Value which should be placed on application badge (if required).
-     */
-    private _badge?;
-    /**
-     * Name of the file from resource bundle which should be played when notification received.
-     */
-    private _sound?;
     /**
      * APNS-specific message payload.
      */
@@ -568,7 +470,12 @@ declare class NotificationsPayload {
      * FCM-specific message payload.
      */
     fcm: FCMNotificationPayload;
-    constructor(title: string, body: string);
+    /**
+     * Enable or disable push notification debugging message.
+     *
+     * @param value - Whether debug message from push notification scheduler should be published to the specific
+     * channel or not.
+     */
     set debugging(value: boolean);
     /**
      * Notification title.
@@ -622,12 +529,12 @@ declare class NotificationsPayload {
      * Build notifications platform for requested platforms.
      *
      * @param platforms - List of platforms for which payload should be added to final dictionary. Supported values:
-     * gcm, apns, and apns2.
+     * fcm, apns, and apns2.
      *
      * @returns Object with data, which can be sent with publish method call and trigger remote notifications for
      * specified platforms.
      */
-    buildPayload(platforms: string[]): {
+    buildPayload(platforms: ('apns' | 'apns2' | 'fcm')[]): {
         pn_apns?: APNSPayload | undefined;
         pn_gcm?: FCMPayload | undefined;
         pn_debug?: boolean | undefined;

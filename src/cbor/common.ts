@@ -1,5 +1,7 @@
 /**
  * Cbor decoder module.
+ *
+ * @internal
  */
 
 /**

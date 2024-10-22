@@ -1,3 +1,9 @@
+/**
+ * Heartbeating state module.
+ *
+ * @internal
+ */
+
 import { State } from '../../core/state';
 import { Events, disconnect, heartbeatFailure, heartbeatSuccess, joined, left, leftAll } from '../events';
 import { Effects, emitStatus, heartbeat, leave } from '../effects';
@@ -6,11 +12,23 @@ import { HearbeatReconnectingState } from './heartbeat_reconnecting';
 import { HeartbeatStoppedState } from './heartbeat_stopped';
 import { HeartbeatInactiveState } from './heartbeat_inactive';
 
+/**
+ * Context which represent current Presence Event Engine data state.
+ *
+ * @internal
+ */
 export type HeartbeatingStateContext = {
   channels: string[];
   groups: string[];
 };
 
+/**
+ * Heartbeating state module.
+ *
+ * State in which Presence Event Engine send heartbeat REST API call.
+ *
+ * @internal
+ */
 export const HeartbeatingState = new State<HeartbeatingStateContext, Events, Effects>('HEARTBEATING');
 
 HeartbeatingState.onEnter((context) => heartbeat(context.channels, context.groups));

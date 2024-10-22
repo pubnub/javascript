@@ -1,5 +1,18 @@
+/**
+ * Event Engine Core Effects handler module.
+ *
+ * @internal
+ */
+
 import { AbortSignal } from '../../core/components/abort_signal';
 
+/**
+ * Synchronous (short-term) effect invocation handler.
+ *
+ * Handler manages effect execution on behalf of effect dispatcher.
+ *
+ * @internal
+ */
 export abstract class Handler<Payload, Dependencies> {
   constructor(
     protected payload: Payload,
@@ -10,12 +23,24 @@ export abstract class Handler<Payload, Dependencies> {
   abstract cancel(): void;
 }
 
+/**
+ * Asynchronous effect execution function definition.
+ *
+ * @internal
+ */
 type AsyncHandlerFunction<Payload, Dependencies> = (
   payload: Payload,
   abortSignal: AbortSignal,
   dependencies: Dependencies,
 ) => Promise<void>;
 
+/**
+ * Asynchronous (long-running) effect invocation handler.
+ *
+ * Handler manages effect execution on behalf of effect dispatcher.
+ *
+ * @internal
+ */
 class AsyncHandler<Payload, Dependencies> extends Handler<Payload, Dependencies> {
   abortSignal = new AbortSignal();
 
@@ -39,6 +64,13 @@ class AsyncHandler<Payload, Dependencies> extends Handler<Payload, Dependencies>
   }
 }
 
+/**
+ * Asynchronous effect invocation handler constructor.
+ *
+ * @param handlerFunction - Function which performs asynchronous action and should be called on `start`.
+ *
+ * @internal
+ */
 export const asyncHandler =
   <Payload, Dependencies>(handlerFunction: AsyncHandlerFunction<Payload, Dependencies>) =>
   (payload: Payload, dependencies: Dependencies) =>

@@ -1,3 +1,9 @@
+/**
+ * Event Engine terminate signal listener module.
+ *
+ * @internal
+ */
+
 type Listener<T> = (event: T) => void;
 
 /**

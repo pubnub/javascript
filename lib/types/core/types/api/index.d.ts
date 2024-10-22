@@ -1,27 +1,5 @@
-import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import StatusCategory from '../../constants/categories';
-/**
- * PubNub account keyset.
- */
-export type KeySet = {
-    /**
-     * Specifies the `subscribeKey` to be used for subscribing to a channel and message publishing.
-     */
-    subscribeKey: string;
-    /**
-     * Specifies the `publishKey` to be used for publishing messages to a channel.
-     */
-    publishKey?: string;
-    /**
-     * Specifies the `secretKey` to be used for request signatures computation.
-     */
-    secretKey?: string;
-};
-/**
- * REST API request processing function.
- */
-export type SendRequestFunction<ResponseType> = (request: AbstractRequest<ResponseType>, callback?: ResultCallback<ResponseType>) => Promise<ResponseType | void>;
 /**
  * Endpoint call completion block with result.
  *
@@ -105,10 +83,6 @@ export type StatusEvent = {
      */
     currentTimetoken?: number | string;
 };
-/**
- * {@link TransportRequest} query parameter type.
- */
-export type Query = Record<string, string | number | (string | number)[]>;
 /**
  * General payload type.
  *

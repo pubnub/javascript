@@ -1,5 +1,7 @@
 /**
  * File sharing REST API module.
+ *
+ * @internal
  */
 
 import { TransportResponse } from '../../types/transport-response';
