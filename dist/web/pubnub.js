@@ -410,7 +410,9 @@
 
 		var obj = { encode: encode, decode: decode };
 
-		if (module.exports)
+		if (typeof undefined$1 === "function" && undefined$1.amd)
+		  undefined$1("cbor/cbor", obj);
+		else if (module.exports)
 		  module.exports = obj;
 		else if (!global.CBOR)
 		  global.CBOR = obj;
@@ -887,7 +889,7 @@
 	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category: StatusCategory$1.PNValidationErrorCategory, error: true });
 	}
 	function createValidationError(message, statusCode) {
-	    return createError(Object.assign({ message }, ({})));
+	    return createError(Object.assign({ message }, (statusCode !== undefined ? { statusCode } : {})));
 	}
 
 	/*eslint-disable */
@@ -3811,7 +3813,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.2.8';
+	            return '8.2.9';
 	        },
 	        getVersion() {
 	            return this.version;
