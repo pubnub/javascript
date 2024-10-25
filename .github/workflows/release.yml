@@ -10,7 +10,7 @@ jobs:
     name: Check release required
     if: github.event.pull_request.merged && endsWith(github.repository, '-private') != true
     runs-on:
-      group: Default
+      group: organization/Default
     outputs:
       release: ${{ steps.check.outputs.ready }}
     steps:
@@ -31,7 +31,7 @@ jobs:
     needs: check-release
     if: needs.check-release.outputs.release == 'true'
     runs-on:
-      group: Default
+      group: organization/Default
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
