@@ -58,9 +58,7 @@ export class PubNubAPIError extends Error {
       category = StatusCategory.PNNetworkIssuesCategory;
       message = 'Network issues';
     } else if (errorName === 'TypeError') {
-      if (message.indexOf('Load failed') !== -1 || message.indexOf('Failed to fetch') != -1)
-        category = StatusCategory.PNTimeoutCategory;
-      else category = StatusCategory.PNBadRequestCategory;
+      category = StatusCategory.PNBadRequestCategory;
     } else if (errorName === 'FetchError') {
       const errorCode = (error as Record<string, string>).code;
 

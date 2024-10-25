@@ -410,9 +410,7 @@
 
 		var obj = { encode: encode, decode: decode };
 
-		if (typeof undefined$1 === "function" && undefined$1.amd)
-		  undefined$1("cbor/cbor", obj);
-		else if (module.exports)
+		if (module.exports)
 		  module.exports = obj;
 		else if (!global.CBOR)
 		  global.CBOR = obj;
@@ -889,7 +887,7 @@
 	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category: StatusCategory$1.PNValidationErrorCategory, error: true });
 	}
 	function createValidationError(message, statusCode) {
-	    return createError(Object.assign({ message }, (statusCode !== undefined ? { statusCode } : {})));
+	    return createError(Object.assign({ message }, ({})));
 	}
 
 	/*eslint-disable */
@@ -2839,10 +2837,7 @@
 	            message = 'Network issues';
 	        }
 	        else if (errorName === 'TypeError') {
-	            if (message.indexOf('Load failed') !== -1 || message.indexOf('Failed to fetch') != -1)
-	                category = StatusCategory$1.PNTimeoutCategory;
-	            else
-	                category = StatusCategory$1.PNBadRequestCategory;
+	            category = StatusCategory$1.PNBadRequestCategory;
 	        }
 	        else if (errorName === 'FetchError') {
 	            const errorCode = error.code;
