@@ -2839,10 +2839,7 @@
 	            message = 'Network issues';
 	        }
 	        else if (errorName === 'TypeError') {
-	            if (message.indexOf('Load failed') !== -1 || message.indexOf('Failed to fetch') != -1)
-	                category = StatusCategory$1.PNTimeoutCategory;
-	            else
-	                category = StatusCategory$1.PNBadRequestCategory;
+	            category = StatusCategory$1.PNBadRequestCategory;
 	        }
 	        else if (errorName === 'FetchError') {
 	            const errorCode = error.code;
@@ -3816,7 +3813,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.2.8';
+	            return '8.2.9';
 	        },
 	        getVersion() {
 	            return this.version;
