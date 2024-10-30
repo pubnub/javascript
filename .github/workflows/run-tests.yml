@@ -21,7 +21,7 @@ jobs:
   tests:
     name: Integration and Unit tests
     runs-on:
-      group: Default
+      group: organization/Default
     strategy:
       fail-fast: true
       matrix:
@@ -56,7 +56,7 @@ jobs:
   all-tests:
     name: Tests
     runs-on:
-      group: Default
+      group: organization/Default
     needs: [tests]
     steps:
       - name: Tests summary

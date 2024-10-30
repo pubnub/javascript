@@ -1,3 +1,9 @@
+## v8.2.9
+October 25 2024
+
+#### Fixed
+- Revert fix created to handle browser timeouts (not gracefully). The Web Fetch API doesn't have descriptive error information, and it sends `TypeError` for both cases when connection closed by browser or network issue (blocked domain).
+
 ## v8.2.8
 September 30 2024
 
