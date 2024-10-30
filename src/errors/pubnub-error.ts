@@ -1,7 +1,5 @@
 /**
  * PubNub operation error module.
- *
- * @internal
  */
 
 import { Status } from '../core/types/api';

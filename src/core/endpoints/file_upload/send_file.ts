@@ -6,7 +6,7 @@
 
 import { PubNubFileConstructor, PubNubFileInterface } from '../../types/file';
 import { GenerateFileUploadUrlRequest } from './generate_upload_url';
-import { CryptoModule } from '../../interfaces/crypto-module';
+import { ICryptoModule } from '../../interfaces/crypto-module';
 import { Cryptography } from '../../interfaces/cryptography';
 import { AbstractRequest } from '../../components/request';
 import * as FileSharing from '../../types/api/file-sharing';
@@ -67,7 +67,7 @@ type RequestParameters<FileParameters> = FileSharing.SendFileParameters<FilePara
   /**
    * Published data encryption module.
    */
-  crypto?: CryptoModule;
+  crypto?: ICryptoModule;
 
   /**
    * Legacy cryptography module.

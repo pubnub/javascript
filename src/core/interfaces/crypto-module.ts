@@ -49,7 +49,7 @@ export type CryptorConfiguration = {
 /**
  * Base crypto module interface.
  */
-export interface CryptoModule {
+export interface ICryptoModule {
   // --------------------------------------------------------
   // --------------------- Encryption -----------------------
   // --------------------------------------------------------
@@ -109,7 +109,7 @@ export interface CryptoModule {
   // endregion
 }
 
-export abstract class AbstractCryptoModule<C> implements CryptoModule {
+export abstract class AbstractCryptoModule<C> implements ICryptoModule {
   /**
    * `String` to {@link ArrayBuffer} response decoder.
    *
@@ -142,7 +142,7 @@ export abstract class AbstractCryptoModule<C> implements CryptoModule {
    *
    * @throws Error if `config.cipherKey` not set.
    */
-  static legacyCryptoModule(config: CryptorConfiguration): CryptoModule {
+  static legacyCryptoModule(config: CryptorConfiguration): ICryptoModule {
     throw new Error('Should be implemented by concrete crypto module implementation.');
   }
 
@@ -156,7 +156,7 @@ export abstract class AbstractCryptoModule<C> implements CryptoModule {
    *
    * @throws Error if `config.cipherKey` not set.
    */
-  static aesCbcCryptoModule(config: CryptorConfiguration): CryptoModule {
+  static aesCbcCryptoModule(config: CryptorConfiguration): ICryptoModule {
     throw new Error('Should be implemented by concrete crypto module implementation.');
   }
   // endregion
@@ -174,7 +174,7 @@ export abstract class AbstractCryptoModule<C> implements CryptoModule {
   /**
    * Encrypt data.
    *
-   * @param data - Data which should be encrypted using {@link CryptoModule}.
+   * @param data - Data which should be encrypted using {@link ICryptoModule}.
    *
    * @returns Data encryption result.
    */
@@ -203,7 +203,7 @@ export abstract class AbstractCryptoModule<C> implements CryptoModule {
   /**
    * Encrypt data.
    *
-   * @param data - Dta which should be encrypted using `CryptoModule`.
+   * @param data - Dta which should be encrypted using `ICryptoModule`.
    *
    * @returns Data decryption result.
    */

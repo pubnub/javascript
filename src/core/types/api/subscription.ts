@@ -1,5 +1,5 @@
 import {
-  RequestParameters as SubscribeRequestParameters,
+  SubscribeRequestParameters,
   VSPMembershipObjectData,
   AppContextObjectData,
   MessageActionData,
@@ -302,6 +302,8 @@ type FileEvent = {
 
 /**
  * Cancelable subscribe request parameters.
+ *
+ * @internal
  */
 export type CancelableSubscribeParameters = Omit<
   SubscribeRequestParameters,

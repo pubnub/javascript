@@ -10,6 +10,7 @@ import utils from '../../utils';
 
 describe('#components/subscription_manager', () => {
   let pubnub: PubNub;
+  let pubnubWithLimitedDeduplicationQueue: PubNub;
   let pubnubWithPassingHeartbeats: PubNub;
   let pubnubWithLimitedQueue: PubNub;
   let pubnubWithCrypto: PubNub;
@@ -32,6 +33,18 @@ describe('#components/subscription_manager', () => {
       // @ts-expect-error Force override default value.
       useRequestId: false,
       autoNetworkDetection: false,
+      heartbeatInterval: 149,
+    });
+    pubnubWithLimitedDeduplicationQueue = new PubNub({
+      subscribeKey: 'mySubKey',
+      publishKey: 'myPublishKey',
+      origin: 'ps.pndsn.com',
+      uuid: 'myUUID',
+      // @ts-expect-error Force override default value.
+      useRequestId: false,
+      autoNetworkDetection: false,
+      maximumCacheSize: 1,
+      dedupeOnSubscribe: true,
       heartbeatInterval: 149,
     });
     pubnubWithPassingHeartbeats = new PubNub({
@@ -69,6 +82,7 @@ describe('#components/subscription_manager', () => {
 
   afterEach(() => {
     pubnub.stop();
+    pubnubWithLimitedDeduplicationQueue.stop();
     pubnubWithPassingHeartbeats.stop();
     pubnubWithLimitedQueue.stop();
   });
@@ -703,10 +717,6 @@ describe('#components/subscription_manager', () => {
   });
 
   it('supports deduping on shallow queue', (done) => {
-    // @ts-expect-error: This configuration option normally is hidden.
-    pubnub._config.dedupeOnSubscribe = true;
-    // @ts-expect-error: This configuration option normally is hidden.
-    pubnub._config.maximumCacheSize = 1;
     let messageCount = 0;
 
     utils
@@ -739,13 +749,13 @@ describe('#components/subscription_manager', () => {
         { 'content-type': 'text/javascript' },
       );
 
-    pubnub.addListener({
+    pubnubWithLimitedDeduplicationQueue.addListener({
       message() {
         messageCount += 1;
       },
     });
 
-    pubnub.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
+    pubnubWithLimitedDeduplicationQueue.subscribe({ channels: ['ch1', 'ch2'], withPresence: true });
 
     setTimeout(() => {
       if (messageCount === 4) {

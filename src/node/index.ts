@@ -3,8 +3,8 @@ import CborReader from 'cbor-sync';
 import { Readable } from 'stream';
 import { Buffer } from 'buffer';
 
-import { CryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
-import type { CryptoModule as CryptoModuleType } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
+import { NodeCryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
+import type { NodeCryptoModule as CryptoModuleType } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 
 import PubNubFile, { PubNubFileParameters } from '../file/modules/node';
 import { CryptorConfiguration } from '../core/interfaces/crypto-module';
@@ -31,7 +31,8 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
    * Data encryption / decryption module constructor.
    */
   // @ts-expect-error Allowed to simplify interface when module can be disabled.
-  static CryptoModule: typeof CryptoModuleType = process.env.CRYPTO_MODULE !== 'disabled' ? CryptoModule : undefined;
+  static CryptoModule: typeof CryptoModuleType =
+    process.env.CRYPTO_MODULE !== 'disabled' ? NodeCryptoModule : undefined;
 
   /**
    * PubNub File constructor.
@@ -68,7 +69,7 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
         if (!cryptoConfiguration.cipherKey) return undefined;
 
         if (process.env.CRYPTO_MODULE !== 'disabled') {
-          return new CryptoModule({
+          return new NodeCryptoModule({
             default: new LegacyCryptor({ ...cryptoConfiguration }),
             cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
           });

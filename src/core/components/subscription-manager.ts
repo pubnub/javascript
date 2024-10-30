@@ -5,7 +5,7 @@
  */
 
 import { Payload, ResultCallback, Status, StatusCallback, StatusEvent } from '../types/api';
-import { RequestParameters as SubscribeRequestParameters } from '../endpoints/subscribe';
+import { SubscribeRequestParameters as SubscribeRequestParameters } from '../endpoints/subscribe';
 import { PrivateClientConfiguration } from '../interfaces/configuration';
 import { HeartbeatRequest } from '../endpoints/presence/heartbeat';
 import { ReconnectionManager } from './reconnection_manager';

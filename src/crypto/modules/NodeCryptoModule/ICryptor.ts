@@ -3,7 +3,7 @@
  */
 
 /**
- * Data encrypted by {@link CryptoModule}.
+ * Data encrypted by {@link NodeCryptoModule}.
  */
 export type EncryptedDataType = {
   /**
@@ -18,7 +18,7 @@ export type EncryptedDataType = {
 };
 
 /**
- * {@link Readable} stream encrypted by {@link CryptoModule}.
+ * {@link Readable} stream encrypted by {@link NodeCryptoModule}.
  */
 export type EncryptedStream = {
   /**

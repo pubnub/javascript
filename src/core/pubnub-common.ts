@@ -43,7 +43,7 @@ import * as Publish from './endpoints/publish';
 import * as Signal from './endpoints/signal';
 // endregion
 // region Subscription
-import { RequestParameters as SubscribeRequestParameters, SubscribeRequest } from './endpoints/subscribe';
+import { SubscribeRequestParameters as SubscribeRequestParameters, SubscribeRequest } from './endpoints/subscribe';
 import { ReceiveMessagesSubscribeRequest } from './endpoints/subscriptionUtils/receiveMessages';
 import { HandshakeSubscribeRequest } from './endpoints/subscriptionUtils/handshake';
 import * as Subscription from './types/api/subscription';
@@ -2847,8 +2847,7 @@ export class PubNubCore<
    * @param callback - Request completion handler callback.
    *
    * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-   * methods instead
-   * from `objects` API group..
+   * methods instead from `objects` API group.
    */
   public removeMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -2869,8 +2868,7 @@ export class PubNubCore<
    * @returns Asynchronous memberships modification response.
    *
    * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-   * methods instead
-   * from `objects` API group..
+   * methods instead from `objects` API group.
    */
   public async removeMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -2888,8 +2886,7 @@ export class PubNubCore<
    * @returns Asynchronous memberships modification response or `void` in case if `callback` provided.
    *
    * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-   * methods instead
-   * from `objects` API group..
+   * methods instead from `objects` API group.
    */
   public async removeMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,

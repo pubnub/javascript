@@ -5,7 +5,7 @@
 import { createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
 import { TransportMethod } from '../types/transport-request';
-import { CryptoModule } from '../interfaces/crypto-module';
+import { ICryptoModule } from '../interfaces/crypto-module';
 import { AbstractRequest } from '../components/request';
 import RequestOperation from '../constants/operations';
 import { KeySet, Payload, Query } from '../types/api';
@@ -84,11 +84,6 @@ export type PublishParameters = {
    * @deprecated
    */
   replicate?: boolean;
-
-  /**
-   * Indexed signature for deprecated parameters.
-   */
-  [key: string]: string | number | boolean | undefined | Payload | CryptoModule;
 };
 
 /**
@@ -113,7 +108,7 @@ type RequestParameters = PublishParameters & {
   /**
    * Published data encryption module.
    */
-  crypto?: CryptoModule;
+  crypto?: ICryptoModule;
 };
 
 /**

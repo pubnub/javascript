@@ -70,7 +70,10 @@ export class WebReactNativeTransport implements Transport {
           }, req.timeout * 1000);
         });
 
-        return Promise.race([fetch(request, { signal: abortController?.signal }), requestTimeout])
+        return Promise.race([
+          fetch(request, { signal: abortController?.signal, credentials: 'omit', cache: 'no-cache' }),
+          requestTimeout,
+        ])
           .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer] =>
             response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]),
           )

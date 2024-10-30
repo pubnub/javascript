@@ -136,8 +136,6 @@ export type StatusEvent = {
 
 /**
  * {@link TransportRequest} query parameter type.
- *
- * @internal
  */
 export type Query = Record<string, string | number | (string | number)[]>;
 
@@ -148,4 +146,10 @@ export type Query = Record<string, string | number | (string | number)[]>;
  * * generic messages and signals content,
  * * published message metadata.
  */
-export type Payload = string | number | boolean | { [key: string]: Payload | null } | Payload[];
+export type Payload =
+  | string
+  | number
+  | boolean
+  | { toJSON: () => Payload }
+  | { [key: string]: Payload | null }
+  | Payload[];

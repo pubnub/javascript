@@ -20,7 +20,7 @@ export type MessageAction = {
   /**
    * Timetoken of when message reaction has been added.
    *
-   * **Note:** This token required when it will be required to remove raction.
+   * **Note:** This token required when it will be required to remove reaction.
    */
   actionTimetoken: string;
 

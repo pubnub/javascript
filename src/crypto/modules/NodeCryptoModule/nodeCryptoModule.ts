@@ -14,6 +14,7 @@ import { EncryptedDataType, ICryptor } from './ICryptor';
 import { ILegacyCryptor } from './ILegacyCryptor';
 import AesCbcCryptor from './aesCbcCryptor';
 import LegacyCryptor from './legacyCryptor';
+import { Payload } from '../../../core/types/api';
 
 /**
  * Re-export bundled cryptors.
@@ -28,7 +29,7 @@ type CryptorType = ICryptor | ILegacyCryptor;
 /**
  * CryptoModule for Node.js platform.
  */
-export class CryptoModule extends AbstractCryptoModule<CryptorType> {
+export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
   /**
    * {@link LegacyCryptor|Legacy} cryptor identifier.
    */
@@ -85,8 +86,8 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
   encrypt(data: ArrayBuffer | string) {
     // Encrypt data.
     const encrypted =
-      data instanceof ArrayBuffer && this.defaultCryptor.identifier === CryptoModule.LEGACY_IDENTIFIER
-        ? (this.defaultCryptor as ILegacyCryptor).encrypt(CryptoModule.decoder.decode(data))
+      data instanceof ArrayBuffer && this.defaultCryptor.identifier === NodeCryptoModule.LEGACY_IDENTIFIER
+        ? (this.defaultCryptor as ILegacyCryptor).encrypt(NodeCryptoModule.decoder.decode(data))
         : (this.defaultCryptor as ICryptor).encrypt(data);
 
     if (!encrypted.metadata) return encrypted.data;
@@ -96,7 +97,7 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
     // Write encrypted data payload content.
     const encryptedData =
       typeof encrypted.data === 'string'
-        ? CryptoModule.encoder.encode(encrypted.data).buffer
+        ? NodeCryptoModule.encoder.encode(encrypted.data).buffer
         : encrypted.data.buffer.slice(encrypted.data.byteOffset, encrypted.data.byteOffset + encrypted.data.length);
 
     return this.concatArrayBuffer(headerData, encryptedData);
@@ -117,7 +118,7 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
         name: file.name,
         mimeType: 'application/octet-stream',
         data: Buffer.from(
-          typeof encryptedData === 'string' ? CryptoModule.encoder.encode(encryptedData) : encryptedData,
+          typeof encryptedData === 'string' ? NodeCryptoModule.encoder.encode(encryptedData) : encryptedData,
         ),
       });
     }
@@ -156,7 +157,7 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
   // --------------------------------------------------------
   // region Decryption
 
-  decrypt(data: ArrayBuffer | string) {
+  decrypt(data: ArrayBuffer | string): ArrayBuffer | Payload | null {
     const encryptedData = Buffer.from(typeof data === 'string' ? decode(data) : data);
     const header = CryptorHeader.tryParse(
       encryptedData.buffer.slice(encryptedData.byteOffset, encryptedData.byteOffset + encryptedData.length),
@@ -188,7 +189,7 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
        * If It's legacy one then redirect it.
        * (as long as we support legacy need to check on instance type)
        */
-      if (cryptor?.identifier === CryptoModule.LEGACY_IDENTIFIER)
+      if (cryptor?.identifier === NodeCryptoModule.LEGACY_IDENTIFIER)
         return (cryptor as ILegacyCryptor).decryptFile(file, File);
 
       return File.create({
@@ -221,7 +222,7 @@ export class CryptoModule extends AbstractCryptoModule<CryptorType> {
    * @internal
    */
   private getLegacyCryptor(): ILegacyCryptor | undefined {
-    return this.getCryptorFromId(CryptoModule.LEGACY_IDENTIFIER) as ILegacyCryptor;
+    return this.getCryptorFromId(NodeCryptoModule.LEGACY_IDENTIFIER) as ILegacyCryptor;
   }
 
   /**
@@ -438,7 +439,7 @@ class CryptorHeader {
     let version = null;
     if (encryptedData.byteLength >= 4) {
       sentinel = encryptedData.slice(0, 4);
-      if (!this.isSentinel(sentinel)) return CryptoModule.LEGACY_IDENTIFIER;
+      if (!this.isSentinel(sentinel)) return NodeCryptoModule.LEGACY_IDENTIFIER;
     }
 
     if (encryptedData.byteLength >= 5) version = encryptedDataView.getInt8(4);

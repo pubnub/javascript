@@ -9,7 +9,7 @@ import {
 } from '../../core/interfaces/configuration';
 import { TransportKeepAlive } from '../../core/interfaces/transport';
 import { Payload } from '../../core/types/api';
-import { CryptoModule } from '../../core/interfaces/crypto-module';
+import { ICryptoModule } from '../../core/interfaces/crypto-module';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -40,7 +40,7 @@ export type PubNubConfiguration = UserConfiguration & {
    *
    * @default `not set`
    */
-  cryptoModule?: CryptoModule;
+  cryptoModule?: ICryptoModule;
 
   // region Deprecated parameters
   /**

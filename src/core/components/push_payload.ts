@@ -595,7 +595,7 @@ export class APNSNotificationPayload extends BaseNotificationPayload {
 }
 
 /**
- * Message payload for Firebase Clouse Messaging service.
+ * Message payload for Firebase Cloud Messaging service.
  */
 export class FCMNotificationPayload extends BaseNotificationPayload {
   /**
