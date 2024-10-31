@@ -6,6 +6,8 @@ import StatusCategory from '../../constants/categories';
 
 /**
  * PubNub account keyset.
+ *
+ * @internal
  */
 export type KeySet = {
   /**
@@ -26,6 +28,8 @@ export type KeySet = {
 
 /**
  * REST API request processing function.
+ *
+ * @internal
  */
 export type SendRequestFunction<ResponseType> = (
   request: AbstractRequest<ResponseType>,
@@ -142,4 +146,10 @@ export type Query = Record<string, string | number | (string | number)[]>;
  * * generic messages and signals content,
  * * published message metadata.
  */
-export type Payload = string | number | boolean | { [key: string]: Payload | null } | Payload[];
+export type Payload =
+  | string
+  | number
+  | boolean
+  | { toJSON: () => Payload }
+  | { [key: string]: Payload | null }
+  | Payload[];

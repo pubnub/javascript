@@ -1,10 +1,12 @@
 /**
  * Get history REST API module.
+ *
+ * @internal
  */
 
 import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
-import { CryptoModule } from '../../interfaces/crypto-module';
+import { ICryptoModule } from '../../interfaces/crypto-module';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import { KeySet, Payload, Query } from '../../types/api';
@@ -54,7 +56,7 @@ type RequestParameters = History.GetHistoryParameters & {
   /**
    * Published data encryption module.
    */
-  crypto?: CryptoModule;
+  crypto?: ICryptoModule;
 
   /**
    * Whether verbose logging enabled or not.

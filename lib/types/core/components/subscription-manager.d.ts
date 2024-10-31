@@ -1,4 +1,0 @@
-/**
- * Subscription manager module.
- */
-export {};

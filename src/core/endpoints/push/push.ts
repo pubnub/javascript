@@ -1,5 +1,7 @@
 /**
  * Manage channels enabled for device push REST API module.
+ *
+ * @internal
  */
 
 import { TransportResponse } from '../../types/transport-response';

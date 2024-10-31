@@ -1,3 +1,9 @@
+/**
+ * Reconnect to receive real-time updates (disconnected) state.
+ *
+ * @internal
+ */
+
 import { PubNubError } from '../../errors/pubnub-error';
 import { State } from '../core/state';
 import { Effects, emitMessages, receiveReconnect, emitStatus } from '../effects';
@@ -18,6 +24,11 @@ import { UnsubscribedState } from './unsubscribed';
 import categoryConstants from '../../core/constants/categories';
 import * as Subscription from '../../core/types/api/subscription';
 
+/**
+ * Context which represent current Subscription Event Engine data state.
+ *
+ * @internal
+ */
 export type ReceiveReconnectingStateContext = {
   channels: string[];
   groups: string[];
@@ -27,6 +38,13 @@ export type ReceiveReconnectingStateContext = {
   reason: PubNubError;
 };
 
+/**
+ * Reconnect to receive real-time updates (disconnected) state.
+ *
+ * State in which Subscription Event Engine tries to recover after error which happened before.
+ *
+ * @internal
+ */
 export const ReceiveReconnectingState = new State<ReceiveReconnectingStateContext, Events, Effects>(
   'RECEIVE_RECONNECTING',
 );

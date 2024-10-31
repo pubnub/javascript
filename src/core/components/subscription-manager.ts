@@ -1,18 +1,20 @@
 /**
  * Subscription manager module.
+ *
+ * @internal
  */
 
 import { Payload, ResultCallback, Status, StatusCallback, StatusEvent } from '../types/api';
-import { RequestParameters as SubscribeRequestParameters } from '../endpoints/subscribe';
+import { SubscribeRequestParameters as SubscribeRequestParameters } from '../endpoints/subscribe';
 import { PrivateClientConfiguration } from '../interfaces/configuration';
 import { HeartbeatRequest } from '../endpoints/presence/heartbeat';
 import { ReconnectionManager } from './reconnection_manager';
 import * as Subscription from '../types/api/subscription';
 import { ListenerManager } from './listener_manager';
 import StatusCategory from '../constants/categories';
+import { DedupingManager } from './deduping_manager';
 import Categories from '../constants/categories';
 import * as Presence from '../types/api/presence';
-import DedupingManager from './deduping_manager';
 import { PubNubCore } from '../pubnub-common';
 import EventEmitter from './eventEmitter';
 
@@ -142,7 +144,7 @@ export class SubscriptionManager {
     time: typeof PubNubCore.prototype.time,
   ) {
     this.reconnectionManager = new ReconnectionManager(time);
-    this.dedupingManager = new DedupingManager({ config: this.configuration });
+    this.dedupingManager = new DedupingManager(this.configuration);
     this.heartbeatChannelGroups = {};
     this.heartbeatChannels = {};
     this.presenceChannelGroups = {};
@@ -453,7 +455,7 @@ export class SubscriptionManager {
 
     try {
       messages.forEach((message) => {
-        if (dedupeOnSubscribe) {
+        if (dedupeOnSubscribe && 'message' in message.data && 'timetoken' in message.data) {
           if (this.dedupingManager.isDuplicate(message.data)) return;
           this.dedupingManager.addEntry(message.data);
         }

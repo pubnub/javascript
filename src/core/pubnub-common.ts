@@ -1,3 +1,7 @@
+/**
+ * Core PubNub API module.
+ */
+
 // region Imports
 // region Components
 import { Listener, ListenerManager } from './components/listener_manager';
@@ -39,7 +43,7 @@ import * as Publish from './endpoints/publish';
 import * as Signal from './endpoints/signal';
 // endregion
 // region Subscription
-import { RequestParameters as SubscribeRequestParameters, SubscribeRequest } from './endpoints/subscribe';
+import { SubscribeRequestParameters as SubscribeRequestParameters, SubscribeRequest } from './endpoints/subscribe';
 import { ReceiveMessagesSubscribeRequest } from './endpoints/subscriptionUtils/receiveMessages';
 import { HandshakeSubscribeRequest } from './endpoints/subscriptionUtils/handshake';
 import * as Subscription from './types/api/subscription';
@@ -112,6 +116,11 @@ import { DownloadFileRequest } from './endpoints/file_upload/download_file';
 // --------------------------------------------------------
 // region Types
 
+/**
+ * Core PubNub client configuration object.
+ *
+ * @internal
+ */
 type ClientInstanceConfiguration<CryptographyTypes> = {
   /**
    * Client-provided configuration.
@@ -309,6 +318,14 @@ export class PubNubCore<
   }
   // endregion
 
+  /**
+   * Create and configure PubNub client core.
+   *
+   * @param configuration - PubNub client core configuration.
+   * @returns Configured and ready to use PubNub client.
+   *
+   * @internal
+   */
   constructor(configuration: ClientInstanceConfiguration<CryptographyTypes>) {
     this._configuration = configuration.configuration;
     this.cryptography = configuration.cryptography;
@@ -732,6 +749,8 @@ export class PubNubCore<
    * @param callback - Request completion handler callback.
    *
    * @returns Asynchronous request execution and response parsing result.
+   *
+   * @internal
    */
   private sendRequest<ResponseType>(
     request: AbstractRequest<ResponseType>,
@@ -741,6 +760,8 @@ export class PubNubCore<
   /**
    * Schedule request execution.
    *
+   * @internal
+   *
    * @param request - REST API request.
    *
    * @returns Asynchronous request execution and response parsing result.
@@ -749,6 +770,8 @@ export class PubNubCore<
 
   /**
    * Schedule request execution.
+   *
+   * @internal
    *
    * @param request - REST API request.
    * @param [callback] - Request completion handler callback.
@@ -1080,6 +1103,8 @@ export class PubNubCore<
    *
    * **Note:** Method passed into managers to let them use it when required.
    *
+   * @internal
+   *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
@@ -1135,6 +1160,8 @@ export class PubNubCore<
    *
    * **Note:** Method passed into managers to let them use it when required.
    *
+   * @internal
+   *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
@@ -1186,6 +1213,8 @@ export class PubNubCore<
   /**
    * Event engine handshake subscribe.
    *
+   * @internal
+   *
    * @param parameters - Request configuration parameters.
    */
   private async subscribeHandshake(parameters: Subscription.CancelableSubscribeParameters) {
@@ -1217,6 +1246,8 @@ export class PubNubCore<
 
   /**
    * Event engine receive messages subscribe.
+   *
+   * @internal
    *
    * @param parameters - Request configuration parameters.
    */
@@ -1800,6 +1831,8 @@ export class PubNubCore<
   /**
    * Announce user presence
    *
+   * @internal
+   *
    * @param parameters - Desired presence state for provided list of channels and groups.
    * @param callback - Request completion handler callback.
    */
@@ -1823,6 +1856,8 @@ export class PubNubCore<
   /**
    * Announce user `join` on specified list of channels and groups.
    *
+   * @internal
+   *
    * @param parameters - List of channels and groups where `join` event should be sent.
    */
   private join(parameters: { channels?: string[]; groups?: string[] }) {
@@ -1835,6 +1870,8 @@ export class PubNubCore<
   /**
    * Announce user `leave` on specified list of channels and groups.
    *
+   * @internal
+   *
    * @param parameters - List of channels and groups where `leave` event should be sent.
    */
   private leave(parameters: { channels?: string[]; groups?: string[] }) {
@@ -1844,6 +1881,8 @@ export class PubNubCore<
 
   /**
    * Announce user `leave` on all subscribed channels.
+   *
+   * @internal
    */
   private leaveAll() {
     if (process.env.PRESENCE_MODULE !== 'disabled') this.presenceEventEngine?.leaveAll();
@@ -1987,7 +2026,7 @@ export class PubNubCore<
    *
    * @returns Token's permissions information for the resources.
    */
-  public parseToken(token: string) {
+  public parseToken(token: string): PAM.Token | undefined {
     return this.tokenManager && this.tokenManager.parseToken(token);
   }
   // endregion
@@ -2808,8 +2847,7 @@ export class PubNubCore<
    * @param callback - Request completion handler callback.
    *
    * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-   * methods instead
-   * from `objects` API group..
+   * methods instead from `objects` API group.
    */
   public removeMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -2830,8 +2868,7 @@ export class PubNubCore<
    * @returns Asynchronous memberships modification response.
    *
    * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-   * methods instead
-   * from `objects` API group..
+   * methods instead from `objects` API group.
    */
   public async removeMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -2849,8 +2886,7 @@ export class PubNubCore<
    * @returns Asynchronous memberships modification response or `void` in case if `callback` provided.
    *
    * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-   * methods instead
-   * from `objects` API group..
+   * methods instead from `objects` API group.
    */
   public async removeMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,

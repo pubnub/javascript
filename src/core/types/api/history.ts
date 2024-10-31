@@ -141,7 +141,7 @@ export type Actions = {
        * High-precision PubNub timetoken with time when {@link uuid} reacted on message.
        */
       actionTimetoken: string;
-    };
+    }[];
   };
 };
 

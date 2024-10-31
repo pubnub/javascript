@@ -15,7 +15,7 @@ type DevicePush = {
   /**
    * Push Notifications gateway to use.
    *
-   * **Important:** Depends from the source of `device` token and can be `apns2` (for token
+   * **Important:** Depends on from the source of `device` token and can be `apns2` (for token
    * provided during device registration using Apple's framework) or `gcm` (when used Firebase
    * or similar framework to receive token).
    */

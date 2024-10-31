@@ -1,5 +1,7 @@
 /**
  * Generate file upload URL REST API request.
+ *
+ * @internal
  */
 
 import { createValidationError, PubNubError } from '../../../errors/pubnub-error';

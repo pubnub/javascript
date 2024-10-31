@@ -1,3 +1,21 @@
+## v8.2.10
+October 31 2024
+
+#### Fixed
+- Fix `Actions` type definition.
+
+#### Modified
+- Remove indexed signature for publish.
+- Add serializable objects to `Payload` type.
+- Aggregate generated types definitions.
+- Fix definition of type which represents message actions received from history and list of users which added action of specific type and value to the message. Fixed the following issues reported by [@yo1dog](https://github.com/yo1dog): [#407](https://github.com/pubnub/javascript/issues/407).
+- Remove redundant indexed signature from publish message parameters type definition. Fixed the following issues reported by [@yo1dog](https://github.com/yo1dog): [#413](https://github.com/pubnub/javascript/issues/413).       
+- Extend `Payload` type definition with objects which can be serialized by `JSON.stringify` using `toJSON()` methods. Fixed the following issues reported by [@yo1dog](https://github.com/yo1dog): [#412](https://github.com/pubnub/javascript/issues/412).
+- Aggregate multiple types definitions into single type definition type with proper type names and namespaces. Fixed 
+  the following issues reported by [@Tallyb](https://github.com/Tallyb) and [@yo1dog](https://github.com/yo1dog): [#405](https://github.com/pubnub/javascript/issues/405) and [#409](https://github.com/pubnub/javascript/issues/409) and [#410](https://github.com/pubnub/javascript/issues/410).
+- Add the Subscribe Event Engine and Event Listener types to the bundled types definition file. Fixed the following 
+  issues reported by [@roman-rr](https://github.com/roman-rr): [#377](https://github.com/pubnub/javascript/issues/377).
+
 ## v8.2.9
 October 25 2024
 

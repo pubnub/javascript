@@ -25,7 +25,7 @@ describe('components/crypto useRandomIVs', () => {
     expect(decrypted).to.deep.equal(data, JSON.stringify(decrypted));
   });
 
-  it('should be able to encrypt and decrypt a message with CryptoModule', () => {
+  it('should be able to encrypt and decrypt a message with ICryptoModule', () => {
     const pubnub = new PubNub({
       subscribeKey: 'demo-36',
       publishKey: 'demo-36',

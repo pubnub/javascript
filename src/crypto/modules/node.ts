@@ -1,5 +1,7 @@
 /**
  * Legacy Node.js cryptography module.
+ *
+ * @internal
  */
 
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
@@ -12,6 +14,8 @@ import { PubNubFileConstructor } from '../../core/types/file';
 
 /**
  * Legacy cryptography implementation for Node.js-based {@link PubNub} client.
+ *
+ * @internal
  */
 export default class NodeCryptography implements Cryptography<string | ArrayBuffer | Buffer | Readable> {
   /**

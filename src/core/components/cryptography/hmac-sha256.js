@@ -1,3 +1,9 @@
+/**
+ * CryptoJS implementation.
+ *
+ * @internal
+ */
+
 /*eslint-disable */
 
 /*

@@ -1,5 +1,7 @@
 /**
  * Remove channel group channels REST API module.
+ *
+ * @internal
  */
 
 import { createValidationError, PubNubError } from '../../../errors/pubnub-error';

@@ -1,5 +1,7 @@
 /**
  * List Device push enabled channels REST API module.
+ *
+ * @internal
  */
 
 import { createValidationError, PubNubError } from '../../../errors/pubnub-error';

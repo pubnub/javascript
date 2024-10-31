@@ -1,3 +1,9 @@
+/**
+ * Presence Event Engine module.
+ *
+ * @internal
+ */
+
 import { Dispatcher, Engine } from '../core';
 import * as events from './events';
 import * as effects from './effects';
@@ -5,6 +11,11 @@ import { Dependencies, PresenceEventEngineDispatcher } from './dispatcher';
 
 import { HeartbeatInactiveState } from './states/heartbeat_inactive';
 
+/**
+ * Presence Event Engine Core.
+ *
+ * @internal
+ */
 export class PresenceEventEngine {
   private engine: Engine<events.Events, effects.Effects> = new Engine();
   private dispatcher: Dispatcher<effects.Effects, Dependencies>;

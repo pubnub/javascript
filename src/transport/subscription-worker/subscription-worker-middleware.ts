@@ -3,6 +3,8 @@
  *
  * Middleware optimize subscription feature requests utilizing `Subscription Worker` if available and not disabled
  * by user.
+ *
+ * @internal
  */
 
 import { CancellationController, TransportRequest } from '../../core/types/transport-request';

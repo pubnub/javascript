@@ -1,144 +1,17 @@
 /**
  * PubNub Access Token Manager module.
+ *
+ * @internal
  */
 
 import Cbor from '../../cbor/common';
+import * as PAM from '../types/api/access-manager';
 import { Payload } from '../types/api';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
 // --------------------------------------------------------
 // region Types
-
-type Token = {
-  /**
-   * Token version.
-   */
-  version: number;
-
-  /**
-   * Token generation date time.
-   */
-  timestamp: number;
-
-  /**
-   * Maximum duration (in minutes) during which token will be valid.
-   */
-  ttl: number;
-
-  /**
-   * Permissions granted to specific resources.
-   */
-  resources?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>>;
-
-  /**
-   * Permissions granted to resources which match specified regular expression.
-   */
-  patterns?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>>;
-
-  /**
-   * The uuid that is exclusively authorized to use this token to make API requests.
-   */
-  authorized_uuid?: string;
-
-  /**
-   * PAM token content signature.
-   */
-  signature: ArrayBuffer;
-
-  /**
-   * Additional information which has been added to the token.
-   */
-  meta?: Payload;
-};
-
-/**
- * Granted resource permissions.
- *
- * **Note:** Following operations doesn't require any permissions:
- * - unsubscribe from channel / channel group
- * - where now
- */
-type Permissions = {
-  /**
-   * Resource read permission.
-   *
-   * Read permission required for:
-   * - subscribe to channel / channel group (including presence versions `-pnpres`)
-   * - here now
-   * - get presence state
-   * - set presence state
-   * - fetch history
-   * - fetch messages count
-   * - list shared files
-   * - download shared file
-   * - enable / disable push notifications
-   * - get message actions
-   * - get history with message actions
-   */
-  read: boolean;
-
-  /**
-   * Resource write permission.
-   *
-   * Write permission required for:
-   * - publish message / signal
-   * - share file
-   * - add message actions
-   */
-  write: boolean;
-
-  /**
-   * Resource manage permission.
-   *
-   * Manage permission required for:
-   * - add / remove channels to / from the channel group
-   * - list channels in group
-   * - remove channel group
-   * - set / remove channel members
-   */
-  manage: boolean;
-
-  /**
-   * Resource delete permission.
-   *
-   * Delete permission required for:
-   * - delete messages from history
-   * - delete shared file
-   * - delete user metadata
-   * - delete channel metadata
-   * - remove message action
-   */
-  delete: boolean;
-
-  /**
-   * Resource get permission.
-   *
-   * Get permission required for:
-   * - get user metadata
-   * - get channel metadata
-   * - get channel members
-   */
-  get: boolean;
-
-  /**
-   * Resource update permission.
-   *
-   * Update permissions required for:
-   * - set user metadata
-   * - set channel metadata
-   * - set / remove user membership
-   */
-  update: boolean;
-
-  /**
-   * Resource `join` permission.
-   *
-   * `Join` permission required for:
-   * - set / remove channel members
-   */
-  join: boolean;
-};
 
 /**
  * Raw parsed token.
@@ -242,7 +115,7 @@ export class TokenManager {
       const channelPatternPermissions = Object.keys(parsed.pat.chan);
       const groupPatternPermissions = Object.keys(parsed.pat.grp);
 
-      const result: Token = {
+      const result: PAM.Token = {
         version: parsed.v,
         timestamp: parsed.t,
         ttl: parsed.ttl,
@@ -312,7 +185,7 @@ export class TokenManager {
    * @returns Human-readable resource permissions.
    */
   private extractPermissions(permissions: number) {
-    const permissionsResult: Permissions = {
+    const permissionsResult: PAM.Permissions = {
       read: false,
       write: false,
       manage: false,

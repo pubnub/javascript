@@ -129,7 +129,7 @@ export type SendFileResponse = PublishFileMessageResponse & {
   /**
    * Unique file identifier.
    *
-   * Unique file identifier and it's {@link name} can be used to download file from the channel
+   * Unique file identifier, and it's {@link name} can be used to download file from the channel
    * later.
    */
   id: string;
@@ -387,7 +387,7 @@ export type FileUrlParameters = {
   /**
    * Unique file identifier.
    *
-   * Unique file identifier and it's {@link name} can be used to download file from the channel
+   * Unique file identifier, and it's {@link name} can be used to download file from the channel
    * later.
    */
   id: string;
@@ -426,7 +426,7 @@ export type DeleteFileParameters = {
   /**
    * Unique file identifier.
    *
-   * Unique file identifier and it's {@link name} can be used to download file from the channel
+   * Unique file identifier, and it's {@link name} can be used to download file from the channel
    * later.
    */
   id: string;

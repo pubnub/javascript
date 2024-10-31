@@ -1,5 +1,7 @@
 /**
  * Channels / channel groups presence REST API module.
+ *
+ * @internal
  */
 
 import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
@@ -213,7 +215,7 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse> {
 
     return {
       ...(!includeUUIDs! ? { disable_uuids: '1' } : {}),
-      ...(includeState ?? false ? { state: '1' } : {}),
+      ...((includeState ?? false) ? { state: '1' } : {}),
       ...(channelGroups && channelGroups.length > 0 ? { 'channel-group': channelGroups.join(',') } : {}),
       ...queryParameters!,
     };

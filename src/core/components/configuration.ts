@@ -1,9 +1,11 @@
 /**
  * {@link PubNub} client configuration module.
+ *
+ * @internal
  */
 
 import { ExtendedConfiguration, PlatformConfiguration, PrivateClientConfiguration } from '../interfaces/configuration';
-import { CryptoModule, CryptorConfiguration } from '../interfaces/crypto-module';
+import { ICryptoModule, CryptorConfiguration } from '../interfaces/crypto-module';
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
 import uuidGenerator from './uuid';
 import { Payload } from '../types/api';
@@ -28,7 +30,7 @@ const USE_RANDOM_INITIALIZATION_VECTOR = true;
  *
  * @internal
  */
-type SetupCryptoModule = (configuration: CryptorConfiguration) => CryptoModule | undefined;
+type SetupCryptoModule = (configuration: CryptorConfiguration) => ICryptoModule | undefined;
 
 /**
  * Internal state of the {@link PrivateClientConfiguration} to store temporarily information.
@@ -58,7 +60,7 @@ type PrivateConfigurationFields = {
   /**
    * Configured crypto module.
    */
-  _cryptoModule?: CryptoModule;
+  _cryptoModule?: ICryptoModule;
 
   /**
    * Currently used data encryption / decryption key.
@@ -70,7 +72,7 @@ type PrivateConfigurationFields = {
  * Create {@link PubNub} client private configuration object.
  *
  * @param base - User- and platform-provided configuration.
- * @param setupCryptoModule - Platform-provided {@link CryptoModule} configuration block.
+ * @param setupCryptoModule - Platform-provided {@link ICryptoModule} configuration block.
  *
  * @returns `PubNub` client private configuration.
  *
@@ -140,7 +142,7 @@ export const makeConfiguration = (
         customDecrypt: this.getCustomDecrypt(),
       });
     },
-    getCryptoModule(): CryptoModule | undefined {
+    getCryptoModule(): ICryptoModule | undefined {
       return this._cryptoModule;
     },
     getUseRandomIVs(): boolean | undefined {
@@ -169,7 +171,7 @@ export const makeConfiguration = (
       return base.PubNubFile;
     },
     get version(): string {
-      return '8.2.9';
+      return '8.2.10';
     },
     getVersion(): string {
       return this.version;

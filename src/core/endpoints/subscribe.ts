@@ -4,7 +4,7 @@
 
 import { createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
-import { CryptoModule } from '../interfaces/crypto-module';
+import { ICryptoModule } from '../interfaces/crypto-module';
 import * as Subscription from '../types/api/subscription';
 import { AbstractRequest } from '../components/request';
 import * as FileSharing from '../types/api/file-sharing';
@@ -32,8 +32,6 @@ const WITH_PRESENCE = false;
 
 /**
  * PubNub-defined event types by payload.
- *
- * @internal
  */
 export enum PubNubEventType {
   /**
@@ -193,8 +191,6 @@ type PresenceStateChangeData = {
 
 /**
  * Channel presence service response.
- *
- * @internal
  */
 export type PresenceData = PresenceIntervalData | PresenceChangeData | PresenceStateChangeData;
 // endregion
@@ -202,8 +198,6 @@ export type PresenceData = PresenceIntervalData | PresenceChangeData | PresenceS
 // region Message Actions service response
 /**
  * Message reaction change service response.
- *
- * @internal
  */
 export type MessageActionData = {
   /**
@@ -309,8 +303,6 @@ type ChannelObjectData = ObjectData<
 
 /**
  * `Space` object change real-time service response.
- *
- * @internal
  */
 export type SpaceObjectData = ObjectData<
   AppContextVSPEvents,
@@ -325,8 +317,6 @@ type UuidObjectData = ObjectData<AppContextEvents, 'uuid', AppContext.UUIDMetada
 
 /**
  * `User` object change real-time service response.
- *
- * @internal
  */
 export type UserObjectData = ObjectData<
   AppContextVSPEvents,
@@ -365,8 +355,6 @@ type MembershipObjectData = ObjectData<
 
 /**
  * VSP `Membership` object change real-time service response.
- *
- * @internal
  */
 export type VSPMembershipObjectData = ObjectData<
   AppContextVSPEvents,
@@ -396,8 +384,6 @@ export type VSPMembershipObjectData = ObjectData<
 
 /**
  * App Context service response.
- *
- * @internal
  */
 export type AppContextObjectData = ChannelObjectData | UuidObjectData | MembershipObjectData;
 // endregion
@@ -405,8 +391,6 @@ export type AppContextObjectData = ChannelObjectData | UuidObjectData | Membersh
 // region File service response
 /**
  * File service response.
- *
- * @internal
  */
 export type FileData = {
   /**
@@ -435,6 +419,8 @@ export type FileData = {
  * Service response data envelope.
  *
  * Each entry from `m` list wrapped into this object.
+ *
+ * @internal
  */
 type Envelope = {
   /**
@@ -515,6 +501,8 @@ type Envelope = {
 
 /**
  * Subscribe REST API service success response.
+ *
+ * @internal
  */
 type ServiceResponse = {
   /**
@@ -537,7 +525,7 @@ type ServiceResponse = {
  *
  * @internal
  */
-export type RequestParameters = Subscription.SubscribeParameters & {
+export type SubscribeRequestParameters = Subscription.SubscribeParameters & {
   /**
    * Timetoken's region identifier.
    */
@@ -564,7 +552,7 @@ export type RequestParameters = Subscription.SubscribeParameters & {
   /**
    * Received data decryption module.
    */
-  crypto?: CryptoModule;
+  crypto?: ICryptoModule;
 
   /**
    * File download Url generation function.
@@ -587,7 +575,7 @@ export type RequestParameters = Subscription.SubscribeParameters & {
  * @internal
  */
 export class BaseSubscribeRequest extends AbstractRequest<Subscription.SubscriptionResponse> {
-  constructor(protected readonly parameters: RequestParameters) {
+  constructor(protected readonly parameters: SubscribeRequestParameters) {
     super({ cancellable: true });
 
     // Apply default request parameters.

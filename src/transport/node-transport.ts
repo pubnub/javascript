@@ -1,3 +1,9 @@
+/**
+ * Node.js Transport provider module.
+ *
+ * @internal
+ */
+
 import fetch, { Request, Response, RequestInit } from 'node-fetch';
 import { ProxyAgent, ProxyAgentOptions } from 'proxy-agent';
 import { Agent as HttpsAgent } from 'https';
@@ -14,20 +20,29 @@ import { queryStringFromObject } from '../core/utils';
 
 /**
  * Class representing a fetch-based Node.js transport provider.
+ *
+ * @internal
  */
 export class NodeTransport implements Transport {
   /**
    * Service {@link ArrayBuffer} response decoder.
+   *
+   * @internal
    */
   protected static decoder = new TextDecoder();
 
   /**
    * Request proxy configuration.
+   *
+   * @internal
    */
   private proxyConfiguration?: ProxyAgentOptions;
 
+  /** @internal */
   private proxyAgent?: ProxyAgent;
+  /** @internal */
   private httpsAgent?: HttpsAgent;
+  /** @internal */
   private httpAgent?: HttpAgent;
 
   /**
@@ -38,6 +53,8 @@ export class NodeTransport implements Transport {
    * @param [logVerbosity] - Whether verbose logging enabled or not.
    *
    * @returns Transport for performing network requests.
+   *
+   * @internal
    */
   constructor(
     private readonly keepAlive: boolean = false,
@@ -49,6 +66,8 @@ export class NodeTransport implements Transport {
    * Update request proxy configuration.
    *
    * @param configuration - New proxy configuration.
+   *
+   * @internal
    */
   public setProxy(configuration?: ProxyAgentOptions) {
     this.proxyConfiguration = configuration;
@@ -119,6 +138,8 @@ export class NodeTransport implements Transport {
    * @param req - The {@link TransportRequest} object containing request information.
    *
    * @returns Request object generated from the {@link TransportRequest} object.
+   *
+   * @internal
    */
   private async requestFromTransportRequest(req: TransportRequest): Promise<Request> {
     let headers: Record<string, string> | undefined = req.headers;
@@ -164,6 +185,8 @@ export class NodeTransport implements Transport {
    *
    * @returns {HttpAgent | HttpsAgent | undefined} - The appropriate agent for the request, or
    * undefined if keep alive or proxy not requested.
+   *
+   * @internal
    */
   private agentForTransportRequest(req: TransportRequest): HttpAgent | HttpsAgent | undefined {
     // Don't configure any agents if keep alive not requested.

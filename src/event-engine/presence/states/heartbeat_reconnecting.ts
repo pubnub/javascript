@@ -1,3 +1,9 @@
+/**
+ * Retry heartbeat state module.
+ *
+ * @internal
+ */
+
 import { PubNubError } from '../../../errors/pubnub-error';
 import { State } from '../../core/state';
 import {
@@ -17,6 +23,11 @@ import { HeartbeatCooldownState } from './heartbeat_cooldown';
 import { HeartbeatInactiveState } from './heartbeat_inactive';
 import { HeartbeatFailedState } from './heartbeat_failed';
 
+/**
+ * Context which represent current Subscription Event Engine data state.
+ *
+ * @internal
+ */
 export type HeartbeatReconnectingStateContext = {
   channels: string[];
   groups: string[];
@@ -25,6 +36,13 @@ export type HeartbeatReconnectingStateContext = {
   reason: PubNubError;
 };
 
+/**
+ * Retry heartbeat state.
+ *
+ * State in which Presence Event Engine tries to recover after error which happened before.
+ *
+ * @internal
+ */
 export const HearbeatReconnectingState = new State<HeartbeatReconnectingStateContext, Events, Effects>(
   'HEARBEAT_RECONNECTING',
 );

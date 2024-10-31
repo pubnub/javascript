@@ -1,5 +1,7 @@
 /**
  * PAM Revoke Token REST API module.
+ *
+ * @internal
  */
 
 import { createValidationError, PubNubError } from '../../../errors/pubnub-error';

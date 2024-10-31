@@ -410,9 +410,7 @@
 
 		var obj = { encode: encode, decode: decode };
 
-		if (typeof undefined$1 === "function" && undefined$1.amd)
-		  undefined$1("cbor/cbor", obj);
-		else if (module.exports)
+		if (module.exports)
 		  module.exports = obj;
 		else if (!global.CBOR)
 		  global.CBOR = obj;
@@ -437,7 +435,7 @@
 	OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 	PERFORMANCE OF THIS SOFTWARE.
 	***************************************************************************** */
-	/* global Reflect, Promise, SuppressedError, Symbol */
+	/* global Reflect, Promise, SuppressedError, Symbol, Iterator */
 
 
 	function __rest(s, e) {
@@ -514,6 +512,8 @@
 	    // region Helpers
 	    /**
 	     * Retrieve list of module's cryptors.
+	     *
+	     * @internal
 	     */
 	    getAllCryptors() {
 	        return [this.defaultCryptor, ...this.cryptors];
@@ -521,10 +521,14 @@
 	}
 	/**
 	 * `String` to {@link ArrayBuffer} response decoder.
+	 *
+	 * @internal
 	 */
 	AbstractCryptoModule.encoder = new TextEncoder();
 	/**
 	 *  {@link ArrayBuffer} to {@link string} decoder.
+	 *
+	 * @internal
 	 */
 	AbstractCryptoModule.decoder = new TextDecoder();
 
@@ -695,6 +699,11 @@
 	 */
 	PubNubFile.supportsFileUri = false;
 
+	/**
+	 * Base64 support module.
+	 *
+	 * @internal
+	 */
 	const BASE64_CHARMAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
 	/**
 	 * Decode a Base64 encoded string.
@@ -874,7 +883,25 @@
 	})(StatusCategory || (StatusCategory = {}));
 	var StatusCategory$1 = StatusCategory;
 
+	/**
+	 * PubNub operation error module.
+	 */
+	/**
+	 * PubNub operation error.
+	 *
+	 * When an operation can't be performed or there is an error from the server, this object will be returned.
+	 */
 	class PubNubError extends Error {
+	    /**
+	     * Create PubNub operation error.
+	     *
+	     * @param message - Message with details about why operation failed.
+	     * @param [status] - Additional information about performed operation.
+	     *
+	     * @returns Configured and ready to use PubNub operation error.
+	     *
+	     * @internal
+	     */
 	    constructor(message, status) {
 	        super(message);
 	        this.status = status;
@@ -883,14 +910,39 @@
 	        Object.setPrototypeOf(this, new.target.prototype);
 	    }
 	}
+	/**
+	 * Create error status object.
+	 *
+	 * @param errorPayload - Additional information which should be attached to the error status object.
+	 *
+	 * @returns Error status object.
+	 *
+	 * @internal
+	 */
 	function createError(errorPayload) {
 	    var _a;
 	    (_a = errorPayload.statusCode) !== null && _a !== void 0 ? _a : (errorPayload.statusCode = 0);
 	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category: StatusCategory$1.PNValidationErrorCategory, error: true });
 	}
+	/**
+	 * Create operation arguments validation error status object.
+	 *
+	 * @param message - Information about failed validation requirement.
+	 * @param [statusCode] - Operation HTTP status code.
+	 *
+	 * @returns Operation validation error status object.
+	 *
+	 * @internal
+	 */
 	function createValidationError(message, statusCode) {
-	    return createError(Object.assign({ message }, (statusCode !== undefined ? { statusCode } : {})));
+	    return createError(Object.assign({ message }, ({})));
 	}
+
+	/**
+	 * CryptoJS implementation.
+	 *
+	 * @internal
+	 */
 
 	/*eslint-disable */
 
@@ -1935,6 +1987,8 @@
 
 	/**
 	 * Legacy cryptography module.
+	 *
+	 * @internal
 	 */
 	/**
 	 * Convert bytes array to words array.
@@ -1942,6 +1996,8 @@
 	 * @param b - Bytes array (buffer) which should be converted.
 	 *
 	 * @returns Word sized array.
+	 *
+	 * @internal
 	 */
 	/* eslint-disable  @typescript-eslint/no-explicit-any */
 	function bufferToWordArray(b) {
@@ -1953,6 +2009,11 @@
 	    // @ts-expect-error Bundled library without types.
 	    return CryptoJS$1.lib.WordArray.create(wa, b.length);
 	}
+	/**
+	 * Legacy cryptography module for files and signature.
+	 *
+	 * @internal
+	 */
 	class Crypto {
 	    constructor(configuration) {
 	        this.configuration = configuration;
@@ -2201,18 +2262,16 @@
 	    }
 	}
 
-	/* global crypto */
 	/**
 	 * Legacy browser cryptography module.
+	 *
+	 * @internal
 	 */
-	function concatArrayBuffer(ab1, ab2) {
-	    const tmp = new Uint8Array(ab1.byteLength + ab2.byteLength);
-	    tmp.set(new Uint8Array(ab1), 0);
-	    tmp.set(new Uint8Array(ab2), ab1.byteLength);
-	    return tmp.buffer;
-	}
+	/* global crypto */
 	/**
 	 * Legacy cryptography implementation for browser-based {@link PubNub} client.
+	 *
+	 * @internal
 	 */
 	class WebCryptography {
 	    // --------------------------------------------------------
@@ -2248,7 +2307,7 @@
 	    encryptArrayBuffer(key, buffer) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const abIv = crypto.getRandomValues(new Uint8Array(16));
-	            return concatArrayBuffer(abIv.buffer, yield crypto.subtle.encrypt({ name: 'AES-CBC', iv: abIv }, key, buffer));
+	            return this.concatArrayBuffer(abIv.buffer, yield crypto.subtle.encrypt({ name: 'AES-CBC', iv: abIv }, key, buffer));
 	        });
 	    }
 	    /**
@@ -2264,7 +2323,7 @@
 	            const abIv = crypto.getRandomValues(new Uint8Array(16));
 	            const abPlaintext = WebCryptography.encoder.encode(text).buffer;
 	            const abPayload = yield crypto.subtle.encrypt({ name: 'AES-CBC', iv: abIv }, key, abPlaintext);
-	            const ciphertext = concatArrayBuffer(abIv.buffer, abPayload);
+	            const ciphertext = this.concatArrayBuffer(abIv.buffer, abPayload);
 	            return WebCryptography.decoder.decode(ciphertext);
 	        });
 	    }
@@ -2396,6 +2455,20 @@
 	            const abKey = WebCryptography.encoder.encode(hashHex.slice(0, 32)).buffer;
 	            return crypto.subtle.importKey('raw', abKey, 'AES-CBC', true, ['encrypt', 'decrypt']);
 	        });
+	    }
+	    /**
+	     * Join two `ArrayBuffer`s.
+	     *
+	     * @param ab1 - `ArrayBuffer` to which other buffer should be appended.
+	     * @param ab2 - `ArrayBuffer` which should appended to the other buffer.
+	     *
+	     * @returns Buffer which starts with `ab1` elements and appended `ab2`.
+	     */
+	    concatArrayBuffer(ab1, ab2) {
+	        const tmp = new Uint8Array(ab1.byteLength + ab2.byteLength);
+	        tmp.set(new Uint8Array(ab1), 0);
+	        tmp.set(new Uint8Array(ab2), ab1.byteLength);
+	        return tmp.buffer;
 	    }
 	}
 	/**
@@ -2785,9 +2858,13 @@
 
 	/**
 	 * REST API endpoint use error module.
+	 *
+	 * @internal
 	 */
 	/**
 	 * PubNub REST API call error.
+	 *
+	 * @internal
 	 */
 	class PubNubAPIError extends Error {
 	    /**
@@ -2978,6 +3055,8 @@
 	 *
 	 * Middleware optimize subscription feature requests utilizing `Subscription Worker` if available and not disabled
 	 * by user.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -3201,6 +3280,11 @@
 	}
 
 	/**
+	 * PubNub package utilities module.
+	 *
+	 * @internal
+	 */
+	/**
 	 * Percent-encode input string.
 	 *
 	 * **Note:** Encode content in accordance of the `PubNub` service requirements.
@@ -3208,6 +3292,8 @@
 	 * @param input - Source string or number for encoding.
 	 *
 	 * @returns Percent-encoded string.
+	 *
+	 * @internal
 	 */
 	const encodeString = (input) => {
 	    return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
@@ -3220,11 +3306,16 @@
 	 * @param [defaultString] - String which should be used in case if {@link names} is empty.
 	 *
 	 * @returns String which contains encoded names joined by non-encoded `,`.
+	 *
+	 * @internal
 	 */
 	const encodeNames = (names, defaultString) => {
 	    const encodedNames = names.map((name) => encodeString(name));
-	    return encodedNames.length ? encodedNames.join(',') : defaultString !== null && defaultString !== void 0 ? defaultString : '';
+	    return encodedNames.length ? encodedNames.join(',') : (defaultString !== null && defaultString !== void 0 ? defaultString : '');
 	};
+	/**
+	 * @internal
+	 */
 	const removeSingleOccurrence = (source, elementsToRemove) => {
 	    const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
 	    return source.filter((e) => {
@@ -3235,6 +3326,9 @@
 	        return true;
 	    });
 	};
+	/**
+	 * @internal
+	 */
 	const findUniqueCommonElements = (a, b) => {
 	    return [...a].filter((value) => b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value));
 	};
@@ -3244,6 +3338,8 @@
 	 * @param query - Key / value pairs of the request query parameters.
 	 *
 	 * @returns Stringified query key / value pairs.
+	 *
+	 * @internal
 	 */
 	const queryStringFromObject = (query) => {
 	    return Object.keys(query)
@@ -3258,11 +3354,23 @@
 
 	/**
 	 * Common browser and React Native Transport provider module.
+	 *
+	 * @internal
 	 */
 	/**
 	 * Class representing a `fetch`-based browser and React Native transport provider.
+	 *
+	 * @internal
 	 */
 	class WebReactNativeTransport {
+	    /**
+	     * Create and configure transport provider for Web and Rect environments.
+	     *
+	     * @param [keepAlive] - Whether client should try to keep connections open for reuse or not.
+	     * @param logVerbosity - Whether verbose logs should be printed or not.
+	     *
+	     * @internal
+	     */
 	    constructor(keepAlive = false, logVerbosity) {
 	        this.keepAlive = keepAlive;
 	        this.logVerbosity = logVerbosity;
@@ -3294,7 +3402,10 @@
 	                        reject(new Error('Request timeout'));
 	                    }, req.timeout * 1000);
 	                });
-	                return Promise.race([fetch(request, { signal: abortController === null || abortController === void 0 ? void 0 : abortController.signal }), requestTimeout])
+	                return Promise.race([
+	                    fetch(request, { signal: abortController === null || abortController === void 0 ? void 0 : abortController.signal, credentials: 'omit', cache: 'no-cache' }),
+	                    requestTimeout,
+	                ])
 	                    .then((response) => response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]))
 	                    .then((response) => {
 	                    const responseBody = response[1].byteLength > 0 ? response[1] : undefined;
@@ -3329,6 +3440,8 @@
 	     * @param req - The {@link TransportRequest} object containing request information.
 	     *
 	     * @returns Request object generated from the {@link TransportRequest} object.
+	     *
+	     * @internal
 	     */
 	    requestFromTransportRequest(req) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -3375,6 +3488,8 @@
 	     * @param request - Platform-specific
 	     * @param [elapsed] - How many seconds passed since request processing started.
 	     * @param [body] - Service response (if available).
+	     *
+	     * @internal
 	     */
 	    logRequestProcessProgress(request, elapsed, body) {
 	        if (!this.logVerbosity)
@@ -3396,9 +3511,16 @@
 	}
 	/**
 	 * Service {@link ArrayBuffer} response decoder.
+	 *
+	 * @internal
 	 */
 	WebReactNativeTransport.decoder = new TextDecoder();
 
+	/**
+	 * CBOR support module.
+	 *
+	 * @internal
+	 */
 	/**
 	 * Re-map CBOR object keys from potentially C buffer strings to actual strings.
 	 *
@@ -3569,12 +3691,17 @@
 	    let announceFailedHeartbeats = ANNOUNCE_HEARTBEAT_FAILURE;
 	    let fileUploadPublishRetryLimit = FILE_PUBLISH_RETRY_LIMIT;
 	    let dedupeOnSubscribe = DEDUPE_ON_SUBSCRIBE;
-	    const maximumCacheSize = DEDUPE_CACHE_SIZE;
+	    let maximumCacheSize = DEDUPE_CACHE_SIZE;
 	    let useRequestId = USE_REQUEST_ID;
 	    // @ts-expect-error Not documented legacy configuration options.
 	    if (configurationCopy.dedupeOnSubscribe !== undefined && typeof configurationCopy.dedupeOnSubscribe === 'boolean') {
 	        // @ts-expect-error Not documented legacy configuration options.
 	        dedupeOnSubscribe = configurationCopy.dedupeOnSubscribe;
+	    }
+	    // @ts-expect-error Not documented legacy configuration options.
+	    if (configurationCopy.maximumCacheSize !== undefined && typeof configurationCopy.maximumCacheSize === 'number') {
+	        // @ts-expect-error Not documented legacy configuration options.
+	        maximumCacheSize = configurationCopy.maximumCacheSize;
 	    }
 	    // @ts-expect-error Not documented legacy configuration options.
 	    if (configurationCopy.useRequestId !== undefined && typeof configurationCopy.useRequestId === 'boolean') {
@@ -3698,6 +3825,12 @@
 	var uuidExports = uuid.exports;
 	var uuidGenerator$1 = /*@__PURE__*/getDefaultExportFromCjs(uuidExports);
 
+	/**
+	 * Random identifier generator helper module.
+	 *
+	 * @internal
+	 */
+	/** @internal */
 	var uuidGenerator = {
 	    createUUID() {
 	        if (uuidGenerator$1.uuid) {
@@ -3710,6 +3843,8 @@
 
 	/**
 	 * {@link PubNub} client configuration module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -3725,7 +3860,7 @@
 	 * Create {@link PubNub} client private configuration object.
 	 *
 	 * @param base - User- and platform-provided configuration.
-	 * @param setupCryptoModule - Platform-provided {@link CryptoModule} configuration block.
+	 * @param setupCryptoModule - Platform-provided {@link ICryptoModule} configuration block.
 	 *
 	 * @returns `PubNub` client private configuration.
 	 *
@@ -3813,7 +3948,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.2.9';
+	            return '8.2.10';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -3865,6 +4000,8 @@
 
 	/**
 	 * PubNub Access Token Manager module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -4031,6 +4168,11 @@
 	})(TransportMethod || (TransportMethod = {}));
 
 	/**
+	 * Common PubNub Network Provider middleware module.
+	 *
+	 * @internal
+	 */
+	/**
 	 * Request signature generator.
 	 *
 	 * @internal
@@ -4089,6 +4231,11 @@
 	    }
 	}
 	RequestSignature.textDecoder = new TextDecoder('utf-8');
+	/**
+	 * Common PubNub Network Provider middleware.
+	 *
+	 * @internal
+	 */
 	class PubNubMiddleware {
 	    constructor(configuration) {
 	        this.configuration = configuration;
@@ -4357,6 +4504,8 @@
 	 * Subscription reconnection-manager.
 	 *
 	 * **Note:** Reconnection manger rely on legacy time-based availability check.
+	 *
+	 * @internal
 	 */
 	/**
 	 * Network "discovery" manager.
@@ -4402,59 +4551,85 @@
 	    }
 	}
 
-	/*       */
-
-	const hashCode = (payload) => {
-	  let hash = 0;
-	  if (payload.length === 0) return hash;
-	  for (let i = 0; i < payload.length; i += 1) {
-	    const character = payload.charCodeAt(i);
-	    hash = (hash << 5) - hash + character; // eslint-disable-line
-	    hash = hash & hash; // eslint-disable-line
-	  }
-	  return hash;
-	};
-
+	/**
+	 * Messages de-duplication manager module.
+	 *
+	 * @internal
+	 */
 	/**
 	 * Real-time events deduplication manager.
 	 *
 	 * @internal
 	 */
 	class DedupingManager {
-	  _config;
-
-	  hashHistory;
-
-	  constructor({ config }) {
-	    this.hashHistory = [];
-	    this._config = config;
-	  }
-
-	  getKey(message) {
-	    const hashedPayload = hashCode(JSON.stringify(message.message)).toString();
-	    const timetoken = message.timetoken;
-	    return `${timetoken}-${hashedPayload}`;
-	  }
-
-	  isDuplicate(message) {
-	    return this.hashHistory.includes(this.getKey(message));
-	  }
-
-	  addEntry(message) {
-	    if (this.hashHistory.length >= this._config.maximumCacheSize) {
-	      this.hashHistory.shift();
+	    /**
+	     * Create and configure real-time events de-duplication manager.
+	     *
+	     * @param config - PubNub client configuration object.
+	     */
+	    constructor({ maximumCacheSize }) {
+	        this.maximumCacheSize = maximumCacheSize;
+	        this.hashHistory = [];
 	    }
-
-	    this.hashHistory.push(this.getKey(message));
-	  }
-
-	  clearHistory() {
-	    this.hashHistory = [];
-	  }
+	    /**
+	     * Compute unique real-time event payload key.
+	     *
+	     * @param message - Received real-time event payload for which unique key should be computed.
+	     * @returns Unique real-time event payload key in messages cache.
+	     */
+	    getKey(message) {
+	        var _a;
+	        return `${message.timetoken}-${this.hashCode(JSON.stringify((_a = message.message) !== null && _a !== void 0 ? _a : '')).toString()}`;
+	    }
+	    /**
+	     * Check whether there is similar message already received or not.
+	     *
+	     * @param message - Received real-time event payload which should be checked for duplicates.
+	     * @returns `true` in case if similar payload already has been received before.
+	     */
+	    isDuplicate(message) {
+	        return this.hashHistory.includes(this.getKey(message));
+	    }
+	    /**
+	     * Store received message to be used later for duplicate detection.
+	     *
+	     * @param message - Received real-time event payload.
+	     */
+	    addEntry(message) {
+	        if (this.hashHistory.length >= this.maximumCacheSize) {
+	            this.hashHistory.shift();
+	        }
+	        this.hashHistory.push(this.getKey(message));
+	    }
+	    /**
+	     * Clean up cached messages.
+	     */
+	    clearHistory() {
+	        this.hashHistory = [];
+	    }
+	    /**
+	     * Compute message hash sum.
+	     *
+	     * @param payload - Received payload for which hash sum should be computed.
+	     * @returns {number} - Resulting hash sum.
+	     */
+	    hashCode(payload) {
+	        let hash = 0;
+	        if (payload.length === 0)
+	            return hash;
+	        for (let i = 0; i < payload.length; i += 1) {
+	            const character = payload.charCodeAt(i);
+	            hash = (hash << 5) - hash + character; // eslint-disable-line
+	            hash = hash & hash; // eslint-disable-line
+	        }
+	        return hash;
+	    }
 	}
 
 	/**
 	 * Subscription manager module.
+	 *
+	 * @internal
 	 */
 	/**
 	 * Subscription loop manager.
@@ -4470,7 +4645,7 @@
 	        this.heartbeatCall = heartbeatCall;
 	        this.leaveCall = leaveCall;
 	        this.reconnectionManager = new ReconnectionManager(time);
-	        this.dedupingManager = new DedupingManager({ config: this.configuration });
+	        this.dedupingManager = new DedupingManager(this.configuration);
 	        this.heartbeatChannelGroups = {};
 	        this.heartbeatChannels = {};
 	        this.presenceChannelGroups = {};
@@ -4724,7 +4899,7 @@
 	        }
 	        try {
 	            messages.forEach((message) => {
-	                if (dedupeOnSubscribe) {
+	                if (dedupeOnSubscribe && 'message' in message.data && 'timetoken' in message.data) {
 	                    if (this.dedupingManager.isDuplicate(message.data))
 	                        return;
 	                    this.dedupingManager.addEntry(message.data);
@@ -4840,6 +5015,15 @@
 	 * Base notification payload object.
 	 */
 	class BaseNotificationPayload {
+	    /**
+	     * Base notification provider payload object.
+	     *
+	     * @internal
+	     *
+	     * @param payload - Object which contains vendor-specific preformatted push notification payload.
+	     * @param title - Notification main title.
+	     * @param body - Notification body (main messages).
+	     */
 	    constructor(payload, title, body) {
 	        this._payload = payload;
 	        this.setDefaultPayloadStructure();
@@ -4896,10 +5080,14 @@
 	    }
 	    /**
 	     * Platform-specific structure initialization.
+	     *
+	     * @internal
 	     */
 	    setDefaultPayloadStructure() { }
 	    /**
 	     * Translate data object into PubNub push notification payload object.
+	     *
+	     * @internal
 	     *
 	     * @returns Preformatted push notification payload.
 	     */
@@ -4915,10 +5103,14 @@
 	        super(...arguments);
 	        /**
 	         * Type of push notification service for which payload will be created.
+	         *
+	         * @internal
 	         */
 	        this._apnsPushType = 'apns';
 	        /**
 	         * Whether resulting payload should trigger silent notification or not.
+	         *
+	         * @internal
 	         */
 	        this._isSilent = false;
 	    }
@@ -5048,9 +5240,21 @@
 	    set silent(value) {
 	        this._isSilent = value;
 	    }
+	    /**
+	     * Setup push notification payload default content.
+	     *
+	     * @internal
+	     */
 	    setDefaultPayloadStructure() {
 	        this.payload.aps = { alert: {} };
 	    }
+	    /**
+	     * Translate data object into PubNub push notification payload object.
+	     *
+	     * @internal
+	     *
+	     * @returns Preformatted push notification payload.
+	     */
 	    toObject() {
 	        const payload = Object.assign({}, this.payload);
 	        const { aps } = payload;
@@ -5080,6 +5284,8 @@
 	    /**
 	     * Create PubNub push notification service APNS2 configuration information object.
 	     *
+	     * @internal
+	     *
 	     * @param configuration - Source user-provided APNS2 configuration.
 	     *
 	     * @returns Preformatted for PubNub service APNS2 configuration information.
@@ -5102,6 +5308,8 @@
 	    /**
 	     * Create PubNub push notification service APNS2 target information object.
 	     *
+	     * @internal
+	     *
 	     * @param target - Source user-provided data.
 	     *
 	     * @returns Preformatted for PubNub service APNS2 target information.
@@ -5117,7 +5325,7 @@
 	    }
 	}
 	/**
-	 * Message payload for Firebase Clouse Messaging service.
+	 * Message payload for Firebase Cloud Messaging service.
 	 */
 	class FCMNotificationPayload extends BaseNotificationPayload {
 	    get payload() {
@@ -5215,9 +5423,19 @@
 	        this.payload.notification.icon = value;
 	        this._icon = value;
 	    }
+	    /**
+	     * Retrieve notifications grouping tag.
+	     *
+	     * @returns Notifications grouping tag.
+	     */
 	    get tag() {
 	        return this._tag;
 	    }
+	    /**
+	     * Update notifications grouping tag.
+	     *
+	     * @param value - String which will be used to group similar notifications in notification center.
+	     */
 	    set tag(value) {
 	        if (!value || !value.length)
 	            return;
@@ -5234,10 +5452,22 @@
 	    set silent(value) {
 	        this._isSilent = value;
 	    }
+	    /**
+	     * Setup push notification payload default content.
+	     *
+	     * @internal
+	     */
 	    setDefaultPayloadStructure() {
 	        this.payload.notification = {};
 	        this.payload.data = {};
 	    }
+	    /**
+	     * Translate data object into PubNub push notification payload object.
+	     *
+	     * @internal
+	     *
+	     * @returns Preformatted push notification payload.
+	     */
 	    toObject() {
 	        let data = Object.assign({}, this.payload.data);
 	        let notification = null;
@@ -5259,6 +5489,14 @@
 	    }
 	}
 	class NotificationsPayload {
+	    /**
+	     * Create push notification payload holder.
+	     *
+	     * @internal
+	     *
+	     * @param title - String which will be shown at the top of the notification (below app name).
+	     * @param body - String with message which should be shown when user will check notification.
+	     */
 	    constructor(title, body) {
 	        this._payload = { apns: {}, fcm: {} };
 	        this._title = title;
@@ -5266,6 +5504,12 @@
 	        this.apns = new APNSNotificationPayload(this._payload.apns, title, body);
 	        this.fcm = new FCMNotificationPayload(this._payload.fcm, title, body);
 	    }
+	    /**
+	     * Enable or disable push notification debugging message.
+	     *
+	     * @param value - Whether debug message from push notification scheduler should be published to the specific
+	     * channel or not.
+	     */
 	    set debugging(value) {
 	        this._debugging = value;
 	    }
@@ -5343,7 +5587,7 @@
 	     * Build notifications platform for requested platforms.
 	     *
 	     * @param platforms - List of platforms for which payload should be added to final dictionary. Supported values:
-	     * gcm, apns, and apns2.
+	     * fcm, apns, and apns2.
 	     *
 	     * @returns Object with data, which can be sent with publish method call and trigger remote notifications for
 	     * specified platforms.
@@ -5368,6 +5612,11 @@
 	    }
 	}
 
+	/**
+	 * Network request module.
+	 *
+	 * @internal
+	 */
 	/**
 	 * Base REST API request class.
 	 *
@@ -5530,7 +5779,9 @@
 	 */
 	AbstractRequest.decoder = new TextDecoder();
 
-	/*       */
+	/**
+	 * Endpoint API operation types.
+	 */
 	var RequestOperation;
 	(function (RequestOperation) {
 	    // --------------------------------------------------------
@@ -5765,7 +6016,17 @@
 	    // --------------------------------------------------------
 	    // ---------------- Subscription Utility ------------------
 	    // --------------------------------------------------------
+	    /**
+	     * Initial event engine subscription handshake operation.
+	     *
+	     * @internal
+	     */
 	    RequestOperation["PNHandshakeOperation"] = "PNHandshakeOperation";
+	    /**
+	     * Event engine subscription loop operation.
+	     *
+	     * @internal
+	     */
 	    RequestOperation["PNReceiveMessagesOperation"] = "PNReceiveMessagesOperation";
 	})(RequestOperation || (RequestOperation = {}));
 	var RequestOperation$1 = RequestOperation;
@@ -5788,8 +6049,6 @@
 	// region Types
 	/**
 	 * PubNub-defined event types by payload.
-	 *
-	 * @internal
 	 */
 	var PubNubEventType;
 	(function (PubNubEventType) {
@@ -6106,6 +6365,11 @@
 	}
 
 	/**
+	 * Real-time events emitter module.
+	 *
+	 * @internal
+	 */
+	/**
 	 * Real-time events' emitter.
 	 *
 	 * Emitter responsible for forwarding received real-time events to the closures which has been
@@ -6274,6 +6538,11 @@
 	}
 
 	/**
+	 * Event Engine terminate signal listener module.
+	 *
+	 * @internal
+	 */
+	/**
 	 * @internal
 	 */
 	class Subject {
@@ -6302,7 +6571,18 @@
 	    }
 	}
 
-	/* eslint-disable @typescript-eslint/no-explicit-any */
+	/**
+	 * Event Engine Core state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Event engine current state object.
+	 *
+	 * State contains current context and list of invocations which should be performed by the Event Engine.
+	 *
+	 * @internal
+	 */
 	class State {
 	    transition(context, event) {
 	        var _a;
@@ -6334,7 +6614,17 @@
 	    }
 	}
 
+	/**
+	 * Event Engine Core module.
+	 *
+	 * @internal
+	 */
 	/* eslint-disable @typescript-eslint/no-explicit-any */
+	/**
+	 * Generic event engine.
+	 *
+	 * @internal
+	 */
 	class Engine extends Subject {
 	    describe(label) {
 	        return new State(label);
@@ -6394,7 +6684,18 @@
 	    }
 	}
 
-	/* eslint-disable @typescript-eslint/no-explicit-any */
+	/**
+	 * Event Engine Core Effects dispatcher module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Event Engine effects dispatcher.
+	 *
+	 * Dispatcher responsible for invocation enqueue and dequeue for processing.
+	 *
+	 * @internal
+	 */
 	class Dispatcher {
 	    constructor(dependencies) {
 	        this.dependencies = dependencies;
@@ -6431,7 +6732,16 @@
 	    }
 	}
 
-	/* eslint-disable @typescript-eslint/no-explicit-any */
+	/**
+	 * Event Engine Core types module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Create and configure event engine event.
+	 *
+	 * @internal
+	 */
 	function createEvent(type, fn) {
 	    const creator = function (...args) {
 	        return {
@@ -6442,6 +6752,11 @@
 	    creator.type = type;
 	    return creator;
 	}
+	/**
+	 * Create and configure short-term effect invocation.
+	 *
+	 * @internal
+	 */
 	function createEffect(type, fn) {
 	    const creator = (...args) => {
 	        return { type, payload: fn(...args), managed: false };
@@ -6449,6 +6764,11 @@
 	    creator.type = type;
 	    return creator;
 	}
+	/**
+	 * Create and configure long-running effect invocation.
+	 *
+	 * @internal
+	 */
 	function createManagedEffect(type, fn) {
 	    const creator = (...args) => {
 	        return { type, payload: fn(...args), managed: true };
@@ -6458,6 +6778,11 @@
 	    return creator;
 	}
 
+	/**
+	 * Event Engine managed effects terminate signal module.
+	 *
+	 * @internal
+	 */
 	class AbortError extends Error {
 	    constructor() {
 	        super('The operation was aborted.');
@@ -6489,12 +6814,31 @@
 	    }
 	}
 
+	/**
+	 * Event Engine Core Effects handler module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Synchronous (short-term) effect invocation handler.
+	 *
+	 * Handler manages effect execution on behalf of effect dispatcher.
+	 *
+	 * @internal
+	 */
 	class Handler {
 	    constructor(payload, dependencies) {
 	        this.payload = payload;
 	        this.dependencies = dependencies;
 	    }
 	}
+	/**
+	 * Asynchronous (long-running) effect invocation handler.
+	 *
+	 * Handler manages effect execution on behalf of effect dispatcher.
+	 *
+	 * @internal
+	 */
 	class AsyncHandler extends Handler {
 	    constructor(payload, dependencies, asyncFunction) {
 	        super(payload, dependencies);
@@ -6511,37 +6855,169 @@
 	        this.abortSignal.abort();
 	    }
 	}
+	/**
+	 * Asynchronous effect invocation handler constructor.
+	 *
+	 * @param handlerFunction - Function which performs asynchronous action and should be called on `start`.
+	 *
+	 * @internal
+	 */
 	const asyncHandler = (handlerFunction) => (payload, dependencies) => new AsyncHandler(payload, dependencies, handlerFunction);
 
+	/**
+	 * Presence Event Engine events module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Reconnect event.
+	 *
+	 * Event is sent each time when user restores real-time updates processing and notifies other present subscribers
+	 * about joining back.
+	 *
+	 * @internal
+	 */
 	const reconnect$1 = createEvent('RECONNECT', () => ({}));
+	/**
+	 * Disconnect event.
+	 *
+	 * Event is sent when user wants to temporarily stop real-time updates processing and notifies other present
+	 * subscribers about leaving.
+	 *
+	 * @internal
+	 */
 	const disconnect$1 = createEvent('DISCONNECT', () => ({}));
+	/**
+	 * Channel / group join event.
+	 *
+	 * Event is sent when user adds new channels / groups to the active channels / groups list and notifies other present
+	 * subscribers about joining.
+	 *
+	 * @internal
+	 */
 	const joined = createEvent('JOINED', (channels, groups) => ({
 	    channels,
 	    groups,
 	}));
+	/**
+	 * Channel / group leave event.
+	 *
+	 * Event is sent when user removes channels / groups from the active channels / groups list and notifies other present
+	 * subscribers about leaving.
+	 *
+	 * @internal
+	 */
 	const left = createEvent('LEFT', (channels, groups) => ({
 	    channels,
 	    groups,
 	}));
+	/**
+	 * Leave all event.
+	 *
+	 * Event is sent when user doesn't want to receive any real-time updates anymore and notifies other
+	 * subscribers on previously active channels / groups about leaving.
+	 *
+	 * @internal
+	 */
 	const leftAll = createEvent('LEFT_ALL', () => ({}));
+	/**
+	 * Presence heartbeat success event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call was successful.
+	 *
+	 * @internal
+	 */
 	const heartbeatSuccess = createEvent('HEARTBEAT_SUCCESS', (statusCode) => ({ statusCode }));
+	/**
+	 * Presence heartbeat did fail event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call failed.
+	 *
+	 * @internal
+	 */
 	const heartbeatFailure = createEvent('HEARTBEAT_FAILURE', (error) => error);
+	/**
+	 * Presence heartbeat impossible event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call exhausted all retry attempt and won't try again.
+	 *
+	 * @internal
+	 */
 	const heartbeatGiveup = createEvent('HEARTBEAT_GIVEUP', () => ({}));
+	/**
+	 * Delayed presence heartbeat event.
+	 *
+	 * Event is sent by corresponding effect handler when delay timer between heartbeat calls fired.
+	 *
+	 * @internal
+	 */
 	const timesUp = createEvent('TIMES_UP', () => ({}));
 
+	/**
+	 * Presence Event Engine effects module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Presence heartbeat effect.
+	 *
+	 * Performs presence heartbeat REST API call.
+	 *
+	 * @internal
+	 */
 	const heartbeat = createEffect('HEARTBEAT', (channels, groups) => ({
 	    channels,
 	    groups,
 	}));
+	/**
+	 * Presence leave effect.
+	 *
+	 * Performs presence leave REST API call.
+	 *
+	 * @internal
+	 */
 	const leave = createEffect('LEAVE', (channels, groups) => ({
 	    channels,
 	    groups,
 	}));
+	/**
+	 * Emit presence heartbeat REST API call result status effect.
+	 *
+	 * Notify status change event listeners.
+	 *
+	 * @internal
+	 */
 	/* eslint-disable  @typescript-eslint/no-explicit-any */
 	const emitStatus$1 = createEffect('EMIT_STATUS', (status) => status);
+	/**
+	 * Heartbeat delay effect.
+	 *
+	 * Delay of configured length (heartbeat interval) before another heartbeat REST API call will be done.
+	 *
+	 * @internal
+	 */
 	const wait = createManagedEffect('WAIT', () => ({}));
+	/**
+	 * Delayed heartbeat effect.
+	 *
+	 * Similar to the {@link wait} effect but used in case if previous heartbeat call did fail.
+	 *
+	 * @internal
+	 */
 	const delayedHeartbeat = createManagedEffect('DELAYED_HEARTBEAT', (context) => context);
 
+	/**
+	 * Presence Event Engine effects dispatcher.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Presence Event Engine dispatcher.
+	 *
+	 * Dispatcher responsible for presence events handling and corresponding effects execution.
+	 *
+	 * @internal
+	 */
 	class PresenceEventEngineDispatcher extends Dispatcher {
 	    constructor(engine, dependencies) {
 	        super(dependencies);
@@ -6558,7 +7034,7 @@
 	                }
 	            }
 	        })));
-	        this.on(leave.type, asyncHandler((payload_2, _2, _b) => __awaiter(this, [payload_2, _2, _b], void 0, function* (payload, _, { leave, config }) {
+	        this.on(leave.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { leave, config }) {
 	            if (!config.suppressLeaveEvents) {
 	                try {
 	                    leave({
@@ -6569,13 +7045,13 @@
 	                catch (e) { }
 	            }
 	        })));
-	        this.on(wait.type, asyncHandler((_3, abortSignal_1, _c) => __awaiter(this, [_3, abortSignal_1, _c], void 0, function* (_, abortSignal, { heartbeatDelay }) {
+	        this.on(wait.type, asyncHandler((_1, abortSignal_1, _a) => __awaiter(this, [_1, abortSignal_1, _a], void 0, function* (_, abortSignal, { heartbeatDelay }) {
 	            abortSignal.throwIfAborted();
 	            yield heartbeatDelay();
 	            abortSignal.throwIfAborted();
 	            return engine.transition(timesUp());
 	        })));
-	        this.on(delayedHeartbeat.type, asyncHandler((payload_3, abortSignal_2, _d) => __awaiter(this, [payload_3, abortSignal_2, _d], void 0, function* (payload, abortSignal, { heartbeat, retryDelay, presenceState, config }) {
+	        this.on(delayedHeartbeat.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { heartbeat, retryDelay, presenceState, config }) {
 	            if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
 	                abortSignal.throwIfAborted();
 	                yield retryDelay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
@@ -6596,9 +7072,9 @@
 	                return engine.transition(heartbeatGiveup());
 	            }
 	        })));
-	        this.on(emitStatus$1.type, asyncHandler((payload_4, _4, _e) => __awaiter(this, [payload_4, _4, _e], void 0, function* (payload, _, { emitStatus, config }) {
-	            var _f;
-	            if (config.announceFailedHeartbeats && ((_f = payload === null || payload === void 0 ? void 0 : payload.status) === null || _f === void 0 ? void 0 : _f.error) === true) {
+	        this.on(emitStatus$1.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitStatus, config }) {
+	            var _b;
+	            if (config.announceFailedHeartbeats && ((_b = payload === null || payload === void 0 ? void 0 : payload.status) === null || _b === void 0 ? void 0 : _b.error) === true) {
 	                emitStatus(payload.status);
 	            }
 	            else if (config.announceSuccessfulHeartbeats && payload.statusCode === 200) {
@@ -6608,6 +7084,19 @@
 	    }
 	}
 
+	/**
+	 * Heartbeat stopped state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Heartbeat stopped state.
+	 *
+	 * State in which Presence Event Engine still has information about active channels / groups, but doesn't wait for
+	 * delayed heartbeat request sending.
+	 *
+	 * @internal
+	 */
 	const HeartbeatStoppedState = new State('HEARTBEAT_STOPPED');
 	HeartbeatStoppedState.on(joined.type, (context, event) => HeartbeatStoppedState.with({
 	    channels: [...context.channels, ...event.payload.channels],
@@ -6623,6 +7112,18 @@
 	}));
 	HeartbeatStoppedState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined));
 
+	/**
+	 * Waiting next heartbeat state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Waiting next heartbeat state.
+	 *
+	 * State in which Presence Event Engine is waiting when delay will run out and next heartbeat call should be done.
+	 *
+	 * @internal
+	 */
 	const HeartbeatCooldownState = new State('HEARTBEAT_COOLDOWN');
 	HeartbeatCooldownState.onEnter(() => wait());
 	HeartbeatCooldownState.onExit(() => wait.cancel);
@@ -6644,6 +7145,19 @@
 	}, [leave(context.channels, context.groups)]));
 	HeartbeatCooldownState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]));
 
+	/**
+	 * Failed to heartbeat state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Failed to heartbeat state.
+	 *
+	 * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
+	 * exhausted.
+	 *
+	 * @internal
+	 */
 	const HeartbeatFailedState = new State('HEARTBEAT_FAILED');
 	HeartbeatFailedState.on(joined.type, (context, event) => HeartbeatingState.with({
 	    channels: [...context.channels, ...event.payload.channels],
@@ -6663,6 +7177,18 @@
 	}, [leave(context.channels, context.groups)]));
 	HeartbeatFailedState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]));
 
+	/**
+	 * Retry heartbeat state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Retry heartbeat state.
+	 *
+	 * State in which Presence Event Engine tries to recover after error which happened before.
+	 *
+	 * @internal
+	 */
 	const HearbeatReconnectingState = new State('HEARBEAT_RECONNECTING');
 	HearbeatReconnectingState.onEnter((context) => delayedHeartbeat(context));
 	HearbeatReconnectingState.onExit(() => delayedHeartbeat.cancel);
@@ -6695,6 +7221,18 @@
 	});
 	HearbeatReconnectingState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]));
 
+	/**
+	 * Heartbeating state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Heartbeating state module.
+	 *
+	 * State in which Presence Event Engine send heartbeat REST API call.
+	 *
+	 * @internal
+	 */
 	const HeartbeatingState = new State('HEARTBEATING');
 	HeartbeatingState.onEnter((context) => heartbeat(context.channels, context.groups));
 	HeartbeatingState.on(heartbeatSuccess.type, (context, event) => {
@@ -6722,12 +7260,34 @@
 	}, [leave(context.channels, context.groups)]));
 	HeartbeatingState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]));
 
+	/**
+	 * Inactive heratbeating state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Inactive heratbeating state
+	 *
+	 * State in which Presence Event Engine doesn't process any heartbeat requests (initial state).
+	 *
+	 * @internal
+	 */
 	const HeartbeatInactiveState = new State('HEARTBEAT_INACTIVE');
 	HeartbeatInactiveState.on(joined.type, (_, event) => HeartbeatingState.with({
 	    channels: event.payload.channels,
 	    groups: event.payload.groups,
 	}));
 
+	/**
+	 * Presence Event Engine module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Presence Event Engine Core.
+	 *
+	 * @internal
+	 */
 	class PresenceEventEngine {
 	    get _engine() {
 	        return this.engine;
@@ -6766,6 +7326,9 @@
 	    }
 	}
 
+	/**
+	 * Failed request retry policy.
+	 */
 	class RetryPolicy {
 	    static LinearRetryPolicy(configuration) {
 	        return {
@@ -6840,20 +7403,87 @@
 	    }
 	}
 
+	/**
+	 * Subscribe Event Engine effects module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Initial subscription effect.
+	 *
+	 * Performs subscribe REST API call with `tt=0`.
+	 *
+	 * @internal
+	 */
 	const handshake = createManagedEffect('HANDSHAKE', (channels, groups) => ({
 	    channels,
 	    groups,
 	}));
+	/**
+	 * Real-time updates receive effect.
+	 *
+	 * Performs sequential subscribe REST API call with `tt` set to the value received from the previous subscribe
+	 * REST API call.
+	 *
+	 * @internal
+	 */
 	const receiveMessages = createManagedEffect('RECEIVE_MESSAGES', (channels, groups, cursor) => ({ channels, groups, cursor }));
+	/**
+	 * Emit real-time updates effect.
+	 *
+	 * Notify event listeners about updates for which listener handlers has been provided.
+	 *
+	 * @internal
+	 */
 	const emitMessages = createEffect('EMIT_MESSAGES', (events) => events);
+	/**
+	 * Emit subscription status change effect.
+	 *
+	 * Notify status change event listeners.
+	 *
+	 * @internal
+	 */
 	const emitStatus = createEffect('EMIT_STATUS', (status) => status);
+	/**
+	 * Real-time updates receive restore effect.
+	 *
+	 * Performs subscribe REST API call with `tt` which has been received before disconnection or error.
+	 *
+	 * @internal
+	 */
 	const receiveReconnect = createManagedEffect('RECEIVE_RECONNECT', (context) => context);
+	/**
+	 * Initial subscription restore effect.
+	 *
+	 * Performs subscribe REST API call with `tt=0` after error.
+	 *
+	 * @internal
+	 */
 	const handshakeReconnect = createManagedEffect('HANDSHAKE_RECONNECT', (context) => context);
 
+	/**
+	 * Subscribe Event Engine events module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Subscription list change event.
+	 *
+	 * Event is sent each time when user would like to change list of active channels / groups.
+	 *
+	 * @internal
+	 */
 	const subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', (channels, groups) => ({
 	    channels,
 	    groups,
 	}));
+	/**
+	 * Subscription loop restore.
+	 *
+	 * Event is sent when user would like to try catch up on missed updates by providing specific timetoken.
+	 *
+	 * @internal
+	 */
 	const restore = createEvent('SUBSCRIPTION_RESTORED', (channels, groups, timetoken, region) => ({
 	    channels,
 	    groups,
@@ -6862,33 +7492,136 @@
 	        region: region !== null && region !== void 0 ? region : 0,
 	    },
 	}));
+	/**
+	 * Initial subscription handshake success event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call was successful.
+	 *
+	 * @internal
+	 */
 	const handshakeSuccess = createEvent('HANDSHAKE_SUCCESS', (cursor) => cursor);
+	/**
+	 * Initial subscription handshake did fail event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call failed.
+	 *
+	 * @internal
+	 */
 	const handshakeFailure = createEvent('HANDSHAKE_FAILURE', (error) => error);
+	/**
+	 * Initial subscription handshake reconnect success event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call was successful after transition to the failed state.
+	 *
+	 * @internal
+	 */
 	const handshakeReconnectSuccess = createEvent('HANDSHAKE_RECONNECT_SUCCESS', (cursor) => ({
 	    cursor,
 	}));
+	/**
+	 * Initial subscription handshake reconnect did fail event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call did fail while tried to enter to the success state.
+	 *
+	 * @internal
+	 */
 	const handshakeReconnectFailure = createEvent('HANDSHAKE_RECONNECT_FAILURE', (error) => error);
+	/**
+	 * Initial subscription handshake impossible event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call exhausted all retry attempt and won't try again.
+	 *
+	 * @internal
+	 */
 	const handshakeReconnectGiveup = createEvent('HANDSHAKE_RECONNECT_GIVEUP', (error) => error);
+	/**
+	 * Subscription successfully received real-time updates event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call was successful.
+	 *
+	 * @internal
+	 */
 	const receiveSuccess = createEvent('RECEIVE_SUCCESS', (cursor, events) => ({
 	    cursor,
 	    events,
 	}));
+	/**
+	 * Subscription did fail to receive real-time updates event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call failed.
+	 *
+	 * @internal
+	 */
 	const receiveFailure = createEvent('RECEIVE_FAILURE', (error) => error);
+	/**
+	 * Subscription successfully received real-time updates on reconnection attempt event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call was successful after transition to the failed state.
+	 *
+	 * @internal
+	 */
 	const receiveReconnectSuccess = createEvent('RECEIVE_RECONNECT_SUCCESS', (cursor, events) => ({
 	    cursor,
 	    events,
 	}));
+	/**
+	 * Subscription did fail to receive real-time updates on reconnection attempt event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call did fail while tried to enter to the success state.
+	 *
+	 * @internal
+	 */
 	const receiveReconnectFailure = createEvent('RECEIVE_RECONNECT_FAILURE', (error) => error);
+	/**
+	 * Subscription real-time updates received impossible event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call exhausted all retry attempt and won't try again.
+	 *
+	 * @internal
+	 */
 	const receiveReconnectGiveup = createEvent('RECEIVING_RECONNECT_GIVEUP', (error) => error);
+	/**
+	 * Client disconnect event.
+	 *
+	 * Event is sent when user wants to temporarily stop real-time updates receive.
+	 *
+	 * @internal
+	 */
 	const disconnect = createEvent('DISCONNECT', () => ({}));
+	/**
+	 * Client reconnect event.
+	 *
+	 * Event is sent when user wants to restore real-time updates receive.
+	 *
+	 * @internal
+	 */
 	const reconnect = createEvent('RECONNECT', (timetoken, region) => ({
 	    cursor: {
 	        timetoken: timetoken !== null && timetoken !== void 0 ? timetoken : '',
 	        region: region !== null && region !== void 0 ? region : 0,
 	    },
 	}));
+	/**
+	 * Completely stop real-time updates receive event.
+	 *
+	 * Event is sent when user doesn't want to receive any real-time updates anymore.
+	 *
+	 * @internal
+	 */
 	const unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', () => ({}));
 
+	/**
+	 * Subscribe Event Engine effects dispatcher.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Subscribe Event Engine dispatcher.
+	 *
+	 * Dispatcher responsible for subscription events handling and corresponding effects execution.
+	 *
+	 * @internal
+	 */
 	class EventEngineDispatcher extends Dispatcher {
 	    constructor(engine, dependencies) {
 	        super(dependencies);
@@ -6906,7 +7639,7 @@
 	                }
 	            }
 	        })));
-	        this.on(receiveMessages.type, asyncHandler((payload_2, abortSignal_2, _b) => __awaiter(this, [payload_2, abortSignal_2, _b], void 0, function* (payload, abortSignal, { receiveMessages, config }) {
+	        this.on(receiveMessages.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { receiveMessages, config }) {
 	            abortSignal.throwIfAborted();
 	            try {
 	                const result = yield receiveMessages({
@@ -6928,15 +7661,15 @@
 	                }
 	            }
 	        })));
-	        this.on(emitMessages.type, asyncHandler((payload_3, _1, _c) => __awaiter(this, [payload_3, _1, _c], void 0, function* (payload, _, { emitMessages }) {
+	        this.on(emitMessages.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitMessages }) {
 	            if (payload.length > 0) {
 	                emitMessages(payload);
 	            }
 	        })));
-	        this.on(emitStatus.type, asyncHandler((payload_4, _2, _d) => __awaiter(this, [payload_4, _2, _d], void 0, function* (payload, _, { emitStatus }) {
+	        this.on(emitStatus.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitStatus }) {
 	            emitStatus(payload);
 	        })));
-	        this.on(receiveReconnect.type, asyncHandler((payload_5, abortSignal_3, _e) => __awaiter(this, [payload_5, abortSignal_3, _e], void 0, function* (payload, abortSignal, { receiveMessages, delay, config }) {
+	        this.on(receiveReconnect.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { receiveMessages, delay, config }) {
 	            if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
 	                abortSignal.throwIfAborted();
 	                yield delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
@@ -6966,7 +7699,7 @@
 	                    : 'Unable to complete subscribe messages receive.')));
 	            }
 	        })));
-	        this.on(handshakeReconnect.type, asyncHandler((payload_6, abortSignal_4, _f) => __awaiter(this, [payload_6, abortSignal_4, _f], void 0, function* (payload, abortSignal, { handshake, delay, presenceState, config }) {
+	        this.on(handshakeReconnect.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { handshake, delay, presenceState, config }) {
 	            if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
 	                abortSignal.throwIfAborted();
 	                yield delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
@@ -6992,6 +7725,19 @@
 	    }
 	}
 
+	/**
+	 * Failed initial subscription handshake (disconnected) state.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Failed initial subscription handshake (disconnected) state.
+	 *
+	 * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
+	 * exhausted.
+	 *
+	 * @internal
+	 */
 	const HandshakeFailedState = new State('HANDSHAKE_FAILED');
 	HandshakeFailedState.on(subscriptionChange.type, (context, event) => HandshakingState.with({
 	    channels: event.payload.channels,
@@ -7010,12 +7756,25 @@
 	        groups: event.payload.groups,
 	        cursor: {
 	            timetoken: event.payload.cursor.timetoken,
-	            region: event.payload.cursor.region ? event.payload.cursor.region : (_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
+	            region: event.payload.cursor.region ? event.payload.cursor.region : ((_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0),
 	        },
 	    });
 	});
 	HandshakeFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
 
+	/**
+	 * Stopped initial subscription handshake (disconnected) state.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Stopped initial subscription handshake (disconnected) state.
+	 *
+	 * State in which Subscription Event Engine still has information about subscription but doesn't have subscription
+	 * cursor for next sequential subscribe REST API call.
+	 *
+	 * @internal
+	 */
 	const HandshakeStoppedState = new State('HANDSHAKE_STOPPED');
 	HandshakeStoppedState.on(subscriptionChange.type, (context, event) => HandshakeStoppedState.with({
 	    channels: event.payload.channels,
@@ -7036,6 +7795,19 @@
 	});
 	HandshakeStoppedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
 
+	/**
+	 * Failed to receive real-time updates (disconnected) state.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Failed to receive real-time updates (disconnected) state.
+	 *
+	 * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
+	 * exhausted.
+	 *
+	 * @internal
+	 */
 	const ReceiveFailedState = new State('RECEIVE_FAILED');
 	ReceiveFailedState.on(reconnect.type, (context, event) => {
 	    var _a;
@@ -7063,6 +7835,19 @@
 	}));
 	ReceiveFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));
 
+	/**
+	 * Stopped real-time updates (disconnected) state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Stopped real-time updates (disconnected) state.
+	 *
+	 * State in which Subscription Event Engine still has information about subscription but doesn't process real-time
+	 * updates.
+	 *
+	 * @internal
+	 */
 	const ReceiveStoppedState = new State('RECEIVE_STOPPED');
 	ReceiveStoppedState.on(subscriptionChange.type, (context, event) => ReceiveStoppedState.with({
 	    channels: event.payload.channels,
@@ -7090,6 +7875,18 @@
 	});
 	ReceiveStoppedState.on(unsubscribeAll.type, () => UnsubscribedState.with(undefined));
 
+	/**
+	 * Reconnect to receive real-time updates (disconnected) state.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Reconnect to receive real-time updates (disconnected) state.
+	 *
+	 * State in which Subscription Event Engine tries to recover after error which happened before.
+	 *
+	 * @internal
+	 */
 	const ReceiveReconnectingState = new State('RECEIVE_RECONNECTING');
 	ReceiveReconnectingState.onEnter((context) => receiveReconnect(context));
 	ReceiveReconnectingState.onExit(() => receiveReconnect.cancel);
@@ -7128,6 +7925,18 @@
 	}));
 	ReceiveReconnectingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
 
+	/**
+	 * Receiving real-time updates (connected) state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Receiving real-time updates (connected) state.
+	 *
+	 * State in which Subscription Event Engine processes any real-time updates.
+	 *
+	 * @internal
+	 */
 	const ReceivingState = new State('RECEIVING');
 	ReceivingState.onEnter((context) => receiveMessages(context.channels, context.groups, context.cursor));
 	ReceivingState.onExit(() => receiveMessages.cancel);
@@ -7171,6 +7980,18 @@
 	});
 	ReceivingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
 
+	/**
+	 * Retry initial subscription handshake (disconnected) state.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Retry initial subscription handshake (disconnected) state.
+	 *
+	 * State in which Subscription Event Engine tries to recover after error which happened before.
+	 *
+	 * @internal
+	 */
 	const HandshakeReconnectingState = new State('HANDSHAKE_RECONNECTING');
 	HandshakeReconnectingState.onEnter((context) => handshakeReconnect(context));
 	HandshakeReconnectingState.onExit(() => handshakeReconnect.cancel);
@@ -7219,6 +8040,19 @@
 	});
 	HandshakeReconnectingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));
 
+	/**
+	 * Initial subscription handshake (disconnected) state.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Initial subscription handshake (disconnected) state.
+	 *
+	 * State in which Subscription Event Engine tries to receive subscription cursor for next sequential subscribe REST
+	 * API calls.
+	 *
+	 * @internal
+	 */
 	const HandshakingState = new State('HANDSHAKING');
 	HandshakingState.onEnter((context) => handshake(context.channels, context.groups));
 	HandshakingState.onExit(() => handshake.cancel);
@@ -7274,6 +8108,18 @@
 	});
 	HandshakingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
 
+	/**
+	 * Unsubscribed / disconnected state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Unsubscribed / disconnected state.
+	 *
+	 * State in which Subscription Event Engine doesn't process any real-time updates.
+	 *
+	 * @internal
+	 */
 	const UnsubscribedState = new State('UNSUBSCRIBED');
 	UnsubscribedState.on(subscriptionChange.type, (_, event) => HandshakingState.with({
 	    channels: event.payload.channels,
@@ -7287,6 +8133,16 @@
 	    });
 	});
 
+	/**
+	 * Subscribe Event Engine module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Subscribe Event Engine Core.
+	 *
+	 * @internal
+	 */
 	class EventEngine {
 	    get _engine() {
 	        return this.engine;
@@ -7528,6 +8384,8 @@
 
 	/**
 	 * Receive messages subscribe REST API module.
+	 *
+	 * @internal
 	 */
 	/**
 	 * Receive messages subscribe request.
@@ -7572,6 +8430,8 @@
 
 	/**
 	 * Handshake subscribe REST API module.
+	 *
+	 * @internal
 	 */
 	/**
 	 * Handshake subscribe request.
@@ -7603,6 +8463,8 @@
 
 	/**
 	 * Get Presence State REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -7659,6 +8521,8 @@
 
 	/**
 	 * Set Presence State REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -7709,6 +8573,8 @@
 
 	/**
 	 * Announce heartbeat REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -7759,6 +8625,8 @@
 
 	/**
 	 * Announce leave REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -7811,6 +8679,8 @@
 
 	/**
 	 * `uuid` presence REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -7851,6 +8721,8 @@
 
 	/**
 	 * Channels / channel groups presence REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -7948,6 +8820,8 @@
 
 	/**
 	 * Delete messages REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -7992,6 +8866,8 @@
 
 	/**
 	 * Messages count REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -8044,6 +8920,8 @@
 
 	/**
 	 * Get history REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ---------------------- Defaults ------------------------
@@ -8182,6 +9060,8 @@
 
 	/**
 	 * Fetch messages REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ---------------------- Defaults ------------------------
@@ -8363,6 +9243,8 @@
 
 	/**
 	 * Get Message Actions REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -8418,6 +9300,8 @@
 
 	/**
 	 * Add Message Action REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -8475,6 +9359,8 @@
 
 	/**
 	 * Remove Message Action REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -8520,6 +9406,8 @@
 
 	/**
 	 * Publish File Message REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -8598,6 +9486,8 @@
 
 	/**
 	 * File sharing REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -8642,6 +9532,8 @@
 
 	/**
 	 * Delete file REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -8685,6 +9577,8 @@
 
 	/**
 	 * List Files REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -8739,6 +9633,8 @@
 
 	/**
 	 * Generate file upload URL REST API request.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -8790,6 +9686,8 @@
 
 	/**
 	 * Upload file REST API request.
+	 *
+	 * @internal
 	 */
 	/**
 	 * File Upload request.
@@ -8847,6 +9745,11 @@
 	    }
 	}
 
+	/**
+	 * Share File API module.
+	 *
+	 * @internal
+	 */
 	// endregion
 	/**
 	 * Send file composed request.
@@ -8969,53 +9872,173 @@
 	}
 
 	class SubscribeCapable {
+	    /**
+	     * Start receiving real-time updates.
+	     *
+	     * @param subscribeParameters - Additional subscription configuration options which should be used
+	     * for request.
+	     */
 	    subscribe(subscribeParameters) {
 	        const timetoken = subscribeParameters === null || subscribeParameters === void 0 ? void 0 : subscribeParameters.timetoken;
 	        this.pubnub.subscribe(Object.assign({ channels: this.channelNames, channelGroups: this.groupNames }, (timetoken !== null && timetoken !== '' && { timetoken: timetoken })));
 	    }
+	    /**
+	     * Stop real-time events processing.
+	     */
 	    unsubscribe() {
 	        this.pubnub.unsubscribe({
 	            channels: this.channelNames,
 	            channelGroups: this.groupNames,
 	        });
 	    }
+	    /**
+	     * Set new message handler.
+	     *
+	     * @param onMessageListener - Listener function, which will be called each time when a new message
+	     * is received from the real-time network.
+	     */
 	    set onMessage(onMessageListener) {
 	        this.listener.message = onMessageListener;
 	    }
+	    /**
+	     * Set new presence events handler.
+	     *
+	     * @param onPresenceListener - Listener function, which will be called each time when a new
+	     * presence event is received from the real-time network.
+	     */
 	    set onPresence(onPresenceListener) {
 	        this.listener.presence = onPresenceListener;
 	    }
+	    /**
+	     * Set new signal handler.
+	     *
+	     * @param onSignalListener - Listener function, which will be called each time when a new signal
+	     * is received from the real-time network.
+	     */
 	    set onSignal(onSignalListener) {
 	        this.listener.signal = onSignalListener;
 	    }
+	    /**
+	     * Set new app context event handler.
+	     *
+	     * @param onObjectsListener - Listener function, which will be called each time when a new
+	     * app context event is received from the real-time network.
+	     */
 	    set onObjects(onObjectsListener) {
 	        this.listener.objects = onObjectsListener;
 	    }
+	    /**
+	     * Set new message reaction event handler.
+	     *
+	     * @param messageActionEventListener - Listener function, which will be called each time when a
+	     * new message reaction event is received from the real-time network.
+	     */
 	    set onMessageAction(messageActionEventListener) {
 	        this.listener.messageAction = messageActionEventListener;
 	    }
+	    /**
+	     * Set new file handler.
+	     *
+	     * @param fileEventListener - Listener function, which will be called each time when a new file
+	     * is received from the real-time network.
+	     */
 	    set onFile(fileEventListener) {
 	        this.listener.file = fileEventListener;
 	    }
+	    /**
+	     * Set events handler.
+	     *
+	     * @param listener - Events listener configuration object, which lets specify handlers for multiple
+	     * types of events.
+	     */
 	    addListener(listener) {
 	        this.eventEmitter.addListener(listener, this.channelNames.filter((c) => !c.endsWith('-pnpres')), this.groupNames.filter((cg) => !cg.endsWith('-pnpres')));
 	    }
+	    /**
+	     * Remove events handler.
+	     *
+	     * @param listener - Event listener configuration, which should be removed from the list of notified
+	     * listeners. **Important:** Should be the same object which has been passed to the
+	     * {@link addListener}.
+	     */
 	    removeListener(listener) {
 	        this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
 	    }
+	    /**
+	     * Get list of channels which is used for subscription.
+	     *
+	     * @returns List of channel names.
+	     */
 	    get channels() {
 	        return this.channelNames.slice(0);
 	    }
+	    /**
+	     * Get list of channel groups which is used for subscription.
+	     *
+	     * @returns List of channel group names.
+	     */
 	    get channelGroups() {
 	        return this.groupNames.slice(0);
 	    }
 	}
 
+	/**
+	 * Multiple entities subscription set object which can be used to receive and handle real-time
+	 * updates.
+	 *
+	 * Subscription set object represent collection of per-entity subscription objects and allow
+	 * processing them at once for subscription loop and events handling.
+	 */
 	class SubscriptionSet extends SubscribeCapable {
+	    /**
+	     * Create entities' subscription set object.
+	     *
+	     * Subscription set object represent collection of per-entity subscription objects and allow
+	     * processing them at once for subscription loop and events handling.
+	     *
+	     * @param channels - List of channels which should be used in subscription loop.
+	     * @param channelGroups - List of channel groups which should be used in subscription loop.
+	     * @param subscriptionOptions - Entities' subscription object configuration.
+	     * @param eventEmitter - Event emitter, which will notify listeners about updates received for
+	     * entities' channels / groups.
+	     * @param pubnub - PubNub instance which will perform subscribe / unsubscribe requests for
+	     * entities.
+	     *
+	     * @returns Ready to use entities' subscription set object.
+	     *
+	     * @internal
+	     */
 	    constructor({ channels = [], channelGroups = [], subscriptionOptions, eventEmitter, pubnub, }) {
 	        super();
+	        /**
+	         * List of channel names for subscription loop.
+	         *
+	         * List of entities' names which can have additional entries depending on from configuration
+	         * options. Presence events observing adds additional name to be used along with entity name.
+	         *
+	         * **Note:** Depending on from the entities' type, they may provide a list of channels which are
+	         * used to receive real-time updates for it.
+	         *
+	         * @internal
+	         */
 	        this.channelNames = [];
+	        /**
+	         * List of channel group names for subscription loop.
+	         *
+	         * List of entities' names which can have additional entries depending on from configuration
+	         * options. Presence events observing adds additional name to be used along with entity name.
+	         *
+	         * **Note:** Depending on from the entities' type, they may provide a list of channels which are
+	         * used to receive real-time updates for it.
+	         *
+	         * @internal
+	         */
 	        this.groupNames = [];
+	        /**
+	         * List of per-entity subscription objects.
+	         *
+	         * @internal
+	         */
 	        this.subscriptionList = [];
 	        this.options = subscriptionOptions;
 	        this.eventEmitter = eventEmitter;
@@ -9033,12 +10056,28 @@
 	        this.listener = {};
 	        eventEmitter.addListener(this.listener, this.channelNames.filter((c) => !c.endsWith('-pnpres')), this.groupNames.filter((cg) => !cg.endsWith('-pnpres')));
 	    }
+	    /**
+	     * Add additional entity's subscription to the subscription set.
+	     *
+	     * **Important:** Changes will be effective only after {@link SubscribeCapable#subscribe} call or
+	     * next subscription loop.
+	     *
+	     * @param subscription - Other entity's subscription object, which should be added.
+	     */
 	    addSubscription(subscription) {
 	        this.subscriptionList.push(subscription);
 	        this.channelNames = [...this.channelNames, ...subscription.channels];
 	        this.groupNames = [...this.groupNames, ...subscription.channelGroups];
 	        this.eventEmitter.addListener(this.listener, subscription.channels, subscription.channelGroups);
 	    }
+	    /**
+	     * Remove entity's subscription object from the set.
+	     *
+	     * **Important:** Changes will be effective only after {@link SubscribeCapable#unsubscribe} call or
+	     * next subscription loop.
+	     *
+	     * @param subscription - Other entity's subscription object, which should be removed.
+	     */
 	    removeSubscription(subscription) {
 	        const channelsToRemove = subscription.channels;
 	        const groupsToRemove = subscription.channelGroups;
@@ -9047,12 +10086,28 @@
 	        this.subscriptionList = this.subscriptionList.filter((s) => s !== subscription);
 	        this.eventEmitter.removeListener(this.listener, channelsToRemove, groupsToRemove);
 	    }
+	    /**
+	     * Merge with other subscription set object.
+	     *
+	     * **Important:** Changes will be effective only after {@link SubscribeCapable#subscribe} call or
+	     * next subscription loop.
+	     *
+	     * @param subscriptionSet - Other entities' subscription set, which should be joined.
+	     */
 	    addSubscriptionSet(subscriptionSet) {
 	        this.subscriptionList = [...this.subscriptionList, ...subscriptionSet.subscriptions];
 	        this.channelNames = [...this.channelNames, ...subscriptionSet.channels];
 	        this.groupNames = [...this.groupNames, ...subscriptionSet.channelGroups];
 	        this.eventEmitter.addListener(this.listener, subscriptionSet.channels, subscriptionSet.channelGroups);
 	    }
+	    /**
+	     * Subtract other subscription set object.
+	     *
+	     * **Important:** Changes will be effective only after {@link SubscribeCapable#unsubscribe} call or
+	     * next subscription loop.
+	     *
+	     * @param subscriptionSet - Other entities' subscription set, which should be subtracted.
+	     */
 	    removeSubscriptionSet(subscriptionSet) {
 	        const channelsToRemove = subscriptionSet.channels;
 	        const groupsToRemove = subscriptionSet.channelGroups;
@@ -9061,15 +10116,59 @@
 	        this.subscriptionList = this.subscriptionList.filter((s) => !subscriptionSet.subscriptions.includes(s));
 	        this.eventEmitter.removeListener(this.listener, channelsToRemove, groupsToRemove);
 	    }
+	    /**
+	     * Get list of entities' subscription objects registered in subscription set.
+	     *
+	     * @returns Entities' subscription objects list.
+	     */
 	    get subscriptions() {
 	        return this.subscriptionList.slice(0);
 	    }
 	}
 
+	/**
+	 * Single-entity subscription object which can be used to receive and handle real-time updates.
+	 */
 	class Subscription extends SubscribeCapable {
+	    /**
+	     * Create entity's subscription object.
+	     *
+	     * @param channels - List of channels which should be used in subscription loop.
+	     * @param channelGroups - List of channel groups which should be used in subscription loop.
+	     * @param subscriptionOptions - Per-entity subscription object configuration.
+	     * @param eventEmitter - Event emitter, which will notify listeners about updates received for
+	     * entity channels / groups.
+	     * @param pubnub - PubNub instance which will perform subscribe / unsubscribe requests for entity.
+	     *
+	     * @returns Ready to use entity's subscription object.
+	     *
+	     * @internal
+	     */
 	    constructor({ channels, channelGroups, subscriptionOptions, eventEmitter, pubnub, }) {
 	        super();
+	        /**
+	         * List of channel names for subscription loop.
+	         *
+	         * Entity may have few because of subscription configuration options. Presence events observing
+	         * adds additional name to be used along with entity name.
+	         *
+	         * **Note:** Depending on from the entity type, it may provide a list of channels which are used
+	         * to receive real-time updates for it.
+	         *
+	         * @internal
+	         */
 	        this.channelNames = [];
+	        /**
+	         * List of channel group names for subscription loop.
+	         *
+	         * Entity may have few because of subscription configuration options. Presence events observing
+	         * adds additional name to be used along with entity name.
+	         *
+	         * **Note:** Depending on from the entity type, it may provide a list of channel groups which is
+	         * sed to receive real-time updates for it.
+	         *
+	         * @internal
+	         */
 	        this.groupNames = [];
 	        this.channelNames = channels;
 	        this.groupNames = channelGroups;
@@ -9079,6 +10178,12 @@
 	        this.listener = {};
 	        eventEmitter.addListener(this.listener, this.channelNames.filter((c) => !c.endsWith('-pnpres')), this.groupNames.filter((cg) => !cg.endsWith('-pnpres')));
 	    }
+	    /**
+	     * Merge entities' subscription objects into subscription set.
+	     *
+	     * @param subscription - Other entity's subscription object to be merged with receiver.
+	     * @return Subscription set which contains both receiver and other entities' subscription objects.
+	     */
 	    addSubscription(subscription) {
 	        return new SubscriptionSet({
 	            channels: [...this.channelNames, ...subscription.channels],
@@ -9090,12 +10195,37 @@
 	    }
 	}
 
+	/**
+	 * First-class objects which provides access to the channel app context object-specific APIs.
+	 */
 	class ChannelMetadata {
+	    /**
+	     * Create channel app context object entity.
+	     *
+	     * @param id - Channel app context object identifier which will be used with subscription loop.
+	     * @param eventEmitter - Event emitter, which will notify listeners about updates received on
+	     * channel's subscription.
+	     * @param pubnub - PubNub instance which will use this entity.
+	     *
+	     * @returns Ready to use channel app context object entity.
+	     *
+	     * @internal
+	     */
 	    constructor(id, eventEmitter, pubnub) {
-	        this.id = id;
 	        this.eventEmitter = eventEmitter;
 	        this.pubnub = pubnub;
+	        this.id = id;
 	    }
+	    /**
+	     * Create channel's app context subscription object for real-time updates.
+	     *
+	     * Create subscription object which can be used to subscribe to the real-time updates sent to the specific channel
+	     * app context object.
+	     *
+	     * @param [subscriptionOptions] - Channel's app context subscription object behavior customization options.
+	     *
+	     * @returns Configured and ready to use channel's app context subscription object.
+	     */
 	    subscription(subscriptionOptions) {
 	        {
 	            return new Subscription({
@@ -9109,12 +10239,37 @@
 	    }
 	}
 
+	/**
+	 * First-class objects which provides access to the channel group-specific APIs.
+	 */
 	class ChannelGroup {
-	    constructor(channelGroup, eventEmitter, pubnub) {
+	    /**
+	     * Create simple channel entity.
+	     *
+	     * @param name - Name of the channel group which will be used with subscription loop.
+	     * @param eventEmitter - Event emitter, which will notify listeners about updates received on
+	     * channel group's subscription.
+	     * @param pubnub - PubNub instance which will use this entity.
+	     *
+	     * @returns Ready to use channel group entity.
+	     *
+	     * @internal
+	     */
+	    constructor(name, eventEmitter, pubnub) {
 	        this.eventEmitter = eventEmitter;
 	        this.pubnub = pubnub;
-	        this.name = channelGroup;
+	        this.name = name;
 	    }
+	    /**
+	     * Create channel group's subscription object for real-time updates.
+	     *
+	     * Create subscription object which can be used to subscribe to the real-time updates sent to the channels in
+	     * specific channel group.
+	     *
+	     * @param [subscriptionOptions] - Channel group's subscription object behavior customization options.
+	     *
+	     * @returns Configured and ready to use channel group's subscription object.
+	     */
 	    subscription(subscriptionOptions) {
 	        {
 	            return new Subscription({
@@ -9128,12 +10283,37 @@
 	    }
 	}
 
+	/**
+	 * First-class objects which provides access to the user app context object-specific APIs.
+	 */
 	class UserMetadata {
+	    /**
+	     * Create user app context object entity.
+	     *
+	     * @param id - User app context object identifier which will be used with subscription loop.
+	     * @param eventEmitter - Event emitter, which will notify listeners about updates received on
+	     * channel's subscription.
+	     * @param pubnub - PubNub instance which will use this entity.
+	     *
+	     * @returns Ready to use user app context object entity.
+	     *
+	     * @internal
+	     */
 	    constructor(id, eventEmitter, pubnub) {
-	        this.id = id;
 	        this.eventEmitter = eventEmitter;
 	        this.pubnub = pubnub;
+	        this.id = id;
 	    }
+	    /**
+	     * Create user's app context subscription object for real-time updates.
+	     *
+	     * Create subscription object which can be used to subscribe to the real-time updates sent to the specific user
+	     * app context object.
+	     *
+	     * @param [subscriptionOptions] - User's app context subscription object behavior customization options.
+	     *
+	     * @returns Configured and ready to use user's app context subscription object.
+	     */
 	    subscription(subscriptionOptions) {
 	        {
 	            return new Subscription({
@@ -9147,12 +10327,36 @@
 	    }
 	}
 
+	/**
+	 * First-class objects which provides access to the channel-specific APIs.
+	 */
 	class Channel {
-	    constructor(channelName, eventEmitter, pubnub) {
+	    /**
+	     * Create simple channel entity.
+	     *
+	     * @param name - Name of the channel which will be used with subscription loop.
+	     * @param eventEmitter - Event emitter, which will notify listeners about updates received on
+	     * channel's subscription.
+	     * @param pubnub - PubNub instance which will use this entity.
+	     *
+	     * @returns Ready to use channel entity.
+	     *
+	     * @internal
+	     */
+	    constructor(name, eventEmitter, pubnub) {
 	        this.eventEmitter = eventEmitter;
 	        this.pubnub = pubnub;
-	        this.name = channelName;
+	        this.name = name;
 	    }
+	    /**
+	     * Create channel's subscription object for real-time updates.
+	     *
+	     * Create subscription object which can be used to subscribe to the real-time updates sent to the specific channel.
+	     *
+	     * @param [subscriptionOptions] - Channel's subscription object behavior customization options.
+	     *
+	     * @returns Configured and ready to use channel's subscription object.
+	     */
 	    subscription(subscriptionOptions) {
 	        {
 	            return new Subscription({
@@ -9168,6 +10372,8 @@
 
 	/**
 	 * Remove channel group channels REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -9215,6 +10421,8 @@
 
 	/**
 	 * Add channel group channels REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -9261,6 +10469,8 @@
 
 	/**
 	 * List channel group channels REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -9301,6 +10511,8 @@
 
 	/**
 	 * Delete channel group REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -9341,6 +10553,8 @@
 
 	/**
 	 * List All Channel Groups REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -9379,12 +10593,23 @@
 	/**
 	 * PubNub Channel Groups API module.
 	 */
-	class PubnubChannelGroups {
+	/**
+	 * PubNub Stream / Channel group API interface.
+	 */
+	class PubNubChannelGroups {
+	    /**
+	     * Create stream / channel group API access object.
+	     *
+	     * @param keySet - PubNub account keys set which should be used for REST API calls.
+	     * @param sendRequest - Function which should be used to send REST API calls.
+	     *
+	     * @internal
+	     */
 	    constructor(keySet, 
 	    /* eslint-disable  @typescript-eslint/no-explicit-any */
 	    sendRequest) {
-	        this.keySet = keySet;
 	        this.sendRequest = sendRequest;
+	        this.keySet = keySet;
 	    }
 	    /**
 	     * Fetch channel group channels.
@@ -9474,6 +10699,8 @@
 
 	/**
 	 * Manage channels enabled for device push REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -9551,6 +10778,8 @@
 
 	/**
 	 * Unregister Channels from Device push REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -9578,6 +10807,8 @@
 
 	/**
 	 * List Device push enabled channels REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -9605,6 +10836,8 @@
 
 	/**
 	 * Register Channels with Device push REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -9632,6 +10865,8 @@
 
 	/**
 	 * Unregister Device push REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -9660,12 +10895,23 @@
 	/**
 	 * PubNub Push Notifications API module.
 	 */
+	/**
+	 * PubNub Push Notifications API interface.
+	 */
 	class PubNubPushNotifications {
+	    /**
+	     * Create mobile push notifications API access object.
+	     *
+	     * @param keySet - PubNub account keys set which should be used for REST API calls.
+	     * @param sendRequest - Function which should be used to send REST API calls.
+	     *
+	     * @internal
+	     */
 	    constructor(keySet, 
 	    /* eslint-disable  @typescript-eslint/no-explicit-any */
 	    sendRequest) {
-	        this.keySet = keySet;
 	        this.sendRequest = sendRequest;
+	        this.keySet = keySet;
 	    }
 	    /**
 	     * Fetch device's push notification enabled channels.
@@ -9729,6 +10975,8 @@
 
 	/**
 	 * Get All Channel Metadata REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -9794,6 +11042,8 @@
 
 	/**
 	 * Remove Channel Metadata REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -9832,6 +11082,8 @@
 
 	/**
 	 * Get UUID Memberships REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -9943,6 +11195,8 @@
 
 	/**
 	 * Set UUID Memberships REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -10049,6 +11303,8 @@
 
 	/**
 	 * Get All UUID Metadata REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -10109,6 +11365,8 @@
 
 	/**
 	 * Get Channel Metadata REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -10165,6 +11423,8 @@
 
 	/**
 	 * Set Channel Metadata REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -10226,6 +11486,8 @@
 
 	/**
 	 * Remove UUID Metadata REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -10267,6 +11529,8 @@
 
 	/**
 	 * Get Channel Members REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -10375,6 +11639,8 @@
 
 	/**
 	 * Set Channel Members REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -10478,6 +11744,8 @@
 
 	/**
 	 * Get UUID Metadata REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -10536,6 +11804,8 @@
 
 	/**
 	 * Set UUID Metadata REST API module.
+	 *
+	 * @internal
 	 */
 	// --------------------------------------------------------
 	// ----------------------- Defaults -----------------------
@@ -10601,13 +11871,24 @@
 	/**
 	 * PubNub Objects API module.
 	 */
+	/**
+	 * PubNub App Context API interface.
+	 */
 	class PubNubObjects {
+	    /**
+	     * Create app context API access object.
+	     *
+	     * @param configuration - Extended PubNub client configuration object.
+	     * @param sendRequest - Function which should be used to send REST API calls.
+	     *
+	     * @internal
+	     */
 	    constructor(configuration, 
 	    /* eslint-disable  @typescript-eslint/no-explicit-any */
 	    sendRequest) {
+	        this.keySet = configuration.keySet;
 	        this.configuration = configuration;
 	        this.sendRequest = sendRequest;
-	        this.keySet = configuration.keySet;
 	    }
 	    /**
 	     * Fetch a paginated list of UUID Metadata objects.
@@ -10625,11 +11906,12 @@
 	    /**
 	     * Fetch a paginated list of UUID Metadata objects.
 	     *
-	     *
 	     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
 	     * @param [callback] - Request completion handler callback.
 	     *
 	     * @returns Asynchronous get all UUID metadata response or `void` in case if `callback` provided.
+	     *
+	     * @internal
 	     */
 	    _getAllUUIDMetadata(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -10662,6 +11944,8 @@
 	     * @param [callback] - Request completion handler callback.
 	     *
 	     * @returns Asynchronous get UUID metadata response or `void` in case if `callback` provided.
+	     *
+	     * @internal
 	     */
 	    _getUUIDMetadata(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -10694,6 +11978,8 @@
 	    }
 	    /**
 	     * Update specific UUID Metadata object.
+	     *
+	     * @internal
 	     *
 	     * @param parameters - Request configuration parameters. Will set UUID metadata for currently
 	     * configured PubNub client `uuid` if not set.
@@ -10728,6 +12014,8 @@
 	    }
 	    /**
 	     * Remove a specific UUID Metadata object.
+	     *
+	     * @internal
 	     *
 	     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
 	     * @param [callback] - Request completion handler callback.
@@ -10766,6 +12054,8 @@
 	    /**
 	     * Fetch a paginated list of Channel Metadata objects.
 	     *
+	     * @internal
+	     *
 	     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
 	     * @param [callback] - Request completion handler callback.
 	     *
@@ -10799,6 +12089,8 @@
 	    /**
 	     * Fetch Channel Metadata object.
 	     *
+	     * @internal
+	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
 	     *
@@ -10827,6 +12119,8 @@
 	    }
 	    /**
 	     * Update specific Channel Metadata object.
+	     *
+	     * @internal
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -10857,6 +12151,8 @@
 	    }
 	    /**
 	     * Remove a specific Channel Metadata object.
+	     *
+	     * @internal
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -11088,7 +12384,6 @@
 	                    uuids: (_c = (_b = spaceParameters.users) === null || _b === void 0 ? void 0 : _b.map((user) => {
 	                        if (typeof user === 'string')
 	                            return user;
-	                        user.userId;
 	                        return { id: user.userId, custom: user.custom };
 	                    })) !== null && _c !== void 0 ? _c : spaceParameters.uuids,
 	                    limit: 0,
@@ -11148,6 +12443,8 @@
 
 	/**
 	 * Download File REST API module.
+	 *
+	 * @internal
 	 */
 	// endregion
 	/**
@@ -11199,6 +12496,9 @@
 	    }
 	}
 
+	/**
+	 * Core PubNub API module.
+	 */
 	// endregion
 	/**
 	 * Platform-agnostic PubNub client core.
@@ -11226,6 +12526,14 @@
 	        return uuidGenerator.createUUID();
 	    }
 	    // endregion
+	    /**
+	     * Create and configure PubNub client core.
+	     *
+	     * @param configuration - PubNub client core configuration.
+	     * @returns Configured and ready to use PubNub client.
+	     *
+	     * @internal
+	     */
 	    constructor(configuration) {
 	        this._configuration = configuration.configuration;
 	        this.cryptography = configuration.cryptography;
@@ -11234,7 +12542,7 @@
 	        this.crypto = configuration.crypto;
 	        // API group entry points initialization.
 	        this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
-	        this._channelGroups = new PubnubChannelGroups(this._configuration.keySet, this.sendRequest.bind(this));
+	        this._channelGroups = new PubNubChannelGroups(this._configuration.keySet, this.sendRequest.bind(this));
 	        this._push = new PubNubPushNotifications(this._configuration.keySet, this.sendRequest.bind(this));
 	        {
 	            // Prepare for real-time events announcement.
@@ -11591,6 +12899,8 @@
 	    /**
 	     * Schedule request execution.
 	     *
+	     * @internal
+	     *
 	     * @param request - REST API request.
 	     * @param [callback] - Request completion handler callback.
 	     *
@@ -11817,6 +13127,8 @@
 	     *
 	     * **Note:** Method passed into managers to let them use it when required.
 	     *
+	     * @internal
+	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param callback - Request completion handler callback.
 	     */
@@ -11860,6 +13172,8 @@
 	     * Perform unsubscribe request.
 	     *
 	     * **Note:** Method passed into managers to let them use it when required.
+	     *
+	     * @internal
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param callback - Request completion handler callback.
@@ -11908,6 +13222,8 @@
 	    /**
 	     * Event engine handshake subscribe.
 	     *
+	     * @internal
+	     *
 	     * @param parameters - Request configuration parameters.
 	     */
 	    subscribeHandshake(parameters) {
@@ -11933,6 +13249,8 @@
 	    }
 	    /**
 	     * Event engine receive messages subscribe.
+	     *
+	     * @internal
 	     *
 	     * @param parameters - Request configuration parameters.
 	     */
@@ -12203,6 +13521,8 @@
 	    /**
 	     * Announce user presence
 	     *
+	     * @internal
+	     *
 	     * @param parameters - Desired presence state for provided list of channels and groups.
 	     * @param callback - Request completion handler callback.
 	     */
@@ -12221,6 +13541,8 @@
 	    /**
 	     * Announce user `join` on specified list of channels and groups.
 	     *
+	     * @internal
+	     *
 	     * @param parameters - List of channels and groups where `join` event should be sent.
 	     */
 	    join(parameters) {
@@ -12232,6 +13554,8 @@
 	    /**
 	     * Announce user `leave` on specified list of channels and groups.
 	     *
+	     * @internal
+	     *
 	     * @param parameters - List of channels and groups where `leave` event should be sent.
 	     */
 	    leave(parameters) {
@@ -12240,6 +13564,8 @@
 	    }
 	    /**
 	     * Announce user `leave` on all subscribed channels.
+	     *
+	     * @internal
 	     */
 	    leaveAll() {
 	        var _a;
@@ -12577,8 +13903,7 @@
 	     * @returns Asynchronous memberships modification response or `void` in case if `callback` provided.
 	     *
 	     * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-	     * methods instead
-	     * from `objects` API group..
+	     * methods instead from `objects` API group.
 	     */
 	    removeMemberships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -12931,6 +14256,8 @@
 
 	/**
 	 * Cbor decoder module.
+	 *
+	 * @internal
 	 */
 	/**
 	 * CBOR data decoder.
@@ -12967,6 +14294,13 @@
 	 * PubNub client for browser platform.
 	 */
 	class PubNub extends PubNubCore {
+	    /**
+	     * Create and configure PubNub client core.
+	     *
+	     * @param configuration - User-provided PubNub client configuration.
+	     *
+	     * @returns Configured and ready to use PubNub client.
+	     */
 	    constructor(configuration) {
 	        var _a;
 	        const configurationCopy = setDefaults(configuration);

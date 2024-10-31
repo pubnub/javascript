@@ -1,5 +1,7 @@
 /**
  * REST API endpoint use error module.
+ *
+ * @internal
  */
 
 import { TransportResponse } from '../core/types/transport-response';
@@ -10,6 +12,8 @@ import { PubNubError } from './pubnub-error';
 
 /**
  * PubNub REST API call error.
+ *
+ * @internal
  */
 export class PubNubAPIError extends Error {
   /**

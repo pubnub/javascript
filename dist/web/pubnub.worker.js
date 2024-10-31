@@ -17,7 +17,7 @@
     OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
     PERFORMANCE OF THIS SOFTWARE.
     ***************************************************************************** */
-    /* global Reflect, Promise, SuppressedError, Symbol */
+    /* global Reflect, Promise, SuppressedError, Symbol, Iterator */
 
 
     function __awaiter(thisArg, _arguments, P, generator) {
@@ -89,6 +89,12 @@
     var uuidExports = uuid.exports;
     var uuidGenerator$1 = /*@__PURE__*/getDefaultExportFromCjs(uuidExports);
 
+    /**
+     * Random identifier generator helper module.
+     *
+     * @internal
+     */
+    /** @internal */
     var uuidGenerator = {
         createUUID() {
             if (uuidGenerator$1.uuid) {
@@ -105,6 +111,8 @@
      *
      * Service worker provides support for PubNub subscription feature to give better user experience across
      * multiple opened pages.
+     *
+     * @internal
      */
     /**
      * How often PING request should be sent to the PubNub clients.

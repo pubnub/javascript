@@ -3,7 +3,7 @@ import {
   ExtendedConfiguration,
   setDefaults as setBaseDefaults,
 } from '../../core/interfaces/configuration';
-import { CryptoModule } from '../../core/interfaces/crypto-module';
+import { ICryptoModule } from '../../core/interfaces/crypto-module';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -77,7 +77,7 @@ export type PubNubConfiguration = UserConfiguration & {
    *
    * @default `not set`
    */
-  cryptoModule?: CryptoModule;
+  cryptoModule?: ICryptoModule;
 
   // region Deprecated parameters
   /**

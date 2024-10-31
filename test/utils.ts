@@ -47,8 +47,8 @@ export default {
 
     let promisesResult = Promise.resolve();
     for (let delayIdx = 0; delayIdx < delays.length; delayIdx += 1) {
-      let previousDelay = delayIdx > 0 ? delays[delayIdx - 1] : 0;
-      let delay = delays[delayIdx];
+      const previousDelay = delayIdx > 0 ? delays[delayIdx - 1] : 0;
+      const delay = delays[delayIdx];
       promisesResult = promisesResult.then(() => callAPIWithDelayedResponse(previousDelay, delay)) as Promise<void>;
     }
 

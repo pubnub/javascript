@@ -1,5 +1,7 @@
 /**
  * Upload file REST API request.
+ *
+ * @internal
  */
 
 import { TransportResponse } from '../../types/transport-response';

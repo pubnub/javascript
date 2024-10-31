@@ -1,10 +1,12 @@
 /**
  * Download File REST API module.
+ *
+ * @internal
  */
 
 import { PubNubBasicFileParameters, PubNubFileConstructor, PubNubFileInterface } from '../../types/file';
 import { TransportResponse } from '../../types/transport-response';
-import { CryptoModule } from '../../interfaces/crypto-module';
+import { ICryptoModule } from '../../interfaces/crypto-module';
 import { Cryptography } from '../../interfaces/cryptography';
 import { AbstractRequest } from '../../components/request';
 import * as FileSharing from '../../types/api/file-sharing';
@@ -34,7 +36,7 @@ type RequestParameters = FileSharing.DownloadFileParameters & {
   /**
    * Send file decryption module.
    */
-  crypto?: CryptoModule;
+  crypto?: ICryptoModule;
 
   /**
    * Legacy cryptography module.

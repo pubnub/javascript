@@ -1,4 +1,0 @@
-/**
- * Cbor decoder module.
- */
-export {};

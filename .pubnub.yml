@@ -1,5 +1,26 @@
 ---
 changelog:
+  - date: 2024-10-31
+    version: v8.2.10
+    changes:
+      - type: bug
+        text: "Fix `Actions` type definition."
+      - type: improvement
+        text: "Remove indexed signature for publish."
+      - type: improvement
+        text: "Add serializable objects to `Payload` type."
+      - type: improvement
+        text: "Aggregate generated types definitions."
+      - type: improvement
+        text: "Fix definition of type which represents message actions received from history and list of users which added action of specific type and value to the message."
+      - type: improvement
+        text: "Remove redundant indexed signature from publish message parameters type definition."
+      - type: improvement
+        text: "Extend `Payload` type definition with objects which can be serialized by `JSON.stringify` using `toJSON()` methods."
+      - type: improvement
+        text: "Aggregate multiple types definitions into single type definition type with proper type names and namespaces."
+      - type: improvement
+        text: "Add the Subscribe Event Engine and Event Listener types to the bundled types definition file."
   - date: 2024-10-25
     version: v8.2.9
     changes:
@@ -1041,7 +1062,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '8.2.9'
+version: '8.2.10'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1057,7 +1078,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.2.9.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.2.10.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1728,7 +1749,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v8.2.9/pubnub.8.2.9.js
+            location: https://github.com/pubnub/javascript/releases/download/v8.2.10/pubnub.8.2.10.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

@@ -1,4 +1,10 @@
 /**
+ * CBOR support module.
+ *
+ * @internal
+ */
+
+/**
  * Re-map CBOR object keys from potentially C buffer strings to actual strings.
  *
  * @param obj CBOR which should be remapped to stringified keys.

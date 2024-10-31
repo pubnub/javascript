@@ -1,3 +1,9 @@
+/**
+ * Failed to heartbeat state module.
+ *
+ * @internal
+ */
+
 import { State } from '../../core/state';
 import { Events, disconnect, heartbeatFailure, heartbeatSuccess, joined, left, leftAll, reconnect } from '../events';
 import { Effects, heartbeat, leave } from '../effects';
@@ -5,11 +11,24 @@ import { HeartbeatingState } from './heartbeating';
 import { HeartbeatStoppedState } from './heartbeat_stopped';
 import { HeartbeatInactiveState } from './heartbeat_inactive';
 
+/**
+ * Context which represent current Presence Event Engine data state.
+ *
+ * @internal
+ */
 export type HeartbeatFailedStateContext = {
   channels: string[];
   groups: string[];
 };
 
+/**
+ * Failed to heartbeat state.
+ *
+ * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
+ * exhausted.
+ *
+ * @internal
+ */
 export const HeartbeatFailedState = new State<HeartbeatFailedStateContext, Events, Effects>('HEARTBEAT_FAILED');
 
 HeartbeatFailedState.on(joined.type, (context, event) =>

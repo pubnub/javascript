@@ -1,3 +1,9 @@
+/**
+ * Base64 support module.
+ *
+ * @internal
+ */
+
 const BASE64_CHARMAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
 
 /**

@@ -1,3 +1,9 @@
+/**
+ * Network request module.
+ *
+ * @internal
+ */
+
 import { CancellationController, TransportMethod, TransportRequest } from '../types/transport-request';
 import { TransportResponse } from '../types/transport-response';
 import RequestOperation from '../constants/operations';

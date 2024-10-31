@@ -1,11 +1,13 @@
 /**
  * Fetch messages REST API module.
+ *
+ * @internal
  */
 
 import { createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
 import { PubNubAPIError } from '../../errors/pubnub-api-error';
-import { CryptoModule } from '../interfaces/crypto-module';
+import { ICryptoModule } from '../interfaces/crypto-module';
 import { AbstractRequest } from '../components/request';
 import * as FileSharing from '../types/api/file-sharing';
 import RequestOperation from '../constants/operations';
@@ -67,7 +69,7 @@ type RequestParameters = History.FetchMessagesParameters & {
   /**
    * Published data encryption module.
    */
-  crypto?: CryptoModule;
+  crypto?: ICryptoModule;
 
   /**
    * File download Url generation function.

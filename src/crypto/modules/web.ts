@@ -1,23 +1,18 @@
-/* global crypto */
 /**
  * Legacy browser cryptography module.
+ *
+ * @internal
  */
+/* global crypto */
 
 import { PubNubFile, PubNubFileParameters } from '../../file/modules/web';
 import { Cryptography } from '../../core/interfaces/cryptography';
 import { PubNubFileConstructor } from '../../core/types/file';
 
-function concatArrayBuffer(ab1: ArrayBuffer, ab2: ArrayBuffer) {
-  const tmp = new Uint8Array(ab1.byteLength + ab2.byteLength);
-
-  tmp.set(new Uint8Array(ab1), 0);
-  tmp.set(new Uint8Array(ab2), ab1.byteLength);
-
-  return tmp.buffer;
-}
-
 /**
  * Legacy cryptography implementation for browser-based {@link PubNub} client.
+ *
+ * @internal
  */
 export default class WebCryptography implements Cryptography<ArrayBuffer | string> {
   /**
@@ -70,7 +65,7 @@ export default class WebCryptography implements Cryptography<ArrayBuffer | strin
   private async encryptArrayBuffer(key: CryptoKey, buffer: ArrayBuffer) {
     const abIv = crypto.getRandomValues(new Uint8Array(16));
 
-    return concatArrayBuffer(abIv.buffer, await crypto.subtle.encrypt({ name: 'AES-CBC', iv: abIv }, key, buffer));
+    return this.concatArrayBuffer(abIv.buffer, await crypto.subtle.encrypt({ name: 'AES-CBC', iv: abIv }, key, buffer));
   }
 
   /**
@@ -87,7 +82,7 @@ export default class WebCryptography implements Cryptography<ArrayBuffer | strin
     const abPlaintext = WebCryptography.encoder.encode(text).buffer;
     const abPayload = await crypto.subtle.encrypt({ name: 'AES-CBC', iv: abIv }, key, abPlaintext);
 
-    const ciphertext = concatArrayBuffer(abIv.buffer, abPayload);
+    const ciphertext = this.concatArrayBuffer(abIv.buffer, abPayload);
 
     return WebCryptography.decoder.decode(ciphertext);
   }
@@ -228,6 +223,23 @@ export default class WebCryptography implements Cryptography<ArrayBuffer | strin
     const abKey = WebCryptography.encoder.encode(hashHex.slice(0, 32)).buffer;
 
     return crypto.subtle.importKey('raw', abKey, 'AES-CBC', true, ['encrypt', 'decrypt']);
+  }
+
+  /**
+   * Join two `ArrayBuffer`s.
+   *
+   * @param ab1 - `ArrayBuffer` to which other buffer should be appended.
+   * @param ab2 - `ArrayBuffer` which should appended to the other buffer.
+   *
+   * @returns Buffer which starts with `ab1` elements and appended `ab2`.
+   */
+  private concatArrayBuffer(ab1: ArrayBuffer, ab2: ArrayBuffer) {
+    const tmp = new Uint8Array(ab1.byteLength + ab2.byteLength);
+
+    tmp.set(new Uint8Array(ab1), 0);
+    tmp.set(new Uint8Array(ab2), ab1.byteLength);
+
+    return tmp.buffer;
   }
   // endregion
 }

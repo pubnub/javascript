@@ -4,7 +4,7 @@
 
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
 import { RequestRetryPolicy } from '../../event-engine/core/retryPolicy';
-import { CryptoModule } from './crypto-module';
+import { ICryptoModule } from './crypto-module';
 import { KeySet, Payload } from '../types/api';
 import { PubNubError } from '../../errors/pubnub-error';
 
@@ -402,7 +402,7 @@ export type PlatformConfiguration = {
    *
    * @default `not set`
    */
-  cryptoModule?: CryptoModule;
+  cryptoModule?: ICryptoModule;
 
   /**
    * Platform-specific file representation
@@ -571,7 +571,7 @@ export interface PrivateClientConfiguration
    *
    * @returns Data processing crypto module (if set).
    */
-  getCryptoModule(): CryptoModule | undefined;
+  getCryptoModule(): ICryptoModule | undefined;
 
   /**
    * Retrieve user's presence timeout.
@@ -741,13 +741,19 @@ export const setDefaults = (configuration: UserConfiguration): ExtendedConfigura
   let announceFailedHeartbeats = ANNOUNCE_HEARTBEAT_FAILURE;
   let fileUploadPublishRetryLimit = FILE_PUBLISH_RETRY_LIMIT;
   let dedupeOnSubscribe = DEDUPE_ON_SUBSCRIBE;
-  const maximumCacheSize = DEDUPE_CACHE_SIZE;
+  let maximumCacheSize = DEDUPE_CACHE_SIZE;
   let useRequestId = USE_REQUEST_ID;
 
   // @ts-expect-error Not documented legacy configuration options.
   if (configurationCopy.dedupeOnSubscribe !== undefined && typeof configurationCopy.dedupeOnSubscribe === 'boolean') {
     // @ts-expect-error Not documented legacy configuration options.
     dedupeOnSubscribe = configurationCopy.dedupeOnSubscribe;
+  }
+
+  // @ts-expect-error Not documented legacy configuration options.
+  if (configurationCopy.maximumCacheSize !== undefined && typeof configurationCopy.maximumCacheSize === 'number') {
+    // @ts-expect-error Not documented legacy configuration options.
+    maximumCacheSize = configurationCopy.maximumCacheSize;
   }
 
   // @ts-expect-error Not documented legacy configuration options.

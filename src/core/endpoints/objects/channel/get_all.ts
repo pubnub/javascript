@@ -1,5 +1,7 @@
 /**
  * Get All Channel Metadata REST API module.
+ *
+ * @internal
  */
 
 import { createValidationError, PubNubError } from '../../../../errors/pubnub-error';

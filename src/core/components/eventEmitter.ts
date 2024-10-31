@@ -1,3 +1,9 @@
+/**
+ * Real-time events emitter module.
+ *
+ * @internal
+ */
+
 import { Listener, ListenerManager } from './listener_manager';
 import * as Subscription from '../types/api/subscription';
 import { PubNubEventType } from '../endpoints/subscribe';

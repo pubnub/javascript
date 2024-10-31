@@ -6,7 +6,7 @@ import { createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
 import { AbstractRequest } from '../components/request';
 import RequestOperation from '../constants/operations';
-import { KeySet, Payload } from '../types/api';
+import { KeySet, Payload, Query } from '../types/api';
 import { encodeString } from '../utils';
 
 // --------------------------------------------------------

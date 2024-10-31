@@ -19,17 +19,47 @@ import * as AppContext from './types/api/app-context';
 import { ChannelMetadataObject } from './types/api/app-context';
 import { SetUUIDMetadataRequest } from './endpoints/objects/uuid/set';
 
+/**
+ * PubNub App Context API interface.
+ */
 export default class PubNubObjects {
   /**
+   * Extended PubNub client configuration object.
+   *
+   * @internal
+   */
+  private readonly configuration: PrivateClientConfiguration;
+
+  /* eslint-disable  @typescript-eslint/no-explicit-any */
+  /**
+   * Function which should be used to send REST API calls.
+   *
+   * @internal
+   */
+  private readonly sendRequest: SendRequestFunction<any>;
+  /**
    * REST API endpoints access credentials.
+   *
+   * @internal
    */
   private readonly keySet: KeySet;
+
+  /**
+   * Create app context API access object.
+   *
+   * @param configuration - Extended PubNub client configuration object.
+   * @param sendRequest - Function which should be used to send REST API calls.
+   *
+   * @internal
+   */
   constructor(
-    private readonly configuration: PrivateClientConfiguration,
+    configuration: PrivateClientConfiguration,
     /* eslint-disable  @typescript-eslint/no-explicit-any */
-    private readonly sendRequest: SendRequestFunction<any>,
+    sendRequest: SendRequestFunction<any>,
   ) {
     this.keySet = configuration.keySet;
+    this.configuration = configuration;
+    this.sendRequest = sendRequest;
   }
 
   // --------------------------------------------------------
@@ -89,11 +119,12 @@ export default class PubNubObjects {
   /**
    * Fetch a paginated list of UUID Metadata objects.
    *
-   *
    * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
    * @param [callback] - Request completion handler callback.
    *
    * @returns Asynchronous get all UUID metadata response or `void` in case if `callback` provided.
+   *
+   * @internal
    */
   async _getAllUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parametersOrCallback?:
@@ -169,6 +200,8 @@ export default class PubNubObjects {
    * @param [callback] - Request completion handler callback.
    *
    * @returns Asynchronous get UUID metadata response or `void` in case if `callback` provided.
+   *
+   * @internal
    */
   async _getUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parametersOrCallback?:
@@ -233,6 +266,8 @@ export default class PubNubObjects {
 
   /**
    * Update specific UUID Metadata object.
+   *
+   * @internal
    *
    * @param parameters - Request configuration parameters. Will set UUID metadata for currently
    * configured PubNub client `uuid` if not set.
@@ -305,6 +340,8 @@ export default class PubNubObjects {
 
   /**
    * Remove a specific UUID Metadata object.
+   *
+   * @internal
    *
    * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
    * @param [callback] - Request completion handler callback.
@@ -390,6 +427,8 @@ export default class PubNubObjects {
   /**
    * Fetch a paginated list of Channel Metadata objects.
    *
+   * @internal
+   *
    * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
    * @param [callback] - Request completion handler callback.
    *
@@ -453,6 +492,8 @@ export default class PubNubObjects {
   /**
    * Fetch Channel Metadata object.
    *
+   * @internal
+   *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
@@ -509,6 +550,8 @@ export default class PubNubObjects {
 
   /**
    * Update specific Channel Metadata object.
+   *
+   * @internal
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -567,6 +610,8 @@ export default class PubNubObjects {
 
   /**
    * Remove a specific Channel Metadata object.
+   *
+   * @internal
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -1065,7 +1110,6 @@ export default class PubNubObjects {
         uuids:
           spaceParameters.users?.map((user) => {
             if (typeof user === 'string') return user;
-            user.userId;
             return { id: user.userId, custom: user.custom };
           }) ?? spaceParameters.uuids,
         limit: 0,
