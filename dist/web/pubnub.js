@@ -435,7 +435,7 @@
 	OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 	PERFORMANCE OF THIS SOFTWARE.
 	***************************************************************************** */
-	/* global Reflect, Promise, SuppressedError, Symbol */
+	/* global Reflect, Promise, SuppressedError, Symbol, Iterator */
 
 
 	function __rest(s, e) {
@@ -3311,7 +3311,7 @@
 	 */
 	const encodeNames = (names, defaultString) => {
 	    const encodedNames = names.map((name) => encodeString(name));
-	    return encodedNames.length ? encodedNames.join(',') : defaultString !== null && defaultString !== void 0 ? defaultString : '';
+	    return encodedNames.length ? encodedNames.join(',') : (defaultString !== null && defaultString !== void 0 ? defaultString : '');
 	};
 	/**
 	 * @internal
@@ -3948,7 +3948,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.2.9';
+	            return '8.2.10';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -7034,7 +7034,7 @@
 	                }
 	            }
 	        })));
-	        this.on(leave.type, asyncHandler((payload_2, _2, _b) => __awaiter(this, [payload_2, _2, _b], void 0, function* (payload, _, { leave, config }) {
+	        this.on(leave.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { leave, config }) {
 	            if (!config.suppressLeaveEvents) {
 	                try {
 	                    leave({
@@ -7045,13 +7045,13 @@
 	                catch (e) { }
 	            }
 	        })));
-	        this.on(wait.type, asyncHandler((_3, abortSignal_1, _c) => __awaiter(this, [_3, abortSignal_1, _c], void 0, function* (_, abortSignal, { heartbeatDelay }) {
+	        this.on(wait.type, asyncHandler((_1, abortSignal_1, _a) => __awaiter(this, [_1, abortSignal_1, _a], void 0, function* (_, abortSignal, { heartbeatDelay }) {
 	            abortSignal.throwIfAborted();
 	            yield heartbeatDelay();
 	            abortSignal.throwIfAborted();
 	            return engine.transition(timesUp());
 	        })));
-	        this.on(delayedHeartbeat.type, asyncHandler((payload_3, abortSignal_2, _d) => __awaiter(this, [payload_3, abortSignal_2, _d], void 0, function* (payload, abortSignal, { heartbeat, retryDelay, presenceState, config }) {
+	        this.on(delayedHeartbeat.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { heartbeat, retryDelay, presenceState, config }) {
 	            if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
 	                abortSignal.throwIfAborted();
 	                yield retryDelay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
@@ -7072,9 +7072,9 @@
 	                return engine.transition(heartbeatGiveup());
 	            }
 	        })));
-	        this.on(emitStatus$1.type, asyncHandler((payload_4, _4, _e) => __awaiter(this, [payload_4, _4, _e], void 0, function* (payload, _, { emitStatus, config }) {
-	            var _f;
-	            if (config.announceFailedHeartbeats && ((_f = payload === null || payload === void 0 ? void 0 : payload.status) === null || _f === void 0 ? void 0 : _f.error) === true) {
+	        this.on(emitStatus$1.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitStatus, config }) {
+	            var _b;
+	            if (config.announceFailedHeartbeats && ((_b = payload === null || payload === void 0 ? void 0 : payload.status) === null || _b === void 0 ? void 0 : _b.error) === true) {
 	                emitStatus(payload.status);
 	            }
 	            else if (config.announceSuccessfulHeartbeats && payload.statusCode === 200) {
@@ -7639,7 +7639,7 @@
 	                }
 	            }
 	        })));
-	        this.on(receiveMessages.type, asyncHandler((payload_2, abortSignal_2, _b) => __awaiter(this, [payload_2, abortSignal_2, _b], void 0, function* (payload, abortSignal, { receiveMessages, config }) {
+	        this.on(receiveMessages.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { receiveMessages, config }) {
 	            abortSignal.throwIfAborted();
 	            try {
 	                const result = yield receiveMessages({
@@ -7661,15 +7661,15 @@
 	                }
 	            }
 	        })));
-	        this.on(emitMessages.type, asyncHandler((payload_3, _1, _c) => __awaiter(this, [payload_3, _1, _c], void 0, function* (payload, _, { emitMessages }) {
+	        this.on(emitMessages.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitMessages }) {
 	            if (payload.length > 0) {
 	                emitMessages(payload);
 	            }
 	        })));
-	        this.on(emitStatus.type, asyncHandler((payload_4, _2, _d) => __awaiter(this, [payload_4, _2, _d], void 0, function* (payload, _, { emitStatus }) {
+	        this.on(emitStatus.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitStatus }) {
 	            emitStatus(payload);
 	        })));
-	        this.on(receiveReconnect.type, asyncHandler((payload_5, abortSignal_3, _e) => __awaiter(this, [payload_5, abortSignal_3, _e], void 0, function* (payload, abortSignal, { receiveMessages, delay, config }) {
+	        this.on(receiveReconnect.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { receiveMessages, delay, config }) {
 	            if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
 	                abortSignal.throwIfAborted();
 	                yield delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
@@ -7699,7 +7699,7 @@
 	                    : 'Unable to complete subscribe messages receive.')));
 	            }
 	        })));
-	        this.on(handshakeReconnect.type, asyncHandler((payload_6, abortSignal_4, _f) => __awaiter(this, [payload_6, abortSignal_4, _f], void 0, function* (payload, abortSignal, { handshake, delay, presenceState, config }) {
+	        this.on(handshakeReconnect.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { handshake, delay, presenceState, config }) {
 	            if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
 	                abortSignal.throwIfAborted();
 	                yield delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
@@ -7756,7 +7756,7 @@
 	        groups: event.payload.groups,
 	        cursor: {
 	            timetoken: event.payload.cursor.timetoken,
-	            region: event.payload.cursor.region ? event.payload.cursor.region : (_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0,
+	            region: event.payload.cursor.region ? event.payload.cursor.region : ((_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0),
 	        },
 	    });
 	});
@@ -12384,7 +12384,6 @@
 	                    uuids: (_c = (_b = spaceParameters.users) === null || _b === void 0 ? void 0 : _b.map((user) => {
 	                        if (typeof user === 'string')
 	                            return user;
-	                        user.userId;
 	                        return { id: user.userId, custom: user.custom };
 	                    })) !== null && _c !== void 0 ? _c : spaceParameters.uuids,
 	                    limit: 0,
