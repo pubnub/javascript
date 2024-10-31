@@ -3,14 +3,7 @@ import { expect } from 'chai';
 
 import { AccessManagerKeyset } from '../shared/keysets';
 import { PubNub, PubNubManager } from '../shared/pubnub';
-import {
-  tokenWithKnownAuthorizedUUID,
-  tokenWithUUIDPatternPermissions,
-  tokenWithUUIDResourcePermissions,
-} from '../shared/fixtures';
-import { ResourceType, AccessPermission } from '../shared/enums';
 
-import { ParsedGrantToken } from 'pubnub';
 import { exists } from '../shared/helpers';
 
 @binding([PubNubManager, AccessManagerKeyset])

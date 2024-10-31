@@ -1,11 +1,13 @@
 import { after, binding, given, then, when } from 'cucumber-tsflow';
 import { DemoKeyset } from '../shared/keysets';
 import { PubNub, PubNubManager } from '../shared/pubnub';
-import type { MessageEvent, PresenceEvent, StatusEvent } from 'pubnub';
+
+// import type { MessageEvent, PresenceEvent, StatusEvent } from 'pubnub';
 import type { Change } from '../../../src/event-engine/core/change';
 import { DataTable } from '@cucumber/cucumber';
 import { expect } from 'chai';
 import PubNubClass from '../../../lib/node/index.js';
+import { Subscription, StatusEvent } from '../../../lib/types';
 
 function logChangelog(changelog: Change<any, any>) {
   switch (changelog.type) {
@@ -30,9 +32,9 @@ function logChangelog(changelog: Change<any, any>) {
 class EventEngineSteps {
   private pubnub?: PubNub;
 
-  private messagePromise?: Promise<MessageEvent>;
+  private messagePromise?: Promise<Subscription.MessageEvent>;
   private statusPromise?: Promise<StatusEvent>;
-  private presencePromise?: Promise<PresenceEvent>;
+  private presencePromise?: Promise<Subscription.PresenceEvent>;
   private changelog: Change<any, any>[] = [];
   private configuration: any = {};
 
@@ -89,7 +91,7 @@ class EventEngineSteps {
     });
 
     this.statusPromise = new Promise<StatusEvent>((resolveStatus) => {
-      this.presencePromise = new Promise<PresenceEvent>((resolvePresence) => {
+      this.presencePromise = new Promise<Subscription.PresenceEvent>((resolvePresence) => {
         this.pubnub?.addListener({
           presence(presenceEvent) {
             resolvePresence(presenceEvent);
@@ -170,7 +172,7 @@ class EventEngineSteps {
   @when('I subscribe')
   async whenISubscribe() {
     this.statusPromise = new Promise<StatusEvent>((resolveStatus) => {
-      this.messagePromise = new Promise<MessageEvent>((resolveMessage) => {
+      this.messagePromise = new Promise<Subscription.MessageEvent>((resolveMessage) => {
         this.pubnub?.addListener({
           message(messageEvent) {
             setTimeout(() => resolveMessage(messageEvent), 100);
@@ -188,7 +190,7 @@ class EventEngineSteps {
   @when(/I subscribe with timetoken (\d*)/)
   async whenISubscribeWithTimetoken(timetoken: number) {
     this.statusPromise = new Promise<StatusEvent>((resolveStatus) => {
-      this.messagePromise = new Promise<MessageEvent>((resolveMessage) => {
+      this.messagePromise = new Promise<Subscription.MessageEvent>((resolveMessage) => {
         this.pubnub?.addListener({
           message(messageEvent) {
             setTimeout(() => resolveMessage(messageEvent), 100);

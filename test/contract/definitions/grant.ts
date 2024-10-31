@@ -11,17 +11,17 @@ import {
 } from '../shared/fixtures';
 import { ResourceType, AccessPermission } from '../shared/enums';
 
-import { ParsedGrantToken, GrantTokenParameters } from 'pubnub';
 import { exists } from '../shared/helpers';
+import { PAM } from '../../../lib/types';
 
 @binding([PubNubManager, AccessManagerKeyset])
 class GrantTokenSteps {
   private pubnub?: PubNub;
 
   private token?: string;
-  private parsedToken?: ParsedGrantToken;
+  private parsedToken?: PAM.Token;
 
-  private grantParams: Partial<GrantTokenParameters> = {};
+  private grantParams: Partial<PAM.GrantTokenParameters> = {};
 
   private resourceName?: string;
   private resourceType?: ResourceType;
@@ -133,7 +133,7 @@ class GrantTokenSteps {
   public async grantToken() {
     exists(this.grantParams);
 
-    const params = this.grantParams as GrantTokenParameters;
+    const params = this.grantParams as PAM.GrantTokenParameters;
 
     const token = await this.pubnub?.grantToken(params);
 

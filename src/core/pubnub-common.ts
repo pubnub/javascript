@@ -2026,7 +2026,7 @@ export class PubNubCore<
    *
    * @returns Token's permissions information for the resources.
    */
-  public parseToken(token: string) {
+  public parseToken(token: string): PAM.Token | undefined {
     return this.tokenManager && this.tokenManager.parseToken(token);
   }
   // endregion
