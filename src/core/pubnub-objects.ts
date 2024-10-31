@@ -1110,7 +1110,6 @@ export default class PubNubObjects {
         uuids:
           spaceParameters.users?.map((user) => {
             if (typeof user === 'string') return user;
-            user.userId;
             return { id: user.userId, custom: user.custom };
           }) ?? spaceParameters.uuids,
         limit: 0,

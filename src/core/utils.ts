@@ -34,7 +34,7 @@ export const encodeString = (input: string | number) => {
  */
 export const encodeNames = (names: string[], defaultString?: string) => {
   const encodedNames = names.map((name) => encodeString(name));
-  return encodedNames.length ? encodedNames.join(',') : defaultString ?? '';
+  return encodedNames.length ? encodedNames.join(',') : (defaultString ?? '');
 };
 
 /**
