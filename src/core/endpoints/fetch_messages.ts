@@ -128,6 +128,11 @@ type ServiceResponse = {
       uuid?: string;
 
       /**
+       * User-provided message type.
+       */
+      custom_message_type?: string;
+
+      /**
        * PubNub-defined message type.
        */
       message_type?: History.PubNubMessageType | null;
@@ -232,6 +237,7 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
           timetoken: payload.timetoken,
           message: processedPayload.payload,
           messageType: payload.message_type,
+          ...(payload.custom_message_type ? { customMessageType: payload.custom_message_type } : {}),
           uuid: payload.uuid,
         };
 
@@ -269,7 +275,16 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
   }
 
   protected get queryParameters(): Query {
-    const { start, end, count, includeMessageType, includeMeta, includeUUID, stringifiedTimeToken } = this.parameters;
+    const {
+      start,
+      end,
+      count,
+      includeCustomMessageType,
+      includeMessageType,
+      includeMeta,
+      includeUUID,
+      stringifiedTimeToken,
+    } = this.parameters;
 
     return {
       max: count!,
@@ -278,6 +293,9 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
       ...(stringifiedTimeToken! ? { string_message_token: 'true' } : {}),
       ...(includeMeta !== undefined && includeMeta ? { include_meta: 'true' } : {}),
       ...(includeUUID! ? { include_uuid: 'true' } : {}),
+      ...(includeCustomMessageType !== undefined && includeCustomMessageType !== null
+        ? { include_custom_message_type: includeCustomMessageType ? 'true' : 'false' }
+        : {}),
       ...(includeMessageType! ? { include_message_type: 'true' } : {}),
     };
   }

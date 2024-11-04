@@ -488,9 +488,9 @@ type Envelope = {
   u?: { [p: string]: Payload };
 
   /**
-   * User provided message type (set only when `publish` called with `type`).
+   * User-provided message type (set only when `publish` called with `type`).
    */
-  mt?: string;
+  cmt?: string;
 
   /**
    * Identifier of space into which message has been published (set only when `publish` called
@@ -739,6 +739,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     };
 
     if (envelope.u) event.userMetadata = envelope.u;
+    if (envelope.cmt) event.customMessageType = envelope.cmt;
     if (decryptionError) event.error = decryptionError;
 
     return event;
@@ -756,6 +757,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     };
 
     if (envelope.u) event.userMetadata = envelope.u;
+    if (envelope.cmt) event.customMessageType = envelope.cmt;
 
     return event;
   }
@@ -816,6 +818,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       }
     }
 
+    if (envelope.cmt) event.customMessageType = envelope.cmt;
     if (errorMessage) event.error = errorMessage;
 
     return event;

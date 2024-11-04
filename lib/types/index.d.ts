@@ -4765,6 +4765,10 @@ declare namespace PubNub {
         [p: string]: Payload;
       };
       /**
+       * User-provided message type.
+       */
+      customMessageType?: string;
+      /**
        * Sent data.
        */
       message: Payload;
@@ -6087,6 +6091,13 @@ declare namespace PubNub {
        */
       message: Payload;
       /**
+       * User-specified message type.
+       *
+       * **Important:** string limited by **3**-**50** case-sensitive alphanumeric characters with only
+       * `-` and `_` special characters allowed.
+       */
+      customMessageType?: string;
+      /**
        * Whether published data should be available with `Storage API` later or not.
        *
        * @default `true`
@@ -6150,6 +6161,13 @@ declare namespace PubNub {
        * The message may be any valid JSON type including objects, arrays, strings, and numbers.
        */
       message: Payload;
+      /**
+       * User-specified message type.
+       *
+       * **Important:** string limited by **3**-**50** case-sensitive alphanumeric characters with only
+       * `-` and `_` special characters allowed.
+       */
+      customMessageType?: string;
     };
 
     /**
@@ -6566,6 +6584,10 @@ declare namespace PubNub {
        * PubNub-defined message type.
        */
       messageType?: PubNubMessageType.Message;
+      /**
+       * User-provided message type.
+       */
+      customMessageType?: string;
     };
 
     /**
@@ -6610,6 +6632,10 @@ declare namespace PubNub {
        * PubNub-defined message type.
        */
       messageType?: PubNubMessageType.Files;
+      /**
+       * User-provided message type.
+       */
+      customMessageType?: string;
     };
 
     /**
@@ -6652,6 +6678,12 @@ declare namespace PubNub {
        * @default `100` or `25`
        */
       count?: number;
+      /**
+       * Include messages' custom type flag.
+       *
+       * Message / signal and file messages may contain user-provided type.
+       */
+      includeCustomMessageType?: boolean;
       /**
        * Whether message type should be returned with each history message or not.
        *
@@ -7194,6 +7226,13 @@ declare namespace PubNub {
        * File annotation message.
        */
       message?: Payload;
+      /**
+       * User-specified message type.
+       *
+       * **Important:** string limited by **3**-**50** case-sensitive alphanumeric characters with only
+       * `-` and `_` special characters allowed.
+       */
+      customMessageType?: string;
       /**
        * Custom file and message encryption key.
        *

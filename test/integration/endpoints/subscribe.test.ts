@@ -229,13 +229,14 @@ describe('subscribe endpoints', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"146075779609322","r":1},"m":[{"a":"4","f":0,"i":"test","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"c1","d":{"text":"customttresponse"},"b":"c1"}]}',
+        '{"t":{"t":"146075779609322","r":1},"m":[{"a":"4","f":0,"cmt":"test-message-type","i":"test","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"c1","d":{"text":"customttresponse"},"b":"c1"}]}',
         { 'content-type': 'text/javascript' },
       );
 
     pubnubWithEE.addListener({
       message(message) {
         try {
+          assert.equal(message.customMessageType, 'test-message-type');
           assert.deepEqual(message.message, { text: 'customttresponse' });
           assert.equal(scope.isDone(), true);
           done();
@@ -272,13 +273,62 @@ describe('subscribe endpoints', () => {
       })
       .reply(
         200,
-        '{"t":{"t":"14523669555221453","r":1},"m":[{"a":"3","f":0,"e":1,"i":"myUniqueUserId","p":{"t":"17200339136465528","r":41},"k":"mySubKey","c":"c1","d":"typing:start"}]}',
+        '{"t":{"t":"14523669555221453","r":1},"m":[{"a":"3","f":0,"e":1,"cmt":"test-message-type","i":"myUniqueUserId","p":{"t":"17200339136465528","r":41},"k":"mySubKey","c":"c1","d":"typing:start"}]}',
         { 'content-type': 'text/javascript' },
       );
 
     pubnubWithEE.addListener({
       signal(signal) {
         try {
+          assert.equal(signal.customMessageType, 'test-message-type');
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+    });
+
+    const channel = pubnubWithEE.channel('c1');
+    const subscription = channel.subscription();
+    subscription.subscribe();
+  });
+
+  it('file listener called for shared file', (done) => {
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/c1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: 0,
+      })
+      .reply(200, '{"t":{"t":"14523669555221452","r":1},"m":[]}', { 'content-type': 'text/javascript' });
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/c1/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: '14523669555221452',
+        tr: 1,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"14523669555221453","r":1},"m":[{"a":"3","f":0,"e":4,"cmt":"test-message-type","i":"myUniqueUserId","p":{"t":"17200339136465528","r":41},"k":"mySubKey","c":"c1","d":{"message":"Hello","file":{"id":"file-id","name":"file-name"}}}]}',
+        { 'content-type': 'text/javascript' },
+      );
+
+    pubnubWithEE.addListener({
+      file(sharedFile) {
+        try {
+          assert.equal(sharedFile.customMessageType, 'test-message-type');
+          assert.equal(sharedFile.message, 'Hello');
+          assert.notEqual(sharedFile.file, undefined);
+          assert(sharedFile.file !== undefined);
+          assert.equal(sharedFile.file.id, 'file-id');
+          assert.equal(sharedFile.file.name, 'file-name');
           done();
         } catch (error) {
           done(error);

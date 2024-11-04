@@ -29,6 +29,14 @@ export type SignalParameters = {
    * The message may be any valid JSON type including objects, arrays, strings, and numbers.
    */
   message: Payload;
+
+  /**
+   * User-specified message type.
+   *
+   * **Important:** string limited by **3**-**50** case-sensitive alphanumeric characters with only
+   * `-` and `_` special characters allowed.
+   */
+  customMessageType?: string;
 };
 
 /**
@@ -104,5 +112,14 @@ export class SignalRequest extends AbstractRequest<SignalResponse> {
     const stringifiedPayload = JSON.stringify(message);
 
     return `/signal/${publishKey}/${subscribeKey}/0/${encodeString(channel)}/0/${encodeString(stringifiedPayload)}`;
+  }
+
+  protected get queryParameters(): Query {
+    const { customMessageType } = this.parameters;
+    const query: Query = {};
+
+    if (customMessageType) query.custom_message_type = customMessageType;
+
+    return query;
   }
 }

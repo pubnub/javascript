@@ -209,6 +209,11 @@ export type RegularMessage = BaseFetchedMessage & {
    * PubNub-defined message type.
    */
   messageType?: PubNubMessageType.Message;
+
+  /**
+   * User-provided message type.
+   */
+  customMessageType?: string;
 };
 
 /**
@@ -259,6 +264,11 @@ export type FileMessage = BaseFetchedMessage & {
    * PubNub-defined message type.
    */
   messageType?: PubNubMessageType.Files;
+
+  /**
+   * User-provided message type.
+   */
+  customMessageType?: string;
 };
 
 /**
@@ -302,6 +312,13 @@ export type FetchMessagesParameters = {
    * @default `100` or `25`
    */
   count?: number;
+
+  /**
+   * Include messages' custom type flag.
+   *
+   * Message / signal and file messages may contain user-provided type.
+   */
+  includeCustomMessageType?: boolean;
 
   /**
    * Whether message type should be returned with each history message or not.

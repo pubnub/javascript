@@ -1,10 +1,12 @@
 /* global describe, beforeEach, afterEach, it, after */
 /* eslint no-console: 0 */
+/* eslint-disable max-len */
 
 import assert from 'assert';
 import nock from 'nock';
 
 import * as MessageActions from '../../../src/core/types/api/message-action';
+import * as Publish from '../../../src/core/endpoints/publish';
 import { Payload } from '../../../src/core/types/api';
 import PubNub from '../../../src/node/index';
 import utils from '../../utils';
@@ -21,30 +23,33 @@ type TestMessage = { messageIdx: string; time: number };
  * @param client - PubNub client instance which will be used to publish messages.
  * @param count - How many messages should be published.
  * @param channel - Name of the channel into which messages should be published.
+ * @param customMessageType - User-provided message type (ignored if empty).
  * @param completion - Messages set publish completion function.
  */
 function publishMessagesToChannel(
   client: PubNub,
   count: number,
   channel: string,
+  customMessageType: string,
   completion: (published: { message: TestMessage; timetoken: string }[]) => void,
 ) {
   let messages: { message: TestMessage; timetoken: string }[] = [];
   let publishCompleted = 0;
 
   const publish = (messageIdx: number) => {
-    let payload: { channel: string; message: TestMessage; meta?: Payload } = {
+    const payload: Publish.PublishParameters = {
       message: { messageIdx: [channel, messageIdx].join(': '), time: Date.now() },
       channel,
     };
 
-    if (messageIdx % 2 === 0) payload.meta = { time: payload.message.time };
+    if (customMessageType.length) payload.customMessageType = customMessageType;
+    if (messageIdx % 2 === 0) payload.meta = { time: (payload.message as TestMessage).time };
 
     client.publish(payload, (status, response) => {
       publishCompleted += 1;
 
       if (!status.error && response) {
-        messages.push({ message: payload.message, timetoken: response.timetoken });
+        messages.push({ message: payload.message as TestMessage, timetoken: response.timetoken });
         messages = messages.sort((left, right) => parseInt(left.timetoken, 10) - parseInt(right.timetoken, 10));
       } else {
         console.error('Publish did fail:', status);
@@ -91,7 +96,7 @@ function addActionsInChannel(
     PubNub.generateUUID(),
   ];
   let actions: MessageActions.MessageAction[] = [];
-  let actionsToAdd: {
+  const actionsToAdd: {
     messageTimetoken: string;
     action: Pick<MessageActions.AddMessageActionParameters['action'], 'type' | 'value'>;
   }[] = [];
@@ -317,7 +322,7 @@ describe('fetch messages endpoints', () => {
     const channel = PubNub.generateUUID();
     const expectedMessagesCount = 10;
 
-    publishMessagesToChannel(pubnub, expectedMessagesCount, channel, (messages) => {
+    publishMessagesToChannel(pubnub, expectedMessagesCount, channel, '', (messages) => {
       pubnub.fetchMessages({ channels: [channel], count: 25, includeMeta: true }, (_, response) => {
         try {
           assert(response !== null);
@@ -350,12 +355,36 @@ describe('fetch messages endpoints', () => {
     assert(errorCatched);
   });
 
+  it.only('supports custom message type', (done) => {
+    const channel = PubNub.generateUUID();
+    const expectedMessagesCount = 2;
+
+    publishMessagesToChannel(pubnub, expectedMessagesCount, channel, 'test-message-type', (messages) => {
+      const messageTimetokens = messages.map((message) => message.timetoken);
+
+      pubnub.fetchMessages({ channels: [channel], includeCustomMessageType: true }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          const fetchedMessages = response.channels[channel];
+          fetchedMessages.forEach((message) => {
+            assert.equal(message.customMessageType, 'test-message-type');
+          });
+
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
+  }).timeout(60000);
+
   it("supports actions (stored as 'data' field)", (done) => {
     const channel = PubNub.generateUUID();
     const expectedMessagesCount = 2;
     const expectedActionsCount = 4;
 
-    publishMessagesToChannel(pubnub, expectedMessagesCount, channel, (messages) => {
+    publishMessagesToChannel(pubnub, expectedMessagesCount, channel, '', (messages) => {
       const messageTimetokens = messages.map((message) => message.timetoken);
 
       addActionsInChannel(pubnub, expectedActionsCount, messageTimetokens, channel, (actions) => {
@@ -405,7 +434,7 @@ describe('fetch messages endpoints', () => {
     const expectedMessagesCount = 2;
     const expectedActionsCount = 4;
 
-    publishMessagesToChannel(pubnub, expectedMessagesCount, channel, (messages) => {
+    publishMessagesToChannel(pubnub, expectedMessagesCount, channel, '', (messages) => {
       const messageTimetokens = messages.map((message) => message.timetoken);
 
       addActionsInChannel(pubnub, expectedActionsCount, messageTimetokens, channel, (actions) => {
