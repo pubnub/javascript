@@ -1,3 +1,9 @@
+## v8.3.0
+November 14 2024
+
+#### Added
+- Add custom message type support for the following APIs: publish, signal, share file, subscribe and history.
+
 ## v8.2.10
 October 31 2024
 
