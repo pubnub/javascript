@@ -111,9 +111,10 @@ export class PublishFileMessageRequest extends AbstractRequest<FileSharing.Publi
   }
 
   protected get queryParameters(): Query {
-    const { storeInHistory, ttl, meta } = this.parameters;
+    const { customMessageType, storeInHistory, ttl, meta } = this.parameters;
     return {
       store: storeInHistory! ? '1' : '0',
+      ...(customMessageType ? { custom_message_type: customMessageType } : {}),
       ...(ttl ? { ttl } : {}),
       ...(meta && typeof meta === 'object' ? { meta: JSON.stringify(meta) } : {}),
     };

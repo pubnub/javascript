@@ -3948,7 +3948,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.2.10';
+	            return '8.3.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -6230,6 +6230,8 @@
 	        };
 	        if (envelope.u)
 	            event.userMetadata = envelope.u;
+	        if (envelope.cmt)
+	            event.customMessageType = envelope.cmt;
 	        if (decryptionError)
 	            event.error = decryptionError;
 	        return event;
@@ -6245,6 +6247,8 @@
 	        };
 	        if (envelope.u)
 	            event.userMetadata = envelope.u;
+	        if (envelope.cmt)
+	            event.customMessageType = envelope.cmt;
 	        return event;
 	    }
 	    messageActionFromEnvelope(envelope) {
@@ -6296,6 +6300,8 @@
 	                };
 	            }
 	        }
+	        if (envelope.cmt)
+	            event.customMessageType = envelope.cmt;
 	        if (errorMessage)
 	            event.error = errorMessage;
 	        return event;
@@ -8303,8 +8309,10 @@
 	        return `/publish/${keySet.publishKey}/${keySet.subscribeKey}/0/${encodeString(channel)}/0${!this.parameters.sendByPost ? `/${encodeString(stringifiedPayload)}` : ''}`;
 	    }
 	    get queryParameters() {
-	        const { meta, replicate, storeInHistory, ttl } = this.parameters;
+	        const { customMessageType, meta, replicate, storeInHistory, ttl } = this.parameters;
 	        const query = {};
+	        if (customMessageType)
+	            query.custom_message_type = customMessageType;
 	        if (storeInHistory !== undefined)
 	            query.store = storeInHistory ? '1' : '0';
 	        if (ttl !== undefined)
@@ -8379,6 +8387,13 @@
 	        const { keySet: { publishKey, subscribeKey }, channel, message, } = this.parameters;
 	        const stringifiedPayload = JSON.stringify(message);
 	        return `/signal/${publishKey}/${subscribeKey}/0/${encodeString(channel)}/0/${encodeString(stringifiedPayload)}`;
+	    }
+	    get queryParameters() {
+	        const { customMessageType } = this.parameters;
+	        const query = {};
+	        if (customMessageType)
+	            query.custom_message_type = customMessageType;
+	        return query;
 	    }
 	}
 
@@ -9151,13 +9166,7 @@
 	                    if (payload.message_type === null)
 	                        payload.message_type = PubNubMessageType.Message;
 	                    const processedPayload = this.processPayload(channel, payload);
-	                    const item = {
-	                        channel,
-	                        timetoken: payload.timetoken,
-	                        message: processedPayload.payload,
-	                        messageType: payload.message_type,
-	                        uuid: payload.uuid,
-	                    };
+	                    const item = Object.assign(Object.assign({ channel, timetoken: payload.timetoken, message: processedPayload.payload, messageType: payload.message_type }, (payload.custom_message_type ? { customMessageType: payload.custom_message_type } : {})), { uuid: payload.uuid });
 	                    if (payload.actions) {
 	                        const itemWithActions = item;
 	                        itemWithActions.actions = payload.actions;
@@ -9183,8 +9192,10 @@
 	        return `/v3/${endpoint}/sub-key/${subscribeKey}/channel/${encodeNames(channels)}`;
 	    }
 	    get queryParameters() {
-	        const { start, end, count, includeMessageType, includeMeta, includeUUID, stringifiedTimeToken } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ max: count }, (start ? { start } : {})), (end ? { end } : {})), (stringifiedTimeToken ? { string_message_token: 'true' } : {})), (includeMeta !== undefined && includeMeta ? { include_meta: 'true' } : {})), (includeUUID ? { include_uuid: 'true' } : {})), (includeMessageType ? { include_message_type: 'true' } : {}));
+	        const { start, end, count, includeCustomMessageType, includeMessageType, includeMeta, includeUUID, stringifiedTimeToken, } = this.parameters;
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ max: count }, (start ? { start } : {})), (end ? { end } : {})), (stringifiedTimeToken ? { string_message_token: 'true' } : {})), (includeMeta !== undefined && includeMeta ? { include_meta: 'true' } : {})), (includeUUID ? { include_uuid: 'true' } : {})), (includeCustomMessageType !== undefined && includeCustomMessageType !== null
+	            ? { include_custom_message_type: includeCustomMessageType ? 'true' : 'false' }
+	            : {})), (includeMessageType ? { include_message_type: 'true' } : {}));
 	    }
 	    /**
 	     * Parse single channel data entry.
@@ -9461,8 +9472,8 @@
 	        return `/v1/files/publish-file/${publishKey}/${subscribeKey}/0/${encodeString(channel)}/0/${encodeString(this.prepareMessagePayload(fileMessage))}`;
 	    }
 	    get queryParameters() {
-	        const { storeInHistory, ttl, meta } = this.parameters;
-	        return Object.assign(Object.assign({ store: storeInHistory ? '1' : '0' }, (ttl ? { ttl } : {})), (meta && typeof meta === 'object' ? { meta: JSON.stringify(meta) } : {}));
+	        const { customMessageType, storeInHistory, ttl, meta } = this.parameters;
+	        return Object.assign(Object.assign(Object.assign({ store: storeInHistory ? '1' : '0' }, (customMessageType ? { custom_message_type: customMessageType } : {})), (ttl ? { ttl } : {})), (meta && typeof meta === 'object' ? { meta: JSON.stringify(meta) } : {}));
 	    }
 	    /**
 	     * Pre-process provided data.

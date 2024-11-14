@@ -70,6 +70,34 @@ describe('signal endpoints', () => {
     });
   });
 
+  it('send signal with custom message type', (done) => {
+    const scope = utils
+      .createNock()
+      .get('/signal/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        auth: 'myAuthKey',
+        custom_message_type: 'test-message-type',
+      })
+      .reply(200, '[1,"Sent","14647523059145592"]', { 'content-type': 'text/javascript' });
+
+    pubnub.signal(
+      { message: { such: 'object' }, customMessageType: 'test-message-type', channel: 'ch1' },
+      (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.timetoken, '14647523059145592');
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+    );
+  });
+
   it('send signal and signal listener called', (done) => {
     const scope = utils
       .createNock()

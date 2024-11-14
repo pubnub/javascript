@@ -115,6 +115,11 @@ type PublishedData = {
   userMetadata?: { [p: string]: Payload };
 
   /**
+   * User-provided message type.
+   */
+  customMessageType?: string;
+
+  /**
    * Sent data.
    */
   message: Payload;

@@ -45,6 +45,14 @@ export type PublishParameters = {
   message: Payload;
 
   /**
+   * User-specified message type.
+   *
+   * **Important:** string limited by **3**-**50** case-sensitive alphanumeric characters with only
+   * `-` and `_` special characters allowed.
+   */
+  customMessageType?: string;
+
+  /**
    * Whether published data should be available with `Storage API` later or not.
    *
    * @default `true`
@@ -176,9 +184,10 @@ export class PublishRequest extends AbstractRequest<PublishResponse> {
   }
 
   protected get queryParameters(): Query {
-    const { meta, replicate, storeInHistory, ttl } = this.parameters;
+    const { customMessageType, meta, replicate, storeInHistory, ttl } = this.parameters;
     const query: Query = {};
 
+    if (customMessageType) query.custom_message_type = customMessageType;
     if (storeInHistory !== undefined) query.store = storeInHistory ? '1' : '0';
     if (ttl !== undefined) query.ttl = ttl;
     if (replicate !== undefined && !replicate) query.norep = 'true';

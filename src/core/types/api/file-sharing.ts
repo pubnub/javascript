@@ -289,6 +289,14 @@ export type PublishFileMessageParameters = {
   message?: Payload;
 
   /**
+   * User-specified message type.
+   *
+   * **Important:** string limited by **3**-**50** case-sensitive alphanumeric characters with only
+   * `-` and `_` special characters allowed.
+   */
+  customMessageType?: string;
+
+  /**
    * Custom file and message encryption key.
    *
    * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} configured for PubNub client

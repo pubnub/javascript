@@ -59,20 +59,24 @@ describe('publish endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         auth: 'myAuthKey',
+        custom_message_type: 'test-message-type',
       })
       .reply(200, '[1,"Sent","14647523059145592"]', { 'content-type': 'text/javascript' });
 
-    pubnub.publish({ message: { such: 'object' }, channel: 'ch1' }, (status, response) => {
-      try {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.timetoken, "14647523059145592");
-        assert.equal(scope.isDone(), true);
-        done();
-      } catch (error) {
-        done(error);
-      }
-    });
+    pubnub.publish(
+      { message: { such: 'object' }, customMessageType: 'test-message-type', channel: 'ch1' },
+      (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.timetoken, '14647523059145592');
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+    );
   });
 
   it('publishes without replication via GET', (done) => {
@@ -91,7 +95,7 @@ describe('publish endpoints', () => {
       try {
         assert.equal(status.error, false);
         assert(response !== null);
-        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.deepEqual(response.timetoken, '14647523059145592');
         assert.equal(scope.isDone(), true);
         done();
       } catch (error) {
@@ -117,7 +121,7 @@ describe('publish endpoints', () => {
       try {
         assert.equal(status.error, false);
         assert(response !== null);
-        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.deepEqual(response.timetoken, '14647523059145592');
         assert.equal(scope.isDone(), true);
         done();
       } catch (error) {
@@ -143,7 +147,7 @@ describe('publish endpoints', () => {
       try {
         assert.equal(status.error, false);
         assert(response !== null);
-        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.deepEqual(response.timetoken, '14647523059145592');
         assert.equal(scope.isDone(), true);
         done();
       } catch (error) {
@@ -170,7 +174,7 @@ describe('publish endpoints', () => {
       try {
         assert.equal(status.error, false);
         assert(response !== null);
-        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.deepEqual(response.timetoken, '14647523059145592');
         assert.equal(scope.isDone(), true);
         done();
       } catch (error) {
@@ -197,7 +201,34 @@ describe('publish endpoints', () => {
       try {
         assert.equal(status.error, false);
         assert(response !== null);
-        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.deepEqual(response.timetoken, '14647523059145592');
+        assert.equal(scope.isDone(), true);
+        done();
+      } catch (error) {
+        done(error);
+      }
+    });
+  });
+
+  it('supports customMessageType', (done) => {
+    const scope = utils
+      .createNock()
+      .get('/publish/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        auth: 'myAuthKey',
+        store: '0',
+      })
+      .reply(200, '[1,"Sent","14647523059145592"]', { 'content-type': 'text/javascript' });
+
+    pubnub.setCipherKey('myCipherKey');
+
+    pubnub.publish({ message: { such: 'object' }, channel: 'ch1', storeInHistory: false }, (status, response) => {
+      try {
+        assert.equal(status.error, false);
+        assert(response !== null);
+        assert.deepEqual(response.timetoken, '14647523059145592');
         assert.equal(scope.isDone(), true);
         done();
       } catch (error) {
@@ -221,7 +252,7 @@ describe('publish endpoints', () => {
       try {
         assert.equal(status.error, false);
         assert(response !== null);
-        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.deepEqual(response.timetoken, '14647523059145592');
         assert.equal(scope.isDone(), true);
         done();
       } catch (error) {
@@ -247,7 +278,7 @@ describe('publish endpoints', () => {
       try {
         assert.equal(status.error, false);
         assert(response !== null);
-        assert.deepEqual(response.timetoken, "14647523059145592");
+        assert.deepEqual(response.timetoken, '14647523059145592');
         assert.equal(scope.isDone(), true);
         done();
       } catch (error) {
@@ -274,7 +305,7 @@ describe('publish endpoints', () => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
-          assert.deepEqual(response.timetoken, "14647523059145592");
+          assert.deepEqual(response.timetoken, '14647523059145592');
           assert.equal(scope.isDone(), true);
           done();
         } catch (error) {
