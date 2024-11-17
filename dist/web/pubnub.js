@@ -6403,6 +6403,7 @@
 	     * @param event - Received real-time event.
 	     */
 	    emitEvent(event) {
+	        var _a;
 	        if (event.type === PubNubEventType.Message) {
 	            this.listenerManager.announceMessage(event.data);
 	            this.announce('message', event.data, event.data.channel, event.data.subscription);
@@ -6413,7 +6414,7 @@
 	        }
 	        else if (event.type === PubNubEventType.Presence) {
 	            this.listenerManager.announcePresence(event.data);
-	            this.announce('presence', event.data, event.data.channel, event.data.subscription);
+	            this.announce('presence', event.data, (_a = event.data.subscription) !== null && _a !== void 0 ? _a : event.data.channel, event.data.subscription);
 	        }
 	        else if (event.type === PubNubEventType.AppContext) {
 	            const { data: objectEvent } = event;
@@ -9963,7 +9964,7 @@
 	     * types of events.
 	     */
 	    addListener(listener) {
-	        this.eventEmitter.addListener(listener, this.channelNames.filter((c) => !c.endsWith('-pnpres')), this.groupNames.filter((cg) => !cg.endsWith('-pnpres')));
+	        this.eventEmitter.addListener(listener, this.channelNames, this.groupNames);
 	    }
 	    /**
 	     * Remove events handler.
@@ -10065,7 +10066,7 @@
 	            this.subscriptionList.push(subscription);
 	        });
 	        this.listener = {};
-	        eventEmitter.addListener(this.listener, this.channelNames.filter((c) => !c.endsWith('-pnpres')), this.groupNames.filter((cg) => !cg.endsWith('-pnpres')));
+	        eventEmitter.addListener(this.listener, this.channelNames, this.groupNames);
 	    }
 	    /**
 	     * Add additional entity's subscription to the subscription set.
@@ -10187,7 +10188,7 @@
 	        this.pubnub = pubnub;
 	        this.eventEmitter = eventEmitter;
 	        this.listener = {};
-	        eventEmitter.addListener(this.listener, this.channelNames.filter((c) => !c.endsWith('-pnpres')), this.groupNames.filter((cg) => !cg.endsWith('-pnpres')));
+	        eventEmitter.addListener(this.listener, this.channelNames, this.groupNames);
 	    }
 	    /**
 	     * Merge entities' subscription objects into subscription set.
@@ -10283,9 +10284,12 @@
 	     */
 	    subscription(subscriptionOptions) {
 	        {
+	            const channelGroups = [this.name];
+	            if ((subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) && !this.name.endsWith('-pnpres'))
+	                channelGroups.push(`${this.name}-pnpres`);
 	            return new Subscription({
 	                channels: [],
-	                channelGroups: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, `${this.name}-pnpres`] : [this.name],
+	                channelGroups,
 	                subscriptionOptions: subscriptionOptions,
 	                eventEmitter: this.eventEmitter,
 	                pubnub: this.pubnub,
@@ -10370,8 +10374,11 @@
 	     */
 	    subscription(subscriptionOptions) {
 	        {
+	            const channels = [this.name];
+	            if ((subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) && !this.name.endsWith('-pnpres'))
+	                channels.push(`${this.name}-pnpres`);
 	            return new Subscription({
-	                channels: (subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) ? [this.name, `${this.name}-pnpres`] : [this.name],
+	                channels,
 	                channelGroups: [],
 	                subscriptionOptions: subscriptionOptions,
 	                eventEmitter: this.eventEmitter,

@@ -45,7 +45,7 @@ export default class EventEmitter {
       this.announce('signal', event.data, event.data.channel, event.data.subscription);
     } else if (event.type === PubNubEventType.Presence) {
       this.listenerManager.announcePresence(event.data);
-      this.announce('presence', event.data, event.data.channel, event.data.subscription);
+      this.announce('presence', event.data, event.data.subscription ?? event.data.channel, event.data.subscription);
     } else if (event.type === PubNubEventType.AppContext) {
       const { data: objectEvent } = event;
       const { message: object } = objectEvent;

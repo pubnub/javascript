@@ -57,8 +57,12 @@ export class Channel {
    */
   subscription(subscriptionOptions?: SubscriptionOptions) {
     if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      const channels = [this.name];
+      if (subscriptionOptions?.receivePresenceEvents && !this.name.endsWith('-pnpres'))
+        channels.push(`${this.name}-pnpres`);
+
       return new Subscription({
-        channels: subscriptionOptions?.receivePresenceEvents ? [this.name, `${this.name}-pnpres`] : [this.name],
+        channels,
         channelGroups: [],
         subscriptionOptions: subscriptionOptions,
         eventEmitter: this.eventEmitter,

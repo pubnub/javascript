@@ -141,11 +141,7 @@ export abstract class SubscribeCapable {
    * types of events.
    */
   addListener(listener: Listener) {
-    this.eventEmitter.addListener(
-      listener,
-      this.channelNames.filter((c) => !c.endsWith('-pnpres')),
-      this.groupNames.filter((cg) => !cg.endsWith('-pnpres')),
-    );
+    this.eventEmitter.addListener(listener, this.channelNames, this.groupNames);
   }
 
   /**
