@@ -227,6 +227,7 @@ describe('publish endpoints', () => {
     pubnub.publish({ message: { such: 'object' }, channel: 'ch1', storeInHistory: false }, (status, response) => {
       try {
         assert.equal(status.error, false);
+        if (status.error) console.error(`Message publish error: ${JSON.stringify(status.errorData)}`);
         assert(response !== null);
         assert.deepEqual(response.timetoken, '14647523059145592');
         assert.equal(scope.isDone(), true);
