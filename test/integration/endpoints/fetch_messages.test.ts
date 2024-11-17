@@ -363,8 +363,7 @@ describe('fetch messages endpoints', () => {
       const messageTimetokens = messages.map((message) => message.timetoken);
 
       pubnub.fetchMessages({ channels: [channel], includeCustomMessageType: true }, (status, response) => {
-        if (status.error) console.error(`Fetch messages error: ${JSON.stringify(status.errorData)}`);
-        assert.equal(status.error, false);
+        assert.equal(status.error, false, `Fetch messages error: ${JSON.stringify(status.errorData)}`);
 
         try {
           assert.equal(status.error, false);
