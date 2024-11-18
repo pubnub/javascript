@@ -355,7 +355,7 @@ describe('fetch messages endpoints', () => {
     assert(errorCatched);
   });
 
-  it.only('supports custom message type', (done) => {
+  it('supports custom message type', (done) => {
     const channel = PubNub.generateUUID();
     const expectedMessagesCount = 2;
 
@@ -363,6 +363,8 @@ describe('fetch messages endpoints', () => {
       const messageTimetokens = messages.map((message) => message.timetoken);
 
       pubnub.fetchMessages({ channels: [channel], includeCustomMessageType: true }, (status, response) => {
+        assert.equal(status.error, false, `Fetch messages error: ${JSON.stringify(status.errorData)}`);
+
         try {
           assert.equal(status.error, false);
           assert(response !== null);

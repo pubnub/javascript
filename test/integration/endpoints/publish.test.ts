@@ -210,7 +210,7 @@ describe('publish endpoints', () => {
     });
   });
 
-  it('supports customMessageType', (done) => {
+  it.only('supports customMessageType', (done) => {
     const scope = utils
       .createNock()
       .get('/publish/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D')
@@ -219,22 +219,24 @@ describe('publish endpoints', () => {
         uuid: 'myUUID',
         auth: 'myAuthKey',
         store: '0',
+        custom_message_type: 'test-message-type',
       })
       .reply(200, '[1,"Sent","14647523059145592"]', { 'content-type': 'text/javascript' });
 
-    pubnub.setCipherKey('myCipherKey');
-
-    pubnub.publish({ message: { such: 'object' }, channel: 'ch1', storeInHistory: false }, (status, response) => {
-      try {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        assert.deepEqual(response.timetoken, '14647523059145592');
-        assert.equal(scope.isDone(), true);
-        done();
-      } catch (error) {
-        done(error);
-      }
-    });
+    pubnub.publish(
+      { message: { such: 'object' }, channel: 'ch1', storeInHistory: false, customMessageType: 'test-message-type' },
+      (status, response) => {
+        try {
+          assert.equal(status.error, false, `Message publish error: ${JSON.stringify(status.errorData)}`);
+          assert(response !== null);
+          assert.deepEqual(response.timetoken, '14647523059145592');
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+    );
   });
 
   it('publishes a complex object via POST', (done) => {

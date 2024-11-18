@@ -99,11 +99,7 @@ export class Subscription extends SubscribeCapable {
     this.pubnub = pubnub;
     this.eventEmitter = eventEmitter;
     this.listener = {};
-    eventEmitter.addListener(
-      this.listener,
-      this.channelNames.filter((c) => !c.endsWith('-pnpres')),
-      this.groupNames.filter((cg) => !cg.endsWith('-pnpres')),
-    );
+    eventEmitter.addListener(this.listener, this.channelNames, this.groupNames);
   }
 
   /**
