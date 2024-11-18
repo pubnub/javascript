@@ -1,3 +1,9 @@
+## v8.3.1
+November 18 2024
+
+#### Fixed
+- Fix issue because of which presence events not delivered to the `Subscription` and `SubscriptionSet` objects (only global listeners).
+
 ## v8.3.0
 November 14 2024
 
