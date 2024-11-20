@@ -19,6 +19,12 @@ import { ICryptoModule } from '../../core/interfaces/crypto-module';
 const LISTEN_TO_BROWSER_NETWORK_EVENTS = true;
 
 /**
+ * If set to `true`, SDK will attempt to destroy itself when the browser begins navigation via the beforeunload event.
+ * Fixes issues with Safari memory leaks when refreshing, or navigating away and returning with the browser back button.
+ */
+const CLEANUP_ON_BROWSER_NAVIGATION = false;
+
+/**
  * Whether verbose logging should be enabled for `Subscription` worker to print debug messages or not.
  */
 const SUBSCRIPTION_WORKER_LOG_VERBOSITY = false;
@@ -41,6 +47,16 @@ export type PubNubConfiguration = UserConfiguration & {
    * @default `true`
    */
   listenToBrowserNetworkEvents?: boolean;
+
+  /**
+   * If set to `true`, SDK will attempt to destroy itself when the browser begins navigation via the
+   * beforeunload event.
+   *
+   * This fixes issues with Safari memory leaks when refreshing, or navigating away and returning with the back button.
+   *
+   * @default `false`
+   */
+  cleanupOnNavigationEvent?: boolean;
 
   /**
    * Path to the hosted PubNub `Subscription` service worker.
@@ -116,6 +132,7 @@ export const setDefaults = (configuration: PubNubConfiguration): PubNubConfigura
     ...setBaseDefaults(configuration),
     // Set platform-specific options.
     listenToBrowserNetworkEvents: configuration.listenToBrowserNetworkEvents ?? LISTEN_TO_BROWSER_NETWORK_EVENTS,
+    cleanupOnNavigationEvent: configuration.cleanupOnNavigationEvent ?? CLEANUP_ON_BROWSER_NAVIGATION,
     subscriptionWorkerUrl: configuration.subscriptionWorkerUrl,
     subscriptionWorkerLogVerbosity: configuration.subscriptionWorkerLogVerbosity ?? SUBSCRIPTION_WORKER_LOG_VERBOSITY,
     keepAlive: configuration.keepAlive ?? KEEP_ALIVE,

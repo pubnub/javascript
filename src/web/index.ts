@@ -136,6 +136,12 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
         this.networkUpDetected();
       });
     }
+
+    if (configuration.cleanupOnNavigationEvent ?? false) {
+      window.addEventListener('beforeunload', () => {
+        this.destroy(true);
+      });
+    }
   }
 
   private networkDownDetected() {
