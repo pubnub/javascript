@@ -189,9 +189,6 @@ export class NodeTransport implements Transport {
    * @internal
    */
   private agentForTransportRequest(req: TransportRequest): HttpAgent | HttpsAgent | undefined {
-    // Don't configure any agents if keep alive not requested.
-    if (!this.keepAlive && !this.proxyConfiguration) return undefined;
-
     // Create proxy agent (if possible).
     if (this.proxyConfiguration)
       return this.proxyAgent ? this.proxyAgent : (this.proxyAgent = new ProxyAgent(this.proxyConfiguration));
@@ -199,11 +196,9 @@ export class NodeTransport implements Transport {
     // Create keep alive agent.
     const useSecureAgent = req.origin!.startsWith('https:');
 
-    if (useSecureAgent && this.httpsAgent === undefined)
-      this.httpsAgent = new HttpsAgent({ keepAlive: true, ...this.keepAliveSettings });
-    else if (!useSecureAgent && this.httpAgent === undefined) {
-      this.httpAgent = new HttpAgent({ keepAlive: true, ...this.keepAliveSettings });
-    }
+    const agentOptions = { keepAlive: this.keepAlive, ...(this.keepAlive ? this.keepAliveSettings : {}) };
+    if (useSecureAgent && this.httpsAgent === undefined) this.httpsAgent = new HttpsAgent(agentOptions);
+    else if (!useSecureAgent && this.httpAgent === undefined) this.httpAgent = new HttpAgent(agentOptions);
 
     return useSecureAgent ? this.httpsAgent : this.httpAgent;
   }
