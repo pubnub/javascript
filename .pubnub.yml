@@ -1,5 +1,14 @@
 ---
 changelog:
+  - date: 2024-12-12
+    version: v8.3.2
+    changes:
+      - type: bug
+        text: "Fix issue with `Subscription` and `SubscriptionSet` when one can unsubscribe channel / group which is still in use by another."
+      - type: bug
+        text: "Fix particular `TypeError` emitted when browser forcefully closes long-poll connection before its timeout and reported as bad request. This type of error will be reported as a network error."
+      - type: bug
+        text: "Fix issue because of which `node-fetch` used default agent, which after Node.js 19+ has `keepAlive` enabled by default."
   - date: 2024-11-18
     version: v8.3.1
     changes:
@@ -1072,7 +1081,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '8.3.1'
+version: '8.3.2'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1088,7 +1097,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.3.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.3.2.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1759,7 +1768,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v8.3.1/pubnub.8.3.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v8.3.2/pubnub.8.3.2.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

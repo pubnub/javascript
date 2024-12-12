@@ -87,6 +87,7 @@ import { AuditRequest } from './endpoints/access_manager/audit';
 import * as PAM from './types/api/access-manager';
 // endregion
 // region Entities
+import { SubscribeCapable } from '../entities/SubscribeCapable';
 import { SubscriptionOptions } from '../entities/commonTypes';
 import { ChannelMetadata } from '../entities/ChannelMetadata';
 import { SubscriptionSet } from '../entities/SubscriptionSet';
@@ -217,6 +218,16 @@ export class PubNubCore<
   private presenceEventEngine?: PresenceEventEngine;
 
   /**
+   * List of subscribe capable objects with active subscriptions.
+   *
+   * Track list of {@link Subscription} and {@link SubscriptionSet} objects with active
+   * subscription.
+   *
+   * @internal
+   */
+  private readonly subscribeCapable?: Set<SubscribeCapable>;
+
+  /**
    * Subscription event engine.
    *
    * @internal
@@ -345,6 +356,7 @@ export class PubNubCore<
       // Prepare for real-time events announcement.
       this.listenerManager = new ListenerManager();
       this.eventEmitter = new EventEmitter(this.listenerManager);
+      this.subscribeCapable = new Set<SubscribeCapable>();
 
       if (this._configuration.enableEventEngine) {
         if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
@@ -863,6 +875,8 @@ export class PubNubCore<
    */
   public destroy(isOffline?: boolean): void {
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') this.subscribeCapable?.clear();
+
       if (this.subscriptionManager) {
         this.subscriptionManager.unsubscribeAll(isOffline);
         this.subscriptionManager.disconnect();
@@ -1087,6 +1101,56 @@ export class PubNubCore<
   }
 
   /**
+   * Register subscribe capable object with active subscription.
+   *
+   * @param subscribeCapable - {@link Subscription} or {@link SubscriptionSet} object.
+   *
+   * @internal
+   */
+  public registerSubscribeCapable(subscribeCapable: SubscribeCapable) {
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      if (!this.subscribeCapable || this.subscribeCapable.has(subscribeCapable)) return;
+
+      this.subscribeCapable.add(subscribeCapable);
+    } else throw new Error('Subscription error: subscription event engine module disabled');
+  }
+
+  /**
+   * Unregister subscribe capable object with inactive subscription.
+   *
+   * @param subscribeCapable - {@link Subscription} or {@link SubscriptionSet} object.
+   *
+   * @internal
+   */
+  public unregisterSubscribeCapable(subscribeCapable: SubscribeCapable) {
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      if (!this.subscribeCapable || !this.subscribeCapable.has(subscribeCapable)) return;
+
+      this.subscribeCapable.delete(subscribeCapable);
+    } else throw new Error('Subscription error: subscription event engine module disabled');
+  }
+
+  /**
+   * Retrieve list of subscribe capable entities currently used in subscription.
+   *
+   * @returns Channels and channel groups currently used in subscription.
+   *
+   * @internal
+   */
+  public getSubscribeCapableEntities(): { channels: string[]; channelGroups: string[] } {
+    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      const entities: { channels: string[]; channelGroups: string[] } = { channels: [], channelGroups: [] };
+      if (!this.subscribeCapable) return entities;
+
+      for (const subscribeCapable of this.subscribeCapable) {
+        entities.channelGroups.push(...subscribeCapable.channelGroups);
+        entities.channels.push(...subscribeCapable.channels);
+      }
+      return entities;
+    } else throw new Error('Subscription error: subscription event engine module disabled');
+  }
+
+  /**
    * Subscribe to specified channels and groups real-time events.
    *
    * @param parameters - Request configuration parameters.
@@ -1182,6 +1246,8 @@ export class PubNubCore<
    */
   public unsubscribeAll() {
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') this.subscribeCapable?.clear();
+
       if (this.subscriptionManager) this.subscriptionManager.unsubscribeAll();
       else if (this.eventEngine) this.eventEngine.unsubscribeAll();
     } else throw new Error('Unsubscription error: subscription module disabled');

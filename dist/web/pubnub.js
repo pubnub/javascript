@@ -2916,7 +2916,10 @@
 	            message = 'Network issues';
 	        }
 	        else if (errorName === 'TypeError') {
-	            category = StatusCategory$1.PNBadRequestCategory;
+	            if (message.indexOf('Load failed') !== -1 || message.indexOf('Failed to fetch') != -1)
+	                category = StatusCategory$1.PNNetworkIssuesCategory;
+	            else
+	                category = StatusCategory$1.PNBadRequestCategory;
 	        }
 	        else if (errorName === 'FetchError') {
 	            const errorCode = error.code;
@@ -3948,7 +3951,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.3.1';
+	            return '8.3.2';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -9892,15 +9895,23 @@
 	     */
 	    subscribe(subscribeParameters) {
 	        const timetoken = subscribeParameters === null || subscribeParameters === void 0 ? void 0 : subscribeParameters.timetoken;
+	        this.pubnub.registerSubscribeCapable(this);
 	        this.pubnub.subscribe(Object.assign({ channels: this.channelNames, channelGroups: this.groupNames }, (timetoken !== null && timetoken !== '' && { timetoken: timetoken })));
 	    }
 	    /**
 	     * Stop real-time events processing.
 	     */
 	    unsubscribe() {
+	        this.pubnub.unregisterSubscribeCapable(this);
+	        const { channels, channelGroups } = this.pubnub.getSubscribeCapableEntities();
+	        // Identify channels and groups from which PubNub client can safely unsubscribe.
+	        const filteredChannelGroups = this.groupNames.filter((cg) => !channelGroups.includes(cg));
+	        const filteredChannels = this.channelNames.filter((ch) => !channels.includes(ch));
+	        if (filteredChannels.length === 0 && filteredChannelGroups.length === 0)
+	            return;
 	        this.pubnub.unsubscribe({
-	            channels: this.channelNames,
-	            channelGroups: this.groupNames,
+	            channels: filteredChannels,
+	            channelGroups: filteredChannelGroups,
 	        });
 	    }
 	    /**
@@ -12566,6 +12577,7 @@
 	            // Prepare for real-time events announcement.
 	            this.listenerManager = new ListenerManager();
 	            this.eventEmitter = new EventEmitter(this.listenerManager);
+	            this.subscribeCapable = new Set();
 	            if (this._configuration.enableEventEngine) {
 	                {
 	                    let heartbeatInterval = this._configuration.getHeartbeatInterval();
@@ -12998,7 +13010,9 @@
 	     * @param [isOffline] - Whether `offline` presence should be notified or not.
 	     */
 	    destroy(isOffline) {
+	        var _a;
 	        {
+	            (_a = this.subscribeCapable) === null || _a === void 0 ? void 0 : _a.clear();
 	            if (this.subscriptionManager) {
 	                this.subscriptionManager.unsubscribeAll(isOffline);
 	                this.subscriptionManager.disconnect();
@@ -13128,6 +13142,53 @@
 	        return [];
 	    }
 	    /**
+	     * Register subscribe capable object with active subscription.
+	     *
+	     * @param subscribeCapable - {@link Subscription} or {@link SubscriptionSet} object.
+	     *
+	     * @internal
+	     */
+	    registerSubscribeCapable(subscribeCapable) {
+	        {
+	            if (!this.subscribeCapable || this.subscribeCapable.has(subscribeCapable))
+	                return;
+	            this.subscribeCapable.add(subscribeCapable);
+	        }
+	    }
+	    /**
+	     * Unregister subscribe capable object with inactive subscription.
+	     *
+	     * @param subscribeCapable - {@link Subscription} or {@link SubscriptionSet} object.
+	     *
+	     * @internal
+	     */
+	    unregisterSubscribeCapable(subscribeCapable) {
+	        {
+	            if (!this.subscribeCapable || !this.subscribeCapable.has(subscribeCapable))
+	                return;
+	            this.subscribeCapable.delete(subscribeCapable);
+	        }
+	    }
+	    /**
+	     * Retrieve list of subscribe capable entities currently used in subscription.
+	     *
+	     * @returns Channels and channel groups currently used in subscription.
+	     *
+	     * @internal
+	     */
+	    getSubscribeCapableEntities() {
+	        {
+	            const entities = { channels: [], channelGroups: [] };
+	            if (!this.subscribeCapable)
+	                return entities;
+	            for (const subscribeCapable of this.subscribeCapable) {
+	                entities.channelGroups.push(...subscribeCapable.channelGroups);
+	                entities.channels.push(...subscribeCapable.channels);
+	            }
+	            return entities;
+	        }
+	    }
+	    /**
 	     * Subscribe to specified channels and groups real-time events.
 	     *
 	     * @param parameters - Request configuration parameters.
@@ -13205,7 +13266,9 @@
 	     * Unsubscribe from all channels and groups.
 	     */
 	    unsubscribeAll() {
+	        var _a;
 	        {
+	            (_a = this.subscribeCapable) === null || _a === void 0 ? void 0 : _a.clear();
 	            if (this.subscriptionManager)
 	                this.subscriptionManager.unsubscribeAll();
 	            else if (this.eventEngine)

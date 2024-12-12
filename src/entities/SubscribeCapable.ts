@@ -57,6 +57,7 @@ export abstract class SubscribeCapable {
    */
   subscribe(subscribeParameters?: { timetoken?: string }) {
     const timetoken = subscribeParameters?.timetoken;
+    this.pubnub.registerSubscribeCapable(this);
     this.pubnub.subscribe({
       channels: this.channelNames,
       channelGroups: this.groupNames,
@@ -68,9 +69,18 @@ export abstract class SubscribeCapable {
    * Stop real-time events processing.
    */
   unsubscribe() {
+    this.pubnub.unregisterSubscribeCapable(this);
+    const { channels, channelGroups } = this.pubnub.getSubscribeCapableEntities();
+
+    // Identify channels and groups from which PubNub client can safely unsubscribe.
+    const filteredChannelGroups = this.groupNames.filter((cg) => !channelGroups.includes(cg));
+    const filteredChannels = this.channelNames.filter((ch) => !channels.includes(ch));
+
+    if (filteredChannels.length === 0 && filteredChannelGroups.length === 0) return;
+
     this.pubnub.unsubscribe({
-      channels: this.channelNames,
-      channelGroups: this.groupNames,
+      channels: filteredChannels,
+      channelGroups: filteredChannelGroups,
     });
   }
 
