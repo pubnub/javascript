@@ -210,7 +210,7 @@ describe('publish endpoints', () => {
     });
   });
 
-  it.only('supports customMessageType', (done) => {
+  it('supports customMessageType', (done) => {
     const scope = utils
       .createNock()
       .get('/publish/myPublishKey/mySubKey/0/ch1/0/%7B%22such%22%3A%22object%22%7D')
