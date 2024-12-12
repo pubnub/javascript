@@ -1,3 +1,11 @@
+## v8.3.2
+December 12 2024
+
+#### Fixed
+- Fix issue with `Subscription` and `SubscriptionSet` when one can unsubscribe channel / group which is still in use by another.
+- Fix particular `TypeError` emitted when browser forcefully closes long-poll connection before its timeout and reported as bad request. This type of error will be reported as a network error.
+- Fix issue because of which `node-fetch` used default agent, which after Node.js 19+ has `keepAlive` enabled by default.
+
 ## v8.3.1
 November 18 2024
 
