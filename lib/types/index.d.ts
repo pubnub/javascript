@@ -5952,7 +5952,7 @@ declare namespace PubNub {
        */
       status?: string;
       /**
-       * Channel's membership type.
+       * Channel's member type.
        */
       type?: string;
       /**

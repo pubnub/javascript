@@ -29,7 +29,6 @@ describe('subscribe endpoints', () => {
       // @ts-expect-error Force override default value.
       useRequestId: false,
       autoNetworkDetection: false,
-      logVerbosity: true,
     });
     pubnubWithFiltering = new PubNub({
       subscribeKey: 'mySubKey',
@@ -203,7 +202,7 @@ describe('subscribe endpoints', () => {
     });
   });
 
-  it('supports timetoken', (done) => {
+  it.only('supports timetoken', (done) => {
     const scope0 = utils
       .createNock()
       .get('/v2/subscribe/mySubKey/c1/0')

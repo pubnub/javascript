@@ -6224,9 +6224,7 @@
 	                delete payload.data;
 	            }
 	            else if ('action' in payload && payload.action === 'interval') {
-	                // @ts-expect-error This is `interval` object which should have `hereNowRefresh` field.
-	                payload['hereNowRefresh'] = (_a = payload.here_now_refresh) !== null && _a !== void 0 ? _a : false;
-	                // @ts-expect-error Keeping only human-readable keys.
+	                payload.hereNowRefresh = (_a = payload.here_now_refresh) !== null && _a !== void 0 ? _a : false;
 	                delete payload.here_now_refresh;
 	            }
 	        }
