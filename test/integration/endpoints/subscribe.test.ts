@@ -29,6 +29,7 @@ describe('subscribe endpoints', () => {
       // @ts-expect-error Force override default value.
       useRequestId: false,
       autoNetworkDetection: false,
+      logVerbosity: true,
     });
     pubnubWithFiltering = new PubNub({
       subscribeKey: 'mySubKey',
@@ -338,6 +339,51 @@ describe('subscribe endpoints', () => {
 
     const channel = pubnubWithEE.channel('c1');
     const subscription = channel.subscription();
+    subscription.subscribe();
+  });
+
+  it('presence listener called for interval / delta update', (done) => {
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/c1,c1-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+      })
+      .reply(200, '{"t":{"t":"14523669555221452","r":1},"m":[]}', { 'content-type': 'text/javascript' });
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/c1,c1-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        tt: '14523669555221452',
+        tr: 1,
+        heartbeat: 300,
+      })
+      .reply(
+        200,
+        '{"t":{"t":"14523669555221453","r":1},"m":[{"a":"3","f":0,"i":"myUniqueUserId","p":{"t":"17200339136465528","r":41},"k":"mySubKey","c":"c1-pnpres","d":{"action":"interval","timestamp":"1720033913","occupancy":0,"here_now_refresh":true}}]}',
+        { 'content-type': 'text/javascript' },
+      );
+
+    pubnub.addListener({
+      presence(presence) {
+        try {
+          assert.equal(presence.action, 'interval');
+          if (presence.action === 'interval') {
+            assert.equal(presence.hereNowRefresh, true);
+            done();
+          }
+        } catch (error) {
+          done(error);
+        }
+      },
+    });
+
+    const channel = pubnub.channel('c1');
+    const subscription = channel.subscription({ receivePresenceEvents: true });
     subscription.subscribe();
   });
 

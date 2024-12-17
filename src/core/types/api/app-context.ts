@@ -69,6 +69,11 @@ type ObjectsRelation<Custom extends CustomData> = {
   status?: string;
 
   /**
+   * App Context objects relation type.
+   */
+  type?: string;
+
+  /**
    * Additional data associated with App Context object relation (membership or members).
    *
    * **Important:** Values must be scalars; only arrays or objects are supported.
@@ -143,11 +148,18 @@ type MembershipsIncludeOptions = IncludeOptions & {
   customChannelFields?: boolean;
 
   /**
-   * Whether to include the membership's status field in the response.
+   * Whether to include the membership's `status` field in the response.
    *
    * @default `false`
    */
   statusField?: boolean;
+
+  /**
+   * Whether to include the membership's `type` field in the response.
+   *
+   * @default `false`
+   */
+  typeField?: boolean;
 
   /**
    * Whether to include the channel's status field in the response.
@@ -185,11 +197,18 @@ type MembersIncludeOptions = IncludeOptions & {
   customUUIDFields?: boolean;
 
   /**
-   * Whether to include the members's status field in the response.
+   * Whether to include the member's `status` field in the response.
    *
    * @default `false`
    */
   statusField?: boolean;
+
+  /**
+   * Whether to include the member's `type` field in the response.
+   *
+   * @default `false`
+   */
+  typeField?: boolean;
 
   /**
    * Whether to include the user's status field in the response.
@@ -322,11 +341,15 @@ type MembershipsSortingOptions =
   | 'channel.name'
   | 'channel.description'
   | 'channel.updated'
+  | 'channel.status'
+  | 'channel.type'
   | 'space.id'
   | 'space.name'
   | 'space.description'
   | 'space.updated'
   | 'updated'
+  | 'status'
+  | 'type'
   | {
       /**
        * Sort results by channel's `id` in ascending (`asc`) or descending (`desc`) order.
@@ -355,6 +378,20 @@ type MembershipsSortingOptions =
        * Specify `null` for default sorting direction (ascending).
        */
       'channel.updated'?: 'asc' | 'desc' | null;
+
+      /**
+       * Sort results by channel's `status` in ascending (`asc`) or descending (`desc`) order.
+       *
+       * Specify `null` for default sorting direction (ascending).
+       */
+      'channel.status'?: 'asc' | 'desc' | null;
+
+      /**
+       * Sort results by channel's `type` in ascending (`asc`) or descending (`desc`) order.
+       *
+       * Specify `null` for default sorting direction (ascending).
+       */
+      'channel.type'?: 'asc' | 'desc' | null;
 
       /**
        * Sort results by channel's `id` in ascending (`asc`) or descending (`desc`) order.
@@ -398,6 +435,20 @@ type MembershipsSortingOptions =
        * Specify `null` for default sorting direction (ascending).
        */
       updated?: 'asc' | 'desc' | null;
+
+      /**
+       * Sort results by `status` in ascending (`asc`) or descending (`desc`) order.
+       *
+       * Specify `null` for default sorting direction (ascending).
+       */
+      status?: 'asc' | 'desc' | null;
+
+      /**
+       * Sort results by `type` in ascending (`asc`) or descending (`desc`) order.
+       *
+       * Specify `null` for default sorting direction (ascending).
+       */
+      type?: 'asc' | 'desc' | null;
     };
 
 /**
@@ -407,10 +458,14 @@ type MembersSortingOptions =
   | 'uuid.id'
   | 'uuid.name'
   | 'uuid.updated'
+  | 'uuid.status'
+  | 'uuid.type'
   | 'user.id'
   | 'user.name'
   | 'user.updated'
   | 'updated'
+  | 'status'
+  | 'type'
   | {
       /**
        * Sort results by user's `id` in ascending (`asc`) or descending (`desc`) order.
@@ -432,6 +487,20 @@ type MembersSortingOptions =
        * Specify `null` for default sorting direction (ascending).
        */
       'uuid.updated'?: 'asc' | 'desc' | null;
+
+      /**
+       * Sort results by user's `status` in ascending (`asc`) or descending (`desc`) order.
+       *
+       * Specify `null` for default sorting direction (ascending).
+       */
+      'uuid.status'?: 'asc' | 'desc' | null;
+
+      /**
+       * Sort results by user's `type` in ascending (`asc`) or descending (`desc`) order.
+       *
+       * Specify `null` for default sorting direction (ascending).
+       */
+      'uuid.type'?: 'asc' | 'desc' | null;
 
       /**
        * Sort results by user's `id` in ascending (`asc`) or descending (`desc`) order.
@@ -466,6 +535,20 @@ type MembersSortingOptions =
        * Specify `null` for default sorting direction (ascending).
        */
       updated?: 'asc' | 'desc' | null;
+
+      /**
+       * Sort results by `status` in ascending (`asc`) or descending (`desc`) order.
+       *
+       * Specify `null` for default sorting direction (ascending).
+       */
+      status?: 'asc' | 'desc' | null;
+
+      /**
+       * Sort results by `type` in ascending (`asc`) or descending (`desc`) order.
+       *
+       * Specify `null` for default sorting direction (ascending).
+       */
+      type?: 'asc' | 'desc' | null;
     };
 
 // --------------------------------------------------------
@@ -786,6 +869,19 @@ type MembershipsObject<MembershipCustom extends CustomData, ChannelCustom extend
   ObjectData<MembershipCustom>,
   'id'
 > & {
+  /**
+   * User's membership status.
+   */
+  status?: string;
+
+  /**
+   * User's membership type.
+   */
+  type?: string;
+
+  /**
+   * Channel for which `user` has membership.
+   */
   channel: ChannelMetadataObject<ChannelCustom> | { id: string };
 };
 
@@ -833,7 +929,7 @@ export type GetMembershipsResponse<
  * Update Memberships request parameters.
  */
 export type SetMembershipsParameters<Custom extends CustomData> = PagedRequestParameters<
-  Omit<MembershipsIncludeOptions, 'statusField' | 'channelStatusField' | 'channelTypeField'>,
+  MembershipsIncludeOptions,
   MembershipsSortingOptions
 > & {
   /**
@@ -946,6 +1042,19 @@ type MembersObject<MemberCustom extends CustomData, UUIDCustom extends CustomDat
   ObjectData<MemberCustom>,
   'id'
 > & {
+  /**
+   * Channel's member status.
+   */
+  status?: string;
+
+  /**
+   * Channel's member type.
+   */
+  type?: string;
+
+  /**
+   * Member of the `channel`.
+   */
   uuid: UUIDMetadataObject<UUIDCustom> | { id: string };
 };
 
@@ -985,7 +1094,7 @@ export type GetMembersResponse<MembersCustom extends CustomData, UUIDCustom exte
  * Update Members request parameters.
  */
 export type SetChannelMembersParameters<Custom extends CustomData> = PagedRequestParameters<
-  Omit<MembersIncludeOptions, 'statusField' | 'UUIDStatusField' | 'UUIDTypeField'>,
+  MembersIncludeOptions,
   MembersSortingOptions
 > & {
   /**

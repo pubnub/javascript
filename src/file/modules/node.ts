@@ -131,10 +131,9 @@ export default class PubNubFile implements PubNubFileInterface {
     if (stream && stream instanceof Readable) {
       fileData = stream;
 
-      if (stream instanceof fs.ReadStream) {
-        const streamFilePath = stream.path instanceof Buffer ? new TextDecoder().decode(stream.path) : stream.path;
-        fileName = basename(streamFilePath);
-        contentLength = fs.statSync(streamFilePath).size;
+      if (stream instanceof fs.ReadStream && !(stream.path instanceof Buffer)) {
+        fileName = basename(stream.path);
+        contentLength = fs.statSync(stream.path).size;
       }
     } else if (data instanceof Buffer) {
       contentLength = data.length;

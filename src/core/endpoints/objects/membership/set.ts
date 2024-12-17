@@ -25,6 +25,16 @@ import { encodeString } from '../../../utils';
 const INCLUDE_CUSTOM_FIELDS = false;
 
 /**
+ * Whether membership's `status` field should be included in response or not.
+ */
+const INCLUDE_STATUS = false;
+
+/**
+ * Whether membership's `type` field should be included in response or not.
+ */
+const INCLUDE_TYPE = false;
+
+/**
  * Whether total number of memberships should be included in response or not.
  */
 const INCLUDE_TOTAL_COUNT = false;
@@ -33,6 +43,16 @@ const INCLUDE_TOTAL_COUNT = false;
  * Whether `Channel` fields should be included in response or not.
  */
 const INCLUDE_CHANNEL_FIELDS = false;
+
+/**
+ * Whether `Channel` status field should be included in response or not.
+ */
+const INCLUDE_CHANNEL_STATUS_FIELD = false;
+
+/**
+ * Whether `Channel` type field should be included in response or not.
+ */
+const INCLUDE_CHANNEL_TYPE_FIELD = false;
 
 /**
  * Whether `Channel` custom field should be included in response or not.
@@ -83,8 +103,12 @@ export class SetUUIDMembershipsRequest<
     parameters.include ??= {};
     parameters.include.customFields ??= INCLUDE_CUSTOM_FIELDS;
     parameters.include.totalCount ??= INCLUDE_TOTAL_COUNT;
+    parameters.include.statusField ??= INCLUDE_STATUS;
+    parameters.include.typeField ??= INCLUDE_TYPE;
     parameters.include.channelFields ??= INCLUDE_CHANNEL_FIELDS;
     parameters.include.customChannelFields ??= INCLUDE_CHANNEL_CUSTOM_FIELDS;
+    parameters.include.channelStatusField ??= INCLUDE_CHANNEL_STATUS_FIELD;
+    parameters.include.channelTypeField ??= INCLUDE_CHANNEL_TYPE_FIELD;
     parameters.limit ??= LIMIT;
 
     // Remap for backward compatibility.
@@ -132,8 +156,12 @@ export class SetUUIDMembershipsRequest<
       sorting = Object.entries(sort ?? {}).map(([option, order]) => (order !== null ? `${option}:${order}` : option));
     const includeFlags: string[] = ['channel.status', 'channel.type', 'status'];
 
+    if (include!.statusField) includeFlags.push('status');
+    if (include!.typeField) includeFlags.push('type');
     if (include!.customFields) includeFlags.push('custom');
     if (include!.channelFields) includeFlags.push('channel');
+    if (include!.channelStatusField) includeFlags.push('channel.status');
+    if (include!.channelTypeField) includeFlags.push('channel.type');
     if (include!.customChannelFields) includeFlags.push('channel.custom');
 
     return {
@@ -155,7 +183,7 @@ export class SetUUIDMembershipsRequest<
         if (typeof channel === 'string') {
           return { channel: { id: channel } };
         } else {
-          return { channel: { id: channel.id }, status: channel.status, custom: channel.custom };
+          return { channel: { id: channel.id }, status: channel.status, type: channel.type, custom: channel.custom };
         }
       }),
     });

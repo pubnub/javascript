@@ -25,6 +25,16 @@ import { encodeString } from '../../../utils';
 const INCLUDE_CUSTOM_FIELDS = false;
 
 /**
+ * Whether member's `status` field should be included in response or not.
+ */
+const INCLUDE_STATUS = false;
+
+/**
+ * Whether member's `type` field should be included in response or not.
+ */
+const INCLUDE_TYPE = false;
+
+/**
  * Whether total number of members should be included in response or not.
  */
 const INCLUDE_TOTAL_COUNT = false;
@@ -33,6 +43,16 @@ const INCLUDE_TOTAL_COUNT = false;
  * Whether `UUID` fields should be included in response or not.
  */
 const INCLUDE_UUID_FIELDS = false;
+
+/**
+ * Whether `UUID` status field should be included in response or not.
+ */
+const INCLUDE_UUID_STATUS_FIELD = false;
+
+/**
+ * Whether `UUID` type field should be included in response or not.
+ */
+const INCLUDE_UUID_TYPE_FIELD = false;
 
 /**
  * Whether `UUID` custom field should be included in response or not.
@@ -83,8 +103,12 @@ export class SetChannelMembersRequest<
     parameters.include ??= {};
     parameters.include.customFields ??= INCLUDE_CUSTOM_FIELDS;
     parameters.include.totalCount ??= INCLUDE_TOTAL_COUNT;
+    parameters.include.statusField ??= INCLUDE_STATUS;
+    parameters.include.typeField ??= INCLUDE_TYPE;
     parameters.include.UUIDFields ??= INCLUDE_UUID_FIELDS;
     parameters.include.customUUIDFields ??= INCLUDE_UUID_CUSTOM_FIELDS;
+    parameters.include.UUIDStatusField ??= INCLUDE_UUID_STATUS_FIELD;
+    parameters.include.UUIDTypeField ??= INCLUDE_UUID_TYPE_FIELD;
     parameters.limit ??= LIMIT;
   }
 
@@ -129,8 +153,12 @@ export class SetChannelMembersRequest<
       sorting = Object.entries(sort ?? {}).map(([option, order]) => (order !== null ? `${option}:${order}` : option));
     const includeFlags: string[] = ['uuid.status', 'uuid.type', 'type'];
 
+    if (include!.statusField) includeFlags.push('status');
+    if (include!.typeField) includeFlags.push('type');
     if (include!.customFields) includeFlags.push('custom');
     if (include!.UUIDFields) includeFlags.push('uuid');
+    if (include!.UUIDStatusField) includeFlags.push('uuid.status');
+    if (include!.UUIDTypeField) includeFlags.push('uuid.type');
     if (include!.customUUIDFields) includeFlags.push('uuid.custom');
 
     return {
@@ -152,7 +180,7 @@ export class SetChannelMembersRequest<
         if (typeof uuid === 'string') {
           return { uuid: { id: uuid } };
         } else {
-          return { uuid: { id: uuid.id }, status: uuid.status, custom: uuid.custom };
+          return { uuid: { id: uuid.id }, status: uuid.status, type: uuid.type, custom: uuid.custom };
         }
       }),
     });

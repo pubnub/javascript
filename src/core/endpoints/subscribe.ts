@@ -127,6 +127,25 @@ type PresenceIntervalData = {
    * presence update.
    */
   timeout?: string[];
+
+  /**
+   * Indicates whether presence should be requested manually using {@link PubNubCore.hereNow hereNow()}
+   * or not.
+   *
+   * Depending on from the presence activity, the resulting interval update can be too large to be
+   * returned as a presence event with subscribe REST API response. The server will set this flag to
+   * `true` in this case.
+   */
+  hereNowRefresh: boolean;
+
+  /**
+   * Indicates whether presence should be requested manually or not.
+   *
+   * **Warning:** This is internal property which will be removed after processing.
+   *
+   * @internal
+   */
+  here_now_refresh?: boolean;
 };
 
 /**
@@ -331,6 +350,16 @@ type MembershipObjectData = ObjectData<
   AppContextEvents,
   'membership',
   Omit<AppContext.ObjectData<AppContext.CustomData>, 'id'> & {
+    /**
+     * User membership status.
+     */
+    status?: string;
+
+    /**
+     * User membership type.
+     */
+    type?: string;
+
     /**
      * `Uuid` object which has been used to create relationship with `channel`.
      */
@@ -703,10 +732,15 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     const actualChannel = subscription !== null ? trimmedChannel : null;
     const subscribedChannel = subscription !== null ? subscription : trimmedChannel;
 
-    if (typeof payload !== 'string' && 'data' in payload) {
-      // @ts-expect-error This is `state-change` object which should have `state` field.
-      payload['state'] = payload.data;
-      delete payload.data;
+    if (typeof payload !== 'string') {
+      if ('data' in payload) {
+        // @ts-expect-error This is `state-change` object which should have `state` field.
+        payload['state'] = payload.data;
+        delete payload.data;
+      } else if ('action' in payload && payload.action === 'interval') {
+        payload.hereNowRefresh = payload.here_now_refresh ?? false;
+        delete payload.here_now_refresh;
+      }
     }
 
     return {

@@ -90,7 +90,7 @@ export class NodeTransport implements Transport {
       this.requestFromTransportRequest(req).then((request) => {
         const start = new Date().getTime();
 
-        this.logRequestProcessProgress(request);
+        this.logRequestProcessProgress(request, req.body);
 
         return fetch(request, {
           signal: abortController?.signal,
@@ -116,7 +116,7 @@ export class NodeTransport implements Transport {
 
             if (status >= 400) throw PubNubAPIError.create(transportResponse);
 
-            this.logRequestProcessProgress(request, new Date().getTime() - start, responseBody);
+            this.logRequestProcessProgress(request, undefined, new Date().getTime() - start, responseBody);
 
             return transportResponse;
           })
@@ -207,29 +207,37 @@ export class NodeTransport implements Transport {
    * Log out request processing progress and result.
    *
    * @param request - Platform-specific request object.
+   * @param [requestBody] - POST / PATCH body.
    * @param [elapsed] - How many times passed since request processing started.
    * @param [body] - Service response (if available).
    */
-  protected logRequestProcessProgress(request: Request, elapsed?: number, body?: ArrayBuffer) {
+  protected logRequestProcessProgress(
+    request: Request,
+    requestBody: TransportRequest['body'],
+    elapsed?: number,
+    body?: ArrayBuffer,
+  ) {
     if (!this.logVerbosity) return;
 
     const { protocol, host, pathname, search } = new URL(request.url);
     const timestamp = new Date().toISOString();
 
     if (!elapsed) {
+      let outgoing = `[${timestamp}]\n${protocol}//${host}${pathname}\n${search}`;
+      if (requestBody && (typeof requestBody === 'string' || requestBody instanceof ArrayBuffer)) {
+        if (typeof requestBody === 'string') outgoing += `\n\n${requestBody}`;
+        else outgoing += `\n\n${NodeTransport.decoder.decode(requestBody)}`;
+      }
+
       console.log('<<<<<');
-      console.log(`[${timestamp}]`, `\n${protocol}//${host}${pathname}`, `\n${search}`);
+      console.log(outgoing);
       console.log('-----');
     } else {
-      const stringifiedBody = body ? NodeTransport.decoder.decode(body) : undefined;
+      let outgoing = `[${timestamp} / ${elapsed}]\n${protocol}//${host}${pathname}\n${search}`;
+      if (body) outgoing += `\n\n${NodeTransport.decoder.decode(body)}`;
 
       console.log('>>>>>>');
-      console.log(
-        `[${timestamp} / ${elapsed}]`,
-        `\n${protocol}//${host}${pathname}`,
-        `\n${search}`,
-        `\n${stringifiedBody}`,
-      );
+      console.log(outgoing);
       console.log('-----');
     }
   }

@@ -3392,7 +3392,7 @@
 	        return [
 	            this.requestFromTransportRequest(req).then((request) => {
 	                const start = new Date().getTime();
-	                this.logRequestProcessProgress(request);
+	                this.logRequestProcessProgress(request, req.body);
 	                /**
 	                 * Setup request timeout promise.
 	                 *
@@ -3424,7 +3424,7 @@
 	                    };
 	                    if (status >= 400)
 	                        throw PubNubAPIError.create(transportResponse);
-	                    this.logRequestProcessProgress(request, new Date().getTime() - start, responseBody);
+	                    this.logRequestProcessProgress(request, undefined, new Date().getTime() - start, responseBody);
 	                    return transportResponse;
 	                })
 	                    .catch((error) => {
@@ -3489,25 +3489,35 @@
 	     * Log out request processing progress and result.
 	     *
 	     * @param request - Platform-specific
+	     * @param [requestBody] - POST / PATCH body.
 	     * @param [elapsed] - How many seconds passed since request processing started.
 	     * @param [body] - Service response (if available).
 	     *
 	     * @internal
 	     */
-	    logRequestProcessProgress(request, elapsed, body) {
+	    logRequestProcessProgress(request, requestBody, elapsed, body) {
 	        if (!this.logVerbosity)
 	            return;
 	        const { protocol, host, pathname, search } = new URL(request.url);
 	        const timestamp = new Date().toISOString();
 	        if (!elapsed) {
-	            console.log('<<<<<');
-	            console.log(`[${timestamp}]`, `\n${protocol}//${host}${pathname}`, `\n${search}`);
+	            let outgoing = `[${timestamp}]\n${protocol}//${host}${pathname}\n${search}`;
+	            if (requestBody && (typeof requestBody === 'string' || requestBody instanceof ArrayBuffer)) {
+	                if (typeof requestBody === 'string')
+	                    outgoing += `\n\n${requestBody}`;
+	                else
+	                    outgoing += `\n\n${WebReactNativeTransport.decoder.decode(requestBody)}`;
+	            }
+	            console.log(`<<<<<`);
+	            console.log(outgoing);
 	            console.log('-----');
 	        }
 	        else {
-	            const stringifiedBody = body ? WebReactNativeTransport.decoder.decode(body) : undefined;
+	            let outgoing = `[${timestamp} / ${elapsed}]\n${protocol}//${host}${pathname}\n${search}`;
+	            if (body)
+	                outgoing += `\n\n${WebReactNativeTransport.decoder.decode(body)}`;
 	            console.log('>>>>>>');
-	            console.log(`[${timestamp} / ${elapsed}]`, `\n${protocol}//${host}${pathname}`, `\n${search}`, `\n${stringifiedBody}`);
+	            console.log(outgoing);
 	            console.log('-----');
 	        }
 	    }
@@ -6199,6 +6209,7 @@
 	    // --------------------------------------------------------
 	    // region Envelope parsing
 	    presenceEventFromEnvelope(envelope) {
+	        var _a;
 	        const { d: payload } = envelope;
 	        const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
 	        // Clean up channel and subscription name from presence suffix.
@@ -6206,10 +6217,18 @@
 	        // Backward compatibility with deprecated properties.
 	        const actualChannel = subscription !== null ? trimmedChannel : null;
 	        const subscribedChannel = subscription !== null ? subscription : trimmedChannel;
-	        if (typeof payload !== 'string' && 'data' in payload) {
-	            // @ts-expect-error This is `state-change` object which should have `state` field.
-	            payload['state'] = payload.data;
-	            delete payload.data;
+	        if (typeof payload !== 'string') {
+	            if ('data' in payload) {
+	                // @ts-expect-error This is `state-change` object which should have `state` field.
+	                payload['state'] = payload.data;
+	                delete payload.data;
+	            }
+	            else if ('action' in payload && payload.action === 'interval') {
+	                // @ts-expect-error This is `interval` object which should have `hereNowRefresh` field.
+	                payload['hereNowRefresh'] = (_a = payload.here_now_refresh) !== null && _a !== void 0 ? _a : false;
+	                // @ts-expect-error Keeping only human-readable keys.
+	                delete payload.here_now_refresh;
+	            }
 	        }
 	        return Object.assign({ channel: trimmedChannel, subscription,
 	            actualChannel,
@@ -11123,9 +11142,13 @@
 	 */
 	const INCLUDE_CUSTOM_FIELDS$8 = false;
 	/**
-	 * Whether membership's status field should be included in response or not.
+	 * Whether membership's `status` field should be included in response or not.
 	 */
-	const INCLUDE_STATUS$1 = false;
+	const INCLUDE_STATUS$3 = false;
+	/**
+	 * Whether membership's `type` field should be included in response or not.
+	 */
+	const INCLUDE_TYPE$3 = false;
 	/**
 	 * Whether total number of memberships should be included in response or not.
 	 */
@@ -11137,11 +11160,11 @@
 	/**
 	 * Whether `Channel` status field should be included in response or not.
 	 */
-	const INCLUDE_CHANNEL_STATUS_FIELD = false;
+	const INCLUDE_CHANNEL_STATUS_FIELD$1 = false;
 	/**
 	 * Whether `Channel` type field should be included in response or not.
 	 */
-	const INCLUDE_CHANNEL_TYPE_FIELD = false;
+	const INCLUDE_CHANNEL_TYPE_FIELD$1 = false;
 	/**
 	 * Whether `Channel` custom field should be included in response or not.
 	 */
@@ -11158,20 +11181,21 @@
 	 */
 	class GetUUIDMembershipsRequest extends AbstractRequest {
 	    constructor(parameters) {
-	        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-	        var _k, _l, _m, _o, _p, _q, _r;
+	        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+	        var _l, _m, _o, _p, _q, _r, _s, _t;
 	        super();
 	        this.parameters = parameters;
 	        // Apply default request parameters.
 	        (_a = parameters.include) !== null && _a !== void 0 ? _a : (parameters.include = {});
-	        (_b = (_k = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_k.customFields = INCLUDE_CUSTOM_FIELDS$8);
-	        (_c = (_l = parameters.include).totalCount) !== null && _c !== void 0 ? _c : (_l.totalCount = INCLUDE_TOTAL_COUNT$3);
-	        (_d = (_m = parameters.include).statusField) !== null && _d !== void 0 ? _d : (_m.statusField = INCLUDE_STATUS$1);
-	        (_e = (_o = parameters.include).channelFields) !== null && _e !== void 0 ? _e : (_o.channelFields = INCLUDE_CHANNEL_FIELDS$1);
-	        (_f = (_p = parameters.include).customChannelFields) !== null && _f !== void 0 ? _f : (_p.customChannelFields = INCLUDE_CHANNEL_CUSTOM_FIELDS$1);
-	        (_g = (_q = parameters.include).channelStatusField) !== null && _g !== void 0 ? _g : (_q.channelStatusField = INCLUDE_CHANNEL_STATUS_FIELD);
-	        (_h = (_r = parameters.include).channelTypeField) !== null && _h !== void 0 ? _h : (_r.channelTypeField = INCLUDE_CHANNEL_TYPE_FIELD);
-	        (_j = parameters.limit) !== null && _j !== void 0 ? _j : (parameters.limit = LIMIT$4);
+	        (_b = (_l = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_l.customFields = INCLUDE_CUSTOM_FIELDS$8);
+	        (_c = (_m = parameters.include).totalCount) !== null && _c !== void 0 ? _c : (_m.totalCount = INCLUDE_TOTAL_COUNT$3);
+	        (_d = (_o = parameters.include).statusField) !== null && _d !== void 0 ? _d : (_o.statusField = INCLUDE_STATUS$3);
+	        (_e = (_p = parameters.include).typeField) !== null && _e !== void 0 ? _e : (_p.typeField = INCLUDE_TYPE$3);
+	        (_f = (_q = parameters.include).channelFields) !== null && _f !== void 0 ? _f : (_q.channelFields = INCLUDE_CHANNEL_FIELDS$1);
+	        (_g = (_r = parameters.include).customChannelFields) !== null && _g !== void 0 ? _g : (_r.customChannelFields = INCLUDE_CHANNEL_CUSTOM_FIELDS$1);
+	        (_h = (_s = parameters.include).channelStatusField) !== null && _h !== void 0 ? _h : (_s.channelStatusField = INCLUDE_CHANNEL_STATUS_FIELD$1);
+	        (_j = (_t = parameters.include).channelTypeField) !== null && _j !== void 0 ? _j : (_t.channelTypeField = INCLUDE_CHANNEL_TYPE_FIELD$1);
+	        (_k = parameters.limit) !== null && _k !== void 0 ? _k : (parameters.limit = LIMIT$4);
 	        // Remap for backward compatibility.
 	        if (this.parameters.userId)
 	            this.parameters.uuid = this.parameters.userId;
@@ -11208,6 +11232,8 @@
 	        const includeFlags = [];
 	        if (include.statusField)
 	            includeFlags.push('status');
+	        if (include.typeField)
+	            includeFlags.push('type');
 	        if (include.customFields)
 	            includeFlags.push('custom');
 	        if (include.channelFields)
@@ -11236,6 +11262,14 @@
 	 */
 	const INCLUDE_CUSTOM_FIELDS$7 = false;
 	/**
+	 * Whether membership's `status` field should be included in response or not.
+	 */
+	const INCLUDE_STATUS$2 = false;
+	/**
+	 * Whether membership's `type` field should be included in response or not.
+	 */
+	const INCLUDE_TYPE$2 = false;
+	/**
 	 * Whether total number of memberships should be included in response or not.
 	 */
 	const INCLUDE_TOTAL_COUNT$2 = false;
@@ -11243,6 +11277,14 @@
 	 * Whether `Channel` fields should be included in response or not.
 	 */
 	const INCLUDE_CHANNEL_FIELDS = false;
+	/**
+	 * Whether `Channel` status field should be included in response or not.
+	 */
+	const INCLUDE_CHANNEL_STATUS_FIELD = false;
+	/**
+	 * Whether `Channel` type field should be included in response or not.
+	 */
+	const INCLUDE_CHANNEL_TYPE_FIELD = false;
 	/**
 	 * Whether `Channel` custom field should be included in response or not.
 	 */
@@ -11259,17 +11301,21 @@
 	 */
 	class SetUUIDMembershipsRequest extends AbstractRequest {
 	    constructor(parameters) {
-	        var _a, _b, _c, _d, _e, _f;
-	        var _g, _h, _j, _k;
+	        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+	        var _l, _m, _o, _p, _q, _r, _s, _t;
 	        super({ method: TransportMethod.PATCH });
 	        this.parameters = parameters;
 	        // Apply default request parameters.
 	        (_a = parameters.include) !== null && _a !== void 0 ? _a : (parameters.include = {});
-	        (_b = (_g = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_g.customFields = INCLUDE_CUSTOM_FIELDS$7);
-	        (_c = (_h = parameters.include).totalCount) !== null && _c !== void 0 ? _c : (_h.totalCount = INCLUDE_TOTAL_COUNT$2);
-	        (_d = (_j = parameters.include).channelFields) !== null && _d !== void 0 ? _d : (_j.channelFields = INCLUDE_CHANNEL_FIELDS);
-	        (_e = (_k = parameters.include).customChannelFields) !== null && _e !== void 0 ? _e : (_k.customChannelFields = INCLUDE_CHANNEL_CUSTOM_FIELDS);
-	        (_f = parameters.limit) !== null && _f !== void 0 ? _f : (parameters.limit = LIMIT$3);
+	        (_b = (_l = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_l.customFields = INCLUDE_CUSTOM_FIELDS$7);
+	        (_c = (_m = parameters.include).totalCount) !== null && _c !== void 0 ? _c : (_m.totalCount = INCLUDE_TOTAL_COUNT$2);
+	        (_d = (_o = parameters.include).statusField) !== null && _d !== void 0 ? _d : (_o.statusField = INCLUDE_STATUS$2);
+	        (_e = (_p = parameters.include).typeField) !== null && _e !== void 0 ? _e : (_p.typeField = INCLUDE_TYPE$2);
+	        (_f = (_q = parameters.include).channelFields) !== null && _f !== void 0 ? _f : (_q.channelFields = INCLUDE_CHANNEL_FIELDS);
+	        (_g = (_r = parameters.include).customChannelFields) !== null && _g !== void 0 ? _g : (_r.customChannelFields = INCLUDE_CHANNEL_CUSTOM_FIELDS);
+	        (_h = (_s = parameters.include).channelStatusField) !== null && _h !== void 0 ? _h : (_s.channelStatusField = INCLUDE_CHANNEL_STATUS_FIELD);
+	        (_j = (_t = parameters.include).channelTypeField) !== null && _j !== void 0 ? _j : (_t.channelTypeField = INCLUDE_CHANNEL_TYPE_FIELD);
+	        (_k = parameters.limit) !== null && _k !== void 0 ? _k : (parameters.limit = LIMIT$3);
 	        // Remap for backward compatibility.
 	        if (this.parameters.userId)
 	            this.parameters.uuid = this.parameters.userId;
@@ -11307,10 +11353,18 @@
 	        else
 	            sorting = Object.entries(sort !== null && sort !== void 0 ? sort : {}).map(([option, order]) => (order !== null ? `${option}:${order}` : option));
 	        const includeFlags = ['channel.status', 'channel.type', 'status'];
+	        if (include.statusField)
+	            includeFlags.push('status');
+	        if (include.typeField)
+	            includeFlags.push('type');
 	        if (include.customFields)
 	            includeFlags.push('custom');
 	        if (include.channelFields)
 	            includeFlags.push('channel');
+	        if (include.channelStatusField)
+	            includeFlags.push('channel.status');
+	        if (include.channelTypeField)
+	            includeFlags.push('channel.type');
 	        if (include.customChannelFields)
 	            includeFlags.push('channel.custom');
 	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ count: `${include.totalCount}` }, (includeFlags.length > 0 ? { include: includeFlags.join(',') } : {})), (filter ? { filter } : {})), ((page === null || page === void 0 ? void 0 : page.next) ? { start: page.next } : {})), ((page === null || page === void 0 ? void 0 : page.prev) ? { end: page.prev } : {})), (limit ? { limit } : {})), (sorting.length ? { sort: sorting } : {}));
@@ -11323,7 +11377,7 @@
 	                    return { channel: { id: channel } };
 	                }
 	                else {
-	                    return { channel: { id: channel.id }, status: channel.status, custom: channel.custom };
+	                    return { channel: { id: channel.id }, status: channel.status, type: channel.type, custom: channel.custom };
 	                }
 	            }),
 	        });
@@ -11570,9 +11624,13 @@
 	 */
 	const INCLUDE_CUSTOM_FIELDS$3 = false;
 	/**
-	 * Whether member's status field should be included in response or not.
+	 * Whether member's `status` field should be included in response or not.
 	 */
-	const INCLUDE_STATUS = false;
+	const INCLUDE_STATUS$1 = false;
+	/**
+	 * Whether member's `type` field should be included in response or not.
+	 */
+	const INCLUDE_TYPE$1 = false;
 	/**
 	 * Whether total number of members should be included in response or not.
 	 */
@@ -11584,11 +11642,11 @@
 	/**
 	 * Whether `UUID` status field should be included in response or not.
 	 */
-	const INCLUDE_UUID_STATUS_FIELD = false;
+	const INCLUDE_UUID_STATUS_FIELD$1 = false;
 	/**
 	 * Whether `UUID` type field should be included in response or not.
 	 */
-	const INCLUDE_UUID_TYPE_FIELD = false;
+	const INCLUDE_UUID_TYPE_FIELD$1 = false;
 	/**
 	 * Whether `UUID` custom field should be included in response or not.
 	 */
@@ -11605,20 +11663,21 @@
 	 */
 	class GetChannelMembersRequest extends AbstractRequest {
 	    constructor(parameters) {
-	        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-	        var _k, _l, _m, _o, _p, _q, _r;
+	        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+	        var _l, _m, _o, _p, _q, _r, _s, _t;
 	        super();
 	        this.parameters = parameters;
 	        // Apply default request parameters.
 	        (_a = parameters.include) !== null && _a !== void 0 ? _a : (parameters.include = {});
-	        (_b = (_k = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_k.customFields = INCLUDE_CUSTOM_FIELDS$3);
-	        (_c = (_l = parameters.include).totalCount) !== null && _c !== void 0 ? _c : (_l.totalCount = INCLUDE_TOTAL_COUNT$1);
-	        (_d = (_m = parameters.include).statusField) !== null && _d !== void 0 ? _d : (_m.statusField = INCLUDE_STATUS);
-	        (_e = (_o = parameters.include).UUIDFields) !== null && _e !== void 0 ? _e : (_o.UUIDFields = INCLUDE_UUID_FIELDS$1);
-	        (_f = (_p = parameters.include).customUUIDFields) !== null && _f !== void 0 ? _f : (_p.customUUIDFields = INCLUDE_UUID_CUSTOM_FIELDS$1);
-	        (_g = (_q = parameters.include).UUIDStatusField) !== null && _g !== void 0 ? _g : (_q.UUIDStatusField = INCLUDE_UUID_STATUS_FIELD);
-	        (_h = (_r = parameters.include).UUIDTypeField) !== null && _h !== void 0 ? _h : (_r.UUIDTypeField = INCLUDE_UUID_TYPE_FIELD);
-	        (_j = parameters.limit) !== null && _j !== void 0 ? _j : (parameters.limit = LIMIT$1);
+	        (_b = (_l = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_l.customFields = INCLUDE_CUSTOM_FIELDS$3);
+	        (_c = (_m = parameters.include).totalCount) !== null && _c !== void 0 ? _c : (_m.totalCount = INCLUDE_TOTAL_COUNT$1);
+	        (_d = (_o = parameters.include).statusField) !== null && _d !== void 0 ? _d : (_o.statusField = INCLUDE_STATUS$1);
+	        (_e = (_p = parameters.include).typeField) !== null && _e !== void 0 ? _e : (_p.typeField = INCLUDE_TYPE$1);
+	        (_f = (_q = parameters.include).UUIDFields) !== null && _f !== void 0 ? _f : (_q.UUIDFields = INCLUDE_UUID_FIELDS$1);
+	        (_g = (_r = parameters.include).customUUIDFields) !== null && _g !== void 0 ? _g : (_r.customUUIDFields = INCLUDE_UUID_CUSTOM_FIELDS$1);
+	        (_h = (_s = parameters.include).UUIDStatusField) !== null && _h !== void 0 ? _h : (_s.UUIDStatusField = INCLUDE_UUID_STATUS_FIELD$1);
+	        (_j = (_t = parameters.include).UUIDTypeField) !== null && _j !== void 0 ? _j : (_t.UUIDTypeField = INCLUDE_UUID_TYPE_FIELD$1);
+	        (_k = parameters.limit) !== null && _k !== void 0 ? _k : (parameters.limit = LIMIT$1);
 	    }
 	    operation() {
 	        return RequestOperation$1.PNSetMembersOperation;
@@ -11652,6 +11711,8 @@
 	        const includeFlags = [];
 	        if (include.statusField)
 	            includeFlags.push('status');
+	        if (include.typeField)
+	            includeFlags.push('type');
 	        if (include.customFields)
 	            includeFlags.push('custom');
 	        if (include.UUIDFields)
@@ -11680,6 +11741,14 @@
 	 */
 	const INCLUDE_CUSTOM_FIELDS$2 = false;
 	/**
+	 * Whether member's `status` field should be included in response or not.
+	 */
+	const INCLUDE_STATUS = false;
+	/**
+	 * Whether member's `type` field should be included in response or not.
+	 */
+	const INCLUDE_TYPE = false;
+	/**
 	 * Whether total number of members should be included in response or not.
 	 */
 	const INCLUDE_TOTAL_COUNT = false;
@@ -11687,6 +11756,14 @@
 	 * Whether `UUID` fields should be included in response or not.
 	 */
 	const INCLUDE_UUID_FIELDS = false;
+	/**
+	 * Whether `UUID` status field should be included in response or not.
+	 */
+	const INCLUDE_UUID_STATUS_FIELD = false;
+	/**
+	 * Whether `UUID` type field should be included in response or not.
+	 */
+	const INCLUDE_UUID_TYPE_FIELD = false;
 	/**
 	 * Whether `UUID` custom field should be included in response or not.
 	 */
@@ -11703,17 +11780,21 @@
 	 */
 	class SetChannelMembersRequest extends AbstractRequest {
 	    constructor(parameters) {
-	        var _a, _b, _c, _d, _e, _f;
-	        var _g, _h, _j, _k;
+	        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+	        var _l, _m, _o, _p, _q, _r, _s, _t;
 	        super({ method: TransportMethod.PATCH });
 	        this.parameters = parameters;
 	        // Apply default request parameters.
 	        (_a = parameters.include) !== null && _a !== void 0 ? _a : (parameters.include = {});
-	        (_b = (_g = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_g.customFields = INCLUDE_CUSTOM_FIELDS$2);
-	        (_c = (_h = parameters.include).totalCount) !== null && _c !== void 0 ? _c : (_h.totalCount = INCLUDE_TOTAL_COUNT);
-	        (_d = (_j = parameters.include).UUIDFields) !== null && _d !== void 0 ? _d : (_j.UUIDFields = INCLUDE_UUID_FIELDS);
-	        (_e = (_k = parameters.include).customUUIDFields) !== null && _e !== void 0 ? _e : (_k.customUUIDFields = INCLUDE_UUID_CUSTOM_FIELDS);
-	        (_f = parameters.limit) !== null && _f !== void 0 ? _f : (parameters.limit = LIMIT);
+	        (_b = (_l = parameters.include).customFields) !== null && _b !== void 0 ? _b : (_l.customFields = INCLUDE_CUSTOM_FIELDS$2);
+	        (_c = (_m = parameters.include).totalCount) !== null && _c !== void 0 ? _c : (_m.totalCount = INCLUDE_TOTAL_COUNT);
+	        (_d = (_o = parameters.include).statusField) !== null && _d !== void 0 ? _d : (_o.statusField = INCLUDE_STATUS);
+	        (_e = (_p = parameters.include).typeField) !== null && _e !== void 0 ? _e : (_p.typeField = INCLUDE_TYPE);
+	        (_f = (_q = parameters.include).UUIDFields) !== null && _f !== void 0 ? _f : (_q.UUIDFields = INCLUDE_UUID_FIELDS);
+	        (_g = (_r = parameters.include).customUUIDFields) !== null && _g !== void 0 ? _g : (_r.customUUIDFields = INCLUDE_UUID_CUSTOM_FIELDS);
+	        (_h = (_s = parameters.include).UUIDStatusField) !== null && _h !== void 0 ? _h : (_s.UUIDStatusField = INCLUDE_UUID_STATUS_FIELD);
+	        (_j = (_t = parameters.include).UUIDTypeField) !== null && _j !== void 0 ? _j : (_t.UUIDTypeField = INCLUDE_UUID_TYPE_FIELD);
+	        (_k = parameters.limit) !== null && _k !== void 0 ? _k : (parameters.limit = LIMIT);
 	    }
 	    operation() {
 	        return RequestOperation$1.PNSetMembersOperation;
@@ -11748,10 +11829,18 @@
 	        else
 	            sorting = Object.entries(sort !== null && sort !== void 0 ? sort : {}).map(([option, order]) => (order !== null ? `${option}:${order}` : option));
 	        const includeFlags = ['uuid.status', 'uuid.type', 'type'];
+	        if (include.statusField)
+	            includeFlags.push('status');
+	        if (include.typeField)
+	            includeFlags.push('type');
 	        if (include.customFields)
 	            includeFlags.push('custom');
 	        if (include.UUIDFields)
 	            includeFlags.push('uuid');
+	        if (include.UUIDStatusField)
+	            includeFlags.push('uuid.status');
+	        if (include.UUIDTypeField)
+	            includeFlags.push('uuid.type');
 	        if (include.customUUIDFields)
 	            includeFlags.push('uuid.custom');
 	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ count: `${include.totalCount}` }, (includeFlags.length > 0 ? { include: includeFlags.join(',') } : {})), (filter ? { filter } : {})), ((page === null || page === void 0 ? void 0 : page.next) ? { start: page.next } : {})), ((page === null || page === void 0 ? void 0 : page.prev) ? { end: page.prev } : {})), (limit ? { limit } : {})), (sorting.length ? { sort: sorting } : {}));
@@ -11764,7 +11853,7 @@
 	                    return { uuid: { id: uuid } };
 	                }
 	                else {
-	                    return { uuid: { id: uuid.id }, status: uuid.status, custom: uuid.custom };
+	                    return { uuid: { id: uuid.id }, status: uuid.status, type: uuid.type, custom: uuid.custom };
 	                }
 	            }),
 	        });
