@@ -50,12 +50,12 @@ export class TitaniumTransport implements Transport {
       new Promise<TransportResponse>((resolve, reject) => {
         const start = new Date().getTime();
 
-        this.logRequestProcessProgress(url);
+        this.logRequestProcessProgress(url, req.body);
 
         xhr.onload = () => {
           const response = this.transportResponseFromXHR(url, xhr);
 
-          this.logRequestProcessProgress(url, new Date().getTime() - start, response.body);
+          this.logRequestProcessProgress(url, undefined, new Date().getTime() - start, response.body);
           resolve(response);
         };
 
@@ -76,7 +76,7 @@ export class TitaniumTransport implements Transport {
             body = response.body;
           }
 
-          this.logRequestProcessProgress(url, elapsed, body);
+          this.logRequestProcessProgress(url, undefined, elapsed, body);
 
           reject(error);
         };
@@ -144,29 +144,37 @@ export class TitaniumTransport implements Transport {
    * Log out request processing progress and result.
    *
    * @param url - Endpoint Url used by {@link Ti.Network.HTTPClient|HTTPClient}.
+   * @param [requestBody] - POST / PATCH body.
    * @param [elapsed] - How many times passed since request processing started.
    * @param [body] - Service response (if available).
    */
-  private logRequestProcessProgress(url: string, elapsed?: number, body?: ArrayBuffer) {
+  private logRequestProcessProgress(
+    url: string,
+    requestBody: TransportRequest['body'],
+    elapsed?: number,
+    body?: ArrayBuffer,
+  ) {
     if (!this.logVerbosity) return;
 
     const { protocol, host, pathname, search } = new URL(url);
     const timestamp = new Date().toISOString();
 
     if (!elapsed) {
+      let outgoing = `[${timestamp}]\n${protocol}//${host}${pathname}\n${search}`;
+      if (requestBody && (typeof requestBody === 'string' || requestBody instanceof ArrayBuffer)) {
+        if (typeof requestBody === 'string') outgoing += `\n\n${requestBody}`;
+        else outgoing += `\n\n${TitaniumTransport.decoder.decode(requestBody)}`;
+      }
+
       Ti.API.info('<<<<<');
-      Ti.API.info([`[${timestamp}]`, `\n${protocol}//${host}${pathname}`, `\n${search}`]);
+      Ti.API.info(outgoing);
       Ti.API.info('-----');
     } else {
-      const stringifiedBody = body ? TitaniumTransport.decoder.decode(body) : undefined;
+      let outgoing = `[${timestamp} / ${elapsed}]\n${protocol}//${host}${pathname}\n${search}`;
+      if (body) outgoing += `\n\n${TitaniumTransport.decoder.decode(body)}`;
 
       Ti.API.info('>>>>>>');
-      Ti.API.info([
-        `[${timestamp} / ${elapsed}]`,
-        `\n${protocol}//${host}${pathname}`,
-        `\n${search}`,
-        `\n${stringifiedBody}`,
-      ]);
+      Ti.API.info(outgoing);
       Ti.API.info('-----');
     }
   }

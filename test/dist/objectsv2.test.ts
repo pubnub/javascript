@@ -99,7 +99,7 @@ describe('Objects V2 system tests', () => {
   it('should set memberships', async () => {
     const result = await pubnub.objects.setMemberships({
       uuid: UUID_1,
-      channels: [{ id: CHANNEL_1, custom: { myData: 42 } }],
+      channels: [{ id: CHANNEL_1, custom: { myData: 42 }, status: 'active', type: 'test' }],
     });
 
     expect(result.status).to.equal(200);
@@ -119,6 +119,8 @@ describe('Objects V2 system tests', () => {
     const result = await pubnub.objects.getMemberships({
       uuid: UUID_1,
       include: {
+        statusField: true,
+        typeField: true,
         customFields: true,
         customChannelFields: true,
         channelFields: true,
@@ -128,6 +130,8 @@ describe('Objects V2 system tests', () => {
     expect(result.status).to.equal(200);
     expect(result.data[0].custom?.myData).to.equal(42);
     assert('name' in result.data[0].channel);
+    expect(result.data[0].status).to.equal('active');
+    expect(result.data[0].type).to.equal('test');
     expect(result.data[0].channel?.name).to.equal(CHANNEL_NAME);
     expect(result.data[0].channel?.custom?.foo).to.be.true;
   });

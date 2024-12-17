@@ -24,9 +24,14 @@ import { encodeString } from '../../../utils';
 const INCLUDE_CUSTOM_FIELDS = false;
 
 /**
- * Whether member's status field should be included in response or not.
+ * Whether member's `status` field should be included in response or not.
  */
 const INCLUDE_STATUS = false;
+
+/**
+ * Whether member's `type` field should be included in response or not.
+ */
+const INCLUDE_TYPE = false;
 
 /**
  * Whether total number of members should be included in response or not.
@@ -93,6 +98,7 @@ export class GetChannelMembersRequest<
     parameters.include.customFields ??= INCLUDE_CUSTOM_FIELDS;
     parameters.include.totalCount ??= INCLUDE_TOTAL_COUNT;
     parameters.include.statusField ??= INCLUDE_STATUS;
+    parameters.include.typeField ??= INCLUDE_TYPE;
     parameters.include.UUIDFields ??= INCLUDE_UUID_FIELDS;
     parameters.include.customUUIDFields ??= INCLUDE_UUID_CUSTOM_FIELDS;
     parameters.include.UUIDStatusField ??= INCLUDE_UUID_STATUS_FIELD;
@@ -139,6 +145,7 @@ export class GetChannelMembersRequest<
     const includeFlags: string[] = [];
 
     if (include!.statusField) includeFlags.push('status');
+    if (include!.typeField) includeFlags.push('type');
     if (include!.customFields) includeFlags.push('custom');
     if (include!.UUIDFields) includeFlags.push('uuid');
     if (include!.UUIDStatusField) includeFlags.push('uuid.status');

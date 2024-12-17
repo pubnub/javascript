@@ -3082,6 +3082,15 @@ declare namespace PubNub {
      * presence update.
      */
     timeout?: string[];
+    /**
+     * Indicates whether presence should be requested manually using {@link PubNubCore.hereNow hereNow()}
+     * or not.
+     *
+     * Depending on from the presence activity, the resulting interval update can be too large to be
+     * returned as a presence event with subscribe REST API response. The server will set this flag to
+     * `true` in this case.
+     */
+    hereNowRefresh: boolean;
   };
 
   /**
@@ -3269,6 +3278,14 @@ declare namespace PubNub {
     AppContextEvents,
     'membership',
     Omit<AppContext.ObjectData<AppContext.CustomData>, 'id'> & {
+      /**
+       * User membership status.
+       */
+      status?: string;
+      /**
+       * User membership type.
+       */
+      type?: string;
       /**
        * `Uuid` object which has been used to create relationship with `channel`.
        */
@@ -5054,6 +5071,10 @@ declare namespace PubNub {
        */
       status?: string;
       /**
+       * App Context objects relation type.
+       */
+      type?: string;
+      /**
        * Additional data associated with App Context object relation (membership or members).
        *
        * **Important:** Values must be scalars; only arrays or objects are supported.
@@ -5124,11 +5145,17 @@ declare namespace PubNub {
        */
       customChannelFields?: boolean;
       /**
-       * Whether to include the membership's status field in the response.
+       * Whether to include the membership's `status` field in the response.
        *
        * @default `false`
        */
       statusField?: boolean;
+      /**
+       * Whether to include the membership's `type` field in the response.
+       *
+       * @default `false`
+       */
+      typeField?: boolean;
       /**
        * Whether to include the channel's status field in the response.
        *
@@ -5162,11 +5189,17 @@ declare namespace PubNub {
        */
       customUUIDFields?: boolean;
       /**
-       * Whether to include the members's status field in the response.
+       * Whether to include the member's `status` field in the response.
        *
        * @default `false`
        */
       statusField?: boolean;
+      /**
+       * Whether to include the member's `type` field in the response.
+       *
+       * @default `false`
+       */
+      typeField?: boolean;
       /**
        * Whether to include the user's status field in the response.
        *
@@ -5276,11 +5309,15 @@ declare namespace PubNub {
       | 'channel.name'
       | 'channel.description'
       | 'channel.updated'
+      | 'channel.status'
+      | 'channel.type'
       | 'space.id'
       | 'space.name'
       | 'space.description'
       | 'space.updated'
       | 'updated'
+      | 'status'
+      | 'type'
       | {
           /**
            * Sort results by channel's `id` in ascending (`asc`) or descending (`desc`) order.
@@ -5306,6 +5343,18 @@ declare namespace PubNub {
            * Specify `null` for default sorting direction (ascending).
            */
           'channel.updated'?: 'asc' | 'desc' | null;
+          /**
+           * Sort results by channel's `status` in ascending (`asc`) or descending (`desc`) order.
+           *
+           * Specify `null` for default sorting direction (ascending).
+           */
+          'channel.status'?: 'asc' | 'desc' | null;
+          /**
+           * Sort results by channel's `type` in ascending (`asc`) or descending (`desc`) order.
+           *
+           * Specify `null` for default sorting direction (ascending).
+           */
+          'channel.type'?: 'asc' | 'desc' | null;
           /**
            * Sort results by channel's `id` in ascending (`asc`) or descending (`desc`) order.
            *
@@ -5344,6 +5393,18 @@ declare namespace PubNub {
            * Specify `null` for default sorting direction (ascending).
            */
           updated?: 'asc' | 'desc' | null;
+          /**
+           * Sort results by `status` in ascending (`asc`) or descending (`desc`) order.
+           *
+           * Specify `null` for default sorting direction (ascending).
+           */
+          status?: 'asc' | 'desc' | null;
+          /**
+           * Sort results by `type` in ascending (`asc`) or descending (`desc`) order.
+           *
+           * Specify `null` for default sorting direction (ascending).
+           */
+          type?: 'asc' | 'desc' | null;
         };
 
     /**
@@ -5353,10 +5414,14 @@ declare namespace PubNub {
       | 'uuid.id'
       | 'uuid.name'
       | 'uuid.updated'
+      | 'uuid.status'
+      | 'uuid.type'
       | 'user.id'
       | 'user.name'
       | 'user.updated'
       | 'updated'
+      | 'status'
+      | 'type'
       | {
           /**
            * Sort results by user's `id` in ascending (`asc`) or descending (`desc`) order.
@@ -5376,6 +5441,18 @@ declare namespace PubNub {
            * Specify `null` for default sorting direction (ascending).
            */
           'uuid.updated'?: 'asc' | 'desc' | null;
+          /**
+           * Sort results by user's `status` in ascending (`asc`) or descending (`desc`) order.
+           *
+           * Specify `null` for default sorting direction (ascending).
+           */
+          'uuid.status'?: 'asc' | 'desc' | null;
+          /**
+           * Sort results by user's `type` in ascending (`asc`) or descending (`desc`) order.
+           *
+           * Specify `null` for default sorting direction (ascending).
+           */
+          'uuid.type'?: 'asc' | 'desc' | null;
           /**
            * Sort results by user's `id` in ascending (`asc`) or descending (`desc`) order.
            *
@@ -5406,6 +5483,18 @@ declare namespace PubNub {
            * Specify `null` for default sorting direction (ascending).
            */
           updated?: 'asc' | 'desc' | null;
+          /**
+           * Sort results by `status` in ascending (`asc`) or descending (`desc`) order.
+           *
+           * Specify `null` for default sorting direction (ascending).
+           */
+          status?: 'asc' | 'desc' | null;
+          /**
+           * Sort results by `type` in ascending (`asc`) or descending (`desc`) order.
+           *
+           * Specify `null` for default sorting direction (ascending).
+           */
+          type?: 'asc' | 'desc' | null;
         };
 
     /**
@@ -5691,6 +5780,17 @@ declare namespace PubNub {
       ObjectData<MembershipCustom>,
       'id'
     > & {
+      /**
+       * User's membership status.
+       */
+      status?: string;
+      /**
+       * User's membership type.
+       */
+      type?: string;
+      /**
+       * Channel for which `user` has membership.
+       */
       channel:
         | ChannelMetadataObject<ChannelCustom>
         | {
@@ -5744,7 +5844,7 @@ declare namespace PubNub {
      * Update Memberships request parameters.
      */
     export type SetMembershipsParameters<Custom extends CustomData> = PagedRequestParameters<
-      Omit<MembershipsIncludeOptions, 'statusField' | 'channelStatusField' | 'channelTypeField'>,
+      MembershipsIncludeOptions,
       MembershipsSortingOptions
     > & {
       /**
@@ -5847,6 +5947,17 @@ declare namespace PubNub {
       ObjectData<MemberCustom>,
       'id'
     > & {
+      /**
+       * Channel's member status.
+       */
+      status?: string;
+      /**
+       * Channel's member type.
+       */
+      type?: string;
+      /**
+       * Member of the `channel`.
+       */
       uuid:
         | UUIDMetadataObject<UUIDCustom>
         | {
@@ -5889,7 +6000,7 @@ declare namespace PubNub {
      * Update Members request parameters.
      */
     export type SetChannelMembersParameters<Custom extends CustomData> = PagedRequestParameters<
-      Omit<MembersIncludeOptions, 'statusField' | 'UUIDStatusField' | 'UUIDTypeField'>,
+      MembersIncludeOptions,
       MembersSortingOptions
     > & {
       /**

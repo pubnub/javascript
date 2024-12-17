@@ -101,7 +101,11 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
     if (process.env.CRYPTO_MODULE !== 'disabled') cryptography = new NodeCryptography();
 
     // Setup transport provider.
-    const transport = new NodeTransport(configuration.keepAlive, configuration.keepAliveSettings);
+    const transport = new NodeTransport(
+      configuration.keepAlive,
+      configuration.keepAliveSettings,
+      clientConfiguration.logVerbosity!,
+    );
     const transportMiddleware = new PubNubMiddleware({
       clientConfiguration,
       tokenManager,

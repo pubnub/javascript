@@ -54,7 +54,7 @@ export class WebReactNativeTransport implements Transport {
       this.requestFromTransportRequest(req).then((request) => {
         const start = new Date().getTime();
 
-        this.logRequestProcessProgress(request);
+        this.logRequestProcessProgress(request, req.body);
 
         /**
          * Setup request timeout promise.
@@ -94,7 +94,7 @@ export class WebReactNativeTransport implements Transport {
 
             if (status >= 400) throw PubNubAPIError.create(transportResponse);
 
-            this.logRequestProcessProgress(request, new Date().getTime() - start, responseBody);
+            this.logRequestProcessProgress(request, undefined, new Date().getTime() - start, responseBody);
 
             return transportResponse;
           })
@@ -162,31 +162,39 @@ export class WebReactNativeTransport implements Transport {
    * Log out request processing progress and result.
    *
    * @param request - Platform-specific
+   * @param [requestBody] - POST / PATCH body.
    * @param [elapsed] - How many seconds passed since request processing started.
    * @param [body] - Service response (if available).
    *
    * @internal
    */
-  protected logRequestProcessProgress(request: Request, elapsed?: number, body?: ArrayBuffer) {
+  protected logRequestProcessProgress(
+    request: Request,
+    requestBody: TransportRequest['body'],
+    elapsed?: number,
+    body?: ArrayBuffer,
+  ) {
     if (!this.logVerbosity) return;
 
     const { protocol, host, pathname, search } = new URL(request.url);
     const timestamp = new Date().toISOString();
 
     if (!elapsed) {
-      console.log('<<<<<');
-      console.log(`[${timestamp}]`, `\n${protocol}//${host}${pathname}`, `\n${search}`);
+      let outgoing = `[${timestamp}]\n${protocol}//${host}${pathname}\n${search}`;
+      if (requestBody && (typeof requestBody === 'string' || requestBody instanceof ArrayBuffer)) {
+        if (typeof requestBody === 'string') outgoing += `\n\n${requestBody}`;
+        else outgoing += `\n\n${WebReactNativeTransport.decoder.decode(requestBody)}`;
+      }
+
+      console.log(`<<<<<`);
+      console.log(outgoing);
       console.log('-----');
     } else {
-      const stringifiedBody = body ? WebReactNativeTransport.decoder.decode(body) : undefined;
+      let outgoing = `[${timestamp} / ${elapsed}]\n${protocol}//${host}${pathname}\n${search}`;
+      if (body) outgoing += `\n\n${WebReactNativeTransport.decoder.decode(body)}`;
 
       console.log('>>>>>>');
-      console.log(
-        `[${timestamp} / ${elapsed}]`,
-        `\n${protocol}//${host}${pathname}`,
-        `\n${search}`,
-        `\n${stringifiedBody}`,
-      );
+      console.log(outgoing);
       console.log('-----');
     }
   }
