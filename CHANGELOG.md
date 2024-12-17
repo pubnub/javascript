@@ -1,3 +1,17 @@
+## v8.4.0
+December 17 2024
+
+#### Added
+- Add `type` field for members and membership objects and subscribe response.
+
+#### Fixed
+- Fixed type which limited number of options which can be included into response / used in sorting for members / membership setting API.
+- Fix missing `hereNowRefresh` flag from the presence object received from subscribe.
+- Fix issue because of which `logVerbosity` set to `true` still didn't print logs for Node.js.
+
+#### Modified
+- Change format and add proper request body output.
+
 ## v8.3.2
 December 12 2024
 
