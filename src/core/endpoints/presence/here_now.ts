@@ -165,7 +165,7 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse> {
     // Extract general presence information.
     const totalChannels = 'occupancy' in serviceResponse ? 1 : serviceResponse.payload.total_channels;
     const totalOccupancy =
-      'occupancy' in serviceResponse ? serviceResponse.occupancy : serviceResponse.payload.total_channels;
+      'occupancy' in serviceResponse ? serviceResponse.occupancy : serviceResponse.payload.total_occupancy;
     const channelsPresence: Presence.HereNowResponse['channels'] = {};
     let channels: Required<MultipleChannelServiceResponse['payload']>['channels'] = {};
 
