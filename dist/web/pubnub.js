@@ -3961,7 +3961,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.4.0';
+	            return '8.4.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -8810,7 +8810,7 @@
 	                throw PubNubAPIError.create(response);
 	            // Extract general presence information.
 	            const totalChannels = 'occupancy' in serviceResponse ? 1 : serviceResponse.payload.total_channels;
-	            const totalOccupancy = 'occupancy' in serviceResponse ? serviceResponse.occupancy : serviceResponse.payload.total_channels;
+	            const totalOccupancy = 'occupancy' in serviceResponse ? serviceResponse.occupancy : serviceResponse.payload.total_occupancy;
 	            const channelsPresence = {};
 	            let channels = {};
 	            // Remap single channel presence to multiple channels presence response.

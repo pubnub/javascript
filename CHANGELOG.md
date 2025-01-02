@@ -1,3 +1,9 @@
+## v8.4.1
+January 02 2025
+
+#### Fixed
+- Fixed issue of hereNow response parsing for `totalOccupancy` field.
+
 ## v8.4.0
 December 17 2024
 
