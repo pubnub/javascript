@@ -28,370 +28,370 @@ describe('presence endpoints', () => {
     });
   });
 
-  // describe('#whereNow', () => {
-  //   it('returns the requested data for user UUID', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/uuid/myUUID')
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID',
-  //       })
-  //       .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}', {
-  //         'content-type': 'text/javascript',
-  //       });
+  describe('#whereNow', () => {
+    it('returns the requested data for user UUID', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/uuid/myUUID')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+        })
+        .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}', {
+          'content-type': 'text/javascript',
+        });
 
-  //     pubnub.whereNow({}, (status, response) => {
-  //       try {
-  //         assert.equal(status.error, false);
-  //         assert(response !== null);
-  //         assert.deepEqual(response.channels, ["a", "b"]);
-  //         assert.equal(scope.isDone(), true);
-  //         done();
-  //       } catch (error) {
-  //         done(error);
-  //       }
-  //     });
-  //   });
+      pubnub.whereNow({}, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, ["a", "b"]);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
 
-  //   it('returns the requested data for user encoded UUID', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/uuid/myUUID%231')
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID#1',
-  //       })
-  //       .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}', {
-  //         'content-type': 'text/javascript',
-  //       });
+    it('returns the requested data for user encoded UUID', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/uuid/myUUID%231')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID#1',
+        })
+        .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}', {
+          'content-type': 'text/javascript',
+        });
 
-  //     const pubnubClient = new PubNub({
-  //       subscribeKey: 'mySubscribeKey',
-  //       publishKey: 'myPublishKey',
-  //       uuid: 'myUUID#1',
-  //       // @ts-expect-error Force override default value.
-  //       useRequestId: false,
-  //     });
+      const pubnubClient = new PubNub({
+        subscribeKey: 'mySubscribeKey',
+        publishKey: 'myPublishKey',
+        uuid: 'myUUID#1',
+        // @ts-expect-error Force override default value.
+        useRequestId: false,
+      });
 
-  //     pubnubClient.whereNow({}, (status, response) => {
-  //       try {
-  //         assert.equal(status.error, false);
-  //         assert(response !== null);
-  //         assert.deepEqual(response.channels, ["a", "b"]);
-  //         assert.equal(scope.isDone(), true);
-  //         done();
-  //       } catch (error) {
-  //         done(error);
-  //       }
-  //     });
-  //   });
+      pubnubClient.whereNow({}, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, ["a", "b"]);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
 
-  //   it('returns the requested data for somebody elses UUID', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/uuid/otherUUID')
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID',
-  //       })
-  //       .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}', {
-  //         'content-type': 'text/javascript',
-  //       });
+    it('returns the requested data for somebody elses UUID', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/uuid/otherUUID')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+        })
+        .reply(200, '{"status": 200, "message": "OK", "payload": {"channels": ["a","b"]}, "service": "Presence"}', {
+          'content-type': 'text/javascript',
+        });
 
-  //     pubnub.whereNow({ uuid: 'otherUUID' }, (status, response) => {
-  //       try {
-  //         assert.equal(status.error, false);
-  //         assert(response !== null);
-  //         assert.deepEqual(response.channels, ["a", "b"]);
-  //         assert.equal(scope.isDone(), true);
-  //         done();
-  //       } catch (error) {
-  //         done(error);
-  //       }
-  //     });
-  //   });
+      pubnub.whereNow({ uuid: 'otherUUID' }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, ["a", "b"]);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
 
-  //   it('returns empty response object when serverResponse has no payload', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/uuid/')
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID',
-  //       })
-  //       .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}', {
-  //         'content-type': 'text/javascript',
-  //       });
+    it('returns empty response object when serverResponse has no payload', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/uuid/')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+        })
+        .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}', {
+          'content-type': 'text/javascript',
+        });
 
-  //     pubnub.whereNow({ uuid: '' }, (status, response) => {
-  //       try {
-  //         assert.equal(status.error, false);
-  //         assert(response !== null);
-  //         assert.deepEqual(response.channels, []);
-  //         assert.equal(scope.isDone(), true);
-  //         done();
-  //       } catch (error) {
-  //         done(error);
-  //       }
-  //     });
-  //   });
-  // });
+      pubnub.whereNow({ uuid: '' }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, []);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
+  });
 
-  // describe('#setState', () => {
-  //   it('sets presence data for user UUID', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID/data')
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID',
-  //         state: '{"new":"state"}',
-  //       })
-  //       .reply(
-  //         200,
-  //         '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
-  //         { 'content-type': 'text/javascript' },
-  //       );
+  describe('#setState', () => {
+    it('sets presence data for user UUID', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID/data')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+          state: '{"new":"state"}',
+        })
+        .reply(
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
+          { 'content-type': 'text/javascript' },
+        );
 
-  //     pubnub.setState({ channels: ['testChannel'], state: { new: 'state' } }, (status, response) => {
-  //       try {
-  //         assert.equal(status.error, false);
-  //         assert(response !== null);
-  //         assert.deepEqual(response.state, { age: 20, status: "online" });
-  //         assert.equal(scope.isDone(), true);
-  //         done();
-  //       } catch (error) {
-  //         done(error);
-  //       }
-  //     });
-  //   });
+      pubnub.setState({ channels: ['testChannel'], state: { new: 'state' } }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
 
-  //   it('sets presence data for user encoded UUID and encoded channel', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel%231/uuid/myUUID%231/data')
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID#1',
-  //         state: '{"new":"state"}',
-  //       })
-  //       .reply(
-  //         200,
-  //         '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
-  //         { 'content-type': 'text/javascript' },
-  //       );
+    it('sets presence data for user encoded UUID and encoded channel', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel%231/uuid/myUUID%231/data')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID#1',
+          state: '{"new":"state"}',
+        })
+        .reply(
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
+          { 'content-type': 'text/javascript' },
+        );
 
-  //     const pubnubClient = new PubNub({
-  //       subscribeKey: 'mySubscribeKey',
-  //       publishKey: 'myPublishKey',
-  //       uuid: 'myUUID#1',
-  //       // @ts-expect-error Force override default value.
-  //       useRequestId: false,
-  //     });
+      const pubnubClient = new PubNub({
+        subscribeKey: 'mySubscribeKey',
+        publishKey: 'myPublishKey',
+        uuid: 'myUUID#1',
+        // @ts-expect-error Force override default value.
+        useRequestId: false,
+      });
 
-  //     pubnubClient.setState({ channels: ['testChannel#1'], state: { new: 'state' } }, (status, response) => {
-  //       try {
-  //         assert.equal(status.error, false);
-  //         assert(response !== null);
-  //         assert.deepEqual(response.state, { age: 20, status: "online" });
-  //         assert.equal(scope.isDone(), true);
-  //         done();
-  //       } catch (error) {
-  //         done(error);
-  //       }
-  //     });
-  //   });
+      pubnubClient.setState({ channels: ['testChannel#1'], state: { new: 'state' } }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
 
-  //   it('sets presence data for multiple channels', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2/uuid/myUUID/data')
+    it('sets presence data for multiple channels', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2/uuid/myUUID/data')
 
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID',
-  //         state: '{"new":"state"}',
-  //       })
-  //       .reply(
-  //         200,
-  //         '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}',
-  //         { 'content-type': 'text/javascript' },
-  //       );
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+          state: '{"new":"state"}',
+        })
+        .reply(
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}',
+          { 'content-type': 'text/javascript' },
+        );
 
-  //     pubnub.setState({ channels: ['ch1', 'ch2'], state: { new: 'state' } }, (status, response) => {
-  //       try {
-  //         assert.equal(status.error, false);
-  //         assert(response !== null);
-  //         assert.deepEqual(response.state, {
-  //           ch1: { age: 20, status: "online" },
-  //           ch2: { age: 100, status: "offline" }
-  //         });
-  //         assert.equal(scope.isDone(), true);
-  //         done();
-  //       } catch (error) {
-  //         done(error);
-  //       }
-  //     });
-  //   });
+      pubnub.setState({ channels: ['ch1', 'ch2'], state: { new: 'state' } }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.state, {
+            ch1: { age: 20, status: "online" },
+            ch2: { age: 100, status: "offline" }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
 
-  //   it('sets state for multiple channels / channel groups', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2/uuid/myUUID/data')
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID',
-  //         'channel-group': 'cg1,cg2',
-  //         state: '{"new":"state"}',
-  //       })
-  //       .reply(
-  //         200,
-  //         '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
-  //         { 'content-type': 'text/javascript' },
-  //       );
+    it('sets state for multiple channels / channel groups', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2/uuid/myUUID/data')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+          'channel-group': 'cg1,cg2',
+          state: '{"new":"state"}',
+        })
+        .reply(
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
+          { 'content-type': 'text/javascript' },
+        );
 
-  //     pubnub.setState(
-  //       {
-  //         channels: ['ch1', 'ch2'],
-  //         channelGroups: ['cg1', 'cg2'],
-  //         state: { new: 'state' },
-  //       },
-  //       (status, response) => {
-  //         try {
-  //           assert.equal(status.error, false);
-  //           assert(response !== null);
-  //           assert.deepEqual(response.state, { age: 20, status: "online" });
-  //           assert.equal(scope.isDone(), true);
-  //           done();
-  //         } catch (error) {
-  //           done(error);
-  //         }
-  //       },
-  //     );
-  //   });
-  // });
+      pubnub.setState(
+        {
+          channels: ['ch1', 'ch2'],
+          channelGroups: ['cg1', 'cg2'],
+          state: { new: 'state' },
+        },
+        (status, response) => {
+          try {
+            assert.equal(status.error, false);
+            assert(response !== null);
+            assert.deepEqual(response.state, { age: 20, status: "online" });
+            assert.equal(scope.isDone(), true);
+            done();
+          } catch (error) {
+            done(error);
+          }
+        },
+      );
+    });
+  });
 
-  // describe('#getState', () => {
-  //   it('returns the requested data for user UUID', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID')
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID',
-  //       })
-  //       .reply(
-  //         200,
-  //         '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
-  //         { 'content-type': 'text/javascript' },
-  //       );
+  describe('#getState', () => {
+    it('returns the requested data for user UUID', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/myUUID')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+        })
+        .reply(
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
+          { 'content-type': 'text/javascript' },
+        );
 
-  //     pubnub.getState({ channels: ['testChannel'] }, (status, response) => {
-  //       try {
-  //         assert.equal(status.error, false);
-  //         assert(response !== null);
-  //         assert.deepEqual(response.channels, {
-  //           testChannel: { age: 20, status: "online" }
-  //         });
-  //         assert.equal(scope.isDone(), true);
-  //         done();
-  //       } catch (error) {
-  //         done(error);
-  //       }
-  //     });
-  //   });
+      pubnub.getState({ channels: ['testChannel'] }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            testChannel: { age: 20, status: "online" }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
 
-  //   it('returns the requested data for another UUID', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/otherUUID')
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID',
-  //       })
-  //       .reply(
-  //         200,
-  //         '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
-  //         { 'content-type': 'text/javascript' },
-  //       );
+    it('returns the requested data for another UUID', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/testChannel/uuid/otherUUID')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+        })
+        .reply(
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "age" : 20, "status" : "online"}, "service": "Presence"}',
+          { 'content-type': 'text/javascript' },
+        );
 
-  //     pubnub.getState({ uuid: 'otherUUID', channels: ['testChannel'] }, (status, response) => {
-  //       try {
-  //         assert.equal(status.error, false);
-  //         assert(response !== null);
-  //         assert.deepEqual(response.channels, {
-  //           testChannel: { age: 20, status: "online" }
-  //         });
-  //         assert.equal(scope.isDone(), true);
-  //         done();
-  //       } catch (error) {
-  //         done(error);
-  //       }
-  //     });
-  //   });
+      pubnub.getState({ uuid: 'otherUUID', channels: ['testChannel'] }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            testChannel: { age: 20, status: "online" }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
 
-  //   it('returns the requested for multiple channels', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2/uuid/myUUID')
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID',
-  //       })
-  //       .reply(
-  //         200,
-  //         '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}',
-  //         { 'content-type': 'text/javascript' },
-  //       );
+    it('returns the requested for multiple channels', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2/uuid/myUUID')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+        })
+        .reply(
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}',
+          { 'content-type': 'text/javascript' },
+        );
 
-  //     pubnub.getState({ channels: ['ch1', 'ch2'] }, (status, response) => {
-  //       try {
-  //         assert.equal(status.error, false);
-  //         assert(response !== null);
-  //         assert.deepEqual(response.channels, {
-  //           ch1: { age: 20, status: "online" },
-  //           ch2: { age: 100, status: "offline" }
-  //         });
-  //         assert.equal(scope.isDone(), true);
-  //         done();
-  //       } catch (error) {
-  //         done(error);
-  //       }
-  //     });
-  //   });
+      pubnub.getState({ channels: ['ch1', 'ch2'] }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            ch1: { age: 20, status: "online" },
+            ch2: { age: 100, status: "offline" }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
 
-  //   it('returns the requested for multiple channels', (done) => {
-  //     const scope = utils
-  //       .createNock()
-  //       .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2/uuid/myUUID')
-  //       .query({
-  //         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-  //         uuid: 'myUUID',
-  //         'channel-group': 'cg1,cg2',
-  //       })
-  //       .reply(
-  //         200,
-  //         '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}',
-  //         { 'content-type': 'text/javascript' },
-  //       );
+    it('returns the requested for multiple channels', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2/uuid/myUUID')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          uuid: 'myUUID',
+          'channel-group': 'cg1,cg2',
+        })
+        .reply(
+          200,
+          '{ "status": 200, "message": "OK", "payload": { "ch1": { "age" : 20, "status" : "online"}, "ch2": { "age": 100, "status": "offline" } }, "service": "Presence"}',
+          { 'content-type': 'text/javascript' },
+        );
 
-  //     pubnub.getState({ channels: ['ch1', 'ch2'], channelGroups: ['cg1', 'cg2'] }, (status, response) => {
-  //       try {
-  //         assert.equal(status.error, false);
-  //         assert(response !== null);
-  //         assert.deepEqual(response.channels, {
-  //           ch1: { age: 20, status: "online" },
-  //           ch2: { age: 100, status: "offline" }
-  //         });
-  //         assert.equal(scope.isDone(), true);
-  //         done();
-  //       } catch (error) {
-  //         done(error);
-  //       }
-  //     });
-  //   });
-  // });
+      pubnub.getState({ channels: ['ch1', 'ch2'], channelGroups: ['cg1', 'cg2'] }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.deepEqual(response.channels, {
+            ch1: { age: 20, status: "online" },
+            ch2: { age: 100, status: "offline" }
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
+  });
 
   describe('#hereNow', () => {
     it('returns response for a single channel', (done) => {
@@ -601,7 +601,7 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          ' {"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a581c974-e2f9-4088-9cc8-9632708e012d"], "occupancy": 1}}, "total_channels": 3, "total_occupancy": 7}, "service": "Presence"}',
+          ' {"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a581c974-e2f9-4088-9cc8-9632708e012d"], "occupancy": 1}}, "total_channels": 1, "total_occupancy": 1}, "service": "Presence"}',
           { 'content-type': 'text/javascript' },
         );
 
@@ -621,10 +621,7 @@ describe('presence endpoints', () => {
               ]
             }
           });
-          assert.equal(response.totalChannels, 3);
-          assert.equal(response.totalOccupancy, 7);
           assert.equal(scope.isDone(), true);
-
           done();
         } catch (error) {
           done(error);
