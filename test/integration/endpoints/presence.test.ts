@@ -601,7 +601,7 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          ' {"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a581c974-e2f9-4088-9cc8-9632708e012d"], "occupancy": 1}}, "total_channels": 1, "total_occupancy": 1}, "service": "Presence"}',
+          ' {"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a581c974-e2f9-4088-9cc8-9632708e012d"], "occupancy": 1}}, "total_channels": 3, "total_occupancy": 7}, "service": "Presence"}',
           { 'content-type': 'text/javascript' },
         );
 
@@ -621,6 +621,8 @@ describe('presence endpoints', () => {
               ]
             }
           });
+          assert.equal(response.totalChannels, 3);
+          assert.equal(response.totalOccupancy, 7);
           assert.equal(scope.isDone(), true);
           done();
         } catch (error) {
