@@ -1,7 +1,7 @@
 /**
  * Request processing status categories.
  */
-enum StatusCategory {
+export enum StatusCategory {
   /**
    * Call failed when network was unable to complete the call.
    */
