@@ -1,3 +1,9 @@
+## v8.4.2
+January 08 2025
+
+#### Fixed
+- Fix issue with missing `StatusCategory` export in types definition file.
+
 ## v8.4.1
 January 02 2025
 
