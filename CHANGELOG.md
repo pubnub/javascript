@@ -1,3 +1,12 @@
+## v8.5.0
+January 15 2025
+
+#### Added
+- Add `fileRequestTimeout` client configuration option which is specific only for requests which upload and download files.
+
+#### Fixed
+- Fix issue with `instanceId` set to `undefined` for requests with `useInstanceId` configuration flag set to `true`.
+
 ## v8.4.1
 January 02 2025
 
