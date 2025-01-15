@@ -103,6 +103,10 @@ export const makeConfiguration = (
       if (this.useInstanceId) return this._instanceId;
       return undefined;
     },
+    getInstanceId(): string | undefined {
+      if (this.useInstanceId) return this._instanceId;
+      return undefined;
+    },
     getUserId() {
       return this.userId!;
     },
@@ -166,6 +170,9 @@ export const makeConfiguration = (
     },
     getSubscribeTimeout(): number {
       return this.subscribeRequestTimeout!;
+    },
+    getFileTimeout(): number {
+      return this.fileRequestTimeout!;
     },
     get PubNubFile(): PubNubFileConstructor<PubNubFileInterface, unknown> | undefined {
       return base.PubNubFile;

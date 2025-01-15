@@ -806,9 +806,12 @@ export class PubNubCore<
 
     // Complete request configuration.
     const transportRequest = request.request();
-    if (transportRequest.formData && transportRequest.formData.length > 0) {
-      // Set 300 seconds file upload request delay.
-      transportRequest.timeout = 300;
+    if (
+      (transportRequest.formData && transportRequest.formData.length > 0) ||
+      request.operation() === RequestOperation.PNDownloadFileOperation
+    ) {
+      // Set file upload / download request delay.
+      transportRequest.timeout = this._configuration.getFileTimeout();
     } else {
       if (request.operation() === RequestOperation.PNSubscribeOperation)
         transportRequest.timeout = this._configuration.getSubscribeTimeout();
