@@ -100,6 +100,11 @@ const TRANSACTIONAL_REQUEST_TIMEOUT = 15;
 const SUBSCRIBE_REQUEST_TIMEOUT = 310;
 
 /**
+ * File upload / download request timeout.
+ */
+const FILE_REQUEST_TIMEOUT = 300;
+
+/**
  * Default user presence timeout.
  */
 const PRESENCE_TIMEOUT = 300;
@@ -217,6 +222,16 @@ export type UserConfiguration = {
    * @default `310` seconds
    */
   subscribeRequestTimeout?: number;
+
+  /**
+   * File upload / download request timeout in milliseconds.
+   *
+   * Maximum duration for which PubNub client should wait for file upload / download request
+   * completion.
+   *
+   * @default `300` seconds
+   */
+  fileRequestTimeout?: number;
 
   /**
    * `true` to allow catch up on the front-end applications.
@@ -618,6 +633,14 @@ export interface PrivateClientConfiguration
   getSubscribeTimeout(): number;
 
   /**
+   * File requests timeout.
+   *
+   * @returns Maximum duration in milliseconds for which PubNub client should wait for
+   * file upload / download request completion.
+   */
+  getFileTimeout(): number;
+
+  /**
    * PubNub file object constructor.
    */
   get PubNubFile(): PubNubFileConstructor<PubNubFileInterface, unknown> | undefined;
@@ -628,6 +651,13 @@ export interface PrivateClientConfiguration
    * @returns Current PubNub client instance identifier.
    */
   get instanceId(): string | undefined;
+
+  /**
+   * Get PubNub client instance identifier.
+   *
+   * @returns Current PubNub client instance identifier.
+   */
+  getInstanceId(): string | undefined;
 
   /**
    * Get SDK family identifier.
@@ -698,6 +728,7 @@ export const setDefaults = (configuration: UserConfiguration): ExtendedConfigura
   configurationCopy.ssl ??= USE_SSL;
   configurationCopy.transactionalRequestTimeout ??= TRANSACTIONAL_REQUEST_TIMEOUT;
   configurationCopy.subscribeRequestTimeout ??= SUBSCRIBE_REQUEST_TIMEOUT;
+  configurationCopy.fileRequestTimeout ??= FILE_REQUEST_TIMEOUT;
   configurationCopy.restore ??= RESTORE;
   configurationCopy.useInstanceId ??= USE_INSTANCE_ID;
   configurationCopy.suppressLeaveEvents ??= SUPPRESS_LEAVE_EVENTS;

@@ -3645,6 +3645,10 @@
 	 */
 	const SUBSCRIBE_REQUEST_TIMEOUT = 310;
 	/**
+	 * File upload / download request timeout.
+	 */
+	const FILE_REQUEST_TIMEOUT = 300;
+	/**
 	 * Default user presence timeout.
 	 */
 	const PRESENCE_TIMEOUT = 300;
@@ -3660,27 +3664,28 @@
 	 * @internal
 	 */
 	const setDefaults$1 = (configuration) => {
-	    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+	    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
 	    // Copy configuration.
 	    const configurationCopy = Object.assign({}, configuration);
 	    (_a = configurationCopy.logVerbosity) !== null && _a !== void 0 ? _a : (configurationCopy.logVerbosity = USE_VERBOSE_LOGGING);
 	    (_b = configurationCopy.ssl) !== null && _b !== void 0 ? _b : (configurationCopy.ssl = USE_SSL);
 	    (_c = configurationCopy.transactionalRequestTimeout) !== null && _c !== void 0 ? _c : (configurationCopy.transactionalRequestTimeout = TRANSACTIONAL_REQUEST_TIMEOUT);
 	    (_d = configurationCopy.subscribeRequestTimeout) !== null && _d !== void 0 ? _d : (configurationCopy.subscribeRequestTimeout = SUBSCRIBE_REQUEST_TIMEOUT);
-	    (_e = configurationCopy.restore) !== null && _e !== void 0 ? _e : (configurationCopy.restore = RESTORE);
-	    (_f = configurationCopy.useInstanceId) !== null && _f !== void 0 ? _f : (configurationCopy.useInstanceId = USE_INSTANCE_ID);
-	    (_g = configurationCopy.suppressLeaveEvents) !== null && _g !== void 0 ? _g : (configurationCopy.suppressLeaveEvents = SUPPRESS_LEAVE_EVENTS);
-	    (_h = configurationCopy.requestMessageCountThreshold) !== null && _h !== void 0 ? _h : (configurationCopy.requestMessageCountThreshold = DEDUPE_CACHE_SIZE);
-	    (_j = configurationCopy.autoNetworkDetection) !== null && _j !== void 0 ? _j : (configurationCopy.autoNetworkDetection = AUTO_NETWORK_DETECTION);
-	    (_k = configurationCopy.enableEventEngine) !== null && _k !== void 0 ? _k : (configurationCopy.enableEventEngine = ENABLE_EVENT_ENGINE);
-	    (_l = configurationCopy.maintainPresenceState) !== null && _l !== void 0 ? _l : (configurationCopy.maintainPresenceState = MAINTAIN_PRESENCE_STATE);
-	    (_m = configurationCopy.keepAlive) !== null && _m !== void 0 ? _m : (configurationCopy.keepAlive = KEEP_ALIVE$1);
+	    (_e = configurationCopy.fileRequestTimeout) !== null && _e !== void 0 ? _e : (configurationCopy.fileRequestTimeout = FILE_REQUEST_TIMEOUT);
+	    (_f = configurationCopy.restore) !== null && _f !== void 0 ? _f : (configurationCopy.restore = RESTORE);
+	    (_g = configurationCopy.useInstanceId) !== null && _g !== void 0 ? _g : (configurationCopy.useInstanceId = USE_INSTANCE_ID);
+	    (_h = configurationCopy.suppressLeaveEvents) !== null && _h !== void 0 ? _h : (configurationCopy.suppressLeaveEvents = SUPPRESS_LEAVE_EVENTS);
+	    (_j = configurationCopy.requestMessageCountThreshold) !== null && _j !== void 0 ? _j : (configurationCopy.requestMessageCountThreshold = DEDUPE_CACHE_SIZE);
+	    (_k = configurationCopy.autoNetworkDetection) !== null && _k !== void 0 ? _k : (configurationCopy.autoNetworkDetection = AUTO_NETWORK_DETECTION);
+	    (_l = configurationCopy.enableEventEngine) !== null && _l !== void 0 ? _l : (configurationCopy.enableEventEngine = ENABLE_EVENT_ENGINE);
+	    (_m = configurationCopy.maintainPresenceState) !== null && _m !== void 0 ? _m : (configurationCopy.maintainPresenceState = MAINTAIN_PRESENCE_STATE);
+	    (_o = configurationCopy.keepAlive) !== null && _o !== void 0 ? _o : (configurationCopy.keepAlive = KEEP_ALIVE$1);
 	    if (configurationCopy.userId && configurationCopy.uuid)
 	        throw new PubNubError("PubNub client configuration error: use only 'userId'");
-	    (_o = configurationCopy.userId) !== null && _o !== void 0 ? _o : (configurationCopy.userId = configurationCopy.uuid);
+	    (_p = configurationCopy.userId) !== null && _p !== void 0 ? _p : (configurationCopy.userId = configurationCopy.uuid);
 	    if (!configurationCopy.userId)
 	        throw new PubNubError("PubNub client configuration error: 'userId' not set");
-	    else if (((_p = configurationCopy.userId) === null || _p === void 0 ? void 0 : _p.trim().length) === 0)
+	    else if (((_q = configurationCopy.userId) === null || _q === void 0 ? void 0 : _q.trim().length) === 0)
 	        throw new PubNubError("PubNub client configuration error: 'userId' is empty");
 	    // Generate default origin subdomains.
 	    if (!configurationCopy.origin)
@@ -3894,6 +3899,11 @@
 	                return this._instanceId;
 	            return undefined;
 	        },
+	        getInstanceId() {
+	            if (this.useInstanceId)
+	                return this._instanceId;
+	            return undefined;
+	        },
 	        getUserId() {
 	            return this.userId;
 	        },
@@ -3957,11 +3967,14 @@
 	        getSubscribeTimeout() {
 	            return this.subscribeRequestTimeout;
 	        },
+	        getFileTimeout() {
+	            return this.fileRequestTimeout;
+	        },
 	        get PubNubFile() {
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.4.1';
+	            return '8.5.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -4270,7 +4283,7 @@
 	            req.queryParameters = {};
 	        // Modify request with required information.
 	        if (clientConfiguration.useInstanceId)
-	            req.queryParameters['instanceid'] = clientConfiguration.instanceId;
+	            req.queryParameters['instanceid'] = clientConfiguration.getInstanceId();
 	        if (!req.queryParameters['uuid'])
 	            req.queryParameters['uuid'] = clientConfiguration.userId;
 	        if (clientConfiguration.useRequestId)
@@ -13037,9 +13050,10 @@
 	            }
 	            // Complete request configuration.
 	            const transportRequest = request.request();
-	            if (transportRequest.formData && transportRequest.formData.length > 0) {
-	                // Set 300 seconds file upload request delay.
-	                transportRequest.timeout = 300;
+	            if ((transportRequest.formData && transportRequest.formData.length > 0) ||
+	                request.operation() === RequestOperation$1.PNDownloadFileOperation) {
+	                // Set file upload / download request delay.
+	                transportRequest.timeout = this._configuration.getFileTimeout();
 	            }
 	            else {
 	                if (request.operation() === RequestOperation$1.PNSubscribeOperation)

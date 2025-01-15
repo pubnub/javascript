@@ -2498,6 +2498,15 @@ declare namespace PubNub {
      */
     subscribeRequestTimeout?: number;
     /**
+     * File upload / download request timeout in milliseconds.
+     *
+     * Maximum duration for which PubNub client should wait for file upload / download request
+     * completion.
+     *
+     * @default `300` seconds
+     */
+    fileRequestTimeout?: number;
+    /**
      * `true` to allow catch up on the front-end applications.
      *
      * @default `false`

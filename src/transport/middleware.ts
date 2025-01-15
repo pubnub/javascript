@@ -137,7 +137,7 @@ export class PubNubMiddleware implements Transport {
     if (!req.queryParameters) req.queryParameters = {};
 
     // Modify request with required information.
-    if (clientConfiguration.useInstanceId) req.queryParameters['instanceid'] = clientConfiguration.instanceId!;
+    if (clientConfiguration.useInstanceId) req.queryParameters['instanceid'] = clientConfiguration.getInstanceId()!;
     if (!req.queryParameters['uuid']) req.queryParameters['uuid'] = clientConfiguration.userId!;
     if (clientConfiguration.useRequestId) req.queryParameters['requestid'] = req.identifier;
     req.queryParameters['pnsdk'] = this.generatePNSDK();

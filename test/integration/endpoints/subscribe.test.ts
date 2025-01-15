@@ -202,7 +202,7 @@ describe('subscribe endpoints', () => {
     });
   });
 
-  it.only('supports timetoken', (done) => {
+  it('supports timetoken', (done) => {
     const scope0 = utils
       .createNock()
       .get('/v2/subscribe/mySubKey/c1/0')
