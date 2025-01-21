@@ -1,3 +1,9 @@
+## v8.6.0
+January 21 2025
+
+#### Added
+- A new optional parameter `ifMatchesEtag` is added to `setUUIDMetadata` and `setChannelMetadata`. When provided, the server compares the argument value with the ETag on the server and if they don't match a HTTP 412 error is returned.
+
 ## v8.5.0
 January 15 2025
 
