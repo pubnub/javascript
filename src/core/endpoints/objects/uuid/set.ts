@@ -13,7 +13,6 @@ import RequestOperation from '../../../constants/operations';
 import * as AppContext from '../../../types/api/app-context';
 import { KeySet, Query } from '../../../types/api';
 import { encodeString } from '../../../utils';
-import { Headers } from 'node-fetch';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
