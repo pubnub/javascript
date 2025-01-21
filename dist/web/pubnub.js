@@ -3974,7 +3974,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.5.0';
+	            return '8.6.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -11553,6 +11553,14 @@
 	        if (!this.parameters.data)
 	            return 'Data cannot be empty';
 	    }
+	    get headers() {
+	        if (this.parameters.ifMatchesEtag) {
+	            return { 'If-Match': this.parameters.ifMatchesEtag };
+	        }
+	        else {
+	            return undefined;
+	        }
+	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const serviceResponse = this.deserializeResponse(response);
@@ -11971,6 +11979,14 @@
 	            return "'uuid' cannot be empty";
 	        if (!this.parameters.data)
 	            return 'Data cannot be empty';
+	    }
+	    get headers() {
+	        if (this.parameters.ifMatchesEtag) {
+	            return { 'If-Match': this.parameters.ifMatchesEtag };
+	        }
+	        else {
+	            return undefined;
+	        }
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {

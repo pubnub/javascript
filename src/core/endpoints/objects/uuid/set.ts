@@ -70,6 +70,14 @@ export class SetUUIDMetadataRequest<
     if (!this.parameters.data) return 'Data cannot be empty';
   }
 
+  protected get headers(): Record<string, string> | undefined {
+    if (this.parameters.ifMatchesEtag) {
+      return { 'If-Match': this.parameters.ifMatchesEtag };
+    } else {
+      return undefined;
+    }
+  }
+
   async parse(response: TransportResponse): Promise<Response> {
     const serviceResponse = this.deserializeResponse<Response>(response);
 

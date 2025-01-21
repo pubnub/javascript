@@ -5627,6 +5627,11 @@ declare namespace PubNub {
        * Fields which can be additionally included into response.
        */
       include?: Omit<IncludeOptions, 'totalCount'>;
+      /**
+       * Optional entity tag from a previously received `PNUUIDMetadata`. The request
+       * will fail if this parameter is specified and the ETag value on the server doesn't match.
+       */
+      ifMatchesEtag?: string;
     };
 
     /**
@@ -5752,6 +5757,11 @@ declare namespace PubNub {
        * Fields which can be additionally included into response.
        */
       include?: Omit<IncludeOptions, 'totalCount'>;
+      /**
+       * Optional entity tag from a previously received `PNUUIDMetadata`. The request
+       * will fail if this parameter is specified and the ETag value on the server doesn't match.
+       */
+      ifMatchesEtag?: string;
     };
 
     /**
