@@ -13,6 +13,7 @@ import RequestOperation from '../../../constants/operations';
 import * as AppContext from '../../../types/api/app-context';
 import { KeySet, Query } from '../../../types/api';
 import { encodeString } from '../../../utils';
+import { Headers } from 'node-fetch';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -68,6 +69,14 @@ export class SetUUIDMetadataRequest<
   validate(): string | undefined {
     if (!this.parameters.uuid) return "'uuid' cannot be empty";
     if (!this.parameters.data) return 'Data cannot be empty';
+  }
+
+  protected get headers(): Record<string, string> | undefined {
+    if (this.parameters.ifMatchesEtag) {
+      return { "If-Match" : this.parameters.ifMatchesEtag }
+    } else {
+      return undefined
+    }
   }
 
   async parse(response: TransportResponse): Promise<Response> {
