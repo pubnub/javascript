@@ -6,8 +6,7 @@ changelog:
       - type: feature
         text: "Pass heartbeat request through `SharedWorker` (if used) to optimize the number of requests for clients opened in few tabs and subscribed on same channels / groups list."
       - type: improvement
-        text: "Don't send `heartbeat` request to unsubscribe."
-  - date: 2025-01-21
+        text: "Don't send `heartbeat` request to unsubscribe."  - date: 2025-01-21
     version: v8.6.0
     changes:
       - type: feature
