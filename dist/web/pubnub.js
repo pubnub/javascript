@@ -3975,7 +3975,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.6.0';
+	            return '8.7.0';
 	        },
 	        getVersion() {
 	            return this.version;

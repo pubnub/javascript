@@ -1,3 +1,12 @@
+## v8.7.0
+January 30 2025
+
+#### Added
+- Pass heartbeat request through `SharedWorker` (if used) to optimize the number of requests for clients opened in few tabs and subscribed on same channels / groups list.
+
+#### Modified
+- Don't send `heartbeat` request to unsubscribe.
+
 ## v8.6.0
 January 21 2025
 
