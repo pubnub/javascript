@@ -7,8 +7,6 @@ January 30 2025
 #### Modified
 - Don't send `heartbeat` request to unsubscribe.
 
-
-
 ## v8.6.0
 January 21 2025
 
