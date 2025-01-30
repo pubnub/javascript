@@ -56,6 +56,13 @@ type PubNubMiddlewareConfiguration = {
   workerLogVerbosity: boolean;
 
   /**
+   * How often the client will announce itself to server. The value is in seconds.
+   *
+   * @default `not set`
+   */
+  heartbeatInterval?: number;
+
+  /**
    * Platform-specific transport for requests processing.
    */
   transport: Transport;
@@ -100,7 +107,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
 
   makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
     // Use default request flow for non-subscribe / presence leave requests.
-    if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/leave'))
+    if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/heartbeat') && !req.path.endsWith('/leave'))
       return this.configuration.transport.makeSendable(req);
 
     let controller: CancellationController | undefined;
@@ -225,6 +232,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
         clientIdentifier: this.configuration.clientIdentifier,
         subscriptionKey: this.configuration.subscriptionKey,
         userId: this.configuration.userId,
+        heartbeatInterval: this.configuration.heartbeatInterval,
         logVerbosity: this.configuration.logVerbosity,
         workerLogVerbosity: this.configuration.workerLogVerbosity,
       },
@@ -254,7 +262,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
       console.log(`[SharedWorker] ${data.message}`);
     } else if (data.type === 'shared-worker-console-dir') {
       if (data.message) console.log(`[SharedWorker] ${data.message}`);
-      console.dir(data.data);
+      console.dir(data.data, { depth: 10 });
     } else if (data.type === 'shared-worker-ping') {
       const { logVerbosity, subscriptionKey, clientIdentifier } = this.configuration;
 

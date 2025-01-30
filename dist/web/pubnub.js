@@ -3078,7 +3078,7 @@
 	    }
 	    makeSendable(req) {
 	        // Use default request flow for non-subscribe / presence leave requests.
-	        if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/leave'))
+	        if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/heartbeat') && !req.path.endsWith('/leave'))
 	            return this.configuration.transport.makeSendable(req);
 	        let controller;
 	        const sendRequestEvent = {
@@ -3188,6 +3188,7 @@
 	            clientIdentifier: this.configuration.clientIdentifier,
 	            subscriptionKey: this.configuration.subscriptionKey,
 	            userId: this.configuration.userId,
+	            heartbeatInterval: this.configuration.heartbeatInterval,
 	            logVerbosity: this.configuration.logVerbosity,
 	            workerLogVerbosity: this.configuration.workerLogVerbosity,
 	        }, true);
@@ -3212,7 +3213,7 @@
 	        else if (data.type === 'shared-worker-console-dir') {
 	            if (data.message)
 	                console.log(`[SharedWorker] ${data.message}`);
-	            console.dir(data.data);
+	            console.dir(data.data, { depth: 10 });
 	        }
 	        else if (data.type === 'shared-worker-ping') {
 	            const { logVerbosity, subscriptionKey, clientIdentifier } = this.configuration;
@@ -4708,9 +4709,16 @@
 	        this.stopHeartbeatTimer();
 	        this.reconnectionManager.stopPolling();
 	    }
-	    reconnect() {
+	    /**
+	     * Restart subscription loop with current state.
+	     *
+	     * @param forUnsubscribe - Whether restarting subscription loop as part of channels list change on
+	     * unsubscribe or not.
+	     */
+	    reconnect(forUnsubscribe = false) {
 	        this.startSubscribeLoop();
-	        this.startHeartbeatTimer();
+	        if (!forUnsubscribe)
+	            this.startHeartbeatTimer();
 	    }
 	    /**
 	     * Update channels and groups used in subscription loop.
@@ -4809,7 +4817,7 @@
 	            this.region = null;
 	            this.reconnectionManager.stopPolling();
 	        }
-	        this.reconnect();
+	        this.reconnect(true);
 	    }
 	    unsubscribeAll(isOffline) {
 	        this.unsubscribe({
@@ -14546,6 +14554,7 @@
 	                    userId: clientConfiguration.getUserId(),
 	                    workerUrl: configurationCopy.subscriptionWorkerUrl,
 	                    sdkVersion: clientConfiguration.getVersion(),
+	                    heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
 	                    logVerbosity: clientConfiguration.logVerbosity,
 	                    workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
 	                    transport,
