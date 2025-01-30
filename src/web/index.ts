@@ -106,6 +106,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
           userId: clientConfiguration.getUserId(),
           workerUrl: configurationCopy.subscriptionWorkerUrl,
           sdkVersion: clientConfiguration.getVersion(),
+          heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
           logVerbosity: clientConfiguration.logVerbosity!,
           workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity!,
           transport,

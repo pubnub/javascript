@@ -1,5 +1,12 @@
 ---
 changelog:
+  - date: 2025-01-30
+    version: v8.7.0
+    changes:
+      - type: feature
+        text: "Pass heartbeat request through `SharedWorker` (if used) to optimize the number of requests for clients opened in few tabs and subscribed on same channels / groups list."
+      - type: improvement
+        text: "Don't send `heartbeat` request to unsubscribe."
   - date: 2025-01-21
     version: v8.6.0
     changes:
@@ -1111,7 +1118,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '8.6.0'
+version: '8.7.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1127,7 +1134,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.6.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.7.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1798,7 +1805,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v8.6.0/pubnub.8.6.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v8.7.0/pubnub.8.7.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

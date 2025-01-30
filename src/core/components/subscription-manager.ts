@@ -190,9 +190,15 @@ export class SubscriptionManager {
     this.reconnectionManager.stopPolling();
   }
 
-  public reconnect() {
+  /**
+   * Restart subscription loop with current state.
+   *
+   * @param forUnsubscribe - Whether restarting subscription loop as part of channels list change on
+   * unsubscribe or not.
+   */
+  public reconnect(forUnsubscribe: boolean = false) {
     this.startSubscribeLoop();
-    this.startHeartbeatTimer();
+    if (!forUnsubscribe) this.startHeartbeatTimer();
   }
 
   /**
@@ -315,7 +321,7 @@ export class SubscriptionManager {
       this.reconnectionManager.stopPolling();
     }
 
-    this.reconnect();
+    this.reconnect(true);
   }
 
   public unsubscribeAll(isOffline?: boolean) {
