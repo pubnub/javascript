@@ -6,12 +6,7 @@ changelog:
       - type: feature
         text: "Pass heartbeat request through `SharedWorker` (if used) to optimize the number of requests for clients opened in few tabs and subscribed on same channels / groups list."
       - type: improvement
-        text: "Don't send `heartbeat` request to unsubscribe."  - date: 2025-01-21
-    version: v8.6.0
-    changes:
-      - type: feature
-        text: "A new optional parameter `ifMatchesEtag` is added to `setUUIDMetadata` and `setChannelMetadata`. When provided, the server compares the argument value with the ETag on the server and if they don't match a HTTP 412 error is returned."
-  - date: 2025-01-15
+        text: "Don't send `heartbeat` request to unsubscribe."  - date: 2025-01-15
     version: v8.5.0
     changes:
       - type: feature
