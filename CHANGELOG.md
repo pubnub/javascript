@@ -1,3 +1,9 @@
+## v8.7.1
+January 31 2025
+
+#### Fixed
+- Fix long-poll request cancellation caused by APM packages monkey patching 'fetch' and try to use 'native' implementation instead of patched.
+
 ## v8.7.0
 January 30 2025
 

@@ -4000,7 +4000,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.7.0';
+	            return '8.7.1';
 	        },
 	        getVersion() {
 	            return this.version;
