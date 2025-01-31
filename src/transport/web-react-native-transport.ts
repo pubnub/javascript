@@ -18,6 +18,15 @@ import { queryStringFromObject } from '../core/utils';
  */
 export class WebReactNativeTransport implements Transport {
   /**
+   * Pointer to the "clean" `fetch` function.
+   *
+   * This protects against APM which overload implementation and may break crucial functionality.
+   *
+   * @internal
+   */
+  private static originalFetch: typeof fetch;
+
+  /**
    * Service {@link ArrayBuffer} response decoder.
    *
    * @internal
@@ -27,15 +36,30 @@ export class WebReactNativeTransport implements Transport {
   /**
    * Create and configure transport provider for Web and Rect environments.
    *
+   * @param originalFetch - Pointer to the original (not monkey patched) `fetch` implementation.
    * @param [keepAlive] - Whether client should try to keep connections open for reuse or not.
    * @param logVerbosity - Whether verbose logs should be printed or not.
    *
    * @internal
    */
   constructor(
+    originalFetch: unknown,
     private keepAlive: boolean = false,
-    private readonly logVerbosity: boolean,
-  ) {}
+    private readonly logVerbosity: boolean = false,
+  ) {
+    WebReactNativeTransport.originalFetch = originalFetch as typeof fetch;
+
+    // Check whether `fetch` has been monkey patched or not.
+    if (logVerbosity && this.isFetchMonkeyPatched()) {
+      console.warn("[PubNub] Native Web Fetch API 'fetch' function monkey patched.");
+      if (!this.isFetchMonkeyPatched(WebReactNativeTransport.originalFetch))
+        console.info("[PubNub] Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
+      else
+        console.warn(
+          '[PubNub] Unable receive native Web Fetch API. There can be issues with subscribe long-poll cancellation',
+        );
+    }
+  }
 
   makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
     let controller: CancellationController | undefined;
@@ -71,7 +95,11 @@ export class WebReactNativeTransport implements Transport {
         });
 
         return Promise.race([
-          fetch(request, { signal: abortController?.signal, credentials: 'omit', cache: 'no-cache' }),
+          WebReactNativeTransport.originalFetch(request, {
+            signal: abortController?.signal,
+            credentials: 'omit',
+            cache: 'no-cache',
+          }),
           requestTimeout,
         ])
           .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer] =>
@@ -197,5 +225,18 @@ export class WebReactNativeTransport implements Transport {
       console.log(outgoing);
       console.log('-----');
     }
+  }
+
+  /**
+   * Check whether original `fetch` has been monkey patched or not.
+   *
+   * @returns `true` if original `fetch` has been patched.
+   *
+   * @internal
+   */
+  private isFetchMonkeyPatched(oFetch?: typeof fetch): boolean {
+    const fetchString = (oFetch ?? fetch).toString();
+
+    return !fetchString.includes('[native code]') && fetch.name !== 'fetch';
   }
 }

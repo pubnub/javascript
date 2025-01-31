@@ -3370,14 +3370,24 @@
 	    /**
 	     * Create and configure transport provider for Web and Rect environments.
 	     *
+	     * @param originalFetch - Pointer to the original (not monkey patched) `fetch` implementation.
 	     * @param [keepAlive] - Whether client should try to keep connections open for reuse or not.
 	     * @param logVerbosity - Whether verbose logs should be printed or not.
 	     *
 	     * @internal
 	     */
-	    constructor(keepAlive = false, logVerbosity) {
+	    constructor(originalFetch, keepAlive = false, logVerbosity = false) {
 	        this.keepAlive = keepAlive;
 	        this.logVerbosity = logVerbosity;
+	        WebReactNativeTransport.originalFetch = originalFetch;
+	        // Check whether `fetch` has been monkey patched or not.
+	        if (logVerbosity && this.isFetchMonkeyPatched()) {
+	            console.warn("[PubNub] Native Web Fetch API 'fetch' function monkey patched.");
+	            if (!this.isFetchMonkeyPatched(WebReactNativeTransport.originalFetch))
+	                console.info("[PubNub] Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
+	            else
+	                console.warn('[PubNub] Unable receive native Web Fetch API. There can be issues with subscribe long-poll cancellation');
+	        }
 	    }
 	    makeSendable(req) {
 	        let controller;
@@ -3407,7 +3417,11 @@
 	                    }, req.timeout * 1000);
 	                });
 	                return Promise.race([
-	                    fetch(request, { signal: abortController === null || abortController === void 0 ? void 0 : abortController.signal, credentials: 'omit', cache: 'no-cache' }),
+	                    WebReactNativeTransport.originalFetch(request, {
+	                        signal: abortController === null || abortController === void 0 ? void 0 : abortController.signal,
+	                        credentials: 'omit',
+	                        cache: 'no-cache',
+	                    }),
 	                    requestTimeout,
 	                ])
 	                    .then((response) => response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]))
@@ -3521,6 +3535,17 @@
 	            console.log(outgoing);
 	            console.log('-----');
 	        }
+	    }
+	    /**
+	     * Check whether original `fetch` has been monkey patched or not.
+	     *
+	     * @returns `true` if original `fetch` has been patched.
+	     *
+	     * @internal
+	     */
+	    isFetchMonkeyPatched(oFetch) {
+	        const fetchString = (oFetch !== null && oFetch !== void 0 ? oFetch : fetch).toString();
+	        return !fetchString.includes('[native code]') && fetch.name !== 'fetch';
 	    }
 	}
 	/**
@@ -14544,7 +14569,7 @@
 	        let cryptography;
 	        cryptography = new WebCryptography();
 	        // Setup transport provider.
-	        let transport = new WebReactNativeTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity);
+	        let transport = new WebReactNativeTransport(PubNub.originalFetch(), clientConfiguration.keepAlive, clientConfiguration.logVerbosity);
 	        {
 	            if (configurationCopy.subscriptionWorkerUrl) {
 	                // Inject subscription worker into transport provider stack.
@@ -14592,6 +14617,19 @@
 	    networkUpDetected() {
 	        this.listenerManager.announceNetworkUp();
 	        this.reconnect();
+	    }
+	    static originalFetch() {
+	        let iframe = document.querySelector('iframe[name="pubnub-context-unpatched-fetch"]');
+	        if (!iframe) {
+	            iframe = document.createElement('iframe');
+	            iframe.style.display = 'none';
+	            iframe.name = 'pubnub-context-unpatched-fetch';
+	            iframe.src = 'about:blank';
+	            document.body.appendChild(iframe);
+	        }
+	        if (iframe.contentWindow)
+	            return iframe.contentWindow.fetch.bind(iframe.contentWindow);
+	        return fetch;
 	    }
 	}
 	/**
