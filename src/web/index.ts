@@ -93,6 +93,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
 
     // Setup transport provider.
     let transport: Transport = new WebReactNativeTransport(
+      PubNub.originalFetch(),
       clientConfiguration.keepAlive,
       clientConfiguration.logVerbosity!,
     );
@@ -149,5 +150,20 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
   private networkUpDetected() {
     this.listenerManager.announceNetworkUp();
     this.reconnect();
+  }
+
+  private static originalFetch(): typeof fetch {
+    let iframe = document.querySelector<HTMLIFrameElement>('iframe[name="pubnub-context-unpatched-fetch"]');
+
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.name = 'pubnub-context-unpatched-fetch';
+      iframe.src = 'about:blank';
+      document.body.appendChild(iframe);
+    }
+
+    if (iframe.contentWindow) return iframe.contentWindow.fetch.bind(iframe.contentWindow);
+    return fetch;
   }
 }

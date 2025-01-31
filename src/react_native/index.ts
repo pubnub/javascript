@@ -72,7 +72,7 @@ export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
     const transportMiddleware = new PubNubMiddleware({
       clientConfiguration,
       tokenManager,
-      transport: new WebReactNativeTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity!),
+      transport: new WebReactNativeTransport(fetch, clientConfiguration.keepAlive, clientConfiguration.logVerbosity!),
     });
 
     super({
