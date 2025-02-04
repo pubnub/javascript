@@ -2907,11 +2907,11 @@
 	            category = StatusCategory$1.PNCancelledCategory;
 	            message = 'Request cancelled';
 	        }
-	        else if (message.indexOf('timeout') !== -1) {
+	        else if (message.toLowerCase().indexOf('timeout') !== -1) {
 	            category = StatusCategory$1.PNTimeoutCategory;
 	            message = 'Request timeout';
 	        }
-	        else if (message.indexOf('network') !== -1) {
+	        else if (message.toLowerCase().indexOf('network') !== -1) {
 	            category = StatusCategory$1.PNNetworkIssuesCategory;
 	            message = 'Network issues';
 	        }
@@ -3284,278 +3284,6 @@
 	}
 
 	/**
-	 * PubNub package utilities module.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Percent-encode input string.
-	 *
-	 * **Note:** Encode content in accordance of the `PubNub` service requirements.
-	 *
-	 * @param input - Source string or number for encoding.
-	 *
-	 * @returns Percent-encoded string.
-	 *
-	 * @internal
-	 */
-	const encodeString = (input) => {
-	    return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
-	};
-	/**
-	 * Percent-encode list of names (channels).
-	 *
-	 * @param names - List of names which should be encoded.
-	 *
-	 * @param [defaultString] - String which should be used in case if {@link names} is empty.
-	 *
-	 * @returns String which contains encoded names joined by non-encoded `,`.
-	 *
-	 * @internal
-	 */
-	const encodeNames = (names, defaultString) => {
-	    const encodedNames = names.map((name) => encodeString(name));
-	    return encodedNames.length ? encodedNames.join(',') : (defaultString !== null && defaultString !== void 0 ? defaultString : '');
-	};
-	/**
-	 * @internal
-	 */
-	const removeSingleOccurrence = (source, elementsToRemove) => {
-	    const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
-	    return source.filter((e) => {
-	        if (elementsToRemove.includes(e) && !removed[e]) {
-	            removed[e] = true;
-	            return false;
-	        }
-	        return true;
-	    });
-	};
-	/**
-	 * @internal
-	 */
-	const findUniqueCommonElements = (a, b) => {
-	    return [...a].filter((value) => b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value));
-	};
-	/**
-	 * Transform query key / value pairs to the string.
-	 *
-	 * @param query - Key / value pairs of the request query parameters.
-	 *
-	 * @returns Stringified query key / value pairs.
-	 *
-	 * @internal
-	 */
-	const queryStringFromObject = (query) => {
-	    return Object.keys(query)
-	        .map((key) => {
-	        const queryValue = query[key];
-	        if (!Array.isArray(queryValue))
-	            return `${key}=${encodeString(queryValue)}`;
-	        return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
-	    })
-	        .join('&');
-	};
-
-	/**
-	 * Common browser and React Native Transport provider module.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Class representing a `fetch`-based browser and React Native transport provider.
-	 *
-	 * @internal
-	 */
-	class WebReactNativeTransport {
-	    /**
-	     * Create and configure transport provider for Web and Rect environments.
-	     *
-	     * @param originalFetch - Pointer to the original (not monkey patched) `fetch` implementation.
-	     * @param [keepAlive] - Whether client should try to keep connections open for reuse or not.
-	     * @param logVerbosity - Whether verbose logs should be printed or not.
-	     *
-	     * @internal
-	     */
-	    constructor(originalFetch, keepAlive = false, logVerbosity = false) {
-	        this.keepAlive = keepAlive;
-	        this.logVerbosity = logVerbosity;
-	        WebReactNativeTransport.originalFetch = originalFetch;
-	        // Check whether `fetch` has been monkey patched or not.
-	        if (logVerbosity && this.isFetchMonkeyPatched()) {
-	            console.warn("[PubNub] Native Web Fetch API 'fetch' function monkey patched.");
-	            if (!this.isFetchMonkeyPatched(WebReactNativeTransport.originalFetch))
-	                console.info("[PubNub] Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
-	            else
-	                console.warn('[PubNub] Unable receive native Web Fetch API. There can be issues with subscribe long-poll cancellation');
-	        }
-	    }
-	    makeSendable(req) {
-	        let controller;
-	        let abortController;
-	        if (req.cancellable) {
-	            abortController = new AbortController();
-	            controller = {
-	                // Storing controller inside to prolong object lifetime.
-	                abortController,
-	                abort: () => abortController === null || abortController === void 0 ? void 0 : abortController.abort(),
-	            };
-	        }
-	        return [
-	            this.requestFromTransportRequest(req).then((request) => {
-	                const start = new Date().getTime();
-	                this.logRequestProcessProgress(request, req.body);
-	                /**
-	                 * Setup request timeout promise.
-	                 *
-	                 * **Note:** Native Fetch API doesn't support `timeout` out-of-box.
-	                 */
-	                const requestTimeout = new Promise((_, reject) => {
-	                    const timeoutId = setTimeout(() => {
-	                        // Clean up.
-	                        clearTimeout(timeoutId);
-	                        reject(new Error('Request timeout'));
-	                    }, req.timeout * 1000);
-	                });
-	                return Promise.race([
-	                    WebReactNativeTransport.originalFetch(request, {
-	                        signal: abortController === null || abortController === void 0 ? void 0 : abortController.signal,
-	                        credentials: 'omit',
-	                        cache: 'no-cache',
-	                    }),
-	                    requestTimeout,
-	                ])
-	                    .then((response) => response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]))
-	                    .then((response) => {
-	                    const responseBody = response[1].byteLength > 0 ? response[1] : undefined;
-	                    const { status, headers: requestHeaders } = response[0];
-	                    const headers = {};
-	                    // Copy Headers object content into plain Record.
-	                    requestHeaders.forEach((value, key) => (headers[key] = value.toLowerCase()));
-	                    const transportResponse = {
-	                        status,
-	                        url: request.url,
-	                        headers,
-	                        body: responseBody,
-	                    };
-	                    if (status >= 400)
-	                        throw PubNubAPIError.create(transportResponse);
-	                    this.logRequestProcessProgress(request, undefined, new Date().getTime() - start, responseBody);
-	                    return transportResponse;
-	                })
-	                    .catch((error) => {
-	                    throw PubNubAPIError.create(error);
-	                });
-	            }),
-	            controller,
-	        ];
-	    }
-	    request(req) {
-	        return req;
-	    }
-	    /**
-	     * Creates a Request object from a given {@link TransportRequest} object.
-	     *
-	     * @param req - The {@link TransportRequest} object containing request information.
-	     *
-	     * @returns Request object generated from the {@link TransportRequest} object.
-	     *
-	     * @internal
-	     */
-	    requestFromTransportRequest(req) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            let body;
-	            let path = req.path;
-	            // Create multipart request body.
-	            if (req.formData && req.formData.length > 0) {
-	                // Reset query parameters to conform to signed URL
-	                req.queryParameters = {};
-	                const file = req.body;
-	                const formData = new FormData();
-	                for (const { key, value } of req.formData)
-	                    formData.append(key, value);
-	                try {
-	                    const fileData = yield file.toArrayBuffer();
-	                    formData.append('file', new Blob([fileData], { type: 'application/octet-stream' }), file.name);
-	                }
-	                catch (_) {
-	                    try {
-	                        const fileData = yield file.toFileUri();
-	                        // @ts-expect-error React Native File Uri support.
-	                        formData.append('file', fileData, file.name);
-	                    }
-	                    catch (_) { }
-	                }
-	                body = formData;
-	            }
-	            // Handle regular body payload (if passed).
-	            else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer))
-	                body = req.body;
-	            if (req.queryParameters && Object.keys(req.queryParameters).length !== 0)
-	                path = `${path}?${queryStringFromObject(req.queryParameters)}`;
-	            return new Request(`${req.origin}${path}`, {
-	                method: req.method,
-	                headers: req.headers,
-	                redirect: 'follow',
-	                body,
-	            });
-	        });
-	    }
-	    /**
-	     * Log out request processing progress and result.
-	     *
-	     * @param request - Platform-specific
-	     * @param [requestBody] - POST / PATCH body.
-	     * @param [elapsed] - How many seconds passed since request processing started.
-	     * @param [body] - Service response (if available).
-	     *
-	     * @internal
-	     */
-	    logRequestProcessProgress(request, requestBody, elapsed, body) {
-	        if (!this.logVerbosity)
-	            return;
-	        const { protocol, host, pathname, search } = new URL(request.url);
-	        const timestamp = new Date().toISOString();
-	        if (!elapsed) {
-	            let outgoing = `[${timestamp}]\n${protocol}//${host}${pathname}\n${search}`;
-	            if (requestBody && (typeof requestBody === 'string' || requestBody instanceof ArrayBuffer)) {
-	                if (typeof requestBody === 'string')
-	                    outgoing += `\n\n${requestBody}`;
-	                else
-	                    outgoing += `\n\n${WebReactNativeTransport.decoder.decode(requestBody)}`;
-	            }
-	            console.log(`<<<<<`);
-	            console.log(outgoing);
-	            console.log('-----');
-	        }
-	        else {
-	            let outgoing = `[${timestamp} / ${elapsed}]\n${protocol}//${host}${pathname}\n${search}`;
-	            if (body)
-	                outgoing += `\n\n${WebReactNativeTransport.decoder.decode(body)}`;
-	            console.log('>>>>>>');
-	            console.log(outgoing);
-	            console.log('-----');
-	        }
-	    }
-	    /**
-	     * Check whether original `fetch` has been monkey patched or not.
-	     *
-	     * @returns `true` if original `fetch` has been patched.
-	     *
-	     * @internal
-	     */
-	    isFetchMonkeyPatched(oFetch) {
-	        const fetchString = (oFetch !== null && oFetch !== void 0 ? oFetch : fetch).toString();
-	        return !fetchString.includes('[native code]') && fetch.name !== 'fetch';
-	    }
-	}
-	/**
-	 * Service {@link ArrayBuffer} response decoder.
-	 *
-	 * @internal
-	 */
-	WebReactNativeTransport.decoder = new TextDecoder();
-
-	/**
 	 * CBOR support module.
 	 *
 	 * @internal
@@ -3801,6 +3529,10 @@
 	 */
 	const SUBSCRIPTION_WORKER_LOG_VERBOSITY = false;
 	/**
+	 * Use modern Web Fetch API for network requests by default.
+	 */
+	const TRANSPORT = 'fetch';
+	/**
 	 * Whether PubNub client should try to utilize existing TCP connection for new requests or not.
 	 */
 	const KEEP_ALIVE = true;
@@ -3812,13 +3544,13 @@
 	 * @internal
 	 */
 	const setDefaults = (configuration) => {
-	    var _a, _b, _c;
+	    var _a, _b, _c, _d;
 	    // Force disable service workers if environment doesn't support them.
 	    if (configuration.subscriptionWorkerUrl && typeof SharedWorker === 'undefined')
 	        configuration.subscriptionWorkerUrl = null;
 	    return Object.assign(Object.assign({}, setDefaults$1(configuration)), { 
 	        // Set platform-specific options.
-	        listenToBrowserNetworkEvents: (_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : LISTEN_TO_BROWSER_NETWORK_EVENTS, subscriptionWorkerUrl: configuration.subscriptionWorkerUrl, subscriptionWorkerLogVerbosity: (_b = configuration.subscriptionWorkerLogVerbosity) !== null && _b !== void 0 ? _b : SUBSCRIPTION_WORKER_LOG_VERBOSITY, keepAlive: (_c = configuration.keepAlive) !== null && _c !== void 0 ? _c : KEEP_ALIVE });
+	        listenToBrowserNetworkEvents: (_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : LISTEN_TO_BROWSER_NETWORK_EVENTS, subscriptionWorkerUrl: configuration.subscriptionWorkerUrl, subscriptionWorkerLogVerbosity: (_b = configuration.subscriptionWorkerLogVerbosity) !== null && _b !== void 0 ? _b : SUBSCRIPTION_WORKER_LOG_VERBOSITY, transport: (_c = configuration.transport) !== null && _c !== void 0 ? _c : TRANSPORT, keepAlive: (_d = configuration.keepAlive) !== null && _d !== void 0 ? _d : KEEP_ALIVE });
 	};
 
 	var uuid = {exports: {}};
@@ -4220,6 +3952,79 @@
 	})(TransportMethod || (TransportMethod = {}));
 
 	/**
+	 * PubNub package utilities module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Percent-encode input string.
+	 *
+	 * **Note:** Encode content in accordance of the `PubNub` service requirements.
+	 *
+	 * @param input - Source string or number for encoding.
+	 *
+	 * @returns Percent-encoded string.
+	 *
+	 * @internal
+	 */
+	const encodeString = (input) => {
+	    return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
+	};
+	/**
+	 * Percent-encode list of names (channels).
+	 *
+	 * @param names - List of names which should be encoded.
+	 *
+	 * @param [defaultString] - String which should be used in case if {@link names} is empty.
+	 *
+	 * @returns String which contains encoded names joined by non-encoded `,`.
+	 *
+	 * @internal
+	 */
+	const encodeNames = (names, defaultString) => {
+	    const encodedNames = names.map((name) => encodeString(name));
+	    return encodedNames.length ? encodedNames.join(',') : (defaultString !== null && defaultString !== void 0 ? defaultString : '');
+	};
+	/**
+	 * @internal
+	 */
+	const removeSingleOccurrence = (source, elementsToRemove) => {
+	    const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
+	    return source.filter((e) => {
+	        if (elementsToRemove.includes(e) && !removed[e]) {
+	            removed[e] = true;
+	            return false;
+	        }
+	        return true;
+	    });
+	};
+	/**
+	 * @internal
+	 */
+	const findUniqueCommonElements = (a, b) => {
+	    return [...a].filter((value) => b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value));
+	};
+	/**
+	 * Transform query key / value pairs to the string.
+	 *
+	 * @param query - Key / value pairs of the request query parameters.
+	 *
+	 * @returns Stringified query key / value pairs.
+	 *
+	 * @internal
+	 */
+	const queryStringFromObject = (query) => {
+	    return Object.keys(query)
+	        .map((key) => {
+	        const queryValue = query[key];
+	        if (!Array.isArray(queryValue))
+	            return `${key}=${encodeString(queryValue)}`;
+	        return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
+	    })
+	        .join('&');
+	};
+
+	/**
 	 * Common PubNub Network Provider middleware module.
 	 *
 	 * @internal
@@ -4365,6 +4170,309 @@
 	        return base;
 	    }
 	}
+
+	/**
+	 * Common browser and React Native Transport provider module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Class representing a `fetch`-based browser and React Native transport provider.
+	 *
+	 * @internal
+	 */
+	class WebTransport {
+	    /**
+	     * Create and configure transport provider for Web and Rect environments.
+	     *
+	     * @param [transport] - API which should be used to make network requests.
+	     * @param [keepAlive] - Whether client should try to keep connections open for reuse or not.
+	     * @param logVerbosity - Whether verbose logs should be printed or not.
+	     *
+	     * @internal
+	     */
+	    constructor(transport = 'fetch', keepAlive = false, logVerbosity = false) {
+	        this.transport = transport;
+	        this.keepAlive = keepAlive;
+	        this.logVerbosity = logVerbosity;
+	        if (transport === 'fetch' && (!window || !window.fetch))
+	            this.transport = 'xhr';
+	        if (this.transport !== 'fetch')
+	            return;
+	        // Keeping reference on current `window.fetch` function.
+	        WebTransport.originalFetch = fetch.bind(window);
+	        // Check whether `fetch` has been monkey patched or not.
+	        if (logVerbosity && this.isFetchMonkeyPatched()) {
+	            console.warn("[PubNub] Native Web Fetch API 'fetch' function monkey patched.");
+	            WebTransport.originalFetch = WebTransport.getOriginalFetch();
+	            if (!this.isFetchMonkeyPatched(WebTransport.originalFetch))
+	                console.info("[PubNub] Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
+	            else
+	                console.warn('[PubNub] Unable receive native Web Fetch API. There can be issues with subscribe long-poll cancellation');
+	        }
+	    }
+	    makeSendable(req) {
+	        const abortController = new AbortController();
+	        const cancellation = {
+	            abortController,
+	            abort: () => !abortController.signal.aborted && abortController.abort(),
+	        };
+	        return [
+	            this.webTransportRequestFromTransportRequest(req).then((request) => {
+	                const start = new Date().getTime();
+	                this.logRequestProcessProgress(request, req.body);
+	                return this.sendRequest(request, cancellation)
+	                    .then((response) => response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]))
+	                    .then((response) => {
+	                    const responseBody = response[1].byteLength > 0 ? response[1] : undefined;
+	                    const { status, headers: requestHeaders } = response[0];
+	                    const headers = {};
+	                    // Copy Headers object content into plain Record.
+	                    requestHeaders.forEach((value, key) => (headers[key] = value.toLowerCase()));
+	                    const transportResponse = {
+	                        status,
+	                        url: request.url,
+	                        headers,
+	                        body: responseBody,
+	                    };
+	                    if (status >= 400)
+	                        throw PubNubAPIError.create(transportResponse);
+	                    this.logRequestProcessProgress(request, undefined, new Date().getTime() - start, responseBody);
+	                    return transportResponse;
+	                })
+	                    .catch((error) => {
+	                    throw PubNubAPIError.create(error);
+	                });
+	            }),
+	            cancellation,
+	        ];
+	    }
+	    request(req) {
+	        return req;
+	    }
+	    /**
+	     * Send network request using preferred API.
+	     *
+	     * @param req - Transport API agnostic request object with prepared body and URL.
+	     * @param controller - Request cancellation controller (for long-poll requests).
+	     *
+	     * @returns Promise which will be resolved or rejected at the end of network request processing.
+	     *
+	     * @internal
+	     */
+	    sendRequest(req, controller) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            if (this.transport === 'fetch')
+	                return this.sendFetchRequest(req, controller);
+	            return this.sendXHRRequest(req, controller);
+	        });
+	    }
+	    /**
+	     * Send network request using legacy XMLHttpRequest API.
+	     *
+	     * @param req - Transport API agnostic request object with prepared body and URL.
+	     * @param controller - Request cancellation controller (for long-poll requests).
+	     *
+	     * @returns Promise which will be resolved or rejected at the end of network request processing.
+	     *
+	     * @internal
+	     */
+	    sendFetchRequest(req, controller) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            let timeoutId;
+	            const requestTimeout = new Promise((_, reject) => {
+	                timeoutId = setTimeout(() => {
+	                    clearTimeout(timeoutId);
+	                    reject(new Error('Request timeout'));
+	                    controller.abort();
+	                }, req.timeout * 1000);
+	            });
+	            const request = new Request(req.url, {
+	                method: req.method,
+	                headers: req.headers,
+	                redirect: 'follow',
+	                body: req.body,
+	            });
+	            return Promise.race([
+	                WebTransport.originalFetch(request, {
+	                    signal: controller.abortController.signal,
+	                    credentials: 'omit',
+	                    cache: 'no-cache',
+	                }).then((response) => {
+	                    if (timeoutId)
+	                        clearTimeout(timeoutId);
+	                    return response;
+	                }),
+	                requestTimeout,
+	            ]);
+	        });
+	    }
+	    /**
+	     * Send network request using legacy XMLHttpRequest API.
+	     *
+	     * @param req - Transport API agnostic request object with prepared body and URL.
+	     * @param controller - Request cancellation controller (for long-poll requests).
+	     *
+	     * @returns Promise which will be resolved or rejected at the end of network request processing.
+	     *
+	     * @internal
+	     */
+	    sendXHRRequest(req, controller) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve, reject) => {
+	                var _a;
+	                const xhr = new XMLHttpRequest();
+	                xhr.open(req.method, req.url, true);
+	                // Setup request
+	                xhr.responseType = 'arraybuffer';
+	                xhr.timeout = req.timeout * 1000;
+	                controller.abortController.signal.onabort = () => {
+	                    if (xhr.readyState == XMLHttpRequest.DONE || xhr.readyState == XMLHttpRequest.UNSENT)
+	                        return;
+	                    xhr.abort();
+	                };
+	                Object.entries((_a = req.headers) !== null && _a !== void 0 ? _a : {}).forEach(([key, value]) => xhr.setRequestHeader(key, value));
+	                // Setup handlers to match `fetch` results handling.
+	                xhr.onabort = () => reject(new Error('Aborted'));
+	                xhr.ontimeout = () => reject(new Error('Request timeout'));
+	                xhr.onerror = () => reject(new Error('Request timeout'));
+	                xhr.onload = () => {
+	                    const headers = new Headers();
+	                    xhr
+	                        .getAllResponseHeaders()
+	                        .split('\r\n')
+	                        .forEach((header) => {
+	                        const [key, value] = header.split(': ');
+	                        if (key.length > 1 && value.length > 1)
+	                            headers.append(key, value);
+	                    });
+	                    resolve(new Response(xhr.response, { status: xhr.status, headers, statusText: xhr.statusText }));
+	                };
+	                xhr.send(req.body);
+	            });
+	        });
+	    }
+	    /**
+	     * Creates a Web Request object from a given {@link TransportRequest} object.
+	     *
+	     * @param req - The {@link TransportRequest} object containing request information.
+	     *
+	     * @returns Request object generated from the {@link TransportRequest} object.
+	     *
+	     * @internal
+	     */
+	    webTransportRequestFromTransportRequest(req) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            let body;
+	            let path = req.path;
+	            // Create multipart request body.
+	            if (req.formData && req.formData.length > 0) {
+	                // Reset query parameters to conform to signed URL
+	                req.queryParameters = {};
+	                const file = req.body;
+	                const formData = new FormData();
+	                for (const { key, value } of req.formData)
+	                    formData.append(key, value);
+	                try {
+	                    const fileData = yield file.toArrayBuffer();
+	                    formData.append('file', new Blob([fileData], { type: 'application/octet-stream' }), file.name);
+	                }
+	                catch (_) {
+	                    try {
+	                        const fileData = yield file.toFileUri();
+	                        // @ts-expect-error React Native File Uri support.
+	                        formData.append('file', fileData, file.name);
+	                    }
+	                    catch (_) { }
+	                }
+	                body = formData;
+	            }
+	            // Handle regular body payload (if passed).
+	            else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer))
+	                body = req.body;
+	            if (req.queryParameters && Object.keys(req.queryParameters).length !== 0)
+	                path = `${path}?${queryStringFromObject(req.queryParameters)}`;
+	            return {
+	                url: `${req.origin}${path}`,
+	                method: req.method,
+	                headers: req.headers,
+	                timeout: req.timeout,
+	                body,
+	            };
+	        });
+	    }
+	    /**
+	     * Log out request processing progress and result.
+	     *
+	     * @param request - Platform-specific
+	     * @param [requestBody] - POST / PATCH body.
+	     * @param [elapsed] - How many seconds passed since request processing started.
+	     * @param [body] - Service response (if available).
+	     *
+	     * @internal
+	     */
+	    logRequestProcessProgress(request, requestBody, elapsed, body) {
+	        if (!this.logVerbosity)
+	            return;
+	        const { protocol, host, pathname, search } = new URL(request.url);
+	        const timestamp = new Date().toISOString();
+	        if (!elapsed) {
+	            let outgoing = `[${timestamp}]\n${protocol}//${host}${pathname}\n${search}`;
+	            if (requestBody && (typeof requestBody === 'string' || requestBody instanceof ArrayBuffer)) {
+	                if (typeof requestBody === 'string')
+	                    outgoing += `\n\n${requestBody}`;
+	                else
+	                    outgoing += `\n\n${WebTransport.decoder.decode(requestBody)}`;
+	            }
+	            console.log(`<<<<<`);
+	            console.log(outgoing);
+	            console.log('-----');
+	        }
+	        else {
+	            let outgoing = `[${timestamp} / ${elapsed}]\n${protocol}//${host}${pathname}\n${search}`;
+	            if (body)
+	                outgoing += `\n\n${WebTransport.decoder.decode(body)}`;
+	            console.log('>>>>>>');
+	            console.log(outgoing);
+	            console.log('-----');
+	        }
+	    }
+	    /**
+	     * Check whether original `fetch` has been monkey patched or not.
+	     *
+	     * @returns `true` if original `fetch` has been patched.
+	     */
+	    isFetchMonkeyPatched(oFetch) {
+	        const fetchString = (oFetch !== null && oFetch !== void 0 ? oFetch : fetch).toString();
+	        return !fetchString.includes('[native code]') && fetch.name !== 'fetch';
+	    }
+	    /**
+	     * Retrieve original `fetch` implementation.
+	     *
+	     * Retrieve implementation which hasn't been patched by APM tools.
+	     *
+	     * @returns Reference to the `fetch` function.
+	     */
+	    static getOriginalFetch() {
+	        let iframe = document.querySelector('iframe[name="pubnub-context-unpatched-fetch"]');
+	        if (!iframe) {
+	            iframe = document.createElement('iframe');
+	            iframe.style.display = 'none';
+	            iframe.name = 'pubnub-context-unpatched-fetch';
+	            iframe.src = 'about:blank';
+	            document.body.appendChild(iframe);
+	        }
+	        if (iframe.contentWindow)
+	            return iframe.contentWindow.fetch.bind(iframe.contentWindow);
+	        return fetch;
+	    }
+	}
+	/**
+	 * Service {@link ArrayBuffer} response decoder.
+	 *
+	 * @internal
+	 */
+	WebTransport.decoder = new TextDecoder();
 
 	/**
 	 * Events listener manager module.
@@ -5759,7 +5867,7 @@
 	            path: this.path,
 	            queryParameters: this.queryParameters,
 	            cancellable: (_d = (_c = this.params) === null || _c === void 0 ? void 0 : _c.cancellable) !== null && _d !== void 0 ? _d : false,
-	            timeout: 10000,
+	            timeout: 10,
 	            identifier: this.requestIdentifier,
 	        };
 	        // Attach headers (if required).
@@ -13099,13 +13207,15 @@
 	            }
 	            // Complete request configuration.
 	            const transportRequest = request.request();
+	            const operation = request.operation();
 	            if ((transportRequest.formData && transportRequest.formData.length > 0) ||
-	                request.operation() === RequestOperation$1.PNDownloadFileOperation) {
+	                operation === RequestOperation$1.PNDownloadFileOperation) {
 	                // Set file upload / download request delay.
 	                transportRequest.timeout = this._configuration.getFileTimeout();
 	            }
 	            else {
-	                if (request.operation() === RequestOperation$1.PNSubscribeOperation)
+	                if (operation === RequestOperation$1.PNSubscribeOperation ||
+	                    operation === RequestOperation$1.PNReceiveMessagesOperation)
 	                    transportRequest.timeout = this._configuration.getSubscribeTimeout();
 	                else
 	                    transportRequest.timeout = this._configuration.getTransactionTimeout();
@@ -13113,7 +13223,7 @@
 	            // API request processing status.
 	            const status = {
 	                error: false,
-	                operation: request.operation(),
+	                operation,
 	                category: StatusCategory$1.PNAcknowledgmentCategory,
 	                statusCode: 0,
 	            };
@@ -13149,8 +13259,8 @@
 	                const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
 	                // Notify callback (if possible).
 	                if (callback)
-	                    return callback(apiError.toStatus(request.operation()), null);
-	                throw apiError.toPubNubError(request.operation(), 'REST API request processing error, check status for details');
+	                    return callback(apiError.toStatus(operation), null);
+	                throw apiError.toPubNubError(operation, 'REST API request processing error, check status for details');
 	            });
 	        });
 	    }
@@ -14569,7 +14679,7 @@
 	        let cryptography;
 	        cryptography = new WebCryptography();
 	        // Setup transport provider.
-	        let transport = new WebReactNativeTransport(PubNub.originalFetch(), clientConfiguration.keepAlive, clientConfiguration.logVerbosity);
+	        let transport = new WebTransport(platformConfiguration.transport, clientConfiguration.keepAlive, clientConfiguration.logVerbosity);
 	        {
 	            if (configurationCopy.subscriptionWorkerUrl) {
 	                // Inject subscription worker into transport provider stack.
@@ -14617,19 +14727,6 @@
 	    networkUpDetected() {
 	        this.listenerManager.announceNetworkUp();
 	        this.reconnect();
-	    }
-	    static originalFetch() {
-	        let iframe = document.querySelector('iframe[name="pubnub-context-unpatched-fetch"]');
-	        if (!iframe) {
-	            iframe = document.createElement('iframe');
-	            iframe.style.display = 'none';
-	            iframe.name = 'pubnub-context-unpatched-fetch';
-	            iframe.src = 'about:blank';
-	            document.body.appendChild(iframe);
-	        }
-	        if (iframe.contentWindow)
-	            return iframe.contentWindow.fetch.bind(iframe.contentWindow);
-	        return fetch;
 	    }
 	}
 	/**

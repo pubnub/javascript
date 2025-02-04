@@ -24,6 +24,7 @@
     "src/file/modules/web.ts",
     "src/transport/subscription-worker/**/*",
     "src/transport/titanium-transport.ts",
+    "src/transport/web-transport.ts",
     "src/nativescript/**/*",
     "src/titanium/**/*",
     "src/web/**/*"

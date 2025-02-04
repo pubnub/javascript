@@ -90,7 +90,7 @@ export type TransportRequest = {
   body?: ArrayBuffer | PubNubFileInterface | string;
 
   /**
-   * For how long request should wait response from the server.
+   * For how long (in seconds) request should wait response from the server.
    *
    * @default `10` seconds.
    */

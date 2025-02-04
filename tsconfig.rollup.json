@@ -25,6 +25,7 @@
     "src/nativescript/**/*",
     "src/titanium/**/*",
     "src/transport/node-transport.ts",
-    "src/transport/titanium-transport.ts"
+    "src/transport/titanium-transport.ts",
+    "src/transport/react-native-transport.ts"
   ]
 }

@@ -55,10 +55,10 @@ export class PubNubAPIError extends Error {
     if (errorName === 'AbortError' || message.indexOf('Aborted') !== -1) {
       category = StatusCategory.PNCancelledCategory;
       message = 'Request cancelled';
-    } else if (message.indexOf('timeout') !== -1) {
+    } else if (message.toLowerCase().indexOf('timeout') !== -1) {
       category = StatusCategory.PNTimeoutCategory;
       message = 'Request timeout';
-    } else if (message.indexOf('network') !== -1) {
+    } else if (message.toLowerCase().indexOf('network') !== -1) {
       category = StatusCategory.PNNetworkIssuesCategory;
       message = 'Network issues';
     } else if (errorName === 'TypeError') {

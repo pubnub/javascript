@@ -24,6 +24,11 @@ const LISTEN_TO_BROWSER_NETWORK_EVENTS = true;
 const SUBSCRIPTION_WORKER_LOG_VERBOSITY = false;
 
 /**
+ * Use modern Web Fetch API for network requests by default.
+ */
+const TRANSPORT: PubNubConfiguration['transport'] = 'fetch';
+
+/**
  * Whether PubNub client should try to utilize existing TCP connection for new requests or not.
  */
 const KEEP_ALIVE = true;
@@ -59,6 +64,15 @@ export type PubNubConfiguration = UserConfiguration & {
    * @default `false`
    */
   subscriptionWorkerLogVerbosity?: boolean;
+
+  /**
+   * API which should be used to make network requests.
+   *
+   * **Important:** `Shared Worker` always use `fetch` API.
+   *
+   * @default `fetch`
+   */
+  transport?: 'fetch' | 'xhr';
 
   /**
    * If set to `true`, SDK will use the same TCP connection for each HTTP request, instead of
@@ -118,6 +132,7 @@ export const setDefaults = (configuration: PubNubConfiguration): PubNubConfigura
     listenToBrowserNetworkEvents: configuration.listenToBrowserNetworkEvents ?? LISTEN_TO_BROWSER_NETWORK_EVENTS,
     subscriptionWorkerUrl: configuration.subscriptionWorkerUrl,
     subscriptionWorkerLogVerbosity: configuration.subscriptionWorkerLogVerbosity ?? SUBSCRIPTION_WORKER_LOG_VERBOSITY,
+    transport: configuration.transport ?? TRANSPORT,
     keepAlive: configuration.keepAlive ?? KEEP_ALIVE,
   };
 };
