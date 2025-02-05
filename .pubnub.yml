@@ -1,5 +1,14 @@
 ---
 changelog:
+  - date: 2025-02-05
+    version: v8.8.0
+    changes:
+      - type: feature
+        text: "For the browser version of PubNub SDK, add the ability to switch between `fetch` and `xhr` APIs (`transport` configuration option)."
+      - type: bug
+        text: "Fix issue because of which, in Event Engine mode, wrong timeout values have been set for requests which create long-poll request."
+      - type: improvement
+        text: "Refactor `timeout` implementation for `fetch` transport to properly cancel request when the timeout timer will fire."
   - date: 2025-01-31
     version: v8.7.1
     changes:
@@ -1123,7 +1132,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '8.7.1'
+version: '8.8.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1139,7 +1148,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.7.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.8.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1810,7 +1819,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v8.7.1/pubnub.8.7.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v8.8.0/pubnub.8.8.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

@@ -3732,7 +3732,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.7.1';
+	            return '8.8.0';
 	        },
 	        getVersion() {
 	            return this.version;
