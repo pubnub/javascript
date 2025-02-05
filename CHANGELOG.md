@@ -1,3 +1,15 @@
+## v8.8.0
+February 05 2025
+
+#### Added
+- For the browser version of PubNub SDK, add the ability to switch between `fetch` and `xhr` APIs (`transport` configuration option).
+
+#### Fixed
+- Fix issue because of which, in Event Engine mode, wrong timeout values have been set for requests which create long-poll request.
+
+#### Modified
+- Refactor `timeout` implementation for `fetch` transport to properly cancel request when the timeout timer will fire.
+
 ## v8.7.1
 January 31 2025
 

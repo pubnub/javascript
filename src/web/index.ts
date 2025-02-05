@@ -9,7 +9,6 @@ import type { WebCryptoModule as CryptoModuleType } from '../crypto/modules/WebC
 
 import { SubscriptionWorkerMiddleware } from '../transport/subscription-worker/subscription-worker-middleware';
 import { ExtendedConfiguration, PlatformConfiguration } from '../core/interfaces/configuration';
-import { WebReactNativeTransport } from '../transport/web-react-native-transport';
 import { stringifyBufferKeys } from '../core/components/stringify_buffer_keys';
 import { PubNubConfiguration, setDefaults } from './components/configuration';
 import { CryptorConfiguration } from '../core/interfaces/crypto-module';
@@ -18,6 +17,7 @@ import { makeConfiguration } from '../core/components/configuration';
 import { TokenManager } from '../core/components/token_manager';
 import { Cryptography } from '../core/interfaces/cryptography';
 import { PubNubMiddleware } from '../transport/middleware';
+import { WebTransport } from '../transport/web-transport';
 import { decode } from '../core/components/base64_codec';
 import { Transport } from '../core/interfaces/transport';
 import Crypto from '../core/components/cryptography';
@@ -92,8 +92,8 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
     if (process.env.CRYPTO_MODULE !== 'disabled') cryptography = new WebCryptography();
 
     // Setup transport provider.
-    let transport: Transport = new WebReactNativeTransport(
-      PubNub.originalFetch(),
+    let transport: Transport = new WebTransport(
+      platformConfiguration.transport,
       clientConfiguration.keepAlive,
       clientConfiguration.logVerbosity!,
     );
@@ -150,20 +150,5 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
   private networkUpDetected() {
     this.listenerManager.announceNetworkUp();
     this.reconnect();
-  }
-
-  private static originalFetch(): typeof fetch {
-    let iframe = document.querySelector<HTMLIFrameElement>('iframe[name="pubnub-context-unpatched-fetch"]');
-
-    if (!iframe) {
-      iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.name = 'pubnub-context-unpatched-fetch';
-      iframe.src = 'about:blank';
-      document.body.appendChild(iframe);
-    }
-
-    if (iframe.contentWindow) return iframe.contentWindow.fetch.bind(iframe.contentWindow);
-    return fetch;
   }
 }

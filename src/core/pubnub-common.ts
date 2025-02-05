@@ -806,14 +806,18 @@ export class PubNubCore<
 
     // Complete request configuration.
     const transportRequest = request.request();
+    const operation = request.operation();
     if (
       (transportRequest.formData && transportRequest.formData.length > 0) ||
-      request.operation() === RequestOperation.PNDownloadFileOperation
+      operation === RequestOperation.PNDownloadFileOperation
     ) {
       // Set file upload / download request delay.
       transportRequest.timeout = this._configuration.getFileTimeout();
     } else {
-      if (request.operation() === RequestOperation.PNSubscribeOperation)
+      if (
+        operation === RequestOperation.PNSubscribeOperation ||
+        operation === RequestOperation.PNReceiveMessagesOperation
+      )
         transportRequest.timeout = this._configuration.getSubscribeTimeout();
       else transportRequest.timeout = this._configuration.getTransactionTimeout();
     }
@@ -821,7 +825,7 @@ export class PubNubCore<
     // API request processing status.
     const status: Status = {
       error: false,
-      operation: request.operation(),
+      operation,
       category: StatusCategory.PNAcknowledgmentCategory,
       statusCode: 0,
     };
@@ -862,12 +866,9 @@ export class PubNubCore<
         const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
 
         // Notify callback (if possible).
-        if (callback) return callback(apiError.toStatus(request.operation()), null);
+        if (callback) return callback(apiError.toStatus(operation), null);
 
-        throw apiError.toPubNubError(
-          request.operation(),
-          'REST API request processing error, check status for details',
-        );
+        throw apiError.toPubNubError(operation, 'REST API request processing error, check status for details');
       });
   }
 

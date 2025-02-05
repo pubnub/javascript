@@ -122,13 +122,37 @@ export type RequestRetryPolicy = {
   validate(): void;
 };
 
+/**
+ * Policy, which uses linear formula to calculate next request retry attempt time.
+ */
 export type LinearRetryPolicyConfiguration = {
+  /**
+   * Delay between retry attempt (in seconds).
+   */
   delay: number;
+
+  /**
+   * Maximum number of retry attempts.
+   */
   maximumRetry: number;
 };
 
+/**
+ * Policy, which uses exponential formula to calculate next request retry attempt time.
+ */
 export type ExponentialRetryPolicyConfiguration = {
+  /**
+   * Minimum delay between retry attempts (in seconds).
+   */
   minimumDelay: number;
+
+  /**
+   * Maximum delay between retry attempts (in seconds).
+   */
   maximumDelay: number;
+
+  /**
+   * Maximum number of retry attempts.
+   */
   maximumRetry: number;
 };

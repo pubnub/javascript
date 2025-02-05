@@ -107,7 +107,7 @@ export abstract class AbstractRequest<ResponseType> implements Request<ResponseT
       path: this.path,
       queryParameters: this.queryParameters,
       cancellable: this.params?.cancellable ?? false,
-      timeout: 10000,
+      timeout: 10,
       identifier: this.requestIdentifier,
     };
 
