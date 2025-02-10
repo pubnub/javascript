@@ -96,9 +96,12 @@ export class WebTransport implements Transport {
     WebTransport.originalFetch = fetch.bind(window);
 
     // Check whether `fetch` has been monkey patched or not.
-    if (logVerbosity && this.isFetchMonkeyPatched()) {
-      console.warn("[PubNub] Native Web Fetch API 'fetch' function monkey patched.");
+    if (this.isFetchMonkeyPatched()) {
       WebTransport.originalFetch = WebTransport.getOriginalFetch();
+
+      if (!logVerbosity) return;
+
+      console.warn("[PubNub] Native Web Fetch API 'fetch' function monkey patched.");
 
       if (!this.isFetchMonkeyPatched(WebTransport.originalFetch))
         console.info("[PubNub] Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");

@@ -1,3 +1,9 @@
+## v8.8.1
+February 10 2025
+
+#### Fixed
+- Fix issue because of which APM fix worked only when the client has been configured with `logVerbosity: true`.
+
 ## v8.8.0
 February 05 2025
 

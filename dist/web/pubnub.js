@@ -3732,7 +3732,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.8.0';
+	            return '8.8.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -4202,9 +4202,11 @@
 	        // Keeping reference on current `window.fetch` function.
 	        WebTransport.originalFetch = fetch.bind(window);
 	        // Check whether `fetch` has been monkey patched or not.
-	        if (logVerbosity && this.isFetchMonkeyPatched()) {
-	            console.warn("[PubNub] Native Web Fetch API 'fetch' function monkey patched.");
+	        if (this.isFetchMonkeyPatched()) {
 	            WebTransport.originalFetch = WebTransport.getOriginalFetch();
+	            if (!logVerbosity)
+	                return;
+	            console.warn("[PubNub] Native Web Fetch API 'fetch' function monkey patched.");
 	            if (!this.isFetchMonkeyPatched(WebTransport.originalFetch))
 	                console.info("[PubNub] Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
 	            else
