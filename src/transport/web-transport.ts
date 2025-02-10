@@ -98,9 +98,9 @@ export class WebTransport implements Transport {
     // Check whether `fetch` has been monkey patched or not.
     if (this.isFetchMonkeyPatched()) {
       WebTransport.originalFetch = WebTransport.getOriginalFetch();
-      
+
       if (!logVerbosity) return;
-      
+
       console.warn("[PubNub] Native Web Fetch API 'fetch' function monkey patched.");
 
       if (!this.isFetchMonkeyPatched(WebTransport.originalFetch))
