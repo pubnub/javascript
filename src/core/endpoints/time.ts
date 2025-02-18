@@ -2,7 +2,6 @@
  * Time REST API module.
  */
 
-import { createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
 import { AbstractRequest } from '../components/request';
 import RequestOperation from '../constants/operations';
@@ -33,7 +32,7 @@ type ServiceResponse = [string];
  *
  * @internal
  */
-export class TimeRequest extends AbstractRequest<TimeResponse> {
+export class TimeRequest extends AbstractRequest<TimeResponse, ServiceResponse> {
   constructor() {
     super();
   }
@@ -43,15 +42,7 @@ export class TimeRequest extends AbstractRequest<TimeResponse> {
   }
 
   async parse(response: TransportResponse): Promise<TimeResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse)
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-
-    return { timetoken: serviceResponse[0] };
+    return { timetoken: this.deserializeResponse(response)[0] };
   }
 
   protected get path(): string {

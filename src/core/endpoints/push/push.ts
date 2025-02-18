@@ -4,7 +4,6 @@
  * @internal
  */
 
-import { TransportResponse } from '../../types/transport-response';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import { KeySet, Query } from '../../types/api';
@@ -52,7 +51,7 @@ type RequestParameters = (Push.ManageDeviceChannelsParameters | Push.RemoveDevic
  *
  * @internal
  */
-export class BasePushNotificationChannelsRequest<R> extends AbstractRequest<R> {
+export class BasePushNotificationChannelsRequest<R, S extends object> extends AbstractRequest<R, S> {
   constructor(private readonly parameters: RequestParameters) {
     super();
 
@@ -83,10 +82,6 @@ export class BasePushNotificationChannelsRequest<R> extends AbstractRequest<R> {
 
     if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns2)';
     if (this.parameters.pushGateway === 'apns2' && !this.parameters.topic) return 'Missing APNS2 topic';
-  }
-
-  async parse(_response: TransportResponse): Promise<R> {
-    throw Error('Should be implemented in subclass.');
   }
 
   protected get path(): string {

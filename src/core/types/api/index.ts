@@ -31,8 +31,8 @@ export type KeySet = {
  *
  * @internal
  */
-export type SendRequestFunction<ResponseType> = (
-  request: AbstractRequest<ResponseType>,
+export type SendRequestFunction<ResponseType, ServiceResponse extends object> = (
+  request: AbstractRequest<ResponseType, ServiceResponse>,
   callback?: ResultCallback<ResponseType>,
 ) => Promise<ResponseType | void>;
 

@@ -2044,6 +2044,14 @@ declare namespace PubNub {
      */
     PNAcknowledgmentCategory = 'PNAcknowledgmentCategory',
     /**
+     * PubNub service or intermediate "actor" returned unexpected response.
+     *
+     * There can be few sources of unexpected return with success code:
+     * - proxy server / VPN;
+     * - Wi-Fi hotspot authorization page.
+     */
+    PNMalformedResponseCategory = 'PNMalformedResponseCategory',
+    /**
      * Something strange happened; please check the logs.
      */
     PNUnknownCategory = 'PNUnknownCategory',
@@ -2892,7 +2900,7 @@ declare namespace PubNub {
     /**
      * Request cancellation / abort function.
      */
-    abort: () => void;
+    abort: (reason?: string) => void;
   };
 
   /**

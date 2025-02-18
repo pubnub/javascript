@@ -13,7 +13,6 @@ import * as Subscription from '../types/api/subscription';
 import { ListenerManager } from './listener_manager';
 import StatusCategory from '../constants/categories';
 import { DedupingManager } from './deduping_manager';
-import Categories from '../constants/categories';
 import * as Presence from '../types/api/presence';
 import { PubNubCore } from '../pubnub-common';
 import EventEmitter from './eventEmitter';
@@ -382,9 +381,9 @@ export class SubscriptionManager {
       )
         return;
 
-      if (status.category === Categories.PNTimeoutCategory) {
+      if (status.category === StatusCategory.PNTimeoutCategory) {
         this.startSubscribeLoop();
-      } else if (status.category === Categories.PNNetworkIssuesCategory) {
+      } else if (status.category === StatusCategory.PNNetworkIssuesCategory) {
         this.disconnect();
 
         if (status.error && this.configuration.autoNetworkDetection && this.isOnline) {
@@ -402,7 +401,7 @@ export class SubscriptionManager {
           this.subscriptionStatusAnnounced = true;
 
           const reconnectedAnnounce = {
-            category: Categories.PNReconnectedCategory,
+            category: StatusCategory.PNReconnectedCategory,
             operation: status.operation,
             lastTimetoken: this.lastTimetoken,
             currentTimetoken: this.currentTimetoken,
@@ -412,12 +411,16 @@ export class SubscriptionManager {
 
         this.reconnectionManager.startPolling();
         this.listenerManager.announceStatus(status);
-      } else if (status.category === Categories.PNBadRequestCategory) {
-        this.stopHeartbeatTimer();
-        this.listenerManager.announceStatus(status);
-      } else {
-        this.listenerManager.announceStatus(status);
-      }
+      } else if (
+        status.category === StatusCategory.PNBadRequestCategory ||
+        status.category == StatusCategory.PNMalformedResponseCategory
+      ) {
+        const category = this.isOnline ? StatusCategory.PNDisconnectedUnexpectedlyCategory : status.category;
+        this.isOnline = false;
+        this.disconnect();
+
+        this.listenerManager.announceStatus({ ...status, category });
+      } else this.listenerManager.announceStatus(status);
 
       return;
     }

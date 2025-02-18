@@ -764,8 +764,8 @@ export class PubNubCore<
    *
    * @internal
    */
-  private sendRequest<ResponseType>(
-    request: AbstractRequest<ResponseType>,
+  private sendRequest<ResponseType, ServiceResponse extends object>(
+    request: AbstractRequest<ResponseType, ServiceResponse>,
     callback: ResultCallback<ResponseType>,
   ): void;
 
@@ -778,7 +778,9 @@ export class PubNubCore<
    *
    * @returns Asynchronous request execution and response parsing result.
    */
-  private async sendRequest<ResponseType>(request: AbstractRequest<ResponseType>): Promise<ResponseType>;
+  private async sendRequest<ResponseType, ServiceResponse extends object>(
+    request: AbstractRequest<ResponseType, ServiceResponse>,
+  ): Promise<ResponseType>;
 
   /**
    * Schedule request execution.
@@ -793,8 +795,8 @@ export class PubNubCore<
    *
    * @throws PubNubError in case of request processing error.
    */
-  private async sendRequest<ResponseType>(
-    request: AbstractRequest<ResponseType>,
+  private async sendRequest<ResponseType, ServiceResponse extends object>(
+    request: AbstractRequest<ResponseType, ServiceResponse>,
     callback?: ResultCallback<ResponseType>,
   ): Promise<ResponseType | void> {
     // Validate user-input.
@@ -846,12 +848,13 @@ export class PubNubCore<
 
         // Handle special case when request completed but not fully processed by PubNub service.
         if (response.status !== 200 && response.status !== 204) {
+          const responseText = PubNubCore.decoder.decode(response.body);
           const contentType = response.headers['content-type'];
           if (contentType || contentType.indexOf('javascript') !== -1 || contentType.indexOf('json') !== -1) {
-            const json = JSON.parse(PubNubCore.decoder.decode(response.body)) as Payload;
+            const json = JSON.parse(responseText) as Payload;
             if (typeof json === 'object' && 'error' in json && json.error && typeof json.error === 'object')
               status.errorData = json.error;
-          }
+          } else status.responseText = responseText;
         }
 
         return request.parse(response);
@@ -1203,7 +1206,7 @@ export class PubNubCore<
        */
       if (this.subscriptionManager) {
         // Creating identifiable abort caller.
-        const callableAbort = () => request.abort();
+        const callableAbort = () => request.abort('Cancel long-poll subscribe request');
         callableAbort.identifier = request.requestIdentifier;
 
         this.subscriptionManager.abort = callableAbort;
@@ -1297,7 +1300,7 @@ export class PubNubCore<
       });
 
       const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
-        request.abort();
+        request.abort('Cancel subscribe handshake request');
       });
 
       /**
@@ -1331,7 +1334,7 @@ export class PubNubCore<
       });
 
       const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
-        request.abort();
+        request.abort('Cancel long-poll subscribe request');
       });
 
       /**
@@ -1340,8 +1343,8 @@ export class PubNubCore<
        * **Note:** Had to be done after scheduling because transport provider return cancellation
        * controller only when schedule new request.
        */
-      const handshakeResponse = this.sendRequest(request);
-      return handshakeResponse.then((response) => {
+      const receiveResponse = this.sendRequest(request);
+      return receiveResponse.then((response) => {
         abortUnsubscribe();
         return response;
       });
@@ -1857,7 +1860,10 @@ export class PubNubCore<
     if (process.env.PRESENCE_MODULE !== 'disabled') {
       const { keySet, userId: userId } = this._configuration;
       const heartbeat = this._configuration.getPresenceTimeout();
-      let request: AbstractRequest<Presence.PresenceHeartbeatResponse | Presence.SetPresenceStateResponse>;
+      let request: AbstractRequest<
+        Presence.PresenceHeartbeatResponse | Presence.SetPresenceStateResponse,
+        Record<string, unknown>
+      >;
 
       // Maintain presence information (if required).
       if (this._configuration.enableEventEngine && this.presenceState) {

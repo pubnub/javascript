@@ -6,16 +6,16 @@
 
 import { PubNubFileConstructor, PubNubFileInterface } from '../../types/file';
 import { GenerateFileUploadUrlRequest } from './generate_upload_url';
+import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { ICryptoModule } from '../../interfaces/crypto-module';
 import { Cryptography } from '../../interfaces/cryptography';
 import { AbstractRequest } from '../../components/request';
 import * as FileSharing from '../../types/api/file-sharing';
 import { PubNubError } from '../../../errors/pubnub-error';
 import RequestOperation from '../../constants/operations';
-import { UploadFileRequest } from './upload-file';
-import { PubNubAPIError } from '../../../errors/pubnub-api-error';
-import { KeySet } from '../../types/api';
 import StatusCategory from '../../constants/categories';
+import { UploadFileRequest } from './upload-file';
+import { KeySet } from '../../types/api';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -46,7 +46,7 @@ type RequestParameters<FileParameters> = FileSharing.SendFileParameters<FilePara
    *
    * @param request - Request which should be processed.
    */
-  sendRequest: <ResponseType>(request: AbstractRequest<ResponseType>) => Promise<ResponseType>;
+  sendRequest: <ResponseType>(request: AbstractRequest<ResponseType, Record<string, unknown>>) => Promise<ResponseType>;
 
   /**
    * File message publish method.

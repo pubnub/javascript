@@ -29,7 +29,7 @@ describe('#distribution test (titanium)', function () {
     listener = {
       status: function (st) {
         try {
-          expect(st.operation).to.be.equal("PNSubscribeOperation");
+          expect(st.operation).to.be.equal('PNSubscribeOperation');
           done();
         } catch (error) {
           done(error);
@@ -50,7 +50,7 @@ describe('#distribution test (titanium)', function () {
       message: function (m) {
         try {
           expect(m.channel).to.be.equal(myChannel2);
-          expect(m.message.text).to.be.equal("hello Titanium SDK");
+          expect(m.message.text).to.be.equal('hello Titanium SDK');
           done();
         } catch (error) {
           done(error);
@@ -68,7 +68,7 @@ describe('#distribution test (titanium)', function () {
     pubnub.setState({ channels: [myChannel1], state: { hello: 'there' } }, function (status, response) {
       try {
         expect(status.error).to.be.equal(false);
-        expect(response.state.hello).to.be.equal("there");
+        expect(response.state.hello).to.be.equal('there');
         done();
       } catch (error) {
         done(error);
@@ -79,7 +79,7 @@ describe('#distribution test (titanium)', function () {
   it('should have to get the time', function (done) {
     pubnub.time(function (status) {
       try {
-        expect(status.operation).to.be.equal("PNTimeOperation");
+        expect(status.operation).to.be.equal('PNTimeOperation');
         expect(status.statusCode).to.be.equal(200);
         done();
       } catch (error) {
@@ -142,7 +142,7 @@ describe('#distribution test (titanium)', function () {
     pubnub.setUUID('CustomUUID');
 
     try {
-      expect(pubnub.getUUID()).to.be.equal("CustomUUID");
+      expect(pubnub.getUUID()).to.be.equal('CustomUUID');
       done();
     } catch (error) {
       done(error);
@@ -159,7 +159,7 @@ describe('#distribution test (titanium)', function () {
     pubnub.addListener({
       status: function (st) {
         try {
-          expect(st.operation).to.be.equal("PNUnsubscribeOperation");
+          expect(st.operation).to.be.equal('PNUnsubscribeOperation');
 
           if (!finished) {
             // prevent calling done twice

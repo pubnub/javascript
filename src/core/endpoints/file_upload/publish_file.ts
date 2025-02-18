@@ -4,7 +4,6 @@
  * @internal
  */
 
-import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
 import { ICryptoModule } from '../../interfaces/crypto-module';
 import { AbstractRequest } from '../../components/request';
@@ -56,7 +55,10 @@ type ServiceResponse = [0 | 1, string, string];
  *
  * @internal
  */
-export class PublishFileMessageRequest extends AbstractRequest<FileSharing.PublishFileMessageResponse> {
+export class PublishFileMessageRequest extends AbstractRequest<
+  FileSharing.PublishFileMessageResponse,
+  ServiceResponse
+> {
   constructor(private readonly parameters: RequestParameters) {
     super();
 
@@ -77,15 +79,7 @@ export class PublishFileMessageRequest extends AbstractRequest<FileSharing.Publi
   }
 
   async parse(response: TransportResponse): Promise<FileSharing.PublishFileMessageResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse)
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-
-    return { timetoken: serviceResponse[2] };
+    return { timetoken: this.deserializeResponse(response)[2] };
   }
 
   protected get path(): string {

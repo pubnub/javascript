@@ -42,7 +42,7 @@ export class ReactNativeTransport implements Transport {
     const controller = {
       // Storing controller inside to prolong object lifetime.
       abortController,
-      abort: () => !abortController.signal.aborted && abortController.abort(),
+      abort: (reason) => !abortController.signal.aborted && abortController.abort(reason),
     } as CancellationController;
 
     return [
@@ -63,7 +63,7 @@ export class ReactNativeTransport implements Transport {
             clearTimeout(timeoutId);
 
             reject(new Error('Request timeout'));
-            controller.abort();
+            controller.abort('Cancel because of timeout');
           }, req.timeout * 1000);
         });
 
@@ -104,7 +104,18 @@ export class ReactNativeTransport implements Transport {
             return transportResponse;
           })
           .catch((error) => {
-            throw PubNubAPIError.create(error);
+            let fetchError = error;
+
+            if (typeof error === 'string') {
+              const errorMessage = error.toLowerCase();
+              if (errorMessage.includes('timeout') || !errorMessage.includes('cancel')) fetchError = new Error(error);
+              else if (errorMessage.includes('cancel')) {
+                fetchError = new Error('Aborted');
+                fetchError.name = 'AbortError';
+              }
+            }
+
+            throw PubNubAPIError.create(fetchError);
           });
       }),
       controller,

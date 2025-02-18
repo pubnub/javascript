@@ -121,20 +121,27 @@ export class PubNubAPIError extends Error {
         try {
           const errorResponse: Payload = JSON.parse(decoded);
 
-          if (typeof errorResponse === 'object' && !Array.isArray(errorResponse)) {
-            if (
-              'error' in errorResponse &&
-              (errorResponse.error === 1 || errorResponse.error === true) &&
-              'status' in errorResponse &&
-              typeof errorResponse.status === 'number' &&
-              'message' in errorResponse &&
-              'service' in errorResponse
-            ) {
-              errorData = errorResponse;
-              status = errorResponse.status;
-            } else errorData = errorResponse;
+          if (typeof errorResponse === 'object') {
+            if (!Array.isArray(errorResponse)) {
+              if (
+                'error' in errorResponse &&
+                (errorResponse.error === 1 || errorResponse.error === true) &&
+                'status' in errorResponse &&
+                typeof errorResponse.status === 'number' &&
+                'message' in errorResponse &&
+                'service' in errorResponse
+              ) {
+                errorData = errorResponse;
+                status = errorResponse.status;
+              } else errorData = errorResponse;
 
-            if ('error' in errorResponse && errorResponse.error instanceof Error) errorData = errorResponse.error;
+              if ('error' in errorResponse && errorResponse.error instanceof Error) errorData = errorResponse.error;
+            } else {
+              // Handling Publish API payload error.
+              if (typeof errorResponse[0] === 'number' && errorResponse[0] === 0) {
+                if (errorResponse.length > 1 && typeof errorResponse[1] === 'string') errorData = errorResponse[1];
+              }
+            }
           }
         } catch (_) {
           errorData = decoded;

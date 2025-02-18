@@ -4,7 +4,7 @@
  * @internal
  */
 
-import fetch, { Request, Response, RequestInit } from 'node-fetch';
+import fetch, { Request, Response, RequestInit, AbortError } from 'node-fetch';
 import { ProxyAgent, ProxyAgentOptions } from 'proxy-agent';
 import { Agent as HttpsAgent } from 'https';
 import { Agent as HttpAgent } from 'http';
@@ -82,7 +82,10 @@ export class NodeTransport implements Transport {
       controller = {
         // Storing controller inside to prolong object lifetime.
         abortController,
-        abort: () => abortController?.abort(),
+        abort: (reason) => {
+          if (!abortController || abortController.signal.aborted) return;
+          abortController?.abort(reason);
+        },
       } as CancellationController;
     }
 
@@ -121,7 +124,15 @@ export class NodeTransport implements Transport {
             return transportResponse;
           })
           .catch((error) => {
-            throw PubNubAPIError.create(error);
+            let fetchError = error;
+
+            if (typeof error === 'string') {
+              const errorMessage = error.toLowerCase();
+              if (errorMessage.includes('timeout') || !errorMessage.includes('cancel')) fetchError = new Error(error);
+              else if (errorMessage.includes('cancel')) fetchError = new AbortError('Aborted');
+            }
+
+            throw PubNubAPIError.create(fetchError);
           });
       }),
       controller,

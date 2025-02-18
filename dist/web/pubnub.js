@@ -836,6 +836,14 @@
 	     */
 	    StatusCategory["PNAcknowledgmentCategory"] = "PNAcknowledgmentCategory";
 	    /**
+	     * PubNub service or intermediate "actor" returned unexpected response.
+	     *
+	     * There can be few sources of unexpected return with success code:
+	     * - proxy server / VPN;
+	     * - Wi-Fi hotspot authorization page.
+	     */
+	    StatusCategory["PNMalformedResponseCategory"] = "PNMalformedResponseCategory";
+	    /**
 	     * Something strange happened; please check the logs.
 	     */
 	    StatusCategory["PNUnknownCategory"] = "PNUnknownCategory";
@@ -914,15 +922,16 @@
 	 * Create error status object.
 	 *
 	 * @param errorPayload - Additional information which should be attached to the error status object.
+	 * @param category - Occurred error category.
 	 *
 	 * @returns Error status object.
 	 *
 	 * @internal
 	 */
-	function createError(errorPayload) {
+	function createError(errorPayload, category) {
 	    var _a;
 	    (_a = errorPayload.statusCode) !== null && _a !== void 0 ? _a : (errorPayload.statusCode = 0);
-	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category: StatusCategory$1.PNValidationErrorCategory, error: true });
+	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category, error: true });
 	}
 	/**
 	 * Create operation arguments validation error status object.
@@ -935,7 +944,16 @@
 	 * @internal
 	 */
 	function createValidationError(message, statusCode) {
-	    return createError(Object.assign({ message }, ({})));
+	    return createError(Object.assign({ message }, ({})), StatusCategory$1.PNValidationErrorCategory);
+	}
+	/**
+	 * Create malformed service response error status object.
+	 *
+	 * @param [responseText] - Stringified original service response.
+	 * @param [statusCode] - Operation HTTP status code.
+	 */
+	function createMalformedResponseError(responseText, statusCode) {
+	    return createError(Object.assign(Object.assign({ message: 'Unable to deserialize service response' }, (responseText !== undefined ? { responseText } : {})), (statusCode !== undefined ? { statusCode } : {})), StatusCategory$1.PNMalformedResponseCategory);
 	}
 
 	/**
@@ -2979,20 +2997,29 @@
 	                response.headers['content-type'].indexOf('application/json') !== -1) {
 	                try {
 	                    const errorResponse = JSON.parse(decoded);
-	                    if (typeof errorResponse === 'object' && !Array.isArray(errorResponse)) {
-	                        if ('error' in errorResponse &&
-	                            (errorResponse.error === 1 || errorResponse.error === true) &&
-	                            'status' in errorResponse &&
-	                            typeof errorResponse.status === 'number' &&
-	                            'message' in errorResponse &&
-	                            'service' in errorResponse) {
-	                            errorData = errorResponse;
-	                            status = errorResponse.status;
+	                    if (typeof errorResponse === 'object') {
+	                        if (!Array.isArray(errorResponse)) {
+	                            if ('error' in errorResponse &&
+	                                (errorResponse.error === 1 || errorResponse.error === true) &&
+	                                'status' in errorResponse &&
+	                                typeof errorResponse.status === 'number' &&
+	                                'message' in errorResponse &&
+	                                'service' in errorResponse) {
+	                                errorData = errorResponse;
+	                                status = errorResponse.status;
+	                            }
+	                            else
+	                                errorData = errorResponse;
+	                            if ('error' in errorResponse && errorResponse.error instanceof Error)
+	                                errorData = errorResponse.error;
 	                        }
-	                        else
-	                            errorData = errorResponse;
-	                        if ('error' in errorResponse && errorResponse.error instanceof Error)
-	                            errorData = errorResponse.error;
+	                        else {
+	                            // Handling Publish API payload error.
+	                            if (typeof errorResponse[0] === 'number' && errorResponse[0] === 0) {
+	                                if (errorResponse.length > 1 && typeof errorResponse[1] === 'string')
+	                                    errorData = errorResponse[1];
+	                            }
+	                        }
 	                    }
 	                }
 	                catch (_) {
@@ -3732,7 +3759,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.8.1';
+	            return '8.9.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -4217,7 +4244,7 @@
 	        const abortController = new AbortController();
 	        const cancellation = {
 	            abortController,
-	            abort: () => !abortController.signal.aborted && abortController.abort(),
+	            abort: (reason) => !abortController.signal.aborted && abortController.abort(reason),
 	        };
 	        return [
 	            this.webTransportRequestFromTransportRequest(req).then((request) => {
@@ -4243,7 +4270,15 @@
 	                    return transportResponse;
 	                })
 	                    .catch((error) => {
-	                    throw PubNubAPIError.create(error);
+	                    let fetchError = error;
+	                    if (typeof error === 'string') {
+	                        const errorMessage = error.toLowerCase();
+	                        if (errorMessage.includes('timeout') || !errorMessage.includes('cancel'))
+	                            fetchError = new Error(error);
+	                        else if (errorMessage.includes('cancel'))
+	                            fetchError = new DOMException('Aborted', 'AbortError');
+	                    }
+	                    throw PubNubAPIError.create(fetchError);
 	                });
 	            }),
 	            cancellation,
@@ -4286,7 +4321,7 @@
 	                timeoutId = setTimeout(() => {
 	                    clearTimeout(timeoutId);
 	                    reject(new Error('Request timeout'));
-	                    controller.abort();
+	                    controller.abort('Cancel because of timeout');
 	                }, req.timeout * 1000);
 	            });
 	            const request = new Request(req.url, {
@@ -5025,13 +5060,15 @@
 	                this.reconnectionManager.startPolling();
 	                this.listenerManager.announceStatus(status);
 	            }
-	            else if (status.category === StatusCategory$1.PNBadRequestCategory) {
-	                this.stopHeartbeatTimer();
-	                this.listenerManager.announceStatus(status);
+	            else if (status.category === StatusCategory$1.PNBadRequestCategory ||
+	                status.category == StatusCategory$1.PNMalformedResponseCategory) {
+	                const category = this.isOnline ? StatusCategory$1.PNDisconnectedUnexpectedlyCategory : status.category;
+	                this.isOnline = false;
+	                this.disconnect();
+	                this.listenerManager.announceStatus(Object.assign(Object.assign({}, status), { category }));
 	            }
-	            else {
+	            else
 	                this.listenerManager.announceStatus(status);
-	            }
 	            return;
 	        }
 	        if (this.storedTimetoken) {
@@ -5828,10 +5865,12 @@
 	    }
 	    /**
 	     * Abort request if possible.
+	     *
+	     * @param [reason] Information about why request has been cancelled.
 	     */
-	    abort() {
+	    abort(reason) {
 	        if (this && this.cancellationController)
-	            this.cancellationController.abort();
+	            this.cancellationController.abort(reason);
 	    }
 	    /**
 	     * Target REST API endpoint operation type.
@@ -5850,11 +5889,11 @@
 	    /**
 	     * Parse service response.
 	     *
-	     * @param _response - Raw service response which should be parsed.
+	     * @param response - Raw service response which should be parsed.
 	     */
-	    parse(_response) {
+	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            throw Error('Should be implemented by subclass.');
+	            return this.deserializeResponse(response);
 	        });
 	    }
 	    /**
@@ -5926,21 +5965,28 @@
 	     *
 	     * @param response - Transparent response object with headers and body information.
 	     *
-	     * @returns Deserialized data or `undefined` in case of `JSON.parse(..)` error.
+	     * @returns Deserialized service response data.
+	     *
+	     * @throws {Error} if received service response can't be processed (has unexpected content-type or can't be parsed as
+	     * JSON).
 	     */
 	    deserializeResponse(response) {
+	        const responseText = AbstractRequest.decoder.decode(response.body);
 	        const contentType = response.headers['content-type'];
+	        let parsedJson;
 	        if (!contentType || (contentType.indexOf('javascript') === -1 && contentType.indexOf('json') === -1))
-	            return undefined;
-	        const json = AbstractRequest.decoder.decode(response.body);
+	            throw new PubNubError('Service response error, check status for details', createMalformedResponseError(responseText, response.status));
 	        try {
-	            const parsedJson = JSON.parse(json);
-	            return parsedJson;
+	            parsedJson = JSON.parse(responseText);
 	        }
 	        catch (error) {
 	            console.error('Error parsing JSON response:', error);
-	            return undefined;
+	            throw new PubNubError('Service response error, check status for details', createMalformedResponseError(responseText, response.status));
 	        }
+	        // Throw and exception in case of client / server error.
+	        if ('status' in parsedJson && typeof parsedJson.status === 'number' && parsedJson.status >= 400)
+	            throw PubNubAPIError.create(response);
+	        return parsedJson;
 	    }
 	}
 	/**
@@ -6282,16 +6328,17 @@
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            let serviceResponse;
+	            let responseText;
 	            try {
-	                const json = AbstractRequest.decoder.decode(response.body);
-	                const parsedJson = JSON.parse(json);
+	                responseText = AbstractRequest.decoder.decode(response.body);
+	                const parsedJson = JSON.parse(responseText);
 	                serviceResponse = parsedJson;
 	            }
 	            catch (error) {
 	                console.error('Error parsing JSON response:', error);
 	            }
 	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
+	                throw new PubNubError('Service response error, check status for details', createMalformedResponseError(responseText, response.status));
 	            }
 	            const events = serviceResponse.m
 	                .filter((envelope) => {
@@ -8474,10 +8521,7 @@
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse)
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            return { timetoken: serviceResponse[2] };
+	            return { timetoken: this.deserializeResponse(response)[2] };
 	        });
 	    }
 	    get path() {
@@ -8501,6 +8545,8 @@
 	        return query;
 	    }
 	    get headers() {
+	        if (!this.parameters.sendByPost)
+	            return undefined;
 	        return { 'Content-Type': 'application/json' };
 	    }
 	    get body() {
@@ -8554,10 +8600,7 @@
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse)
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            return { timetoken: serviceResponse[2] };
+	            return { timetoken: this.deserializeResponse(response)[2] };
 	        });
 	    }
 	    get path() {
@@ -8685,11 +8728,6 @@
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
 	            const { channels = [], channelGroups = [] } = this.parameters;
 	            const state = { channels: {} };
 	            if (channels.length === 1 && channelGroups.length === 0)
@@ -8741,13 +8779,7 @@
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return { state: serviceResponse.payload };
+	            return { state: this.deserializeResponse(response).payload };
 	        });
 	    }
 	    get path() {
@@ -8790,14 +8822,11 @@
 	            return 'Please provide a list of channels and/or channel-groups';
 	    }
 	    parse(response) {
+	        const _super = Object.create(null, {
+	            parse: { get: () => super.parse }
+	        });
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return {};
+	            return _super.parse.call(this, response).then((_) => ({}));
 	        });
 	    }
 	    get path() {
@@ -8846,14 +8875,11 @@
 	            return 'At least one `channel` or `channel group` should be provided.';
 	    }
 	    parse(response) {
+	        const _super = Object.create(null, {
+	            parse: { get: () => super.parse }
+	        });
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return {};
+	            return _super.parse.call(this, response).then((_) => ({}));
 	        });
 	    }
 	    get path() {
@@ -8895,11 +8921,6 @@
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
 	            if (!serviceResponse.payload)
 	                return { channels: [] };
 	            return { channels: serviceResponse.payload.channels };
@@ -8959,11 +8980,6 @@
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a, _b;
 	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
 	            // Extract general presence information.
 	            const totalChannels = 'occupancy' in serviceResponse ? 1 : serviceResponse.payload.total_channels;
 	            const totalOccupancy = 'occupancy' in serviceResponse ? serviceResponse.occupancy : serviceResponse.payload.total_occupancy;
@@ -9036,14 +9052,11 @@
 	            return 'Missing channel';
 	    }
 	    parse(response) {
+	        const _super = Object.create(null, {
+	            parse: { get: () => super.parse }
+	        });
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return {};
+	            return _super.parse.call(this, response).then((_) => ({}));
 	        });
 	    }
 	    get path() {
@@ -9090,13 +9103,7 @@
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return { channels: serviceResponse.channels };
+	            return { channels: this.deserializeResponse(response).channels };
 	        });
 	    }
 	    get path() {
@@ -9167,8 +9174,6 @@
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse)
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
 	            const messages = serviceResponse[0];
 	            const startTimeToken = serviceResponse[1];
 	            const endTimeToken = serviceResponse[2];
@@ -9329,11 +9334,6 @@
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
 	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
 	            const responseChannels = (_a = serviceResponse.channels) !== null && _a !== void 0 ? _a : {};
 	            const channels = {};
 	            Object.keys(responseChannels).forEach((channel) => {
@@ -9457,11 +9457,6 @@
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
 	            let start = null;
 	            let end = null;
 	            if (serviceResponse.data.length > 0) {
@@ -9523,14 +9518,11 @@
 	            return 'Action.type value exceed maximum length of 15';
 	    }
 	    parse(response) {
+	        const _super = Object.create(null, {
+	            parse: { get: () => super.parse }
+	        });
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return { data: serviceResponse.data };
+	            return _super.parse.call(this, response).then(({ data }) => ({ data }));
 	        });
 	    }
 	    get path() {
@@ -9576,14 +9568,11 @@
 	            return 'Missing action timetoken';
 	    }
 	    parse(response) {
+	        const _super = Object.create(null, {
+	            parse: { get: () => super.parse }
+	        });
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return { data: serviceResponse.data };
+	            return _super.parse.call(this, response).then(({ data }) => ({ data }));
 	        });
 	    }
 	    get path() {
@@ -9634,10 +9623,7 @@
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse)
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            return { timetoken: serviceResponse[2] };
+	            return { timetoken: this.deserializeResponse(response)[2] };
 	        });
 	    }
 	    get path() {
@@ -9746,17 +9732,6 @@
 	        if (!name)
 	            return "file name can't be empty";
 	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
-	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, id, channel, name, } = this.parameters;
 	        return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files/${id}/${name}`;
@@ -9798,17 +9773,6 @@
 	        if (!this.parameters.channel)
 	            return "channel can't be empty";
 	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
-	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, } = this.parameters;
 	        return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files`;
@@ -9847,11 +9811,6 @@
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
 	            return {
 	                id: serviceResponse.data.id,
 	                name: serviceResponse.data.name,
@@ -10602,14 +10561,11 @@
 	            return 'Missing channels';
 	    }
 	    parse(response) {
+	        const _super = Object.create(null, {
+	            parse: { get: () => super.parse }
+	        });
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return {};
+	            return _super.parse.call(this, response).then((_) => ({}));
 	        });
 	    }
 	    get path() {
@@ -10650,14 +10606,11 @@
 	            return 'Missing channels';
 	    }
 	    parse(response) {
+	        const _super = Object.create(null, {
+	            parse: { get: () => super.parse }
+	        });
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return {};
+	            return _super.parse.call(this, response).then((_) => ({}));
 	        });
 	    }
 	    get path() {
@@ -10696,13 +10649,7 @@
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return { channels: serviceResponse.payload.channels };
+	            return { channels: this.deserializeResponse(response).payload.channels };
 	        });
 	    }
 	    get path() {
@@ -10737,14 +10684,11 @@
 	            return 'Missing Channel Group';
 	    }
 	    parse(response) {
+	        const _super = Object.create(null, {
+	            parse: { get: () => super.parse }
+	        });
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return {};
+	            return _super.parse.call(this, response).then((_) => ({}));
 	        });
 	    }
 	    get path() {
@@ -10778,13 +10722,7 @@
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return { groups: serviceResponse.payload.groups };
+	            return { groups: this.deserializeResponse(response).payload.groups };
 	        });
 	    }
 	    get path() {
@@ -10951,11 +10889,6 @@
 	        if (this.parameters.pushGateway === 'apns2' && !this.parameters.topic)
 	            return 'Missing APNS2 topic';
 	    }
-	    parse(_response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            throw Error('Should be implemented in subclass.');
-	        });
-	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, action, device, pushGateway, } = this.parameters;
 	        let path = pushGateway === 'apns2'
@@ -10998,11 +10931,11 @@
 	        return RequestOperation$1.PNRemovePushNotificationEnabledChannelsOperation;
 	    }
 	    parse(response) {
+	        const _super = Object.create(null, {
+	            parse: { get: () => super.parse }
+	        });
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse)
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            return {};
+	            return _super.parse.call(this, response).then((_) => ({}));
 	        });
 	    }
 	}
@@ -11028,10 +10961,7 @@
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse)
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            return { channels: serviceResponse };
+	            return { channels: this.deserializeResponse(response) };
 	        });
 	    }
 	}
@@ -11056,11 +10986,11 @@
 	        return RequestOperation$1.PNAddPushNotificationEnabledChannelsOperation;
 	    }
 	    parse(response) {
+	        const _super = Object.create(null, {
+	            parse: { get: () => super.parse }
+	        });
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse)
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            return {};
+	            return _super.parse.call(this, response).then((_) => ({}));
 	        });
 	    }
 	}
@@ -11085,11 +11015,11 @@
 	        return RequestOperation$1.PNRemoveAllPushNotificationsOperation;
 	    }
 	    parse(response) {
+	        const _super = Object.create(null, {
+	            parse: { get: () => super.parse }
+	        });
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse)
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            return {};
+	            return _super.parse.call(this, response).then((_) => ({}));
 	        });
 	    }
 	}
@@ -11217,17 +11147,6 @@
 	    operation() {
 	        return RequestOperation$1.PNGetAllChannelMetadataOperation;
 	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
-	    }
 	    get path() {
 	        return `/v2/objects/${this.parameters.keySet.subscribeKey}/channels`;
 	    }
@@ -11264,17 +11183,6 @@
 	    validate() {
 	        if (!this.parameters.channel)
 	            return 'Channel cannot be empty';
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, } = this.parameters;
@@ -11360,17 +11268,6 @@
 	    validate() {
 	        if (!this.parameters.uuid)
 	            return "'uuid' cannot be empty";
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, uuid, } = this.parameters;
@@ -11484,17 +11381,6 @@
 	        if (!channels || channels.length === 0)
 	            return 'Channels cannot be empty';
 	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
-	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, uuid, } = this.parameters;
 	        return `/v2/objects/${subscribeKey}/uuids/${encodeString(uuid)}/channels`;
@@ -11575,17 +11461,6 @@
 	    operation() {
 	        return RequestOperation$1.PNGetAllUUIDMetadataOperation;
 	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
-	    }
 	    get path() {
 	        return `/v2/objects/${this.parameters.keySet.subscribeKey}/uuids`;
 	    }
@@ -11635,17 +11510,6 @@
 	    validate() {
 	        if (!this.parameters.channel)
 	            return 'Channel cannot be empty';
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, } = this.parameters;
@@ -11704,17 +11568,6 @@
 	            return undefined;
 	        }
 	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
-	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, } = this.parameters;
 	        return `/v2/objects/${subscribeKey}/channels/${encodeString(channel)}`;
@@ -11754,17 +11607,6 @@
 	    validate() {
 	        if (!this.parameters.uuid)
 	            return "'uuid' cannot be empty";
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, uuid, } = this.parameters;
@@ -11847,17 +11689,6 @@
 	    validate() {
 	        if (!this.parameters.channel)
 	            return 'Channel cannot be empty';
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, } = this.parameters;
@@ -11968,17 +11799,6 @@
 	        if (!uuids || uuids.length === 0)
 	            return 'UUIDs cannot be empty';
 	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
-	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, } = this.parameters;
 	        return `/v2/objects/${subscribeKey}/channels/${encodeString(channel)}/uuids`;
@@ -12061,17 +11881,6 @@
 	        if (!this.parameters.uuid)
 	            return "'uuid' cannot be empty";
 	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
-	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, uuid, } = this.parameters;
 	        return `/v2/objects/${subscribeKey}/uuids/${encodeString(uuid)}`;
@@ -12130,17 +11939,6 @@
 	        else {
 	            return undefined;
 	        }
-	    }
-	    parse(response) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse) {
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            }
-	            else if (serviceResponse.status >= 400)
-	                throw PubNubAPIError.create(response);
-	            return serviceResponse;
-	        });
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, uuid, } = this.parameters;
@@ -12718,10 +12516,7 @@
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const serviceResponse = this.deserializeResponse(response);
-	            if (!serviceResponse)
-	                throw new PubNubError('Service response error, check status for details', createValidationError('Unable to deserialize service response'));
-	            return { timetoken: serviceResponse[0] };
+	            return { timetoken: this.deserializeResponse(response)[0] };
 	        });
 	    }
 	    get path() {
@@ -13242,12 +13037,15 @@
 	                status.statusCode = response.status;
 	                // Handle special case when request completed but not fully processed by PubNub service.
 	                if (response.status !== 200 && response.status !== 204) {
+	                    const responseText = PubNubCore.decoder.decode(response.body);
 	                    const contentType = response.headers['content-type'];
 	                    if (contentType || contentType.indexOf('javascript') !== -1 || contentType.indexOf('json') !== -1) {
-	                        const json = JSON.parse(PubNubCore.decoder.decode(response.body));
+	                        const json = JSON.parse(responseText);
 	                        if (typeof json === 'object' && 'error' in json && json.error && typeof json.error === 'object')
 	                            status.errorData = json.error;
 	                    }
+	                    else
+	                        status.responseText = responseText;
 	                }
 	                return request.parse(response);
 	            })
@@ -13490,7 +13288,7 @@
 	             */
 	            if (this.subscriptionManager) {
 	                // Creating identifiable abort caller.
-	                const callableAbort = () => request.abort();
+	                const callableAbort = () => request.abort('Cancel long-poll subscribe request');
 	                callableAbort.identifier = request.requestIdentifier;
 	                this.subscriptionManager.abort = callableAbort;
 	            }
@@ -13574,7 +13372,7 @@
 	            {
 	                const request = new HandshakeSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
 	                const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
-	                    request.abort();
+	                    request.abort('Cancel subscribe handshake request');
 	                });
 	                /**
 	                 * Allow subscription cancellation.
@@ -13602,7 +13400,7 @@
 	            {
 	                const request = new ReceiveMessagesSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
 	                const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
-	                    request.abort();
+	                    request.abort('Cancel long-poll subscribe request');
 	                });
 	                /**
 	                 * Allow subscription cancellation.
@@ -13610,8 +13408,8 @@
 	                 * **Note:** Had to be done after scheduling because transport provider return cancellation
 	                 * controller only when schedule new request.
 	                 */
-	                const handshakeResponse = this.sendRequest(request);
-	                return handshakeResponse.then((response) => {
+	                const receiveResponse = this.sendRequest(request);
+	                return receiveResponse.then((response) => {
 	                    abortUnsubscribe();
 	                    return response;
 	                });

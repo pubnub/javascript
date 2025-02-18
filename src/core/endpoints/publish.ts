@@ -2,7 +2,6 @@
  * Publish REST API module.
  */
 
-import { createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
 import { TransportMethod } from '../types/transport-request';
 import { ICryptoModule } from '../interfaces/crypto-module';
@@ -133,7 +132,7 @@ type ServiceResponse = [0 | 1, string, string];
  *
  * @internal
  */
-export class PublishRequest extends AbstractRequest<PublishResponse> {
+export class PublishRequest extends AbstractRequest<PublishResponse, ServiceResponse> {
   /**
    * Construct data publish request.
    *
@@ -163,15 +162,7 @@ export class PublishRequest extends AbstractRequest<PublishResponse> {
   }
 
   async parse(response: TransportResponse): Promise<PublishResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse)
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-
-    return { timetoken: serviceResponse[2] };
+    return { timetoken: this.deserializeResponse(response)[2] };
   }
 
   protected get path(): string {
@@ -197,6 +188,7 @@ export class PublishRequest extends AbstractRequest<PublishResponse> {
   }
 
   protected get headers(): Record<string, string> | undefined {
+    if (!this.parameters.sendByPost) return undefined;
     return { 'Content-Type': 'application/json' };
   }
 

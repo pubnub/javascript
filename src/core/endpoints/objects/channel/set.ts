@@ -4,9 +4,6 @@
  * @internal
  */
 
-import { createValidationError, PubNubError } from '../../../../errors/pubnub-error';
-import { TransportResponse } from '../../../types/transport-response';
-import { PubNubAPIError } from '../../../../errors/pubnub-api-error';
 import { TransportMethod } from '../../../types/transport-request';
 import { AbstractRequest } from '../../../components/request';
 import RequestOperation from '../../../constants/operations';
@@ -49,7 +46,7 @@ type RequestParameters = AppContext.SetChannelMetadataParameters<AppContext.Cust
 export class SetChannelMetadataRequest<
   Response extends AppContext.SetChannelMetadataResponse<Custom>,
   Custom extends AppContext.CustomData = AppContext.CustomData,
-> extends AbstractRequest<Response> {
+> extends AbstractRequest<Response, Response> {
   constructor(private readonly parameters: RequestParameters) {
     super({ method: TransportMethod.PATCH });
 
@@ -73,19 +70,6 @@ export class SetChannelMetadataRequest<
     } else {
       return undefined;
     }
-  }
-
-  async parse(response: TransportResponse): Promise<Response> {
-    const serviceResponse = this.deserializeResponse<Response>(response);
-
-    if (!serviceResponse) {
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
-
-    return serviceResponse;
   }
 
   protected get path(): string {
