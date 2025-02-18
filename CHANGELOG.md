@@ -1,3 +1,12 @@
+## v8.9.0
+February 18 2025
+
+#### Added
+- Emit 'PNDisconnectedUnexpectedlyCategory'  in cases when client receives bad request or unexpected / malformed service response.
+
+#### Modified
+- Move error / malformed response handling into `AbstractRequest` to simplify actual endpoint classes.
+
 ## v8.8.1
 February 10 2025
 

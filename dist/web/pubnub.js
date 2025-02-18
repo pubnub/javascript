@@ -3759,7 +3759,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.8.1';
+	            return '8.9.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -5984,9 +5984,8 @@
 	            throw new PubNubError('Service response error, check status for details', createMalformedResponseError(responseText, response.status));
 	        }
 	        // Throw and exception in case of client / server error.
-	        if ('status' in parsedJson && typeof parsedJson.status === 'number' && parsedJson.status >= 400) {
+	        if ('status' in parsedJson && typeof parsedJson.status === 'number' && parsedJson.status >= 400)
 	            throw PubNubAPIError.create(response);
-	        }
 	        return parsedJson;
 	    }
 	}
