@@ -52,7 +52,7 @@ type RequestParameters = FileSharing.DownloadFileParameters & {
  */
 export class DownloadFileRequest<
   PlatformFile extends Partial<PubNubFileInterface> = Record<string, unknown>,
-> extends AbstractRequest<PlatformFile> {
+> extends AbstractRequest<PlatformFile, Record<string, unknown>> {
   constructor(private readonly parameters: RequestParameters) {
     super();
   }

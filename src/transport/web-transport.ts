@@ -116,7 +116,7 @@ export class WebTransport implements Transport {
     const abortController = new AbortController();
     const cancellation: WebCancellationController = {
       abortController,
-      abort: () => !abortController.signal.aborted && abortController.abort(),
+      abort: (reason) => !abortController.signal.aborted && abortController.abort(reason),
     };
 
     return [
@@ -151,7 +151,15 @@ export class WebTransport implements Transport {
             return transportResponse;
           })
           .catch((error) => {
-            throw PubNubAPIError.create(error);
+            let fetchError = error;
+
+            if (typeof error === 'string') {
+              const errorMessage = error.toLowerCase();
+              if (errorMessage.includes('timeout') || !errorMessage.includes('cancel')) fetchError = new Error(error);
+              else if (errorMessage.includes('cancel')) fetchError = new DOMException('Aborted', 'AbortError');
+            }
+
+            throw PubNubAPIError.create(fetchError);
           });
       }),
       cancellation,
@@ -195,7 +203,7 @@ export class WebTransport implements Transport {
         clearTimeout(timeoutId);
 
         reject(new Error('Request timeout'));
-        controller.abort();
+        controller.abort('Cancel because of timeout');
       }, req.timeout * 1000);
     });
 

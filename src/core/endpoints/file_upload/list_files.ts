@@ -4,9 +4,6 @@
  * @internal
  */
 
-import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
-import { TransportResponse } from '../../types/transport-response';
-import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { AbstractRequest } from '../../components/request';
 import * as FileSharing from '../../types/api/file-sharing';
 import RequestOperation from '../../constants/operations';
@@ -70,7 +67,7 @@ type ServiceResponse = {
  *
  * @internal
  */
-export class FilesListRequest extends AbstractRequest<FileSharing.ListFilesResponse> {
+export class FilesListRequest extends AbstractRequest<FileSharing.ListFilesResponse, ServiceResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();
 
@@ -84,19 +81,6 @@ export class FilesListRequest extends AbstractRequest<FileSharing.ListFilesRespo
 
   validate(): string | undefined {
     if (!this.parameters.channel) return "channel can't be empty";
-  }
-
-  async parse(response: TransportResponse): Promise<FileSharing.ListFilesResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse) {
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
-
-    return serviceResponse;
   }
 
   protected get path(): string {

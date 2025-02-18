@@ -4,9 +4,7 @@
  * @internal
  */
 
-import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
-import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import * as MessageAction from '../../types/api/message-action';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
@@ -54,7 +52,10 @@ type ServiceResponse = {
  *
  * @internal
  */
-export class GetMessageActionsRequest extends AbstractRequest<MessageAction.GetMessageActionsResponse> {
+export class GetMessageActionsRequest extends AbstractRequest<
+  MessageAction.GetMessageActionsResponse,
+  ServiceResponse
+> {
   constructor(private readonly parameters: RequestParameters) {
     super();
   }
@@ -69,15 +70,7 @@ export class GetMessageActionsRequest extends AbstractRequest<MessageAction.GetM
   }
 
   async parse(response: TransportResponse): Promise<MessageAction.GetMessageActionsResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse) {
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
-
+    const serviceResponse = this.deserializeResponse(response);
     let start: string | null = null;
     let end: string | null = null;
 

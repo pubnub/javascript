@@ -4,7 +4,6 @@
  * @internal
  */
 
-import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
 import { ICryptoModule } from '../../interfaces/crypto-module';
 import { AbstractRequest } from '../../components/request';
@@ -108,7 +107,7 @@ type ServiceResponse = [
  *
  * @internal
  */
-export class GetHistoryRequest extends AbstractRequest<History.GetHistoryResponse> {
+export class GetHistoryRequest extends AbstractRequest<History.GetHistoryResponse, ServiceResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();
 
@@ -131,14 +130,7 @@ export class GetHistoryRequest extends AbstractRequest<History.GetHistoryRespons
   }
 
   async parse(response: TransportResponse): Promise<History.GetHistoryResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse)
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-
+    const serviceResponse = this.deserializeResponse(response);
     const messages = serviceResponse[0];
     const startTimeToken = serviceResponse[1];
     const endTimeToken = serviceResponse[2];

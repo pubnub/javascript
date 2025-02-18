@@ -4,9 +4,7 @@
  * @internal
  */
 
-import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
-import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import * as Presence from '../../types/api/presence';
@@ -64,7 +62,7 @@ type ServiceResponse = {
  *
  * @internal
  */
-export class WhereNowRequest extends AbstractRequest<Presence.WhereNowResponse> {
+export class WhereNowRequest extends AbstractRequest<Presence.WhereNowResponse, ServiceResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();
   }
@@ -78,19 +76,13 @@ export class WhereNowRequest extends AbstractRequest<Presence.WhereNowResponse> 
   }
 
   async parse(response: TransportResponse): Promise<Presence.WhereNowResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse) {
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
+    const serviceResponse = this.deserializeResponse(response);
 
     if (!serviceResponse.payload) return { channels: [] };
 
     return { channels: serviceResponse.payload.channels };
   }
+
   protected get path(): string {
     const {
       keySet: { subscribeKey },

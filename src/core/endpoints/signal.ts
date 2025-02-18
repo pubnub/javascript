@@ -2,7 +2,6 @@
  * Signal REST API module.
  */
 
-import { createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
 import { AbstractRequest } from '../components/request';
 import RequestOperation from '../constants/operations';
@@ -70,7 +69,7 @@ type ServiceResponse = [0 | 1, string, string];
  *
  * @internal
  */
-export class SignalRequest extends AbstractRequest<SignalResponse> {
+export class SignalRequest extends AbstractRequest<SignalResponse, ServiceResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();
   }
@@ -92,15 +91,7 @@ export class SignalRequest extends AbstractRequest<SignalResponse> {
   }
 
   async parse(response: TransportResponse): Promise<SignalResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse)
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-
-    return { timetoken: serviceResponse[2] };
+    return { timetoken: this.deserializeResponse(response)[2] };
   }
 
   protected get path(): string {

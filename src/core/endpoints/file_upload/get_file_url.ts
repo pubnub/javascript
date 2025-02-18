@@ -35,7 +35,7 @@ type RequestParameters = FileSharing.FileUrlParameters & {
  *
  * @internal
  */
-export class GetFileDownloadUrlRequest extends AbstractRequest<FileSharing.FileUrlResponse> {
+export class GetFileDownloadUrlRequest extends AbstractRequest<FileSharing.FileUrlResponse, Record<string, unknown>> {
   /**
    * Construct file download Url generation request.
    *

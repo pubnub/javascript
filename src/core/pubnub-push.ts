@@ -27,7 +27,7 @@ export default class PubNubPushNotifications {
    *
    * @internal
    */
-  private readonly sendRequest: SendRequestFunction<any>;
+  private readonly sendRequest: SendRequestFunction<any, any>;
 
   /**
    * Create mobile push notifications API access object.
@@ -40,7 +40,7 @@ export default class PubNubPushNotifications {
   constructor(
     keySet: KeySet,
     /* eslint-disable  @typescript-eslint/no-explicit-any */
-    sendRequest: SendRequestFunction<any>,
+    sendRequest: SendRequestFunction<any, any>,
   ) {
     this.sendRequest = sendRequest;
     this.keySet = keySet;

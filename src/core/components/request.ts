@@ -5,7 +5,9 @@
  */
 
 import { CancellationController, TransportMethod, TransportRequest } from '../types/transport-request';
+import { createMalformedResponseError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
+import { PubNubAPIError } from '../../errors/pubnub-api-error';
 import RequestOperation from '../constants/operations';
 import { PubNubFileInterface } from '../types/file';
 import { Request } from '../interfaces/request';
@@ -17,7 +19,7 @@ import uuidGenerator from './uuid';
  *
  * @internal
  */
-export abstract class AbstractRequest<ResponseType> implements Request<ResponseType> {
+export abstract class AbstractRequest<ResponseType, ServiceResponse extends object> implements Request<ResponseType> {
   /**
    * Service `ArrayBuffer` response decoder.
    */
@@ -66,9 +68,11 @@ export abstract class AbstractRequest<ResponseType> implements Request<ResponseT
   }
   /**
    * Abort request if possible.
+   *
+   * @param [reason] Information about why request has been cancelled.
    */
-  abort(): void {
-    if (this && this.cancellationController) this.cancellationController.abort();
+  abort(reason?: string): void {
+    if (this && this.cancellationController) this.cancellationController.abort(reason);
   }
 
   /**
@@ -90,10 +94,10 @@ export abstract class AbstractRequest<ResponseType> implements Request<ResponseT
   /**
    * Parse service response.
    *
-   * @param _response - Raw service response which should be parsed.
+   * @param response - Raw service response which should be parsed.
    */
-  async parse(_response: TransportResponse): Promise<ResponseType> {
-    throw Error('Should be implemented by subclass.');
+  async parse(response: TransportResponse): Promise<ResponseType> {
+    return this.deserializeResponse(response) as unknown as ResponseType;
   }
 
   /**
@@ -170,21 +174,37 @@ export abstract class AbstractRequest<ResponseType> implements Request<ResponseT
    *
    * @param response - Transparent response object with headers and body information.
    *
-   * @returns Deserialized data or `undefined` in case of `JSON.parse(..)` error.
+   * @returns Deserialized service response data.
+   *
+   * @throws {Error} if received service response can't be processed (has unexpected content-type or can't be parsed as
+   * JSON).
    */
-  protected deserializeResponse<ServiceResponse>(response: TransportResponse): ServiceResponse | undefined {
+  protected deserializeResponse(response: TransportResponse): ServiceResponse {
+    const responseText = AbstractRequest.decoder.decode(response.body);
     const contentType = response.headers['content-type'];
-    if (!contentType || (contentType.indexOf('javascript') === -1 && contentType.indexOf('json') === -1))
-      return undefined;
+    let parsedJson: ServiceResponse;
 
-    const json = AbstractRequest.decoder.decode(response.body);
+    if (!contentType || (contentType.indexOf('javascript') === -1 && contentType.indexOf('json') === -1))
+      throw new PubNubError(
+        'Service response error, check status for details',
+        createMalformedResponseError(responseText, response.status),
+      );
 
     try {
-      const parsedJson = JSON.parse(json);
-      return parsedJson as ServiceResponse;
+      parsedJson = JSON.parse(responseText);
     } catch (error) {
       console.error('Error parsing JSON response:', error);
-      return undefined;
+
+      throw new PubNubError(
+        'Service response error, check status for details',
+        createMalformedResponseError(responseText, response.status),
+      );
     }
+
+    // Throw and exception in case of client / server error.
+    if ('status' in parsedJson && typeof parsedJson.status === 'number' && parsedJson.status >= 400)
+      throw PubNubAPIError.create(response);
+
+    return parsedJson;
   }
 }

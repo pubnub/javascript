@@ -39,7 +39,7 @@ export type CancellationController = {
   /**
    * Request cancellation / abort function.
    */
-  abort: () => void;
+  abort: (reason?: string) => void;
 };
 
 /**

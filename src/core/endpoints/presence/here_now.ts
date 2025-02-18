@@ -4,9 +4,7 @@
  * @internal
  */
 
-import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
-import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import { KeySet, Payload, Query } from '../../types/api';
@@ -131,7 +129,7 @@ type ServiceResponse = SingleChannelServiceResponse | MultipleChannelServiceResp
  *
  * @internal
  */
-export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse> {
+export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, ServiceResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super();
 
@@ -153,15 +151,7 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse> {
   }
 
   async parse(response: TransportResponse): Promise<Presence.HereNowResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse) {
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
-
+    const serviceResponse = this.deserializeResponse(response);
     // Extract general presence information.
     const totalChannels = 'occupancy' in serviceResponse ? 1 : serviceResponse.payload.total_channels;
     const totalOccupancy =

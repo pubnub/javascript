@@ -4,7 +4,6 @@
  * @internal
  */
 
-import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
 import { BasePushNotificationChannelsRequest } from './push';
 import RequestOperation from '../../constants/operations';
@@ -39,7 +38,8 @@ type ServiceResponse = string[];
  */
 // prettier-ignore
 export class ListDevicePushNotificationChannelsRequest extends BasePushNotificationChannelsRequest<
-  Push.ListDeviceChannelsResponse
+  Push.ListDeviceChannelsResponse,
+  ServiceResponse
 > {
   constructor(parameters: RequestParameters) {
     super({ ...parameters, action: 'list' });
@@ -50,14 +50,6 @@ export class ListDevicePushNotificationChannelsRequest extends BasePushNotificat
   }
 
   async parse(response: TransportResponse): Promise<Push.ListDeviceChannelsResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse)
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-
-    return { channels: serviceResponse };
+    return { channels: this.deserializeResponse(response) };
   }
 }

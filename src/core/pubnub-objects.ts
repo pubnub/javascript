@@ -36,7 +36,7 @@ export default class PubNubObjects {
    *
    * @internal
    */
-  private readonly sendRequest: SendRequestFunction<any>;
+  private readonly sendRequest: SendRequestFunction<any, any>;
   /**
    * REST API endpoints access credentials.
    *
@@ -55,7 +55,7 @@ export default class PubNubObjects {
   constructor(
     configuration: PrivateClientConfiguration,
     /* eslint-disable  @typescript-eslint/no-explicit-any */
-    sendRequest: SendRequestFunction<any>,
+    sendRequest: SendRequestFunction<any, any>,
   ) {
     this.keySet = configuration.keySet;
     this.configuration = configuration;

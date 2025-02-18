@@ -4,8 +4,8 @@
  * @internal
  */
 
-import { TransportResponse } from '../../types/transport-response';
 import { TransportMethod, TransportRequest } from '../../types/transport-request';
+import { TransportResponse } from '../../types/transport-response';
 import { AbstractRequest } from '../../components/request';
 import * as FileSharing from '../../types/api/file-sharing';
 import RequestOperation from '../../constants/operations';
@@ -16,7 +16,7 @@ import { PubNubFileInterface } from '../../types/file';
  *
  * @internal
  */
-export class UploadFileRequest extends AbstractRequest<FileSharing.UploadFileResponse> {
+export class UploadFileRequest extends AbstractRequest<FileSharing.UploadFileResponse, Record<string, string>> {
   constructor(private readonly parameters: FileSharing.UploadFileParameters) {
     super({ method: TransportMethod.POST });
 

@@ -4,9 +4,6 @@
  * @internal
  */
 
-import { createValidationError, PubNubError } from '../../../../errors/pubnub-error';
-import { TransportResponse } from '../../../types/transport-response';
-import { PubNubAPIError } from '../../../../errors/pubnub-api-error';
 import { TransportMethod } from '../../../types/transport-request';
 import { AbstractRequest } from '../../../components/request';
 import RequestOperation from '../../../constants/operations';
@@ -35,9 +32,10 @@ type RequestParameters = AppContext.RemoveUUIDMetadataParameters & {
  *
  * @internal
  */
-export class RemoveUUIDMetadataRequest<
-  Response extends AppContext.RemoveUUIDMetadataResponse,
-> extends AbstractRequest<Response> {
+export class RemoveUUIDMetadataRequest<Response extends AppContext.RemoveUUIDMetadataResponse> extends AbstractRequest<
+  Response,
+  Response
+> {
   constructor(private readonly parameters: RequestParameters) {
     super({ method: TransportMethod.DELETE });
 
@@ -51,19 +49,6 @@ export class RemoveUUIDMetadataRequest<
 
   validate(): string | undefined {
     if (!this.parameters.uuid) return "'uuid' cannot be empty";
-  }
-
-  async parse(response: TransportResponse): Promise<Response> {
-    const serviceResponse = this.deserializeResponse<Response>(response);
-
-    if (!serviceResponse) {
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
-
-    return serviceResponse;
   }
 
   protected get path(): string {

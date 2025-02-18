@@ -37,20 +37,15 @@ export class PubNubError extends Error {
  * Create error status object.
  *
  * @param errorPayload - Additional information which should be attached to the error status object.
+ * @param category - Occurred error category.
  *
  * @returns Error status object.
  *
  * @internal
  */
-function createError(errorPayload: { message: string; statusCode?: number }): Status {
+function createError(errorPayload: { message: string; statusCode?: number }, category: StatusCategory): Status {
   errorPayload.statusCode ??= 0;
-
-  return {
-    ...errorPayload,
-    statusCode: errorPayload.statusCode!,
-    category: StatusCategory.PNValidationErrorCategory,
-    error: true,
-  };
+  return { ...errorPayload, statusCode: errorPayload.statusCode!, category, error: true };
 }
 
 /**
@@ -64,5 +59,25 @@ function createError(errorPayload: { message: string; statusCode?: number }): St
  * @internal
  */
 export function createValidationError(message: string, statusCode?: number) {
-  return createError({ message, ...(statusCode !== undefined ? { statusCode } : {}) });
+  return createError(
+    { message, ...(statusCode !== undefined ? { statusCode } : {}) },
+    StatusCategory.PNValidationErrorCategory,
+  );
+}
+
+/**
+ * Create malformed service response error status object.
+ *
+ * @param [responseText] - Stringified original service response.
+ * @param [statusCode] - Operation HTTP status code.
+ */
+export function createMalformedResponseError(responseText?: string, statusCode?: number) {
+  return createError(
+    {
+      message: 'Unable to deserialize service response',
+      ...(responseText !== undefined ? { responseText } : {}),
+      ...(statusCode !== undefined ? { statusCode } : {}),
+    },
+    StatusCategory.PNMalformedResponseCategory,
+  );
 }

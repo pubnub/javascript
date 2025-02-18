@@ -2,7 +2,7 @@
  * Subscription REST API module.
  */
 
-import { createValidationError, PubNubError } from '../../errors/pubnub-error';
+import { createMalformedResponseError, createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
 import { ICryptoModule } from '../interfaces/crypto-module';
 import * as Subscription from '../types/api/subscription';
@@ -603,7 +603,7 @@ export type SubscribeRequestParameters = Subscription.SubscribeParameters & {
  *
  * @internal
  */
-export class BaseSubscribeRequest extends AbstractRequest<Subscription.SubscriptionResponse> {
+export class BaseSubscribeRequest extends AbstractRequest<Subscription.SubscriptionResponse, ServiceResponse> {
   constructor(protected readonly parameters: SubscribeRequestParameters) {
     super({ cancellable: true });
 
@@ -630,10 +630,11 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
 
   async parse(response: TransportResponse): Promise<Subscription.SubscriptionResponse> {
     let serviceResponse: ServiceResponse | undefined;
+    let responseText: string | undefined;
 
     try {
-      const json = AbstractRequest.decoder.decode(response.body);
-      const parsedJson = JSON.parse(json);
+      responseText = AbstractRequest.decoder.decode(response.body);
+      const parsedJson = JSON.parse(responseText);
       serviceResponse = parsedJson as ServiceResponse;
     } catch (error) {
       console.error('Error parsing JSON response:', error);
@@ -642,7 +643,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     if (!serviceResponse) {
       throw new PubNubError(
         'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
+        createMalformedResponseError(responseText, response.status),
       );
     }
 

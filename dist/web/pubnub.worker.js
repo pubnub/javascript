@@ -547,7 +547,15 @@
                 const clients = getClients();
                 if (clients.length === 0)
                     return;
-                failure(clients, error);
+                let fetchError = error;
+                if (typeof error === 'string') {
+                    const errorMessage = error.toLowerCase();
+                    if (errorMessage.includes('timeout') || !errorMessage.includes('cancel'))
+                        fetchError = new Error(error);
+                    else if (errorMessage.includes('cancel'))
+                        fetchError = new DOMException('Aborted', 'AbortError');
+                }
+                failure(clients, fetchError);
             });
         }))();
     };
@@ -564,7 +572,7 @@
             delete serviceRequests[requestId];
             // Abort request if possible.
             if (controller)
-                controller.abort();
+                controller.abort('Cancel request');
         }
     };
     /**
@@ -1081,12 +1089,12 @@
             message = error.message;
             name = error.name;
         }
-        if (name === 'AbortError') {
+        if (message.toLowerCase().includes('timeout'))
+            type = 'TIMEOUT';
+        else if (name === 'AbortError' || message.toLowerCase().includes('cancel')) {
             message = 'Request aborted';
             type = 'ABORTED';
         }
-        else if (message === 'Request timeout')
-            type = 'TIMEOUT';
         return {
             type: 'request-process-error',
             clientIdentifier: '',

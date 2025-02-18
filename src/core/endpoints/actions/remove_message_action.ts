@@ -4,9 +4,7 @@
  * @internal
  */
 
-import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
-import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import { TransportMethod } from '../../types/transport-request';
 import * as MessageAction from '../../types/api/message-action';
 import { AbstractRequest } from '../../components/request';
@@ -50,7 +48,7 @@ type ServiceResponse = {
  *
  * @internal
  */
-export class RemoveMessageAction extends AbstractRequest<MessageAction.RemoveMessageActionResponse> {
+export class RemoveMessageAction extends AbstractRequest<MessageAction.RemoveMessageActionResponse, ServiceResponse> {
   constructor(private readonly parameters: RequestParameters) {
     super({ method: TransportMethod.DELETE });
   }
@@ -74,16 +72,7 @@ export class RemoveMessageAction extends AbstractRequest<MessageAction.RemoveMes
   }
 
   async parse(response: TransportResponse): Promise<MessageAction.RemoveMessageActionResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse) {
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
-
-    return { data: serviceResponse.data };
+    return super.parse(response).then(({ data }) => ({ data }));
   }
 
   protected get path(): string {

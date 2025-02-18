@@ -4,9 +4,7 @@
  * @internal
  */
 
-import { createValidationError, PubNubError } from '../../../errors/pubnub-error';
 import { TransportResponse } from '../../types/transport-response';
-import { PubNubAPIError } from '../../../errors/pubnub-api-error';
 import * as ChannelGroups from '../../types/api/channel-groups';
 import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
@@ -74,7 +72,10 @@ type ServiceResponse = {
  *
  * @internal
  */
-export class ListChannelGroupChannels extends AbstractRequest<ChannelGroups.ListChannelGroupChannelsResponse> {
+export class ListChannelGroupChannels extends AbstractRequest<
+  ChannelGroups.ListChannelGroupChannelsResponse,
+  ServiceResponse
+> {
   constructor(private readonly parameters: RequestParameters) {
     super();
   }
@@ -89,16 +90,7 @@ export class ListChannelGroupChannels extends AbstractRequest<ChannelGroups.List
   }
 
   async parse(response: TransportResponse): Promise<ChannelGroups.ListChannelGroupChannelsResponse> {
-    const serviceResponse = this.deserializeResponse<ServiceResponse>(response);
-
-    if (!serviceResponse) {
-      throw new PubNubError(
-        'Service response error, check status for details',
-        createValidationError('Unable to deserialize service response'),
-      );
-    } else if (serviceResponse.status >= 400) throw PubNubAPIError.create(response);
-
-    return { channels: serviceResponse.payload.channels };
+    return { channels: this.deserializeResponse(response).payload.channels };
   }
 
   protected get path(): string {
