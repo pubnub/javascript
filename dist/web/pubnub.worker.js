@@ -550,10 +550,9 @@
                 let fetchError = error;
                 if (typeof error === 'string') {
                     const errorMessage = error.toLowerCase();
-                    if (errorMessage.includes('timeout') || !errorMessage.includes('cancel'))
-                        fetchError = new Error(error);
-                    else if (errorMessage.includes('cancel'))
-                        fetchError = new DOMException('Aborted', 'AbortError');
+                    fetchError = new Error(error);
+                    if (!errorMessage.includes('timeout') && errorMessage.includes('cancel'))
+                        fetchError.name = 'AbortError';
                 }
                 failure(clients, fetchError);
             });
@@ -1089,9 +1088,10 @@
             message = error.message;
             name = error.name;
         }
-        if (message.toLowerCase().includes('timeout'))
+        const errorMessage = message.toLowerCase();
+        if (errorMessage.includes('timeout'))
             type = 'TIMEOUT';
-        else if (name === 'AbortError' || message.toLowerCase().includes('cancel')) {
+        else if (name === 'AbortError' || errorMessage.includes('aborted') || errorMessage.includes('cancel')) {
             message = 'Request aborted';
             type = 'ABORTED';
         }

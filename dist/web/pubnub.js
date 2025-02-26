@@ -2890,7 +2890,7 @@
 	     *
 	     * @param errorOrResponse - `Error` or service error response object from which error information
 	     * should be extracted.
-	     * @param data - Preprocessed service error response.
+	     * @param [data] - Preprocessed service error response.
 	     *
 	     * @returns `PubNubAPIError` object with known error category and additional information (if
 	     * available).
@@ -2969,7 +2969,7 @@
 	     *
 	     * @param response - Service error response object from which error information should be
 	     * extracted.
-	     * @param data - Preprocessed service error response.
+	     * @param [data] - Preprocessed service error response.
 	     *
 	     * @returns `PubNubAPIError` object with known error category and additional information (if
 	     * available).
@@ -2989,6 +2989,11 @@
 	        else if (status === 403) {
 	            category = StatusCategory$1.PNAccessDeniedCategory;
 	            message = 'Access denied';
+	        }
+	        if (typeof response === 'object' && Object.keys(response).length === 0) {
+	            category = StatusCategory$1.PNMalformedResponseCategory;
+	            message = 'Malformed response (network issues)';
+	            status = 400;
 	        }
 	        // Try to get more information about error from service response.
 	        if (data && data.byteLength > 0) {
@@ -3042,7 +3047,7 @@
 	     * @param message - Short API call error description.
 	     * @param category - Error category.
 	     * @param statusCode - Response HTTP status code.
-	     * @param errorData - Error information.
+	     * @param [errorData] - Error information.
 	     */
 	    constructor(message, category, statusCode, errorData) {
 	        super(message);
@@ -3065,18 +3070,57 @@
 	            operation,
 	            statusCode: this.statusCode,
 	            errorData: this.errorData,
+	            // @ts-expect-error Inner helper for JSON.stringify.
+	            toJSON: function () {
+	                let normalizedErrorData;
+	                const errorData = this.errorData;
+	                if (errorData) {
+	                    try {
+	                        if (typeof errorData === 'object') {
+	                            const errorObject = Object.assign(Object.assign(Object.assign(Object.assign({}, ('name' in errorData ? { name: errorData.name } : {})), ('message' in errorData ? { message: errorData.message } : {})), ('stack' in errorData ? { stack: errorData.stack } : {})), errorData);
+	                            normalizedErrorData = JSON.parse(JSON.stringify(errorObject, PubNubAPIError.circularReplacer()));
+	                        }
+	                        else
+	                            normalizedErrorData = errorData;
+	                    }
+	                    catch (_) {
+	                        normalizedErrorData = { error: 'Could not serialize the error object' };
+	                    }
+	                }
+	                // Make sure to exclude `toJSON` function from the final object.
+	                const _a = this, status = __rest(_a, ["toJSON"]);
+	                return JSON.stringify(Object.assign(Object.assign({}, status), { errorData: normalizedErrorData }));
+	            },
 	        };
 	    }
 	    /**
 	     * Convert API error object to PubNub client error object.
 	     *
 	     * @param operation - Request operation during which error happened.
-	     * @param message - Custom error message.
+	     * @param [message] - Custom error message.
 	     *
 	     * @returns Client-facing pre-formatted endpoint call error.
 	     */
 	    toPubNubError(operation, message) {
 	        return new PubNubError(message !== null && message !== void 0 ? message : this.message, this.toStatus(operation));
+	    }
+	    /**
+	     * Function which handles circular references in serialized JSON.
+	     *
+	     * @returns Circular reference replacer function.
+	     *
+	     * @internal
+	     */
+	    static circularReplacer() {
+	        const visited = new WeakSet();
+	        return function (_, value) {
+	            if (typeof value === 'object' && value !== null) {
+	                if (visited.has(value))
+	                    return '[Circular]';
+	                visited.add(value);
+	            }
+	            return value;
+	        };
 	    }
 	}
 
@@ -3759,7 +3803,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '8.9.0';
+	            return '8.9.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -4273,10 +4317,9 @@
 	                    let fetchError = error;
 	                    if (typeof error === 'string') {
 	                        const errorMessage = error.toLowerCase();
-	                        if (errorMessage.includes('timeout') || !errorMessage.includes('cancel'))
-	                            fetchError = new Error(error);
-	                        else if (errorMessage.includes('cancel'))
-	                            fetchError = new DOMException('Aborted', 'AbortError');
+	                        fetchError = new Error(error);
+	                        if (!errorMessage.includes('timeout') && errorMessage.includes('cancel'))
+	                            fetchError.name = 'AbortError';
 	                    }
 	                    throw PubNubAPIError.create(fetchError);
 	                });
@@ -5036,7 +5079,8 @@
 	            if (status.category === StatusCategory$1.PNTimeoutCategory) {
 	                this.startSubscribeLoop();
 	            }
-	            else if (status.category === StatusCategory$1.PNNetworkIssuesCategory) {
+	            else if (status.category === StatusCategory$1.PNNetworkIssuesCategory ||
+	                status.category === StatusCategory$1.PNMalformedResponseCategory) {
 	                this.disconnect();
 	                if (status.error && this.configuration.autoNetworkDetection && this.isOnline) {
 	                    this.isOnline = false;
@@ -5058,14 +5102,11 @@
 	                    this.listenerManager.announceStatus(reconnectedAnnounce);
 	                });
 	                this.reconnectionManager.startPolling();
-	                this.listenerManager.announceStatus(status);
+	                this.listenerManager.announceStatus(Object.assign(Object.assign({}, status), { category: StatusCategory$1.PNNetworkIssuesCategory }));
 	            }
-	            else if (status.category === StatusCategory$1.PNBadRequestCategory ||
-	                status.category == StatusCategory$1.PNMalformedResponseCategory) {
-	                const category = this.isOnline ? StatusCategory$1.PNDisconnectedUnexpectedlyCategory : status.category;
-	                this.isOnline = false;
-	                this.disconnect();
-	                this.listenerManager.announceStatus(Object.assign(Object.assign({}, status), { category }));
+	            else if (status.category === StatusCategory$1.PNBadRequestCategory) {
+	                this.stopHeartbeatTimer();
+	                this.listenerManager.announceStatus(status);
 	            }
 	            else
 	                this.listenerManager.announceStatus(status);
@@ -13319,7 +13360,22 @@
 	     */
 	    makeUnsubscribe(parameters, callback) {
 	        {
-	            this.sendRequest(new PresenceLeaveRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet })), callback);
+	            // Filtering out presence channels and groups.
+	            let { channels, channelGroups } = parameters;
+	            if (channelGroups)
+	                channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
+	            if (channels)
+	                channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+	            // Complete immediately request only for presence channels.
+	            if ((channelGroups !== null && channelGroups !== void 0 ? channelGroups : []).length === 0 && (channels !== null && channels !== void 0 ? channels : []).length === 0) {
+	                return callback({
+	                    error: false,
+	                    operation: RequestOperation$1.PNUnsubscribeOperation,
+	                    category: StatusCategory$1.PNAcknowledgmentCategory,
+	                    statusCode: 200,
+	                });
+	            }
+	            this.sendRequest(new PresenceLeaveRequest({ channels, channelGroups, keySet: this._configuration.keySet }), callback);
 	        }
 	    }
 	    /**
@@ -13670,7 +13726,26 @@
 	    heartbeat(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
-	                const request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                // Filtering out presence channels and groups.
+	                let { channels, channelGroups } = parameters;
+	                if (channelGroups)
+	                    channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
+	                if (channels)
+	                    channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+	                // Complete immediately request only for presence channels.
+	                if ((channelGroups !== null && channelGroups !== void 0 ? channelGroups : []).length === 0 && (channels !== null && channels !== void 0 ? channels : []).length === 0) {
+	                    const responseStatus = {
+	                        error: false,
+	                        operation: RequestOperation$1.PNHeartbeatOperation,
+	                        category: StatusCategory$1.PNAcknowledgmentCategory,
+	                        statusCode: 200,
+	                    };
+	                    if (callback)
+	                        return callback(responseStatus, {});
+	                    return Promise.resolve(responseStatus);
+	                }
+	                const request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { channels,
+	                    channelGroups, keySet: this._configuration.keySet }));
 	                if (callback)
 	                    return this.sendRequest(request, callback);
 	                return this.sendRequest(request);

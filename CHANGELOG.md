@@ -1,3 +1,12 @@
+## v8.9.1
+February 26 2025
+
+#### Fixed
+- Fix issue because of which code doesn't handle edge case when `fetch` reject with empty object and not `Error`.
+
+#### Modified
+- Remove `-pnpres` channels and groups from presence `leave` and `heartbeat` requests.
+
 ## v8.9.0
 February 18 2025
 
