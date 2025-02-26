@@ -21,7 +21,7 @@ export class PubNubAPIError extends Error {
    *
    * @param errorOrResponse - `Error` or service error response object from which error information
    * should be extracted.
-   * @param data - Preprocessed service error response.
+   * @param [data] - Preprocessed service error response.
    *
    * @returns `PubNubAPIError` object with known error category and additional information (if
    * available).
@@ -89,7 +89,7 @@ export class PubNubAPIError extends Error {
    *
    * @param response - Service error response object from which error information should be
    * extracted.
-   * @param data - Preprocessed service error response.
+   * @param [data] - Preprocessed service error response.
    *
    * @returns `PubNubAPIError` object with known error category and additional information (if
    * available).
@@ -108,6 +108,12 @@ export class PubNubAPIError extends Error {
     } else if (status === 403) {
       category = StatusCategory.PNAccessDeniedCategory;
       message = 'Access denied';
+    }
+
+    if (typeof response === 'object' && Object.keys(response).length === 0) {
+      category = StatusCategory.PNMalformedResponseCategory;
+      message = 'Malformed response (network issues)';
+      status = 400;
     }
 
     // Try to get more information about error from service response.
@@ -163,7 +169,7 @@ export class PubNubAPIError extends Error {
    * @param message - Short API call error description.
    * @param category - Error category.
    * @param statusCode - Response HTTP status code.
-   * @param errorData - Error information.
+   * @param [errorData] - Error information.
    */
   constructor(
     message: string,
@@ -190,6 +196,32 @@ export class PubNubAPIError extends Error {
       operation,
       statusCode: this.statusCode,
       errorData: this.errorData,
+      // @ts-expect-error Inner helper for JSON.stringify.
+      toJSON: function (this: Status): string {
+        let normalizedErrorData: Payload | undefined;
+        const errorData = this.errorData;
+
+        if (errorData) {
+          try {
+            if (typeof errorData === 'object') {
+              const errorObject = {
+                ...('name' in errorData ? { name: errorData.name } : {}),
+                ...('message' in errorData ? { message: errorData.message } : {}),
+                ...('stack' in errorData ? { stack: errorData.stack } : {}),
+                ...errorData,
+              };
+
+              normalizedErrorData = JSON.parse(JSON.stringify(errorObject, PubNubAPIError.circularReplacer()));
+            } else normalizedErrorData = errorData;
+          } catch (_) {
+            normalizedErrorData = { error: 'Could not serialize the error object' };
+          }
+        }
+
+        // Make sure to exclude `toJSON` function from the final object.
+        const { toJSON, ...status } = this;
+        return JSON.stringify({ ...status, errorData: normalizedErrorData });
+      },
     };
   }
 
@@ -197,11 +229,31 @@ export class PubNubAPIError extends Error {
    * Convert API error object to PubNub client error object.
    *
    * @param operation - Request operation during which error happened.
-   * @param message - Custom error message.
+   * @param [message] - Custom error message.
    *
    * @returns Client-facing pre-formatted endpoint call error.
    */
   public toPubNubError(operation: RequestOperation, message?: string): PubNubError {
     return new PubNubError(message ?? this.message, this.toStatus(operation));
+  }
+
+  /**
+   * Function which handles circular references in serialized JSON.
+   *
+   * @returns Circular reference replacer function.
+   *
+   * @internal
+   */
+  private static circularReplacer() {
+    const visited = new WeakSet();
+
+    return function (_: unknown, value: object | null) {
+      if (typeof value === 'object' && value !== null) {
+        if (visited.has(value)) return '[Circular]';
+        visited.add(value);
+      }
+
+      return value;
+    };
   }
 }

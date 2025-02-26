@@ -1238,11 +1238,23 @@ export class PubNubCore<
    */
   private makeUnsubscribe(parameters: Presence.PresenceLeaveParameters, callback: StatusCallback): void {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
+      // Filtering out presence channels and groups.
+      let { channels, channelGroups } = parameters;
+      if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
+      if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+
+      // Complete immediately request only for presence channels.
+      if ((channelGroups ?? []).length === 0 && (channels ?? []).length === 0) {
+        return callback({
+          error: false,
+          operation: RequestOperation.PNUnsubscribeOperation,
+          category: StatusCategory.PNAcknowledgmentCategory,
+          statusCode: 200,
+        });
+      }
+
       this.sendRequest(
-        new PresenceLeaveRequest({
-          ...parameters,
-          keySet: this._configuration.keySet,
-        }),
+        new PresenceLeaveRequest({ channels, channelGroups, keySet: this._configuration.keySet }),
         callback,
       );
     } else throw new Error('Unsubscription error: presence module disabled');
@@ -1917,8 +1929,28 @@ export class PubNubCore<
     callback?: ResultCallback<Presence.PresenceHeartbeatResponse>,
   ) {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
+      // Filtering out presence channels and groups.
+      let { channels, channelGroups } = parameters;
+      if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
+      if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+
+      // Complete immediately request only for presence channels.
+      if ((channelGroups ?? []).length === 0 && (channels ?? []).length === 0) {
+        const responseStatus = {
+          error: false,
+          operation: RequestOperation.PNHeartbeatOperation,
+          category: StatusCategory.PNAcknowledgmentCategory,
+          statusCode: 200,
+        };
+
+        if (callback) return callback(responseStatus, {});
+        return Promise.resolve(responseStatus);
+      }
+
       const request = new HeartbeatRequest({
         ...parameters,
+        channels,
+        channelGroups,
         keySet: this._configuration.keySet,
       });
 

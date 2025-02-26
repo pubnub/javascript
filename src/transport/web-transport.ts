@@ -155,8 +155,9 @@ export class WebTransport implements Transport {
 
             if (typeof error === 'string') {
               const errorMessage = error.toLowerCase();
-              if (errorMessage.includes('timeout') || !errorMessage.includes('cancel')) fetchError = new Error(error);
-              else if (errorMessage.includes('cancel')) fetchError = new DOMException('Aborted', 'AbortError');
+              fetchError = new Error(error);
+
+              if (!errorMessage.includes('timeout') && errorMessage.includes('cancel')) fetchError.name = 'AbortError';
             }
 
             throw PubNubAPIError.create(fetchError);

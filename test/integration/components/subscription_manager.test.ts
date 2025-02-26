@@ -383,6 +383,8 @@ describe('#components/subscription_manager', () => {
     pubnub.addListener({
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        // @ts-expect-error Remove helper function before compare.
+        delete statusPayload['toJSON'];
 
         const statusWithoutError = _.omit(statusPayload, 'errorData', 'statusCode');
         try {
@@ -423,6 +425,8 @@ describe('#components/subscription_manager', () => {
     pubnub.addListener({
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        // @ts-expect-error Remove helper function before compare.
+        delete statusPayload['toJSON'];
 
         const statusWithoutError = _.omit(statusPayload, 'errorData');
         try {
@@ -465,6 +469,8 @@ describe('#components/subscription_manager', () => {
     pubnubWithPassingHeartbeats.addListener({
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        // @ts-expect-error Remove helper function before compare.
+        delete statusPayload['toJSON'];
 
         try {
           assert.equal(scope.isDone(), true);
@@ -491,6 +497,88 @@ describe('#components/subscription_manager', () => {
     });
   });
 
+  it('heartbeat removes presence channels', (done) => {
+    const scope = utils
+      .createNock()
+      .get('/v2/presence/sub-key/mySubKey/channel/ch1/heartbeat')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        state: '{}',
+      })
+      .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}', { 'content-type': 'text/javascript' });
+
+    pubnubWithPassingHeartbeats.addListener({
+      status(statusPayload) {
+        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        // @ts-expect-error Remove helper function before compare.
+        delete statusPayload['toJSON'];
+
+        try {
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(
+            {
+              error: false,
+              operation: PubNub.OPERATIONS.PNHeartbeatOperation,
+              category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
+              statusCode: 200,
+            },
+            statusPayload,
+          );
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+    });
+
+    pubnubWithPassingHeartbeats.subscribe({
+      channels: ['ch1', 'ch2-pnpres'],
+    });
+  });
+
+  it("heartbeat doesn't make a call with only presence channels", (done) => {
+    const scope = utils
+      .createNock()
+      .get('/v2/presence/sub-key/mySubKey/channel/ch1-pnpres,ch2-pnpres/heartbeat')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        state: '{}',
+      })
+      .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}', { 'content-type': 'text/javascript' });
+
+    pubnubWithPassingHeartbeats.addListener({
+      status(statusPayload) {
+        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        // @ts-expect-error Remove helper function before compare.
+        delete statusPayload['toJSON'];
+
+        try {
+          assert.equal(scope.isDone(), false);
+          assert.deepEqual(
+            {
+              error: false,
+              operation: PubNub.OPERATIONS.PNHeartbeatOperation,
+              category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
+              statusCode: 200,
+            },
+            statusPayload,
+          );
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+    });
+
+    pubnubWithPassingHeartbeats.subscribe({
+      channels: ['ch1-pnpres', 'ch2-pnpres'],
+    });
+  });
+
   it('reports when heartbeats pass with heartbeatChannels', (done) => {
     const scope = utils
       .createNock()
@@ -506,6 +594,8 @@ describe('#components/subscription_manager', () => {
     pubnubWithPassingHeartbeats.addListener({
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        // @ts-expect-error Remove helper function before compare.
+        delete statusPayload['toJSON'];
 
         try {
           assert.equal(scope.isDone(), true);
@@ -531,6 +621,48 @@ describe('#components/subscription_manager', () => {
     });
   });
 
+  it('heartbeat removes presence channel groups', (done) => {
+    const scope = utils
+      .createNock()
+      .get('/v2/presence/sub-key/mySubKey/channel/,/heartbeat')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        state: '{}',
+        'channel-group': 'cg1',
+      })
+      .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}', { 'content-type': 'text/javascript' });
+
+    pubnubWithPassingHeartbeats.addListener({
+      status(statusPayload) {
+        if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        // @ts-expect-error Remove helper function before compare.
+        delete statusPayload['toJSON'];
+
+        try {
+          assert.equal(scope.isDone(), true);
+          assert.deepEqual(
+            {
+              error: false,
+              operation: PubNub.OPERATIONS.PNHeartbeatOperation,
+              category: PubNub.CATEGORIES.PNAcknowledgmentCategory,
+              statusCode: 200,
+            },
+            statusPayload,
+          );
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+    });
+
+    pubnubWithPassingHeartbeats.subscribe({
+      channelGroups: ['cg1', 'cg2-pnpres'],
+    });
+  });
+
   it('reports when heartbeats pass with heartbeatChannelGroups', (done) => {
     const scope = utils
       .createNock()
@@ -547,6 +679,8 @@ describe('#components/subscription_manager', () => {
     pubnubWithPassingHeartbeats.addListener({
       status(statusPayload) {
         if (statusPayload.operation !== PubNub.OPERATIONS.PNHeartbeatOperation) return;
+        // @ts-expect-error Remove helper function before compare.
+        delete statusPayload['toJSON'];
 
         try {
           assert.equal(scope.isDone(), true);
@@ -600,6 +734,8 @@ describe('#components/subscription_manager', () => {
     pubnubWithLimitedQueue.addListener({
       status(statusPayload) {
         if (statusPayload.category !== PubNub.CATEGORIES.PNRequestMessageCountExceededCategory) return;
+        // @ts-expect-error Remove helper function before compare.
+        delete statusPayload['toJSON'];
 
         try {
           assert.equal(scope.isDone(), true);

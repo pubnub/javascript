@@ -383,7 +383,10 @@ export class SubscriptionManager {
 
       if (status.category === StatusCategory.PNTimeoutCategory) {
         this.startSubscribeLoop();
-      } else if (status.category === StatusCategory.PNNetworkIssuesCategory) {
+      } else if (
+        status.category === StatusCategory.PNNetworkIssuesCategory ||
+        status.category === StatusCategory.PNMalformedResponseCategory
+      ) {
         this.disconnect();
 
         if (status.error && this.configuration.autoNetworkDetection && this.isOnline) {
@@ -410,16 +413,10 @@ export class SubscriptionManager {
         });
 
         this.reconnectionManager.startPolling();
+        this.listenerManager.announceStatus({ ...status, category: StatusCategory.PNNetworkIssuesCategory });
+      } else if (status.category === StatusCategory.PNBadRequestCategory) {
+        this.stopHeartbeatTimer();
         this.listenerManager.announceStatus(status);
-      } else if (
-        status.category === StatusCategory.PNBadRequestCategory ||
-        status.category == StatusCategory.PNMalformedResponseCategory
-      ) {
-        const category = this.isOnline ? StatusCategory.PNDisconnectedUnexpectedlyCategory : status.category;
-        this.isOnline = false;
-        this.disconnect();
-
-        this.listenerManager.announceStatus({ ...status, category });
       } else this.listenerManager.announceStatus(status);
 
       return;
