@@ -1,5 +1,14 @@
 ---
 changelog:
+  - date: 2025-03-06
+    version: v8.10.0
+    changes:
+      - type: feature
+        text: "Add `useSmartHeartbeat` configuration option which allows ignoring implicit heartbeat (with successful subscribe response) and keep sending `heartbeat` calls with fixed intervals."
+      - type: feature
+        text: "`subscriptionWorkerOfflineClientsCheckInterval` configuration option can be used to configure the interval at which “offline” PubNub clients (when tab closed) detection will be done."
+      - type: feature
+        text: "`subscriptionWorkerUnsubscribeOfflineClients` configuration option can be used to force unsubscribe  (presence leave) for “offline” PubNub clients (when tab closed)."
   - date: 2025-02-26
     version: v8.9.1
     changes:
@@ -1151,7 +1160,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '8.9.1'
+version: '8.10.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1167,7 +1176,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.9.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v8.10.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1838,7 +1847,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v8.9.1/pubnub.8.9.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v8.10.0/pubnub.8.10.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
