@@ -3261,6 +3261,8 @@
 	            userId: this.configuration.userId,
 	            heartbeatInterval: this.configuration.heartbeatInterval,
 	            logVerbosity: this.configuration.logVerbosity,
+	            workerOfflineClientsCheckInterval: this.configuration.workerOfflineClientsCheckInterval,
+	            workerUnsubscribeOfflineClients: this.configuration.workerUnsubscribeOfflineClients,
 	            workerLogVerbosity: this.configuration.workerLogVerbosity,
 	        }, true);
 	        this.subscriptionWorker.port.onmessage = (event) => this.handleWorkerEvent(event);
@@ -3434,6 +3436,10 @@
 	 */
 	const MAINTAIN_PRESENCE_STATE = true;
 	/**
+	 * Whether heartbeat should be postponed on successful subscribe response or not.
+	 */
+	const USE_SMART_HEARTBEAT = true;
+	/**
 	 * Whether PubNub client should try to utilize existing TCP connection for new requests or not.
 	 */
 	const KEEP_ALIVE$1 = false;
@@ -3489,7 +3495,7 @@
 	 * @internal
 	 */
 	const setDefaults$1 = (configuration) => {
-	    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+	    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
 	    // Copy configuration.
 	    const configurationCopy = Object.assign({}, configuration);
 	    (_a = configurationCopy.logVerbosity) !== null && _a !== void 0 ? _a : (configurationCopy.logVerbosity = USE_VERBOSE_LOGGING);
@@ -3504,13 +3510,14 @@
 	    (_k = configurationCopy.autoNetworkDetection) !== null && _k !== void 0 ? _k : (configurationCopy.autoNetworkDetection = AUTO_NETWORK_DETECTION);
 	    (_l = configurationCopy.enableEventEngine) !== null && _l !== void 0 ? _l : (configurationCopy.enableEventEngine = ENABLE_EVENT_ENGINE);
 	    (_m = configurationCopy.maintainPresenceState) !== null && _m !== void 0 ? _m : (configurationCopy.maintainPresenceState = MAINTAIN_PRESENCE_STATE);
-	    (_o = configurationCopy.keepAlive) !== null && _o !== void 0 ? _o : (configurationCopy.keepAlive = KEEP_ALIVE$1);
+	    (_o = configurationCopy.useSmartHeartbeat) !== null && _o !== void 0 ? _o : (configurationCopy.useSmartHeartbeat = USE_SMART_HEARTBEAT);
+	    (_p = configurationCopy.keepAlive) !== null && _p !== void 0 ? _p : (configurationCopy.keepAlive = KEEP_ALIVE$1);
 	    if (configurationCopy.userId && configurationCopy.uuid)
 	        throw new PubNubError("PubNub client configuration error: use only 'userId'");
-	    (_p = configurationCopy.userId) !== null && _p !== void 0 ? _p : (configurationCopy.userId = configurationCopy.uuid);
+	    (_q = configurationCopy.userId) !== null && _q !== void 0 ? _q : (configurationCopy.userId = configurationCopy.uuid);
 	    if (!configurationCopy.userId)
 	        throw new PubNubError("PubNub client configuration error: 'userId' not set");
-	    else if (((_q = configurationCopy.userId) === null || _q === void 0 ? void 0 : _q.trim().length) === 0)
+	    else if (((_r = configurationCopy.userId) === null || _r === void 0 ? void 0 : _r.trim().length) === 0)
 	        throw new PubNubError("PubNub client configuration error: 'userId' is empty");
 	    // Generate default origin subdomains.
 	    if (!configurationCopy.origin)
@@ -3600,6 +3607,14 @@
 	 */
 	const SUBSCRIPTION_WORKER_LOG_VERBOSITY = false;
 	/**
+	 * Interval at which Shared Worker should check whether PubNub instances which used it still active or not.
+	 */
+	const SUBSCRIPTION_WORKER_OFFLINE_CLIENTS_CHECK_INTERVAL = 10;
+	/**
+	 * Whether `leave` request should be sent for _offline_ PubNub client or not.
+	 */
+	const SUBSCRIPTION_WORKER_UNSUBSCRIBE_OFFLINE_CLIENTS = false;
+	/**
 	 * Use modern Web Fetch API for network requests by default.
 	 */
 	const TRANSPORT = 'fetch';
@@ -3615,13 +3630,13 @@
 	 * @internal
 	 */
 	const setDefaults = (configuration) => {
-	    var _a, _b, _c, _d;
+	    var _a, _b, _c, _d, _e, _f;
 	    // Force disable service workers if environment doesn't support them.
 	    if (configuration.subscriptionWorkerUrl && typeof SharedWorker === 'undefined')
 	        configuration.subscriptionWorkerUrl = null;
 	    return Object.assign(Object.assign({}, setDefaults$1(configuration)), { 
 	        // Set platform-specific options.
-	        listenToBrowserNetworkEvents: (_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : LISTEN_TO_BROWSER_NETWORK_EVENTS, subscriptionWorkerUrl: configuration.subscriptionWorkerUrl, subscriptionWorkerLogVerbosity: (_b = configuration.subscriptionWorkerLogVerbosity) !== null && _b !== void 0 ? _b : SUBSCRIPTION_WORKER_LOG_VERBOSITY, transport: (_c = configuration.transport) !== null && _c !== void 0 ? _c : TRANSPORT, keepAlive: (_d = configuration.keepAlive) !== null && _d !== void 0 ? _d : KEEP_ALIVE });
+	        listenToBrowserNetworkEvents: (_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : LISTEN_TO_BROWSER_NETWORK_EVENTS, subscriptionWorkerUrl: configuration.subscriptionWorkerUrl, subscriptionWorkerOfflineClientsCheckInterval: (_b = configuration.subscriptionWorkerOfflineClientsCheckInterval) !== null && _b !== void 0 ? _b : SUBSCRIPTION_WORKER_OFFLINE_CLIENTS_CHECK_INTERVAL, subscriptionWorkerUnsubscribeOfflineClients: (_c = configuration.subscriptionWorkerUnsubscribeOfflineClients) !== null && _c !== void 0 ? _c : SUBSCRIPTION_WORKER_UNSUBSCRIBE_OFFLINE_CLIENTS, subscriptionWorkerLogVerbosity: (_d = configuration.subscriptionWorkerLogVerbosity) !== null && _d !== void 0 ? _d : SUBSCRIPTION_WORKER_LOG_VERBOSITY, transport: (_e = configuration.transport) !== null && _e !== void 0 ? _e : TRANSPORT, keepAlive: (_f = configuration.keepAlive) !== null && _f !== void 0 ? _f : KEEP_ALIVE });
 	};
 
 	var uuid = {exports: {}};
@@ -4930,7 +4945,7 @@
 	     */
 	    reconnect(forUnsubscribe = false) {
 	        this.startSubscribeLoop();
-	        if (!forUnsubscribe)
+	        if (!forUnsubscribe && this.configuration.useSmartHeartbeat)
 	            this.startHeartbeatTimer();
 	    }
 	    /**
@@ -14565,6 +14580,8 @@
 	                    workerUrl: configurationCopy.subscriptionWorkerUrl,
 	                    sdkVersion: clientConfiguration.getVersion(),
 	                    heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
+	                    workerOfflineClientsCheckInterval: platformConfiguration.subscriptionWorkerOfflineClientsCheckInterval,
+	                    workerUnsubscribeOfflineClients: platformConfiguration.subscriptionWorkerUnsubscribeOfflineClients,
 	                    logVerbosity: clientConfiguration.logVerbosity,
 	                    workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
 	                    transport,

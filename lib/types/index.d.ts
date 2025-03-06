@@ -2581,6 +2581,19 @@ declare namespace PubNub {
      */
     maintainPresenceState?: boolean;
     /**
+     * Whether heartbeat should be postponed on successful subscribe response.
+     *
+     * With implicit heartbeat each successful `subscribe` loop response is treated as `heartbeat`
+     * and there is no need to send another explicit heartbeat earlier than `heartbeatInterval`
+     * since moment of `subscribe` response.
+     *
+     * **Note:** With disabled implicit heartbeat this feature may cause `timeout` if there is
+     * constant activity on subscribed channels / groups.
+     *
+     * @default `true`
+     */
+    useSmartHeartbeat?: boolean;
+    /**
      * `UUID` to use. You should set a unique `UUID` to identify the user or the device that
      * connects to PubNub.
      * If you don't set the `UUID`, you won't be able to connect to PubNub.

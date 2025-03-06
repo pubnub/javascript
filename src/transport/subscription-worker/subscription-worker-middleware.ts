@@ -51,6 +51,16 @@ type PubNubMiddlewareConfiguration = {
   logVerbosity: boolean;
 
   /**
+   * Interval at which Shared Worker should check whether PubNub instances which used it still active or not.
+   */
+  workerOfflineClientsCheckInterval: number;
+
+  /**
+   * Whether `leave` request should be sent for _offline_ PubNub client or not.
+   */
+  workerUnsubscribeOfflineClients: boolean;
+
+  /**
    * Whether verbose logging should be enabled for `Subscription` worker should print debug messages or not.
    */
   workerLogVerbosity: boolean;
@@ -234,6 +244,8 @@ export class SubscriptionWorkerMiddleware implements Transport {
         userId: this.configuration.userId,
         heartbeatInterval: this.configuration.heartbeatInterval,
         logVerbosity: this.configuration.logVerbosity,
+        workerOfflineClientsCheckInterval: this.configuration.workerOfflineClientsCheckInterval,
+        workerUnsubscribeOfflineClients: this.configuration.workerUnsubscribeOfflineClients,
         workerLogVerbosity: this.configuration.workerLogVerbosity,
       },
       true,
