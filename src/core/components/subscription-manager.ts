@@ -197,7 +197,7 @@ export class SubscriptionManager {
    */
   public reconnect(forUnsubscribe: boolean = false) {
     this.startSubscribeLoop();
-    if (!forUnsubscribe) this.startHeartbeatTimer();
+    if (!forUnsubscribe && this.configuration.useSmartHeartbeat) this.startHeartbeatTimer();
   }
 
   /**

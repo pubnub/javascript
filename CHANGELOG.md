@@ -1,3 +1,11 @@
+## v8.10.0
+March 06 2025
+
+#### Added
+- Add `useSmartHeartbeat` configuration option which allows ignoring implicit heartbeat (with successful subscribe response) and keep sending `heartbeat` calls with fixed intervals.
+- `subscriptionWorkerOfflineClientsCheckInterval` configuration option can be used to configure the interval at which “offline” PubNub clients (when tab closed) detection will be done.
+- `subscriptionWorkerUnsubscribeOfflineClients` configuration option can be used to force unsubscribe  (presence leave) for “offline” PubNub clients (when tab closed).
+
 ## v8.9.1
 February 26 2025
 

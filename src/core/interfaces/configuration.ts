@@ -55,6 +55,11 @@ const ENABLE_EVENT_ENGINE = false;
 const MAINTAIN_PRESENCE_STATE = true;
 
 /**
+ * Whether heartbeat should be postponed on successful subscribe response or not.
+ */
+const USE_SMART_HEARTBEAT = true;
+
+/**
  * Whether PubNub client should try to utilize existing TCP connection for new requests or not.
  */
 const KEEP_ALIVE = false;
@@ -306,6 +311,20 @@ export type UserConfiguration = {
    * @default `true`
    */
   maintainPresenceState?: boolean;
+
+  /**
+   * Whether heartbeat should be postponed on successful subscribe response.
+   *
+   * With implicit heartbeat each successful `subscribe` loop response is treated as `heartbeat`
+   * and there is no need to send another explicit heartbeat earlier than `heartbeatInterval`
+   * since moment of `subscribe` response.
+   *
+   * **Note:** With disabled implicit heartbeat this feature may cause `timeout` if there is
+   * constant activity on subscribed channels / groups.
+   *
+   * @default `true`
+   */
+  useSmartHeartbeat?: boolean;
 
   /**
    * `UUID` to use. You should set a unique `UUID` to identify the user or the device that
@@ -736,6 +755,7 @@ export const setDefaults = (configuration: UserConfiguration): ExtendedConfigura
   configurationCopy.autoNetworkDetection ??= AUTO_NETWORK_DETECTION;
   configurationCopy.enableEventEngine ??= ENABLE_EVENT_ENGINE;
   configurationCopy.maintainPresenceState ??= MAINTAIN_PRESENCE_STATE;
+  configurationCopy.useSmartHeartbeat ??= USE_SMART_HEARTBEAT;
   configurationCopy.keepAlive ??= KEEP_ALIVE;
 
   if (configurationCopy.userId && configurationCopy.uuid)

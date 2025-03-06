@@ -24,6 +24,16 @@ const LISTEN_TO_BROWSER_NETWORK_EVENTS = true;
 const SUBSCRIPTION_WORKER_LOG_VERBOSITY = false;
 
 /**
+ * Interval at which Shared Worker should check whether PubNub instances which used it still active or not.
+ */
+const SUBSCRIPTION_WORKER_OFFLINE_CLIENTS_CHECK_INTERVAL = 10;
+
+/**
+ * Whether `leave` request should be sent for _offline_ PubNub client or not.
+ */
+const SUBSCRIPTION_WORKER_UNSUBSCRIBE_OFFLINE_CLIENTS = false;
+
+/**
  * Use modern Web Fetch API for network requests by default.
  */
 const TRANSPORT: PubNubConfiguration['transport'] = 'fetch';
@@ -57,6 +67,26 @@ export type PubNubConfiguration = UserConfiguration & {
    * configured to serve worker file from `account.main.com`.
    */
   subscriptionWorkerUrl?: string | null;
+
+  /**
+   * Interval at which Shared Worker should check whether PubNub instances which used it still active or not.
+   *
+   * With every iteration, Shared Worker will detect for _offline_ PubNub client instances which should be removed from
+   * the list of tracked instances.
+   *
+   * @default `10` seconds
+   */
+  subscriptionWorkerOfflineClientsCheckInterval?: number;
+
+  /**
+   * Whether `leave` request should be sent for _offline_ PubNub client or not.
+   *
+   * It is possible for Shared Worker as part of _offline_ PubNub clients clean up send `leave` request for proper
+   * leave. This behavior can be useful to gracefully handle browser tab / window close.
+   *
+   * @default `false`
+   */
+  subscriptionWorkerUnsubscribeOfflineClients?: boolean;
 
   /**
    * Whether verbose logging should be enabled for `Subscription` worker should print debug messages or not.
@@ -131,6 +161,10 @@ export const setDefaults = (configuration: PubNubConfiguration): PubNubConfigura
     // Set platform-specific options.
     listenToBrowserNetworkEvents: configuration.listenToBrowserNetworkEvents ?? LISTEN_TO_BROWSER_NETWORK_EVENTS,
     subscriptionWorkerUrl: configuration.subscriptionWorkerUrl,
+    subscriptionWorkerOfflineClientsCheckInterval:
+      configuration.subscriptionWorkerOfflineClientsCheckInterval ?? SUBSCRIPTION_WORKER_OFFLINE_CLIENTS_CHECK_INTERVAL,
+    subscriptionWorkerUnsubscribeOfflineClients:
+      configuration.subscriptionWorkerUnsubscribeOfflineClients ?? SUBSCRIPTION_WORKER_UNSUBSCRIBE_OFFLINE_CLIENTS,
     subscriptionWorkerLogVerbosity: configuration.subscriptionWorkerLogVerbosity ?? SUBSCRIPTION_WORKER_LOG_VERBOSITY,
     transport: configuration.transport ?? TRANSPORT,
     keepAlive: configuration.keepAlive ?? KEEP_ALIVE,
