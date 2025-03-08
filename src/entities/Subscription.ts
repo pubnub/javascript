@@ -134,10 +134,11 @@ export class Subscription extends SubscribeCapable {
 
     // Subscribe whole subscription set if it has been created with receiving subscription object
     // which is already subscribed.
-    console.log(`~~~~> SUBSCRIPTION SUBSCRIBED? ${this.subscribed ? 'Yes' : 'No'}`);
     if (this.subscribed) {
-      subscription.subscribe();
-      subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
+      if (!subscription.subscribed) {
+        subscription.subscribe();
+        subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
+      }
 
       this.pubnub.registerSubscribeCapable(subscriptionSet);
       // @ts-expect-error: Required modification of protected field.

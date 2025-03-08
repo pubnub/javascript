@@ -156,8 +156,8 @@ export class SubscriptionSet extends SubscribeCapable {
     this.eventEmitter.addListener(this.listener, subscription.channels, subscription.channelGroups);
 
     // Subscribe subscription object if subscription set already subscribed.
-    console.log(`~~~~> SET SUBSCRIBED? ${this.subscribed ? 'Yes' : 'No'}`);
-    if (this.subscribed) {
+    // @ts-expect-error: Required access of protected field.
+    if (this.subscribed && !subscription.subscribed) {
       subscription.subscribe();
       // @ts-expect-error: Required modification of protected field.
       subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
@@ -199,8 +199,7 @@ export class SubscriptionSet extends SubscribeCapable {
     this.eventEmitter.addListener(this.listener, subscriptionSet.channels, subscriptionSet.channelGroups);
 
     // Subscribe subscription object if subscription set already subscribed.
-    console.log(`~~~~> SET SUBSCRIBED? ${this.subscribed ? 'Yes' : 'No'}`);
-    if (this.subscribed) {
+    if (this.subscribed && !subscriptionSet.subscribed) {
       subscriptionSet.subscribe();
       subscriptionSet.subscribedAutomatically = true; // should be placed after .subscribe() call.
     }
