@@ -242,7 +242,7 @@
                             // Check whether there are more clients which may schedule next subscription loop and they need to be
                             // aggregated or not.
                             if (hasClientsForSendAggregatedSubscribeRequestEvent(client, data)) {
-                                const timerIdentifier = `${client.userId}-${client.subscriptionKey}`;
+                                const timerIdentifier = aggregateTimerId(client);
                                 // Check whether we need to start new aggregation timer or not.
                                 if (!aggregationTimers.has(timerIdentifier)) {
                                     const aggregationTimer = setTimeout(() => {
@@ -1624,6 +1624,21 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
             const interval = _pubNubClients[0].offlineClientsCheckInterval;
             pingTimeouts[subscriptionKey] = setTimeout(() => pingClients(subscriptionKey), interval * 500 - 1);
         }
+    };
+    /**
+     * Compose clients' aggregation key.
+     *
+     * Aggregation key includes key parameters which differentiate clients between each other.
+     *
+     * @param client - Client for which identifier should be composed.
+     *
+     * @returns Aggregation timeout identifier string.
+     */
+    const aggregateTimerId = (client) => {
+        let id = `${client.userId}-${client.subscriptionKey}${client.authKey ? `-${client.authKey}` : ''}`;
+        if (client.subscription && client.subscription.filterExpression)
+            id += `-${client.subscription.filterExpression}`;
+        return id;
     };
     /**
      * Print message on the worker's clients console.
