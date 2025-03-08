@@ -57,7 +57,7 @@ const MAINTAIN_PRESENCE_STATE = true;
 /**
  * Whether heartbeat should be postponed on successful subscribe response or not.
  */
-const USE_SMART_HEARTBEAT = true;
+const USE_SMART_HEARTBEAT = false;
 
 /**
  * Whether PubNub client should try to utilize existing TCP connection for new requests or not.

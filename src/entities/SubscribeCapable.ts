@@ -50,6 +50,21 @@ export abstract class SubscribeCapable {
   protected abstract pubnub: PubNub<unknown, unknown>;
 
   /**
+   * Whether subscribed ({@link SubscribeCapable#subscribe}) automatically during subscription
+   * object / sets manipulation or not.
+   *
+   * @internal
+   */
+  protected abstract subscribedAutomatically: boolean;
+
+  /**
+   * Whether subscribable object subscribed ({@link SubscribeCapable#subscribe}) or not.
+   *
+   * @internal
+   */
+  protected abstract subscribed: boolean;
+
+  /**
    * Start receiving real-time updates.
    *
    * @param subscribeParameters - Additional subscription configuration options which should be used
@@ -58,6 +73,9 @@ export abstract class SubscribeCapable {
   subscribe(subscribeParameters?: { timetoken?: string }) {
     const timetoken = subscribeParameters?.timetoken;
     this.pubnub.registerSubscribeCapable(this);
+    this.subscribedAutomatically = false;
+    this.subscribed = true;
+
     this.pubnub.subscribe({
       channels: this.channelNames,
       channelGroups: this.groupNames,
@@ -70,6 +88,9 @@ export abstract class SubscribeCapable {
    */
   unsubscribe() {
     this.pubnub.unregisterSubscribeCapable(this);
+    this.subscribedAutomatically = false;
+    this.subscribed = false;
+
     const { channels, channelGroups } = this.pubnub.getSubscribeCapableEntities();
 
     // Identify channels and groups from which PubNub client can safely unsubscribe.

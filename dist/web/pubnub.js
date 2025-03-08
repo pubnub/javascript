@@ -3438,7 +3438,7 @@
 	/**
 	 * Whether heartbeat should be postponed on successful subscribe response or not.
 	 */
-	const USE_SMART_HEARTBEAT = true;
+	const USE_SMART_HEARTBEAT = false;
 	/**
 	 * Whether PubNub client should try to utilize existing TCP connection for new requests or not.
 	 */
@@ -4944,8 +4944,9 @@
 	     * unsubscribe or not.
 	     */
 	    reconnect(forUnsubscribe = false) {
-	        this.startSubscribeLoop();
-	        if (!forUnsubscribe && this.configuration.useSmartHeartbeat)
+	        this.startSubscribeLoop(forUnsubscribe);
+	        // Starting heartbeat loop for provided channels and groups.
+	        if (!forUnsubscribe && !this.configuration.useSmartHeartbeat)
 	            this.startHeartbeatTimer();
 	    }
 	    /**
@@ -5053,7 +5054,15 @@
 	            channelGroups: this.subscribedChannelGroups,
 	        }, isOffline);
 	    }
-	    startSubscribeLoop() {
+	    /**
+	     * Start next subscription loop.
+	     *
+	     * @param restartOnUnsubscribe - Whether restarting subscription loop as part of channels list change on
+	     * unsubscribe or not.
+	     *
+	     * @internal
+	     */
+	    startSubscribeLoop(restartOnUnsubscribe = false) {
 	        this.stopSubscribeLoop();
 	        const channelGroups = [...Object.keys(this.channelGroups)];
 	        const channels = [...Object.keys(this.channels)];
@@ -5073,6 +5082,8 @@
 	        }, (status, result) => {
 	            this.processSubscribeResponse(status, result);
 	        });
+	        if (!restartOnUnsubscribe && this.configuration.useSmartHeartbeat)
+	            this.startHeartbeatTimer();
 	    }
 	    stopSubscribeLoop() {
 	        if (this._subscribeAbort) {
@@ -5224,7 +5235,9 @@
 	        const heartbeatInterval = this.configuration.getHeartbeatInterval();
 	        if (!heartbeatInterval || heartbeatInterval === 0)
 	            return;
-	        this.sendHeartbeat();
+	        // Sending immediate heartbeat only if not working as smart heartbeat.
+	        if (!this.configuration.useSmartHeartbeat)
+	            this.sendHeartbeat();
 	        this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), heartbeatInterval * 1000);
 	    }
 	    /**
@@ -10084,6 +10097,8 @@
 	    subscribe(subscribeParameters) {
 	        const timetoken = subscribeParameters === null || subscribeParameters === void 0 ? void 0 : subscribeParameters.timetoken;
 	        this.pubnub.registerSubscribeCapable(this);
+	        this.subscribedAutomatically = false;
+	        this.subscribed = true;
 	        this.pubnub.subscribe(Object.assign({ channels: this.channelNames, channelGroups: this.groupNames }, (timetoken !== null && timetoken !== '' && { timetoken: timetoken })));
 	    }
 	    /**
@@ -10091,6 +10106,8 @@
 	     */
 	    unsubscribe() {
 	        this.pubnub.unregisterSubscribeCapable(this);
+	        this.subscribedAutomatically = false;
+	        this.subscribed = false;
 	        const { channels, channelGroups } = this.pubnub.getSubscribeCapableEntities();
 	        // Identify channels and groups from which PubNub client can safely unsubscribe.
 	        const filteredChannelGroups = this.groupNames.filter((cg) => !channelGroups.includes(cg));
@@ -10251,6 +10268,19 @@
 	         * @internal
 	         */
 	        this.subscriptionList = [];
+	        /**
+	         * Whether subscribed ({@link SubscribeCapable#subscribe}) automatically during subscription
+	         * object / sets manipulation or not.
+	         *
+	         * @internal
+	         */
+	        this.subscribedAutomatically = false;
+	        /**
+	         * Whether subscribable object subscribed ({@link SubscribeCapable#subscribe}) or not.
+	         *
+	         * @internal
+	         */
+	        this.subscribed = false;
 	        this.options = subscriptionOptions;
 	        this.eventEmitter = eventEmitter;
 	        this.pubnub = pubnub;
@@ -10280,6 +10310,13 @@
 	        this.channelNames = [...this.channelNames, ...subscription.channels];
 	        this.groupNames = [...this.groupNames, ...subscription.channelGroups];
 	        this.eventEmitter.addListener(this.listener, subscription.channels, subscription.channelGroups);
+	        // Subscribe subscription object if subscription set already subscribed.
+	        console.log(`~~~~> SET SUBSCRIBED? ${this.subscribed ? 'Yes' : 'No'}`);
+	        if (this.subscribed) {
+	            subscription.subscribe();
+	            // @ts-expect-error: Required modification of protected field.
+	            subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
+	        }
 	    }
 	    /**
 	     * Remove entity's subscription object from the set.
@@ -10296,6 +10333,9 @@
 	        this.groupNames = this.groupNames.filter((cg) => !groupsToRemove.includes(cg));
 	        this.subscriptionList = this.subscriptionList.filter((s) => s !== subscription);
 	        this.eventEmitter.removeListener(this.listener, channelsToRemove, groupsToRemove);
+	        // @ts-expect-error: Required access of protected field.
+	        if (subscription.subscribedAutomatically)
+	            subscription.unsubscribe();
 	    }
 	    /**
 	     * Merge with other subscription set object.
@@ -10310,6 +10350,12 @@
 	        this.channelNames = [...this.channelNames, ...subscriptionSet.channels];
 	        this.groupNames = [...this.groupNames, ...subscriptionSet.channelGroups];
 	        this.eventEmitter.addListener(this.listener, subscriptionSet.channels, subscriptionSet.channelGroups);
+	        // Subscribe subscription object if subscription set already subscribed.
+	        console.log(`~~~~> SET SUBSCRIBED? ${this.subscribed ? 'Yes' : 'No'}`);
+	        if (this.subscribed) {
+	            subscriptionSet.subscribe();
+	            subscriptionSet.subscribedAutomatically = true; // should be placed after .subscribe() call.
+	        }
 	    }
 	    /**
 	     * Subtract other subscription set object.
@@ -10326,6 +10372,8 @@
 	        this.groupNames = this.groupNames.filter((cg) => !groupsToRemove.includes(cg));
 	        this.subscriptionList = this.subscriptionList.filter((s) => !subscriptionSet.subscriptions.includes(s));
 	        this.eventEmitter.removeListener(this.listener, channelsToRemove, groupsToRemove);
+	        if (subscriptionSet.subscribedAutomatically)
+	            subscriptionSet.unsubscribe();
 	    }
 	    /**
 	     * Get list of entities' subscription objects registered in subscription set.
@@ -10381,6 +10429,19 @@
 	         * @internal
 	         */
 	        this.groupNames = [];
+	        /**
+	         * Whether subscribed ({@link SubscribeCapable#subscribe}) automatically during subscription
+	         * object / sets manipulation or not.
+	         *
+	         * @internal
+	         */
+	        this.subscribedAutomatically = false;
+	        /**
+	         * Whether subscribable object subscribed ({@link SubscribeCapable#subscribe}) or not.
+	         *
+	         * @internal
+	         */
+	        this.subscribed = false;
 	        this.channelNames = channels;
 	        this.groupNames = channelGroups;
 	        this.options = subscriptionOptions;
@@ -10396,13 +10457,24 @@
 	     * @return Subscription set which contains both receiver and other entities' subscription objects.
 	     */
 	    addSubscription(subscription) {
-	        return new SubscriptionSet({
+	        const subscriptionSet = new SubscriptionSet({
 	            channels: [...this.channelNames, ...subscription.channels],
 	            channelGroups: [...this.groupNames, ...subscription.channelGroups],
 	            subscriptionOptions: Object.assign(Object.assign({}, this.options), subscription === null || subscription === void 0 ? void 0 : subscription.options),
 	            eventEmitter: this.eventEmitter,
 	            pubnub: this.pubnub,
 	        });
+	        // Subscribe whole subscription set if it has been created with receiving subscription object
+	        // which is already subscribed.
+	        console.log(`~~~~> SUBSCRIPTION SUBSCRIBED? ${this.subscribed ? 'Yes' : 'No'}`);
+	        if (this.subscribed) {
+	            subscription.subscribe();
+	            subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
+	            this.pubnub.registerSubscribeCapable(subscriptionSet);
+	            // @ts-expect-error: Required modification of protected field.
+	            subscriptionSet.subscribed = true;
+	        }
+	        return subscriptionSet;
 	    }
 	}
 

@@ -696,17 +696,21 @@ self.onconnect = (event) => {
 
           const client = pubNubClients[data.clientIdentifier];
           if (client) {
-            const timerIdentifier = `${client.userId}-${client.subscriptionKey}`;
+            // Check whether there are more clients which may schedule next subscription loop and they need to be
+            // aggregated or not.
+            if (hasClientsForSendAggregatedSubscribeRequestEvent(client, data)) {
+              const timerIdentifier = `${client.userId}-${client.subscriptionKey}`;
 
-            // Check whether we need to start new aggregation timer or not.
-            if (!aggregationTimers.has(timerIdentifier)) {
-              const aggregationTimer = setTimeout(() => {
-                handleSendSubscribeRequestEvent(data);
-                aggregationTimers.delete(timerIdentifier);
-              }, subscribeAggregationTimeout);
+              // Check whether we need to start new aggregation timer or not.
+              if (!aggregationTimers.has(timerIdentifier)) {
+                const aggregationTimer = setTimeout(() => {
+                  handleSendSubscribeRequestEvent(data);
+                  aggregationTimers.delete(timerIdentifier);
+                }, subscribeAggregationTimeout);
 
-              aggregationTimers.set(timerIdentifier, aggregationTimer);
-            }
+                aggregationTimers.set(timerIdentifier, aggregationTimer);
+              }
+            } else handleSendSubscribeRequestEvent(data);
           }
         } else if (data.request.path.endsWith('/heartbeat')) {
           updateClientHeartbeatState(data);
@@ -2160,6 +2164,18 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
   }
 
   return undefined;
+};
+
+/**
+ * Check whether there are any clients which can be used for subscribe request aggregation or not.
+ *
+ * @param client - PubNub client state which will be checked.
+ * @param event - Send subscribe request event information.
+ *
+ * @returns `true` in case there is more than 1 client which has same parameters for subscribe request to aggregate.
+ */
+const hasClientsForSendAggregatedSubscribeRequestEvent = (client: PubNubClientState, event: SendRequestEvent) => {
+  return clientsForSendSubscribeRequestEvent((client.subscription ?? {}).timetoken ?? '0', event).length > 1;
 };
 
 /**

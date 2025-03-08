@@ -196,8 +196,10 @@ export class SubscriptionManager {
    * unsubscribe or not.
    */
   public reconnect(forUnsubscribe: boolean = false) {
-    this.startSubscribeLoop();
-    if (!forUnsubscribe && this.configuration.useSmartHeartbeat) this.startHeartbeatTimer();
+    this.startSubscribeLoop(forUnsubscribe);
+
+    // Starting heartbeat loop for provided channels and groups.
+    if (!forUnsubscribe && !this.configuration.useSmartHeartbeat) this.startHeartbeatTimer();
   }
 
   /**
@@ -333,8 +335,17 @@ export class SubscriptionManager {
     );
   }
 
-  private startSubscribeLoop() {
+  /**
+   * Start next subscription loop.
+   *
+   * @param restartOnUnsubscribe - Whether restarting subscription loop as part of channels list change on
+   * unsubscribe or not.
+   *
+   * @internal
+   */
+  private startSubscribeLoop(restartOnUnsubscribe: boolean = false) {
     this.stopSubscribeLoop();
+
     const channelGroups = [...Object.keys(this.channelGroups)];
     const channels = [...Object.keys(this.channels)];
 
@@ -358,6 +369,8 @@ export class SubscriptionManager {
         this.processSubscribeResponse(status, result);
       },
     );
+
+    if (!restartOnUnsubscribe && this.configuration.useSmartHeartbeat) this.startHeartbeatTimer();
   }
 
   private stopSubscribeLoop() {
@@ -528,7 +541,8 @@ export class SubscriptionManager {
     const heartbeatInterval = this.configuration.getHeartbeatInterval();
     if (!heartbeatInterval || heartbeatInterval === 0) return;
 
-    this.sendHeartbeat();
+    // Sending immediate heartbeat only if not working as smart heartbeat.
+    if (!this.configuration.useSmartHeartbeat) this.sendHeartbeat();
     this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), heartbeatInterval * 1000) as unknown as number;
   }
 
