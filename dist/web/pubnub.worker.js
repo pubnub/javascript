@@ -239,15 +239,21 @@
                         updateClientSubscribeStateIfRequired(data);
                         const client = pubNubClients[data.clientIdentifier];
                         if (client) {
-                            const timerIdentifier = `${client.userId}-${client.subscriptionKey}`;
-                            // Check whether we need to start new aggregation timer or not.
-                            if (!aggregationTimers.has(timerIdentifier)) {
-                                const aggregationTimer = setTimeout(() => {
-                                    handleSendSubscribeRequestEvent(data);
-                                    aggregationTimers.delete(timerIdentifier);
-                                }, subscribeAggregationTimeout);
-                                aggregationTimers.set(timerIdentifier, aggregationTimer);
+                            // Check whether there are more clients which may schedule next subscription loop and they need to be
+                            // aggregated or not.
+                            if (hasClientsForSendAggregatedSubscribeRequestEvent(client, data)) {
+                                const timerIdentifier = aggregateTimerId(client);
+                                // Check whether we need to start new aggregation timer or not.
+                                if (!aggregationTimers.has(timerIdentifier)) {
+                                    const aggregationTimer = setTimeout(() => {
+                                        handleSendSubscribeRequestEvent(data);
+                                        aggregationTimers.delete(timerIdentifier);
+                                    }, subscribeAggregationTimeout);
+                                    aggregationTimers.set(timerIdentifier, aggregationTimer);
+                                }
                             }
+                            else
+                                handleSendSubscribeRequestEvent(data);
                         }
                     }
                     else if (data.request.path.endsWith('/heartbeat')) {
@@ -1478,6 +1484,18 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
         return undefined;
     };
     /**
+     * Check whether there are any clients which can be used for subscribe request aggregation or not.
+     *
+     * @param client - PubNub client state which will be checked.
+     * @param event - Send subscribe request event information.
+     *
+     * @returns `true` in case there is more than 1 client which has same parameters for subscribe request to aggregate.
+     */
+    const hasClientsForSendAggregatedSubscribeRequestEvent = (client, event) => {
+        var _a, _b;
+        return clientsForSendSubscribeRequestEvent((_b = ((_a = client.subscription) !== null && _a !== void 0 ? _a : {}).timetoken) !== null && _b !== void 0 ? _b : '0', event).length > 1;
+    };
+    /**
      * Find PubNub client states with configuration compatible with the one in request.
      *
      * Method allow to find information about all PubNub client instances which use same:
@@ -1606,6 +1624,21 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
             const interval = _pubNubClients[0].offlineClientsCheckInterval;
             pingTimeouts[subscriptionKey] = setTimeout(() => pingClients(subscriptionKey), interval * 500 - 1);
         }
+    };
+    /**
+     * Compose clients' aggregation key.
+     *
+     * Aggregation key includes key parameters which differentiate clients between each other.
+     *
+     * @param client - Client for which identifier should be composed.
+     *
+     * @returns Aggregation timeout identifier string.
+     */
+    const aggregateTimerId = (client) => {
+        let id = `${client.userId}-${client.subscriptionKey}${client.authKey ? `-${client.authKey}` : ''}`;
+        if (client.subscription && client.subscription.filterExpression)
+            id += `-${client.subscription.filterExpression}`;
+        return id;
     };
     /**
      * Print message on the worker's clients console.

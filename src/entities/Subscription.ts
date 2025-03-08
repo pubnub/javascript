@@ -66,6 +66,21 @@ export class Subscription extends SubscribeCapable {
   protected listener: Listener;
 
   /**
+   * Whether subscribed ({@link SubscribeCapable#subscribe}) automatically during subscription
+   * object / sets manipulation or not.
+   *
+   * @internal
+   */
+  protected subscribedAutomatically: boolean = false;
+
+  /**
+   * Whether subscribable object subscribed ({@link SubscribeCapable#subscribe}) or not.
+   *
+   * @internal
+   */
+  protected subscribed: boolean = false;
+
+  /**
    * Create entity's subscription object.
    *
    * @param channels - List of channels which should be used in subscription loop.
@@ -109,12 +124,27 @@ export class Subscription extends SubscribeCapable {
    * @return Subscription set which contains both receiver and other entities' subscription objects.
    */
   addSubscription(subscription: Subscription) {
-    return new SubscriptionSet({
+    const subscriptionSet = new SubscriptionSet({
       channels: [...this.channelNames, ...subscription.channels],
       channelGroups: [...this.groupNames, ...subscription.channelGroups],
       subscriptionOptions: { ...this.options, ...subscription?.options },
       eventEmitter: this.eventEmitter,
       pubnub: this.pubnub,
     });
+
+    // Subscribe whole subscription set if it has been created with receiving subscription object
+    // which is already subscribed.
+    if (this.subscribed) {
+      if (!subscription.subscribed) {
+        subscription.subscribe();
+        subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
+      }
+
+      this.pubnub.registerSubscribeCapable(subscriptionSet);
+      // @ts-expect-error: Required modification of protected field.
+      subscriptionSet.subscribed = true;
+    }
+
+    return subscriptionSet;
   }
 }
