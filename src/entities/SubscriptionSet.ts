@@ -78,6 +78,21 @@ export class SubscriptionSet extends SubscribeCapable {
   protected listener: Listener;
 
   /**
+   * Whether subscribed ({@link SubscribeCapable#subscribe}) automatically during subscription
+   * object / sets manipulation or not.
+   *
+   * @internal
+   */
+  protected subscribedAutomatically: boolean = false;
+
+  /**
+   * Whether subscribable object subscribed ({@link SubscribeCapable#subscribe}) or not.
+   *
+   * @internal
+   */
+  protected subscribed: boolean = false;
+
+  /**
    * Create entities' subscription set object.
    *
    * Subscription set object represent collection of per-entity subscription objects and allow
@@ -139,6 +154,14 @@ export class SubscriptionSet extends SubscribeCapable {
     this.channelNames = [...this.channelNames, ...subscription.channels];
     this.groupNames = [...this.groupNames, ...subscription.channelGroups];
     this.eventEmitter.addListener(this.listener, subscription.channels, subscription.channelGroups);
+
+    // Subscribe subscription object if subscription set already subscribed.
+    // @ts-expect-error: Required access of protected field.
+    if (this.subscribed && !subscription.subscribed) {
+      subscription.subscribe();
+      // @ts-expect-error: Required modification of protected field.
+      subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
+    }
   }
 
   /**
@@ -156,6 +179,9 @@ export class SubscriptionSet extends SubscribeCapable {
     this.groupNames = this.groupNames.filter((cg) => !groupsToRemove.includes(cg));
     this.subscriptionList = this.subscriptionList.filter((s) => s !== subscription);
     this.eventEmitter.removeListener(this.listener, channelsToRemove, groupsToRemove);
+
+    // @ts-expect-error: Required access of protected field.
+    if (subscription.subscribedAutomatically) subscription.unsubscribe();
   }
 
   /**
@@ -171,6 +197,12 @@ export class SubscriptionSet extends SubscribeCapable {
     this.channelNames = [...this.channelNames, ...subscriptionSet.channels];
     this.groupNames = [...this.groupNames, ...subscriptionSet.channelGroups];
     this.eventEmitter.addListener(this.listener, subscriptionSet.channels, subscriptionSet.channelGroups);
+
+    // Subscribe subscription object if subscription set already subscribed.
+    if (this.subscribed && !subscriptionSet.subscribed) {
+      subscriptionSet.subscribe();
+      subscriptionSet.subscribedAutomatically = true; // should be placed after .subscribe() call.
+    }
   }
 
   /**
@@ -188,6 +220,8 @@ export class SubscriptionSet extends SubscribeCapable {
     this.groupNames = this.groupNames.filter((cg) => !groupsToRemove.includes(cg));
     this.subscriptionList = this.subscriptionList.filter((s) => !subscriptionSet.subscriptions.includes(s));
     this.eventEmitter.removeListener(this.listener, channelsToRemove, groupsToRemove);
+
+    if (subscriptionSet.subscribedAutomatically) subscriptionSet.unsubscribe();
   }
 
   /**
