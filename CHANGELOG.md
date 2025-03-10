@@ -1,3 +1,13 @@
+## v9.0.0
+March 10 2025
+
+#### Added
+- BREAKING CHANGES: `SubscriptionSet` will subscribe / unsubscribe added / removed `Subscription` or `SubscriptionSet` objects if the set itself already subscribed.
+
+#### Fixed
+- Fix issue because of which throttle didn't consider difference in client settings (throttled only by user ID and subscribe key, which is not enough).
+- With the fix, smart heartbeat as feature has been added to the SDK, and it is disabled by default.
+
 ## v8.10.0
 March 06 2025
 
