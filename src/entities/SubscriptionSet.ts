@@ -69,13 +69,41 @@ export class SubscriptionSet extends SubscribeCapable {
   protected subscriptionList: Subscription[] = [];
 
   /**
+   * Real-time events listener object associated with channels and groups of subscription object.
+   *
+   * Listener will be used to notify about updates received from the channels / groups.
+   *
+   * **Note:** this is different from {@link typeBasedListener} because it is passed as aggregated
+   * listener using {@link addListener} and {@link removeListener}. This listener will be passed to
+   * the added {@link Subscription} and {@link SubscriptionSet} if they will be added into already
+   * subscribed object.
+   *
+   * @internal
+   */
+  protected aggregatedListener?: Listener;
+
+  /**
+   * Unique identifier of aggregated listener registered for subscribe capable object.
+   *
+   * @internal.
+   */
+  protected aggregatedListenerId?: string;
+
+  /**
+   * Unique identifier of object associated listener.
+   *
+   * @internal.
+   */
+  protected typeBasedListenerId: string;
+
+  /**
    * Real-time events listener object associated with entities' subscription objects.
    *
    * Listener will be used to notify about updates received from the entities' channels / groups.
    *
    * @internal
    */
-  protected listener: Listener;
+  protected typeBasedListener: Listener;
 
   /**
    * Whether subscribed ({@link SubscribeCapable#subscribe}) automatically during subscription
@@ -137,8 +165,8 @@ export class SubscriptionSet extends SubscribeCapable {
       this.groupNames = [...this.groupNames, ...subscription.channelGroups];
       this.subscriptionList.push(subscription);
     });
-    this.listener = {};
-    eventEmitter.addListener(this.listener, this.channelNames, this.groupNames);
+    this.typeBasedListener = {};
+    this.typeBasedListenerId = eventEmitter.addListener(this.typeBasedListener, this.channelNames, this.groupNames);
   }
 
   /**
@@ -153,7 +181,15 @@ export class SubscriptionSet extends SubscribeCapable {
     this.subscriptionList.push(subscription);
     this.channelNames = [...this.channelNames, ...subscription.channels];
     this.groupNames = [...this.groupNames, ...subscription.channelGroups];
-    this.eventEmitter.addListener(this.listener, subscription.channels, subscription.channelGroups);
+    this.eventEmitter.addListener(
+      this.typeBasedListener,
+      subscription.channels,
+      subscription.channelGroups,
+      this.typeBasedListenerId,
+    );
+
+    // Make sure to listen events on channels / groups added with `subscription`.
+    this.updateListeners();
 
     // Subscribe subscription object if subscription set already subscribed.
     // @ts-expect-error: Required access of protected field.
@@ -178,7 +214,15 @@ export class SubscriptionSet extends SubscribeCapable {
     this.channelNames = this.channelNames.filter((c) => !channelsToRemove.includes(c));
     this.groupNames = this.groupNames.filter((cg) => !groupsToRemove.includes(cg));
     this.subscriptionList = this.subscriptionList.filter((s) => s !== subscription);
-    this.eventEmitter.removeListener(this.listener, channelsToRemove, groupsToRemove);
+    this.eventEmitter.removeListener(
+      this.typeBasedListener,
+      this.typeBasedListenerId,
+      channelsToRemove,
+      groupsToRemove,
+    );
+
+    // Make sure to stop listening for events from channels / groups removed with `subscription`.
+    this.updateListeners();
 
     // @ts-expect-error: Required access of protected field.
     if (subscription.subscribedAutomatically) subscription.unsubscribe();
@@ -196,7 +240,15 @@ export class SubscriptionSet extends SubscribeCapable {
     this.subscriptionList = [...this.subscriptionList, ...subscriptionSet.subscriptions];
     this.channelNames = [...this.channelNames, ...subscriptionSet.channels];
     this.groupNames = [...this.groupNames, ...subscriptionSet.channelGroups];
-    this.eventEmitter.addListener(this.listener, subscriptionSet.channels, subscriptionSet.channelGroups);
+    this.eventEmitter.addListener(
+      this.typeBasedListener,
+      subscriptionSet.channels,
+      subscriptionSet.channelGroups,
+      this.typeBasedListenerId,
+    );
+
+    // Make sure to listen events on channels / groups added with `subscription set`.
+    this.updateListeners();
 
     // Subscribe subscription object if subscription set already subscribed.
     if (this.subscribed && !subscriptionSet.subscribed) {
@@ -219,7 +271,15 @@ export class SubscriptionSet extends SubscribeCapable {
     this.channelNames = this.channelNames.filter((c) => !channelsToRemove.includes(c));
     this.groupNames = this.groupNames.filter((cg) => !groupsToRemove.includes(cg));
     this.subscriptionList = this.subscriptionList.filter((s) => !subscriptionSet.subscriptions.includes(s));
-    this.eventEmitter.removeListener(this.listener, channelsToRemove, groupsToRemove);
+    this.eventEmitter.removeListener(
+      this.typeBasedListener,
+      this.typeBasedListenerId,
+      channelsToRemove,
+      groupsToRemove,
+    );
+
+    // Make sure to stop listening for events from channels / groups removed with `subscription set`.
+    this.updateListeners();
 
     if (subscriptionSet.subscribedAutomatically) subscriptionSet.unsubscribe();
   }
@@ -231,5 +291,22 @@ export class SubscriptionSet extends SubscribeCapable {
    */
   get subscriptions(): Subscription[] {
     return this.subscriptionList.slice(0);
+  }
+
+  /**
+   * Update listeners for current {@link SubscriptionSet} state.
+   *
+   * When {@link Subscription} or {@link SubscriptionSet} added / removed it is **required** to
+   * update mapping of channels / groups (based on current {@link SubscriptionSet} state) to the
+   * event listeners.
+   *
+   * @internal
+   */
+  private updateListeners() {
+    if (!this.aggregatedListener) return;
+
+    const aggregatedListener = this.aggregatedListener;
+    this.removeListener(this.aggregatedListener);
+    this.addListener(aggregatedListener);
   }
 }

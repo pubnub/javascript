@@ -7,8 +7,8 @@
 import { ExtendedConfiguration, PlatformConfiguration, PrivateClientConfiguration } from '../interfaces/configuration';
 import { ICryptoModule, CryptorConfiguration } from '../interfaces/crypto-module';
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
-import uuidGenerator from './uuid';
 import { Payload } from '../types/api';
+import uuidGenerator from './uuid';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------

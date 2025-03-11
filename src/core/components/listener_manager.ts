@@ -110,8 +110,6 @@ export class ListenerManager {
    * @param listener - Listener with event callbacks to handle different types of events.
    */
   public addListener(listener: Listener) {
-    if (this.listeners.includes(listener)) return;
-
     this.listeners.push(listener);
   }
 
@@ -121,7 +119,8 @@ export class ListenerManager {
    * @param listener - Event listeners which should be removed.
    */
   public removeListener(listener: Listener) {
-    this.listeners = this.listeners.filter((storedListener) => storedListener !== listener);
+    const listenerIdx = this.listeners.indexOf(listener);
+    if (listenerIdx !== -1) this.listeners.splice(listenerIdx, 1);
   }
 
   /**

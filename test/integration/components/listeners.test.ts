@@ -4,6 +4,8 @@ import nock from 'nock';
 import * as Subscription from '../../../src/core/types/api/subscription';
 import PubNub from '../../../src/node/index';
 import utils from '../../utils';
+import { Status } from '../../../lib/types';
+import StatusCategory from '../../../src/core/constants/categories';
 
 let pubnub: PubNub;
 
@@ -300,16 +302,15 @@ describe('#listeners', () => {
         { 'content-type': 'text/javascript' },
       );
     const messages: Subscription.Message[] = [];
-    const channel = pubnub.channel('ch1');
-    const subscription = channel.subscription();
+    const subscription = pubnub.channel('ch1').subscription();
     const listener = { message: (m: Subscription.Message) => messages.push(m) };
     subscription.addListener(listener);
-    const messagePromise = new Promise<Subscription.Message>((resolveMessage) =>
+    const messagePromise = new Promise<Subscription.Message>((resolveMessage) => {
+      subscription.removeListener(listener);
       subscription.addListener({
         message: (m) => resolveMessage(m),
-      }),
-    );
-    subscription.removeListener(listener);
+      });
+    });
     subscription.subscribe();
     const actual = await messagePromise;
     expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
@@ -441,12 +442,12 @@ describe('#listeners', () => {
     const subscription = channel.subscription();
     const listener = { message: (m: Subscription.Message) => messages.push(m) };
     subscription.addListener(listener);
-    const messagePromise = new Promise<Subscription.Message>((resolveMessage) =>
+    const messagePromise = new Promise<Subscription.Message>((resolveMessage) => {
+      subscription.removeListener(listener);
       subscription.addListener({
         message: (m) => resolveMessage(m),
-      }),
-    );
-    subscription.removeListener(listener);
+      });
+    });
     subscription.subscribe();
     const actual = await messagePromise;
     expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');

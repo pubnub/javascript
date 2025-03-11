@@ -57,13 +57,34 @@ export class Subscription extends SubscribeCapable {
   protected eventEmitter: EventEmitter;
 
   /**
+   * Real-time events listener object associated with channels and groups of subscription object.
+   *
+   * Listener will be used to notify about updates received from the channels / groups.
+   *
+   * **Note:** this is different from {@link typeBasedListener} because it is passed as aggregated
+   * listener using {@link addListener} and {@link removeListener}. This listener will be passed to
+   * the added {@link Subscription} and {@link SubscriptionSet} if they will be added into already
+   * subscribed object.
+   *
+   * @internal
+   */
+  protected aggregatedListener?: Listener;
+
+  /**
+   * Unique identifier of aggregated listener registered for subscribe capable object.
+   *
+   * @internal.
+   */
+  protected aggregatedListenerId?: string;
+
+  /**
    * Real-time events listener object associated with entity subscription object.
    *
    * Listener will be used to notify about updates received from the entity channels / groups.
    *
    * @internal
    */
-  protected listener: Listener;
+  protected typeBasedListener: Listener;
 
   /**
    * Whether subscribed ({@link SubscribeCapable#subscribe}) automatically during subscription
@@ -113,8 +134,8 @@ export class Subscription extends SubscribeCapable {
     this.options = subscriptionOptions;
     this.pubnub = pubnub;
     this.eventEmitter = eventEmitter;
-    this.listener = {};
-    eventEmitter.addListener(this.listener, this.channelNames, this.groupNames);
+    this.typeBasedListener = {};
+    eventEmitter.addListener(this.typeBasedListener, this.channelNames, this.groupNames);
   }
 
   /**
@@ -140,6 +161,7 @@ export class Subscription extends SubscribeCapable {
         subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
       }
 
+      if (this.aggregatedListener) subscriptionSet.addListener(this.aggregatedListener);
       this.pubnub.registerSubscribeCapable(subscriptionSet);
       // @ts-expect-error: Required modification of protected field.
       subscriptionSet.subscribed = true;
