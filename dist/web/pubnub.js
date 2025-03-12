@@ -3171,6 +3171,10 @@
 	         * Whether subscription worker has been initialized and ready to handle events.
 	         */
 	        this.subscriptionWorkerReady = false;
+	        /**
+	         * Map of base64-encoded access tokens to their parsed representations.
+	         */
+	        this.accessTokensMap = {};
 	        this.workerEventsQueue = [];
 	        this.callbacks = new Map();
 	        this.setupSubscriptionWorker();
@@ -3208,7 +3212,9 @@
 	                // `onmessage` handler block to return results.
 	                this.callbacks.set(req.identifier, { resolve, reject });
 	                // Trigger request processing by Service Worker.
-	                this.scheduleEventPost(sendRequestEvent);
+	                this.parsedAccessTokenForRequest(req)
+	                    .then((accessToken) => (sendRequestEvent.token = accessToken))
+	                    .then(() => this.scheduleEventPost(sendRequestEvent));
 	            }),
 	            controller,
 	        ];
@@ -3363,6 +3369,71 @@
 	                reject(new PubNubAPIError(message, category, 0, new Error(message)));
 	            }
 	        }
+	    }
+	    /**
+	     * Get parsed access token object.
+	     *
+	     * @param req - Transport request which may contain access token for processing.
+	     *
+	     * @returns Object with stringified access token information and expiration date information.
+	     */
+	    parsedAccessTokenForRequest(req) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            var _a;
+	            const accessToken = req.queryParameters ? ((_a = req.queryParameters.auth) !== null && _a !== void 0 ? _a : '') : undefined;
+	            if (!accessToken)
+	                return undefined;
+	            else if (this.accessTokensMap[accessToken])
+	                return this.accessTokensMap[accessToken];
+	            return this.stringifyAccessToken(accessToken).then(([token, stringifiedToken]) => {
+	                if (!token || !stringifiedToken)
+	                    return undefined;
+	                return (this.accessTokensMap = {
+	                    [accessToken]: { token: stringifiedToken, expiration: token.timestamp * token.ttl * 60 },
+	                })[accessToken];
+	            });
+	        });
+	    }
+	    /**
+	     * Stringify access token content.
+	     *
+	     * Stringify information about resources with permissions.
+	     *
+	     * @param tokenString - Base64-encoded access token which should be parsed and stringified.
+	     *
+	     * @returns Tuple with parsed access token and its stringified content hash string.
+	     */
+	    stringifyAccessToken(tokenString) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            if (!this.configuration.tokenManager)
+	                return [undefined, undefined];
+	            const token = this.configuration.tokenManager.parseToken(tokenString);
+	            if (!token)
+	                return [undefined, undefined];
+	            // Translate permission to short string built from first chars of enabled permission.
+	            const stringifyPermissions = (permission) => Object.entries(permission)
+	                .filter(([_, v]) => v)
+	                .map(([k]) => k[0])
+	                .sort()
+	                .join('');
+	            const stringifyResources = (resource) => resource
+	                ? Object.entries(resource)
+	                    .sort(([a], [b]) => a.localeCompare(b))
+	                    .map(([type, entries]) => Object.entries(entries || {})
+	                    .sort(([a], [b]) => a.localeCompare(b))
+	                    .map(([name, perms]) => `${type}:${name}=${perms ? stringifyPermissions(perms) : ''}`)
+	                    .join(','))
+	                    .join(';')
+	                : '';
+	            let accessToken = [stringifyResources(token.resources), stringifyResources(token.patterns), token.authorized_uuid]
+	                .filter(Boolean)
+	                .join('|');
+	            if (typeof crypto !== 'undefined' && crypto.subtle) {
+	                const hash = yield crypto.subtle.digest('SHA-256', new TextEncoder().encode(accessToken));
+	                accessToken = String.fromCharCode(...new Uint8Array(hash));
+	            }
+	            return [token, typeof btoa !== 'undefined' ? btoa(accessToken) : accessToken];
+	        });
 	    }
 	    /**
 	     * Print request progress information.
@@ -14729,6 +14800,7 @@
 	                    workerUnsubscribeOfflineClients: platformConfiguration.subscriptionWorkerUnsubscribeOfflineClients,
 	                    logVerbosity: clientConfiguration.logVerbosity,
 	                    workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
+	                    tokenManager,
 	                    transport,
 	                });
 	            }
