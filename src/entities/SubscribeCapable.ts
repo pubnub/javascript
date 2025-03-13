@@ -34,13 +34,34 @@ export abstract class SubscribeCapable {
   protected abstract eventEmitter: EventEmitter;
 
   /**
+   * Real-time events listener object associated with channels and groups of subscription object.
+   *
+   * Listener will be used to notify about updates received from the channels / groups.
+   *
+   * **Note:** this is different from {@link typeBasedListener} because it is passed as aggregated
+   * listener using {@link addListener} and {@link removeListener}. This listener will be passed to
+   * the added {@link Subscription} and {@link SubscriptionSet} if they will be added into already
+   * subscribed object.
+   *
+   * @internal
+   */
+  protected abstract aggregatedListener?: Listener;
+
+  /**
+   * Unique identifier of aggregated listener registered for subscribe capable object.
+   *
+   * @internal.
+   */
+  protected abstract aggregatedListenerId?: string;
+
+  /**
    * Real-time events listener object associated with entity subscription object.
    *
    * Listener will be used to notify about updates received from the channels / groups.
    *
    * @internal
    */
-  protected abstract listener: Listener;
+  protected abstract typeBasedListener: Listener;
 
   /**
    * PubNub instance which will perform subscribe / unsubscribe requests.
@@ -112,7 +133,7 @@ export abstract class SubscribeCapable {
    * is received from the real-time network.
    */
   set onMessage(onMessageListener: (messageEvent: Subscription.Message) => void) {
-    this.listener.message = onMessageListener;
+    this.typeBasedListener.message = onMessageListener;
   }
 
   /**
@@ -122,7 +143,7 @@ export abstract class SubscribeCapable {
    * presence event is received from the real-time network.
    */
   set onPresence(onPresenceListener: (presenceEvent: Subscription.Presence) => void) {
-    this.listener.presence = onPresenceListener;
+    this.typeBasedListener.presence = onPresenceListener;
   }
 
   /**
@@ -132,7 +153,7 @@ export abstract class SubscribeCapable {
    * is received from the real-time network.
    */
   set onSignal(onSignalListener: (signalEvent: Subscription.Signal) => void) {
-    this.listener.signal = onSignalListener;
+    this.typeBasedListener.signal = onSignalListener;
   }
 
   /**
@@ -142,7 +163,7 @@ export abstract class SubscribeCapable {
    * app context event is received from the real-time network.
    */
   set onObjects(onObjectsListener: (objectsEvent: Subscription.AppContextObject) => void) {
-    this.listener.objects = onObjectsListener;
+    this.typeBasedListener.objects = onObjectsListener;
   }
 
   /**
@@ -152,7 +173,7 @@ export abstract class SubscribeCapable {
    * new message reaction event is received from the real-time network.
    */
   set onMessageAction(messageActionEventListener: (messageActionEvent: Subscription.MessageAction) => void) {
-    this.listener.messageAction = messageActionEventListener;
+    this.typeBasedListener.messageAction = messageActionEventListener;
   }
 
   /**
@@ -162,7 +183,7 @@ export abstract class SubscribeCapable {
    * is received from the real-time network.
    */
   set onFile(fileEventListener: (fileEvent: Subscription.File) => void) {
-    this.listener.file = fileEventListener;
+    this.typeBasedListener.file = fileEventListener;
   }
 
   /**
@@ -172,7 +193,9 @@ export abstract class SubscribeCapable {
    * types of events.
    */
   addListener(listener: Listener) {
-    this.eventEmitter.addListener(listener, this.channelNames, this.groupNames);
+    if (this.aggregatedListener && this.aggregatedListener !== listener) this.removeListener(this.aggregatedListener);
+    this.aggregatedListenerId = this.eventEmitter.addListener(listener, this.channelNames, this.groupNames);
+    this.aggregatedListener = listener;
   }
 
   /**
@@ -183,7 +206,11 @@ export abstract class SubscribeCapable {
    * {@link addListener}.
    */
   removeListener(listener: Listener) {
-    this.eventEmitter.removeListener(listener, this.channelNames, this.groupNames);
+    if (!this.aggregatedListener) return;
+
+    this.eventEmitter.removeListener(listener, this.aggregatedListenerId, this.channelNames, this.groupNames);
+    this.aggregatedListenerId = undefined;
+    this.aggregatedListener = undefined;
   }
 
   /**

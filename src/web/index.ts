@@ -112,6 +112,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
           workerUnsubscribeOfflineClients: platformConfiguration.subscriptionWorkerUnsubscribeOfflineClients!,
           logVerbosity: clientConfiguration.logVerbosity!,
           workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity!,
+          tokenManager,
           transport,
         });
       }

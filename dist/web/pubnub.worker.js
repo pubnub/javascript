@@ -759,6 +759,12 @@
             // Update request `state` (if required).
             if (Object.keys(aggregatedState).length)
                 request.queryParameters['state'] = JSON.stringify(aggregatedState);
+            // Update `auth` key (if required).
+            if (request.queryParameters && request.queryParameters.auth) {
+                const authKey = authKeyForAggregatedClientsRequest(clients);
+                if (authKey)
+                    request.queryParameters.auth = authKey;
+            }
         }
         else {
             serviceRequests[serviceRequestId] = {
@@ -1286,6 +1292,7 @@
         client.origin = event.request.origin;
         client.userId = query.uuid;
         client.pnsdk = query.pnsdk;
+        client.accessToken = event.token;
         handleClientIdentityChangeIfRequired(client, userId, authKey);
     };
     /**
@@ -1394,7 +1401,7 @@
     const unsubscribeClient = (client) => {
         if (!client.subscription)
             return;
-        const { channels, channelGroups } = client.subscription;
+        const { channels, channelGroups, serviceRequestId } = client.subscription;
         const encodedChannelGroups = (channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])
             .filter((name) => !name.endsWith('-pnpres'))
             .map((name) => encodeString(name))
@@ -1403,6 +1410,10 @@
             .filter((name) => !name.endsWith('-pnpres'))
             .map((name) => encodeString(name))
             .sort();
+        if (serviceRequestId) {
+            delete client.subscription.serviceRequestId;
+            cancelRequest(serviceRequestId);
+        }
         if (encodedChannels.length === 0 && encodedChannelGroups.length === 0)
             return;
         const channelGroupsString = encodedChannelGroups.length > 0 ? encodedChannelGroups.join(',') : undefined;
@@ -1512,13 +1523,16 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
      * @returns List of PubNub client states which works from other pages for the same user.
      */
     const clientsForSendSubscribeRequestEvent = (timetoken, event) => {
-        var _a, _b, _c;
+        var _a, _b;
+        const reqClient = pubNubClients[event.clientIdentifier];
+        if (!reqClient)
+            return [];
         const query = event.request.queryParameters;
+        const authKey = clientAggregateAuthKey(reqClient);
         const filterExpression = ((_a = query['filter-expr']) !== null && _a !== void 0 ? _a : '');
-        const authKey = ((_b = query.auth) !== null && _b !== void 0 ? _b : '');
         const userId = query.uuid;
-        return ((_c = pubNubClientsBySubscriptionKey[event.subscriptionKey]) !== null && _c !== void 0 ? _c : []).filter((client) => client.userId === userId &&
-            client.authKey === authKey &&
+        return ((_b = pubNubClientsBySubscriptionKey[event.subscriptionKey]) !== null && _b !== void 0 ? _b : []).filter((client) => client.userId === userId &&
+            clientAggregateAuthKey(client) === authKey &&
             client.subscription &&
             // Only clients with active subscription can be used.
             (client.subscription.channels.length !== 0 || client.subscription.channelGroups.length !== 0) &&
@@ -1553,11 +1567,14 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
      * @returns List of PubNub client states which works from other pages for the same user.
      */
     const clientsForSendLeaveRequestEvent = (event) => {
-        var _a, _b;
+        var _a;
+        const reqClient = pubNubClients[event.clientIdentifier];
+        if (!reqClient)
+            return [];
         const query = event.request.queryParameters;
-        const authKey = ((_a = query.auth) !== null && _a !== void 0 ? _a : '');
+        const authKey = reqClient.authKey;
         const userId = query.uuid;
-        return ((_b = pubNubClientsBySubscriptionKey[event.subscriptionKey]) !== null && _b !== void 0 ? _b : []).filter((client) => client.userId === userId && client.authKey === authKey);
+        return ((_a = pubNubClientsBySubscriptionKey[event.subscriptionKey]) !== null && _a !== void 0 ? _a : []).filter((client) => client.userId === userId && clientAggregateAuthKey(client) === authKey);
     };
     /**
      * Extract list of channels from request URI path.
@@ -1626,6 +1643,31 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
         }
     };
     /**
+     * Retrieve auth key which is suitable for common clients request aggregation.
+     *
+     * @param client - Client for which auth key for aggregation should be retrieved.
+     *
+     * @returns Client aggregation auth key.
+     */
+    const clientAggregateAuthKey = (client) => {
+        var _a;
+        return client.accessToken ? ((_a = client.accessToken.token) !== null && _a !== void 0 ? _a : client.authKey) : client.authKey;
+    };
+    /**
+     * Pick auth key for clients with latest expiration date.
+     *
+     * @param clients - List of clients for which latest auth key should be retrieved.
+     *
+     * @returns Access token which can be used to confirm `userId` permissions for aggregated request.
+     */
+    const authKeyForAggregatedClientsRequest = (clients) => {
+        const latestClient = clients
+            .filter((client) => !!client.accessToken)
+            .sort((a, b) => a.accessToken.expiration - b.accessToken.expiration)
+            .pop();
+        return latestClient ? latestClient.authKey : undefined;
+    };
+    /**
      * Compose clients' aggregation key.
      *
      * Aggregation key includes key parameters which differentiate clients between each other.
@@ -1635,7 +1677,8 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
      * @returns Aggregation timeout identifier string.
      */
     const aggregateTimerId = (client) => {
-        let id = `${client.userId}-${client.subscriptionKey}${client.authKey ? `-${client.authKey}` : ''}`;
+        const authKey = clientAggregateAuthKey(client);
+        let id = `${client.userId}-${client.subscriptionKey}${authKey ? `-${authKey}` : ''}`;
         if (client.subscription && client.subscription.filterExpression)
             id += `-${client.subscription.filterExpression}`;
         return id;

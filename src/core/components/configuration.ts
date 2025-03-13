@@ -7,8 +7,8 @@
 import { ExtendedConfiguration, PlatformConfiguration, PrivateClientConfiguration } from '../interfaces/configuration';
 import { ICryptoModule, CryptorConfiguration } from '../interfaces/crypto-module';
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
-import uuidGenerator from './uuid';
 import { Payload } from '../types/api';
+import uuidGenerator from './uuid';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -178,7 +178,7 @@ export const makeConfiguration = (
       return base.PubNubFile;
     },
     get version(): string {
-      return '9.0.0';
+      return '9.1.0';
     },
     getVersion(): string {
       return this.version;

@@ -7,6 +7,7 @@
 import { Listener, ListenerManager } from './listener_manager';
 import * as Subscription from '../types/api/subscription';
 import { PubNubEventType } from '../endpoints/subscribe';
+import uuidGenerator from './uuid';
 
 /**
  * Real-time events' emitter.
@@ -20,12 +21,12 @@ export default class EventEmitter {
   /**
    * Map of channels to listener callbacks for them.
    */
-  private readonly channelListenerMap: Map<string, Listener[]> = new Map();
+  private readonly channelListenerMap: Map<string, { id: string; listener: Listener }[]> = new Map();
 
   /**
    * Map of channel group names to the listener callbacks for them.
    */
-  private readonly groupListenerMap: Map<string, Listener[]> = new Map();
+  private readonly groupListenerMap: Map<string, { id: string; listener: Listener }[]> = new Map();
 
   constructor(private readonly listenerManager: ListenerManager) {}
 
@@ -116,10 +117,15 @@ export default class EventEmitter {
    * Register real-time event listener for specific channels and groups.
    *
    * @param listener - Listener with event callbacks to handle different types of events.
-   * @param channels - List of channels for which listener should be registered.
-   * @param groups - List of channel groups for which listener should be registered.
+   * @param [channels] - List of channels for which listener should be registered.
+   * @param [groups] - List of channel groups for which listener should be registered.
+   * @param [listenerId] - Unique listener identifier which is used to update previous setup.
+   *
+   * @returns Registered listener identifier.
    */
-  public addListener(listener: Listener, channels?: string[], groups?: string[]) {
+  public addListener(listener: Listener, channels?: string[], groups?: string[], listenerId?: string): string {
+    listenerId ??= uuidGenerator.createUUID() as string;
+
     // Register event-listener listener globally.
     if (!(channels && groups)) {
       this.listenerManager.addListener(listener);
@@ -127,45 +133,48 @@ export default class EventEmitter {
       channels?.forEach((channel) => {
         if (this.channelListenerMap.has(channel)) {
           const channelListeners = this.channelListenerMap.get(channel)!;
-          if (!channelListeners.includes(listener)) channelListeners.push(listener);
-        } else this.channelListenerMap.set(channel, [listener]);
+          channelListeners.push({ id: listenerId, listener });
+        } else this.channelListenerMap.set(channel, [{ id: listenerId, listener }]);
       });
 
       groups?.forEach((group) => {
         if (this.groupListenerMap.has(group)) {
           const groupListeners = this.groupListenerMap.get(group)!;
-          if (!groupListeners.includes(listener)) groupListeners.push(listener);
-        } else this.groupListenerMap.set(group, [listener]);
+          groupListeners.push({ id: listenerId, listener });
+        } else this.groupListenerMap.set(group, [{ id: listenerId, listener }]);
       });
     }
+
+    return listenerId;
   }
 
   /**
    * Remove real-time event listener.
    *
    * @param listener - Event listeners which should be removed.
+   * @param listenerId - Unique listener identifier assigned to it during addition.
    * @param channels - List of channels for which listener should be removed.
    * @param groups - List of channel groups for which listener should be removed.
    */
-  public removeListener(listener: Listener, channels?: string[], groups?: string[]) {
+  public removeListener(listener: Listener, listenerId?: string, channels?: string[], groups?: string[]) {
     if (!(channels && groups)) {
       this.listenerManager.removeListener(listener);
     } else {
       channels?.forEach((channel) => {
-        if (this.channelListenerMap.has(channel)) {
-          this.channelListenerMap.set(
-            channel,
-            this.channelListenerMap.get(channel)!.filter((channelListener) => channelListener !== listener),
-          );
+        const channelListeners = this.channelListenerMap.get(channel);
+        if (channelListeners) {
+          const listenerObject = channelListeners.find((listenerObject) => listenerObject.id === listenerId);
+          const listenerIdx = listenerObject ? channelListeners.indexOf(listenerObject) : -1;
+          if (listenerIdx !== -1) channelListeners.splice(listenerIdx, 1);
         }
       });
 
       groups?.forEach((group) => {
-        if (this.groupListenerMap.has(group)) {
-          this.groupListenerMap.set(
-            group,
-            this.groupListenerMap.get(group)!.filter((groupListener) => groupListener !== listener),
-          );
+        const groupListeners = this.groupListenerMap.get(group);
+        if (groupListeners) {
+          const listenerObject = groupListeners.find((listenerObject) => listenerObject.id === listenerId);
+          const listenerIdx = listenerObject ? groupListeners.indexOf(listenerObject) : -1;
+          if (listenerIdx !== -1) groupListeners.splice(listenerIdx, 1);
         }
       });
     }
@@ -195,15 +204,15 @@ export default class EventEmitter {
     group?: string | null,
   ) {
     if (event && this.channelListenerMap.has(channel))
-      this.channelListenerMap.get(channel)!.forEach((listener) => {
-        const typedListener = listener[type];
+      this.channelListenerMap.get(channel)!.forEach((listenerObject) => {
+        const typedListener = listenerObject.listener[type];
         // @ts-expect-error Dynamic events mapping.
         if (typedListener) typedListener(event);
       });
 
     if (group && this.groupListenerMap.has(group))
-      this.groupListenerMap.get(group)!.forEach((listener) => {
-        const typedListener = listener[type];
+      this.groupListenerMap.get(group)!.forEach((listenerObject) => {
+        const typedListener = listenerObject.listener[type];
         // @ts-expect-error Dynamic events mapping.
         if (typedListener) typedListener(event);
       });

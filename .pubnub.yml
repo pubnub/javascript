@@ -1,5 +1,14 @@
 ---
 changelog:
+  - date: 2025-03-13
+    version: v9.1.0
+    changes:
+      - type: feature
+        text: "`SubscriptionSet` will re-add listener every time when `Subscription` or `SubscriptionSet` added to it - this will let receive updates from newly added subscribe capable objects."
+      - type: bug
+        text: "Fix issue because of errors returned by `fetch` taken from `iframe` (to protect against monkey-patching by APM packages) was't handled as Error."
+      - type: improvement
+        text: "Use access token (auth key) content instead of base64 encoded token to identify PubNub clients, which can be used for requests aggregation."
   - date: 2025-03-10
     version: v9.0.0
     changes:
@@ -1169,7 +1178,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.0.0'
+version: '9.1.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1185,7 +1194,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.0.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.1.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1856,7 +1865,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.0.0/pubnub.9.0.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.1.0/pubnub.9.1.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

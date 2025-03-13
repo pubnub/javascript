@@ -1,3 +1,15 @@
+## v9.1.0
+March 13 2025
+
+#### Added
+- `SubscriptionSet` will re-add listener every time when `Subscription` or `SubscriptionSet` added to it - this will let receive updates from newly added subscribe capable objects.
+
+#### Fixed
+- Fix issue because of errors returned by `fetch` taken from `iframe` (to protect against monkey-patching by APM packages) was't handled as Error.
+
+#### Modified
+- Use access token (auth key) content instead of base64 encoded token to identify PubNub clients, which can be used for requests aggregation.
+
 ## v9.0.0
 March 10 2025
 
