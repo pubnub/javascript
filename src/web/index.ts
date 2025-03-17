@@ -101,7 +101,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
     if (process.env.SHARED_WORKER !== 'disabled') {
       if (configurationCopy.subscriptionWorkerUrl) {
         // Inject subscription worker into transport provider stack.
-        transport = new SubscriptionWorkerMiddleware({
+        const middleware = new SubscriptionWorkerMiddleware({
           clientIdentifier: clientConfiguration._instanceId,
           subscriptionKey: clientConfiguration.subscribeKey,
           userId: clientConfiguration.getUserId(),
@@ -115,6 +115,11 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
           tokenManager,
           transport,
         });
+        transport = middleware;
+
+        window.onpagehide = (event: PageTransitionEvent) => {
+          if (!event.persisted) middleware.terminate();
+        };
       }
     }
 

@@ -152,6 +152,10 @@ export const makeConfiguration = (
     getUseRandomIVs(): boolean | undefined {
       return base.useRandomIVs;
     },
+    getKeepPresenceChannelsInPresenceRequests(): boolean {
+      // @ts-expect-error: Access field from web-based SDK configuration.
+      return base.sdkFamily === 'Web' && base['subscriptionWorkerUrl'];
+    },
     setPresenceTimeout(value: number): void {
       this.heartbeatInterval = value / 2 - 1;
       this.presenceTimeout = value;
