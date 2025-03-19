@@ -608,6 +608,15 @@ export interface PrivateClientConfiguration
   getCryptoModule(): ICryptoModule | undefined;
 
   /**
+   * Whether `-pnpres` should not be filtered out from list of channels / groups in presence-related requests or not.
+   *
+   * This option required and set to `true` for Shared Worker setup to properly update client's state.
+   *
+   * @returns `true` if `-pnpres` channels and groups shouldn't be removed before sending request.
+   */
+  getKeepPresenceChannelsInPresenceRequests(): boolean;
+
+  /**
    * Retrieve user's presence timeout.
    *
    * @returns User's presence timeout value.

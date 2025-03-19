@@ -153,7 +153,7 @@
      */
     const subscribeAggregationTimeout = 50;
     /**
-     * Map of PubNub client subscription keys to the started aggregation timeout timers.
+     * Map of clients aggregation keys to the started aggregation timeout timers with client and event information.
      */
     const aggregationTimers = new Map();
     // region State
@@ -232,6 +232,8 @@
                     registerClientIfRequired(data);
                     consoleLog(`Client '${data.clientIdentifier}' registered with '${sharedWorkerIdentifier}' shared worker`);
                 }
+                else if (data.type === 'client-unregister')
+                    unRegisterClient(data);
                 else if (data.type === 'client-pong')
                     handleClientPong(data);
                 else if (data.type === 'send-request') {
@@ -241,19 +243,19 @@
                         if (client) {
                             // Check whether there are more clients which may schedule next subscription loop and they need to be
                             // aggregated or not.
-                            if (hasClientsForSendAggregatedSubscribeRequestEvent(client, data)) {
-                                const timerIdentifier = aggregateTimerId(client);
-                                // Check whether we need to start new aggregation timer or not.
-                                if (!aggregationTimers.has(timerIdentifier)) {
-                                    const aggregationTimer = setTimeout(() => {
-                                        handleSendSubscribeRequestEvent(data);
-                                        aggregationTimers.delete(timerIdentifier);
-                                    }, subscribeAggregationTimeout);
-                                    aggregationTimers.set(timerIdentifier, aggregationTimer);
-                                }
+                            const timerIdentifier = aggregateTimerId(client);
+                            let enqueuedClients = [];
+                            if (aggregationTimers.has(timerIdentifier))
+                                enqueuedClients = aggregationTimers.get(timerIdentifier)[0];
+                            enqueuedClients.push([client, data]);
+                            // Check whether we need to start new aggregation timer or not.
+                            if (!aggregationTimers.has(timerIdentifier)) {
+                                const aggregationTimer = setTimeout(() => {
+                                    handleSendSubscribeRequestEventForClients(enqueuedClients, data);
+                                    aggregationTimers.delete(timerIdentifier);
+                                }, subscribeAggregationTimeout);
+                                aggregationTimers.set(timerIdentifier, [enqueuedClients, aggregationTimer]);
                             }
-                            else
-                                handleSendSubscribeRequestEvent(data);
                         }
                     }
                     else if (data.request.path.endsWith('/heartbeat')) {
@@ -270,20 +272,37 @@
         });
     };
     /**
-     * Handle client request to send subscription request.
+     * Handle aggregated clients request to send subscription request.
      *
+     * @param clients - List of aggregated clients which would like to send subscription requests.
      * @param event - Subscription event details.
      */
-    const handleSendSubscribeRequestEvent = (event) => {
-        var _a;
+    const handleSendSubscribeRequestEventForClients = (clients, event) => {
         const requestOrId = subscribeTransportRequestFromEvent(event);
         const client = pubNubClients[event.clientIdentifier];
+        if (!client)
+            return;
+        // Getting rest of aggregated clients.
+        clients = clients.filter((aggregatedClient) => aggregatedClient[0].clientIdentifier !== client.clientIdentifier);
+        handleSendSubscribeRequestForClient(client, event, requestOrId, true);
+        clients.forEach(([aggregatedClient, clientEvent]) => handleSendSubscribeRequestForClient(aggregatedClient, clientEvent, requestOrId, false));
+    };
+    /**
+     * Handle subscribe request by single client.
+     *
+     * @param client - Client which processes `request`.
+     * @param event - Subscription event details.
+     * @param requestOrId - New aggregated request object or its identifier (if already scheduled).
+     * @param requestOrigin - Whether `client` is the one who triggered subscribe request or not.
+     */
+    const handleSendSubscribeRequestForClient = (client, event, requestOrId, requestOrigin) => {
+        var _a;
         let isInitialSubscribe = false;
-        if (client) {
-            if (client.subscription)
-                isInitialSubscribe = client.subscription.timetoken === '0';
-            notifyRequestProcessing('start', [client], new Date().toISOString(), event.request);
-        }
+        if (!requestOrigin && typeof requestOrId !== 'string')
+            requestOrId = requestOrId.identifier;
+        if (client.subscription)
+            isInitialSubscribe = client.subscription.timetoken === '0';
+        notifyRequestProcessing('start', [client], new Date().toISOString(), event.request);
         if (typeof requestOrId === 'string') {
             const scheduledRequest = serviceRequests[requestOrId];
             if (client) {
@@ -382,7 +401,7 @@
         const request = heartbeatTransportRequestFromEvent(event);
         if (!client)
             return;
-        const heartbeatRequestKey = `${client.userId}_${(_a = client.authKey) !== null && _a !== void 0 ? _a : ''}`;
+        const heartbeatRequestKey = `${client.userId}_${(_a = clientAggregateAuthKey(client)) !== null && _a !== void 0 ? _a : ''}`;
         const hbRequestsBySubscriptionKey = serviceHeartbeatRequests[client.subscriptionKey];
         const hbRequests = (hbRequestsBySubscriptionKey !== null && hbRequestsBySubscriptionKey !== void 0 ? hbRequestsBySubscriptionKey : {})[heartbeatRequestKey];
         notifyRequestProcessing('start', [client], new Date().toISOString(), request);
@@ -526,13 +545,14 @@
         }
         if (!request || !clientWithRequest)
             return;
-        handleSendSubscribeRequestEvent({
+        const sendRequest = {
             type: 'send-request',
             clientIdentifier: clientWithRequest.clientIdentifier,
             subscriptionKey: clientWithRequest.subscriptionKey,
             logVerbosity: clientWithRequest.logVerbosity,
             request,
-        });
+        };
+        handleSendSubscribeRequestEventForClients([[clientWithRequest, sendRequest]], sendRequest);
     };
     // endregion
     // --------------------------------------------------------
@@ -816,7 +836,7 @@
         if (!client || !client.heartbeat)
             return undefined;
         const hbRequestsBySubscriptionKey = ((_a = serviceHeartbeatRequests[_e = client.subscriptionKey]) !== null && _a !== void 0 ? _a : (serviceHeartbeatRequests[_e] = {}));
-        const heartbeatRequestKey = `${client.userId}_${(_b = client.authKey) !== null && _b !== void 0 ? _b : ''}`;
+        const heartbeatRequestKey = `${client.userId}_${(_b = clientAggregateAuthKey(client)) !== null && _b !== void 0 ? _b : ''}`;
         const channelGroupsForAnnouncement = client.heartbeat.channelGroups;
         const channelsForAnnouncement = client.heartbeat.channels;
         let aggregatedState;
@@ -882,6 +902,12 @@
             request.queryParameters['state'] = JSON.stringify(aggregatedState);
         else
             delete request.queryParameters['state'];
+        // Update `auth` key (if required).
+        if (clients.length > 1 && request.queryParameters && request.queryParameters.auth) {
+            const aggregatedAuthKey = authKeyForAggregatedClientsRequest(clients);
+            if (aggregatedAuthKey)
+                request.queryParameters.auth = aggregatedAuthKey;
+        }
         return request;
     };
     /**
@@ -924,10 +950,15 @@
             if (client.clientIdentifier === event.clientIdentifier)
                 continue;
             if (channels.length)
-                channels = channels.filter((channel) => !subscription.channels.includes(channel));
+                channels = channels.filter((channel) => !channel.endsWith('-pnpres') && !subscription.channels.includes(channel));
             if (channelGroups.length)
-                channelGroups = channelGroups.filter((group) => !subscription.channelGroups.includes(group));
+                channelGroups = channelGroups.filter((group) => !group.endsWith('-pnpres') && !subscription.channelGroups.includes(group));
         }
+        // Clean up from presence channels and groups
+        if (channels.length)
+            channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+        if (channelGroups.length)
+            channelGroups = channelGroups.filter((group) => !group.endsWith('-pnpres'));
         if (channels.length === 0 && channelGroups.length === 0) {
             if (client && client.workerLogVerbosity) {
                 const clientIds = clients
@@ -949,6 +980,12 @@
         // Update request channel groups list (if required).
         if (channelGroups.length)
             request.queryParameters['channel-group'] = channelGroups.join(',');
+        // Update `auth` key (if required).
+        if (clients.length > 1 && request.queryParameters && request.queryParameters.auth) {
+            const aggregatedAuthKey = authKeyForAggregatedClientsRequest(clients);
+            if (aggregatedAuthKey)
+                request.queryParameters.auth = aggregatedAuthKey;
+        }
         return request;
     };
     /**
@@ -1215,8 +1252,19 @@
             const interval = event.workerOfflineClientsCheckInterval;
             for (const _client of clientsBySubscriptionKey)
                 consoleLog(`Setup PubNub client ping event ${interval} seconds`, _client);
-            pingTimeouts[event.subscriptionKey] = setTimeout(() => pingClients(subscriptionKey), interval * 500 - 1);
+            pingTimeouts[subscriptionKey] = setTimeout(() => pingClients(subscriptionKey), interval * 500 - 1);
         }
+    };
+    /**
+     * Unregister client if it uses Service Worker before.
+     *
+     * During registration removal client information will be removed from the Shared Worker and
+     * long-poll request will be cancelled if possible.
+     *
+     * @param event - Base information about PubNub client instance and Service Worker {@link Client}.
+     */
+    const unRegisterClient = (event) => {
+        invalidateClient(event.subscriptionKey, event.clientIdentifier);
     };
     /**
      * Update information about previously registered client.
@@ -1333,11 +1381,11 @@
      * @param authKey - `authKey` which has been used by `PubNub` client before state refresh.
      */
     const handleClientIdentityChangeIfRequired = (client, userId, authKey) => {
-        var _a, _b;
+        var _a, _b, _c;
         if (!client || (userId === client.userId && (authKey !== null && authKey !== void 0 ? authKey : '') === ((_a = client.authKey) !== null && _a !== void 0 ? _a : '')))
             return;
         const _heartbeatRequests = (_b = serviceHeartbeatRequests[client.subscriptionKey]) !== null && _b !== void 0 ? _b : {};
-        const heartbeatRequestKey = `${userId}_${authKey !== null && authKey !== void 0 ? authKey : ''}`;
+        const heartbeatRequestKey = `${userId}_${(_c = clientAggregateAuthKey(client)) !== null && _c !== void 0 ? _c : ''}`;
         if (_heartbeatRequests[heartbeatRequestKey] !== undefined)
             delete _heartbeatRequests[heartbeatRequestKey];
     };
@@ -1365,8 +1413,18 @@
         delete pubNubClients[clientId];
         let clients = pubNubClientsBySubscriptionKey[subscriptionKey];
         // Unsubscribe invalidated PubNub client.
-        if (invalidatedClient && invalidatedClient.unsubscribeOfflineClients)
-            unsubscribeClient(invalidatedClient);
+        if (invalidatedClient) {
+            // Cancel long-poll request if possible.
+            if (invalidatedClient.subscription) {
+                const { serviceRequestId } = invalidatedClient.subscription;
+                delete invalidatedClient.subscription.serviceRequestId;
+                if (serviceRequestId)
+                    cancelRequest(serviceRequestId);
+            }
+            // Leave subscribed channels / groups properly.
+            if (invalidatedClient.unsubscribeOfflineClients)
+                unsubscribeClient(invalidatedClient);
+        }
         if (clients) {
             // Clean up linkage between client and subscription key.
             clients = clients.filter((client) => client.clientIdentifier !== clientId);
@@ -1410,10 +1468,6 @@
             .filter((name) => !name.endsWith('-pnpres'))
             .map((name) => encodeString(name))
             .sort();
-        if (serviceRequestId) {
-            delete client.subscription.serviceRequestId;
-            cancelRequest(serviceRequestId);
-        }
         if (encodedChannels.length === 0 && encodedChannelGroups.length === 0)
             return;
         const channelGroupsString = encodedChannelGroups.length > 0 ? encodedChannelGroups.join(',') : undefined;
@@ -1495,18 +1549,6 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
         return undefined;
     };
     /**
-     * Check whether there are any clients which can be used for subscribe request aggregation or not.
-     *
-     * @param client - PubNub client state which will be checked.
-     * @param event - Send subscribe request event information.
-     *
-     * @returns `true` in case there is more than 1 client which has same parameters for subscribe request to aggregate.
-     */
-    const hasClientsForSendAggregatedSubscribeRequestEvent = (client, event) => {
-        var _a, _b;
-        return clientsForSendSubscribeRequestEvent((_b = ((_a = client.subscription) !== null && _a !== void 0 ? _a : {}).timetoken) !== null && _b !== void 0 ? _b : '0', event).length > 1;
-    };
-    /**
      * Find PubNub client states with configuration compatible with the one in request.
      *
      * Method allow to find information about all PubNub client instances which use same:
@@ -1572,7 +1614,7 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
         if (!reqClient)
             return [];
         const query = event.request.queryParameters;
-        const authKey = reqClient.authKey;
+        const authKey = clientAggregateAuthKey(reqClient);
         const userId = query.uuid;
         return ((_a = pubNubClientsBySubscriptionKey[event.subscriptionKey]) !== null && _a !== void 0 ? _a : []).filter((client) => client.userId === userId && clientAggregateAuthKey(client) === authKey);
     };

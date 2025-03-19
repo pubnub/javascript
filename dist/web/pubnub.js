@@ -3179,6 +3179,17 @@
 	        this.callbacks = new Map();
 	        this.setupSubscriptionWorker();
 	    }
+	    /**
+	     * Terminate all ongoing long-poll requests.
+	     */
+	    terminate() {
+	        this.scheduleEventPost({
+	            type: 'client-unregister',
+	            clientIdentifier: this.configuration.clientIdentifier,
+	            subscriptionKey: this.configuration.subscriptionKey,
+	            logVerbosity: this.configuration.logVerbosity,
+	        });
+	    }
 	    makeSendable(req) {
 	        // Use default request flow for non-subscribe / presence leave requests.
 	        if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/heartbeat') && !req.path.endsWith('/leave'))
@@ -3430,7 +3441,7 @@
 	                .join('|');
 	            if (typeof crypto !== 'undefined' && crypto.subtle) {
 	                const hash = yield crypto.subtle.digest('SHA-256', new TextEncoder().encode(accessToken));
-	                accessToken = String.fromCharCode(...new Uint8Array(hash));
+	                accessToken = String.fromCharCode(...Array.from(new Uint8Array(hash)));
 	            }
 	            return [token, typeof btoa !== 'undefined' ? btoa(accessToken) : accessToken];
 	        });
@@ -3891,6 +3902,10 @@
 	        getUseRandomIVs() {
 	            return base.useRandomIVs;
 	        },
+	        getKeepPresenceChannelsInPresenceRequests() {
+	            // @ts-expect-error: Access field from web-based SDK configuration.
+	            return base.sdkFamily === 'Web' && base['subscriptionWorkerUrl'];
+	        },
 	        setPresenceTimeout(value) {
 	            this.heartbeatInterval = value / 2 - 1;
 	            this.presenceTimeout = value;
@@ -3917,7 +3932,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.1.0';
+	            return '9.2.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -13593,10 +13608,13 @@
 	        {
 	            // Filtering out presence channels and groups.
 	            let { channels, channelGroups } = parameters;
-	            if (channelGroups)
-	                channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
-	            if (channels)
-	                channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+	            // Remove `-pnpres` channels / groups if they not acceptable in current PubNub client configuration.
+	            if (!this._configuration.getKeepPresenceChannelsInPresenceRequests()) {
+	                if (channelGroups)
+	                    channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
+	                if (channels)
+	                    channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+	            }
 	            // Complete immediately request only for presence channels.
 	            if ((channelGroups !== null && channelGroups !== void 0 ? channelGroups : []).length === 0 && (channels !== null && channels !== void 0 ? channels : []).length === 0) {
 	                return callback({
@@ -13959,10 +13977,13 @@
 	            {
 	                // Filtering out presence channels and groups.
 	                let { channels, channelGroups } = parameters;
-	                if (channelGroups)
-	                    channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
-	                if (channels)
-	                    channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+	                // Remove `-pnpres` channels / groups if they not acceptable in current PubNub client configuration.
+	                if (!this._configuration.getKeepPresenceChannelsInPresenceRequests()) {
+	                    if (channelGroups)
+	                        channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
+	                    if (channels)
+	                        channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+	                }
 	                // Complete immediately request only for presence channels.
 	                if ((channelGroups !== null && channelGroups !== void 0 ? channelGroups : []).length === 0 && (channels !== null && channels !== void 0 ? channels : []).length === 0) {
 	                    const responseStatus = {
@@ -14789,7 +14810,7 @@
 	        {
 	            if (configurationCopy.subscriptionWorkerUrl) {
 	                // Inject subscription worker into transport provider stack.
-	                transport = new SubscriptionWorkerMiddleware({
+	                const middleware = new SubscriptionWorkerMiddleware({
 	                    clientIdentifier: clientConfiguration._instanceId,
 	                    subscriptionKey: clientConfiguration.subscribeKey,
 	                    userId: clientConfiguration.getUserId(),
@@ -14803,6 +14824,11 @@
 	                    tokenManager,
 	                    transport,
 	                });
+	                transport = middleware;
+	                window.onpagehide = (event) => {
+	                    if (!event.persisted)
+	                        middleware.terminate();
+	                };
 	            }
 	        }
 	        const transportMiddleware = new PubNubMiddleware({

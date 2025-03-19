@@ -1240,8 +1240,12 @@ export class PubNubCore<
     if (process.env.PRESENCE_MODULE !== 'disabled') {
       // Filtering out presence channels and groups.
       let { channels, channelGroups } = parameters;
-      if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
-      if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+
+      // Remove `-pnpres` channels / groups if they not acceptable in current PubNub client configuration.
+      if (!this._configuration.getKeepPresenceChannelsInPresenceRequests()) {
+        if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
+        if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+      }
 
       // Complete immediately request only for presence channels.
       if ((channelGroups ?? []).length === 0 && (channels ?? []).length === 0) {
@@ -1931,8 +1935,12 @@ export class PubNubCore<
     if (process.env.PRESENCE_MODULE !== 'disabled') {
       // Filtering out presence channels and groups.
       let { channels, channelGroups } = parameters;
-      if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
-      if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+
+      // Remove `-pnpres` channels / groups if they not acceptable in current PubNub client configuration.
+      if (!this._configuration.getKeepPresenceChannelsInPresenceRequests()) {
+        if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
+        if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
+      }
 
       // Complete immediately request only for presence channels.
       if ((channelGroups ?? []).length === 0 && (channels ?? []).length === 0) {

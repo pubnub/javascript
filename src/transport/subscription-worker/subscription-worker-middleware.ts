@@ -133,6 +133,18 @@ export class SubscriptionWorkerMiddleware implements Transport {
     this.setupSubscriptionWorker();
   }
 
+  /**
+   * Terminate all ongoing long-poll requests.
+   */
+  terminate() {
+    this.scheduleEventPost({
+      type: 'client-unregister',
+      clientIdentifier: this.configuration.clientIdentifier,
+      subscriptionKey: this.configuration.subscriptionKey,
+      logVerbosity: this.configuration.logVerbosity,
+    });
+  }
+
   makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
     // Use default request flow for non-subscribe / presence leave requests.
     if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/heartbeat') && !req.path.endsWith('/leave'))
@@ -409,7 +421,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
 
     if (typeof crypto !== 'undefined' && crypto.subtle) {
       const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(accessToken));
-      accessToken = String.fromCharCode(...new Uint8Array(hash));
+      accessToken = String.fromCharCode(...Array.from(new Uint8Array(hash)));
     }
 
     return [token, typeof btoa !== 'undefined' ? btoa(accessToken) : accessToken];

@@ -1,3 +1,12 @@
+## v9.2.0
+March 19 2025
+
+#### Added
+- On `pagehide` without `bfcache` client on page will send `terminate` to Shared Worker for early long-poll request termination and `leave` request sending (if configured).
+
+#### Fixed
+- Fix an issue with the client's state update in Shared Worker caused by `-pnpres` suffixed entries being removed from heartbeat / leave request channels and groups.
+
 ## v9.1.0
 March 13 2025
 
