@@ -425,6 +425,11 @@ type PubNubClientState = {
   heartbeatInterval?: number;
 
   /**
+   * Whether instance registered for the first time or not.
+   */
+  newlyRegistered: boolean;
+
+  /**
    * Whether verbose logging enabled or not.
    */
   logVerbosity: boolean;
@@ -932,6 +937,7 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent) => {
   if (!request) {
     consoleLog(
       `Previous heartbeat request has been sent less than ${client.heartbeatInterval} seconds ago. Skipping...`,
+      client,
     );
 
     let response: Response | undefined;
@@ -1472,38 +1478,43 @@ const heartbeatTransportRequestFromEvent = (event: SendRequestEvent): TransportR
     const { channels, channelGroups, response } = hbRequestsBySubscriptionKey[heartbeatRequestKey];
     aggregatedState = client.heartbeat.presenceState ?? {};
     aggregated =
-      includesStrings(channels, client.heartbeat.channels) &&
-      includesStrings(channelGroups, client.heartbeat.channelGroups);
+      includesStrings(channels, channelsForAnnouncement) &&
+      includesStrings(channelGroups, channelGroupsForAnnouncement);
     if (response) failedPreviousRequest = response[0].status >= 400;
+  }
+
+  // Find minimum heartbeat interval which maybe required to use.
+  let minimumHeartbeatInterval = client.heartbeatInterval!;
+  for (const client of clients) {
+    if (client.heartbeatInterval)
+      minimumHeartbeatInterval = Math.min(minimumHeartbeatInterval, client.heartbeatInterval);
   }
 
   if (aggregated) {
     const expectedTimestamp =
-      hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp + client.heartbeatInterval! * 1000;
+      hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp + minimumHeartbeatInterval * 1000;
     const currentTimestamp = Date.now();
 
     // Check whether it is too soon to send request or not (5 is leeway which let send request a bit earlier).
     // Request should be sent if previous attempt failed.
     if (!failedPreviousRequest && currentTimestamp < expectedTimestamp && expectedTimestamp - currentTimestamp > 5000)
       return undefined;
+  }
 
-    delete hbRequestsBySubscriptionKey[heartbeatRequestKey].response;
+  delete hbRequestsBySubscriptionKey[heartbeatRequestKey]!.response;
 
-    // Aggregate channels for similar clients which is pending for heartbeat.
-    for (const client of clients) {
-      const { heartbeat } = client;
-      if (heartbeat === undefined || client.clientIdentifier === event.clientIdentifier) continue;
+  // Aggregate channels for similar clients which is pending for heartbeat.
+  for (const client of clients) {
+    const { heartbeat } = client;
+    if (heartbeat === undefined || client.clientIdentifier === event.clientIdentifier) continue;
 
-      // Append presence state from the client (will override previously set value if already set).
-      if (heartbeat.presenceState) aggregatedState = { ...aggregatedState, ...heartbeat.presenceState };
+    // Append presence state from the client (will override previously set value if already set).
+    if (heartbeat.presenceState) aggregatedState = { ...aggregatedState, ...heartbeat.presenceState };
 
-      channelGroupsForAnnouncement.push(
-        ...heartbeat.channelGroups.filter((channel) => !channelGroupsForAnnouncement.includes(channel)),
-      );
-      channelsForAnnouncement.push(
-        ...heartbeat.channels.filter((channel) => !channelsForAnnouncement.includes(channel)),
-      );
-    }
+    channelGroupsForAnnouncement.push(
+      ...heartbeat.channelGroups.filter((channel) => !channelGroupsForAnnouncement.includes(channel)),
+    );
+    channelsForAnnouncement.push(...heartbeat.channels.filter((channel) => !channelsForAnnouncement.includes(channel)));
   }
 
   hbRequestsBySubscriptionKey[heartbeatRequestKey].channels = channelsForAnnouncement;
@@ -1910,6 +1921,7 @@ const registerClientIfRequired = (event: RegisterEvent) => {
     subscriptionKey: event.subscriptionKey,
     userId: event.userId,
     heartbeatInterval: event.heartbeatInterval,
+    newlyRegistered: true,
     logVerbosity: event.logVerbosity,
     offlineClientsCheckInterval: event.workerOfflineClientsCheckInterval,
     unsubscribeOfflineClients: event.workerUnsubscribeOfflineClients,
@@ -2027,7 +2039,8 @@ const updateClientSubscribeStateIfRequired = (event: SendRequestEvent) => {
     subscription.channelGroups = channelGroupsFromRequest(event.request);
   }
 
-  const { authKey, userId } = client;
+  let { authKey } = client;
+  const { userId } = client;
   subscription.request = event.request;
   subscription.filterExpression = (query['filter-expr'] ?? '') as string;
   subscription.timetoken = (query.tt ?? '0') as string;
@@ -2037,6 +2050,9 @@ const updateClientSubscribeStateIfRequired = (event: SendRequestEvent) => {
   client.userId = query.uuid as string;
   client.pnsdk = query.pnsdk as string;
   client.accessToken = event.token;
+
+  if (client.newlyRegistered && !authKey && client.authKey) authKey = client.authKey;
+  client.newlyRegistered = false;
 
   handleClientIdentityChangeIfRequired(client, userId, authKey);
 };
