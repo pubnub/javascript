@@ -3645,7 +3645,7 @@
 	        }
 	        else if (configurationCopy.presenceTimeout <= 0) {
 	            // eslint-disable-next-line no-console
-	            console.warn('WARNING: Presence timeout is larger than zero.');
+	            console.warn('WARNING: Presence timeout should be larger than zero.');
 	            delete configurationCopy.presenceTimeout;
 	        }
 	    }
@@ -3939,7 +3939,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.2.0';
+	            return '9.3.0';
 	        },
 	        getVersion() {
 	            return this.version;
