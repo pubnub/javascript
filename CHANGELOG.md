@@ -1,3 +1,12 @@
+## v9.3.0
+March 20 2025
+
+#### Added
+- Remove minimum limit for presence timeout (was 20 seconds) to make it possible specify shorter intervals.
+
+#### Fixed
+- Fix issue because of which channels not aggregated and caused separate heartbeat requests.
+
 ## v9.2.0
 March 19 2025
 

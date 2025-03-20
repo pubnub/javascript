@@ -1,5 +1,12 @@
 ---
 changelog:
+  - date: 2025-03-20
+    version: v9.3.0
+    changes:
+      - type: feature
+        text: "Remove minimum limit for presence timeout (was 20 seconds) to make it possible specify shorter intervals."
+      - type: bug
+        text: "Fix issue because of which channels not aggregated and caused separate heartbeat requests."
   - date: 2025-03-19
     version: v9.2.0
     changes:
@@ -1185,7 +1192,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.2.0'
+version: '9.3.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1201,7 +1208,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.2.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.3.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1872,7 +1879,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.2.0/pubnub.9.2.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.3.0/pubnub.9.3.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

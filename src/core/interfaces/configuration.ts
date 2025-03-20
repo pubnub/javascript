@@ -115,9 +115,9 @@ const FILE_REQUEST_TIMEOUT = 300;
 const PRESENCE_TIMEOUT = 300;
 
 /**
- * Minimum user presence timeout.
+ * Maximum user presence timeout.
  */
-const PRESENCE_TIMEOUT_MINIMUM = 20;
+const PRESENCE_TIMEOUT_MAXIMUM = 320;
 // endregion
 
 /**
@@ -786,10 +786,19 @@ export const setDefaults = (configuration: UserConfiguration): ExtendedConfigura
     secretKey: configurationCopy.secretKey,
   };
 
-  if (configurationCopy.presenceTimeout !== undefined && configurationCopy.presenceTimeout < PRESENCE_TIMEOUT_MINIMUM) {
-    configurationCopy.presenceTimeout = PRESENCE_TIMEOUT_MINIMUM;
-    // eslint-disable-next-line no-console
-    console.log('WARNING: Presence timeout is less than the minimum. Using minimum value: ', PRESENCE_TIMEOUT_MINIMUM);
+  if (configurationCopy.presenceTimeout !== undefined) {
+    if (configurationCopy.presenceTimeout > PRESENCE_TIMEOUT_MAXIMUM) {
+      configurationCopy.presenceTimeout = PRESENCE_TIMEOUT_MAXIMUM;
+      // eslint-disable-next-line no-console
+      console.warn(
+        'WARNING: Presence timeout is larger than the maximum. Using maximum value: ',
+        PRESENCE_TIMEOUT_MAXIMUM,
+      );
+    } else if (configurationCopy.presenceTimeout <= 0) {
+      // eslint-disable-next-line no-console
+      console.warn('WARNING: Presence timeout should be larger than zero.');
+      delete configurationCopy.presenceTimeout;
+    }
   }
 
   if (configurationCopy.presenceTimeout !== undefined)

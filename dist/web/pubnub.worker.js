@@ -406,7 +406,7 @@
         const hbRequests = (hbRequestsBySubscriptionKey !== null && hbRequestsBySubscriptionKey !== void 0 ? hbRequestsBySubscriptionKey : {})[heartbeatRequestKey];
         notifyRequestProcessing('start', [client], new Date().toISOString(), request);
         if (!request) {
-            consoleLog(`Previous heartbeat request has been sent less than ${client.heartbeatInterval} seconds ago. Skipping...`);
+            consoleLog(`Previous heartbeat request has been sent less than ${client.heartbeatInterval} seconds ago. Skipping...`, client);
             let response;
             let body;
             // Pulling out previous response.
@@ -855,30 +855,36 @@
             const { channels, channelGroups, response } = hbRequestsBySubscriptionKey[heartbeatRequestKey];
             aggregatedState = (_d = client.heartbeat.presenceState) !== null && _d !== void 0 ? _d : {};
             aggregated =
-                includesStrings(channels, client.heartbeat.channels) &&
-                    includesStrings(channelGroups, client.heartbeat.channelGroups);
+                includesStrings(channels, channelsForAnnouncement) &&
+                    includesStrings(channelGroups, channelGroupsForAnnouncement);
             if (response)
                 failedPreviousRequest = response[0].status >= 400;
         }
+        // Find minimum heartbeat interval which maybe required to use.
+        let minimumHeartbeatInterval = client.heartbeatInterval;
+        for (const client of clients) {
+            if (client.heartbeatInterval)
+                minimumHeartbeatInterval = Math.min(minimumHeartbeatInterval, client.heartbeatInterval);
+        }
         if (aggregated) {
-            const expectedTimestamp = hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp + client.heartbeatInterval * 1000;
+            const expectedTimestamp = hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp + minimumHeartbeatInterval * 1000;
             const currentTimestamp = Date.now();
             // Check whether it is too soon to send request or not (5 is leeway which let send request a bit earlier).
             // Request should be sent if previous attempt failed.
             if (!failedPreviousRequest && currentTimestamp < expectedTimestamp && expectedTimestamp - currentTimestamp > 5000)
                 return undefined;
-            delete hbRequestsBySubscriptionKey[heartbeatRequestKey].response;
-            // Aggregate channels for similar clients which is pending for heartbeat.
-            for (const client of clients) {
-                const { heartbeat } = client;
-                if (heartbeat === undefined || client.clientIdentifier === event.clientIdentifier)
-                    continue;
-                // Append presence state from the client (will override previously set value if already set).
-                if (heartbeat.presenceState)
-                    aggregatedState = Object.assign(Object.assign({}, aggregatedState), heartbeat.presenceState);
-                channelGroupsForAnnouncement.push(...heartbeat.channelGroups.filter((channel) => !channelGroupsForAnnouncement.includes(channel)));
-                channelsForAnnouncement.push(...heartbeat.channels.filter((channel) => !channelsForAnnouncement.includes(channel)));
-            }
+        }
+        delete hbRequestsBySubscriptionKey[heartbeatRequestKey].response;
+        // Aggregate channels for similar clients which is pending for heartbeat.
+        for (const client of clients) {
+            const { heartbeat } = client;
+            if (heartbeat === undefined || client.clientIdentifier === event.clientIdentifier)
+                continue;
+            // Append presence state from the client (will override previously set value if already set).
+            if (heartbeat.presenceState)
+                aggregatedState = Object.assign(Object.assign({}, aggregatedState), heartbeat.presenceState);
+            channelGroupsForAnnouncement.push(...heartbeat.channelGroups.filter((channel) => !channelGroupsForAnnouncement.includes(channel)));
+            channelsForAnnouncement.push(...heartbeat.channels.filter((channel) => !channelsForAnnouncement.includes(channel)));
         }
         hbRequestsBySubscriptionKey[heartbeatRequestKey].channels = channelsForAnnouncement;
         hbRequestsBySubscriptionKey[heartbeatRequestKey].channelGroups = channelGroupsForAnnouncement;
@@ -1231,6 +1237,7 @@
             subscriptionKey: event.subscriptionKey,
             userId: event.userId,
             heartbeatInterval: event.heartbeatInterval,
+            newlyRegistered: true,
             logVerbosity: event.logVerbosity,
             offlineClientsCheckInterval: event.workerOfflineClientsCheckInterval,
             unsubscribeOfflineClients: event.workerUnsubscribeOfflineClients,
@@ -1330,7 +1337,8 @@
             subscription.channelGroupQuery = channelGroupQuery;
             subscription.channelGroups = channelGroupsFromRequest(event.request);
         }
-        const { authKey, userId } = client;
+        let { authKey } = client;
+        const { userId } = client;
         subscription.request = event.request;
         subscription.filterExpression = ((_j = query['filter-expr']) !== null && _j !== void 0 ? _j : '');
         subscription.timetoken = ((_k = query.tt) !== null && _k !== void 0 ? _k : '0');
@@ -1341,6 +1349,9 @@
         client.userId = query.uuid;
         client.pnsdk = query.pnsdk;
         client.accessToken = event.token;
+        if (client.newlyRegistered && !authKey && client.authKey)
+            authKey = client.authKey;
+        client.newlyRegistered = false;
         handleClientIdentityChangeIfRequired(client, userId, authKey);
     };
     /**
