@@ -404,7 +404,7 @@
         const heartbeatRequestKey = `${client.userId}_${(_a = clientAggregateAuthKey(client)) !== null && _a !== void 0 ? _a : ''}`;
         const hbRequestsBySubscriptionKey = serviceHeartbeatRequests[client.subscriptionKey];
         const hbRequests = (hbRequestsBySubscriptionKey !== null && hbRequestsBySubscriptionKey !== void 0 ? hbRequestsBySubscriptionKey : {})[heartbeatRequestKey];
-        notifyRequestProcessing('start', [client], new Date().toISOString(), request);
+        notifyRequestProcessing('start', [client], new Date().toISOString(), event.request);
         if (!request) {
             consoleLog(`Previous heartbeat request has been sent less than ${client.heartbeatInterval} seconds ago. Skipping...`, client);
             let response;
@@ -446,22 +446,31 @@
      * @param [client] - Specific client to handle leave request.
      */
     const handleSendLeaveRequestEvent = (data, client) => {
+        var _a, _b;
+        var _c;
         client = client !== null && client !== void 0 ? client : pubNubClients[data.clientIdentifier];
         const request = leaveTransportRequestFromEvent(data);
         if (!client)
             return;
         // Clean up client subscription information if there is no more channels / groups to use.
-        const { subscription } = client;
+        const { subscription, heartbeat } = client;
         const serviceRequestId = subscription === null || subscription === void 0 ? void 0 : subscription.serviceRequestId;
-        if (subscription) {
-            if (subscription.channels.length === 0 && subscription.channelGroups.length === 0) {
-                subscription.channelGroupQuery = '';
-                subscription.path = '';
-                subscription.previousTimetoken = '0';
-                subscription.timetoken = '0';
-                delete subscription.region;
-                delete subscription.serviceRequestId;
-                delete subscription.request;
+        if (subscription && subscription.channels.length === 0 && subscription.channelGroups.length === 0) {
+            subscription.channelGroupQuery = '';
+            subscription.path = '';
+            subscription.previousTimetoken = '0';
+            subscription.timetoken = '0';
+            delete subscription.region;
+            delete subscription.serviceRequestId;
+            delete subscription.request;
+        }
+        if (serviceHeartbeatRequests[client.subscriptionKey]) {
+            if (heartbeat && heartbeat.channels.length === 0 && heartbeat.channelGroups.length === 0) {
+                const hbRequestsBySubscriptionKey = ((_a = serviceHeartbeatRequests[_c = client.subscriptionKey]) !== null && _a !== void 0 ? _a : (serviceHeartbeatRequests[_c] = {}));
+                const heartbeatRequestKey = `${client.userId}_${(_b = clientAggregateAuthKey(client)) !== null && _b !== void 0 ? _b : ''}`;
+                if (hbRequestsBySubscriptionKey[heartbeatRequestKey] &&
+                    hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier === client.clientIdentifier)
+                    delete hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier;
             }
         }
         if (!request) {
@@ -837,8 +846,8 @@
             return undefined;
         const hbRequestsBySubscriptionKey = ((_a = serviceHeartbeatRequests[_e = client.subscriptionKey]) !== null && _a !== void 0 ? _a : (serviceHeartbeatRequests[_e] = {}));
         const heartbeatRequestKey = `${client.userId}_${(_b = clientAggregateAuthKey(client)) !== null && _b !== void 0 ? _b : ''}`;
-        const channelGroupsForAnnouncement = client.heartbeat.channelGroups;
-        const channelsForAnnouncement = client.heartbeat.channels;
+        const channelGroupsForAnnouncement = [...client.heartbeat.channelGroups];
+        const channelsForAnnouncement = [...client.heartbeat.channels];
         let aggregatedState;
         let failedPreviousRequest = false;
         let aggregated;
@@ -846,6 +855,7 @@
             hbRequestsBySubscriptionKey[heartbeatRequestKey] = {
                 channels: channelsForAnnouncement,
                 channelGroups: channelGroupsForAnnouncement,
+                clientIdentifier: client.clientIdentifier,
                 timestamp: Date.now(),
             };
             aggregatedState = (_c = client.heartbeat.presenceState) !== null && _c !== void 0 ? _c : {};
@@ -866,7 +876,10 @@
             if (client.heartbeatInterval)
                 minimumHeartbeatInterval = Math.min(minimumHeartbeatInterval, client.heartbeatInterval);
         }
-        if (aggregated) {
+        // Check whether multiple instance aggregate heartbeat and there is previous sender known.
+        // `clientIdentifier` maybe empty in case if client which triggered heartbeats before has been invalidated and new
+        // should handle heartbeat unconditionally.
+        if (aggregated && hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier) {
             const expectedTimestamp = hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp + minimumHeartbeatInterval * 1000;
             const currentTimestamp = Date.now();
             // Check whether it is too soon to send request or not (5 is leeway which let send request a bit earlier).
@@ -875,10 +888,11 @@
                 return undefined;
         }
         delete hbRequestsBySubscriptionKey[heartbeatRequestKey].response;
+        hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier = client.clientIdentifier;
         // Aggregate channels for similar clients which is pending for heartbeat.
-        for (const client of clients) {
-            const { heartbeat } = client;
-            if (heartbeat === undefined || client.clientIdentifier === event.clientIdentifier)
+        for (const _client of clients) {
+            const { heartbeat } = _client;
+            if (heartbeat === undefined || _client.clientIdentifier === event.clientIdentifier)
                 continue;
             // Append presence state from the client (will override previously set value if already set).
             if (heartbeat.presenceState)
@@ -894,10 +908,13 @@
             if (!channelsForAnnouncement.includes(objectName) && !channelGroupsForAnnouncement.includes(objectName))
                 delete aggregatedState[objectName];
         }
+        // No need to try send request with empty list of channels and groups.
+        if (channelsForAnnouncement.length === 0 && channelGroupsForAnnouncement.length === 0)
+            return undefined;
         // Update request channels list (if required).
-        if (channelsForAnnouncement.length) {
+        if (channelsForAnnouncement.length || channelGroupsForAnnouncement.length) {
             const pathComponents = request.path.split('/');
-            pathComponents[6] = channelsForAnnouncement.join(',');
+            pathComponents[6] = channelsForAnnouncement.length ? channelsForAnnouncement.join(',') : ',';
             request.path = pathComponents.join('/');
         }
         // Update request channel groups list (if required).
@@ -927,6 +944,7 @@
      * done.
      */
     const leaveTransportRequestFromEvent = (event) => {
+        var _a;
         const client = pubNubClients[event.clientIdentifier];
         const clients = clientsForSendLeaveRequestEvent(event);
         let channelGroups = channelGroupsFromRequest(event.request);
@@ -976,6 +994,20 @@
                 consoleLog(`Specified channels and groups still in use by other clients: ${clientIds}. Ignoring leave request.`, client);
             }
             return undefined;
+        }
+        // Update aggregated heartbeat state object.
+        if (client && serviceHeartbeatRequests[client.subscriptionKey] && (channels.length || channelGroups.length)) {
+            const hbRequestsBySubscriptionKey = serviceHeartbeatRequests[client.subscriptionKey];
+            const heartbeatRequestKey = `${client.userId}_${(_a = clientAggregateAuthKey(client)) !== null && _a !== void 0 ? _a : ''}`;
+            if (hbRequestsBySubscriptionKey[heartbeatRequestKey]) {
+                let { channels: hbChannels, channelGroups: hbChannelGroups } = hbRequestsBySubscriptionKey[heartbeatRequestKey];
+                if (channelGroups.length)
+                    hbChannelGroups = hbChannelGroups.filter((group) => !channels.includes(group));
+                if (channels.length)
+                    hbChannels = hbChannels.filter((channel) => !channels.includes(channel));
+                hbRequestsBySubscriptionKey[heartbeatRequestKey].channelGroups = hbChannelGroups;
+                hbRequestsBySubscriptionKey[heartbeatRequestKey].channels = hbChannels;
+            }
         }
         // Update request channels list (if required).
         if (channels.length) {
@@ -1419,7 +1451,7 @@
      * @param clientId - Unique PubNub client identifier.
      */
     const invalidateClient = (subscriptionKey, clientId) => {
-        var _a;
+        var _a, _b, _c;
         const invalidatedClient = pubNubClients[clientId];
         delete pubNubClients[clientId];
         let clients = pubNubClientsBySubscriptionKey[subscriptionKey];
@@ -1431,6 +1463,13 @@
                 delete invalidatedClient.subscription.serviceRequestId;
                 if (serviceRequestId)
                     cancelRequest(serviceRequestId);
+            }
+            if (serviceHeartbeatRequests[subscriptionKey]) {
+                const hbRequestsBySubscriptionKey = ((_a = serviceHeartbeatRequests[subscriptionKey]) !== null && _a !== void 0 ? _a : (serviceHeartbeatRequests[subscriptionKey] = {}));
+                const heartbeatRequestKey = `${invalidatedClient.userId}_${(_b = clientAggregateAuthKey(invalidatedClient)) !== null && _b !== void 0 ? _b : ''}`;
+                if (hbRequestsBySubscriptionKey[heartbeatRequestKey] &&
+                    hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier === invalidatedClient.clientIdentifier)
+                    delete hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier;
             }
             // Leave subscribed channels / groups properly.
             if (invalidatedClient.unsubscribeOfflineClients)
@@ -1460,7 +1499,7 @@
             else
                 delete sharedWorkerClients[subscriptionKey];
         }
-        const message = `Invalidate '${clientId}' client. '${((_a = pubNubClientsBySubscriptionKey[subscriptionKey]) !== null && _a !== void 0 ? _a : []).length}' clients currently active.`;
+        const message = `Invalidate '${clientId}' client. '${((_c = pubNubClientsBySubscriptionKey[subscriptionKey]) !== null && _c !== void 0 ? _c : []).length}' clients currently active.`;
         if (!clients)
             consoleLog(message);
         else
