@@ -155,18 +155,14 @@ export class SubscriptionSet extends SubscribeCapable {
     this.options = subscriptionOptions;
     this.eventEmitter = eventEmitter;
     this.pubnub = pubnub;
-    channels.forEach((c) => {
-      const subscription = this.pubnub.channel(c).subscription(this.options);
-      this.channelNames = [...this.channelNames, ...subscription.channels];
-      this.subscriptionList.push(subscription);
-    });
-    channelGroups.forEach((cg) => {
-      const subscription = this.pubnub.channelGroup(cg).subscription(this.options);
-      this.groupNames = [...this.groupNames, ...subscription.channelGroups];
-      this.subscriptionList.push(subscription);
-    });
+
+    channels.forEach((c) => this.subscriptionList.push(this.pubnub.channel(c).subscription(this.options)));
+    channelGroups.forEach((cg) => this.subscriptionList.push(this.pubnub.channelGroup(cg).subscription(this.options)));
+
     this.typeBasedListener = {};
     this.typeBasedListenerId = eventEmitter.addListener(this.typeBasedListener, this.channelNames, this.groupNames);
+
+    this.updateListeners();
   }
 
   /**
@@ -178,15 +174,7 @@ export class SubscriptionSet extends SubscribeCapable {
    * @param subscription - Other entity's subscription object, which should be added.
    */
   addSubscription(subscription: Subscription) {
-    this.subscriptionList.push(subscription);
-    this.channelNames = [...this.channelNames, ...subscription.channels];
-    this.groupNames = [...this.groupNames, ...subscription.channelGroups];
-    this.eventEmitter.addListener(
-      this.typeBasedListener,
-      subscription.channels,
-      subscription.channelGroups,
-      this.typeBasedListenerId,
-    );
+    if (!this.subscriptionList.includes(subscription)) this.subscriptionList.push(subscription);
 
     // Make sure to listen events on channels / groups added with `subscription`.
     this.updateListeners();
@@ -209,17 +197,7 @@ export class SubscriptionSet extends SubscribeCapable {
    * @param subscription - Other entity's subscription object, which should be removed.
    */
   removeSubscription(subscription: Subscription) {
-    const channelsToRemove = subscription.channels;
-    const groupsToRemove = subscription.channelGroups;
-    this.channelNames = this.channelNames.filter((c) => !channelsToRemove.includes(c));
-    this.groupNames = this.groupNames.filter((cg) => !groupsToRemove.includes(cg));
-    this.subscriptionList = this.subscriptionList.filter((s) => s !== subscription);
-    this.eventEmitter.removeListener(
-      this.typeBasedListener,
-      this.typeBasedListenerId,
-      channelsToRemove,
-      groupsToRemove,
-    );
+    this.subscriptionList = this.subscriptionList.filter((sub) => sub !== subscription);
 
     // Make sure to stop listening for events from channels / groups removed with `subscription`.
     this.updateListeners();
@@ -237,15 +215,7 @@ export class SubscriptionSet extends SubscribeCapable {
    * @param subscriptionSet - Other entities' subscription set, which should be joined.
    */
   addSubscriptionSet(subscriptionSet: SubscriptionSet) {
-    this.subscriptionList = [...this.subscriptionList, ...subscriptionSet.subscriptions];
-    this.channelNames = [...this.channelNames, ...subscriptionSet.channels];
-    this.groupNames = [...this.groupNames, ...subscriptionSet.channelGroups];
-    this.eventEmitter.addListener(
-      this.typeBasedListener,
-      subscriptionSet.channels,
-      subscriptionSet.channelGroups,
-      this.typeBasedListenerId,
-    );
+    this.subscriptionList = Array.from(new Set([...this.subscriptionList, ...subscriptionSet.subscriptions]));
 
     // Make sure to listen events on channels / groups added with `subscription set`.
     this.updateListeners();
@@ -266,17 +236,7 @@ export class SubscriptionSet extends SubscribeCapable {
    * @param subscriptionSet - Other entities' subscription set, which should be subtracted.
    */
   removeSubscriptionSet(subscriptionSet: SubscriptionSet) {
-    const channelsToRemove = subscriptionSet.channels;
-    const groupsToRemove = subscriptionSet.channelGroups;
-    this.channelNames = this.channelNames.filter((c) => !channelsToRemove.includes(c));
-    this.groupNames = this.groupNames.filter((cg) => !groupsToRemove.includes(cg));
-    this.subscriptionList = this.subscriptionList.filter((s) => !subscriptionSet.subscriptions.includes(s));
-    this.eventEmitter.removeListener(
-      this.typeBasedListener,
-      this.typeBasedListenerId,
-      channelsToRemove,
-      groupsToRemove,
-    );
+    this.subscriptionList = this.subscriptionList.filter((sub) => !subscriptionSet.subscriptions.includes(sub));
 
     // Make sure to stop listening for events from channels / groups removed with `subscription set`.
     this.updateListeners();
@@ -303,10 +263,43 @@ export class SubscriptionSet extends SubscribeCapable {
    * @internal
    */
   private updateListeners() {
-    if (!this.aggregatedListener) return;
+    // Actual list of channels and groups.
+    const channelGroups: string[] = [];
+    const channels: string[] = [];
+
+    // Gather actual information about active channels / groups.
+    this.subscriptionList.forEach((subscription) => {
+      if (subscription.channelGroups.length) channelGroups.push(...subscription.channelGroups);
+      if (subscription.channels.length) channels.push(...subscription.channels);
+    });
+
+    // Identify channels / groups which should be added / removed.
+    const channelsToRemove = this.channelNames.filter((channel) => !channels.includes(channel));
+    const groupsToRemove = this.groupNames.filter((group) => !channelGroups.includes(group));
+    const channelsToAdd = channels.filter((channel) => !this.channelNames.includes(channel));
+    const groupsToAdd = channelGroups.filter((group) => !this.groupNames.includes(group));
+
+    // Removing type-based listener for unused channels / groups.
+    if (channelsToRemove.length || groupsToRemove.length) {
+      this.eventEmitter.removeListener(
+        this.typeBasedListener,
+        this.typeBasedListenerId,
+        channelsToRemove,
+        groupsToRemove,
+      );
+    }
+
+    // Adding type-based listener for unused channels / groups.
+    if (channelsToAdd.length || groupsToAdd.length)
+      this.eventEmitter.addListener(this.typeBasedListener, channelsToAdd, groupsToAdd, this.typeBasedListenerId);
 
     const aggregatedListener = this.aggregatedListener;
-    this.removeListener(this.aggregatedListener);
-    this.addListener(aggregatedListener);
+    if (aggregatedListener) this.removeListener(aggregatedListener);
+
+    // Set actual list of channels and groups.
+    this.groupNames = channelGroups;
+    this.channelNames = channels;
+
+    if (aggregatedListener) this.addListener(aggregatedListener);
   }
 }
