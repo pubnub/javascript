@@ -2484,7 +2484,7 @@ declare namespace PubNub {
      */
     presenceTimeout?: number;
     /**
-     * How often the client will announce itself to server.The value is in seconds.
+     * How often the client will announce itself to server. The value is in seconds.
      *
      * @default `not set`
      */
