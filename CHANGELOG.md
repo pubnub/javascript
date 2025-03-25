@@ -1,3 +1,9 @@
+## v9.3.1
+March 25 2025
+
+#### Fixed
+- Fix issue because of which channels and groups aggregated inside PubNub client state objects and didn't clean up properly on unsubscribe / invalidate.
+
 ## v9.3.0
 March 20 2025
 
