@@ -23,7 +23,7 @@ type MessageAction = MessageActions.AddMessageActionParameters['action'];
  */
 function publishMessages(client: PubNub, count: number, channel: string, completion: (timetokens: string[]) => void) {
   let publishCompleted = 0;
-  let timetokens: string[] = [];
+  const timetokens: string[] = [];
 
   const publish = (messageIdx: number) => {
     const message = { messageIdx, time: Date.now() };
@@ -77,8 +77,8 @@ function addActions(
     PubNub.generateUUID(),
     PubNub.generateUUID(),
   ];
-  let actionsToAdd: { messageTimetoken: string; action: MessageAction }[] = [];
-  let timetokens: string[] = [];
+  const actionsToAdd: { messageTimetoken: string; action: MessageAction }[] = [];
+  const timetokens: string[] = [];
   let actionsAdded = 0;
 
   for (let messageIdx = 0; messageIdx < messageTimetokens.length; messageIdx += 1) {
@@ -114,7 +114,9 @@ function addActions(
       if (actionsAdded < actionsToAdd.length) {
         addAction(actionsAdded);
       } else if (actionsAdded === actionsToAdd.length) {
-        completion(timetokens.sort((left, right) => parseInt(left, 10) - parseInt(right, 10)));
+        setTimeout(() => {
+          completion(timetokens.sort((left, right) => parseInt(left, 10) - parseInt(right, 10)));
+        }, 500);
       }
     });
   };
@@ -168,7 +170,7 @@ describe('message actions endpoints', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Missing Action");
+              assert.equal(err.status.message, 'Missing Action');
               done();
             } catch (error) {
               done(error);
@@ -194,7 +196,7 @@ describe('message actions endpoints', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Missing Action.type");
+              assert.equal(err.status.message, 'Missing Action.type');
               done();
             } catch (error) {
               done(error);
@@ -219,7 +221,7 @@ describe('message actions endpoints', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Action.type value exceed maximum length of 15");
+              assert.equal(err.status.message, 'Action.type value exceed maximum length of 15');
               done();
             } catch (error) {
               done(error);
@@ -245,7 +247,7 @@ describe('message actions endpoints', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Missing Action.value");
+              assert.equal(err.status.message, 'Missing Action.value');
               done();
             } catch (error) {
               done(error);
@@ -270,7 +272,7 @@ describe('message actions endpoints', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Missing message timetoken");
+              assert.equal(err.status.message, 'Missing message timetoken');
               done();
             } catch (error) {
               done(error);
@@ -295,7 +297,7 @@ describe('message actions endpoints', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Missing message channel");
+              assert.equal(err.status.message, 'Missing message channel');
               done();
             } catch (error) {
               done(error);
@@ -423,7 +425,7 @@ describe('message actions endpoints', () => {
             assert.equal(messageActionEvent.data.uuid, pubnub.getUUID());
             assert.equal(messageActionEvent.data.messageTimetoken, messageTimetoken);
             assert(messageActionEvent.data.actionTimetoken);
-            assert.equal(messageActionEvent.event, "added");
+            assert.equal(messageActionEvent.event, 'added');
             pubnub.unsubscribeAll();
 
             done();
@@ -455,7 +457,7 @@ describe('message actions endpoints', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Missing message timetoken");
+              assert.equal(err.status.message, 'Missing message timetoken');
 
               done();
             } catch (error) {
@@ -480,7 +482,7 @@ describe('message actions endpoints', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Missing action timetoken");
+              assert.equal(err.status.message, 'Missing action timetoken');
 
               done();
             } catch (error) {
@@ -505,7 +507,7 @@ describe('message actions endpoints', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Missing message action channel");
+              assert.equal(err.status.message, 'Missing message action channel');
 
               done();
             } catch (error) {
@@ -607,7 +609,7 @@ describe('message actions endpoints', () => {
                 assert.equal(messageActionEvent.data.uuid, pubnub.getUUID());
                 assert.equal(messageActionEvent.data.messageTimetoken, messageTimetokens[0]);
                 assert.equal(messageActionEvent.data.actionTimetoken, actionTimetokens[0]);
-                assert.equal(messageActionEvent.event, "removed");
+                assert.equal(messageActionEvent.event, 'removed');
                 pubnub.unsubscribeAll();
 
                 done();
@@ -633,7 +635,7 @@ describe('message actions endpoints', () => {
         pubnub.getMessageActions({}).catch((err) => {
           try {
             assert.equal(scope.isDone(), false);
-            assert.equal(err.status.message, "Missing message channel");
+            assert.equal(err.status.message, 'Missing message channel');
 
             done();
           } catch (error) {
