@@ -1,4 +1,4 @@
-import { Readable, PassThrough } from 'stream';
+import { Readable } from 'stream';
 import { Buffer } from 'buffer';
 import { ProxyAgentOptions } from 'proxy-agent';
 
@@ -2199,7 +2199,7 @@ declare namespace PubNub {
      *
      * @returns Asynchronous results of conversion to the {@link Readable} stream.
      */
-    toStream(): Promise<Readable | PassThrough>;
+    toStream(): Promise<Readable>;
     /**
      * Convert {@link PubNub} File object content to {@link File}.
      *
