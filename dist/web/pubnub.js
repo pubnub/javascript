@@ -8641,6 +8641,8 @@
 	        }
 	    }
 	    unsubscribeAll() {
+	        const channelGroups = this.getSubscribedChannels();
+	        const channels = this.getSubscribedChannels();
 	        this.channels = [];
 	        this.groups = [];
 	        if (this.dependencies.presenceState) {
@@ -8649,18 +8651,18 @@
 	            });
 	        }
 	        this.engine.transition(subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
-	        if (this.dependencies.leaveAll) {
-	            this.dependencies.leaveAll();
-	        }
+	        if (this.dependencies.leaveAll)
+	            this.dependencies.leaveAll({ channels, groups: channelGroups });
 	    }
 	    reconnect({ timetoken, region }) {
 	        this.engine.transition(reconnect(timetoken, region));
 	    }
 	    disconnect() {
+	        const channelGroups = this.getSubscribedChannels();
+	        const channels = this.getSubscribedChannels();
 	        this.engine.transition(disconnect());
-	        if (this.dependencies.leaveAll) {
-	            this.dependencies.leaveAll();
-	        }
+	        if (this.dependencies.leaveAll)
+	            this.dependencies.leaveAll({ channels, groups: channelGroups });
 	    }
 	    getSubscribedChannels() {
 	        return Array.from(new Set(this.channels.slice(0)));
@@ -14024,8 +14026,13 @@
 	     * @param parameters - List of channels and groups where `join` event should be sent.
 	     */
 	    join(parameters) {
-	        var _a;
-	        (_a = this.presenceEventEngine) === null || _a === void 0 ? void 0 : _a.join(parameters);
+	        {
+	            if (this.presenceEventEngine)
+	                this.presenceEventEngine.join(parameters);
+	            else {
+	                this.heartbeat(Object.assign(Object.assign({ channels: parameters.channels, channelGroups: parameters.groups }, (this._configuration.maintainPresenceState && { state: this.presenceState })), { heartbeat: this._configuration.getPresenceTimeout() }), () => { });
+	            }
+	        }
 	    }
 	    // endregion
 	    // region Leave
@@ -14038,16 +14045,27 @@
 	     */
 	    leave(parameters) {
 	        var _a;
-	        (_a = this.presenceEventEngine) === null || _a === void 0 ? void 0 : _a.leave(parameters);
+	        {
+	            if (this.presenceEventEngine)
+	                (_a = this.presenceEventEngine) === null || _a === void 0 ? void 0 : _a.leave(parameters);
+	            else
+	                this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => { });
+	        }
 	    }
 	    /**
 	     * Announce user `leave` on all subscribed channels.
 	     *
 	     * @internal
+	     *
+	     * @param parameters - List of channels and groups where `leave` event should be sent.
 	     */
-	    leaveAll() {
-	        var _a;
-	        (_a = this.presenceEventEngine) === null || _a === void 0 ? void 0 : _a.leaveAll();
+	    leaveAll(parameters) {
+	        {
+	            if (this.presenceEventEngine)
+	                this.presenceEventEngine.leaveAll();
+	            else
+	                this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => { });
+	        }
 	    }
 	    /**
 	     * Grant token permission.
