@@ -1,3 +1,9 @@
+## v9.3.2
+March 31 2025
+
+#### Fixed
+- Fix missing `heartbeat` and `leave` REST API calls when the event engine is enabled and `presenceTimeout` or `heartbeatInterval` not set.
+
 ## v9.3.1
 March 25 2025
 

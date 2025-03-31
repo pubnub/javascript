@@ -101,7 +101,7 @@ export default class AesCbcCryptor implements ICryptor {
 
       while (data !== null) {
         if (data) {
-          const bChunk = Buffer.from(data);
+          const bChunk = typeof data === 'string' ? Buffer.from(data) : data;
           const sliceLen = stream.metadataLength - bIv.byteLength;
 
           if (bChunk.byteLength < sliceLen) {

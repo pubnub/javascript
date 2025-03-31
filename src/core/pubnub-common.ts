@@ -1977,8 +1977,20 @@ export class PubNubCore<
    * @param parameters - List of channels and groups where `join` event should be sent.
    */
   private join(parameters: { channels?: string[]; groups?: string[] }) {
-    if (process.env.PRESENCE_MODULE !== 'disabled') this.presenceEventEngine?.join(parameters);
-    else throw new Error('Announce UUID Presence error: presence module disabled');
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      if (this.presenceEventEngine) this.presenceEventEngine.join(parameters);
+      else {
+        this.heartbeat(
+          {
+            channels: parameters.channels,
+            channelGroups: parameters.groups,
+            ...(this._configuration.maintainPresenceState && { state: this.presenceState }),
+            heartbeat: this._configuration.getPresenceTimeout(),
+          },
+          () => {},
+        );
+      }
+    } else throw new Error('Announce UUID Presence error: presence module disabled');
   }
   // endregion
 
@@ -1991,18 +2003,24 @@ export class PubNubCore<
    * @param parameters - List of channels and groups where `leave` event should be sent.
    */
   private leave(parameters: { channels?: string[]; groups?: string[] }) {
-    if (process.env.PRESENCE_MODULE !== 'disabled') this.presenceEventEngine?.leave(parameters);
-    else throw new Error('Announce UUID Leave error: presence module disabled');
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      if (this.presenceEventEngine) this.presenceEventEngine?.leave(parameters);
+      else this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => {});
+    } else throw new Error('Announce UUID Leave error: presence module disabled');
   }
 
   /**
    * Announce user `leave` on all subscribed channels.
    *
    * @internal
+   *
+   * @param parameters - List of channels and groups where `leave` event should be sent.
    */
-  private leaveAll() {
-    if (process.env.PRESENCE_MODULE !== 'disabled') this.presenceEventEngine?.leaveAll();
-    else throw new Error('Announce UUID Leave error: presence module disabled');
+  private leaveAll(parameters: { channels?: string[]; groups?: string[] }) {
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      if (this.presenceEventEngine) this.presenceEventEngine.leaveAll();
+      else this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => {});
+    } else throw new Error('Announce UUID Leave error: presence module disabled');
   }
   // endregion
   // endregion

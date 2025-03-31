@@ -131,7 +131,7 @@ export default class PubNubFile implements PubNubFileInterface {
     if (stream && stream instanceof Readable) {
       fileData = stream;
 
-      if (stream instanceof fs.ReadStream && !(stream.path instanceof Buffer)) {
+      if (stream instanceof fs.ReadStream && typeof stream.path === 'string') {
         fileName = basename(stream.path);
         contentLength = fs.statSync(stream.path).size;
       }
@@ -167,7 +167,7 @@ export default class PubNubFile implements PubNubFileInterface {
    * @returns Asynchronous results of conversion to the {@link Buffer}.
    */
   async toBuffer(): Promise<Buffer> {
-    if (this.data instanceof Buffer) return this.data;
+    if (!(this.data instanceof Readable)) return this.data;
 
     const stream = this.data;
     return new Promise((resolve, reject) => {

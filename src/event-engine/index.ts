@@ -125,6 +125,9 @@ export class EventEngine {
   }
 
   unsubscribeAll(): void {
+    const channelGroups = this.getSubscribedChannels();
+    const channels = this.getSubscribedChannels();
+
     this.channels = [];
     this.groups = [];
 
@@ -134,9 +137,7 @@ export class EventEngine {
       });
     }
     this.engine.transition(events.subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
-    if (this.dependencies.leaveAll) {
-      this.dependencies.leaveAll();
-    }
+    if (this.dependencies.leaveAll) this.dependencies.leaveAll({ channels, groups: channelGroups });
   }
 
   reconnect({ timetoken, region }: { timetoken?: string; region?: number }): void {
@@ -144,10 +145,12 @@ export class EventEngine {
   }
 
   disconnect(): void {
+    const channelGroups = this.getSubscribedChannels();
+    const channels = this.getSubscribedChannels();
+
     this.engine.transition(events.disconnect());
-    if (this.dependencies.leaveAll) {
-      this.dependencies.leaveAll();
-    }
+
+    if (this.dependencies.leaveAll) this.dependencies.leaveAll({ channels, groups: channelGroups });
   }
 
   getSubscribedChannels(): string[] {

@@ -25,7 +25,7 @@ export type Dependencies = {
   ) => Promise<Subscription.SubscriptionResponse>;
   join?: (parameters: { channels?: string[]; groups?: string[] }) => void;
   leave?: (parameters: { channels?: string[]; groups?: string[] }) => void;
-  leaveAll?: () => void;
+  leaveAll?: (parameters: { channels?: string[]; groups?: string[] }) => void;
   presenceState: Record<string, Payload>;
   config: PrivateClientConfiguration;
 
