@@ -1,5 +1,12 @@
 ---
 changelog:
+  - date: 2025-04-10
+    version: v9.4.0
+    changes:
+      - type: feature
+        text: "Compress the published payload if sent by POST."
+      - type: feature
+        text: "Explicitly add `gzip, deflate` to the `Accept-Encoding` header."
   - date: 2025-03-31
     version: v9.3.2
     changes:
@@ -1202,7 +1209,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.3.2'
+version: '9.4.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1218,7 +1225,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.3.2.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.4.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1889,7 +1896,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.3.2/pubnub.9.3.2.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.4.0/pubnub.9.4.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
