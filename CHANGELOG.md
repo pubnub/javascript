@@ -1,3 +1,10 @@
+## v9.4.0
+April 10 2025
+
+#### Added
+- Compress the published payload if sent by POST.
+- Explicitly add `gzip, deflate` to the `Accept-Encoding` header.
+
 ## v9.3.2
 March 31 2025
 

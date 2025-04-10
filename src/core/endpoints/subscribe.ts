@@ -714,7 +714,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
   }
 
   protected get headers(): Record<string, string> | undefined {
-    return { accept: 'text/javascript' };
+    return { ...(super.headers ?? {}), accept: 'text/javascript' };
   }
 
   // --------------------------------------------------------

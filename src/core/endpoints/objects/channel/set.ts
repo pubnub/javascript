@@ -66,9 +66,9 @@ export class SetChannelMetadataRequest<
 
   protected get headers(): Record<string, string> | undefined {
     if (this.parameters.ifMatchesEtag) {
-      return { 'If-Match': this.parameters.ifMatchesEtag };
+      return { ...(super.headers ?? {}), 'If-Match': this.parameters.ifMatchesEtag };
     } else {
-      return undefined;
+      return super.headers;
     }
   }
 

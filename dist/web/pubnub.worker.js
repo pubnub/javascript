@@ -1536,6 +1536,7 @@
                 headers: {},
                 timeout: 10,
                 cancellable: false,
+                compressible: false,
                 identifier: query.requestid,
             },
         };

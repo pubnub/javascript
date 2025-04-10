@@ -10,6 +10,7 @@ import { Agent as HttpsAgent } from 'https';
 import { Agent as HttpAgent } from 'http';
 import FormData from 'form-data';
 import { Buffer } from 'buffer';
+import * as zlib from 'zlib';
 
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
 import { Transport, TransportKeepAlive } from '../core/interfaces/transport';
@@ -173,7 +174,10 @@ export class NodeTransport implements Transport {
       headers = formData.getHeaders(headers ?? {});
     }
     // Handle regular body payload (if passed).
-    else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) body = req.body;
+    else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) {
+      // Compressing body (if required).
+      body = req.compressible ? zlib.deflateSync(req.body) : req.body;
+    }
 
     if (req.queryParameters && Object.keys(req.queryParameters).length !== 0)
       path = `${path}?${queryStringFromObject(req.queryParameters)}`;

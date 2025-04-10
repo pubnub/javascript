@@ -152,7 +152,7 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
   }
 
   protected get headers(): Record<string, string> | undefined {
-    return { 'Content-Type': 'application/json' };
+    return { ...(super.headers ?? {}), 'Content-Type': 'application/json' };
   }
 
   protected get body(): string {

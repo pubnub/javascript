@@ -141,7 +141,7 @@ export class GenerateFileUploadUrlRequest extends AbstractRequest<
   }
 
   protected get headers(): Record<string, string> | undefined {
-    return { 'Content-Type': 'application/json' };
+    return { ...(super.headers ?? {}), 'Content-Type': 'application/json' };
   }
 
   protected get body(): ArrayBuffer | string | undefined {

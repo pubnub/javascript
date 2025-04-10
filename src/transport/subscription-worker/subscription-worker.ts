@@ -2264,6 +2264,7 @@ const unsubscribeClient = (client: PubNubClientState) => {
       headers: {},
       timeout: 10,
       cancellable: false,
+      compressible: false,
       identifier: query.requestid as string,
     },
   };

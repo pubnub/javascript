@@ -3939,7 +3939,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.3.2';
+	            return '9.4.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -4604,8 +4604,20 @@
 	                body = formData;
 	            }
 	            // Handle regular body payload (if passed).
-	            else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer))
-	                body = req.body;
+	            else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) {
+	                // Compressing body if browser has native support.
+	                if (req.compressible && typeof CompressionStream !== 'undefined') {
+	                    const bodyStream = new ReadableStream({
+	                        start(controller) {
+	                            controller.enqueue(typeof req.body === 'string' ? WebTransport.encoder.encode(req.body) : req.body);
+	                            controller.close();
+	                        },
+	                    });
+	                    body = yield new Response(bodyStream.pipeThrough(new CompressionStream('deflate'))).arrayBuffer();
+	                }
+	                else
+	                    body = req.body;
+	            }
 	            if (req.queryParameters && Object.keys(req.queryParameters).length !== 0)
 	                path = `${path}?${queryStringFromObject(req.queryParameters)}`;
 	            return {
@@ -4683,6 +4695,12 @@
 	        return fetch;
 	    }
 	}
+	/**
+	 * Request body decoder.
+	 *
+	 * @internal
+	 */
+	WebTransport.encoder = new TextEncoder();
 	/**
 	 * Service {@link ArrayBuffer} response decoder.
 	 *
@@ -6092,12 +6110,13 @@
 	     * @returns Request object which can be processed using platform-specific requirements.
 	     */
 	    request() {
-	        var _a, _b, _c, _d;
+	        var _a, _b, _c, _d, _e, _f;
 	        const request = {
 	            method: (_b = (_a = this.params) === null || _a === void 0 ? void 0 : _a.method) !== null && _b !== void 0 ? _b : TransportMethod.GET,
 	            path: this.path,
 	            queryParameters: this.queryParameters,
 	            cancellable: (_d = (_c = this.params) === null || _c === void 0 ? void 0 : _c.cancellable) !== null && _d !== void 0 ? _d : false,
+	            compressible: (_f = (_e = this.params) === null || _e === void 0 ? void 0 : _e.compressible) !== null && _f !== void 0 ? _f : false,
 	            timeout: 10,
 	            identifier: this.requestIdentifier,
 	        };
@@ -6121,7 +6140,8 @@
 	     * @returns Key/value headers which should be used with request.
 	     */
 	    get headers() {
-	        return undefined;
+	        var _a, _b;
+	        return Object.assign({ 'Accept-Encoding': 'gzip, deflate' }, (((_b = (_a = this.params) === null || _a === void 0 ? void 0 : _a.compressible) !== null && _b !== void 0 ? _b : false) ? { 'Content-Encoding': 'deflate' } : {}));
 	    }
 	    /**
 	     * Target REST API endpoint request path getter.
@@ -6595,7 +6615,8 @@
 	        });
 	    }
 	    get headers() {
-	        return { accept: 'text/javascript' };
+	        var _a;
+	        return Object.assign(Object.assign({}, ((_a = super.headers) !== null && _a !== void 0 ? _a : {})), { accept: 'text/javascript' });
 	    }
 	    // --------------------------------------------------------
 	    // ------------------ Envelope parsing --------------------
@@ -8705,11 +8726,11 @@
 	     */
 	    constructor(parameters) {
 	        var _a;
-	        var _b;
-	        super({ method: parameters.sendByPost ? TransportMethod.POST : TransportMethod.GET });
+	        const sendByPost = (_a = parameters.sendByPost) !== null && _a !== void 0 ? _a : SEND_BY_POST;
+	        super({ method: sendByPost ? TransportMethod.POST : TransportMethod.GET, compressible: sendByPost });
 	        this.parameters = parameters;
 	        // Apply default request parameters.
-	        (_a = (_b = this.parameters).sendByPost) !== null && _a !== void 0 ? _a : (_b.sendByPost = SEND_BY_POST);
+	        this.parameters.sendByPost = sendByPost;
 	    }
 	    operation() {
 	        return RequestOperation$1.PNPublishOperation;
@@ -8749,9 +8770,10 @@
 	        return query;
 	    }
 	    get headers() {
+	        var _a;
 	        if (!this.parameters.sendByPost)
 	            return undefined;
-	        return { 'Content-Type': 'application/json' };
+	        return Object.assign(Object.assign({}, ((_a = super.headers) !== null && _a !== void 0 ? _a : {})), { 'Content-Type': 'application/json' });
 	    }
 	    get body() {
 	        return this.prepareMessagePayload(this.parameters.message);
@@ -9734,7 +9756,8 @@
 	        return `/v1/message-actions/${subscribeKey}/channel/${encodeString(channel)}/message/${messageTimetoken}`;
 	    }
 	    get headers() {
-	        return { 'Content-Type': 'application/json' };
+	        var _a;
+	        return Object.assign(Object.assign({}, ((_a = super.headers) !== null && _a !== void 0 ? _a : {})), { 'Content-Type': 'application/json' });
 	    }
 	    get body() {
 	        return JSON.stringify(this.parameters.action);
@@ -10028,7 +10051,8 @@
 	        return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/generate-upload-url`;
 	    }
 	    get headers() {
-	        return { 'Content-Type': 'application/json' };
+	        var _a;
+	        return Object.assign(Object.assign({}, ((_a = super.headers) !== null && _a !== void 0 ? _a : {})), { 'Content-Type': 'application/json' });
 	    }
 	    get body() {
 	        return JSON.stringify({ name: this.parameters.name });
@@ -11860,11 +11884,12 @@
 	            return 'Data cannot be empty';
 	    }
 	    get headers() {
+	        var _a;
 	        if (this.parameters.ifMatchesEtag) {
-	            return { 'If-Match': this.parameters.ifMatchesEtag };
+	            return Object.assign(Object.assign({}, ((_a = super.headers) !== null && _a !== void 0 ? _a : {})), { 'If-Match': this.parameters.ifMatchesEtag });
 	        }
 	        else {
-	            return undefined;
+	            return super.headers;
 	        }
 	    }
 	    get path() {
@@ -12232,11 +12257,12 @@
 	            return 'Data cannot be empty';
 	    }
 	    get headers() {
+	        var _a;
 	        if (this.parameters.ifMatchesEtag) {
-	            return { 'If-Match': this.parameters.ifMatchesEtag };
+	            return Object.assign(Object.assign({}, ((_a = super.headers) !== null && _a !== void 0 ? _a : {})), { 'If-Match': this.parameters.ifMatchesEtag });
 	        }
 	        else {
-	            return undefined;
+	            return super.headers;
 	        }
 	    }
 	    get path() {
