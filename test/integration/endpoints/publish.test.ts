@@ -1,6 +1,7 @@
 /* global describe, beforeEach, it, before, after */
 /* eslint no-console: 0 */
 
+import * as zlib from 'zlib';
 import assert from 'assert';
 import nock from 'nock';
 
@@ -240,9 +241,24 @@ describe('publish endpoints', () => {
   });
 
   it('publishes a complex object via POST', (done) => {
+    const expectedRawBody = '{"such":"object"}';
     const scope = utils
       .createNock()
-      .post('/publish/myPublishKey/mySubKey/0/ch1/0', '{"such":"object"}')
+      .post('/publish/myPublishKey/mySubKey/0/ch1/0', (body) => {
+        let decompressed: string;
+        let buffer;
+        if (typeof body === 'string' && /^[0-9a-f]+$/i.test(body)) buffer = Buffer.from(body, 'hex');
+        else if (Buffer.isBuffer(body)) buffer = body;
+        else return false;
+
+        try {
+          decompressed = zlib.inflateSync(buffer).toString('utf-8');
+        } catch (_err) {
+          return false;
+        }
+
+        return decompressed === expectedRawBody;
+      })
       .query({
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
@@ -264,9 +280,24 @@ describe('publish endpoints', () => {
   });
 
   it('publishes a complex object via POST with encryption', (done) => {
+    const expectedRawBody = '"toDEeIZkmIyoiLpSojGu7n3+2t1rn7/DsrEZ1r8JKR4="';
     const scope = utils
       .createNock()
-      .post('/publish/myPublishKey/mySubKey/0/ch1/0', '"toDEeIZkmIyoiLpSojGu7n3+2t1rn7/DsrEZ1r8JKR4="')
+      .post('/publish/myPublishKey/mySubKey/0/ch1/0', (body) => {
+        let decompressed: string;
+        let buffer;
+        if (typeof body === 'string' && /^[0-9a-f]+$/i.test(body)) buffer = Buffer.from(body, 'hex');
+        else if (Buffer.isBuffer(body)) buffer = body;
+        else return false;
+
+        try {
+          decompressed = zlib.inflateSync(buffer).toString('utf-8');
+        } catch (_err) {
+          return false;
+        }
+
+        return decompressed === expectedRawBody;
+      })
       .query({
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',

@@ -139,10 +139,12 @@ export class PublishRequest extends AbstractRequest<PublishResponse, ServiceResp
    * @param parameters - Request configuration.
    */
   constructor(private readonly parameters: RequestParameters) {
-    super({ method: parameters.sendByPost ? TransportMethod.POST : TransportMethod.GET });
+    const sendByPost = parameters.sendByPost ?? SEND_BY_POST;
+
+    super({ method: sendByPost ? TransportMethod.POST : TransportMethod.GET, compressible: sendByPost });
 
     // Apply default request parameters.
-    this.parameters.sendByPost ??= SEND_BY_POST;
+    this.parameters.sendByPost = sendByPost;
   }
 
   operation(): RequestOperation {
@@ -189,7 +191,7 @@ export class PublishRequest extends AbstractRequest<PublishResponse, ServiceResp
 
   protected get headers(): Record<string, string> | undefined {
     if (!this.parameters.sendByPost) return undefined;
-    return { 'Content-Type': 'application/json' };
+    return { ...(super.headers ?? {}), 'Content-Type': 'application/json' };
   }
 
   protected get body(): ArrayBuffer | string | undefined {

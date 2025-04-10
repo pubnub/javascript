@@ -69,6 +69,13 @@ export class WebTransport implements Transport {
   private static originalFetch: typeof fetch;
 
   /**
+   * Request body decoder.
+   *
+   * @internal
+   */
+  protected static encoder = new TextEncoder();
+
+  /**
    * Service {@link ArrayBuffer} response decoder.
    *
    * @internal
@@ -311,7 +318,19 @@ export class WebTransport implements Transport {
       body = formData;
     }
     // Handle regular body payload (if passed).
-    else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) body = req.body;
+    else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) {
+      // Compressing body if browser has native support.
+      if (req.compressible && typeof CompressionStream !== 'undefined') {
+        const bodyStream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(typeof req.body === 'string' ? WebTransport.encoder.encode(req.body) : req.body);
+            controller.close();
+          },
+        });
+
+        body = await new Response(bodyStream.pipeThrough(new CompressionStream('deflate'))).arrayBuffer();
+      } else body = req.body;
+    }
 
     if (req.queryParameters && Object.keys(req.queryParameters).length !== 0)
       path = `${path}?${queryStringFromObject(req.queryParameters)}`;

@@ -42,7 +42,9 @@ export abstract class AbstractRequest<ResponseType, ServiceResponse extends obje
    *
    * @param params - Request configuration parameters.
    */
-  protected constructor(private readonly params?: { method?: TransportMethod; cancellable?: boolean }) {
+  protected constructor(
+    private readonly params?: { method?: TransportMethod; cancellable?: boolean; compressible?: boolean },
+  ) {
     this._cancellationController = null;
   }
 
@@ -111,6 +113,7 @@ export abstract class AbstractRequest<ResponseType, ServiceResponse extends obje
       path: this.path,
       queryParameters: this.queryParameters,
       cancellable: this.params?.cancellable ?? false,
+      compressible: this.params?.compressible ?? false,
       timeout: 10,
       identifier: this.requestIdentifier,
     };
@@ -135,7 +138,10 @@ export abstract class AbstractRequest<ResponseType, ServiceResponse extends obje
    * @returns Key/value headers which should be used with request.
    */
   protected get headers(): Record<string, string> | undefined {
-    return undefined;
+    return {
+      'Accept-Encoding': 'gzip, deflate',
+      ...((this.params?.compressible ?? false) ? { 'Content-Encoding': 'deflate' } : {}),
+    };
   }
 
   /**

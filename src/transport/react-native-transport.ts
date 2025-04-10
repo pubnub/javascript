@@ -4,6 +4,8 @@
  * @internal
  */
 
+import { gzipSync } from 'fflate';
+
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
 import { TransportResponse } from '../core/types/transport-response';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
@@ -17,6 +19,13 @@ import { queryStringFromObject } from '../core/utils';
  * @internal
  */
 export class ReactNativeTransport implements Transport {
+  /**
+   * Request body decoder.
+   *
+   * @internal
+   */
+  protected static encoder = new TextEncoder();
+
   /**
    * Service {@link ArrayBuffer} response decoder.
    *
@@ -161,7 +170,13 @@ export class ReactNativeTransport implements Transport {
       body = formData;
     }
     // Handle regular body payload (if passed).
-    else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) body = req.body;
+    else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) {
+      if (req.compressible) {
+        body = gzipSync(
+          typeof req.body === 'string' ? ReactNativeTransport.encoder.encode(req.body) : new Uint8Array(req.body),
+        );
+      } else body = req.body;
+    }
 
     if (req.queryParameters && Object.keys(req.queryParameters).length !== 0)
       path = `${path}?${queryStringFromObject(req.queryParameters)}`;

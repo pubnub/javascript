@@ -104,6 +104,11 @@ export type TransportRequest = {
   cancellable: boolean;
 
   /**
+   * Whether `POST` body should be compressed or not.
+   */
+  compressible: boolean;
+
+  /**
    * Unique request identifier.
    */
   identifier: string;
