@@ -16,10 +16,6 @@ describe('subscribe endpoints', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -50,8 +46,9 @@ describe('subscribe endpoints', () => {
   });
 
   afterEach(() => {
-    pubnub.stop();
-    pubnubWithFiltering.stop();
+    pubnub.destroy(true);
+    pubnubWithFiltering.destroy(true);
+    pubnubWithEE.destroy(true);
   });
 
   it('supports addition of multiple channels', (done) => {

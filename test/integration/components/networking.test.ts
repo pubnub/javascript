@@ -18,10 +18,6 @@ describe('#components/networking', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -47,6 +43,12 @@ describe('#components/networking', () => {
       useRequestId: false,
       sdkName: 'custom-sdk/1.0.0',
     });
+  });
+
+  afterEach(() => {
+    pubnub.destroy(true);
+    pubnubPartner.destroy(true);
+    pubnubSDKName.destroy(true);
   });
 
   describe('supports user-agent generation with partner', () => {

@@ -20,10 +20,6 @@ describe('objects membership', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -35,5 +31,9 @@ describe('objects membership', () => {
       authKey: AUTH_KEY,
     });
     PNSDK = `PubNub-JS-Nodejs/${pubnub.getVersion()}`;
+  });
+
+  afterEach(() => {
+    pubnub.destroy(true);
   });
 });

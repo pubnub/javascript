@@ -32,10 +32,10 @@ import StatusCategory from './constants/categories';
 
 import { createValidationError, PubNubError } from '../errors/pubnub-error';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
+import { RetryPolicy } from './components/retryPolicy';
 
 // region Event Engine
 import { PresenceEventEngine } from '../event-engine/presence/presence';
-import { RetryPolicy } from '../event-engine/core/retryPolicy';
 import { EventEngine } from '../event-engine';
 // endregion
 // region Publish & Signal
@@ -374,7 +374,6 @@ export class PubNubCore<
                     if (!heartbeatInterval) reject(new PubNubError('Heartbeat interval has been reset.'));
                     else setTimeout(resolve, heartbeatInterval * 1000);
                   }),
-                retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
                 emitStatus: (status) => this.listenerManager.announceStatus(status),
                 config: this._configuration,
                 presenceState: this.presenceState,
@@ -389,6 +388,8 @@ export class PubNubCore<
             join: this.join.bind(this),
             leave: this.leave.bind(this),
             leaveAll: this.leaveAll.bind(this),
+            presenceReconnect: this.presenceReconnect.bind(this),
+            presenceDisconnect: this.presenceDisconnect.bind(this),
             presenceState: this.presenceState,
             config: this._configuration,
             emitMessages: (events) => {
@@ -888,6 +889,10 @@ export class PubNubCore<
         this.subscriptionManager.unsubscribeAll(isOffline);
         this.subscriptionManager.disconnect();
       } else if (this.eventEngine) this.eventEngine.dispose();
+
+      if (process.env.PRESENCE_MODULE !== 'disabled') {
+        if (this.presenceEventEngine) this.presenceEventEngine.dispose();
+      }
     }
   }
 
@@ -1278,11 +1283,15 @@ export class PubNubCore<
 
   /**
    * Temporarily disconnect from real-time events stream.
+   *
+   * **Note:** `isOffline` is set to `true` only when client experience network issues.
+   *
+   * @param [isOffline] - Whether `offline` presence should be notified or not.
    */
-  public disconnect(): void {
+  public disconnect(isOffline?: boolean): void {
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
       if (this.subscriptionManager) this.subscriptionManager.disconnect();
-      else if (this.eventEngine) this.eventEngine.disconnect();
+      else if (this.eventEngine) this.eventEngine.disconnect(isOffline);
     } else throw new Error('Disconnection error: subscription module disabled');
   }
 
@@ -1992,6 +2001,30 @@ export class PubNubCore<
       }
     } else throw new Error('Announce UUID Presence error: presence module disabled');
   }
+
+  /**
+   * Reconnect presence event engine after network issues.
+   *
+   * @param parameters - List of channels and groups where `join` event should be sent.
+   *
+   * @internal
+   */
+  private presenceReconnect(parameters: { channels?: string[]; groups?: string[] }) {
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      if (this.presenceEventEngine) this.presenceEventEngine.reconnect();
+      else {
+        this.heartbeat(
+          {
+            channels: parameters.channels,
+            channelGroups: parameters.groups,
+            ...(this._configuration.maintainPresenceState && { state: this.presenceState }),
+            heartbeat: this._configuration.getPresenceTimeout(),
+          },
+          () => {},
+        );
+      }
+    } else throw new Error('Announce UUID Presence error: presence module disabled');
+  }
   // endregion
 
   // region Leave
@@ -2020,6 +2053,21 @@ export class PubNubCore<
     if (process.env.PRESENCE_MODULE !== 'disabled') {
       if (this.presenceEventEngine) this.presenceEventEngine.leaveAll();
       else this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => {});
+    } else throw new Error('Announce UUID Leave error: presence module disabled');
+  }
+
+  /**
+   * Announce user `leave` on disconnection.
+   *
+   * @internal
+   *
+   * @param parameters - List of channels and groups where `leave` event should be sent.
+   */
+  private presenceDisconnect(parameters: { channels?: string[]; groups?: string[]; isOffline?: boolean }) {
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      if (this.presenceEventEngine) this.presenceEventEngine.disconnect(parameters.isOffline);
+      else if (!parameters.isOffline)
+        this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => {});
     } else throw new Error('Announce UUID Leave error: presence module disabled');
   }
   // endregion

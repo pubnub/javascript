@@ -55,14 +55,10 @@ HeartbeatFailedState.on(reconnect.type, (context, _) =>
   }),
 );
 
-HeartbeatFailedState.on(disconnect.type, (context, _) =>
-  HeartbeatStoppedState.with(
-    {
-      channels: context.channels,
-      groups: context.groups,
-    },
-    [leave(context.channels, context.groups)],
-  ),
+HeartbeatFailedState.on(disconnect.type, (context, event) =>
+  HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
+    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+  ]),
 );
 
 HeartbeatFailedState.on(leftAll.type, (context, _) =>

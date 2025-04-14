@@ -14,10 +14,6 @@ describe('signal endpoints', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -28,6 +24,10 @@ describe('signal endpoints', () => {
       useRequestId: false,
       authKey: 'myAuthKey',
     });
+  });
+
+  afterEach(() => {
+    pubnub.destroy(true);
   });
 
   describe('##validation', () => {

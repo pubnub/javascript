@@ -58,36 +58,6 @@ export const handshakeSuccess = createEvent('HANDSHAKE_SUCCESS', (cursor: Subscr
 export const handshakeFailure = createEvent('HANDSHAKE_FAILURE', (error: PubNubError) => error);
 
 /**
- * Initial subscription handshake reconnect success event.
- *
- * Event is sent by corresponding effect handler if REST API call was successful after transition to the failed state.
- *
- * @internal
- */
-export const handshakeReconnectSuccess = createEvent(
-  'HANDSHAKE_RECONNECT_SUCCESS',
-  (cursor: Subscription.SubscriptionCursor) => ({
-    cursor,
-  }),
-);
-/**
- * Initial subscription handshake reconnect did fail event.
- *
- * Event is sent by corresponding effect handler if REST API call did fail while tried to enter to the success state.
- *
- * @internal
- */
-export const handshakeReconnectFailure = createEvent('HANDSHAKE_RECONNECT_FAILURE', (error: PubNubError) => error);
-/**
- * Initial subscription handshake impossible event.
- *
- * Event is sent by corresponding effect handler if REST API call exhausted all retry attempt and won't try again.
- *
- * @internal
- */
-export const handshakeReconnectGiveup = createEvent('HANDSHAKE_RECONNECT_GIVEUP', (error: PubNubError) => error);
-
-/**
  * Subscription successfully received real-time updates event.
  *
  * Event is sent by corresponding effect handler if REST API call was successful.
@@ -111,43 +81,13 @@ export const receiveSuccess = createEvent(
 export const receiveFailure = createEvent('RECEIVE_FAILURE', (error: PubNubError) => error);
 
 /**
- * Subscription successfully received real-time updates on reconnection attempt event.
- *
- * Event is sent by corresponding effect handler if REST API call was successful after transition to the failed state.
- *
- * @internal
- */
-export const receiveReconnectSuccess = createEvent(
-  'RECEIVE_RECONNECT_SUCCESS',
-  (cursor: Subscription.SubscriptionCursor, events: Subscription.SubscriptionResponse['messages']) => ({
-    cursor,
-    events,
-  }),
-);
-/**
- * Subscription did fail to receive real-time updates on reconnection attempt event.
- *
- * Event is sent by corresponding effect handler if REST API call did fail while tried to enter to the success state.
- *
- * @internal
- */
-export const receiveReconnectFailure = createEvent('RECEIVE_RECONNECT_FAILURE', (error: PubNubError) => error);
-/**
- * Subscription real-time updates received impossible event.
- *
- * Event is sent by corresponding effect handler if REST API call exhausted all retry attempt and won't try again.
- *
- * @internal
- */
-export const receiveReconnectGiveup = createEvent('RECEIVING_RECONNECT_GIVEUP', (error: PubNubError) => error);
-/**
  * Client disconnect event.
  *
  * Event is sent when user wants to temporarily stop real-time updates receive.
  *
  * @internal
  */
-export const disconnect = createEvent('DISCONNECT', () => ({}));
+export const disconnect = createEvent('DISCONNECT', (isOffline?: boolean) => ({ isOffline }));
 
 /**
  * Client reconnect event.
@@ -182,14 +122,8 @@ export type Events = MapOf<
   | typeof restore
   | typeof handshakeSuccess
   | typeof handshakeFailure
-  | typeof handshakeReconnectSuccess
-  | typeof handshakeReconnectFailure
-  | typeof handshakeReconnectGiveup
   | typeof receiveSuccess
   | typeof receiveFailure
-  | typeof receiveReconnectSuccess
-  | typeof receiveReconnectFailure
-  | typeof receiveReconnectGiveup
   | typeof disconnect
   | typeof reconnect
   | typeof unsubscribeAll

@@ -82,6 +82,11 @@ enum StatusCategory {
   PNConnectedCategory = 'PNConnectedCategory',
 
   /**
+   * Set of active channels and groups has been changed.
+   */
+  PNSubscriptionChangedCategory = 'PNSubscriptionChangedCategory',
+
+  /**
    * Received real-time updates exceed specified threshold.
    *
    * After temporary disconnection and catchup, this category means that potentially some

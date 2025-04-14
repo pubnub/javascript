@@ -24,7 +24,7 @@ export const reconnect = createEvent('RECONNECT', () => ({}));
  *
  * @internal
  */
-export const disconnect = createEvent('DISCONNECT', () => ({}));
+export const disconnect = createEvent('DISCONNECT', (isOffline?: boolean) => ({ isOffline }));
 
 /**
  * Channel / group join event.
@@ -81,15 +81,6 @@ export const heartbeatSuccess = createEvent('HEARTBEAT_SUCCESS', (statusCode: nu
 export const heartbeatFailure = createEvent('HEARTBEAT_FAILURE', (error: PubNubError) => error);
 
 /**
- * Presence heartbeat impossible event.
- *
- * Event is sent by corresponding effect handler if REST API call exhausted all retry attempt and won't try again.
- *
- * @internal
- */
-export const heartbeatGiveup = createEvent('HEARTBEAT_GIVEUP', () => ({}));
-
-/**
  * Delayed presence heartbeat event.
  *
  * Event is sent by corresponding effect handler when delay timer between heartbeat calls fired.
@@ -109,7 +100,6 @@ export type Events = MapOf<
   | typeof leftAll
   | typeof heartbeatSuccess
   | typeof heartbeatFailure
-  | typeof heartbeatGiveup
   | typeof joined
   | typeof left
   | typeof timesUp

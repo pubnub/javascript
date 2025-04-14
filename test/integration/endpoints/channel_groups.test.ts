@@ -7,16 +7,11 @@ import nock from 'nock';
 import PubNub from '../../../src/node/index';
 import utils from '../../utils';
 
-
 describe('channel group endpoints', () => {
   let pubnub: PubNub;
 
   before(() => {
     nock.disableNetConnect();
-  });
-
-  after(() => {
-    nock.enableNetConnect();
   });
 
   beforeEach(() => {
@@ -28,6 +23,10 @@ describe('channel group endpoints', () => {
       // @ts-expect-error Force override default value.
       useRequestId: false,
     });
+  });
+
+  afterEach(() => {
+    pubnub.destroy(true);
   });
 
   describe('adding channels to channel group', () => {
@@ -98,7 +97,7 @@ describe('channel group endpoints', () => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
-          assert.deepEqual(response.groups, ["a", "b"]);
+          assert.deepEqual(response.groups, ['a', 'b']);
           assert.equal(scope.isDone(), true);
           done();
         } catch (error) {
@@ -129,7 +128,7 @@ describe('channel group endpoints', () => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
-          assert.deepEqual(response.channels, ["a", "b"]);
+          assert.deepEqual(response.channels, ['a', 'b']);
           assert.equal(scope.isDone(), true);
           done();
         } catch (error) {

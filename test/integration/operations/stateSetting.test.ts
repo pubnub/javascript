@@ -14,10 +14,6 @@ describe('setting state operation', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -29,12 +25,16 @@ describe('setting state operation', () => {
     });
   });
 
+  afterEach(() => {
+    pubnub.destroy(true);
+  });
+
   describe('#setState', () => {
     it('fails if no channels are provided', (done) => {
       pubnub.setState({ state: { hello: 'there' } }, (status) => {
         try {
           assert.equal(status.error, true);
-          assert.equal(status.message, "Please provide a list of channels and/or channel-groups");
+          assert.equal(status.message, 'Please provide a list of channels and/or channel-groups');
           done();
         } catch (error) {
           done(error);
@@ -61,7 +61,7 @@ describe('setting state operation', () => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
-          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.deepEqual(response.state, { age: 20, status: 'online' });
           assert.equal(scope.isDone(), true);
           done();
         } catch (error) {
@@ -89,7 +89,7 @@ describe('setting state operation', () => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
-          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.deepEqual(response.state, { age: 20, status: 'online' });
           assert.equal(scope.isDone(), true);
           done();
         } catch (error) {
@@ -118,7 +118,7 @@ describe('setting state operation', () => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
-          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.deepEqual(response.state, { age: 20, status: 'online' });
           assert.equal(scope.isDone(), true);
           done();
         } catch (error) {
@@ -147,7 +147,7 @@ describe('setting state operation', () => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
-          assert.deepEqual(response.state, { age: 20, status: "online" });
+          assert.deepEqual(response.state, { age: 20, status: 'online' });
           assert.equal(scope.isDone(), true);
           done();
         } catch (error) {
@@ -171,7 +171,7 @@ describe('setting state operation', () => {
           { 'content-type': 'text/javascript' },
         );
 
-      let promise = pubnub.setState({
+      const promise = pubnub.setState({
         channels: ['ch1'],
         state: { hello: 'there' },
       });

@@ -4,9 +4,12 @@
  * @internal
  */
 
-import { TransportMethod, TransportRequest } from '../core/types/transport-request';
+import { CancellationController, TransportMethod, TransportRequest } from '../core/types/transport-request';
 import { PrivateClientConfiguration } from '../core/interfaces/configuration';
+import { TransportResponse } from '../core/types/transport-response';
 import { TokenManager } from '../core/components/token_manager';
+import { PubNubAPIError } from '../errors/pubnub-api-error';
+import StatusCategory from '../core/constants/categories';
 import { Transport } from '../core/interfaces/transport';
 import { encodeString } from '../core/utils';
 import { Query } from '../core/types/api';
@@ -125,8 +128,66 @@ export class PubNubMiddleware implements Transport {
     }
   }
 
-  makeSendable(req: TransportRequest) {
-    return this.configuration.transport.makeSendable(this.request(req));
+  makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
+    const retryPolicy = this.configuration.clientConfiguration.retryConfiguration;
+    const transport = this.configuration.transport;
+
+    // Make requests retryable.
+    if (retryPolicy !== undefined) {
+      let retryTimeout: ReturnType<typeof setTimeout> | undefined;
+      let activeCancellation: CancellationController | undefined;
+      let cancelled = false;
+      let attempt = 0;
+
+      const cancellation: CancellationController = {
+        abort: (reason) => {
+          cancelled = true;
+          if (retryTimeout) clearTimeout(retryTimeout);
+          if (activeCancellation) activeCancellation.abort(reason);
+        },
+      };
+
+      const retryableRequest = new Promise<TransportResponse>((resolve, reject) => {
+        const trySendRequest = () => {
+          // Check whether request already has been cancelled and there is no retry should proceed.
+          if (cancelled) return;
+
+          const [attemptPromise, attemptCancellation] = transport.makeSendable(this.request(req));
+          activeCancellation = attemptCancellation;
+
+          const responseHandler = (res?: TransportResponse, error?: PubNubAPIError) => {
+            const retriableError = error ? error.category !== StatusCategory.PNCancelledCategory : true;
+            const retriableStatusCode = !res || res.status >= 400;
+            let delay = -1;
+
+            if (
+              retriableError &&
+              retriableStatusCode &&
+              retryPolicy.shouldRetry(req, res, error?.category, attempt + 1)
+            )
+              delay = retryPolicy.getDelay(attempt, res);
+
+            if (delay > 0) {
+              attempt++;
+              retryTimeout = setTimeout(() => trySendRequest(), delay);
+            } else {
+              if (res) resolve(res);
+              else if (error) reject(error);
+            }
+          };
+
+          attemptPromise
+            .then((res) => responseHandler(res))
+            .catch((err: PubNubAPIError) => responseHandler(undefined, err));
+        };
+
+        trySendRequest();
+      });
+
+      return [retryableRequest, activeCancellation ? cancellation : undefined];
+    }
+
+    return transport.makeSendable(this.request(req));
   }
 
   request(req: TransportRequest): TransportRequest {

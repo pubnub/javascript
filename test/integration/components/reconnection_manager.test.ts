@@ -17,10 +17,6 @@ describe('#components/reconnection_manger', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -36,7 +32,7 @@ describe('#components/reconnection_manger', () => {
   });
 
   afterEach(() => {
-    pubnub.destroy();
+    pubnub.destroy(true);
     clock.restore();
   });
 

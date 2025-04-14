@@ -870,6 +870,10 @@
 	     */
 	    StatusCategory["PNConnectedCategory"] = "PNConnectedCategory";
 	    /**
+	     * Set of active channels and groups has been changed.
+	     */
+	    StatusCategory["PNSubscriptionChangedCategory"] = "PNSubscriptionChangedCategory";
+	    /**
 	     * Received real-time updates exceed specified threshold.
 	     *
 	     * After temporary disconnection and catchup, this category means that potentially some
@@ -3756,6 +3760,183 @@
 	        listenToBrowserNetworkEvents: (_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : LISTEN_TO_BROWSER_NETWORK_EVENTS, subscriptionWorkerUrl: configuration.subscriptionWorkerUrl, subscriptionWorkerOfflineClientsCheckInterval: (_b = configuration.subscriptionWorkerOfflineClientsCheckInterval) !== null && _b !== void 0 ? _b : SUBSCRIPTION_WORKER_OFFLINE_CLIENTS_CHECK_INTERVAL, subscriptionWorkerUnsubscribeOfflineClients: (_c = configuration.subscriptionWorkerUnsubscribeOfflineClients) !== null && _c !== void 0 ? _c : SUBSCRIPTION_WORKER_UNSUBSCRIBE_OFFLINE_CLIENTS, subscriptionWorkerLogVerbosity: (_d = configuration.subscriptionWorkerLogVerbosity) !== null && _d !== void 0 ? _d : SUBSCRIPTION_WORKER_LOG_VERBOSITY, transport: (_e = configuration.transport) !== null && _e !== void 0 ? _e : TRANSPORT, keepAlive: (_f = configuration.keepAlive) !== null && _f !== void 0 ? _f : KEEP_ALIVE });
 	};
 
+	// --------------------------------------------------------
+	// ------------------------ Types -------------------------
+	// --------------------------------------------------------
+	// region Types
+	/**
+	 * List of known endpoint groups (by context).
+	 */
+	var Endpoint;
+	(function (Endpoint) {
+	    /**
+	     * Unknown endpoint.
+	     *
+	     * @internal
+	     */
+	    Endpoint["Unknown"] = "UnknownEndpoint";
+	    /**
+	     * The endpoints to send messages.
+	     */
+	    Endpoint["MessageSend"] = "MessageSendEndpoint";
+	    /**
+	     * The endpoint for real-time update retrieval.
+	     */
+	    Endpoint["Subscribe"] = "SubscribeEndpoint";
+	    /**
+	     * The endpoint to access and manage `user_id` presence and fetch channel presence information.
+	     */
+	    Endpoint["Presence"] = "PresenceEndpoint";
+	    /**
+	     * The endpoint to access and manage files in channel-specific storage.
+	     */
+	    Endpoint["Files"] = "FilesEndpoint";
+	    /**
+	     * The endpoint to access and manage messages for a specific channel(s) in the persistent storage.
+	     */
+	    Endpoint["MessageStorage"] = "MessageStorageEndpoint";
+	    /**
+	     * The endpoint to access and manage channel groups.
+	     */
+	    Endpoint["ChannelGroups"] = "ChannelGroupsEndpoint";
+	    /**
+	     * The endpoint to access and manage device registration for channel push notifications.
+	     */
+	    Endpoint["DevicePushNotifications"] = "DevicePushNotificationsEndpoint";
+	    /**
+	     * The endpoint to access and manage App Context objects.
+	     */
+	    Endpoint["AppContext"] = "AppContextEndpoint";
+	    /**
+	     * The endpoint to access and manage reactions for a specific message.
+	     */
+	    Endpoint["MessageReactions"] = "MessageReactionsEndpoint";
+	})(Endpoint || (Endpoint = {}));
+	// endregion
+	/**
+	 * Failed request retry policy.
+	 */
+	class RetryPolicy {
+	    static LinearRetryPolicy(configuration) {
+	        var _a;
+	        return {
+	            delay: configuration.delay,
+	            maximumRetry: configuration.maximumRetry,
+	            excluded: (_a = configuration.excluded) !== null && _a !== void 0 ? _a : [],
+	            shouldRetry(request, response, error, attempt) {
+	                return isRetriableRequest(request, response, error, attempt !== null && attempt !== void 0 ? attempt : 0, this.maximumRetry, this.excluded);
+	            },
+	            getDelay(_, response) {
+	                let delay = -1;
+	                if (response && response.headers['retry-after'] !== undefined)
+	                    delay = parseInt(response.headers['retry-after'], 10);
+	                if (delay === -1)
+	                    delay = this.delay;
+	                return (delay + Math.random()) * 1000;
+	            },
+	            validate() {
+	                if (this.delay < 2)
+	                    throw new Error('Delay can not be set less than 2 seconds for retry');
+	                if (this.maximumRetry > 10)
+	                    throw new Error('Maximum retry for linear retry policy can not be more than 10');
+	            },
+	        };
+	    }
+	    static ExponentialRetryPolicy(configuration) {
+	        var _a;
+	        return {
+	            minimumDelay: configuration.minimumDelay,
+	            maximumDelay: configuration.maximumDelay,
+	            maximumRetry: configuration.maximumRetry,
+	            excluded: (_a = configuration.excluded) !== null && _a !== void 0 ? _a : [],
+	            shouldRetry(request, response, error, attempt) {
+	                return isRetriableRequest(request, response, error, attempt !== null && attempt !== void 0 ? attempt : 0, this.maximumRetry, this.excluded);
+	            },
+	            getDelay(attempt, response) {
+	                let delay = -1;
+	                if (response && response.headers['retry-after'] !== undefined)
+	                    delay = parseInt(response.headers['retry-after'], 10);
+	                if (delay === -1)
+	                    delay = Math.min(Math.pow(2, attempt), this.maximumDelay);
+	                return (delay + Math.random()) * 1000;
+	            },
+	            validate() {
+	                if (this.minimumDelay < 2)
+	                    throw new Error('Minimum delay can not be set less than 2 seconds for retry');
+	                else if (this.maximumDelay > 150)
+	                    throw new Error('Maximum delay can not be set more than 150 seconds for' + ' retry');
+	                else if (this.maximumRetry > 6)
+	                    throw new Error('Maximum retry for exponential retry policy can not be more than 6');
+	            },
+	        };
+	    }
+	}
+	/**
+	 * Check whether request can be retried or not.
+	 *
+	 * @param req - Request for which retry ability is checked.
+	 * @param res - Service response which should be taken into consideration.
+	 * @param errorCategory - Request processing error category.
+	 * @param retryAttempt - Current retry attempt.
+	 * @param maximumRetry - Maximum retry attempts count according to the retry policy.
+	 * @param excluded - List of endpoints for which retry policy won't be applied.
+	 *
+	 * @return `true` if request can be retried.
+	 *
+	 * @internal
+	 */
+	const isRetriableRequest = (req, res, errorCategory, retryAttempt, maximumRetry, excluded) => {
+	    if (errorCategory && errorCategory === StatusCategory$1.PNCancelledCategory)
+	        return false;
+	    else if (isExcludedRequest(req, excluded))
+	        return false;
+	    else if (retryAttempt > maximumRetry)
+	        return false;
+	    return res ? res.status === 429 || res.status >= 500 : true;
+	};
+	/**
+	 * Check whether the provided request is in the list of endpoints for which retry is not allowed or not.
+	 *
+	 * @param req - Request which will be tested.
+	 * @param excluded - List of excluded endpoints configured for retry policy.
+	 *
+	 * @returns `true` if request has been excluded and shouldn't be retried.
+	 *
+	 * @internal
+	 */
+	const isExcludedRequest = (req, excluded) => excluded && excluded.length > 0 ? excluded.includes(endpointFromRequest(req)) : false;
+	/**
+	 * Identify API group from transport request.
+	 *
+	 * @param req - Request for which `path` will be analyzed to identify REST API group.
+	 *
+	 * @returns Endpoint group to which request belongs.
+	 *
+	 * @internal
+	 */
+	const endpointFromRequest = (req) => {
+	    let endpoint = Endpoint.Unknown;
+	    if (req.path.startsWith('/v2/subscribe'))
+	        endpoint = Endpoint.Subscribe;
+	    else if (req.path.startsWith('/publish/') || req.path.startsWith('/signal/'))
+	        endpoint = Endpoint.MessageSend;
+	    else if (req.path.startsWith('/v2/presence'))
+	        endpoint = Endpoint.Presence;
+	    else if (req.path.startsWith('/v2/history') || req.path.startsWith('/v3/history'))
+	        endpoint = Endpoint.MessageStorage;
+	    else if (req.path.startsWith('/v1/message-actions/'))
+	        endpoint = Endpoint.MessageReactions;
+	    else if (req.path.startsWith('/v1/channel-registration/'))
+	        endpoint = Endpoint.ChannelGroups;
+	    else if (req.path.startsWith('/v2/objects/'))
+	        endpoint = Endpoint.ChannelGroups;
+	    else if (req.path.startsWith('/v1/push/') || req.path.startsWith('/v2/push/'))
+	        endpoint = Endpoint.DevicePushNotifications;
+	    else if (req.path.startsWith('/v1/files/'))
+	        endpoint = Endpoint.Files;
+	    return endpoint;
+	};
+
 	var uuid = {exports: {}};
 
 	/*! lil-uuid - v0.1 - MIT License - https://github.com/lil-js/uuid */
@@ -3847,6 +4028,24 @@
 	 */
 	const makeConfiguration = (base, setupCryptoModule) => {
 	    var _a, _b, _c;
+	    // Set default retry policy for subscribe (if new subscribe logic not used).
+	    if (!base.retryConfiguration && base.enableEventEngine) {
+	        base.retryConfiguration = RetryPolicy.ExponentialRetryPolicy({
+	            minimumDelay: 2,
+	            maximumDelay: 150,
+	            maximumRetry: 6,
+	            excluded: [
+	                Endpoint.MessageSend,
+	                Endpoint.Presence,
+	                Endpoint.Files,
+	                Endpoint.MessageStorage,
+	                Endpoint.ChannelGroups,
+	                Endpoint.DevicePushNotifications,
+	                Endpoint.AppContext,
+	                Endpoint.MessageReactions,
+	            ],
+	        });
+	    }
 	    // Ensure that retry policy has proper configuration (if has been set).
 	    (_a = base.retryConfiguration) === null || _a === void 0 ? void 0 : _a.validate();
 	    (_b = base.useRandomIVs) !== null && _b !== void 0 ? _b : (base.useRandomIVs = USE_RANDOM_INITIALIZATION_VECTOR);
@@ -4310,7 +4509,58 @@
 	        }
 	    }
 	    makeSendable(req) {
-	        return this.configuration.transport.makeSendable(this.request(req));
+	        const retryPolicy = this.configuration.clientConfiguration.retryConfiguration;
+	        const transport = this.configuration.transport;
+	        // Make requests retryable.
+	        if (retryPolicy !== undefined) {
+	            let retryTimeout;
+	            let activeCancellation;
+	            let cancelled = false;
+	            let attempt = 0;
+	            const cancellation = {
+	                abort: (reason) => {
+	                    cancelled = true;
+	                    if (retryTimeout)
+	                        clearTimeout(retryTimeout);
+	                    if (activeCancellation)
+	                        activeCancellation.abort(reason);
+	                },
+	            };
+	            const retryableRequest = new Promise((resolve, reject) => {
+	                const trySendRequest = () => {
+	                    // Check whether request already has been cancelled and there is no retry should proceed.
+	                    if (cancelled)
+	                        return;
+	                    const [attemptPromise, attemptCancellation] = transport.makeSendable(this.request(req));
+	                    activeCancellation = attemptCancellation;
+	                    const responseHandler = (res, error) => {
+	                        const retriableError = error ? error.category !== StatusCategory$1.PNCancelledCategory : true;
+	                        const retriableStatusCode = !res || res.status >= 400;
+	                        let delay = -1;
+	                        if (retriableError &&
+	                            retriableStatusCode &&
+	                            retryPolicy.shouldRetry(req, res, error === null || error === void 0 ? void 0 : error.category, attempt + 1))
+	                            delay = retryPolicy.getDelay(attempt, res);
+	                        if (delay > 0) {
+	                            attempt++;
+	                            retryTimeout = setTimeout(() => trySendRequest(), delay);
+	                        }
+	                        else {
+	                            if (res)
+	                                resolve(res);
+	                            else if (error)
+	                                reject(error);
+	                        }
+	                    };
+	                    attemptPromise
+	                        .then((res) => responseHandler(res))
+	                        .catch((err) => responseHandler(undefined, err));
+	                };
+	                trySendRequest();
+	            });
+	            return [retryableRequest, activeCancellation ? cancellation : undefined];
+	        }
+	        return transport.makeSendable(this.request(req));
 	    }
 	    request(req) {
 	        var _a;
@@ -7339,7 +7589,7 @@
 	 *
 	 * @internal
 	 */
-	const disconnect$1 = createEvent('DISCONNECT', () => ({}));
+	const disconnect$1 = createEvent('DISCONNECT', (isOffline) => ({ isOffline }));
 	/**
 	 * Channel / group join event.
 	 *
@@ -7390,14 +7640,6 @@
 	 */
 	const heartbeatFailure = createEvent('HEARTBEAT_FAILURE', (error) => error);
 	/**
-	 * Presence heartbeat impossible event.
-	 *
-	 * Event is sent by corresponding effect handler if REST API call exhausted all retry attempt and won't try again.
-	 *
-	 * @internal
-	 */
-	const heartbeatGiveup = createEvent('HEARTBEAT_GIVEUP', () => ({}));
-	/**
 	 * Delayed presence heartbeat event.
 	 *
 	 * Event is sent by corresponding effect handler when delay timer between heartbeat calls fired.
@@ -7418,7 +7660,7 @@
 	 *
 	 * @internal
 	 */
-	const heartbeat = createEffect('HEARTBEAT', (channels, groups) => ({
+	const heartbeat = createManagedEffect('HEARTBEAT', (channels, groups) => ({
 	    channels,
 	    groups,
 	}));
@@ -7450,14 +7692,6 @@
 	 * @internal
 	 */
 	const wait = createManagedEffect('WAIT', () => ({}));
-	/**
-	 * Delayed heartbeat effect.
-	 *
-	 * Similar to the {@link wait} effect but used in case if previous heartbeat call did fail.
-	 *
-	 * @internal
-	 */
-	const delayedHeartbeat = createManagedEffect('DELAYED_HEARTBEAT', (context) => context);
 
 	/**
 	 * Presence Event Engine effects dispatcher.
@@ -7483,7 +7717,7 @@
 	                if (e instanceof PubNubError) {
 	                    if (e.status && e.status.category == StatusCategory$1.PNCancelledCategory)
 	                        return;
-	                    return engine.transition(heartbeatFailure(e));
+	                    engine.transition(heartbeatFailure(e));
 	                }
 	            }
 	        })));
@@ -7504,34 +7738,12 @@
 	            abortSignal.throwIfAborted();
 	            return engine.transition(timesUp());
 	        })));
-	        this.on(delayedHeartbeat.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { heartbeat, retryDelay, presenceState, config }) {
-	            if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
-	                abortSignal.throwIfAborted();
-	                yield retryDelay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
-	                abortSignal.throwIfAborted();
-	                try {
-	                    const result = yield heartbeat(Object.assign(Object.assign({ channels: payload.channels, channelGroups: payload.groups }, (config.maintainPresenceState && { state: presenceState })), { heartbeat: config.presenceTimeout }));
-	                    return engine.transition(heartbeatSuccess(200));
-	                }
-	                catch (e) {
-	                    if (e instanceof PubNubError) {
-	                        if (e.status && e.status.category == StatusCategory$1.PNCancelledCategory)
-	                            return;
-	                        return engine.transition(heartbeatFailure(e));
-	                    }
-	                }
-	            }
-	            else {
-	                return engine.transition(heartbeatGiveup());
-	            }
-	        })));
 	        this.on(emitStatus$1.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitStatus, config }) {
-	            var _b;
-	            if (config.announceFailedHeartbeats && ((_b = payload === null || payload === void 0 ? void 0 : payload.status) === null || _b === void 0 ? void 0 : _b.error) === true) {
-	                emitStatus(payload.status);
+	            if (config.announceFailedHeartbeats && (payload === null || payload === void 0 ? void 0 : payload.error) === true) {
+	                emitStatus(Object.assign(Object.assign({}, payload), { operation: RequestOperation$1.PNHeartbeatOperation }));
 	            }
 	            else if (config.announceSuccessfulHeartbeats && payload.statusCode === 200) {
-	                emitStatus(Object.assign(Object.assign({}, payload), { operation: RequestOperation$1.PNHeartbeatOperation, error: false }));
+	                emitStatus(Object.assign(Object.assign({}, payload), { error: false, operation: RequestOperation$1.PNHeartbeatOperation, category: StatusCategory$1.PNAcknowledgmentCategory }));
 	            }
 	        })));
 	    }
@@ -7592,10 +7804,9 @@
 	    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
 	    groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
 	}, [leave(event.payload.channels, event.payload.groups)]));
-	HeartbeatCooldownState.on(disconnect$1.type, (context) => HeartbeatStoppedState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	}, [leave(context.channels, context.groups)]));
+	HeartbeatCooldownState.on(disconnect$1.type, (context, event) => HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
+	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+	]));
 	HeartbeatCooldownState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]));
 
 	/**
@@ -7624,55 +7835,10 @@
 	    channels: context.channels,
 	    groups: context.groups,
 	}));
-	HeartbeatFailedState.on(disconnect$1.type, (context, _) => HeartbeatStoppedState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	}, [leave(context.channels, context.groups)]));
+	HeartbeatFailedState.on(disconnect$1.type, (context, event) => HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
+	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+	]));
 	HeartbeatFailedState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]));
-
-	/**
-	 * Retry heartbeat state module.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Retry heartbeat state.
-	 *
-	 * State in which Presence Event Engine tries to recover after error which happened before.
-	 *
-	 * @internal
-	 */
-	const HearbeatReconnectingState = new State('HEARBEAT_RECONNECTING');
-	HearbeatReconnectingState.onEnter((context) => delayedHeartbeat(context));
-	HearbeatReconnectingState.onExit(() => delayedHeartbeat.cancel);
-	HearbeatReconnectingState.on(joined.type, (context, event) => HeartbeatingState.with({
-	    channels: [...context.channels, ...event.payload.channels],
-	    groups: [...context.groups, ...event.payload.groups],
-	}));
-	HearbeatReconnectingState.on(left.type, (context, event) => HeartbeatingState.with({
-	    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
-	    groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
-	}, [leave(event.payload.channels, event.payload.groups)]));
-	HearbeatReconnectingState.on(disconnect$1.type, (context, _) => {
-	    HeartbeatStoppedState.with({
-	        channels: context.channels,
-	        groups: context.groups,
-	    }, [leave(context.channels, context.groups)]);
-	});
-	HearbeatReconnectingState.on(heartbeatSuccess.type, (context, event) => {
-	    return HeartbeatCooldownState.with({
-	        channels: context.channels,
-	        groups: context.groups,
-	    });
-	});
-	HearbeatReconnectingState.on(heartbeatFailure.type, (context, event) => HearbeatReconnectingState.with(Object.assign(Object.assign({}, context), { attempts: context.attempts + 1, reason: event.payload })));
-	HearbeatReconnectingState.on(heartbeatGiveup.type, (context, event) => {
-	    return HeartbeatFailedState.with({
-	        channels: context.channels,
-	        groups: context.groups,
-	    });
-	});
-	HearbeatReconnectingState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]));
 
 	/**
 	 * Heartbeating state module.
@@ -7688,12 +7854,10 @@
 	 */
 	const HeartbeatingState = new State('HEARTBEATING');
 	HeartbeatingState.onEnter((context) => heartbeat(context.channels, context.groups));
-	HeartbeatingState.on(heartbeatSuccess.type, (context, event) => {
-	    return HeartbeatCooldownState.with({
-	        channels: context.channels,
-	        groups: context.groups,
-	    });
-	});
+	HeartbeatingState.onExit(() => heartbeat.cancel);
+	HeartbeatingState.on(heartbeatSuccess.type, (context, event) => HeartbeatCooldownState.with({ channels: context.channels, groups: context.groups }, [
+	    emitStatus$1(Object.assign({}, event.payload)),
+	]));
 	HeartbeatingState.on(joined.type, (context, event) => HeartbeatingState.with({
 	    channels: [...context.channels, ...event.payload.channels],
 	    groups: [...context.groups, ...event.payload.groups],
@@ -7704,13 +7868,12 @@
 	        groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
 	    }, [leave(event.payload.channels, event.payload.groups)]);
 	});
-	HeartbeatingState.on(heartbeatFailure.type, (context, event) => {
-	    return HearbeatReconnectingState.with(Object.assign(Object.assign({}, context), { attempts: 0, reason: event.payload }));
-	});
-	HeartbeatingState.on(disconnect$1.type, (context) => HeartbeatStoppedState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	}, [leave(context.channels, context.groups)]));
+	HeartbeatingState.on(heartbeatFailure.type, (context, event) => HeartbeatFailedState.with(Object.assign({}, context), [
+	    ...(event.payload.status ? [emitStatus$1(Object.assign({}, event.payload.status))] : []),
+	]));
+	HeartbeatingState.on(disconnect$1.type, (context, event) => HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
+	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+	]));
 	HeartbeatingState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]));
 
 	/**
@@ -7773,86 +7936,16 @@
 	    leaveAll() {
 	        this.engine.transition(leftAll());
 	    }
+	    reconnect() {
+	        this.engine.transition(reconnect$1());
+	    }
+	    disconnect(isOffline) {
+	        this.engine.transition(disconnect$1(isOffline));
+	    }
 	    dispose() {
+	        this.disconnect(true);
 	        this._unsubscribeEngine();
 	        this.dispatcher.dispose();
-	    }
-	}
-
-	/**
-	 * Failed request retry policy.
-	 */
-	class RetryPolicy {
-	    static LinearRetryPolicy(configuration) {
-	        return {
-	            delay: configuration.delay,
-	            maximumRetry: configuration.maximumRetry,
-	            /* eslint-disable  @typescript-eslint/no-explicit-any */
-	            shouldRetry(error, attempt) {
-	                var _a;
-	                if (((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode) === 403) {
-	                    return false;
-	                }
-	                return this.maximumRetry > attempt;
-	            },
-	            getDelay(_, reason) {
-	                var _a;
-	                const delay = (_a = reason.retryAfter) !== null && _a !== void 0 ? _a : this.delay;
-	                return (delay + Math.random()) * 1000;
-	            },
-	            /* eslint-disable  @typescript-eslint/no-explicit-any */
-	            getGiveupReason(error, attempt) {
-	                var _a;
-	                if (this.maximumRetry <= attempt) {
-	                    return 'retry attempts exhaused.';
-	                }
-	                if (((_a = error === null || error === void 0 ? void 0 : error.status) === null || _a === void 0 ? void 0 : _a.statusCode) === 403) {
-	                    return 'forbidden operation.';
-	                }
-	                return 'unknown error';
-	            },
-	            validate() {
-	                if (this.maximumRetry > 10)
-	                    throw new Error('Maximum retry for linear retry policy can not be more than 10');
-	            },
-	        };
-	    }
-	    static ExponentialRetryPolicy(configuration) {
-	        return {
-	            minimumDelay: configuration.minimumDelay,
-	            maximumDelay: configuration.maximumDelay,
-	            maximumRetry: configuration.maximumRetry,
-	            shouldRetry(reason, attempt) {
-	                var _a;
-	                if (((_a = reason === null || reason === void 0 ? void 0 : reason.status) === null || _a === void 0 ? void 0 : _a.statusCode) === 403) {
-	                    return false;
-	                }
-	                return this.maximumRetry > attempt;
-	            },
-	            getDelay(attempt, reason) {
-	                var _a;
-	                const delay = (_a = reason.retryAfter) !== null && _a !== void 0 ? _a : Math.min(Math.pow(2, attempt), this.maximumDelay);
-	                return (delay + Math.random()) * 1000;
-	            },
-	            getGiveupReason(reason, attempt) {
-	                var _a;
-	                if (this.maximumRetry <= attempt) {
-	                    return 'retry attempts exhausted.';
-	                }
-	                if (((_a = reason === null || reason === void 0 ? void 0 : reason.status) === null || _a === void 0 ? void 0 : _a.statusCode) === 403) {
-	                    return 'forbidden operation.';
-	                }
-	                return 'unknown error';
-	            },
-	            validate() {
-	                if (this.minimumDelay < 2)
-	                    throw new Error('Minimum delay can not be set less than 2 seconds for retry');
-	                else if (this.maximumDelay)
-	                    throw new Error('Maximum delay can not be set more than 150 seconds for retry');
-	                else if (this.maximumRetry > 6)
-	                    throw new Error('Maximum retry for exponential retry policy can not be more than 6');
-	            },
-	        };
 	    }
 	}
 
@@ -7897,22 +7990,6 @@
 	 * @internal
 	 */
 	const emitStatus = createEffect('EMIT_STATUS', (status) => status);
-	/**
-	 * Real-time updates receive restore effect.
-	 *
-	 * Performs subscribe REST API call with `tt` which has been received before disconnection or error.
-	 *
-	 * @internal
-	 */
-	const receiveReconnect = createManagedEffect('RECEIVE_RECONNECT', (context) => context);
-	/**
-	 * Initial subscription restore effect.
-	 *
-	 * Performs subscribe REST API call with `tt=0` after error.
-	 *
-	 * @internal
-	 */
-	const handshakeReconnect = createManagedEffect('HANDSHAKE_RECONNECT', (context) => context);
 
 	/**
 	 * Subscribe Event Engine events module.
@@ -7962,32 +8039,6 @@
 	 */
 	const handshakeFailure = createEvent('HANDSHAKE_FAILURE', (error) => error);
 	/**
-	 * Initial subscription handshake reconnect success event.
-	 *
-	 * Event is sent by corresponding effect handler if REST API call was successful after transition to the failed state.
-	 *
-	 * @internal
-	 */
-	const handshakeReconnectSuccess = createEvent('HANDSHAKE_RECONNECT_SUCCESS', (cursor) => ({
-	    cursor,
-	}));
-	/**
-	 * Initial subscription handshake reconnect did fail event.
-	 *
-	 * Event is sent by corresponding effect handler if REST API call did fail while tried to enter to the success state.
-	 *
-	 * @internal
-	 */
-	const handshakeReconnectFailure = createEvent('HANDSHAKE_RECONNECT_FAILURE', (error) => error);
-	/**
-	 * Initial subscription handshake impossible event.
-	 *
-	 * Event is sent by corresponding effect handler if REST API call exhausted all retry attempt and won't try again.
-	 *
-	 * @internal
-	 */
-	const handshakeReconnectGiveup = createEvent('HANDSHAKE_RECONNECT_GIVEUP', (error) => error);
-	/**
 	 * Subscription successfully received real-time updates event.
 	 *
 	 * Event is sent by corresponding effect handler if REST API call was successful.
@@ -8007,40 +8058,13 @@
 	 */
 	const receiveFailure = createEvent('RECEIVE_FAILURE', (error) => error);
 	/**
-	 * Subscription successfully received real-time updates on reconnection attempt event.
-	 *
-	 * Event is sent by corresponding effect handler if REST API call was successful after transition to the failed state.
-	 *
-	 * @internal
-	 */
-	const receiveReconnectSuccess = createEvent('RECEIVE_RECONNECT_SUCCESS', (cursor, events) => ({
-	    cursor,
-	    events,
-	}));
-	/**
-	 * Subscription did fail to receive real-time updates on reconnection attempt event.
-	 *
-	 * Event is sent by corresponding effect handler if REST API call did fail while tried to enter to the success state.
-	 *
-	 * @internal
-	 */
-	const receiveReconnectFailure = createEvent('RECEIVE_RECONNECT_FAILURE', (error) => error);
-	/**
-	 * Subscription real-time updates received impossible event.
-	 *
-	 * Event is sent by corresponding effect handler if REST API call exhausted all retry attempt and won't try again.
-	 *
-	 * @internal
-	 */
-	const receiveReconnectGiveup = createEvent('RECEIVING_RECONNECT_GIVEUP', (error) => error);
-	/**
 	 * Client disconnect event.
 	 *
 	 * Event is sent when user wants to temporarily stop real-time updates receive.
 	 *
 	 * @internal
 	 */
-	const disconnect = createEvent('DISCONNECT', () => ({}));
+	const disconnect = createEvent('DISCONNECT', (isOffline) => ({ isOffline }));
 	/**
 	 * Client reconnect event.
 	 *
@@ -8115,105 +8139,12 @@
 	            }
 	        })));
 	        this.on(emitMessages.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitMessages }) {
-	            if (payload.length > 0) {
+	            if (payload.length > 0)
 	                emitMessages(payload);
-	            }
 	        })));
-	        this.on(emitStatus.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitStatus }) {
-	            emitStatus(payload);
-	        })));
-	        this.on(receiveReconnect.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { receiveMessages, delay, config }) {
-	            if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
-	                abortSignal.throwIfAborted();
-	                yield delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
-	                abortSignal.throwIfAborted();
-	                try {
-	                    const result = yield receiveMessages({
-	                        abortSignal: abortSignal,
-	                        channels: payload.channels,
-	                        channelGroups: payload.groups,
-	                        timetoken: payload.cursor.timetoken,
-	                        region: payload.cursor.region,
-	                        filterExpression: config.filterExpression,
-	                    });
-	                    return engine.transition(receiveReconnectSuccess(result.cursor, result.messages));
-	                }
-	                catch (error) {
-	                    if (error instanceof PubNubError) {
-	                        if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
-	                            return;
-	                        return engine.transition(receiveReconnectFailure(error));
-	                    }
-	                }
-	            }
-	            else {
-	                return engine.transition(receiveReconnectGiveup(new PubNubError(config.retryConfiguration
-	                    ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
-	                    : 'Unable to complete subscribe messages receive.')));
-	            }
-	        })));
-	        this.on(handshakeReconnect.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { handshake, delay, presenceState, config }) {
-	            if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
-	                abortSignal.throwIfAborted();
-	                yield delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
-	                abortSignal.throwIfAborted();
-	                try {
-	                    const result = yield handshake(Object.assign({ abortSignal: abortSignal, channels: payload.channels, channelGroups: payload.groups, filterExpression: config.filterExpression }, (config.maintainPresenceState && { state: presenceState })));
-	                    return engine.transition(handshakeReconnectSuccess(result));
-	                }
-	                catch (error) {
-	                    if (error instanceof PubNubError) {
-	                        if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
-	                            return;
-	                        return engine.transition(handshakeReconnectFailure(error));
-	                    }
-	                }
-	            }
-	            else {
-	                return engine.transition(handshakeReconnectGiveup(new PubNubError(config.retryConfiguration
-	                    ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
-	                    : 'Unable to complete subscribe handshake')));
-	            }
-	        })));
+	        this.on(emitStatus.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitStatus }) { return emitStatus(payload); })));
 	    }
 	}
-
-	/**
-	 * Failed initial subscription handshake (disconnected) state.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Failed initial subscription handshake (disconnected) state.
-	 *
-	 * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
-	 * exhausted.
-	 *
-	 * @internal
-	 */
-	const HandshakeFailedState = new State('HANDSHAKE_FAILED');
-	HandshakeFailedState.on(subscriptionChange.type, (context, event) => HandshakingState.with({
-	    channels: event.payload.channels,
-	    groups: event.payload.groups,
-	    cursor: context.cursor,
-	}));
-	HandshakeFailedState.on(reconnect.type, (context, event) => HandshakingState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	    cursor: event.payload.cursor || context.cursor,
-	}));
-	HandshakeFailedState.on(restore.type, (context, event) => {
-	    var _a, _b;
-	    return HandshakingState.with({
-	        channels: event.payload.channels,
-	        groups: event.payload.groups,
-	        cursor: {
-	            timetoken: event.payload.cursor.timetoken,
-	            region: event.payload.cursor.region ? event.payload.cursor.region : ((_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0),
-	        },
-	    });
-	});
-	HandshakeFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
 
 	/**
 	 * Stopped initial subscription handshake (disconnected) state.
@@ -8229,64 +8160,50 @@
 	 * @internal
 	 */
 	const HandshakeStoppedState = new State('HANDSHAKE_STOPPED');
-	HandshakeStoppedState.on(subscriptionChange.type, (context, event) => HandshakeStoppedState.with({
-	    channels: event.payload.channels,
-	    groups: event.payload.groups,
-	    cursor: context.cursor,
-	}));
-	HandshakeStoppedState.on(reconnect.type, (context, event) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: event.payload.cursor || context.cursor })));
-	HandshakeStoppedState.on(restore.type, (context, event) => {
+	HandshakeStoppedState.on(subscriptionChange.type, (context, { payload }) => HandshakeStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }));
+	HandshakeStoppedState.on(reconnect.type, (context, { payload }) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: payload.cursor || context.cursor })));
+	HandshakeStoppedState.on(restore.type, (context, { payload }) => {
 	    var _a;
 	    return HandshakeStoppedState.with({
-	        channels: event.payload.channels,
-	        groups: event.payload.groups,
-	        cursor: {
-	            timetoken: event.payload.cursor.timetoken,
-	            region: event.payload.cursor.region || ((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0,
-	        },
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || ((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0 },
 	    });
 	});
 	HandshakeStoppedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
 
 	/**
-	 * Failed to receive real-time updates (disconnected) state.
+	 * Failed initial subscription handshake (disconnected) state.
 	 *
 	 * @internal
 	 */
 	/**
-	 * Failed to receive real-time updates (disconnected) state.
+	 * Failed initial subscription handshake (disconnected) state.
 	 *
 	 * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
 	 * exhausted.
 	 *
 	 * @internal
 	 */
-	const ReceiveFailedState = new State('RECEIVE_FAILED');
-	ReceiveFailedState.on(reconnect.type, (context, event) => {
-	    var _a;
+	const HandshakeFailedState = new State('HANDSHAKE_FAILED');
+	HandshakeFailedState.on(subscriptionChange.type, (context, { payload }) => HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }));
+	HandshakeFailedState.on(reconnect.type, (context, { payload }) => HandshakingState.with({
+	    channels: context.channels,
+	    groups: context.groups,
+	    cursor: payload.cursor || context.cursor,
+	}));
+	HandshakeFailedState.on(restore.type, (context, { payload }) => {
+	    var _a, _b;
 	    return HandshakingState.with({
-	        channels: context.channels,
-	        groups: context.groups,
+	        channels: payload.channels,
+	        groups: payload.groups,
 	        cursor: {
-	            timetoken: !!event.payload.cursor.timetoken ? (_a = event.payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
-	            region: event.payload.cursor.region || context.cursor.region,
+	            timetoken: payload.cursor.timetoken,
+	            region: payload.cursor.region ? payload.cursor.region : ((_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0),
 	        },
 	    });
 	});
-	ReceiveFailedState.on(subscriptionChange.type, (context, event) => HandshakingState.with({
-	    channels: event.payload.channels,
-	    groups: event.payload.groups,
-	    cursor: context.cursor,
-	}));
-	ReceiveFailedState.on(restore.type, (context, event) => HandshakingState.with({
-	    channels: event.payload.channels,
-	    groups: event.payload.groups,
-	    cursor: {
-	        timetoken: event.payload.cursor.timetoken,
-	        region: event.payload.cursor.region || context.cursor.region,
-	    },
-	}));
-	ReceiveFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));
+	HandshakeFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
 
 	/**
 	 * Stopped real-time updates (disconnected) state module.
@@ -8302,81 +8219,57 @@
 	 * @internal
 	 */
 	const ReceiveStoppedState = new State('RECEIVE_STOPPED');
-	ReceiveStoppedState.on(subscriptionChange.type, (context, event) => ReceiveStoppedState.with({
-	    channels: event.payload.channels,
-	    groups: event.payload.groups,
-	    cursor: context.cursor,
+	ReceiveStoppedState.on(subscriptionChange.type, (context, { payload }) => ReceiveStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }));
+	ReceiveStoppedState.on(restore.type, (context, { payload }) => ReceiveStoppedState.with({
+	    channels: payload.channels,
+	    groups: payload.groups,
+	    cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
 	}));
-	ReceiveStoppedState.on(restore.type, (context, event) => ReceiveStoppedState.with({
-	    channels: event.payload.channels,
-	    groups: event.payload.groups,
-	    cursor: {
-	        timetoken: event.payload.cursor.timetoken,
-	        region: event.payload.cursor.region || context.cursor.region,
-	    },
-	}));
-	ReceiveStoppedState.on(reconnect.type, (context, event) => {
+	ReceiveStoppedState.on(reconnect.type, (context, { payload }) => {
 	    var _a;
 	    return HandshakingState.with({
 	        channels: context.channels,
 	        groups: context.groups,
 	        cursor: {
-	            timetoken: !!event.payload.cursor.timetoken ? (_a = event.payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
-	            region: event.payload.cursor.region || context.cursor.region,
+	            timetoken: !!payload.cursor.timetoken ? (_a = payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
+	            region: payload.cursor.region || context.cursor.region,
 	        },
 	    });
 	});
 	ReceiveStoppedState.on(unsubscribeAll.type, () => UnsubscribedState.with(undefined));
 
 	/**
-	 * Reconnect to receive real-time updates (disconnected) state.
+	 * Failed to receive real-time updates (disconnected) state.
 	 *
 	 * @internal
 	 */
 	/**
-	 * Reconnect to receive real-time updates (disconnected) state.
+	 * Failed to receive real-time updates (disconnected) state.
 	 *
-	 * State in which Subscription Event Engine tries to recover after error which happened before.
+	 * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
+	 * exhausted.
 	 *
 	 * @internal
 	 */
-	const ReceiveReconnectingState = new State('RECEIVE_RECONNECTING');
-	ReceiveReconnectingState.onEnter((context) => receiveReconnect(context));
-	ReceiveReconnectingState.onExit(() => receiveReconnect.cancel);
-	ReceiveReconnectingState.on(receiveReconnectSuccess.type, (context, event) => ReceivingState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	    cursor: event.payload.cursor,
-	}, [emitMessages(event.payload.events)]));
-	ReceiveReconnectingState.on(receiveReconnectFailure.type, (context, event) => ReceiveReconnectingState.with(Object.assign(Object.assign({}, context), { attempts: context.attempts + 1, reason: event.payload })));
-	ReceiveReconnectingState.on(receiveReconnectGiveup.type, (context, event) => {
+	const ReceiveFailedState = new State('RECEIVE_FAILED');
+	ReceiveFailedState.on(reconnect.type, (context, { payload }) => {
 	    var _a;
-	    return ReceiveFailedState.with({
-	        groups: context.groups,
+	    return HandshakingState.with({
 	        channels: context.channels,
-	        cursor: context.cursor,
-	        reason: event.payload,
-	    }, [emitStatus({ category: StatusCategory$1.PNDisconnectedUnexpectedlyCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
+	        groups: context.groups,
+	        cursor: {
+	            timetoken: !!payload.cursor.timetoken ? (_a = payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
+	            region: payload.cursor.region || context.cursor.region,
+	        },
+	    });
 	});
-	ReceiveReconnectingState.on(disconnect.type, (context) => ReceiveStoppedState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	    cursor: context.cursor,
-	}, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
-	ReceiveReconnectingState.on(restore.type, (context, event) => ReceivingState.with({
-	    channels: event.payload.channels,
-	    groups: event.payload.groups,
-	    cursor: {
-	        timetoken: event.payload.cursor.timetoken,
-	        region: event.payload.cursor.region || context.cursor.region,
-	    },
+	ReceiveFailedState.on(subscriptionChange.type, (context, { payload }) => HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }));
+	ReceiveFailedState.on(restore.type, (context, { payload }) => HandshakingState.with({
+	    channels: payload.channels,
+	    groups: payload.groups,
+	    cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
 	}));
-	ReceiveReconnectingState.on(subscriptionChange.type, (context, event) => ReceivingState.with({
-	    channels: event.payload.channels,
-	    groups: event.payload.groups,
-	    cursor: context.cursor,
-	}));
-	ReceiveReconnectingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
+	ReceiveFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));
 
 	/**
 	 * Receiving real-time updates (connected) state module.
@@ -8393,105 +8286,61 @@
 	const ReceivingState = new State('RECEIVING');
 	ReceivingState.onEnter((context) => receiveMessages(context.channels, context.groups, context.cursor));
 	ReceivingState.onExit(() => receiveMessages.cancel);
-	ReceivingState.on(receiveSuccess.type, (context, event) => {
-	    return ReceivingState.with({ channels: context.channels, groups: context.groups, cursor: event.payload.cursor }, [
-	        emitMessages(event.payload.events),
+	ReceivingState.on(receiveSuccess.type, (context, { payload }) => {
+	    return ReceivingState.with({ channels: context.channels, groups: context.groups, cursor: payload.cursor }, [
+	        emitMessages(payload.events),
 	    ]);
 	});
-	ReceivingState.on(subscriptionChange.type, (context, event) => {
-	    if (event.payload.channels.length === 0 && event.payload.groups.length === 0) {
-	        return UnsubscribedState.with(undefined);
-	    }
+	ReceivingState.on(subscriptionChange.type, (context, { payload }) => {
+	    const subscriptionChangeStatus = {
+	        category: StatusCategory$1.PNSubscriptionChangedCategory,
+	        affectedChannels: payload.channels.slice(0),
+	        affectedChannelGroups: payload.groups.slice(0),
+	    };
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined, [emitStatus(subscriptionChangeStatus)]);
+	    return ReceivingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }, [
+	        emitStatus(subscriptionChangeStatus),
+	    ]);
+	});
+	ReceivingState.on(restore.type, (context, { payload }) => {
+	    const subscriptionChangeStatus = {
+	        category: StatusCategory$1.PNSubscriptionChangedCategory,
+	        affectedChannels: payload.channels.slice(0),
+	        affectedChannelGroups: payload.groups.slice(0),
+	    };
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined, [emitStatus(subscriptionChangeStatus)]);
 	    return ReceivingState.with({
-	        cursor: context.cursor,
-	        channels: event.payload.channels,
-	        groups: event.payload.groups,
-	    });
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
+	    }, [emitStatus(subscriptionChangeStatus)]);
 	});
-	ReceivingState.on(restore.type, (context, event) => {
-	    if (event.payload.channels.length === 0 && event.payload.groups.length === 0) {
-	        return UnsubscribedState.with(undefined);
+	ReceivingState.on(receiveFailure.type, (context, { payload }) => {
+	    var _a;
+	    return ReceiveFailedState.with(Object.assign(Object.assign({}, context), { reason: payload }), [
+	        emitStatus({ category: StatusCategory$1.PNDisconnectedUnexpectedlyCategory, error: (_a = payload.status) === null || _a === void 0 ? void 0 : _a.category }),
+	    ]);
+	});
+	ReceivingState.on(disconnect.type, (context, event) => {
+	    var _a;
+	    if (!event.payload.isOffline) {
+	        return ReceiveStoppedState.with({ channels: context.channels, groups: context.groups, cursor: context.cursor }, [
+	            emitStatus({ category: StatusCategory$1.PNDisconnectedCategory }),
+	        ]);
 	    }
-	    return ReceivingState.with({
-	        channels: event.payload.channels,
-	        groups: event.payload.groups,
-	        cursor: {
-	            timetoken: event.payload.cursor.timetoken,
-	            region: event.payload.cursor.region || context.cursor.region,
-	        },
-	    });
-	});
-	ReceivingState.on(receiveFailure.type, (context, event) => {
-	    return ReceiveReconnectingState.with(Object.assign(Object.assign({}, context), { attempts: 0, reason: event.payload }));
-	});
-	ReceivingState.on(disconnect.type, (context) => {
-	    return ReceiveStoppedState.with({
-	        channels: context.channels,
-	        groups: context.groups,
-	        cursor: context.cursor,
-	    }, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]);
+	    else {
+	        const errorReason = PubNubAPIError.create(new Error('Network connection error')).toPubNubError(RequestOperation$1.PNSubscribeOperation);
+	        return ReceiveFailedState.with({ channels: context.channels, groups: context.groups, cursor: context.cursor, reason: errorReason }, [
+	            emitStatus({
+	                category: StatusCategory$1.PNDisconnectedUnexpectedlyCategory,
+	                error: (_a = errorReason.status) === null || _a === void 0 ? void 0 : _a.category,
+	            }),
+	        ]);
+	    }
 	});
 	ReceivingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
-
-	/**
-	 * Retry initial subscription handshake (disconnected) state.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Retry initial subscription handshake (disconnected) state.
-	 *
-	 * State in which Subscription Event Engine tries to recover after error which happened before.
-	 *
-	 * @internal
-	 */
-	const HandshakeReconnectingState = new State('HANDSHAKE_RECONNECTING');
-	HandshakeReconnectingState.onEnter((context) => handshakeReconnect(context));
-	HandshakeReconnectingState.onExit(() => handshakeReconnect.cancel);
-	HandshakeReconnectingState.on(handshakeReconnectSuccess.type, (context, event) => {
-	    var _a, _b;
-	    const cursor = {
-	        timetoken: !!((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) ? (_b = context.cursor) === null || _b === void 0 ? void 0 : _b.timetoken : event.payload.cursor.timetoken,
-	        region: event.payload.cursor.region,
-	    };
-	    return ReceivingState.with({
-	        channels: context.channels,
-	        groups: context.groups,
-	        cursor: cursor,
-	    }, [emitStatus({ category: StatusCategory$1.PNConnectedCategory })]);
-	});
-	HandshakeReconnectingState.on(handshakeReconnectFailure.type, (context, event) => HandshakeReconnectingState.with(Object.assign(Object.assign({}, context), { attempts: context.attempts + 1, reason: event.payload })));
-	HandshakeReconnectingState.on(handshakeReconnectGiveup.type, (context, event) => {
-	    var _a;
-	    return HandshakeFailedState.with({
-	        groups: context.groups,
-	        channels: context.channels,
-	        cursor: context.cursor,
-	        reason: event.payload,
-	    }, [emitStatus({ category: StatusCategory$1.PNConnectionErrorCategory, error: (_a = event.payload) === null || _a === void 0 ? void 0 : _a.message })]);
-	});
-	HandshakeReconnectingState.on(disconnect.type, (context) => HandshakeStoppedState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	    cursor: context.cursor,
-	}));
-	HandshakeReconnectingState.on(subscriptionChange.type, (context, event) => HandshakingState.with({
-	    channels: event.payload.channels,
-	    groups: event.payload.groups,
-	    cursor: context.cursor,
-	}));
-	HandshakeReconnectingState.on(restore.type, (context, event) => {
-	    var _a, _b;
-	    return HandshakingState.with({
-	        channels: event.payload.channels,
-	        groups: event.payload.groups,
-	        cursor: {
-	            timetoken: event.payload.cursor.timetoken,
-	            region: ((_a = event.payload.cursor) === null || _a === void 0 ? void 0 : _a.region) || ((_b = context === null || context === void 0 ? void 0 : context.cursor) === null || _b === void 0 ? void 0 : _b.region) || 0,
-	        },
-	    });
-	});
-	HandshakeReconnectingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));
 
 	/**
 	 * Initial subscription handshake (disconnected) state.
@@ -8509,54 +8358,51 @@
 	const HandshakingState = new State('HANDSHAKING');
 	HandshakingState.onEnter((context) => handshake(context.channels, context.groups));
 	HandshakingState.onExit(() => handshake.cancel);
-	HandshakingState.on(subscriptionChange.type, (context, event) => {
-	    if (event.payload.channels.length === 0 && event.payload.groups.length === 0) {
+	HandshakingState.on(subscriptionChange.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
 	        return UnsubscribedState.with(undefined);
-	    }
-	    return HandshakingState.with({
-	        channels: event.payload.channels,
-	        groups: event.payload.groups,
-	        cursor: context.cursor,
-	    });
+	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
 	});
-	HandshakingState.on(handshakeSuccess.type, (context, event) => {
+	HandshakingState.on(handshakeSuccess.type, (context, { payload }) => {
 	    var _a, _b;
 	    return ReceivingState.with({
 	        channels: context.channels,
 	        groups: context.groups,
 	        cursor: {
-	            timetoken: !!((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) ? (_b = context === null || context === void 0 ? void 0 : context.cursor) === null || _b === void 0 ? void 0 : _b.timetoken : event.payload.timetoken,
-	            region: event.payload.region,
+	            timetoken: !!((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) ? (_b = context.cursor) === null || _b === void 0 ? void 0 : _b.timetoken : payload.timetoken,
+	            region: payload.region,
 	        },
-	    }, [
-	        emitStatus({
-	            category: StatusCategory$1.PNConnectedCategory,
-	        }),
-	    ]);
+	    }, [emitStatus({ category: StatusCategory$1.PNConnectedCategory })]);
 	});
 	HandshakingState.on(handshakeFailure.type, (context, event) => {
-	    return HandshakeReconnectingState.with({
+	    var _a;
+	    return HandshakeFailedState.with({
 	        channels: context.channels,
 	        groups: context.groups,
 	        cursor: context.cursor,
-	        attempts: 0,
 	        reason: event.payload,
-	    });
+	    }, [emitStatus({ category: StatusCategory$1.PNConnectionErrorCategory, error: (_a = event.payload.status) === null || _a === void 0 ? void 0 : _a.category })]);
 	});
-	HandshakingState.on(disconnect.type, (context) => HandshakeStoppedState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	    cursor: context.cursor,
-	}));
-	HandshakingState.on(restore.type, (context, event) => {
+	HandshakingState.on(disconnect.type, (context, event) => {
+	    var _a;
+	    if (!event.payload.isOffline)
+	        return HandshakeStoppedState.with({ channels: context.channels, groups: context.groups, cursor: context.cursor });
+	    else {
+	        const errorReason = PubNubAPIError.create(new Error('Network connection error')).toPubNubError(RequestOperation$1.PNSubscribeOperation);
+	        return HandshakeFailedState.with({ channels: context.channels, groups: context.groups, cursor: context.cursor, reason: errorReason }, [
+	            emitStatus({
+	                category: StatusCategory$1.PNConnectionErrorCategory,
+	                error: (_a = errorReason.status) === null || _a === void 0 ? void 0 : _a.category,
+	            }),
+	        ]);
+	    }
+	});
+	HandshakingState.on(restore.type, (context, { payload }) => {
 	    var _a;
 	    return HandshakingState.with({
-	        channels: event.payload.channels,
-	        groups: event.payload.groups,
-	        cursor: {
-	            timetoken: event.payload.cursor.timetoken,
-	            region: event.payload.cursor.region || ((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0,
-	        },
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || ((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0 },
 	    });
 	});
 	HandshakingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
@@ -8574,17 +8420,8 @@
 	 * @internal
 	 */
 	const UnsubscribedState = new State('UNSUBSCRIBED');
-	UnsubscribedState.on(subscriptionChange.type, (_, event) => HandshakingState.with({
-	    channels: event.payload.channels,
-	    groups: event.payload.groups,
-	}));
-	UnsubscribedState.on(restore.type, (_, event) => {
-	    return HandshakingState.with({
-	        channels: event.payload.channels,
-	        groups: event.payload.groups,
-	        cursor: event.payload.cursor,
-	    });
-	});
+	UnsubscribedState.on(subscriptionChange.type, (_, { payload }) => HandshakingState.with({ channels: payload.channels, groups: payload.groups }));
+	UnsubscribedState.on(restore.type, (_, { payload }) => HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: payload.cursor }));
 
 	/**
 	 * Subscribe Event Engine module.
@@ -8645,10 +8482,10 @@
 	        if (new Set(this.channels).size !== new Set(filteredChannels).size ||
 	            new Set(this.groups).size !== new Set(filteredGroups).size) {
 	            const channelsToLeave = findUniqueCommonElements(this.channels, channels);
-	            const groupstoLeave = findUniqueCommonElements(this.groups, channelGroups);
+	            const groupsToLeave = findUniqueCommonElements(this.groups, channelGroups);
 	            if (this.dependencies.presenceState) {
 	                channelsToLeave === null || channelsToLeave === void 0 ? void 0 : channelsToLeave.forEach((c) => delete this.dependencies.presenceState[c]);
-	                groupstoLeave === null || groupstoLeave === void 0 ? void 0 : groupstoLeave.forEach((g) => delete this.dependencies.presenceState[g]);
+	                groupsToLeave === null || groupsToLeave === void 0 ? void 0 : groupsToLeave.forEach((g) => delete this.dependencies.presenceState[g]);
 	            }
 	            this.channels = filteredChannels;
 	            this.groups = filteredGroups;
@@ -8656,7 +8493,7 @@
 	            if (this.dependencies.leave) {
 	                this.dependencies.leave({
 	                    channels: channelsToLeave.slice(0),
-	                    groups: groupstoLeave.slice(0),
+	                    groups: groupsToLeave.slice(0),
 	                });
 	            }
 	        }
@@ -8676,14 +8513,18 @@
 	            this.dependencies.leaveAll({ channels, groups: channelGroups });
 	    }
 	    reconnect({ timetoken, region }) {
-	        this.engine.transition(reconnect(timetoken, region));
-	    }
-	    disconnect() {
 	        const channelGroups = this.getSubscribedChannels();
 	        const channels = this.getSubscribedChannels();
-	        this.engine.transition(disconnect());
-	        if (this.dependencies.leaveAll)
-	            this.dependencies.leaveAll({ channels, groups: channelGroups });
+	        this.engine.transition(reconnect(timetoken, region));
+	        if (this.dependencies.presenceReconnect)
+	            this.dependencies.presenceReconnect({ channels, groups: channelGroups });
+	    }
+	    disconnect(isOffline) {
+	        const channelGroups = this.getSubscribedChannels();
+	        const channels = this.getSubscribedChannels();
+	        this.engine.transition(disconnect(isOffline));
+	        if (this.dependencies.presenceDisconnect)
+	            this.dependencies.presenceDisconnect({ channels, groups: channelGroups, isOffline });
 	    }
 	    getSubscribedChannels() {
 	        return Array.from(new Set(this.channels.slice(0)));
@@ -8692,7 +8533,7 @@
 	        return Array.from(new Set(this.groups.slice(0)));
 	    }
 	    dispose() {
-	        this.disconnect();
+	        this.disconnect(true);
 	        this._unsubscribeEngine();
 	        this.dispatcher.dispose();
 	    }
@@ -9034,7 +8875,7 @@
 	 */
 	class HeartbeatRequest extends AbstractRequest {
 	    constructor(parameters) {
-	        super();
+	        super({ cancellable: true });
 	        this.parameters = parameters;
 	    }
 	    operation() {
@@ -12973,7 +12814,6 @@
 	                                    else
 	                                        setTimeout(resolve, heartbeatInterval * 1000);
 	                                }),
-	                                retryDelay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
 	                                emitStatus: (status) => this.listenerManager.announceStatus(status),
 	                                config: this._configuration,
 	                                presenceState: this.presenceState,
@@ -12987,6 +12827,8 @@
 	                        join: this.join.bind(this),
 	                        leave: this.leave.bind(this),
 	                        leaveAll: this.leaveAll.bind(this),
+	                        presenceReconnect: this.presenceReconnect.bind(this),
+	                        presenceDisconnect: this.presenceDisconnect.bind(this),
 	                        presenceState: this.presenceState,
 	                        config: this._configuration,
 	                        emitMessages: (events) => {
@@ -13404,6 +13246,10 @@
 	            }
 	            else if (this.eventEngine)
 	                this.eventEngine.dispose();
+	            {
+	                if (this.presenceEventEngine)
+	                    this.presenceEventEngine.dispose();
+	            }
 	        }
 	    }
 	    /**
@@ -13680,13 +13526,17 @@
 	    }
 	    /**
 	     * Temporarily disconnect from real-time events stream.
+	     *
+	     * **Note:** `isOffline` is set to `true` only when client experience network issues.
+	     *
+	     * @param [isOffline] - Whether `offline` presence should be notified or not.
 	     */
-	    disconnect() {
+	    disconnect(isOffline) {
 	        {
 	            if (this.subscriptionManager)
 	                this.subscriptionManager.disconnect();
 	            else if (this.eventEngine)
-	                this.eventEngine.disconnect();
+	                this.eventEngine.disconnect(isOffline);
 	        }
 	    }
 	    /**
@@ -14060,6 +13910,22 @@
 	            }
 	        }
 	    }
+	    /**
+	     * Reconnect presence event engine after network issues.
+	     *
+	     * @param parameters - List of channels and groups where `join` event should be sent.
+	     *
+	     * @internal
+	     */
+	    presenceReconnect(parameters) {
+	        {
+	            if (this.presenceEventEngine)
+	                this.presenceEventEngine.reconnect();
+	            else {
+	                this.heartbeat(Object.assign(Object.assign({ channels: parameters.channels, channelGroups: parameters.groups }, (this._configuration.maintainPresenceState && { state: this.presenceState })), { heartbeat: this._configuration.getPresenceTimeout() }), () => { });
+	            }
+	        }
+	    }
 	    // endregion
 	    // region Leave
 	    /**
@@ -14090,6 +13956,21 @@
 	            if (this.presenceEventEngine)
 	                this.presenceEventEngine.leaveAll();
 	            else
+	                this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => { });
+	        }
+	    }
+	    /**
+	     * Announce user `leave` on disconnection.
+	     *
+	     * @internal
+	     *
+	     * @param parameters - List of channels and groups where `leave` event should be sent.
+	     */
+	    presenceDisconnect(parameters) {
+	        {
+	            if (this.presenceEventEngine)
+	                this.presenceEventEngine.disconnect(parameters.isOffline);
+	            else if (!parameters.isOffline)
 	                this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => { });
 	        }
 	    }
@@ -14909,7 +14790,7 @@
 	    networkDownDetected() {
 	        this.listenerManager.announceNetworkDown();
 	        if (this._configuration.restore)
-	            this.disconnect();
+	            this.disconnect(true);
 	        else
 	            this.destroy(true);
 	    }

@@ -54,7 +54,7 @@ type ServiceResponse = {
  */
 export class HeartbeatRequest extends AbstractRequest<Presence.PresenceHeartbeatResponse, ServiceResponse> {
   constructor(private readonly parameters: RequestParameters) {
-    super();
+    super({ cancellable: true });
   }
 
   operation(): RequestOperation {

@@ -5,14 +5,14 @@
  */
 
 import { PrivateClientConfiguration } from '../../core/interfaces/configuration';
+import { Payload, ResultCallback } from '../../core/types/api';
+import StatusCategory from '../../core/constants/categories';
 import { asyncHandler, Dispatcher, Engine } from '../core';
 import PNOperations from '../../core/constants/operations';
 import * as Presence from '../../core/types/api/presence';
 import { PubNubError } from '../../errors/pubnub-error';
-import { Payload, ResultCallback } from '../../core/types/api';
 import * as effects from './effects';
 import * as events from './events';
-import StatusCategory from '../../core/constants/categories';
 
 /**
  * Presence Event Engine dependencies set (configuration).
@@ -27,7 +27,6 @@ export type Dependencies = {
   leave: (parameters: Presence.PresenceLeaveParameters) => void;
   heartbeatDelay: () => Promise<void>;
 
-  retryDelay: (milliseconds: number) => Promise<void>;
   config: PrivateClientConfiguration;
   presenceState: Record<string, Payload>;
 
@@ -60,7 +59,7 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
         } catch (e) {
           if (e instanceof PubNubError) {
             if (e.status && e.status.category == StatusCategory.PNCancelledCategory) return;
-            return engine.transition(events.heartbeatFailure(e));
+            engine.transition(events.heartbeatFailure(e));
           }
         }
       }),
@@ -94,41 +93,17 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
     );
 
     this.on(
-      effects.delayedHeartbeat.type,
-      asyncHandler(async (payload, abortSignal, { heartbeat, retryDelay, presenceState, config }) => {
-        if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
-          abortSignal.throwIfAborted();
-
-          await retryDelay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
-
-          abortSignal.throwIfAborted();
-          try {
-            const result = await heartbeat({
-              channels: payload.channels,
-              channelGroups: payload.groups,
-              ...(config.maintainPresenceState && { state: presenceState }),
-              heartbeat: config.presenceTimeout!,
-            });
-            return engine.transition(events.heartbeatSuccess(200));
-          } catch (e) {
-            if (e instanceof PubNubError) {
-              if (e.status && e.status.category == StatusCategory.PNCancelledCategory) return;
-              return engine.transition(events.heartbeatFailure(e));
-            }
-          }
-        } else {
-          return engine.transition(events.heartbeatGiveup());
-        }
-      }),
-    );
-
-    this.on(
       effects.emitStatus.type,
       asyncHandler(async (payload, _, { emitStatus, config }) => {
-        if (config.announceFailedHeartbeats && payload?.status?.error === true) {
-          emitStatus(payload.status);
+        if (config.announceFailedHeartbeats && payload?.error === true) {
+          emitStatus({ ...payload, operation: PNOperations.PNHeartbeatOperation });
         } else if (config.announceSuccessfulHeartbeats && payload.statusCode === 200) {
-          emitStatus({ ...payload, operation: PNOperations.PNHeartbeatOperation, error: false });
+          emitStatus({
+            ...payload,
+            error: false,
+            operation: PNOperations.PNHeartbeatOperation,
+            category: StatusCategory.PNAcknowledgmentCategory,
+          });
         }
       }),
     );

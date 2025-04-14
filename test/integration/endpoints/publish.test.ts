@@ -15,10 +15,6 @@ describe('publish endpoints', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -30,6 +26,10 @@ describe('publish endpoints', () => {
       useRequestId: false,
       useRandomIVs: false,
     });
+  });
+
+  afterEach(() => {
+    pubnub.destroy(true);
   });
 
   describe('##validation', () => {

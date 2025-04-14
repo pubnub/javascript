@@ -151,7 +151,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
   private networkDownDetected() {
     this.listenerManager.announceNetworkDown();
 
-    if (this._configuration.restore) this.disconnect();
+    if (this._configuration.restore) this.disconnect(true);
     else this.destroy(true);
   }
 

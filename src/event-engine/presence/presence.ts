@@ -59,7 +59,16 @@ export class PresenceEventEngine {
     this.engine.transition(events.leftAll());
   }
 
+  reconnect() {
+    this.engine.transition(events.reconnect());
+  }
+
+  disconnect(isOffline?: boolean) {
+    this.engine.transition(events.disconnect(isOffline));
+  }
+
   dispose() {
+    this.disconnect(true);
     this._unsubscribeEngine();
     this.dispatcher.dispose();
   }

@@ -407,8 +407,12 @@ declare class PubNubCore<
   unsubscribeAll(): void;
   /**
    * Temporarily disconnect from real-time events stream.
+   *
+   * **Note:** `isOffline` is set to `true` only when client experience network issues.
+   *
+   * @param [isOffline] - Whether `offline` presence should be notified or not.
    */
-  disconnect(): void;
+  disconnect(isOffline?: boolean): void;
   /**
    * Restore connection to the real-time events stream.
    *
@@ -1756,7 +1760,7 @@ declare namespace PubNub {
     /**
      * Information about error.
      */
-    error?: string | boolean;
+    error?: string | StatusCategory | boolean;
     /**
      * List of channels for which status update announced.
      */
@@ -2071,6 +2075,10 @@ declare namespace PubNub {
      * PubNub client connected to the real-time updates stream.
      */
     PNConnectedCategory = 'PNConnectedCategory',
+    /**
+     * Set of active channels and groups has been changed.
+     */
+    PNSubscriptionChangedCategory = 'PNSubscriptionChangedCategory',
     /**
      * Received real-time updates exceed specified threshold.
      *
@@ -2709,60 +2717,76 @@ declare namespace PubNub {
   }
 
   /**
-   * Failed request retry policy.
+   * List of known endpoint groups (by context).
    */
-  export class RetryPolicy {
-    static LinearRetryPolicy(
-      configuration: LinearRetryPolicyConfiguration,
-    ): RequestRetryPolicy & LinearRetryPolicyConfiguration;
-    static ExponentialRetryPolicy(
-      configuration: ExponentialRetryPolicyConfiguration,
-    ): RequestRetryPolicy & ExponentialRetryPolicyConfiguration;
+  export enum Endpoint {
+    /**
+     * The endpoints to send messages.
+     */
+    MessageSend = 'MessageSendEndpoint',
+    /**
+     * The endpoint for real-time update retrieval.
+     */
+    Subscribe = 'SubscribeEndpoint',
+    /**
+     * The endpoint to access and manage `user_id` presence and fetch channel presence information.
+     */
+    Presence = 'PresenceEndpoint',
+    /**
+     * The endpoint to access and manage files in channel-specific storage.
+     */
+    Files = 'FilesEndpoint',
+    /**
+     * The endpoint to access and manage messages for a specific channel(s) in the persistent storage.
+     */
+    MessageStorage = 'MessageStorageEndpoint',
+    /**
+     * The endpoint to access and manage channel groups.
+     */
+    ChannelGroups = 'ChannelGroupsEndpoint',
+    /**
+     * The endpoint to access and manage device registration for channel push notifications.
+     */
+    DevicePushNotifications = 'DevicePushNotificationsEndpoint',
+    /**
+     * The endpoint to access and manage App Context objects.
+     */
+    AppContext = 'AppContextEndpoint',
+    /**
+     * The endpoint to access and manage reactions for a specific message.
+     */
+    MessageReactions = 'MessageReactionsEndpoint',
   }
 
+  /**
+   * Request retry configuration interface.
+   */
   export type RequestRetryPolicy = {
     /**
      * Check whether failed request can be retried.
      *
-     * @param reason - Request processing failure reason.
-     * @param attempt - Number of sequential failure.
+     * @param request - Transport request for which retry ability should be identifier.
+     * @param [response] - Service response (if available)
+     * @param [errorCategory] - Request processing error category.
+     * @param [attempt] - Number of sequential failure.
      *
      * @returns `true` if another request retry attempt can be done.
      */
     shouldRetry(
-      reason: PubNubError & {
-        retryAfter?: number;
-      },
-      attempt: number,
+      request: TransportRequest,
+      response?: TransportResponse,
+      errorCategory?: StatusCategory,
+      attempt?: number,
     ): boolean;
     /**
      * Computed delay for next request retry attempt.
      *
      * @param attempt - Number of sequential failure.
-     * @param reason - Request processing failure reason.
+     * @param [response] - Service response (if available).
      *
      * @returns Delay before next request retry attempt in milliseconds.
      */
-    getDelay(
-      attempt: number,
-      reason: PubNubError & {
-        retryAfter?: number;
-      },
-    ): number;
-    /**
-     * Identify reason why another retry attempt can't be made.
-     *
-     * @param reason - Request processing failure reason.
-     * @param attempt - Number of sequential failure.
-     *
-     * @returns Give up reason.
-     */
-    getGiveupReason(
-      reason: PubNubError & {
-        retryAfter?: number;
-      },
-      attempt: number,
-    ): string;
+    getDelay(attempt: number, response?: TransportResponse): number;
     /**
      * Validate retry policy parameters.
      *
@@ -2786,6 +2810,10 @@ declare namespace PubNub {
      * Maximum number of retry attempts.
      */
     maximumRetry: number;
+    /**
+     * Endpoints that won't be retried.
+     */
+    excluded?: Endpoint[];
   };
 
   /**
@@ -2804,77 +2832,47 @@ declare namespace PubNub {
      * Maximum number of retry attempts.
      */
     maximumRetry: number;
+    /**
+     * Endpoints that won't be retried.
+     */
+    excluded?: Endpoint[];
   };
 
   /**
-   * PubNub operation error.
-   *
-   * When an operation can't be performed or there is an error from the server, this object will be returned.
+   * Failed request retry policy.
    */
-  export class PubNubError extends Error {
-    status?: Status | undefined;
+  export class RetryPolicy {
+    static LinearRetryPolicy(
+      configuration: LinearRetryPolicyConfiguration,
+    ): RequestRetryPolicy & LinearRetryPolicyConfiguration;
+    static ExponentialRetryPolicy(
+      configuration: ExponentialRetryPolicyConfiguration,
+    ): RequestRetryPolicy & ExponentialRetryPolicyConfiguration;
   }
 
   /**
-   * Represents the configuration options for keeping the transport connection alive.
+   * Represents a transport response from a service.
    */
-  export type TransportKeepAlive = {
+  export type TransportResponse = {
     /**
-     * The time interval in milliseconds for keeping the connection alive.
-     *
-     * @default 1000
+     * Full remote resource URL used to retrieve response.
      */
-    keepAliveMsecs?: number;
+    url: string;
     /**
-     * The maximum number of sockets allowed per host.
-     *
-     * @default Infinity
+     * Service response status code.
      */
-    maxSockets?: number;
+    status: number;
     /**
-     * The maximum number of open and free sockets in the pool per host.
+     * Service response headers.
      *
-     * @default 256
+     * **Important:** Header names are in lowercase.
      */
-    maxFreeSockets?: number;
+    headers: Record<string, string>;
     /**
-     * Timeout in milliseconds, after which the `idle` socket will be closed.
-     *
-     * @default 30000
+     * Service response body.
      */
-    timeout?: number;
+    body?: ArrayBuffer;
   };
-
-  /**
-   * This interface is used to send requests to the PubNub API.
-   *
-   * You can implement this interface for your types, or use one of the provided modules to use a
-   * transport library.
-   *
-   * @interface
-   */
-  export interface Transport {
-    /**
-     * Make request sendable.
-     *
-     * @param req - The transport request to be processed.
-     *
-     * @returns - A promise that resolves to a transport response and request cancellation
-     * controller (if required).
-     */
-    makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined];
-    /**
-     * Pre-processed request.
-     *
-     * Transport implementation may pre-process original transport requests before making
-     * platform-specific request objects from it.
-     *
-     * @param req - Transport request provided by the PubNub client.
-     *
-     * @returns Transport request with updated properties (if it was required).
-     */
-    request(req: TransportRequest): TransportRequest;
-  }
 
   /**
    * Enum representing possible transport methods for HTTP requests.
@@ -2979,28 +2977,65 @@ declare namespace PubNub {
   };
 
   /**
-   * Represents a transport response from a service.
+   * Represents the configuration options for keeping the transport connection alive.
    */
-  export type TransportResponse = {
+  export type TransportKeepAlive = {
     /**
-     * Full remote resource URL used to retrieve response.
-     */
-    url: string;
-    /**
-     * Service response status code.
-     */
-    status: number;
-    /**
-     * Service response headers.
+     * The time interval in milliseconds for keeping the connection alive.
      *
-     * **Important:** Header names are in lowercase.
+     * @default 1000
      */
-    headers: Record<string, string>;
+    keepAliveMsecs?: number;
     /**
-     * Service response body.
+     * The maximum number of sockets allowed per host.
+     *
+     * @default Infinity
      */
-    body?: ArrayBuffer;
+    maxSockets?: number;
+    /**
+     * The maximum number of open and free sockets in the pool per host.
+     *
+     * @default 256
+     */
+    maxFreeSockets?: number;
+    /**
+     * Timeout in milliseconds, after which the `idle` socket will be closed.
+     *
+     * @default 30000
+     */
+    timeout?: number;
   };
+
+  /**
+   * This interface is used to send requests to the PubNub API.
+   *
+   * You can implement this interface for your types, or use one of the provided modules to use a
+   * transport library.
+   *
+   * @interface
+   */
+  export interface Transport {
+    /**
+     * Make request sendable.
+     *
+     * @param req - The transport request to be processed.
+     *
+     * @returns - A promise that resolves to a transport response and request cancellation
+     * controller (if required).
+     */
+    makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined];
+    /**
+     * Pre-processed request.
+     *
+     * Transport implementation may pre-process original transport requests before making
+     * platform-specific request objects from it.
+     *
+     * @param req - Transport request provided by the PubNub client.
+     *
+     * @returns Transport request with updated properties (if it was required).
+     */
+    request(req: TransportRequest): TransportRequest;
+  }
 
   /**
    * Real-time events listener.
