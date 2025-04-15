@@ -25,7 +25,6 @@ describe('#listeners', () => {
       useRequestId: false,
       enableEventEngine: true,
       autoNetworkDetection: false,
-      keepAlive: false,
     });
   });
 
