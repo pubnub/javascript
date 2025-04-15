@@ -1,3 +1,17 @@
+## v9.5.0
+April 15 2025
+
+#### Added
+- The configured retry policy will be used for any failed request.
+- By default, the SDK is configured to use an exponential retry policy for failed subscribe requests.
+
+#### Fixed
+- `PNSubscriptionChangedCategory` will be emitted each time the list of channels and groups is changing.
+
+#### Modified
+- Automated request retry has been moved into the network layer to handle all requests (not only subscribed).
+- Properly destroy `PubNub` instance after each test case to make sure that all connections closed and prevent tests from hanging.
+
 ## v9.4.0
 April 10 2025
 

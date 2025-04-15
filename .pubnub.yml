@@ -1,5 +1,18 @@
 ---
 changelog:
+  - date: 2025-04-15
+    version: v9.5.0
+    changes:
+      - type: feature
+        text: "The configured retry policy will be used for any failed request."
+      - type: feature
+        text: "By default, the SDK is configured to use an exponential retry policy for failed subscribe requests."
+      - type: bug
+        text: "`PNSubscriptionChangedCategory` will be emitted each time the list of channels and groups is changing."
+      - type: improvement
+        text: "Automated request retry has been moved into the network layer to handle all requests (not only subscribed)."
+      - type: improvement
+        text: "Properly destroy `PubNub` instance after each test case to make sure that all connections closed and prevent tests from hanging."
   - date: 2025-04-10
     version: v9.4.0
     changes:
@@ -1209,7 +1222,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.4.0'
+version: '9.5.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1225,7 +1238,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.4.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.5.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1896,7 +1909,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.4.0/pubnub.9.4.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.5.0/pubnub.9.5.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
