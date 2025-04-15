@@ -217,17 +217,19 @@ export type ExponentialRetryPolicyConfiguration = {
  * Failed request retry policy.
  */
 export class RetryPolicy {
-  static None: RequestRetryPolicy = {
-    shouldRetry(_request, _response, _errorCategory, _attempt): boolean {
-      return false;
-    },
-    getDelay(_attempt, _response): number {
-      return -1;
-    },
-    validate() {
-      return true;
-    },
-  };
+  static None(): RequestRetryPolicy {
+    return {
+      shouldRetry(_request, _response, _errorCategory, _attempt): boolean {
+        return false;
+      },
+      getDelay(_attempt, _response): number {
+        return -1;
+      },
+      validate() {
+        return true;
+      },
+    };
+  }
 
   static LinearRetryPolicy(
     configuration: LinearRetryPolicyConfiguration,

@@ -3777,38 +3777,96 @@
 	    Endpoint["Unknown"] = "UnknownEndpoint";
 	    /**
 	     * The endpoints to send messages.
+	     *
+	     * This is related to the following functionality:
+	     * - `publish`
+	     * - `signal`
+	     * - `publish file`
+	     * - `fire`
 	     */
 	    Endpoint["MessageSend"] = "MessageSendEndpoint";
 	    /**
 	     * The endpoint for real-time update retrieval.
+	     *
+	     * This is related to the following functionality:
+	     * - `subscribe`
 	     */
 	    Endpoint["Subscribe"] = "SubscribeEndpoint";
 	    /**
 	     * The endpoint to access and manage `user_id` presence and fetch channel presence information.
+	     *
+	     * This is related to the following functionality:
+	     * - `get presence state`
+	     * - `set presence state`
+	     * - `here now`
+	     * - `where now`
+	     * - `heartbeat`
 	     */
 	    Endpoint["Presence"] = "PresenceEndpoint";
 	    /**
 	     * The endpoint to access and manage files in channel-specific storage.
+	     *
+	     * This is related to the following functionality:
+	     * - `send file`
+	     * - `download file`
+	     * - `list files`
+	     * - `delete file`
 	     */
 	    Endpoint["Files"] = "FilesEndpoint";
 	    /**
 	     * The endpoint to access and manage messages for a specific channel(s) in the persistent storage.
+	     *
+	     * This is related to the following functionality:
+	     * - `fetch messages / message actions`
+	     * - `delete messages`
+	     * - `messages count`
 	     */
 	    Endpoint["MessageStorage"] = "MessageStorageEndpoint";
 	    /**
 	     * The endpoint to access and manage channel groups.
+	     *
+	     * This is related to the following functionality:
+	     * - `add channels to group`
+	     * - `list channels in group`
+	     * - `remove channels from group`
+	     * - `list channel groups`
 	     */
 	    Endpoint["ChannelGroups"] = "ChannelGroupsEndpoint";
 	    /**
 	     * The endpoint to access and manage device registration for channel push notifications.
+	     *
+	     * This is related to the following functionality:
+	     * - `enable channels for push notifications`
+	     * - `list push notification enabled channels`
+	     * - `disable push notifications for channels`
+	     * - `disable push notifications for all channels`
 	     */
 	    Endpoint["DevicePushNotifications"] = "DevicePushNotificationsEndpoint";
 	    /**
 	     * The endpoint to access and manage App Context objects.
+	     *
+	     * This is related to the following functionality:
+	     * - `set UUID metadata`
+	     * - `get UUID metadata`
+	     * - `remove UUID metadata`
+	     * - `get all UUID metadata`
+	     * - `set Channel metadata`
+	     * - `get Channel metadata`
+	     * - `remove Channel metadata`
+	     * - `get all Channel metadata`
+	     * - `manage members`
+	     * - `list members`
+	     * - `manage memberships`
+	     * - `list memberships`
 	     */
 	    Endpoint["AppContext"] = "AppContextEndpoint";
 	    /**
 	     * The endpoint to access and manage reactions for a specific message.
+	     *
+	     * This is related to the following functionality:
+	     * - `add message action`
+	     * - `get message actions`
+	     * - `remove message action`
 	     */
 	    Endpoint["MessageReactions"] = "MessageReactionsEndpoint";
 	})(Endpoint || (Endpoint = {}));
@@ -3817,6 +3875,19 @@
 	 * Failed request retry policy.
 	 */
 	class RetryPolicy {
+	    static None() {
+	        return {
+	            shouldRetry(_request, _response, _errorCategory, _attempt) {
+	                return false;
+	            },
+	            getDelay(_attempt, _response) {
+	                return -1;
+	            },
+	            validate() {
+	                return true;
+	            },
+	        };
+	    }
 	    static LinearRetryPolicy(configuration) {
 	        var _a;
 	        return {
@@ -4138,7 +4209,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.5.0';
+	            return '9.5.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -14649,6 +14720,11 @@
 	 */
 	PubNubCore.CATEGORIES = StatusCategory$1;
 	/**
+	 * Enum with API endpoint groups which can be used with retry policy to set up exclusions (which shouldn't be
+	 * retried).
+	 */
+	PubNubCore.Endpoint = Endpoint;
+	/**
 	 * Exponential retry policy constructor.
 	 */
 	PubNubCore.ExponentialRetryPolicy = RetryPolicy.ExponentialRetryPolicy;
@@ -14656,6 +14732,13 @@
 	 * Linear retry policy constructor.
 	 */
 	PubNubCore.LinearRetryPolicy = RetryPolicy.LinearRetryPolicy;
+	/**
+	 * Disabled / inactive retry policy.
+	 *
+	 * **Note:** By default `ExponentialRetryPolicy` is set for subscribe requests and this one can be used to disable
+	 * retry policy for all requests (setting `undefined` for retry configuration will set default policy).
+	 */
+	PubNubCore.NoneRetryPolicy = RetryPolicy.None;
 
 	/**
 	 * Cbor decoder module.

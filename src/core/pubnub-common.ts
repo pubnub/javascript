@@ -32,7 +32,7 @@ import StatusCategory from './constants/categories';
 
 import { createValidationError, PubNubError } from '../errors/pubnub-error';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
-import { RetryPolicy } from './components/retryPolicy';
+import { RetryPolicy, Endpoint } from './components/retryPolicy';
 
 // region Event Engine
 import { PresenceEventEngine } from '../event-engine/presence/presence';
@@ -296,6 +296,12 @@ export class PubNubCore<
   static CATEGORIES = StatusCategory;
 
   /**
+   * Enum with API endpoint groups which can be used with retry policy to set up exclusions (which shouldn't be
+   * retried).
+   */
+  static Endpoint = Endpoint;
+
+  /**
    * Exponential retry policy constructor.
    */
   static ExponentialRetryPolicy = RetryPolicy.ExponentialRetryPolicy;
@@ -304,6 +310,14 @@ export class PubNubCore<
    * Linear retry policy constructor.
    */
   static LinearRetryPolicy = RetryPolicy.LinearRetryPolicy;
+
+  /**
+   * Disabled / inactive retry policy.
+   *
+   * **Note:** By default `ExponentialRetryPolicy` is set for subscribe requests and this one can be used to disable
+   * retry policy for all requests (setting `undefined` for retry configuration will set default policy).
+   */
+  static NoneRetryPolicy = RetryPolicy.None;
 
   /**
    * Construct notification payload which will trigger push notification.
