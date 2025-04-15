@@ -306,6 +306,14 @@ export class PubNubCore<
   static LinearRetryPolicy = RetryPolicy.LinearRetryPolicy;
 
   /**
+   * Disabled / inactive retry policy.
+   *
+   * **Note:** By default `ExponentialRetryPolicy` is set for subscribe requests and this one can be used to disable
+   * retry policy for all requests (setting `undefined` for retry configuration will set default policy).
+   */
+  static NoneRetryPolicy = RetryPolicy.None;
+
+  /**
    * Construct notification payload which will trigger push notification.
    *
    * @param title - Title which will be shown on notification.
