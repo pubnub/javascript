@@ -5,8 +5,9 @@
  */
 
 import { ExtendedConfiguration, PlatformConfiguration, PrivateClientConfiguration } from '../interfaces/configuration';
-import { ICryptoModule, CryptorConfiguration } from '../interfaces/crypto-module';
+import { CryptorConfiguration, ICryptoModule } from '../interfaces/crypto-module';
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
+import { Endpoint, RetryPolicy } from './retryPolicy';
 import { Payload } from '../types/api';
 import uuidGenerator from './uuid';
 
@@ -82,6 +83,26 @@ export const makeConfiguration = (
   base: ExtendedConfiguration & PlatformConfiguration,
   setupCryptoModule?: SetupCryptoModule,
 ): PrivateClientConfiguration & PrivateConfigurationFields => {
+  // Set default retry policy for subscribe (if new subscribe logic not used).
+  if (!base.retryConfiguration && base.enableEventEngine) {
+    const s = RetryPolicy.None;
+    base.retryConfiguration = RetryPolicy.ExponentialRetryPolicy({
+      minimumDelay: 2,
+      maximumDelay: 150,
+      maximumRetry: 6,
+      excluded: [
+        Endpoint.MessageSend,
+        Endpoint.Presence,
+        Endpoint.Files,
+        Endpoint.MessageStorage,
+        Endpoint.ChannelGroups,
+        Endpoint.DevicePushNotifications,
+        Endpoint.AppContext,
+        Endpoint.MessageReactions,
+      ],
+    });
+  }
+
   // Ensure that retry policy has proper configuration (if has been set).
   base.retryConfiguration?.validate();
 
@@ -182,7 +203,7 @@ export const makeConfiguration = (
       return base.PubNubFile;
     },
     get version(): string {
-      return '9.4.0';
+      return '9.5.0';
     },
     getVersion(): string {
       return this.version;

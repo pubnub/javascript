@@ -104,7 +104,7 @@ export type StatusEvent = {
   /**
    * Information about error.
    */
-  error?: string | boolean;
+  error?: string | StatusCategory | boolean;
 
   /**
    * List of channels for which status update announced.

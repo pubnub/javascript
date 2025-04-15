@@ -18,17 +18,21 @@ describe('#components/token_manager', () => {
     });
   });
 
+  afterEach(() => {
+    pubnub.destroy(true);
+  });
+
   describe('parse token', () => {
     it('ignore invalid tokens', () => {
-      let noPermissions = pubnub.parseToken('bad-token');
+      const noPermissions = pubnub.parseToken('bad-token');
 
       assert(noPermissions === undefined);
     });
 
     it('contains correct permissions', () => {
-      let tokenWithAll =
+      const tokenWithAll =
         'p0F2AkF0GmEK-4NDdHRsGDxDcmVzpURjaGFuoWhjaGFubmVsMQFDZ3JwoWZncm91cDEBQ3VzcqBDc3BjoER1dWlkoWV1c2VyMQFDcGF0pURjaGFuoWIuKgFDZ3JwoWIuKgFDdXNyoENzcGOgRHV1aWShYi4qAURtZXRhoENzaWdYII5bQpWLi6Z-l5jbShWxZ7QL6o8Dz6_vxluhxrMGzQCN';
-      let permissions = pubnub.parseToken(tokenWithAll)!;
+      const permissions = pubnub.parseToken(tokenWithAll)!;
 
       assert(permissions.version === 2);
       assert(permissions.timestamp === 1628109699);
@@ -65,21 +69,21 @@ describe('#components/token_manager', () => {
 
   describe('supports token update', () => {
     it('support get and set token', () => {
-      let token =
+      const token =
         'p0F2AkF0GmEK8NZDdHRsGDxDcmVzpURjaGFuoENncnCgQ3VzcqBDc3BjoER1dWlkoWV1c2VyMRhoQ3BhdKVEY2hhbqBDZ3JwoEN1c3KgQ3NwY6BEdXVpZKBEbWV0YaBDc2lnWCB6sYaT3ZbNVV6TBxDKGvdOk6TSQRMoRZir4cwoN9-_dA==';
 
       // has uuid id 'user1'
       pubnub.setToken(token);
 
-      let tokenCheck = pubnub.getToken();
+      const tokenCheck = pubnub.getToken();
 
       assert(tokenCheck === token);
     });
 
     it('adding new token replaces previous', () => {
-      let token =
+      const token =
         'p0F2AkF0GmEK8NZDdHRsGDxDcmVzpURjaGFuoENncnCgQ3VzcqBDc3BjoER1dWlkoWV1c2VyMRhoQ3BhdKVEY2hhbqBDZ3JwoEN1c3KgQ3NwY6BEdXVpZKBEbWV0YaBDc2lnWCB6sYaT3ZbNVV6TBxDKGvdOk6TSQRMoRZir4cwoN9-_dA==';
-      let token2 =
+      const token2 =
         'p0F2AkF0GmEK8LFDdHRsGDxDcmVzpURjaGFuoENncnCgQ3VzcqBDc3BjoER1dWlkoWV1c2VyMhhoQ3BhdKVEY2hhbqBDZ3JwoEN1c3KgQ3NwY6BEdXVpZKBEbWV0YaBDc2lnWCDq63hdreA9JbHVnHLDJuHzK-AWSdcVFZKG0nse79JMZw==';
 
       // has uuid id 'uuid1'

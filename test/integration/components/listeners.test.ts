@@ -14,10 +14,6 @@ describe('#listeners', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -33,7 +29,7 @@ describe('#listeners', () => {
   });
 
   afterEach(() => {
-    pubnub.destroy();
+    pubnub.destroy(true);
   });
 
   it('should pass messages of subscribed channel to its listener', async () => {

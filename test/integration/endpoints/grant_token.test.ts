@@ -39,6 +39,10 @@ describe('grant token endpoint', () => {
     } else pubnub._config.getVersion = () => 'testVersion';
   });
 
+  afterEach(() => {
+    pubnub.destroy(true);
+  });
+
   describe('#grantToken', () => {
     describe('##validation', () => {
       it('ensure resources or patterns', (done) => {
@@ -65,7 +69,7 @@ describe('grant token endpoint', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Missing values for either Resources or Patterns");
+              assert.equal(err.status.message, 'Missing values for either Resources or Patterns');
               done();
             } catch (error) {
               done(error);
@@ -102,7 +106,7 @@ describe('grant token endpoint', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Missing values for either Resources or Patterns");
+              assert.equal(err.status.message, 'Missing values for either Resources or Patterns');
               done();
             } catch (error) {
               done(error);
@@ -139,7 +143,7 @@ describe('grant token endpoint', () => {
           .catch((err) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(err.status.message, "Missing values for either Resources or Patterns");
+              assert.equal(err.status.message, 'Missing values for either Resources or Patterns');
               done();
             } catch (error) {
               done(error);
@@ -170,7 +174,7 @@ describe('grant token endpoint', () => {
       });
 
       it('should correctly translate VSP terms into legacy terms', async () => {
-        let scope = utils
+        const scope = utils
           .createNock()
           .post(
             '/v3/pam/mySubscribeKey/grant',

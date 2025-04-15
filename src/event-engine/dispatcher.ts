@@ -26,6 +26,8 @@ export type Dependencies = {
   join?: (parameters: { channels?: string[]; groups?: string[] }) => void;
   leave?: (parameters: { channels?: string[]; groups?: string[] }) => void;
   leaveAll?: (parameters: { channels?: string[]; groups?: string[] }) => void;
+  presenceReconnect?: (parameters: { channels?: string[]; groups?: string[] }) => void;
+  presenceDisconnect?: (parameters: { channels?: string[]; groups?: string[]; isOffline?: boolean }) => void;
   presenceState: Record<string, Payload>;
   config: PrivateClientConfiguration;
 
@@ -96,98 +98,13 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
     this.on(
       effects.emitMessages.type,
       asyncHandler(async (payload, _, { emitMessages }) => {
-        if (payload.length > 0) {
-          emitMessages(payload);
-        }
+        if (payload.length > 0) emitMessages(payload);
       }),
     );
 
     this.on(
       effects.emitStatus.type,
-      asyncHandler(async (payload, _, { emitStatus }) => {
-        emitStatus(payload);
-      }),
-    );
-
-    this.on(
-      effects.receiveReconnect.type,
-      asyncHandler(async (payload, abortSignal, { receiveMessages, delay, config }) => {
-        if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
-          abortSignal.throwIfAborted();
-
-          await delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
-
-          abortSignal.throwIfAborted();
-
-          try {
-            const result = await receiveMessages({
-              abortSignal: abortSignal,
-              channels: payload.channels,
-              channelGroups: payload.groups,
-              timetoken: payload.cursor.timetoken,
-              region: payload.cursor.region,
-              filterExpression: config.filterExpression,
-            });
-
-            return engine.transition(events.receiveReconnectSuccess(result.cursor, result.messages));
-          } catch (error) {
-            if (error instanceof PubNubError) {
-              if (error.status && error.status.category == StatusCategory.PNCancelledCategory) return;
-              return engine.transition(events.receiveReconnectFailure(error));
-            }
-          }
-        } else {
-          return engine.transition(
-            events.receiveReconnectGiveup(
-              new PubNubError(
-                config.retryConfiguration
-                  ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
-                  : 'Unable to complete subscribe messages receive.',
-              ),
-            ),
-          );
-        }
-      }),
-    );
-
-    this.on(
-      effects.handshakeReconnect.type,
-      asyncHandler(async (payload, abortSignal, { handshake, delay, presenceState, config }) => {
-        if (config.retryConfiguration && config.retryConfiguration.shouldRetry(payload.reason, payload.attempts)) {
-          abortSignal.throwIfAborted();
-
-          await delay(config.retryConfiguration.getDelay(payload.attempts, payload.reason));
-
-          abortSignal.throwIfAborted();
-
-          try {
-            const result = await handshake({
-              abortSignal: abortSignal,
-              channels: payload.channels,
-              channelGroups: payload.groups,
-              filterExpression: config.filterExpression,
-              ...(config.maintainPresenceState && { state: presenceState }),
-            });
-
-            return engine.transition(events.handshakeReconnectSuccess(result));
-          } catch (error) {
-            if (error instanceof PubNubError) {
-              if (error.status && error.status.category == StatusCategory.PNCancelledCategory) return;
-              return engine.transition(events.handshakeReconnectFailure(error));
-            }
-          }
-        } else {
-          return engine.transition(
-            events.handshakeReconnectGiveup(
-              new PubNubError(
-                config.retryConfiguration
-                  ? config.retryConfiguration.getGiveupReason(payload.reason, payload.attempts)
-                  : 'Unable to complete subscribe handshake',
-              ),
-            ),
-          );
-        }
-      }),
+      asyncHandler(async (payload, _, { emitStatus }) => emitStatus(payload)),
     );
   }
 }

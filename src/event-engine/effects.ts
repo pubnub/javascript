@@ -5,8 +5,6 @@
  */
 
 import { createEffect, createManagedEffect, MapOf } from './core';
-import { HandshakeReconnectingStateContext } from './states/handshake_reconnecting';
-import { ReceiveReconnectingStateContext } from './states/receive_reconnecting';
 import * as Subscription from '../core/types/api/subscription';
 import { StatusEvent } from '../core/types/api';
 
@@ -57,39 +55,8 @@ export const emitMessages = createEffect(
 export const emitStatus = createEffect('EMIT_STATUS', (status: StatusEvent) => status);
 
 /**
- * Real-time updates receive restore effect.
- *
- * Performs subscribe REST API call with `tt` which has been received before disconnection or error.
- *
- * @internal
- */
-export const receiveReconnect = createManagedEffect(
-  'RECEIVE_RECONNECT',
-  (context: ReceiveReconnectingStateContext) => context,
-);
-
-/**
- * Initial subscription restore effect.
- *
- * Performs subscribe REST API call with `tt=0` after error.
- *
- * @internal
- */
-export const handshakeReconnect = createManagedEffect(
-  'HANDSHAKE_RECONNECT',
-  (context: HandshakeReconnectingStateContext) => context,
-);
-
-/**
  * Subscribe Event Engine effects.
  *
  * @internal
  */
-export type Effects = MapOf<
-  | typeof receiveMessages
-  | typeof handshake
-  | typeof emitMessages
-  | typeof receiveReconnect
-  | typeof handshakeReconnect
-  | typeof emitStatus
->;
+export type Effects = MapOf<typeof receiveMessages | typeof handshake | typeof emitMessages | typeof emitStatus>;

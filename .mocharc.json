@@ -1,5 +1,6 @@
 {
   "require": "tsx",
+  "file": ["test/setup-why.ts"],
   "spec": "test/**/*.test.ts",
   "exclude": [
     "test/dist/*.{js,ts}",

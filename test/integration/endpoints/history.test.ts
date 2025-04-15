@@ -64,15 +64,11 @@ describe('history endpoints', () => {
   const publishKey = process.env.PUBLISH_KEY || 'demo';
   let pubnub: PubNub;
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   afterEach(() => {
     nock.enableNetConnect();
     pubnub.removeAllListeners();
     pubnub.unsubscribeAll();
-    pubnub.stop();
+    pubnub.destroy(true);
   });
 
   beforeEach(() => {

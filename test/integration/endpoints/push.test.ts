@@ -14,10 +14,6 @@ describe('push endpoints', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -27,6 +23,10 @@ describe('push endpoints', () => {
       useRequestId: false,
       uuid: 'myUUID',
     });
+  });
+
+  afterEach(() => {
+    pubnub.destroy(true);
   });
 
   describe('adding channels to device', () => {
@@ -121,7 +121,7 @@ describe('push endpoints', () => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
-          assert.deepEqual(response.channels, ["ch1", "ch2", "ch3"]);
+          assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
           assert.equal(scope.isDone(), true);
           done();
         } catch (error) {
@@ -149,7 +149,7 @@ describe('push endpoints', () => {
           try {
             assert.equal(status.error, false);
             assert(response !== null);
-            assert.deepEqual(response.channels, ["ch1", "ch2", "ch3"]);
+            assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
             assert.equal(scope.isDone(), true);
             done();
           } catch (error) {
@@ -174,7 +174,7 @@ describe('push endpoints', () => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
-          assert.deepEqual(response.channels, ["ch1", "ch2", "ch3"]);
+          assert.deepEqual(response.channels, ['ch1', 'ch2', 'ch3']);
           assert.equal(scope.isDone(), true);
           done();
         } catch (error) {

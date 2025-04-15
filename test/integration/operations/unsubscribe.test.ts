@@ -14,10 +14,6 @@ describe('unsubscribe', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -32,7 +28,7 @@ describe('unsubscribe', () => {
 
   afterEach(() => {
     pubnub.removeAllListeners();
-    pubnub.stop();
+    pubnub.destroy(true);
   });
 
   describe('#unsubscribe', () => {

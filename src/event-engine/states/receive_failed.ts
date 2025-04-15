@@ -35,33 +35,26 @@ export type ReceiveFailedStateContext = {
  */
 export const ReceiveFailedState = new State<ReceiveFailedStateContext, Events, Effects>('RECEIVE_FAILED');
 
-ReceiveFailedState.on(reconnect.type, (context, event) =>
+ReceiveFailedState.on(reconnect.type, (context, { payload }) =>
   HandshakingState.with({
     channels: context.channels,
     groups: context.groups,
     cursor: {
-      timetoken: !!event.payload.cursor.timetoken ? event.payload.cursor?.timetoken : context.cursor.timetoken,
-      region: event.payload.cursor.region || context.cursor.region,
+      timetoken: !!payload.cursor.timetoken ? payload.cursor?.timetoken : context.cursor.timetoken,
+      region: payload.cursor.region || context.cursor.region,
     },
   }),
 );
 
-ReceiveFailedState.on(subscriptionChange.type, (context, event) =>
-  HandshakingState.with({
-    channels: event.payload.channels,
-    groups: event.payload.groups,
-    cursor: context.cursor,
-  }),
+ReceiveFailedState.on(subscriptionChange.type, (context, { payload }) =>
+  HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }),
 );
 
-ReceiveFailedState.on(restore.type, (context, event) =>
+ReceiveFailedState.on(restore.type, (context, { payload }) =>
   HandshakingState.with({
-    channels: event.payload.channels,
-    groups: event.payload.groups,
-    cursor: {
-      timetoken: event.payload.cursor.timetoken,
-      region: event.payload.cursor.region || context.cursor.region,
-    },
+    channels: payload.channels,
+    groups: payload.groups,
+    cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
   }),
 );
 

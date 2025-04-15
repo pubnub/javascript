@@ -4,13 +4,13 @@
  * @internal
  */
 
-import { State } from '../../core/state';
 import { Events, disconnect, heartbeatFailure, heartbeatSuccess, joined, left, leftAll } from '../events';
-import { Effects, emitStatus, heartbeat, leave } from '../effects';
-import { HeartbeatCooldownState } from './heartbeat_cooldown';
-import { HearbeatReconnectingState } from './heartbeat_reconnecting';
-import { HeartbeatStoppedState } from './heartbeat_stopped';
 import { HeartbeatInactiveState } from './heartbeat_inactive';
+import { HeartbeatCooldownState } from './heartbeat_cooldown';
+import { HeartbeatStoppedState } from './heartbeat_stopped';
+import { HeartbeatFailedState } from './heartbeat_failed';
+import { Effects, emitStatus, heartbeat, leave } from '../effects';
+import { State } from '../../core/state';
 
 /**
  * Context which represent current Presence Event Engine data state.
@@ -32,13 +32,13 @@ export type HeartbeatingStateContext = {
 export const HeartbeatingState = new State<HeartbeatingStateContext, Events, Effects>('HEARTBEATING');
 
 HeartbeatingState.onEnter((context) => heartbeat(context.channels, context.groups));
+HeartbeatingState.onExit(() => heartbeat.cancel);
 
-HeartbeatingState.on(heartbeatSuccess.type, (context, event) => {
-  return HeartbeatCooldownState.with({
-    channels: context.channels,
-    groups: context.groups,
-  });
-});
+HeartbeatingState.on(heartbeatSuccess.type, (context, event) =>
+  HeartbeatCooldownState.with({ channels: context.channels, groups: context.groups }, [
+    emitStatus({ ...event.payload }),
+  ]),
+);
 
 HeartbeatingState.on(joined.type, (context, event) =>
   HeartbeatingState.with({
@@ -57,22 +57,16 @@ HeartbeatingState.on(left.type, (context, event) => {
   );
 });
 
-HeartbeatingState.on(heartbeatFailure.type, (context, event) => {
-  return HearbeatReconnectingState.with({
-    ...context,
-    attempts: 0,
-    reason: event.payload,
-  });
-});
+HeartbeatingState.on(heartbeatFailure.type, (context, event) =>
+  HeartbeatFailedState.with({ ...context }, [
+    ...(event.payload.status ? [emitStatus({ ...event.payload.status })] : []),
+  ]),
+);
 
-HeartbeatingState.on(disconnect.type, (context) =>
-  HeartbeatStoppedState.with(
-    {
-      channels: context.channels,
-      groups: context.groups,
-    },
-    [leave(context.channels, context.groups)],
-  ),
+HeartbeatingState.on(disconnect.type, (context, event) =>
+  HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
+    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+  ]),
 );
 
 HeartbeatingState.on(leftAll.type, (context, _) =>

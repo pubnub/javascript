@@ -15,10 +15,6 @@ describe('heartbeat', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -34,12 +30,12 @@ describe('heartbeat', () => {
 
   afterEach(() => {
     pubnub.removeAllListeners();
-    pubnub.stop();
+    pubnub.destroy(true);
   });
 
   describe('#heartbeat', () => {
     it('heartbeat loop should not get started when heartbeatInterval not set', async () => {
-      pubnub = new PubNub({
+      const pubnubHB = new PubNub({
         subscribeKey: 'mySubscribeKey',
         publishKey: 'myPublishKey',
         uuid: 'myUUID',
@@ -58,8 +54,10 @@ describe('heartbeat', () => {
         .reply(200, '{"status": 200, "message": "OK", "service": "Presence"}', {
           'content-type': 'text/javascript',
         });
-      pubnub.subscribe({ channels: ['ch1', 'ch2'], withHeartbeats: true });
+      pubnubHB.subscribe({ channels: ['ch1', 'ch2'], withHeartbeats: true });
       await expect(scope).to.have.not.been.requested;
+
+      pubnubHB.destroy(true);
     });
 
     it('supports heartbeating for one channel', (done) => {

@@ -1,6 +1,6 @@
 import nock from 'nock';
 
-import { Payload } from '../../src/core/types/api';
+import StatusCategory from '../../src/core/constants/categories';
 import PubNub from '../../src/node/index';
 import utils from '../utils';
 
@@ -42,6 +42,28 @@ describe('EventEngine', () => {
     unsub();
   });
 
+  function forStatus(statusCategory: StatusCategory, timeout?: number) {
+    return new Promise<void>((resolve, reject) => {
+      let timeoutId: ReturnType<typeof setTimeout>;
+
+      pubnub.addListener({
+        status: (statusEvent) => {
+          if (statusEvent.category === statusCategory) {
+            pubnub.removeAllListeners();
+            resolve();
+          }
+        },
+      });
+
+      if (timeout) {
+        timeoutId = setTimeout(() => {
+          pubnub.removeAllListeners();
+          reject(new Error(`Timeout occurred while waiting for state ${statusCategory}`));
+        }, timeout);
+      }
+    });
+  }
+
   function forEvent(eventLabel: string, timeout?: number) {
     return new Promise<void>((resolve, reject) => {
       let timeoutId: NodeJS.Timeout | null = null;
@@ -57,7 +79,7 @@ describe('EventEngine', () => {
       if (timeout) {
         timeoutId = setTimeout(() => {
           unsubscribe();
-          reject(new Error(`Timeout occured while waiting for state ${eventLabel}`));
+          reject(new Error(`Timeout occurred while waiting for state ${eventLabel}`));
         }, timeout);
       }
     });
@@ -114,6 +136,33 @@ describe('EventEngine', () => {
     await forEvent('HANDSHAKE_SUCCESS', 1000);
 
     pubnub.unsubscribe({ channels: ['test'] });
+
+    await forState('UNSUBSCRIBED', 1000);
+  });
+
+  it('should work correctly', async () => {
+    utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');
+    utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/demo/test,test1/0')
+      .query(true)
+      .reply(200, '{"t":{"t":"12345","r":1}, "m":[]}');
+    utils
+      .createNock()
+      .get('/v2/subscribe/demo/test,test1/0')
+      .query(true)
+      .reply(200, '{"t":{"t":"12345","r":1}, "m":[]}');
+
+    pubnub.subscribe({ channels: ['test'] });
+
+    await forEvent('HANDSHAKE_SUCCESS', 1000);
+
+    pubnub.subscribe({ channels: ['test1'] });
+
+    await forStatus(StatusCategory.PNSubscriptionChangedCategory);
+
+    pubnub.unsubscribe({ channels: ['test', 'test1'] });
 
     await forState('UNSUBSCRIBED', 1000);
   });

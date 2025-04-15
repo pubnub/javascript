@@ -35,29 +35,25 @@ export type HandshakeFailedStateContext = {
  */
 export const HandshakeFailedState = new State<HandshakeFailedStateContext, Events, Effects>('HANDSHAKE_FAILED');
 
-HandshakeFailedState.on(subscriptionChange.type, (context, event) =>
-  HandshakingState.with({
-    channels: event.payload.channels,
-    groups: event.payload.groups,
-    cursor: context.cursor,
-  }),
+HandshakeFailedState.on(subscriptionChange.type, (context, { payload }) =>
+  HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }),
 );
 
-HandshakeFailedState.on(reconnect.type, (context, event) =>
+HandshakeFailedState.on(reconnect.type, (context, { payload }) =>
   HandshakingState.with({
     channels: context.channels,
     groups: context.groups,
-    cursor: event.payload.cursor || context.cursor,
+    cursor: payload.cursor || context.cursor,
   }),
 );
 
-HandshakeFailedState.on(restore.type, (context, event) =>
+HandshakeFailedState.on(restore.type, (context, { payload }) =>
   HandshakingState.with({
-    channels: event.payload.channels,
-    groups: event.payload.groups,
+    channels: payload.channels,
+    groups: payload.groups,
     cursor: {
-      timetoken: event.payload.cursor.timetoken,
-      region: event.payload.cursor.region ? event.payload.cursor.region : (context?.cursor?.region ?? 0),
+      timetoken: payload.cursor.timetoken,
+      region: payload.cursor.region ? payload.cursor.region : (context?.cursor?.region ?? 0),
     },
   }),
 );

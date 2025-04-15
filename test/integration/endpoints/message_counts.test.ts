@@ -14,10 +14,6 @@ describe('message counts', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -27,6 +23,10 @@ describe('message counts', () => {
       // @ts-expect-error Force override default value.
       useRequestId: false,
     });
+  });
+
+  afterEach(() => {
+    pubnub.destroy(true);
   });
 
   it('get history with messages for a channel', (done) => {

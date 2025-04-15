@@ -36,6 +36,10 @@ describe('access endpoints', () => {
     pubnub._config.getVersion = () => 'suchJavascript';
   });
 
+  afterEach(() => {
+    pubnub.destroy(true);
+  });
+
   describe('#audit', () => {
     it('issues the correct RESTful request for channels', (done) => {
       const scope = utils
@@ -58,17 +62,17 @@ describe('access endpoints', () => {
         try {
           assert.equal(status.error, false);
           assert.deepEqual(response, {
-            level: "channel-group+auth",
-            subscribe_key: "mySubscribeKey",
-            "channel-group": "cg2",
+            level: 'channel-group+auth',
+            subscribe_key: 'mySubscribeKey',
+            'channel-group': 'cg2',
             auths: {
               key1: {
                 r: 1,
                 m: 1,
                 w: 1,
-                d: 1
-              }
-            }
+                d: 1,
+              },
+            },
           });
           assert.equal(scope.isDone(), true);
           done();
@@ -99,17 +103,17 @@ describe('access endpoints', () => {
         try {
           assert.equal(status.error, false);
           assert.deepEqual(response, {
-            level: "channel-group+auth",
-            subscribe_key: "mySubscribeKey",
-            "channel-group": "cg2",
+            level: 'channel-group+auth',
+            subscribe_key: 'mySubscribeKey',
+            'channel-group': 'cg2',
             auths: {
               key1: {
                 r: 1,
                 m: 1,
                 w: 1,
-                d: 1
-              }
-            }
+                d: 1,
+              },
+            },
           });
           assert.equal(scope.isDone(), true);
           done();
@@ -140,17 +144,17 @@ describe('access endpoints', () => {
         try {
           assert.equal(status.error, false);
           assert.deepEqual(response, {
-            level: "channel-group+auth",
-            subscribe_key: "mySubscribeKey",
-            "channel-group": "cg2",
+            level: 'channel-group+auth',
+            subscribe_key: 'mySubscribeKey',
+            'channel-group': 'cg2',
             auths: {
               key1: {
                 r: 1,
                 m: 1,
                 w: 1,
-                d: 1
-              }
-            }
+                d: 1,
+              },
+            },
           });
           assert.equal(scope.isDone(), true);
           done();
@@ -414,7 +418,7 @@ describe('access endpoints', () => {
               assert.equal(scope.isDone(), false);
               assert.equal(
                 error.status.message,
-                "Both channel/channel group and uuid cannot be used in the same request"
+                'Both channel/channel group and uuid cannot be used in the same request',
               );
               done();
             } catch (error) {
@@ -463,7 +467,7 @@ describe('access endpoints', () => {
               assert.equal(scope.isDone(), false);
               assert.equal(
                 error.status.message,
-                "Both channel/channel group and uuid cannot be used in the same request"
+                'Both channel/channel group and uuid cannot be used in the same request',
               );
               done();
             } catch (error) {
@@ -506,7 +510,7 @@ describe('access endpoints', () => {
           .catch((error) => {
             try {
               assert.equal(scope.isDone(), false);
-              assert.equal(error.status.message, "authKeys are required for grant request on uuids");
+              assert.equal(error.status.message, 'authKeys are required for grant request on uuids');
               done();
             } catch (error) {
               done(error);
@@ -524,10 +528,6 @@ describe('access endpoints telemetry', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -541,9 +541,13 @@ describe('access endpoints telemetry', () => {
     pubnub._config.getVersion = () => 'suchJavascript';
   });
 
+  afterEach(() => {
+    pubnub.destroy(true);
+  });
+
   describe('#audit', () => {
     it('should add PAM audit API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/auth/audit/sub-key/mySubscribeKey').query(true);
+      const scope = utils.createNock().get('/v2/auth/audit/sub-key/mySubscribeKey').query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
       const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);
@@ -569,7 +573,7 @@ describe('access endpoints telemetry', () => {
 
   describe('#grant', () => {
     it('should add PAM grant API telemetry information', (done) => {
-      let scope = utils.createNock().get('/v2/auth/grant/sub-key/mySubscribeKey').query(true);
+      const scope = utils.createNock().get('/v2/auth/grant/sub-key/mySubscribeKey').query(true);
       const delays = [100, 200, 300, 400];
       const countedDelays = delays.slice(0, delays.length - 1);
       const average = Math.floor(countedDelays.reduce((acc, delay) => acc + delay, 0) / countedDelays.length);

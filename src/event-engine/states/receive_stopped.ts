@@ -32,32 +32,25 @@ type ReceiveStoppedStateContext = {
  */
 export const ReceiveStoppedState = new State<ReceiveStoppedStateContext, Events, Effects>('RECEIVE_STOPPED');
 
-ReceiveStoppedState.on(subscriptionChange.type, (context, event) =>
+ReceiveStoppedState.on(subscriptionChange.type, (context, { payload }) =>
+  ReceiveStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }),
+);
+
+ReceiveStoppedState.on(restore.type, (context, { payload }) =>
   ReceiveStoppedState.with({
-    channels: event.payload.channels,
-    groups: event.payload.groups,
-    cursor: context.cursor,
+    channels: payload.channels,
+    groups: payload.groups,
+    cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
   }),
 );
 
-ReceiveStoppedState.on(restore.type, (context, event) =>
-  ReceiveStoppedState.with({
-    channels: event.payload.channels,
-    groups: event.payload.groups,
-    cursor: {
-      timetoken: event.payload.cursor.timetoken,
-      region: event.payload.cursor.region || context.cursor.region,
-    },
-  }),
-);
-
-ReceiveStoppedState.on(reconnect.type, (context, event) =>
+ReceiveStoppedState.on(reconnect.type, (context, { payload }) =>
   HandshakingState.with({
     channels: context.channels,
     groups: context.groups,
     cursor: {
-      timetoken: !!event.payload.cursor.timetoken ? event.payload.cursor?.timetoken : context.cursor.timetoken,
-      region: event.payload.cursor.region || context.cursor.region,
+      timetoken: !!payload.cursor.timetoken ? payload.cursor?.timetoken : context.cursor.timetoken,
+      region: payload.cursor.region || context.cursor.region,
     },
   }),
 );

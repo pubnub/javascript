@@ -3,10 +3,10 @@
  */
 
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
-import { RequestRetryPolicy } from '../../event-engine/core/retryPolicy';
+import { RequestRetryPolicy } from '../components/retryPolicy';
+import { PubNubError } from '../../errors/pubnub-error';
 import { ICryptoModule } from './crypto-module';
 import { KeySet, Payload } from '../types/api';
-import { PubNubError } from '../../errors/pubnub-error';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------

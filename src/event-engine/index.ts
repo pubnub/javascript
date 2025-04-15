@@ -102,10 +102,10 @@ export class EventEngine {
       new Set(this.groups).size !== new Set(filteredGroups).size
     ) {
       const channelsToLeave = utils.findUniqueCommonElements(this.channels, channels);
-      const groupstoLeave = utils.findUniqueCommonElements(this.groups, channelGroups);
+      const groupsToLeave = utils.findUniqueCommonElements(this.groups, channelGroups);
       if (this.dependencies.presenceState) {
         channelsToLeave?.forEach((c) => delete this.dependencies.presenceState[c]);
-        groupstoLeave?.forEach((g) => delete this.dependencies.presenceState[g]);
+        groupsToLeave?.forEach((g) => delete this.dependencies.presenceState[g]);
       }
       this.channels = filteredChannels;
       this.groups = filteredGroups;
@@ -118,7 +118,7 @@ export class EventEngine {
       if (this.dependencies.leave) {
         this.dependencies.leave({
           channels: channelsToLeave.slice(0),
-          groups: groupstoLeave.slice(0),
+          groups: groupsToLeave.slice(0),
         });
       }
     }
@@ -141,16 +141,22 @@ export class EventEngine {
   }
 
   reconnect({ timetoken, region }: { timetoken?: string; region?: number }): void {
-    this.engine.transition(events.reconnect(timetoken, region));
-  }
-
-  disconnect(): void {
     const channelGroups = this.getSubscribedChannels();
     const channels = this.getSubscribedChannels();
 
-    this.engine.transition(events.disconnect());
+    this.engine.transition(events.reconnect(timetoken, region));
 
-    if (this.dependencies.leaveAll) this.dependencies.leaveAll({ channels, groups: channelGroups });
+    if (this.dependencies.presenceReconnect) this.dependencies.presenceReconnect({ channels, groups: channelGroups });
+  }
+
+  disconnect(isOffline?: boolean): void {
+    const channelGroups = this.getSubscribedChannels();
+    const channels = this.getSubscribedChannels();
+
+    this.engine.transition(events.disconnect(isOffline));
+
+    if (this.dependencies.presenceDisconnect)
+      this.dependencies.presenceDisconnect({ channels, groups: channelGroups, isOffline });
   }
 
   getSubscribedChannels(): string[] {
@@ -162,7 +168,7 @@ export class EventEngine {
   }
 
   dispose(): void {
-    this.disconnect();
+    this.disconnect(true);
     this._unsubscribeEngine();
     this.dispatcher.dispose();
   }

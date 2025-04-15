@@ -5,7 +5,6 @@
  */
 
 import { createEffect, createManagedEffect, MapOf } from '../core';
-import { HeartbeatReconnectingStateContext } from './states/heartbeat_reconnecting';
 import { Status } from '../../core/types/api';
 
 /**
@@ -15,7 +14,7 @@ import { Status } from '../../core/types/api';
  *
  * @internal
  */
-export const heartbeat = createEffect('HEARTBEAT', (channels: string[], groups: string[]) => ({
+export const heartbeat = createManagedEffect('HEARTBEAT', (channels: string[], groups: string[]) => ({
   channels,
   groups,
 }));
@@ -52,22 +51,8 @@ export const emitStatus = createEffect('EMIT_STATUS', (status: any) => status);
 export const wait = createManagedEffect('WAIT', () => ({}));
 
 /**
- * Delayed heartbeat effect.
- *
- * Similar to the {@link wait} effect but used in case if previous heartbeat call did fail.
- *
- * @internal
- */
-export const delayedHeartbeat = createManagedEffect(
-  'DELAYED_HEARTBEAT',
-  (context: HeartbeatReconnectingStateContext) => context,
-);
-
-/**
  * Presence Event Engine effects.
  *
  * @internal
  */
-export type Effects = MapOf<
-  typeof heartbeat | typeof leave | typeof emitStatus | typeof wait | typeof delayedHeartbeat
->;
+export type Effects = MapOf<typeof heartbeat | typeof leave | typeof emitStatus | typeof wait>;

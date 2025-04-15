@@ -15,10 +15,6 @@ describe('time endpoints', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -29,6 +25,10 @@ describe('time endpoints', () => {
     });
   });
 
+  afterEach(() => {
+    pubnub.destroy(true);
+  });
+
   it('calls the callback function when time is fetched', (done) => {
     utils.createNock().get('/time/0').query(true).reply(200, ['14570763868573725']);
 
@@ -36,7 +36,7 @@ describe('time endpoints', () => {
       try {
         assert.equal(status.error, false);
         assert(response !== null);
-        assert.deepEqual(response.timetoken, "14570763868573725");
+        assert.deepEqual(response.timetoken, '14570763868573725');
         done();
       } catch (error) {
         done(error);
@@ -77,7 +77,7 @@ describe('time endpoints', () => {
     pubnub.time().catch((ex) => {
       try {
         assert(ex instanceof PubNubError);
-        assert.equal(ex.message, "REST API request processing error, check status for details");
+        assert.equal(ex.message, 'REST API request processing error, check status for details');
         assert.equal(ex.status!.error, true);
         assert.equal(ex.status!.statusCode, 500);
         done();

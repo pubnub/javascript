@@ -19,10 +19,6 @@ describe('#components/subscription_manager', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -81,10 +77,11 @@ describe('#components/subscription_manager', () => {
   });
 
   afterEach(() => {
-    pubnub.stop();
-    pubnubWithLimitedDeduplicationQueue.stop();
-    pubnubWithPassingHeartbeats.stop();
-    pubnubWithLimitedQueue.stop();
+    pubnub.destroy(true);
+    pubnubWithLimitedDeduplicationQueue.destroy(true);
+    pubnubWithPassingHeartbeats.destroy(true);
+    pubnubWithLimitedQueue.destroy(true);
+    pubnubWithCrypto.destroy(true);
   });
 
   it('passes the correct message information', (done) => {

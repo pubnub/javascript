@@ -18,10 +18,6 @@ describe('objects UUID', () => {
     nock.disableNetConnect();
   });
 
-  after(() => {
-    nock.enableNetConnect();
-  });
-
   beforeEach(() => {
     nock.cleanAll();
     pubnub = new PubNub({
@@ -33,6 +29,10 @@ describe('objects UUID', () => {
       authKey: AUTH_KEY,
     });
     PNSDK = `PubNub-JS-Nodejs/${pubnub.getVersion()}`;
+  });
+
+  afterEach(() => {
+    pubnub.destroy(true);
   });
 
   describe('getAllUUIDMetadata', () => {
