@@ -23,46 +23,104 @@ export enum Endpoint {
 
   /**
    * The endpoints to send messages.
+   *
+   * This is related to the following functionality:
+   * - `publish`
+   * - `signal`
+   * - `publish file`
+   * - `fire`
    */
   MessageSend = 'MessageSendEndpoint',
 
   /**
    * The endpoint for real-time update retrieval.
+   *
+   * This is related to the following functionality:
+   * - `subscribe`
    */
   Subscribe = 'SubscribeEndpoint',
 
   /**
    * The endpoint to access and manage `user_id` presence and fetch channel presence information.
+   *
+   * This is related to the following functionality:
+   * - `get presence state`
+   * - `set presence state`
+   * - `here now`
+   * - `where now`
+   * - `heartbeat`
    */
   Presence = 'PresenceEndpoint',
 
   /**
    * The endpoint to access and manage files in channel-specific storage.
+   *
+   * This is related to the following functionality:
+   * - `send file`
+   * - `download file`
+   * - `list files`
+   * - `delete file`
    */
   Files = 'FilesEndpoint',
 
   /**
    * The endpoint to access and manage messages for a specific channel(s) in the persistent storage.
+   *
+   * This is related to the following functionality:
+   * - `fetch messages / message actions`
+   * - `delete messages`
+   * - `messages count`
    */
   MessageStorage = 'MessageStorageEndpoint',
 
   /**
    * The endpoint to access and manage channel groups.
+   *
+   * This is related to the following functionality:
+   * - `add channels to group`
+   * - `list channels in group`
+   * - `remove channels from group`
+   * - `list channel groups`
    */
   ChannelGroups = 'ChannelGroupsEndpoint',
 
   /**
    * The endpoint to access and manage device registration for channel push notifications.
+   *
+   * This is related to the following functionality:
+   * - `enable channels for push notifications`
+   * - `list push notification enabled channels`
+   * - `disable push notifications for channels`
+   * - `disable push notifications for all channels`
    */
   DevicePushNotifications = 'DevicePushNotificationsEndpoint',
 
   /**
    * The endpoint to access and manage App Context objects.
+   *
+   * This is related to the following functionality:
+   * - `set UUID metadata`
+   * - `get UUID metadata`
+   * - `remove UUID metadata`
+   * - `get all UUID metadata`
+   * - `set Channel metadata`
+   * - `get Channel metadata`
+   * - `remove Channel metadata`
+   * - `get all Channel metadata`
+   * - `manage members`
+   * - `list members`
+   * - `manage memberships`
+   * - `list memberships`
    */
   AppContext = 'AppContextEndpoint',
 
   /**
    * The endpoint to access and manage reactions for a specific message.
+   *
+   * This is related to the following functionality:
+   * - `add message action`
+   * - `get message actions`
+   * - `remove message action`
    */
   MessageReactions = 'MessageReactionsEndpoint',
 }
@@ -159,6 +217,18 @@ export type ExponentialRetryPolicyConfiguration = {
  * Failed request retry policy.
  */
 export class RetryPolicy {
+  static None: RequestRetryPolicy = {
+    shouldRetry(_request, _response, _errorCategory, _attempt): boolean {
+      return false;
+    },
+    getDelay(_attempt, _response): number {
+      return -1;
+    },
+    validate() {
+      return true;
+    },
+  };
+
   static LinearRetryPolicy(
     configuration: LinearRetryPolicyConfiguration,
   ): RequestRetryPolicy & LinearRetryPolicyConfiguration {

@@ -85,6 +85,7 @@ export const makeConfiguration = (
 ): PrivateClientConfiguration & PrivateConfigurationFields => {
   // Set default retry policy for subscribe (if new subscribe logic not used).
   if (!base.retryConfiguration && base.enableEventEngine) {
+    const s = RetryPolicy.None;
     base.retryConfiguration = RetryPolicy.ExponentialRetryPolicy({
       minimumDelay: 2,
       maximumDelay: 150,
