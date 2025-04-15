@@ -14720,6 +14720,11 @@
 	 */
 	PubNubCore.CATEGORIES = StatusCategory$1;
 	/**
+	 * Enum with API endpoint groups which can be used with retry policy to set up exclusions (which shouldn't be
+	 * retried).
+	 */
+	PubNubCore.Endpoint = Endpoint;
+	/**
 	 * Exponential retry policy constructor.
 	 */
 	PubNubCore.ExponentialRetryPolicy = RetryPolicy.ExponentialRetryPolicy;

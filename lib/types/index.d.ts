@@ -54,6 +54,11 @@ declare class PubNubCore<
    */
   static CATEGORIES: typeof PubNub.StatusCategory;
   /**
+   * Enum with API endpoint groups which can be used with retry policy to set up exclusions (which shouldn't be
+   * retried).
+   */
+  static Endpoint: typeof PubNub.Endpoint;
+  /**
    * Exponential retry policy constructor.
    */
   static ExponentialRetryPolicy: typeof PubNub.RetryPolicy.ExponentialRetryPolicy;

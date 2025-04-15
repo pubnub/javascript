@@ -32,7 +32,7 @@ import StatusCategory from './constants/categories';
 
 import { createValidationError, PubNubError } from '../errors/pubnub-error';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
-import { RetryPolicy } from './components/retryPolicy';
+import { RetryPolicy, Endpoint } from './components/retryPolicy';
 
 // region Event Engine
 import { PresenceEventEngine } from '../event-engine/presence/presence';
@@ -294,6 +294,12 @@ export class PubNubCore<
    * API call status category.
    */
   static CATEGORIES = StatusCategory;
+
+  /**
+   * Enum with API endpoint groups which can be used with retry policy to set up exclusions (which shouldn't be
+   * retried).
+   */
+  static Endpoint = Endpoint;
 
   /**
    * Exponential retry policy constructor.
