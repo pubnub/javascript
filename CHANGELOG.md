@@ -1,3 +1,12 @@
+## v9.5.1
+April 15 2025
+
+#### Fixed
+- Add missing `NoneRetryPolicy` static field for `PubNub` class.
+
+#### Modified
+- `RetryPolicy.None` exported as a function to not affect tree-shaking and modules exclusion possibilities.
+
 ## v9.5.0
 April 15 2025
 

@@ -4209,7 +4209,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.5.0';
+	            return '9.5.1';
 	        },
 	        getVersion() {
 	            return this.version;
