@@ -314,8 +314,15 @@ const isRetriableRequest = (
   maximumRetry: number,
   excluded?: Endpoint[],
 ) => {
-  if (errorCategory && errorCategory === StatusCategory.PNCancelledCategory) return false;
-  else if (isExcludedRequest(req, excluded)) return false;
+  if (errorCategory) {
+    if (
+      errorCategory === StatusCategory.PNCancelledCategory ||
+      errorCategory === StatusCategory.PNBadRequestCategory ||
+      errorCategory === StatusCategory.PNAccessDeniedCategory
+    )
+      return false;
+  }
+  if (isExcludedRequest(req, excluded)) return false;
   else if (retryAttempt > maximumRetry) return false;
 
   return res ? res.status === 429 || res.status >= 500 : true;

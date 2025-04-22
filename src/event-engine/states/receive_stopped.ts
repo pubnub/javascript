@@ -32,17 +32,21 @@ type ReceiveStoppedStateContext = {
  */
 export const ReceiveStoppedState = new State<ReceiveStoppedStateContext, Events, Effects>('RECEIVE_STOPPED');
 
-ReceiveStoppedState.on(subscriptionChange.type, (context, { payload }) =>
-  ReceiveStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }),
-);
+ReceiveStoppedState.on(subscriptionChange.type, (context, { payload }) => {
+  if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
 
-ReceiveStoppedState.on(restore.type, (context, { payload }) =>
-  ReceiveStoppedState.with({
+  return ReceiveStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+});
+
+ReceiveStoppedState.on(restore.type, (context, { payload }) => {
+  if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
+
+  return ReceiveStoppedState.with({
     channels: payload.channels,
     groups: payload.groups,
     cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
-  }),
-);
+  });
+});
 
 ReceiveStoppedState.on(reconnect.type, (context, { payload }) =>
   HandshakingState.with({

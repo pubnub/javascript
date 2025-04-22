@@ -16,13 +16,12 @@ import {
 } from '../events';
 import * as Subscription from '../../core/types/api/subscription';
 import categoryConstants from '../../core/constants/categories';
+import { PubNubAPIError } from '../../errors/pubnub-api-error';
+import RequestOperation from '../../core/constants/operations';
 import { ReceiveStoppedState } from './receive_stopped';
 import { ReceiveFailedState } from './receive_failed';
 import { UnsubscribedState } from './unsubscribed';
 import { State } from '../core/state';
-import { HandshakeFailedState } from './handshake_failed';
-import { PubNubAPIError } from '../../errors/pubnub-api-error';
-import RequestOperation from '../../core/constants/operations';
 
 /**
  * Context which represent current Subscription Event Engine data state.
@@ -54,29 +53,36 @@ ReceivingState.on(receiveSuccess.type, (context, { payload }) => {
 });
 
 ReceivingState.on(subscriptionChange.type, (context, { payload }) => {
-  const subscriptionChangeStatus = {
-    category: categoryConstants.PNSubscriptionChangedCategory,
-    affectedChannels: payload.channels.slice(0),
-    affectedChannelGroups: payload.groups.slice(0),
-  };
+  if (payload.channels.length === 0 && payload.groups.length === 0) {
+    let errorCategory: string | undefined;
+    if (payload.isOffline)
+      errorCategory = PubNubAPIError.create(new Error('Network connection error')).toPubNubError(
+        RequestOperation.PNSubscribeOperation,
+      ).status?.category;
 
-  if (payload.channels.length === 0 && payload.groups.length === 0)
-    return UnsubscribedState.with(undefined, [emitStatus(subscriptionChangeStatus)]);
+    return UnsubscribedState.with(undefined, [
+      emitStatus({
+        category: !payload.isOffline
+          ? categoryConstants.PNDisconnectedCategory
+          : categoryConstants.PNDisconnectedUnexpectedlyCategory,
+        ...(errorCategory ? { error: errorCategory } : {}),
+      }),
+    ]);
+  }
 
   return ReceivingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }, [
-    emitStatus(subscriptionChangeStatus),
+    emitStatus({
+      category: categoryConstants.PNSubscriptionChangedCategory,
+      affectedChannels: payload.channels.slice(0),
+      affectedChannelGroups: payload.groups.slice(0),
+      currentTimetoken: context.cursor.timetoken,
+    }),
   ]);
 });
 
 ReceivingState.on(restore.type, (context, { payload }) => {
-  const subscriptionChangeStatus = {
-    category: categoryConstants.PNSubscriptionChangedCategory,
-    affectedChannels: payload.channels.slice(0),
-    affectedChannelGroups: payload.groups.slice(0),
-  };
-
   if (payload.channels.length === 0 && payload.groups.length === 0)
-    return UnsubscribedState.with(undefined, [emitStatus(subscriptionChangeStatus)]);
+    return UnsubscribedState.with(undefined, [emitStatus({ category: categoryConstants.PNDisconnectedCategory })]);
 
   return ReceivingState.with(
     {
@@ -84,7 +90,14 @@ ReceivingState.on(restore.type, (context, { payload }) => {
       groups: payload.groups,
       cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
     },
-    [emitStatus(subscriptionChangeStatus)],
+    [
+      emitStatus({
+        category: categoryConstants.PNSubscriptionChangedCategory,
+        affectedChannels: payload.channels.slice(0),
+        affectedChannelGroups: payload.groups.slice(0),
+        currentTimetoken: payload.cursor.timetoken,
+      }),
+    ],
   );
 });
 

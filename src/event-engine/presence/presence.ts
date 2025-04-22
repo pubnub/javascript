@@ -55,8 +55,8 @@ export class PresenceEventEngine {
     this.engine.transition(events.left(channels ?? [], groups ?? []));
   }
 
-  leaveAll() {
-    this.engine.transition(events.leftAll());
+  leaveAll(isOffline?: boolean) {
+    this.engine.transition(events.leftAll(isOffline));
   }
 
   reconnect() {

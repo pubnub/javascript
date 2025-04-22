@@ -46,16 +46,20 @@ ReceiveFailedState.on(reconnect.type, (context, { payload }) =>
   }),
 );
 
-ReceiveFailedState.on(subscriptionChange.type, (context, { payload }) =>
-  HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }),
-);
+ReceiveFailedState.on(subscriptionChange.type, (context, { payload }) => {
+  if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
 
-ReceiveFailedState.on(restore.type, (context, { payload }) =>
-  HandshakingState.with({
+  return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+});
+
+ReceiveFailedState.on(restore.type, (context, { payload }) => {
+  if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
+
+  return HandshakingState.with({
     channels: payload.channels,
     groups: payload.groups,
     cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
-  }),
-);
+  });
+});
 
 ReceiveFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));

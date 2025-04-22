@@ -25,7 +25,7 @@ export type Dependencies = {
   ) => Promise<Subscription.SubscriptionResponse>;
   join?: (parameters: { channels?: string[]; groups?: string[] }) => void;
   leave?: (parameters: { channels?: string[]; groups?: string[] }) => void;
-  leaveAll?: (parameters: { channels?: string[]; groups?: string[] }) => void;
+  leaveAll?: (parameters: { channels?: string[]; groups?: string[]; isOffline?: boolean }) => void;
   presenceReconnect?: (parameters: { channels?: string[]; groups?: string[] }) => void;
   presenceDisconnect?: (parameters: { channels?: string[]; groups?: string[]; isOffline?: boolean }) => void;
   presenceState: Record<string, Payload>;
