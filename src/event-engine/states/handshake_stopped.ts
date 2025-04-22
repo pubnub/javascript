@@ -32,20 +32,24 @@ type HandshakeStoppedStateContext = {
  */
 export const HandshakeStoppedState = new State<HandshakeStoppedStateContext, Events, Effects>('HANDSHAKE_STOPPED');
 
-HandshakeStoppedState.on(subscriptionChange.type, (context, { payload }) =>
-  HandshakeStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }),
-);
+HandshakeStoppedState.on(subscriptionChange.type, (context, { payload }) => {
+  if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
+
+  return HandshakeStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+});
 
 HandshakeStoppedState.on(reconnect.type, (context, { payload }) =>
   HandshakingState.with({ ...context, cursor: payload.cursor || context.cursor }),
 );
 
-HandshakeStoppedState.on(restore.type, (context, { payload }) =>
-  HandshakeStoppedState.with({
+HandshakeStoppedState.on(restore.type, (context, { payload }) => {
+  if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
+
+  return HandshakeStoppedState.with({
     channels: payload.channels,
     groups: payload.groups,
     cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor?.region || 0 },
-  }),
-);
+  });
+});
 
 HandshakeStoppedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());

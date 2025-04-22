@@ -1,5 +1,12 @@
 ---
 changelog:
+  - date: 2025-04-22
+    version: v9.5.2
+    changes:
+      - type: bug
+        text: "Fixed issue because of which client retried for both bad request and access denied."
+      - type: improvement
+        text: "Add current list of channels and groups to connected status."
   - date: 2025-04-15
     version: v9.5.1
     changes:
@@ -1229,7 +1236,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.5.1'
+version: '9.5.2'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1245,7 +1252,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.5.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.5.2.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1916,7 +1923,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.5.1/pubnub.9.5.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.5.2/pubnub.9.5.2.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

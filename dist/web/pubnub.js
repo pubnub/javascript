@@ -3957,9 +3957,13 @@
 	 * @internal
 	 */
 	const isRetriableRequest = (req, res, errorCategory, retryAttempt, maximumRetry, excluded) => {
-	    if (errorCategory && errorCategory === StatusCategory$1.PNCancelledCategory)
-	        return false;
-	    else if (isExcludedRequest(req, excluded))
+	    if (errorCategory) {
+	        if (errorCategory === StatusCategory$1.PNCancelledCategory ||
+	            errorCategory === StatusCategory$1.PNBadRequestCategory ||
+	            errorCategory === StatusCategory$1.PNAccessDeniedCategory)
+	            return false;
+	    }
+	    if (isExcludedRequest(req, excluded))
 	        return false;
 	    else if (retryAttempt > maximumRetry)
 	        return false;
@@ -4209,7 +4213,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.5.1';
+	            return '9.5.2';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -7693,7 +7697,7 @@
 	 *
 	 * @internal
 	 */
-	const leftAll = createEvent('LEFT_ALL', () => ({}));
+	const leftAll = createEvent('LEFT_ALL', (isOffline) => ({ isOffline }));
 	/**
 	 * Presence heartbeat success event.
 	 *
@@ -7878,7 +7882,9 @@
 	HeartbeatCooldownState.on(disconnect$1.type, (context, event) => HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
 	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
 	]));
-	HeartbeatCooldownState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]));
+	HeartbeatCooldownState.on(leftAll.type, (context, event) => HeartbeatInactiveState.with(undefined, [
+	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+	]));
 
 	/**
 	 * Failed to heartbeat state module.
@@ -7909,7 +7915,9 @@
 	HeartbeatFailedState.on(disconnect$1.type, (context, event) => HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
 	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
 	]));
-	HeartbeatFailedState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]));
+	HeartbeatFailedState.on(leftAll.type, (context, event) => HeartbeatInactiveState.with(undefined, [
+	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+	]));
 
 	/**
 	 * Heartbeating state module.
@@ -7945,7 +7953,9 @@
 	HeartbeatingState.on(disconnect$1.type, (context, event) => HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
 	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
 	]));
-	HeartbeatingState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]));
+	HeartbeatingState.on(leftAll.type, (context, event) => HeartbeatInactiveState.with(undefined, [
+	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+	]));
 
 	/**
 	 * Inactive heratbeating state module.
@@ -8004,8 +8014,8 @@
 	        }
 	        this.engine.transition(left(channels !== null && channels !== void 0 ? channels : [], groups !== null && groups !== void 0 ? groups : []));
 	    }
-	    leaveAll() {
-	        this.engine.transition(leftAll());
+	    leaveAll(isOffline) {
+	        this.engine.transition(leftAll(isOffline));
 	    }
 	    reconnect() {
 	        this.engine.transition(reconnect$1());
@@ -8074,9 +8084,10 @@
 	 *
 	 * @internal
 	 */
-	const subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', (channels, groups) => ({
+	const subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', (channels, groups, isOffline) => ({
 	    channels,
 	    groups,
+	    isOffline,
 	}));
 	/**
 	 * Subscription loop restore.
@@ -8231,10 +8242,16 @@
 	 * @internal
 	 */
 	const HandshakeStoppedState = new State('HANDSHAKE_STOPPED');
-	HandshakeStoppedState.on(subscriptionChange.type, (context, { payload }) => HandshakeStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }));
+	HandshakeStoppedState.on(subscriptionChange.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakeStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+	});
 	HandshakeStoppedState.on(reconnect.type, (context, { payload }) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: payload.cursor || context.cursor })));
 	HandshakeStoppedState.on(restore.type, (context, { payload }) => {
 	    var _a;
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
 	    return HandshakeStoppedState.with({
 	        channels: payload.channels,
 	        groups: payload.groups,
@@ -8257,7 +8274,11 @@
 	 * @internal
 	 */
 	const HandshakeFailedState = new State('HANDSHAKE_FAILED');
-	HandshakeFailedState.on(subscriptionChange.type, (context, { payload }) => HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }));
+	HandshakeFailedState.on(subscriptionChange.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+	});
 	HandshakeFailedState.on(reconnect.type, (context, { payload }) => HandshakingState.with({
 	    channels: context.channels,
 	    groups: context.groups,
@@ -8265,6 +8286,8 @@
 	}));
 	HandshakeFailedState.on(restore.type, (context, { payload }) => {
 	    var _a, _b;
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
 	    return HandshakingState.with({
 	        channels: payload.channels,
 	        groups: payload.groups,
@@ -8290,12 +8313,20 @@
 	 * @internal
 	 */
 	const ReceiveStoppedState = new State('RECEIVE_STOPPED');
-	ReceiveStoppedState.on(subscriptionChange.type, (context, { payload }) => ReceiveStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }));
-	ReceiveStoppedState.on(restore.type, (context, { payload }) => ReceiveStoppedState.with({
-	    channels: payload.channels,
-	    groups: payload.groups,
-	    cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
-	}));
+	ReceiveStoppedState.on(subscriptionChange.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return ReceiveStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+	});
+	ReceiveStoppedState.on(restore.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return ReceiveStoppedState.with({
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
+	    });
+	});
 	ReceiveStoppedState.on(reconnect.type, (context, { payload }) => {
 	    var _a;
 	    return HandshakingState.with({
@@ -8334,12 +8365,20 @@
 	        },
 	    });
 	});
-	ReceiveFailedState.on(subscriptionChange.type, (context, { payload }) => HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }));
-	ReceiveFailedState.on(restore.type, (context, { payload }) => HandshakingState.with({
-	    channels: payload.channels,
-	    groups: payload.groups,
-	    cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
-	}));
+	ReceiveFailedState.on(subscriptionChange.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+	});
+	ReceiveFailedState.on(restore.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakingState.with({
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
+	    });
+	});
 	ReceiveFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));
 
 	/**
@@ -8363,30 +8402,41 @@
 	    ]);
 	});
 	ReceivingState.on(subscriptionChange.type, (context, { payload }) => {
-	    const subscriptionChangeStatus = {
-	        category: StatusCategory$1.PNSubscriptionChangedCategory,
-	        affectedChannels: payload.channels.slice(0),
-	        affectedChannelGroups: payload.groups.slice(0),
-	    };
-	    if (payload.channels.length === 0 && payload.groups.length === 0)
-	        return UnsubscribedState.with(undefined, [emitStatus(subscriptionChangeStatus)]);
+	    var _a;
+	    if (payload.channels.length === 0 && payload.groups.length === 0) {
+	        let errorCategory;
+	        if (payload.isOffline)
+	            errorCategory = (_a = PubNubAPIError.create(new Error('Network connection error')).toPubNubError(RequestOperation$1.PNSubscribeOperation).status) === null || _a === void 0 ? void 0 : _a.category;
+	        return UnsubscribedState.with(undefined, [
+	            emitStatus(Object.assign({ category: !payload.isOffline
+	                    ? StatusCategory$1.PNDisconnectedCategory
+	                    : StatusCategory$1.PNDisconnectedUnexpectedlyCategory }, (errorCategory ? { error: errorCategory } : {}))),
+	        ]);
+	    }
 	    return ReceivingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }, [
-	        emitStatus(subscriptionChangeStatus),
+	        emitStatus({
+	            category: StatusCategory$1.PNSubscriptionChangedCategory,
+	            affectedChannels: payload.channels.slice(0),
+	            affectedChannelGroups: payload.groups.slice(0),
+	            currentTimetoken: context.cursor.timetoken,
+	        }),
 	    ]);
 	});
 	ReceivingState.on(restore.type, (context, { payload }) => {
-	    const subscriptionChangeStatus = {
-	        category: StatusCategory$1.PNSubscriptionChangedCategory,
-	        affectedChannels: payload.channels.slice(0),
-	        affectedChannelGroups: payload.groups.slice(0),
-	    };
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
-	        return UnsubscribedState.with(undefined, [emitStatus(subscriptionChangeStatus)]);
+	        return UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]);
 	    return ReceivingState.with({
 	        channels: payload.channels,
 	        groups: payload.groups,
 	        cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
-	    }, [emitStatus(subscriptionChangeStatus)]);
+	    }, [
+	        emitStatus({
+	            category: StatusCategory$1.PNSubscriptionChangedCategory,
+	            affectedChannels: payload.channels.slice(0),
+	            affectedChannelGroups: payload.groups.slice(0),
+	            currentTimetoken: payload.cursor.timetoken,
+	        }),
+	    ]);
 	});
 	ReceivingState.on(receiveFailure.type, (context, { payload }) => {
 	    var _a;
@@ -8435,7 +8485,7 @@
 	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
 	});
 	HandshakingState.on(handshakeSuccess.type, (context, { payload }) => {
-	    var _a, _b;
+	    var _a, _b, _c, _d;
 	    return ReceivingState.with({
 	        channels: context.channels,
 	        groups: context.groups,
@@ -8443,7 +8493,14 @@
 	            timetoken: !!((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) ? (_b = context.cursor) === null || _b === void 0 ? void 0 : _b.timetoken : payload.timetoken,
 	            region: payload.region,
 	        },
-	    }, [emitStatus({ category: StatusCategory$1.PNConnectedCategory })]);
+	    }, [
+	        emitStatus({
+	            category: StatusCategory$1.PNConnectedCategory,
+	            affectedChannels: context.channels.slice(0),
+	            affectedChannelGroups: context.groups.slice(0),
+	            currentTimetoken: !!((_c = context.cursor) === null || _c === void 0 ? void 0 : _c.timetoken) ? (_d = context.cursor) === null || _d === void 0 ? void 0 : _d.timetoken : payload.timetoken,
+	        }),
+	    ]);
 	});
 	HandshakingState.on(handshakeFailure.type, (context, event) => {
 	    var _a;
@@ -8470,6 +8527,8 @@
 	});
 	HandshakingState.on(restore.type, (context, { payload }) => {
 	    var _a;
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
 	    return HandshakingState.with({
 	        channels: payload.channels,
 	        groups: payload.groups,
@@ -8491,8 +8550,16 @@
 	 * @internal
 	 */
 	const UnsubscribedState = new State('UNSUBSCRIBED');
-	UnsubscribedState.on(subscriptionChange.type, (_, { payload }) => HandshakingState.with({ channels: payload.channels, groups: payload.groups }));
-	UnsubscribedState.on(restore.type, (_, { payload }) => HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: payload.cursor }));
+	UnsubscribedState.on(subscriptionChange.type, (_, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups });
+	});
+	UnsubscribedState.on(restore.type, (_, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: payload.cursor });
+	});
 
 	/**
 	 * Subscribe Event Engine module.
@@ -8569,7 +8636,7 @@
 	            }
 	        }
 	    }
-	    unsubscribeAll() {
+	    unsubscribeAll(isOffline) {
 	        const channelGroups = this.getSubscribedChannels();
 	        const channels = this.getSubscribedChannels();
 	        this.channels = [];
@@ -8579,9 +8646,9 @@
 	                delete this.dependencies.presenceState[objectName];
 	            });
 	        }
-	        this.engine.transition(subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
+	        this.engine.transition(subscriptionChange(this.channels.slice(0), this.groups.slice(0), isOffline));
 	        if (this.dependencies.leaveAll)
-	            this.dependencies.leaveAll({ channels, groups: channelGroups });
+	            this.dependencies.leaveAll({ channels, groups: channelGroups, isOffline });
 	    }
 	    reconnect({ timetoken, region }) {
 	        const channelGroups = this.getSubscribedChannels();
@@ -13316,11 +13383,11 @@
 	                this.subscriptionManager.disconnect();
 	            }
 	            else if (this.eventEngine)
-	                this.eventEngine.dispose();
-	            {
-	                if (this.presenceEventEngine)
-	                    this.presenceEventEngine.dispose();
-	            }
+	                this.eventEngine.unsubscribeAll(isOffline);
+	        }
+	        {
+	            if (this.presenceEventEngine)
+	                this.presenceEventEngine.leaveAll(isOffline);
 	        }
 	    }
 	    /**
@@ -14022,11 +14089,11 @@
 	     *
 	     * @param parameters - List of channels and groups where `leave` event should be sent.
 	     */
-	    leaveAll(parameters) {
+	    leaveAll(parameters = {}) {
 	        {
 	            if (this.presenceEventEngine)
-	                this.presenceEventEngine.leaveAll();
-	            else
+	                this.presenceEventEngine.leaveAll(parameters.isOffline);
+	            else if (!parameters.isOffline)
 	                this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => { });
 	        }
 	    }

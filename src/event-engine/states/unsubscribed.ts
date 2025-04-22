@@ -18,10 +18,14 @@ import { HandshakingState } from './handshaking';
  */
 export const UnsubscribedState = new State<void, Events, Effects>('UNSUBSCRIBED');
 
-UnsubscribedState.on(subscriptionChange.type, (_, { payload }) =>
-  HandshakingState.with({ channels: payload.channels, groups: payload.groups }),
-);
+UnsubscribedState.on(subscriptionChange.type, (_, { payload }) => {
+  if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
 
-UnsubscribedState.on(restore.type, (_, { payload }) =>
-  HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: payload.cursor }),
-);
+  return HandshakingState.with({ channels: payload.channels, groups: payload.groups });
+});
+
+UnsubscribedState.on(restore.type, (_, { payload }) => {
+  if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
+
+  return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: payload.cursor });
+});

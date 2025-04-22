@@ -63,6 +63,8 @@ HeartbeatCooldownState.on(disconnect.type, (context, event) =>
   ]),
 );
 
-HeartbeatCooldownState.on(leftAll.type, (context, _) =>
-  HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]),
+HeartbeatCooldownState.on(leftAll.type, (context, event) =>
+  HeartbeatInactiveState.with(undefined, [
+    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+  ]),
 );

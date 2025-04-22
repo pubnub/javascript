@@ -69,6 +69,8 @@ HeartbeatingState.on(disconnect.type, (context, event) =>
   ]),
 );
 
-HeartbeatingState.on(leftAll.type, (context, _) =>
-  HeartbeatInactiveState.with(undefined, [leave(context.channels, context.groups)]),
+HeartbeatingState.on(leftAll.type, (context, event) =>
+  HeartbeatInactiveState.with(undefined, [
+    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+  ]),
 );

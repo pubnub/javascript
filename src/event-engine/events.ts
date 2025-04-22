@@ -15,10 +15,14 @@ import { createEvent, MapOf } from './core';
  *
  * @internal
  */
-export const subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', (channels: string[], groups: string[]) => ({
-  channels,
-  groups,
-}));
+export const subscriptionChange = createEvent(
+  'SUBSCRIPTION_CHANGED',
+  (channels: string[], groups: string[], isOffline?: boolean) => ({
+    channels,
+    groups,
+    isOffline,
+  }),
+);
 
 /**
  * Subscription loop restore.

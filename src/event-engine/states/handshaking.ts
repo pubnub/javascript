@@ -64,7 +64,14 @@ HandshakingState.on(handshakeSuccess.type, (context, { payload }) =>
         region: payload.region,
       },
     },
-    [emitStatus({ category: categoryConstants.PNConnectedCategory })],
+    [
+      emitStatus({
+        category: categoryConstants.PNConnectedCategory,
+        affectedChannels: context.channels.slice(0),
+        affectedChannelGroups: context.groups.slice(0),
+        currentTimetoken: !!context.cursor?.timetoken ? context.cursor?.timetoken : payload.timetoken,
+      }),
+    ],
   ),
 );
 
@@ -100,12 +107,14 @@ HandshakingState.on(disconnect.type, (context, event) => {
   }
 });
 
-HandshakingState.on(restore.type, (context, { payload }) =>
-  HandshakingState.with({
+HandshakingState.on(restore.type, (context, { payload }) => {
+  if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
+
+  return HandshakingState.with({
     channels: payload.channels,
     groups: payload.groups,
     cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context?.cursor?.region || 0 },
-  }),
-);
+  });
+});
 
 HandshakingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());

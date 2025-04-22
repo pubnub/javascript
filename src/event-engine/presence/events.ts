@@ -60,7 +60,7 @@ export const left = createEvent('LEFT', (channels: string[], groups: string[]) =
  *
  * @internal
  */
-export const leftAll = createEvent('LEFT_ALL', () => ({}));
+export const leftAll = createEvent('LEFT_ALL', (isOffline?: boolean) => ({ isOffline }));
 
 /**
  * Presence heartbeat success event.

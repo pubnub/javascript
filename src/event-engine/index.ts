@@ -124,7 +124,7 @@ export class EventEngine {
     }
   }
 
-  unsubscribeAll(): void {
+  unsubscribeAll(isOffline?: boolean): void {
     const channelGroups = this.getSubscribedChannels();
     const channels = this.getSubscribedChannels();
 
@@ -136,8 +136,8 @@ export class EventEngine {
         delete this.dependencies.presenceState[objectName];
       });
     }
-    this.engine.transition(events.subscriptionChange(this.channels.slice(0), this.groups.slice(0)));
-    if (this.dependencies.leaveAll) this.dependencies.leaveAll({ channels, groups: channelGroups });
+    this.engine.transition(events.subscriptionChange(this.channels.slice(0), this.groups.slice(0), isOffline));
+    if (this.dependencies.leaveAll) this.dependencies.leaveAll({ channels, groups: channelGroups, isOffline });
   }
 
   reconnect({ timetoken, region }: { timetoken?: string; region?: number }): void {

@@ -35,9 +35,11 @@ export type HandshakeFailedStateContext = {
  */
 export const HandshakeFailedState = new State<HandshakeFailedStateContext, Events, Effects>('HANDSHAKE_FAILED');
 
-HandshakeFailedState.on(subscriptionChange.type, (context, { payload }) =>
-  HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }),
-);
+HandshakeFailedState.on(subscriptionChange.type, (context, { payload }) => {
+  if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
+
+  return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+});
 
 HandshakeFailedState.on(reconnect.type, (context, { payload }) =>
   HandshakingState.with({
@@ -47,15 +49,17 @@ HandshakeFailedState.on(reconnect.type, (context, { payload }) =>
   }),
 );
 
-HandshakeFailedState.on(restore.type, (context, { payload }) =>
-  HandshakingState.with({
+HandshakeFailedState.on(restore.type, (context, { payload }) => {
+  if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
+
+  return HandshakingState.with({
     channels: payload.channels,
     groups: payload.groups,
     cursor: {
       timetoken: payload.cursor.timetoken,
       region: payload.cursor.region ? payload.cursor.region : (context?.cursor?.region ?? 0),
     },
-  }),
-);
+  });
+});
 
 HandshakeFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());

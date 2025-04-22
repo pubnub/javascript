@@ -902,11 +902,11 @@ export class PubNubCore<
       if (this.subscriptionManager) {
         this.subscriptionManager.unsubscribeAll(isOffline);
         this.subscriptionManager.disconnect();
-      } else if (this.eventEngine) this.eventEngine.dispose();
+      } else if (this.eventEngine) this.eventEngine.unsubscribeAll(isOffline);
+    }
 
-      if (process.env.PRESENCE_MODULE !== 'disabled') {
-        if (this.presenceEventEngine) this.presenceEventEngine.dispose();
-      }
+    if (process.env.PRESENCE_MODULE !== 'disabled') {
+      if (this.presenceEventEngine) this.presenceEventEngine.leaveAll(isOffline);
     }
   }
 
@@ -2063,10 +2063,11 @@ export class PubNubCore<
    *
    * @param parameters - List of channels and groups where `leave` event should be sent.
    */
-  private leaveAll(parameters: { channels?: string[]; groups?: string[] }) {
+  private leaveAll(parameters: { channels?: string[]; groups?: string[]; isOffline?: boolean } = {}) {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
-      if (this.presenceEventEngine) this.presenceEventEngine.leaveAll();
-      else this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => {});
+      if (this.presenceEventEngine) this.presenceEventEngine.leaveAll(parameters.isOffline);
+      else if (!parameters.isOffline)
+        this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => {});
     } else throw new Error('Announce UUID Leave error: presence module disabled');
   }
 
