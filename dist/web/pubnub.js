@@ -8443,7 +8443,11 @@
 	            timetoken: !!((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) ? (_b = context.cursor) === null || _b === void 0 ? void 0 : _b.timetoken : payload.timetoken,
 	            region: payload.region,
 	        },
-	    }, [emitStatus({ category: StatusCategory$1.PNConnectedCategory })]);
+	    }, [emitStatus({ category: StatusCategory$1.PNConnectedCategory,
+	            affectedChannels: context.channels,
+	            affectedChannelGroups: context.groups,
+	            subscribedChannels: context.channels
+	        })]);
 	});
 	HandshakingState.on(handshakeFailure.type, (context, event) => {
 	    var _a;
