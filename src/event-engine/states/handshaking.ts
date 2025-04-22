@@ -64,7 +64,11 @@ HandshakingState.on(handshakeSuccess.type, (context, { payload }) =>
         region: payload.region,
       },
     },
-    [emitStatus({ category: categoryConstants.PNConnectedCategory })],
+    [emitStatus({ category: categoryConstants.PNConnectedCategory, 
+      affectedChannels: context.channels, 
+      affectedChannelGroups: context.groups, 
+      subscribedChannels: context.channels 
+    })],
   ),
 );
 
