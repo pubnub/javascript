@@ -1,3 +1,12 @@
+## v9.5.2
+April 22 2025
+
+#### Fixed
+- Fixed issue because of which client retried for both bad request and access denied.
+
+#### Modified
+- Add current list of channels and groups to connected status.
+
 ## v9.5.1
 April 15 2025
 
