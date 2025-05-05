@@ -133,14 +133,18 @@ export default class EventEmitter {
       channels?.forEach((channel) => {
         if (this.channelListenerMap.has(channel)) {
           const channelListeners = this.channelListenerMap.get(channel)!;
-          channelListeners.push({ id: listenerId, listener });
+          if (!channelListeners.some((l) => l.id === listenerId)) {
+            channelListeners.push({ id: listenerId, listener });
+          }
         } else this.channelListenerMap.set(channel, [{ id: listenerId, listener }]);
       });
 
       groups?.forEach((group) => {
         if (this.groupListenerMap.has(group)) {
           const groupListeners = this.groupListenerMap.get(group)!;
+          if (!groupListeners.some((l) => l.id === listenerId)) {
           groupListeners.push({ id: listenerId, listener });
+          }
         } else this.groupListenerMap.set(group, [{ id: listenerId, listener }]);
       });
     }

@@ -161,7 +161,6 @@ export class Subscription extends SubscribeCapable {
         subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
       }
 
-      if (this.aggregatedListener) subscriptionSet.addListener(this.aggregatedListener);
       this.pubnub.registerSubscribeCapable(subscriptionSet);
       // @ts-expect-error: Required modification of protected field.
       subscriptionSet.subscribed = true;

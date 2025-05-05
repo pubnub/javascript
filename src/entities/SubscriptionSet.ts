@@ -197,7 +197,15 @@ export class SubscriptionSet extends SubscribeCapable {
    * @param subscription - Other entity's subscription object, which should be removed.
    */
   removeSubscription(subscription: Subscription) {
-    this.subscriptionList = this.subscriptionList.filter((sub) => sub !== subscription);
+    this.subscriptionList = this.subscriptionList.filter((sub) => {
+      // Compare based on channel and group names instead of object reference
+      return !(
+        sub.channels.length === subscription.channels.length &&
+        sub.channelGroups.length === subscription.channelGroups.length &&
+        sub.channels.every(channel => subscription.channels.includes(channel)) &&
+        sub.channelGroups.every(group => subscription.channelGroups.includes(group))
+      );
+    });
 
     // Make sure to stop listening for events from channels / groups removed with `subscription`.
     this.updateListeners();

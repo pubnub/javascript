@@ -7232,7 +7232,9 @@
 	            channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => {
 	                if (this.channelListenerMap.has(channel)) {
 	                    const channelListeners = this.channelListenerMap.get(channel);
-	                    channelListeners.push({ id: listenerId, listener });
+	                    if (!channelListeners.some((l) => l.id === listenerId)) {
+	                        channelListeners.push({ id: listenerId, listener });
+	                    }
 	                }
 	                else
 	                    this.channelListenerMap.set(channel, [{ id: listenerId, listener }]);
@@ -7240,7 +7242,9 @@
 	            groups === null || groups === void 0 ? void 0 : groups.forEach((group) => {
 	                if (this.groupListenerMap.has(group)) {
 	                    const groupListeners = this.groupListenerMap.get(group);
-	                    groupListeners.push({ id: listenerId, listener });
+	                    if (!groupListeners.some((l) => l.id === listenerId)) {
+	                        groupListeners.push({ id: listenerId, listener });
+	                    }
 	                }
 	                else
 	                    this.groupListenerMap.set(group, [{ id: listenerId, listener }]);
@@ -10465,7 +10469,13 @@
 	     * @param subscription - Other entity's subscription object, which should be removed.
 	     */
 	    removeSubscription(subscription) {
-	        this.subscriptionList = this.subscriptionList.filter((sub) => sub !== subscription);
+	        this.subscriptionList = this.subscriptionList.filter((sub) => {
+	            // Compare based on channel and group names instead of object reference
+	            return !(sub.channels.length === subscription.channels.length &&
+	                sub.channelGroups.length === subscription.channelGroups.length &&
+	                sub.channels.every(channel => subscription.channels.includes(channel)) &&
+	                sub.channelGroups.every(group => subscription.channelGroups.includes(group)));
+	        });
 	        // Make sure to stop listening for events from channels / groups removed with `subscription`.
 	        this.updateListeners();
 	        // @ts-expect-error: Required access of protected field.
@@ -10642,8 +10652,7 @@
 	                subscription.subscribe();
 	                subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
 	            }
-	            if (this.aggregatedListener)
-	                subscriptionSet.addListener(this.aggregatedListener);
+	            // if (this.aggregatedListener) subscriptionSet.addListener(this.aggregatedListener);
 	            this.pubnub.registerSubscribeCapable(subscriptionSet);
 	            // @ts-expect-error: Required modification of protected field.
 	            subscriptionSet.subscribed = true;
