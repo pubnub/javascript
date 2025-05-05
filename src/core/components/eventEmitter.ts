@@ -143,7 +143,7 @@ export default class EventEmitter {
         if (this.groupListenerMap.has(group)) {
           const groupListeners = this.groupListenerMap.get(group)!;
           if (!groupListeners.some((l) => l.id === listenerId)) {
-          groupListeners.push({ id: listenerId, listener });
+            groupListeners.push({ id: listenerId, listener });
           }
         } else this.groupListenerMap.set(group, [{ id: listenerId, listener }]);
       });

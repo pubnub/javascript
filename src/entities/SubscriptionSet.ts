@@ -202,8 +202,8 @@ export class SubscriptionSet extends SubscribeCapable {
       return !(
         sub.channels.length === subscription.channels.length &&
         sub.channelGroups.length === subscription.channelGroups.length &&
-        sub.channels.every(channel => subscription.channels.includes(channel)) &&
-        sub.channelGroups.every(group => subscription.channelGroups.includes(group))
+        sub.channels.every((channel) => subscription.channels.includes(channel)) &&
+        sub.channelGroups.every((group) => subscription.channelGroups.includes(group))
       );
     });
 
