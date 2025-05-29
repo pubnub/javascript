@@ -37,7 +37,7 @@ export type TransportKeepAlive = {
 /**
  * This interface is used to send requests to the PubNub API.
  *
- * You can implement this interface for your types, or use one of the provided modules to use a
+ * You can implement this interface for your types or use one of the provided modules to use a
  * transport library.
  *
  * @interface

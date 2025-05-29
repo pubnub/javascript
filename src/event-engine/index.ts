@@ -4,13 +4,14 @@
  * @internal
  */
 
-import { Dispatcher, Engine } from './core';
+import { ReceivingState, ReceivingStateContext } from './states/receiving';
 import { Dependencies, EventEngineDispatcher } from './dispatcher';
+import { subscriptionTimetokenFromReference } from '../core/utils';
+import { UnsubscribedState } from './states/unsubscribed';
+import { Dispatcher, Engine } from './core';
+import * as utils from '../core/utils';
 import * as effects from './effects';
 import * as events from './events';
-import { UnsubscribedState } from './states/unsubscribed';
-
-import * as utils from '../core/utils';
 
 /**
  * Subscribe Event Engine Core.
@@ -18,9 +19,12 @@ import * as utils from '../core/utils';
  * @internal
  */
 export class EventEngine {
-  private engine: Engine<events.Events, effects.Effects> = new Engine();
+  private readonly engine: Engine<events.Events, effects.Effects>;
   private dispatcher: Dispatcher<effects.Effects, Dependencies>;
   private dependencies: Dependencies;
+
+  channels: string[] = [];
+  groups: string[] = [];
 
   get _engine() {
     return this.engine;
@@ -30,7 +34,10 @@ export class EventEngine {
 
   constructor(dependencies: Dependencies) {
     this.dependencies = dependencies;
+    this.engine = new Engine(dependencies.config.logger());
     this.dispatcher = new EventEngineDispatcher(this.engine, dependencies);
+
+    dependencies.config.logger().debug(this.constructor.name, 'Create subscribe event engine.');
 
     this._unsubscribeEngine = this.engine.subscribe((change) => {
       if (change.type === 'invocationDispatched') {
@@ -41,8 +48,25 @@ export class EventEngine {
     this.engine.start(UnsubscribedState, undefined);
   }
 
-  channels: string[] = [];
-  groups: string[] = [];
+  /**
+   * Subscription-based current timetoken.
+   *
+   * @returns Timetoken based on current timetoken plus diff between current and loop start time.
+   */
+  get subscriptionTimetoken(): string | undefined {
+    const currentState = this.engine.currentState;
+    if (!currentState) return undefined;
+    let referenceTimetoken: string | undefined;
+    let currentTimetoken = '0';
+
+    if (currentState.label === ReceivingState.label) {
+      const context: ReceivingStateContext = this.engine.currentContext;
+      currentTimetoken = context.cursor.timetoken;
+      referenceTimetoken = context.referenceTimetoken;
+    }
+
+    return subscriptionTimetokenFromReference(currentTimetoken, referenceTimetoken ?? '0');
+  }
 
   subscribe({
     channels,
@@ -124,7 +148,7 @@ export class EventEngine {
     }
   }
 
-  unsubscribeAll(isOffline?: boolean): void {
+  unsubscribeAll(isOffline: boolean = false): void {
     const channelGroups = this.getSubscribedChannels();
     const channels = this.getSubscribedChannels();
 
@@ -149,7 +173,7 @@ export class EventEngine {
     if (this.dependencies.presenceReconnect) this.dependencies.presenceReconnect({ channels, groups: channelGroups });
   }
 
-  disconnect(isOffline?: boolean): void {
+  disconnect(isOffline: boolean = false): void {
     const channelGroups = this.getSubscribedChannels();
     const channels = this.getSubscribedChannels();
 

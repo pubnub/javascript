@@ -159,6 +159,10 @@ export class SetUUIDMembershipsRequest<
     };
   }
 
+  protected get headers(): Record<string, string> | undefined {
+    return { ...(super.headers ?? {}), 'Content-Type': 'application/json' };
+  }
+
   protected get body(): string {
     const { channels, type } = this.parameters;
 

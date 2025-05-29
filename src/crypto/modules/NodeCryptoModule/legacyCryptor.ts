@@ -6,6 +6,7 @@
 
 import PubNubFile, { PubNubFileParameters } from '../../../file/modules/node';
 import { CryptorConfiguration } from '../../../core/interfaces/crypto-module';
+import { LoggerManager } from '../../../core/components/logger-manager';
 import Crypto from '../../../core/components/cryptography/index';
 import { PubNubFileConstructor } from '../../../core/types/file';
 import { encode } from '../../../core/components/base64_codec';
@@ -39,6 +40,15 @@ export default class LegacyCryptor implements ILegacyCryptor {
     this.config = config;
     this.cryptor = new Crypto({ ...config });
     this.fileCryptor = new FileCryptor();
+  }
+
+  /**
+   * Update registered loggers' manager.
+   *
+   * @param [logger] - Logger, which crypto should use.
+   */
+  set logger(logger: LoggerManager) {
+    this.cryptor.logger = logger;
   }
 
   // --------------------------------------------------------
@@ -89,4 +99,18 @@ export default class LegacyCryptor implements ILegacyCryptor {
     return '';
   }
   // endregion
+
+  /**
+   * Serialize cryptor information to string.
+   *
+   * @returns Serialized cryptor information.
+   */
+  toString() {
+    const configurationEntries = Object.entries(this.config).reduce((acc, [key, value]) => {
+      if (key === 'logger') return acc;
+      acc.push(`${key}: ${typeof value === 'function' ? '<function>' : value}`);
+      return acc;
+    }, [] as string[]);
+    return `${this.constructor.name} { ${configurationEntries.join(', ')} }`;
+  }
 }

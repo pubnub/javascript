@@ -6,6 +6,7 @@
 
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
 import { TransportResponse } from '../core/types/transport-response';
+import { LoggerManager } from '../core/components/logger-manager';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
 import { Transport } from '../core/interfaces/transport';
 import { queryStringFromObject } from '../core/utils';
@@ -22,15 +23,17 @@ export class TitaniumTransport implements Transport {
   /**
    * Create a new `Ti.Network.HTTPClient`-based transport instance.
    *
+   * @param logger - Registered loggers' manager.
    * @param keepAlive - Indicates whether keep-alive should be enabled.
-   * @param [logVerbosity] - Whether verbose logging enabled or not.
    *
    * @returns Transport for performing network requests.
    */
   constructor(
+    private readonly logger: LoggerManager,
     private readonly keepAlive: boolean = false,
-    private readonly logVerbosity: boolean = false,
-  ) {}
+  ) {
+    logger.debug(this.constructor.name, `Create with configuration:\n  - keep-alive: ${keepAlive}`);
+  }
 
   makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
     const [xhr, url, body] = this.requestFromTransportRequest(req);
@@ -40,8 +43,11 @@ export class TitaniumTransport implements Transport {
     if (req.cancellable) {
       controller = {
         abort: () => {
-          aborted = true;
-          xhr.abort();
+          if (!aborted) {
+            this.logger.trace(this.constructor.name, 'On-demand request aborting.');
+            aborted = true;
+            xhr.abort();
+          }
         },
       };
     }
@@ -50,33 +56,61 @@ export class TitaniumTransport implements Transport {
       new Promise<TransportResponse>((resolve, reject) => {
         const start = new Date().getTime();
 
-        this.logRequestProcessProgress(url, req.body);
+        this.logger.debug(this.constructor.name, () => ({ messageType: 'network-request', message: req }));
 
         xhr.onload = () => {
           const response = this.transportResponseFromXHR(url, xhr);
 
-          this.logRequestProcessProgress(url, undefined, new Date().getTime() - start, response.body);
+          this.logger.debug(this.constructor.name, () => ({
+            messageType: 'network-response',
+            message: response,
+          }));
+
           resolve(response);
         };
 
         xhr.onerror = () => {
           const elapsed = new Date().getTime() - start;
-          let body: ArrayBuffer | undefined;
           let error: PubNubAPIError;
 
           if (aborted) {
+            this.logger.debug(this.constructor.name, () => ({
+              messageType: 'network-request',
+              message: req,
+              details: 'Aborted',
+              canceled: true,
+            }));
+
             error = PubNubAPIError.create(new Error('Aborted'));
           } else if (xhr.timeout >= elapsed - 100) {
+            this.logger.warn(this.constructor.name, () => ({
+              messageType: 'network-request',
+              message: req,
+              details: 'Timeout',
+              canceled: true,
+            }));
+
             error = PubNubAPIError.create(new Error('Request timeout'));
           } else if (xhr.status === 0) {
+            this.logger.warn(this.constructor.name, () => ({
+              messageType: 'network-request',
+              message: req,
+              details: 'Network error',
+              failed: true,
+            }));
+
             error = PubNubAPIError.create(new Error('Request failed because of network issues'));
           } else {
             const response = this.transportResponseFromXHR(url, xhr);
             error = PubNubAPIError.create(response);
-            body = response.body;
-          }
 
-          this.logRequestProcessProgress(url, undefined, elapsed, body);
+            this.logger.warn(this.constructor.name, () => ({
+              messageType: 'network-request',
+              message: req,
+              details: error.message,
+              failed: true,
+            }));
+          }
 
           reject(error);
         };
@@ -138,44 +172,5 @@ export class TitaniumTransport implements Transport {
     }
 
     return { status: xhr.status, url, headers, body: xhr.responseData.toArrayBuffer() };
-  }
-
-  /**
-   * Log out request processing progress and result.
-   *
-   * @param url - Endpoint Url used by {@link Ti.Network.HTTPClient|HTTPClient}.
-   * @param [requestBody] - POST / PATCH body.
-   * @param [elapsed] - How many times passed since request processing started.
-   * @param [body] - Service response (if available).
-   */
-  private logRequestProcessProgress(
-    url: string,
-    requestBody: TransportRequest['body'],
-    elapsed?: number,
-    body?: ArrayBuffer,
-  ) {
-    if (!this.logVerbosity) return;
-
-    const { protocol, host, pathname, search } = new URL(url);
-    const timestamp = new Date().toISOString();
-
-    if (!elapsed) {
-      let outgoing = `[${timestamp}]\n${protocol}//${host}${pathname}\n${search}`;
-      if (requestBody && (typeof requestBody === 'string' || requestBody instanceof ArrayBuffer)) {
-        if (typeof requestBody === 'string') outgoing += `\n\n${requestBody}`;
-        else outgoing += `\n\n${TitaniumTransport.decoder.decode(requestBody)}`;
-      }
-
-      Ti.API.info('<<<<<');
-      Ti.API.info(outgoing);
-      Ti.API.info('-----');
-    } else {
-      let outgoing = `[${timestamp} / ${elapsed}]\n${protocol}//${host}${pathname}\n${search}`;
-      if (body) outgoing += `\n\n${TitaniumTransport.decoder.decode(body)}`;
-
-      Ti.API.info('>>>>>>');
-      Ti.API.info(outgoing);
-      Ti.API.info('-----');
-    }
   }
 }

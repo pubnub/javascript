@@ -151,9 +151,10 @@ export type PubNubConfiguration = UserConfiguration & {
  * @internal
  */
 export const setDefaults = (configuration: PubNubConfiguration): PubNubConfiguration & ExtendedConfiguration => {
-  // Force disable service workers if environment doesn't support them.
-  if (configuration.subscriptionWorkerUrl && typeof SharedWorker === 'undefined')
+  // Force to disable service workers if the environment doesn't support them.
+  if (configuration.subscriptionWorkerUrl && typeof SharedWorker === 'undefined') {
     configuration.subscriptionWorkerUrl = null;
+  }
 
   return {
     // Set base configuration defaults.

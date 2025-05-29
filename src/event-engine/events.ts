@@ -11,13 +11,13 @@ import { createEvent, MapOf } from './core';
 /**
  * Subscription list change event.
  *
- * Event is sent each time when user would like to change list of active channels / groups.
+ * Event is sent each time when the user would like to change a list of active channels / groups.
  *
  * @internal
  */
 export const subscriptionChange = createEvent(
   'SUBSCRIPTION_CHANGED',
-  (channels: string[], groups: string[], isOffline?: boolean) => ({
+  (channels: string[], groups: string[], isOffline: boolean = false) => ({
     channels,
     groups,
     isOffline,
@@ -27,7 +27,7 @@ export const subscriptionChange = createEvent(
 /**
  * Subscription loop restore.
  *
- * Event is sent when user would like to try catch up on missed updates by providing specific timetoken.
+ * Event is sent when a user would like to try to catch up on missed updates by providing specific timetoken.
  *
  * @internal
  */
@@ -46,16 +46,16 @@ export const restore = createEvent(
 /**
  * Initial subscription handshake success event.
  *
- * Event is sent by corresponding effect handler if REST API call was successful.
+ * Event is sent by the corresponding effect handler if the REST API call was successful.
  *
  * @internal
  */
 export const handshakeSuccess = createEvent('HANDSHAKE_SUCCESS', (cursor: Subscription.SubscriptionCursor) => cursor);
 
 /**
- * Initial subscription handshake did fail event.
+ * The initial subscription handshake did fail event.
  *
- * Event is sent by corresponding effect handler if REST API call failed.
+ * Event is sent by the corresponding effect handler if the REST API call failed.
  *
  * @internal
  */
@@ -64,7 +64,7 @@ export const handshakeFailure = createEvent('HANDSHAKE_FAILURE', (error: PubNubE
 /**
  * Subscription successfully received real-time updates event.
  *
- * Event is sent by corresponding effect handler if REST API call was successful.
+ * Event is sent by the corresponding effect handler if the REST API call was successful.
  *
  * @internal
  */
@@ -78,7 +78,7 @@ export const receiveSuccess = createEvent(
 /**
  * Subscription did fail to receive real-time updates event.
  *
- * Event is sent by corresponding effect handler if REST API call failed.
+ * Event is sent by the corresponding effect handler if the REST API call failed.
  *
  * @internal
  */
@@ -87,16 +87,16 @@ export const receiveFailure = createEvent('RECEIVE_FAILURE', (error: PubNubError
 /**
  * Client disconnect event.
  *
- * Event is sent when user wants to temporarily stop real-time updates receive.
+ * Event is sent when the user wants to temporarily stop real-time updates receive.
  *
  * @internal
  */
-export const disconnect = createEvent('DISCONNECT', (isOffline?: boolean) => ({ isOffline }));
+export const disconnect = createEvent('DISCONNECT', (isOffline: boolean = false) => ({ isOffline }));
 
 /**
  * Client reconnect event.
  *
- * Event is sent when user wants to restore real-time updates receive.
+ * Event is sent when the user wants to restore real-time updates receive.
  *
  * @internal
  */
@@ -110,14 +110,14 @@ export const reconnect = createEvent('RECONNECT', (timetoken?: string, region?: 
 /**
  * Completely stop real-time updates receive event.
  *
- * Event is sent when user doesn't want to receive any real-time updates anymore.
+ * Event is sent when the user doesn't want to receive any real-time updates anymore.
  *
  * @internal
  */
 export const unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', () => ({}));
 
 /**
- * Subscribe Event Engine events.
+ * Subscribe to Event Engine events.
  *
  * @internal
  */

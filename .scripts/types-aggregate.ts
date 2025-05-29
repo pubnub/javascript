@@ -169,7 +169,7 @@ class Package {
         const internalModuleMatch = fileContent.match(/^\/\*\*[\s\S]*?@internal[\s\S]*?\*\//);
         if (internalModuleMatch && internalModuleMatch.index !== undefined && internalModuleMatch.index === 0) return;
 
-        this.files.push(new SourceFile(resourcePath, this.workingDirectory, this.tsConfiguration.options));
+        this.files.push(new SourceFile(resourcePath, this.workingDirectory, this.tsConfiguration.options, this));
       }
     });
 
@@ -202,16 +202,18 @@ class SourceFile {
   private readonly _types: TypeDefinition[] = [];
 
   /**
-   * Create source file from type definition file in the package.
+   * Create a source file from type definition file in the package.
    *
    * @param filePath - Path to the type definition file which will be analyzed.
    * @param workingDirectory - Root folder with subfolders which represent project structure and contains types definition files.
    * @param tsCompileOptions - Package's TS parsed configuration object.
+   * @param projectPackage - Project with processed files information.
    */
   constructor(
     public readonly filePath: string,
     private readonly workingDirectory: string,
     private readonly tsCompileOptions: ts.CompilerOptions,
+    readonly projectPackage: Package,
   ) {
     const source = this.tsSourceFile();
     this.processImports(source);
@@ -343,6 +345,7 @@ class SourceFile {
           node.name.getText(sourceFile),
           type,
           this.tsSourceFile(`${documentation}\n${node.getText(sourceFile)}`),
+          this,
         ),
       );
     });
@@ -382,6 +385,7 @@ class TypeDefinition {
     public readonly name: string,
     public type: 'class' | 'interface' | 'type' | 'enum',
     private readonly sourceFile: ts.SourceFile,
+    private readonly projectSourceFile: SourceFile,
   ) {
     if (type === 'class') {
       const match = sourceFile.getText(this.sourceFile).match(/class PubNub extends ([a-zA-Z]+)[\s|<]/) ?? [];
@@ -411,6 +415,23 @@ class TypeDefinition {
           const typeName = node.typeName.getText(this.sourceFile);
           if (namespace) {
             const reference = ts.factory.createQualifiedName(ts.factory.createIdentifier(namespace), typeName);
+
+            replacement = ts.factory.createTypeReferenceNode(
+              reference,
+              node.typeArguments
+                ?.map((typeArg) => ts.visitNode(typeArg, visit))
+                .filter((typeArg): typeArg is ts.TypeNode => typeArg !== undefined),
+            );
+          }
+        } else if (!namespace && ts.isTypeReferenceNode(node)) {
+          const typeName = node.typeName.getText(this.sourceFile);
+          let typeNamespace = namespace;
+          this.projectSourceFile.imports.forEach((importType) => {
+            if (importType.type === 'alias' && importType.alias === typeName && !typeNamespace)
+              typeNamespace = 'PubNub';
+          });
+          if (typeNamespace) {
+            const reference = ts.factory.createQualifiedName(ts.factory.createIdentifier(typeNamespace), typeName);
 
             replacement = ts.factory.createTypeReferenceNode(
               reference,
@@ -458,7 +479,9 @@ class TypeDefinition {
 
     const aliasedTypeStrings: string[] = [];
     if (this.aliases.length > 0) {
-      const matches = this.sourceFile.getText(this.sourceFile).match(/^(\s*(export\s+)?(declare\s+)?(type|class)\s)/gm);
+      const matches = this.sourceFile
+        .getText(this.sourceFile)
+        .match(/^(\s*(export\s+)?(declare\s+)?(type|class|enum)\s)/gm);
       if (!matches) throw new Error(`Unable to match prefix for '${this.name}' ${this.type}`);
 
       this.aliases.forEach((alias) => {

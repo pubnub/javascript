@@ -22,6 +22,7 @@ describe('unsubscribe', () => {
       uuid: 'myUUID',
       // @ts-expect-error Force override default value.
       useRequestId: false,
+      // logVerbosity: true,
     });
     pubnub.setHeartbeatInterval(0);
   });

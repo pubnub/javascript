@@ -24,7 +24,7 @@ export const reconnect = createEvent('RECONNECT', () => ({}));
  *
  * @internal
  */
-export const disconnect = createEvent('DISCONNECT', (isOffline?: boolean) => ({ isOffline }));
+export const disconnect = createEvent('DISCONNECT', (isOffline: boolean = false) => ({ isOffline }));
 
 /**
  * Channel / group join event.
@@ -60,7 +60,7 @@ export const left = createEvent('LEFT', (channels: string[], groups: string[]) =
  *
  * @internal
  */
-export const leftAll = createEvent('LEFT_ALL', (isOffline?: boolean) => ({ isOffline }));
+export const leftAll = createEvent('LEFT_ALL', (isOffline: boolean = false) => ({ isOffline }));
 
 /**
  * Presence heartbeat success event.

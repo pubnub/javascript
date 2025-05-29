@@ -48,7 +48,7 @@ HandshakeStoppedState.on(restore.type, (context, { payload }) => {
   return HandshakeStoppedState.with({
     channels: payload.channels,
     groups: payload.groups,
-    cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor?.region || 0 },
+    cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor?.region || 0 },
   });
 });
 

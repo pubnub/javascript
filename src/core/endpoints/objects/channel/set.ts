@@ -64,14 +64,6 @@ export class SetChannelMetadataRequest<
     if (!this.parameters.data) return 'Data cannot be empty';
   }
 
-  protected get headers(): Record<string, string> | undefined {
-    if (this.parameters.ifMatchesEtag) {
-      return { ...(super.headers ?? {}), 'If-Match': this.parameters.ifMatchesEtag };
-    } else {
-      return super.headers;
-    }
-  }
-
   protected get path(): string {
     const {
       keySet: { subscribeKey },

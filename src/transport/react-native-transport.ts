@@ -8,6 +8,7 @@ import { gzipSync } from 'fflate';
 
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
 import { TransportResponse } from '../core/types/transport-response';
+import { LoggerManager } from '../core/components/logger-manager';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
 import { Transport } from '../core/interfaces/transport';
 import { PubNubFileInterface } from '../core/types/file';
@@ -36,29 +37,34 @@ export class ReactNativeTransport implements Transport {
   /**
    * Create and configure transport provider for Web and Rect environments.
    *
+   * @param logger - Registered loggers' manager.
    * @param [keepAlive] - Whether client should try to keep connections open for reuse or not.
-   * @param logVerbosity - Whether verbose logs should be printed or not.
    *
    * @internal
    */
   constructor(
+    private readonly logger: LoggerManager,
     private keepAlive: boolean = false,
-    private readonly logVerbosity: boolean = false,
-  ) {}
+  ) {
+    logger.debug(this.constructor.name, `Create with configuration:\n  - keep-alive: ${keepAlive}`);
+  }
 
   makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
     const abortController = new AbortController();
     const controller = {
-      // Storing controller inside to prolong object lifetime.
+      // Storing a controller inside to prolong object lifetime.
       abortController,
-      abort: (reason) => !abortController.signal.aborted && abortController.abort(reason),
+      abort: (reason) => {
+        if (!abortController.signal.aborted) {
+          this.logger.trace(this.constructor.name, `On-demand request aborting: ${reason}`);
+          abortController.abort(reason);
+        }
+      },
     } as CancellationController;
 
     return [
       this.requestFromTransportRequest(req).then((request) => {
-        const start = new Date().getTime();
-
-        this.logRequestProcessProgress(request, req.body);
+        this.logger.debug(this.constructor.name, () => ({ messageType: 'network-request', message: req }));
 
         /**
          * Setup request timeout promise.
@@ -106,22 +112,50 @@ export class ReactNativeTransport implements Transport {
               body: responseBody,
             };
 
-            if (status >= 400) throw PubNubAPIError.create(transportResponse);
+            this.logger.debug(this.constructor.name, () => ({
+              messageType: 'network-response',
+              message: transportResponse,
+            }));
 
-            this.logRequestProcessProgress(request, undefined, new Date().getTime() - start, responseBody);
+            if (status >= 400) throw PubNubAPIError.create(transportResponse);
 
             return transportResponse;
           })
           .catch((error) => {
-            let fetchError = error;
+            const errorMessage = (typeof error === 'string' ? error : (error as Error).message).toLowerCase();
+            let fetchError = typeof error === 'string' ? new Error(error) : (error as Error);
 
-            if (typeof error === 'string') {
-              const errorMessage = error.toLowerCase();
-              if (errorMessage.includes('timeout') || !errorMessage.includes('cancel')) fetchError = new Error(error);
-              else if (errorMessage.includes('cancel')) {
-                fetchError = new Error('Aborted');
-                fetchError.name = 'AbortError';
-              }
+            if (errorMessage.includes('timeout')) {
+              this.logger.warn(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: 'Timeout',
+                canceled: true,
+              }));
+            } else if (errorMessage.includes('cancel') || errorMessage.includes('abort')) {
+              this.logger.debug(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: 'Aborted',
+                canceled: true,
+              }));
+
+              fetchError = new Error('Aborted');
+              fetchError.name = 'AbortError';
+            } else if (errorMessage.includes('network')) {
+              this.logger.warn(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: 'Network error',
+                failed: true,
+              }));
+            } else {
+              this.logger.warn(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: PubNubAPIError.create(fetchError).message,
+                failed: true,
+              }));
             }
 
             throw PubNubAPIError.create(fetchError);
@@ -148,7 +182,7 @@ export class ReactNativeTransport implements Transport {
     let body: string | ArrayBuffer | FormData | undefined;
     let path = req.path;
 
-    // Create multipart request body.
+    // Create a multipart request body.
     if (req.formData && req.formData.length > 0) {
       // Reset query parameters to conform to signed URL
       req.queryParameters = {};
@@ -172,9 +206,19 @@ export class ReactNativeTransport implements Transport {
     // Handle regular body payload (if passed).
     else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) {
       if (req.compressible) {
-        body = gzipSync(
-          typeof req.body === 'string' ? ReactNativeTransport.encoder.encode(req.body) : new Uint8Array(req.body),
-        );
+        const bodyArrayBuffer =
+          typeof req.body === 'string' ? ReactNativeTransport.encoder.encode(req.body) : new Uint8Array(req.body);
+        const initialBodySize = bodyArrayBuffer.byteLength;
+        body = gzipSync(bodyArrayBuffer);
+        this.logger.trace(this.constructor.name, () => {
+          const compressedSize = (body! as ArrayBuffer).byteLength;
+          const ratio = (compressedSize / initialBodySize).toFixed(2);
+
+          return {
+            messageType: 'text',
+            message: `Body of ${initialBodySize} bytes, compressed by ${ratio}x to ${compressedSize} bytes.`,
+          };
+        });
       } else body = req.body;
     }
 
@@ -187,46 +231,5 @@ export class ReactNativeTransport implements Transport {
       redirect: 'follow',
       body,
     });
-  }
-
-  /**
-   * Log out request processing progress and result.
-   *
-   * @param request - Platform-specific
-   * @param [requestBody] - POST / PATCH body.
-   * @param [elapsed] - How many seconds passed since request processing started.
-   * @param [body] - Service response (if available).
-   *
-   * @internal
-   */
-  protected logRequestProcessProgress(
-    request: Request,
-    requestBody: TransportRequest['body'],
-    elapsed?: number,
-    body?: ArrayBuffer,
-  ) {
-    if (!this.logVerbosity) return;
-
-    const { protocol, host, pathname, search } = new URL(request.url);
-    const timestamp = new Date().toISOString();
-
-    if (!elapsed) {
-      let outgoing = `[${timestamp}]\n${protocol}//${host}${pathname}\n${search}`;
-      if (requestBody && (typeof requestBody === 'string' || requestBody instanceof ArrayBuffer)) {
-        if (typeof requestBody === 'string') outgoing += `\n\n${requestBody}`;
-        else outgoing += `\n\n${ReactNativeTransport.decoder.decode(requestBody)}`;
-      }
-
-      console.log(`<<<<<`);
-      console.log(outgoing);
-      console.log('-----');
-    } else {
-      let outgoing = `[${timestamp} / ${elapsed}]\n${protocol}//${host}${pathname}\n${search}`;
-      if (body) outgoing += `\n\n${ReactNativeTransport.decoder.decode(body)}`;
-
-      console.log('>>>>>>');
-      console.log(outgoing);
-      console.log('-----');
-    }
   }
 }

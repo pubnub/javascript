@@ -13,9 +13,9 @@ import { AbortSignal } from '../../components/abort_signal';
 import { Payload } from './index';
 
 // --------------------------------------------------------
-// --------------------- Event types ----------------------
+// ----------------- Subscription types -------------------
 // --------------------------------------------------------
-// region Even types
+// region Subscription types
 
 /**
  * Time cursor.
@@ -30,13 +30,177 @@ export type SubscriptionCursor = {
    * Aside of specifying exact time of receiving data / event this token used to catchup /
    * follow on real-time updates.
    */
-  timetoken: string | number;
+  timetoken: string;
 
   /**
    * Data center region for which `timetoken` has been generated.
    */
   region?: number;
 };
+
+/**
+ * User-provided channels and groups for subscription.
+ *
+ * Object contains information about channels and groups for which real-time updates should be retrieved from the
+ * PubNub network.
+ *
+ * @internal
+ */
+export class SubscriptionInput {
+  /**
+   * Optional list of channels.
+   *
+   * List of channels for which real-time updates should be retrieved from the PubNub network.
+   *
+   * **Note:** List is optional if there is at least one {@link SubscriptionInput#channelGroups} provided.
+   */
+  _channels: Set<string>;
+
+  /**
+   * Optional list of channel groups.
+   *
+   * List of channel groups for which real-time updates should be retrieved from the PubNub network.
+   */
+  _channelGroups: Set<string>;
+
+  /**
+   * Whether the user input is empty or not.
+   */
+  isEmpty: boolean = true;
+
+  /**
+   * Create a subscription input object.
+   *
+   * @param channels - List of channels which will be used with subscribe REST API to receive real-time updates.
+   * @param channelGroups - List of channel groups which will be used with subscribe REST API to receive real-time
+   * updates.
+   */
+  constructor({ channels, channelGroups }: { channels?: string[]; channelGroups?: string[] }) {
+    this._channelGroups = new Set((channelGroups ?? []).filter((value) => value.length > 0));
+    this._channels = new Set((channels ?? []).filter((value) => value.length > 0));
+    this.isEmpty = this._channels.size === 0 && this._channelGroups.size === 0;
+  }
+
+  /**
+   * Retrieve a list of user-provided channel names.
+   *
+   * @returns List of user-provided channel names.
+   */
+  get channels(): string[] {
+    if (this.isEmpty) return [];
+    return Array.from(this._channels);
+  }
+
+  /**
+   * Retrieve a list of user-provided channel group names.
+   *
+   * @returns List of user-provided channel group names.
+   */
+  get channelGroups(): string[] {
+    if (this.isEmpty) return [];
+    return Array.from(this._channelGroups);
+  }
+
+  /**
+   * Check if the given name is contained in the channel or channel group.
+   *
+   * @param name - Containing the name to be checked.
+   *
+   * @returns `true` if the name is found in the channel or channel group, `false` otherwise.
+   */
+  contains(name: string): boolean {
+    if (this.isEmpty) return false;
+    return this._channels.has(name) || this._channelGroups.has(name);
+  }
+
+  /**
+   * Create a new subscription input which will contain all channels and channel groups from both inputs.
+   *
+   * @param input - Another subscription input that should be used to aggregate data in new instance.
+   *
+   * @returns New subscription input instance with combined channels and channel groups.
+   */
+  with(input: SubscriptionInput): SubscriptionInput {
+    return new SubscriptionInput({
+      channels: [...this._channels, ...input._channels],
+      channelGroups: [...this._channelGroups, ...input._channelGroups],
+    });
+  }
+
+  /**
+   * Create a new subscription input which will contain only channels and groups which not present in the input.
+   *
+   * @param input - Another subscription input which should be used to filter data in new instance.
+   *
+   * @returns New subscription input instance with filtered channels and channel groups.
+   */
+  without(input: SubscriptionInput): SubscriptionInput {
+    return new SubscriptionInput({
+      channels: [...this._channels].filter((value) => !input._channels.has(value)),
+      channelGroups: [...this._channelGroups].filter((value) => !input._channelGroups.has(value)),
+    });
+  }
+
+  /**
+   * Add data from another subscription input to the receiver.
+   *
+   * @param input - Another subscription input whose data should be added to the receiver.
+   *
+   * @returns Receiver instance with updated channels and channel groups.
+   */
+  add(input: SubscriptionInput): SubscriptionInput {
+    if (input._channelGroups.size > 0) this._channelGroups = new Set([...this._channelGroups, ...input._channelGroups]);
+    if (input._channels.size > 0) this._channels = new Set([...this._channels, ...input._channels]);
+    this.isEmpty = this._channels.size === 0 && this._channelGroups.size === 0;
+
+    return this;
+  }
+
+  /**
+   * Remove data from another subscription input from the receiver.
+   *
+   * @param input - Another subscription input whose data should be removed from the receiver.
+   *
+   * @returns Receiver instance with updated channels and channel groups.
+   */
+  remove(input: SubscriptionInput): SubscriptionInput {
+    if (input._channelGroups.size > 0)
+      this._channelGroups = new Set([...this._channelGroups].filter((value) => !input._channelGroups.has(value)));
+    if (input._channels.size > 0)
+      this._channels = new Set([...this._channels].filter((value) => !input._channels.has(value)));
+
+    return this;
+  }
+
+  /**
+   * Remove all data from subscription input.
+   *
+   * @returns Receiver instance with updated channels and channel groups.
+   */
+  removeAll(): SubscriptionInput {
+    this._channels.clear();
+    this._channelGroups.clear();
+    this.isEmpty = true;
+    return this;
+  }
+
+  /**
+   * Serialize a subscription input to string.
+   *
+   * @returns Printable string representation of a subscription input.
+   */
+  toString() {
+    return `SubscriptionInput { channels: [${this.channels.join(', ')}], channelGroups: [${this.channelGroups.join(
+      ', ',
+    )}], is empty: ${this.isEmpty ? 'true' : 'false'}} }`;
+  }
+}
+// endregion
+
+// --------------------------------------------------------
+// --------------------- Event types ----------------------
+// --------------------------------------------------------
+// region Even types
 
 /**
  * Common real-time event.
@@ -163,7 +327,6 @@ type SignalEvent = {
 // endregion
 
 // region Message action event
-
 /**
  * Message action real-time event.
  */
@@ -300,10 +463,12 @@ type FileEvent = {
   data: File;
 };
 // endregion
+// endregion
 
 // --------------------------------------------------------
 // -------------------- Request types ---------------------
 // --------------------------------------------------------
+// region Request types
 
 /**
  * Cancelable subscribe request parameters.
@@ -376,3 +541,4 @@ export type SubscriptionResponse = {
   cursor: SubscriptionCursor;
   messages: (PresenceEvent | MessageEvent | SignalEvent | MessageActionEvent | AppContextEvent | FileEvent)[];
 };
+// endregion

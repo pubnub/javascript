@@ -18,6 +18,7 @@ import * as Subscription from '../../core/types/api/subscription';
 import categoryConstants from '../../core/constants/categories';
 import { PubNubAPIError } from '../../errors/pubnub-api-error';
 import RequestOperation from '../../core/constants/operations';
+import { referenceSubscribeTimetoken } from '../../core/utils';
 import { ReceiveStoppedState } from './receive_stopped';
 import { ReceiveFailedState } from './receive_failed';
 import { UnsubscribedState } from './unsubscribed';
@@ -32,6 +33,7 @@ export type ReceivingStateContext = {
   channels: string[];
   groups: string[];
   cursor: Subscription.SubscriptionCursor;
+  referenceTimetoken?: string;
 };
 
 /**
@@ -46,11 +48,17 @@ export const ReceivingState = new State<ReceivingStateContext, Events, Effects>(
 ReceivingState.onEnter((context) => receiveMessages(context.channels, context.groups, context.cursor));
 ReceivingState.onExit(() => receiveMessages.cancel);
 
-ReceivingState.on(receiveSuccess.type, (context, { payload }) => {
-  return ReceivingState.with({ channels: context.channels, groups: context.groups, cursor: payload.cursor }, [
-    emitMessages(payload.events),
-  ]);
-});
+ReceivingState.on(receiveSuccess.type, (context, { payload }) =>
+  ReceivingState.with(
+    {
+      channels: context.channels,
+      groups: context.groups,
+      cursor: payload.cursor,
+      referenceTimetoken: referenceSubscribeTimetoken(payload.cursor.timetoken),
+    },
+    [emitMessages(context.cursor, payload.events)],
+  ),
+);
 
 ReceivingState.on(subscriptionChange.type, (context, { payload }) => {
   if (payload.channels.length === 0 && payload.groups.length === 0) {
@@ -70,14 +78,22 @@ ReceivingState.on(subscriptionChange.type, (context, { payload }) => {
     ]);
   }
 
-  return ReceivingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }, [
-    emitStatus({
-      category: categoryConstants.PNSubscriptionChangedCategory,
-      affectedChannels: payload.channels.slice(0),
-      affectedChannelGroups: payload.groups.slice(0),
-      currentTimetoken: context.cursor.timetoken,
-    }),
-  ]);
+  return ReceivingState.with(
+    {
+      channels: payload.channels,
+      groups: payload.groups,
+      cursor: context.cursor,
+      referenceTimetoken: context.referenceTimetoken,
+    },
+    [
+      emitStatus({
+        category: categoryConstants.PNSubscriptionChangedCategory,
+        affectedChannels: payload.channels.slice(0),
+        affectedChannelGroups: payload.groups.slice(0),
+        currentTimetoken: context.cursor.timetoken,
+      }),
+    ],
+  );
 });
 
 ReceivingState.on(restore.type, (context, { payload }) => {
@@ -88,7 +104,12 @@ ReceivingState.on(restore.type, (context, { payload }) => {
     {
       channels: payload.channels,
       groups: payload.groups,
-      cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
+      cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
+      referenceTimetoken: referenceSubscribeTimetoken(
+        context.cursor.timetoken,
+        `${payload.cursor.timetoken}`,
+        context.referenceTimetoken,
+      ),
     },
     [
       emitStatus({
@@ -109,7 +130,7 @@ ReceivingState.on(receiveFailure.type, (context, { payload }) =>
 
 ReceivingState.on(disconnect.type, (context, event) => {
   if (!event.payload.isOffline) {
-    return ReceiveStoppedState.with({ channels: context.channels, groups: context.groups, cursor: context.cursor }, [
+    return ReceiveStoppedState.with({ ...context }, [
       emitStatus({ category: categoryConstants.PNDisconnectedCategory }),
     ]);
   } else {
@@ -117,15 +138,12 @@ ReceivingState.on(disconnect.type, (context, event) => {
       RequestOperation.PNSubscribeOperation,
     );
 
-    return ReceiveFailedState.with(
-      { channels: context.channels, groups: context.groups, cursor: context.cursor, reason: errorReason },
-      [
-        emitStatus({
-          category: categoryConstants.PNDisconnectedUnexpectedlyCategory,
-          error: errorReason.status?.category,
-        }),
-      ],
-    );
+    return ReceiveFailedState.with({ ...context, reason: errorReason }, [
+      emitStatus({
+        category: categoryConstants.PNDisconnectedUnexpectedlyCategory,
+        error: errorReason.status?.category,
+      }),
+    ]);
   }
 });
 

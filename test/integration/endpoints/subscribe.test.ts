@@ -42,6 +42,7 @@ describe('subscribe endpoints', () => {
       // @ts-expect-error Force override default value.
       useRequestId: false,
       enableEventEngine: true,
+      // logVerbosity: true,
     });
   });
 
@@ -200,42 +201,33 @@ describe('subscribe endpoints', () => {
   });
 
   it('supports timetoken', (done) => {
-    const scope0 = utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/c1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"14523669555221452","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
-        { 'content-type': 'text/javascript' },
-      );
-    const scope = utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/c1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '1234567890',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"146075779609322","r":1},"m":[{"a":"4","f":0,"cmt":"test-message-type","i":"test","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"c1","d":{"text":"customttresponse"},"b":"c1"}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['c1'] }],
+    });
+    const subscribeMockScopes = utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['c1'], messages: [{ channel: 'c1', message: { text: 'Enter Message Here' } }] },
+        {
+          channels: ['c1'],
+          timetoken: '14523669555221452',
+          messages: [{ channel: 'c1', customMessageType: 'test-message-type', message: { text: 'customttresponse' } }],
+        },
+        { channels: ['c1'], messages: [], replyDelay: 500 },
+      ],
+    });
 
     pubnubWithEE.addListener({
       message(message) {
         try {
           assert.equal(message.customMessageType, 'test-message-type');
           assert.deepEqual(message.message, { text: 'customttresponse' });
-          assert.equal(scope.isDone(), true);
+          assert.equal(subscribeMockScopes[subscribeMockScopes.length - 2].isDone(), true);
           done();
         } catch (error) {
           done(error);
@@ -244,35 +236,28 @@ describe('subscribe endpoints', () => {
     });
     const channel = pubnubWithEE.channel('c1');
     const subscription = channel.subscription();
-    subscription.subscribe({ timetoken: '1234567890' });
+    subscription.subscribe({ timetoken: '14523669555221452' });
   });
 
   it('signal listener called for string signal', (done) => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/c1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"14523669555221452","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/c1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '14523669555221452',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"14523669555221453","r":1},"m":[{"a":"3","f":0,"e":1,"cmt":"test-message-type","i":"myUniqueUserId","p":{"t":"17200339136465528","r":41},"k":"mySubKey","c":"c1","d":"typing:start"}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['c1'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        {
+          channels: ['c1'],
+          messages: [{ channel: 'c1', type: 1, customMessageType: 'test-message-type', message: 'typing:start' }],
+        },
+        { channels: ['c1'], messages: [], replyDelay: 500 },
+      ],
+    });
 
     pubnubWithEE.addListener({
       signal(signal) {
@@ -291,31 +276,31 @@ describe('subscribe endpoints', () => {
   });
 
   it('file listener called for shared file', (done) => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/c1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"14523669555221452","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/c1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '14523669555221452',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"14523669555221453","r":1},"m":[{"a":"3","f":0,"e":4,"cmt":"test-message-type","i":"myUniqueUserId","p":{"t":"17200339136465528","r":41},"k":"mySubKey","c":"c1","d":{"message":"Hello","file":{"id":"file-id","name":"file-name"}}}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['c1'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        {
+          channels: ['c1'],
+          messages: [
+            {
+              channel: 'c1',
+              type: 4,
+              customMessageType: 'test-message-type',
+              message: { message: 'Hello', file: { id: 'file-id', name: 'file-name' } },
+            },
+          ],
+        },
+        { channels: ['c1'], messages: [], replyDelay: 500 },
+      ],
+    });
 
     pubnubWithEE.addListener({
       file(sharedFile) {
@@ -383,46 +368,57 @@ describe('subscribe endpoints', () => {
     subscription.subscribe();
   });
 
-  it('supports subscribe() with presence channelnames', () => {
-    const scope0 = utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/c1,c2-pnpres/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"14523669555221452","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"c1","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
-        { 'content-type': 'text/javascript' },
-      );
-    const scope = utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/c1,c2-pnpres/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '1234567890',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"146075779609322","r":1},"m":[{"a":"4","f":0,"i":"test","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"c1","d":{"text":"customttresponse"},"b":"c1"}]}',
-        { 'content-type': 'text/javascript' },
-      );
+  it('supports subscribe() with presence channelnames', async () => {
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['c1'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['c1', 'c2-pnpres'], messages: [{ channel: 'c1', message: { text: 'Enter Message Here' } }] },
+        {
+          channels: ['c1', 'c2-pnpres'],
+          messages: [{ channel: 'c1', message: { text: 'customttresponse' } }],
+        },
+        { channels: ['c1', 'c2-pnpres'], messages: [], replyDelay: 500 },
+      ],
+    });
 
-    const subsripptionSetWithPresenceChannels = pubnubWithEE.subscriptionSet({
+    const subscriptionSetWithPresenceChannels = pubnubWithEE.subscriptionSet({
       channels: ['c1', 'c2-pnpres'],
     });
 
-    subsripptionSetWithPresenceChannels.subscribe();
+    const connectionPromise = new Promise<void>((resolve) => {
+      pubnubWithEE.onStatus = (status) => {
+        if (status.category === PubNub.CATEGORIES.PNConnectedCategory) {
+          pubnubWithEE.onStatus = undefined;
+          resolve();
+        }
+      };
+    });
+
+    subscriptionSetWithPresenceChannels.subscribe();
+    await connectionPromise;
 
     assert.deepEqual(pubnubWithEE.getSubscribedChannels(), ['c1', 'c2-pnpres']);
 
-    subsripptionSetWithPresenceChannels.unsubscribe();
+    const disconnectionPromise = new Promise<void>((resolve) => {
+      pubnubWithEE.onStatus = (status) => {
+        if (status.category === PubNub.CATEGORIES.PNDisconnectedCategory) {
+          pubnubWithEE.onStatus = undefined;
+          resolve();
+        }
+      };
+    });
+
+    subscriptionSetWithPresenceChannels.unsubscribe();
+
+    await disconnectionPromise;
     assert.deepEqual(pubnubWithEE.getSubscribedChannels(), []);
   });
 });

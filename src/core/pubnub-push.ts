@@ -9,11 +9,19 @@ import { KeySet, ResultCallback, SendRequestFunction, StatusCallback } from './t
 import { RemoveDevicePushNotificationRequest } from './endpoints/push/remove_device';
 import * as PushNotifications from './types/api/push-notifications';
 import * as Push from './types/api/push';
+import { LoggerManager } from './components/logger-manager';
 
 /**
  * PubNub Push Notifications API interface.
  */
 export default class PubNubPushNotifications {
+  /**
+   * Registered loggers' manager.
+   *
+   * @internal
+   */
+  private readonly logger: LoggerManager;
+
   /**
    * PubNub account keys set which should be used for REST API calls.
    *
@@ -32,17 +40,20 @@ export default class PubNubPushNotifications {
   /**
    * Create mobile push notifications API access object.
    *
+   * @param logger - Registered loggers' manager.
    * @param keySet - PubNub account keys set which should be used for REST API calls.
    * @param sendRequest - Function which should be used to send REST API calls.
    *
    * @internal
    */
   constructor(
+    logger: LoggerManager,
     keySet: KeySet,
     /* eslint-disable  @typescript-eslint/no-explicit-any */
     sendRequest: SendRequestFunction<any, any>,
   ) {
     this.sendRequest = sendRequest;
+    this.logger = logger;
     this.keySet = keySet;
   }
 
@@ -83,10 +94,29 @@ export default class PubNubPushNotifications {
     parameters: Push.ListDeviceChannelsParameters,
     callback?: ResultCallback<PushNotifications.ListDeviceChannelsResponse>,
   ): Promise<Push.ListDeviceChannelsResponse | void> {
-    const request = new ListDevicePushNotificationChannelsRequest({ ...parameters, keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `List push-enabled channels with parameters:`,
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new ListDevicePushNotificationChannelsRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: Push.ListDeviceChannelsResponse | null) => {
+      if (!response) return;
+
+      this.logger.debug('PubNub', `List push-enabled channels success. Received ${response.channels.length} channels.`);
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse(response);
+      return response;
+    });
   }
   // endregion
 
@@ -117,10 +147,27 @@ export default class PubNubPushNotifications {
    * @param [callback] - Request completion handler callback.
    */
   public async addChannels(parameters: Push.ManageDeviceChannelsParameters, callback?: StatusCallback): Promise<void> {
-    const request = new AddDevicePushNotificationChannelsRequest({ ...parameters, keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Add push-enabled channels with parameters:`,
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new AddDevicePushNotificationChannelsRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = () => {
+      this.logger.debug('PubNub', `Add push-enabled channels success.`);
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status) => {
+        if (!status.error) logResponse();
+        callback(status);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse();
+      return response;
+    });
   }
 
   /**
@@ -148,10 +195,27 @@ export default class PubNubPushNotifications {
     parameters: Push.ManageDeviceChannelsParameters,
     callback?: StatusCallback,
   ): Promise<void> {
-    const request = new RemoveDevicePushNotificationChannelsRequest({ ...parameters, keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Remove push-enabled channels with parameters:`,
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new RemoveDevicePushNotificationChannelsRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = () => {
+      this.logger.debug('PubNub', `Remove push-enabled channels success.`);
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status) => {
+        if (!status.error) logResponse();
+        callback(status);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse();
+      return response;
+    });
   }
 
   /**
@@ -176,10 +240,27 @@ export default class PubNubPushNotifications {
    * @param [callback] - Request completion handler callback.
    */
   public async deleteDevice(parameters: Push.RemoveDeviceParameters, callback?: StatusCallback): Promise<void> {
-    const request = new RemoveDevicePushNotificationRequest({ ...parameters, keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Remove push notifications for device with parameters:`,
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new RemoveDevicePushNotificationRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = () => {
+      this.logger.debug('PubNub', `Remove push notifications for device success.`);
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status) => {
+        if (!status.error) logResponse();
+        callback(status);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse();
+      return response;
+    });
   }
 
   // endregion

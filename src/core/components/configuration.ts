@@ -7,9 +7,12 @@
 import { ExtendedConfiguration, PlatformConfiguration, PrivateClientConfiguration } from '../interfaces/configuration';
 import { CryptorConfiguration, ICryptoModule } from '../interfaces/crypto-module';
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
-import { Endpoint, RetryPolicy } from './retryPolicy';
+import { Endpoint, RetryPolicy } from './retry-policy';
 import { Payload } from '../types/api';
 import uuidGenerator from './uuid';
+import { LogLevel } from '../interfaces/logger';
+import { LoggerManager } from './logger-manager';
+import { ConsoleLogger } from '../../loggers/console-logger';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -37,6 +40,11 @@ type SetupCryptoModule = (configuration: CryptorConfiguration) => ICryptoModule 
  * Internal state of the {@link PrivateClientConfiguration} to store temporarily information.
  */
 type PrivateConfigurationFields = {
+  /**
+   * Registered loggers manager.
+   */
+  _loggerManager: LoggerManager;
+
   /**
    * Frameworks suffixes.
    *
@@ -83,9 +91,8 @@ export const makeConfiguration = (
   base: ExtendedConfiguration & PlatformConfiguration,
   setupCryptoModule?: SetupCryptoModule,
 ): PrivateClientConfiguration & PrivateConfigurationFields => {
-  // Set default retry policy for subscribe (if new subscribe logic not used).
+  // Set the default retry policy for subscribing (if new subscribe logic not used).
   if (!base.retryConfiguration && base.enableEventEngine) {
-    const s = RetryPolicy.None;
     base.retryConfiguration = RetryPolicy.ExponentialRetryPolicy({
       minimumDelay: 2,
       maximumDelay: 150,
@@ -103,10 +110,27 @@ export const makeConfiguration = (
     });
   }
 
+  const instanceId = `pn-${uuidGenerator.createUUID()}`;
+
+  if (base.logVerbosity) base.logLevel = LogLevel.Debug;
+  else if (base.logLevel === undefined) base.logLevel = LogLevel.None;
+
+  // Prepare loggers manager.
+  const loggerManager = new LoggerManager(hashFromString(instanceId), base.logLevel, [
+    ...(base.loggers ?? []),
+    new ConsoleLogger(),
+  ]);
+
+  if (base.logVerbosity !== undefined)
+    loggerManager.warn('Configuration', "'logVerbosity' is deprecated. Use 'logLevel' instead.");
+
   // Ensure that retry policy has proper configuration (if has been set).
   base.retryConfiguration?.validate();
 
   base.useRandomIVs ??= USE_RANDOM_INITIALIZATION_VECTOR;
+  if (base.useRandomIVs)
+    loggerManager.warn('Configuration', "'useRandomIVs' is deprecated. Use 'cryptoModule' instead.");
+
   // Override origin value.
   base.origin = standardOrigin(base.ssl ?? false, base.origin!);
 
@@ -116,16 +140,17 @@ export const makeConfiguration = (
   const clientConfiguration: PrivateClientConfiguration & PrivateConfigurationFields = {
     ...base,
     _pnsdkSuffix: {},
-    _instanceId: `pn-${uuidGenerator.createUUID()}`,
+    _loggerManager: loggerManager,
+    _instanceId: instanceId,
     _cryptoModule: undefined,
     _cipherKey: undefined,
     _setupCryptoModule: setupCryptoModule,
     get instanceId(): string | undefined {
-      if (this.useInstanceId) return this._instanceId;
+      if (base.useInstanceId) return this._instanceId;
       return undefined;
     },
     getInstanceId(): string | undefined {
-      if (this.useInstanceId) return this._instanceId;
+      if (base.useInstanceId) return this._instanceId;
       return undefined;
     },
     getUserId() {
@@ -136,6 +161,9 @@ export const makeConfiguration = (
         throw new Error('Missing or invalid userId parameter. Provide a valid string userId');
 
       this.userId = value;
+    },
+    logger(): LoggerManager {
+      return this._loggerManager;
     },
     getAuthKey() {
       return this.authKey;
@@ -165,6 +193,7 @@ export const makeConfiguration = (
         useRandomIVs: base.useRandomIVs,
         customEncrypt: this.getCustomEncrypt(),
         customDecrypt: this.getCustomDecrypt(),
+        logger: this.logger(),
       });
     },
     getCryptoModule(): ICryptoModule | undefined {
@@ -237,8 +266,10 @@ export const makeConfiguration = (
   };
 
   // Setup `CryptoModule` if possible.
-  if (base.cipherKey) clientConfiguration.setCipherKey(base.cipherKey);
-  else if (cryptoModule) clientConfiguration._cryptoModule = cryptoModule;
+  if (base.cipherKey) {
+    loggerManager.warn('Configuration', "'cipherKey' is deprecated. Use 'cryptoModule' instead.");
+    clientConfiguration.setCipherKey(base.cipherKey);
+  } else if (cryptoModule) clientConfiguration._cryptoModule = cryptoModule;
 
   return clientConfiguration;
 };
@@ -257,4 +288,22 @@ const standardOrigin = (secure: boolean, origin: string | string[]): string => {
   if (typeof origin === 'string') return `${protocol}${origin}`;
 
   return `${protocol}${origin[Math.floor(Math.random() * origin.length)]}`;
+};
+
+/**
+ * Compute 32bit hash string from source value.
+ *
+ * @param value - String from which hash string should be computed.
+ *
+ * @returns Computed hash.
+ */
+const hashFromString = (value: string) => {
+  let basis = 0x811c9dc5;
+
+  for (let i = 0; i < value.length; i++) {
+    basis ^= value.charCodeAt(i);
+    basis = (basis + ((basis << 1) + (basis << 4) + (basis << 7) + (basis << 8) + (basis << 24))) >>> 0;
+  }
+
+  return basis.toString(16).padStart(8, '0');
 };

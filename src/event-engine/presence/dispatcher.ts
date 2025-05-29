@@ -43,7 +43,7 @@ export type Dependencies = {
  */
 export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, Dependencies> {
   constructor(engine: Engine<events.Events, effects.Effects>, dependencies: Dependencies) {
-    super(dependencies);
+    super(dependencies, dependencies.config.logger());
 
     this.on(
       effects.heartbeat.type,
@@ -83,7 +83,6 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
       effects.wait.type,
       asyncHandler(async (_, abortSignal, { heartbeatDelay }) => {
         abortSignal.throwIfAborted();
-
         await heartbeatDelay();
 
         abortSignal.throwIfAborted();

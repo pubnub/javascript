@@ -18,6 +18,7 @@ import { PrivateClientConfiguration } from './interfaces/configuration';
 import * as AppContext from './types/api/app-context';
 import { ChannelMetadataObject } from './types/api/app-context';
 import { SetUUIDMetadataRequest } from './endpoints/objects/uuid/set';
+import { LoggerManager } from './components/logger-manager';
 
 /**
  * PubNub App Context API interface.
@@ -60,6 +61,17 @@ export default class PubNubObjects {
     this.keySet = configuration.keySet;
     this.configuration = configuration;
     this.sendRequest = sendRequest;
+  }
+
+  /**
+   * Get registered loggers' manager.
+   *
+   * @returns Registered loggers' manager.
+   *
+   * @internal
+   */
+  get logger(): LoggerManager {
+    return this.configuration.logger();
   }
 
   // --------------------------------------------------------
@@ -113,6 +125,12 @@ export default class PubNubObjects {
       | ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllUUIDMetadataResponse<Custom> | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: !parametersOrCallback || typeof parametersOrCallback === 'function' ? {} : parametersOrCallback,
+      details: `Get all UUID metadata objects with parameters:`,
+    }));
+
     return this._getAllUUIDMetadata(parametersOrCallback, callback);
   }
 
@@ -138,13 +156,29 @@ export default class PubNubObjects {
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
 
     const request = new GetAllUUIDMetadataRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: AppContext.GetAllUUIDMetadataResponse<Custom> | null) => {
+      if (!response) return;
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      this.logger.debug(
+        'PubNub',
+        `Get all UUID metadata success. Received ${response.totalCount} UUID metadata objects.`,
+      );
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse(response);
+      return response;
+    });
   }
 
   /**
-   * Fetch UUID Metadata object for currently configured PubNub client `uuid`.
+   * Fetch a UUID Metadata object for the currently configured PubNub client `uuid`.
    *
    * @param callback - Request completion handler callback.
    */
@@ -155,8 +189,8 @@ export default class PubNubObjects {
   /**
    * Fetch a specific UUID Metadata object.
    *
-   * @param parameters - Request configuration parameters. Will fetch UUID metadata object for
-   * currently configured PubNub client `uuid` if not set.
+   * @param parameters - Request configuration parameters. Will fetch a UUID metadata object for
+   * a currently configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    */
   public getUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
@@ -190,6 +224,17 @@ export default class PubNubObjects {
       | ResultCallback<AppContext.GetUUIDMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.GetUUIDMetadataResponse<Custom> | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message:
+        !parametersOrCallback || typeof parametersOrCallback === 'function'
+          ? { uuid: this.configuration.userId }
+          : parametersOrCallback,
+      details: `Get ${
+        !parametersOrCallback || typeof parametersOrCallback === 'function' ? ' current' : ''
+      } UUID metadata object with parameters:`,
+    }));
+
     return this._getUUIDMetadata(parametersOrCallback, callback);
   }
 
@@ -213,21 +258,40 @@ export default class PubNubObjects {
     const parameters: AppContext.GetUUIDMetadataParameters =
       parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
-    if (parameters.userId) parameters.uuid = parameters.userId;
+    if (parameters.userId) {
+      this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
+      parameters.uuid = parameters.userId;
+    }
     parameters.uuid ??= this.configuration.userId;
 
     const request = new GetUUIDMetadataRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: AppContext.GetUUIDMetadataResponse<Custom> | null) => {
+      if (!response) return;
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      this.logger.debug(
+        'PubNub',
+        `Get UUID metadata object success. Received '${parameters.uuid}' UUID metadata object.`,
+      );
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse(response);
+      return response;
+    });
   }
   // endregion
 
   // region Set Metadata
   /**
-   * Update specific UUID Metadata object.
+   * Update a specific UUID Metadata object.
    *
-   * @param parameters - Request configuration parameters. Will set UUID metadata for currently
+   * @param parameters - Request configuration parameters. Will set UUID metadata for a currently
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    */
@@ -249,7 +313,7 @@ export default class PubNubObjects {
   ): Promise<AppContext.SetUUIDMetadataResponse<Custom>>;
 
   /**
-   * Update specific UUID Metadata object.
+   * Update a specific UUID Metadata object.
    *
    * @param parameters - Request configuration parameters. Will set UUID metadata for currently
    * configured PubNub client `uuid` if not set.
@@ -261,11 +325,17 @@ export default class PubNubObjects {
     parameters: AppContext.SetUUIDMetadataParameters<Custom>,
     callback?: ResultCallback<AppContext.SetUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.SetUUIDMetadataResponse<Custom> | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Set UUID metadata object with parameters:`,
+    }));
+
     return this._setUUIDMetadata(parameters, callback);
   }
 
   /**
-   * Update specific UUID Metadata object.
+   * Update a specific UUID Metadata object.
    *
    * @internal
    *
@@ -279,19 +349,38 @@ export default class PubNubObjects {
     parameters: AppContext.SetUUIDMetadataParameters<Custom>,
     callback?: ResultCallback<AppContext.SetUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.SetUUIDMetadataResponse<Custom> | void> {
-    if (parameters.userId) parameters.uuid = parameters.userId;
+    if (parameters.userId) {
+      this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
+      parameters.uuid = parameters.userId;
+    }
     parameters.uuid ??= this.configuration.userId;
 
     const request = new SetUUIDMetadataRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: AppContext.SetUUIDMetadataResponse<Custom> | null) => {
+      if (!response) return;
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      this.logger.debug(
+        'PubNub',
+        `Set UUID metadata object success. Updated '${parameters.uuid}' UUID metadata object.'`,
+      );
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse(response);
+      return response;
+    });
   }
   // endregion
 
   // region Remove Metadata
   /**
-   * Remove UUID Metadata object for currently configured PubNub client `uuid`.
+   * Remove a UUID Metadata object for currently configured PubNub client `uuid`.
    *
    * @param callback - Request completion handler callback.
    */
@@ -335,6 +424,17 @@ export default class PubNubObjects {
       | ResultCallback<AppContext.RemoveUUIDMetadataResponse>,
     callback?: ResultCallback<AppContext.RemoveUUIDMetadataResponse>,
   ): Promise<AppContext.RemoveUUIDMetadataResponse | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message:
+        !parametersOrCallback || typeof parametersOrCallback === 'function'
+          ? { uuid: this.configuration.userId }
+          : parametersOrCallback,
+      details: `Remove${
+        !parametersOrCallback || typeof parametersOrCallback === 'function' ? ' current' : ''
+      } UUID metadata object with parameters:`,
+    }));
+
     return this._removeUUIDMetadata(parametersOrCallback, callback);
   }
 
@@ -358,13 +458,32 @@ export default class PubNubObjects {
     const parameters: AppContext.RemoveUUIDMetadataParameters =
       parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
-    if (parameters.userId) parameters.uuid = parameters.userId;
+    if (parameters.userId) {
+      this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
+      parameters.uuid = parameters.userId;
+    }
     parameters.uuid ??= this.configuration.userId;
 
     const request = new RemoveUUIDMetadataRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: AppContext.RemoveUUIDMetadataResponse | null) => {
+      if (!response) return;
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      this.logger.debug(
+        'PubNub',
+        `Remove UUID metadata object success. Removed '${parameters.uuid}' UUID metadata object.`,
+      );
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response: AppContext.RemoveUUIDMetadataResponse | null) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse(response);
+      return response;
+    });
   }
   // endregion
   // endregion
@@ -421,6 +540,12 @@ export default class PubNubObjects {
       | ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllChannelMetadataResponse<Custom> | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: !parametersOrCallback || typeof parametersOrCallback === 'function' ? {} : parametersOrCallback,
+      details: `Get all Channel metadata objects with parameters:`,
+    }));
+
     return this._getAllChannelMetadata(parametersOrCallback, callback);
   }
 
@@ -447,9 +572,25 @@ export default class PubNubObjects {
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
 
     const request = new GetAllChannelsMetadataRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: AppContext.GetAllChannelMetadataResponse<Custom> | null) => {
+      if (!response) return;
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      this.logger.debug(
+        'PubNub',
+        `Get all Channel metadata objects success. Received ${response.totalCount} Channel metadata objects.`,
+      );
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse(response);
+      return response;
+    });
   }
 
   /**
@@ -486,6 +627,12 @@ export default class PubNubObjects {
     parameters: AppContext.GetChannelMetadataParameters,
     callback?: ResultCallback<AppContext.GetChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.GetChannelMetadataResponse<Custom> | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Get Channel metadata object with parameters:`,
+    }));
+
     return this._getChannelMetadata(parameters, callback);
   }
 
@@ -504,9 +651,25 @@ export default class PubNubObjects {
     callback?: ResultCallback<AppContext.GetChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.GetChannelMetadataResponse<Custom> | void> {
     const request = new GetChannelMetadataRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: AppContext.GetChannelMetadataResponse<Custom> | null) => {
+      if (!response) return;
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      this.logger.debug(
+        'PubNub',
+        `Get Channel metadata object success. Received '${parameters.channel}' Channel metadata object.'`,
+      );
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse(response);
+      return response;
+    });
   }
   // endregion
 
@@ -545,6 +708,12 @@ export default class PubNubObjects {
     parameters: AppContext.SetChannelMetadataParameters<Custom>,
     callback?: ResultCallback<AppContext.SetChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.SetChannelMetadataResponse<Custom> | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Set Channel metadata object with parameters:`,
+    }));
+
     return this._setChannelMetadata(parameters, callback);
   }
 
@@ -563,9 +732,25 @@ export default class PubNubObjects {
     callback?: ResultCallback<AppContext.SetChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.SetChannelMetadataResponse<Custom> | void> {
     const request = new SetChannelMetadataRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: AppContext.SetChannelMetadataResponse<Custom> | null) => {
+      if (!response) return;
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      this.logger.debug(
+        'PubNub',
+        `Set Channel metadata object success. Updated '${parameters.channel}' Channel metadata object.`,
+      );
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response: AppContext.SetChannelMetadataResponse<Custom> | null) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response: AppContext.SetChannelMetadataResponse<Custom>) => {
+      logResponse(response);
+      return response;
+    });
   }
   // endregion
 
@@ -605,6 +790,12 @@ export default class PubNubObjects {
     parameters: AppContext.RemoveChannelMetadataParameters,
     callback?: ResultCallback<AppContext.RemoveChannelMetadataResponse>,
   ): Promise<AppContext.RemoveChannelMetadataResponse | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Remove Channel metadata object with parameters:`,
+    }));
+
     return this._removeChannelMetadata(parameters, callback);
   }
 
@@ -624,9 +815,25 @@ export default class PubNubObjects {
     callback?: ResultCallback<AppContext.RemoveChannelMetadataResponse>,
   ): Promise<AppContext.RemoveChannelMetadataResponse | void> {
     const request = new RemoveChannelMetadataRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: AppContext.RemoveChannelMetadataResponse | null) => {
+      if (!response) return;
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+      this.logger.debug(
+        'PubNub',
+        `Remove Channel metadata object success. Removed '${parameters.channel}' Channel metadata object.`,
+      );
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response: AppContext.RemoveChannelMetadataResponse | null) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse(response);
+      return response;
+    });
   }
   // endregion
   // endregion
@@ -678,10 +885,32 @@ export default class PubNubObjects {
     parameters: AppContext.GetMembersParameters,
     callback?: ResultCallback<AppContext.GetMembersResponse<MemberCustom, UUIDCustom>>,
   ): Promise<AppContext.GetMembersResponse<MemberCustom, UUIDCustom> | void> {
-    const request = new GetChannelMembersRequest({ ...parameters, keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Get channel members with parameters:`,
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new GetChannelMembersRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: AppContext.GetMembersResponse<MemberCustom, UUIDCustom> | null) => {
+      if (!response) return;
+
+      this.logger.debug('PubNub', `Get channel members success. Received ${response.totalCount} channel members.`);
+    };
+
+    if (callback)
+      return this.sendRequest(
+        request,
+        (status, response: AppContext.GetMembersResponse<MemberCustom, UUIDCustom> | null) => {
+          logResponse(response);
+          callback(status, response);
+        },
+      );
+
+    return this.sendRequest(request).then((response: AppContext.GetMembersResponse<MemberCustom, UUIDCustom>) => {
+      logResponse(response);
+      return response;
+    });
   }
   // endregion
 
@@ -730,10 +959,32 @@ export default class PubNubObjects {
     parameters: AppContext.SetChannelMembersParameters<MemberCustom>,
     callback?: ResultCallback<AppContext.SetMembersResponse<MemberCustom, UUIDCustom>>,
   ): Promise<AppContext.SetMembersResponse<MemberCustom, UUIDCustom> | void> {
-    const request = new SetChannelMembersRequest({ ...parameters, type: 'set', keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Set channel members with parameters:`,
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new SetChannelMembersRequest({ ...parameters, type: 'set', keySet: this.keySet });
+    const logResponse = (response: AppContext.SetMembersResponse<MemberCustom, UUIDCustom> | null) => {
+      if (!response) return;
+
+      this.logger.debug('PubNub', `Set channel members success. There are ${response.totalCount} channel members now.`);
+    };
+
+    if (callback)
+      return this.sendRequest(
+        request,
+        (status, response: AppContext.SetMembersResponse<MemberCustom, UUIDCustom> | null) => {
+          logResponse(response);
+          callback(status, response);
+        },
+      );
+
+    return this.sendRequest(request).then((response: AppContext.SetMembersResponse<MemberCustom, UUIDCustom>) => {
+      logResponse(response);
+      return response;
+    });
   }
   // endregion
 
@@ -781,10 +1032,35 @@ export default class PubNubObjects {
     parameters: AppContext.RemoveMembersParameters,
     callback?: ResultCallback<AppContext.RemoveMembersResponse<MemberCustom, UUIDCustom>>,
   ): Promise<AppContext.RemoveMembersResponse<MemberCustom, UUIDCustom> | void> {
-    const request = new SetChannelMembersRequest({ ...parameters, type: 'delete', keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Remove channel members with parameters:`,
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new SetChannelMembersRequest({ ...parameters, type: 'delete', keySet: this.keySet });
+    const logResponse = (response: AppContext.RemoveMembersResponse<MemberCustom, UUIDCustom> | null) => {
+      if (!response) return;
+
+      this.logger.debug(
+        'PubNub',
+        `Remove channel members success. There are ${response.totalCount} channel members now.`,
+      );
+    };
+
+    if (callback)
+      return this.sendRequest(
+        request,
+        (status, response: AppContext.RemoveMembersResponse<MemberCustom, UUIDCustom> | null) => {
+          logResponse(response);
+          callback(status, response);
+        },
+      );
+
+    return this.sendRequest(request).then((response: AppContext.RemoveMembersResponse<MemberCustom, UUIDCustom>) => {
+      logResponse(response);
+      return response;
+    });
   }
   // endregion
   // endregion
@@ -854,19 +1130,46 @@ export default class PubNubObjects {
     const parameters: AppContext.GetMembershipsParameters =
       parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
-    if (parameters.userId) parameters.uuid = parameters.userId;
+    if (parameters.userId) {
+      this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
+      parameters.uuid = parameters.userId;
+    }
     parameters.uuid ??= this.configuration.userId;
 
-    const request = new GetUUIDMembershipsRequest({ ...parameters, keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Get memberships with parameters:`,
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new GetUUIDMembershipsRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: AppContext.GetMembershipsResponse<MembershipCustom, ChannelCustom> | null) => {
+      if (!response) return;
+
+      this.logger.debug('PubNub', `Get memberships success. Received ${response.totalCount} memberships.`);
+    };
+
+    if (callback)
+      return this.sendRequest(
+        request,
+        (status, response: AppContext.GetMembershipsResponse<MembershipCustom, ChannelCustom> | null) => {
+          logResponse(response);
+          callback(status, response);
+        },
+      );
+
+    return this.sendRequest(request).then(
+      (response: AppContext.GetMembershipsResponse<MembershipCustom, ChannelCustom>) => {
+        logResponse(response);
+        return response;
+      },
+    );
   }
   // endregion
 
   // region Set Membership
   /**
-   * Update specific UUID Memberships list.
+   * Update a specific UUID Memberships list.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -909,13 +1212,40 @@ export default class PubNubObjects {
     parameters: AppContext.SetMembershipsParameters<MembershipCustom>,
     callback?: ResultCallback<AppContext.SetMembershipsResponse<MembershipCustom, ChannelCustom>>,
   ): Promise<AppContext.SetMembershipsResponse<MembershipCustom, ChannelCustom> | void> {
-    if (parameters.userId) parameters.uuid = parameters.userId;
+    if (parameters.userId) {
+      this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
+      parameters.uuid = parameters.userId;
+    }
     parameters.uuid ??= this.configuration.userId;
 
-    const request = new SetUUIDMembershipsRequest({ ...parameters, type: 'set', keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Set memberships with parameters:`,
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new SetUUIDMembershipsRequest({ ...parameters, type: 'set', keySet: this.keySet });
+    const logResponse = (response: AppContext.SetMembershipsResponse<MembershipCustom, ChannelCustom> | null) => {
+      if (!response) return;
+
+      this.logger.debug('PubNub', `Set memberships success. There are ${response.totalCount} memberships now.`);
+    };
+
+    if (callback)
+      return this.sendRequest(
+        request,
+        (status, response: AppContext.SetMembershipsResponse<MembershipCustom, ChannelCustom> | null) => {
+          logResponse(response);
+          callback(status, response);
+        },
+      );
+
+    return this.sendRequest(request).then(
+      (response: AppContext.SetMembershipsResponse<MembershipCustom, ChannelCustom>) => {
+        logResponse(response);
+        return response;
+      },
+    );
   }
   // endregion
 
@@ -964,13 +1294,40 @@ export default class PubNubObjects {
     parameters: AppContext.RemoveMembershipsParameters,
     callback?: ResultCallback<AppContext.RemoveMembershipsResponse<MembershipCustom, ChannelCustom>>,
   ): Promise<AppContext.RemoveMembershipsResponse<MembershipCustom, ChannelCustom> | void> {
-    if (parameters.userId) parameters.uuid = parameters.userId;
+    if (parameters.userId) {
+      this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
+      parameters.uuid = parameters.userId;
+    }
     parameters.uuid ??= this.configuration.userId;
 
-    const request = new SetUUIDMembershipsRequest({ ...parameters, type: 'delete', keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Remove memberships with parameters:`,
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new SetUUIDMembershipsRequest({ ...parameters, type: 'delete', keySet: this.keySet });
+    const logResponse = (response: AppContext.RemoveMembershipsResponse<MembershipCustom, ChannelCustom> | null) => {
+      if (!response) return;
+
+      this.logger.debug('PubNub', `Remove memberships success. There are ${response.totalCount} memberships now.`);
+    };
+
+    if (callback)
+      return this.sendRequest(
+        request,
+        (status, response: AppContext.RemoveMembershipsResponse<MembershipCustom, ChannelCustom> | null) => {
+          logResponse(response);
+          callback(status, response);
+        },
+      );
+
+    return this.sendRequest(request).then(
+      (response: AppContext.RemoveMembershipsResponse<MembershipCustom, ChannelCustom>) => {
+        logResponse(response);
+        return response;
+      },
+    );
   }
   // endregion
   // endregion
@@ -988,7 +1345,8 @@ export default class PubNubObjects {
    *
    * @returns Asynchronous get specific Space members or specific User memberships response.
    *
-   * @deprecated Use {@link PubNubObjects#getChannelMembers} or {@link PubNubObjects#getMemberships} methods instead.
+   * @deprecated Use {@link PubNubObjects#getChannelMembers getChannelMembers} or
+   * {@link PubNubObjects#getMemberships getMemberships} methods instead.
    */
   public async fetchMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -1004,6 +1362,17 @@ export default class PubNubObjects {
     | AppContext.UserMembersResponse<RelationCustom, MetadataCustom>
     | void
   > {
+    this.logger.warn(
+      'PubNub',
+      "'fetchMemberships' is deprecated. Use 'pubnub.objects.getChannelMembers' or 'pubnub.objects.getMemberships'" +
+        ' instead.',
+    );
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Fetch memberships with parameters:`,
+    }));
+
     if ('spaceId' in parameters) {
       const spaceParameters = parameters as AppContext.GetMembersParameters;
       const mappedParameters = {
@@ -1088,7 +1457,8 @@ export default class PubNubObjects {
    * @returns Asynchronous add members to specific Space or memberships specific User response or
    * `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubObjects#setChannelMembers} or {@link PubNubObjects#setMemberships} methods instead.
+   * @deprecated Use {@link PubNubObjects#setChannelMembers setChannelMembers} or
+   * {@link PubNubObjects#setMemberships setMemberships} methods instead.
    */
   async addMemberships<
     Custom extends AppContext.CustomData = AppContext.CustomData,
@@ -1103,6 +1473,17 @@ export default class PubNubObjects {
     | AppContext.SetMembersResponse<Custom, MetadataCustom>
     | void
   > {
+    this.logger.warn(
+      'PubNub',
+      "'addMemberships' is deprecated. Use 'pubnub.objects.setChannelMembers' or 'pubnub.objects.setMemberships'" +
+        ' instead.',
+    );
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: `Add memberships with parameters:`,
+    }));
+
     if ('spaceId' in parameters) {
       const spaceParameters = parameters as AppContext.SetChannelMembersParameters<Custom>;
       const mappedParameters = {

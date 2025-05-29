@@ -159,4 +159,13 @@ export default class AesCbcCryptor implements ICryptor {
 
     return this.CryptoJS.lib.WordArray.create(wa, b.length);
   }
+
+  /**
+   * Serialize cryptor information to string.
+   *
+   * @returns Serialized cryptor information.
+   */
+  toString() {
+    return `${this.constructor.name} { cipherKey: ${this.cipherKey} }`;
+  }
 }

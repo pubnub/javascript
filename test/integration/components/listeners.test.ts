@@ -4,8 +4,6 @@ import nock from 'nock';
 import * as Subscription from '../../../src/core/types/api/subscription';
 import PubNub from '../../../src/node/index';
 import utils from '../../utils';
-import { Status } from '../../../lib/types';
-import StatusCategory from '../../../src/core/constants/categories';
 
 let pubnub: PubNub;
 
@@ -25,6 +23,7 @@ describe('#listeners', () => {
       useRequestId: false,
       enableEventEngine: true,
       autoNetworkDetection: false,
+      // logLevel: PubNub.LogLevel.Trace,
     });
   });
 
@@ -33,25 +32,22 @@ describe('#listeners', () => {
   });
 
   it('should pass messages of subscribed channel to its listener', async () => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1/0')
-      .query((object) => object.tt === '3')
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1'], messages: [{ channel: 'ch1', message: { message: 'My message!' } }] },
+        { channels: ['ch1'], messages: [], replyDelay: 500 },
+      ],
+    });
+
     const channel = pubnub.channel('ch1');
     const subscription = channel.subscription();
     const messagePromise = new Promise<Subscription.Message>((resolveMessage) =>
@@ -65,31 +61,21 @@ describe('#listeners', () => {
   });
 
   it('should subscribed to channel and presence channels', async () => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch1-pnpres/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch1-pnpres/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '3',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1', 'ch1-pnpres'], messages: [{ channel: 'ch1', message: { message: 'My message!' } }] },
+        { channels: ['ch1', 'ch1-pnpres'], messages: [], replyDelay: 500 },
+      ],
+    });
     nock.enableNetConnect();
 
     const channel = pubnub.channel('ch1');
@@ -105,31 +91,21 @@ describe('#listeners', () => {
   });
 
   it('should work with subscriptionSet', async () => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch2/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch2/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '3',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1', 'ch2'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1', 'ch2'], messages: [{ channel: 'ch2', message: { message: 'My message!' } }] },
+        { channels: ['ch1', 'ch2'], messages: [], replyDelay: 500 },
+      ],
+    });
 
     const channel = pubnub.channel('ch1');
     const subscription = channel.subscription();
@@ -145,31 +121,21 @@ describe('#listeners', () => {
   });
 
   it('should able to create subscriptionSet', async () => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch2/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch2/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '3',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1', 'ch2'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1', 'ch2'], messages: [{ channel: 'ch2', message: { message: 'My message!' } }] },
+        { channels: ['ch1', 'ch2'], messages: [], replyDelay: 500 },
+      ],
+    });
 
     const subscriptionSet = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'] });
 
@@ -184,31 +150,21 @@ describe('#listeners', () => {
   });
 
   it('subscriptionSet works with add/remove with set', async () => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch3,ch4/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch3,ch4/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '3',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch3","d":{"message":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch3', 'ch4'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch3', 'ch4'], messages: [{ channel: 'ch3', message: { message: 'My message!' } }] },
+        { channels: ['ch3', 'ch4'], messages: [], replyDelay: 500 },
+      ],
+    });
 
     const subscriptionSetCh34 = pubnub.subscriptionSet({ channels: ['ch3', 'ch4'] });
 
@@ -231,31 +187,24 @@ describe('#listeners', () => {
   });
 
   it('listener should route presence event to registered handler', async () => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch1-pnpres/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch1-pnpres/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '3',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"17070458535164862","r":31},"m":[{"a":"0","f":0,"p":{"t":"17070458535164862","r":31},"k":"mySubKey","c":"ch1-pnpres","u":{"pn_action":"join","pn_uuid":"dartClient","pn_timestamp":1707045853,"pn_precise_timestamp":1707045853513,"pn_occupancy":2,"pn_ispresence":1,"pn_channel":"ch1"},"d":{"action":"join","uuid":"p2","timestamp":1707045853,"precise_timestamp":1707045853513,"occupancy":2},"b":"ch1-pnpres"}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        {
+          channels: ['ch1', 'ch1-pnpres'],
+          messages: [{ channel: 'ch1-pnpres', presenceAction: 'join', presenceOccupancy: 2 }],
+        },
+        { channels: ['ch1', 'ch1-pnpres'], messages: [], replyDelay: 500 },
+      ],
+    });
 
     const channel = pubnub.channel('ch1');
     const subscription = channel.subscription({ receivePresenceEvents: true });
@@ -272,31 +221,22 @@ describe('#listeners', () => {
   });
 
   it('add/remove listener should work on subscription', async () => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '3',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1'], messages: [{ channel: 'ch1', message: { message: 'My message!' } }] },
+        { channels: ['ch1'], messages: [], replyDelay: 500 },
+      ],
+    });
+
     const messages: Subscription.Message[] = [];
     const subscription = pubnub.channel('ch1').subscription();
     const listener = { message: (m: Subscription.Message) => messages.push(m) };
@@ -314,33 +254,21 @@ describe('#listeners', () => {
   });
 
   it('should work with channel groups and their presence', async () => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/,/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-        'channel-group': 'cg1,cg1-pnpres',
-      })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/,/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '3',
-        tr: 1,
-        'channel-group': 'cg1,cg1-pnpres',
-      })
-      .reply(
-        200,
-        '{"t":{"t":"17070655215847224","r":33},"m":[{"a":"0","f":0,"i":"cl1","p":{"t":"17070655215847224","r":31},"k":"mySubKey","c":"ch1","d":{"message":"My message!"},"b":"cg1"}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({ subKey: 'mySubKey', presenceType: 'heartbeat', requests: [{ groups: ['cg1'] }] });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        {
+          groups: ['cg1', 'cg1-pnpres'],
+          messages: [{ channel: 'ch1', group: 'cg1', message: { message: 'My message!' } }],
+        },
+        { groups: ['cg1', 'cg1-pnpres'], messages: [], replyDelay: 500 },
+      ],
+    });
+
     const channelGroup = pubnub.channelGroup('cg1');
     const subscription = channelGroup.subscription({ receivePresenceEvents: true });
     const messagePromise = new Promise<Subscription.Message>((resolveMessage) =>
@@ -353,86 +281,35 @@ describe('#listeners', () => {
     expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
   });
 
-  it('subscribe/unsubscribe handle edge case of having overlaping channel/group set', async () => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '3',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1/0')
-      .query((object) => object.tt === '10')
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch2/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '10',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch2,ch3/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '10',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch2,ch3/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '10',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"12","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch2","d":{"ch2":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
+  it('subscribe/unsubscribe handle edge case of having overlying channel/group set', async () => {
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1'] }, { channels: ['ch1', 'ch2'] }, { channels: ['ch1', 'ch2', 'ch3'] }],
+    });
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'leave',
+      requests: [{ channels: ['ch1'] }, { channels: ['ch2', 'ch3'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1'], messages: [{ channel: 'ch1', message: { message: 'My message!' } }] },
+        { channels: ['ch1'], messages: [{ channel: 'ch1', message: { message: 'My message!' } }] },
+        { channels: ['ch1', 'ch2'], messages: [{ channel: 'ch1', message: { message: 'My message!' } }] },
+        { channels: ['ch1', 'ch2', 'ch3'], messages: [{ channel: 'ch1', message: { message: 'My message!' } }] },
+        {
+          channels: ['ch2', 'ch3'],
+          messages: [{ channel: 'ch2', message: { ch2: 'My message!' }, timetokenAdjust: '10000000' }],
+        },
+        { channels: ['ch2', 'ch3'], messages: [], replyDelay: 500 },
+      ],
+    });
+
     const messages: Subscription.Message[] = [];
     const channel = pubnub.channel('ch1');
     const subscription = channel.subscription();
@@ -448,6 +325,7 @@ describe('#listeners', () => {
     const actual = await messagePromise;
     expect(JSON.stringify(actual.message)).to.equal('{"message":"My message!"}');
     expect(messages.length).to.equal(0);
+
     const subscriptionCh2 = pubnub.channel('ch2').subscription();
     subscriptionCh2.subscribe();
     const subscriptionCh3 = pubnub.channel('ch3').subscription();
@@ -465,32 +343,151 @@ describe('#listeners', () => {
     expect(JSON.stringify(actualChannel2MessageAfterOneUnsubCh2.message)).to.equal('{"ch2":"My message!"}');
   });
 
-  it('should work with event type specific listener registraction', async () => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '3',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"3","f":514,"i":"demo","p":{"t":"17069673079697201","r":33},"k":"demo","c":"ch1","d":{"message":"My message!"}}]}',
-        { 'content-type': 'text/javascript' },
-      );
+  it("subscribe and don't deliver old messages", async () => {
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1'] }, { channels: ['ch1', 'ch2'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1'], messages: [{ channel: 'ch1', message: { message: 'My message!' } }] },
+        {
+          channels: ['ch1', 'ch2'],
+          messages: [
+            { channel: 'ch1', message: { message: 'My message!' } },
+            { channel: 'ch2', message: { ch2: 'My old message!' }, timetokenAdjust: '-5000000' },
+          ],
+        },
+        {
+          channels: ['ch1', 'ch2'],
+          messages: [{ channel: 'ch2', message: { ch2: 'My new message!' }, timetokenAdjust: '10000000' }],
+        },
+        { channels: ['ch1', 'ch2'], messages: [], replyDelay: 500 },
+      ],
+    });
+
+    const messages: Subscription.Message[] = [];
+    const subscriptionCh1 = pubnub.channel('ch1').subscription();
+    subscriptionCh1.onMessage = () => {};
+
+    const connectionPromise = new Promise<void>((resolve) => {
+      pubnub.onStatus = (status) => {
+        if (status.category === PubNub.CATEGORIES.PNConnectedCategory) resolve();
+      };
+    });
+
+    // Wait for connection.
+    subscriptionCh1.subscribe();
+    await connectionPromise;
+
+    const subscriptionCh2 = pubnub.channel('ch2').subscription();
+    const messagePromise = new Promise<void>((resolveMessage) => {
+      subscriptionCh2.onMessage = (message) => messages.push(message);
+      setTimeout(() => resolveMessage(), 500);
+    });
+
+    // Wait for messages.
+    subscriptionCh2.subscribe();
+    await messagePromise;
+
+    expect(messages.length).to.equal(1);
+    expect(JSON.stringify(messages[0].message)).to.equal('{"ch2":"My new message!"}');
+  });
+
+  it('subscribe and deliver notifications targeted by subscription object', async () => {
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [
+        { channels: ['ch1', 'ch2'] },
+        { channels: ['ch1', 'ch2', 'ch3'] },
+        { channels: ['ch1', 'ch2', 'ch3', 'ch4'] },
+        { channels: ['ch1', 'ch2', 'ch3', 'ch4', 'ch5'] },
+      ],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1', 'ch2'], messages: [{ channel: 'ch1', message: { message: 'My message!' } }] },
+        { channels: ['ch1', 'ch2', 'ch3'], messages: [] },
+        { channels: ['ch1', 'ch2', 'ch3', 'ch4'], messages: [] },
+        {
+          channels: ['ch1', 'ch2', 'ch3', 'ch4', 'ch5'],
+          messages: [
+            { channel: 'ch1', message: { message: 'My message!' } },
+            { channel: 'ch3', message: { ch3: 'My message!' }, timetokenAdjust: '10000000' },
+          ],
+        },
+        { channels: ['ch1', 'ch2', 'ch3', 'ch4', 'ch5'], messages: [], replyDelay: 500 },
+      ],
+    });
+
+    const ch12Messages: Subscription.Message[] = [];
+    const ch3Messages: Subscription.Message[] = [];
+    const subscriptionCh12 = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'] });
+    subscriptionCh12.onMessage = (message) => ch12Messages.push(message);
+
+    const connectionPromise = new Promise<void>((resolve) => {
+      pubnub.onStatus = (status) => {
+        if (status.category === PubNub.CATEGORIES.PNConnectedCategory) resolve();
+      };
+    });
+
+    // Wait for connection.
+    subscriptionCh12.subscribe();
+    await connectionPromise;
+
+    const subscriptionCh3 = pubnub.channel('ch3').subscription();
+    const messagePromise = new Promise<void>((resolveMessage) => {
+      subscriptionCh3.onMessage = (message) => ch3Messages.push(message);
+      setTimeout(() => resolveMessage(), 500);
+    });
+
+    // Wait for messages.
+    subscriptionCh3.subscribe();
+
+    const subscriptionCh4 = pubnub.channel('ch4').subscription();
+    const subscriptionSet1Ch34 = subscriptionCh4.addSubscription(subscriptionCh3);
+    const subscriptionCh5 = pubnub.channel('ch5').subscription();
+    const subscriptionSet2Ch35 = subscriptionCh5.addSubscription(subscriptionCh3);
+    expect(subscriptionCh4.state.isSubscribed).to.equal(true);
+    expect(subscriptionSet1Ch34.state.isSubscribed).to.equal(true);
+    expect(subscriptionCh5.state.isSubscribed).to.equal(true);
+    expect(subscriptionSet2Ch35.state.isSubscribed).to.equal(true);
+
+    await messagePromise;
+
+    expect(ch12Messages.length).to.equal(1);
+    expect(ch3Messages.length).to.equal(1);
+    expect(JSON.stringify(ch12Messages[0].message)).to.equal('{"message":"My message!"}');
+    expect(JSON.stringify(ch3Messages[0].message)).to.equal('{"ch3":"My message!"}');
+  });
+
+  it('should work with event type specific listener registration', async () => {
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1'], messages: [{ channel: 'ch1', message: { message: 'My message!' } }] },
+        { channels: ['ch1'], messages: [], replyDelay: 500 },
+      ],
+    });
+
     const channel = pubnub.channel('ch1');
     const subscription = channel.subscription();
     const messagePromise = new Promise<Subscription.Message>(
@@ -502,31 +499,24 @@ describe('#listeners', () => {
   });
 
   it('with presence should work with event type specific listener registration', async () => {
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch1-pnpres/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: 0,
-      })
-      .reply(200, '{"t":{"t":"3","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/ch1,ch1-pnpres/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        ee: '',
-        tt: '3',
-        tr: 1,
-      })
-      .reply(
-        200,
-        '{"t":{"t":"10","r":1},"m":[{"a":"4","f":0,"p":{"t":"8","r":2},"k":"subKey","c":"ch1-pnpres","d":{"action": "join", "timestamp": 1461451222, "uuid": "testid", "occupancy": 1},"b":"ch1-pnpres"}]}',
-        { 'content-type': 'text/javascript' },
-      );
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        {
+          channels: ['ch1', 'ch1-pnpres'],
+          messages: [{ channel: 'ch1-pnpres', presenceAction: 'join', presenceUserId: 'bob' }],
+        },
+        { channels: ['ch1', 'ch1-pnpres'], messages: [], replyDelay: 500 },
+      ],
+    });
 
     const channel = pubnub.channel('ch1');
     const subscription = channel.subscription({ receivePresenceEvents: true });
@@ -535,16 +525,13 @@ describe('#listeners', () => {
     );
     subscription.subscribe();
     const actual = await presencePromise;
-    expect(actual).to.deep.equal({
-      channel: 'ch1',
-      subscription: 'ch1-pnpres',
-      action: 'join',
-      occupancy: 1,
-      uuid: 'testid',
-      timestamp: 1461451222,
-      actualChannel: 'ch1',
-      subscribedChannel: 'ch1-pnpres',
-      timetoken: '8',
-    });
+    expect(actual.channel).to.be.equal('ch1');
+    expect(actual.subscription).to.be.equal('ch1-pnpres');
+    expect(actual.action).to.be.equal('join');
+    // @ts-expect-error: Don't check a type of presence event here.
+    expect(actual.occupancy).to.be.equal(1);
+    // @ts-expect-error: Don't check a type of presence event here.
+    expect(actual.uuid).to.be.equal('bob');
+    expect(actual.timetoken).to.not.be.equal(undefined);
   });
 });

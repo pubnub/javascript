@@ -44,7 +44,8 @@ declare class PubNubCore<
   CryptographyTypes,
   FileConstructorParameters,
   PlatformFile extends Partial<PubNub.PubNubFileInterface> = Record<string, unknown>,
-> {
+> implements PubNub.EventEmitCapable
+{
   /**
    * Type of REST API endpoint which reported status.
    */
@@ -73,6 +74,10 @@ declare class PubNubCore<
    * retry policy for all requests (setting `undefined` for retry configuration will set default policy).
    */
   static NoneRetryPolicy: typeof PubNub.RetryPolicy.None;
+  /**
+   * Available minimum log levels.
+   */
+  static LogLevel: typeof PubNub.LoggerLogLevel;
   /**
    * Construct notification payload which will trigger push notification.
    *
@@ -197,17 +202,23 @@ declare class PubNubCore<
    */
   setCipherKey(key: string): void;
   /**
-   * Change heartbeat requests interval.
+   * Change a heartbeat requests interval.
    *
    * @param interval - New presence request heartbeat intervals.
    */
   set heartbeatInterval(interval: number);
   /**
-   * Change heartbeat requests interval.
+   * Change a heartbeat requests interval.
    *
    * @param interval - New presence request heartbeat intervals.
    */
   setHeartbeatInterval(interval: number): void;
+  /**
+   * Get registered loggers' manager.
+   *
+   * @returns Registered loggers' manager.
+   */
+  get logger(): PubNub.LoggerManager;
   /**
    * Get PubNub SDK version.
    *
@@ -218,7 +229,7 @@ declare class PubNubCore<
    * Add framework's prefix.
    *
    * @param name - Name of the framework which would want to add own data into `pnsdk` suffix.
-   * @param suffix - Suffix with information about framework.
+   * @param suffix - Suffix with information about a framework.
    */
   _addPnsdkSuffix(name: string, suffix: string | number): void;
   /**
@@ -238,7 +249,7 @@ declare class PubNubCore<
    *
    * @throws Error empty user identifier has been provided.
    *
-   * @deprecated Use the {@link PubNubCore#setUserId} or {@link PubNubCore#userId} setter instead.
+   * @deprecated Use the {@link PubNubCore#setUserId setUserId} or {@link PubNubCore#userId userId} setter instead.
    */
   setUUID(value: string): void;
   /**
@@ -315,22 +326,6 @@ declare class PubNubCore<
    * @deprecated Use {@link destroy} method instead.
    */
   stop(): void;
-  /**
-   * Register real-time events listener.
-   *
-   * @param listener - Listener with event callbacks to handle different types of events.
-   */
-  addListener(listener: PubNub.Listener): void;
-  /**
-   * Remove real-time event listener.
-   *
-   * @param listener - Event listeners which should be removed.
-   */
-  removeListener(listener: PubNub.Listener): void;
-  /**
-   * Clear all real-time event listeners.
-   */
-  removeAllListeners(): void;
   /**
    * Publish data to a specific channel.
    *
@@ -418,9 +413,9 @@ declare class PubNubCore<
    */
   unsubscribeAll(): void;
   /**
-   * Temporarily disconnect from real-time events stream.
+   * Temporarily disconnect from the real-time events stream.
    *
-   * **Note:** `isOffline` is set to `true` only when client experience network issues.
+   * **Note:** `isOffline` is set to `true` only when a client experiences network issues.
    *
    * @param [isOffline] - Whether `offline` presence should be notified or not.
    */
@@ -428,8 +423,7 @@ declare class PubNubCore<
   /**
    * Restore connection to the real-time events stream.
    *
-   * @param parameters - Reconnection catch up configuration. **Note:** available only with
-   * enabled event engine.
+   * @param parameters - Reconnection catch-up configuration. **Note:** available only with the enabled event engine.
    */
   reconnect(parameters?: { timetoken?: string; region?: number }): void;
   /**
@@ -655,7 +649,7 @@ declare class PubNubCore<
   /**
    * Manual presence management.
    *
-   * @param parameters - Desired presence state for provided list of channels and groups.
+   * @param parameters - Desired presence state for a provided list of channels and groups.
    */
   presence(parameters: { connected: boolean; channels?: string[]; channelGroups?: string[] }): void;
   /**
@@ -673,7 +667,7 @@ declare class PubNubCore<
   /**
    * Grant token permission.
    *
-   * Generate access token with requested permissions.
+   * Generate an access token with requested permissions.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -699,13 +693,13 @@ declare class PubNubCore<
    */
   revokeToken(token: PubNub.PAM.RevokeParameters): Promise<PubNub.PAM.RevokeTokenResponse>;
   /**
-   * Get current access token.
+   * Get a current access token.
    *
    * @returns Previously configured access token using {@link setToken} method.
    */
   get token(): string | undefined;
   /**
-   * Get current access token.
+   * Get a current access token.
    *
    * @returns Previously configured access token using {@link setToken} method.
    */
@@ -779,7 +773,7 @@ declare class PubNubCore<
    *
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata getAllUUIDMetadata} method instead.
    */
   fetchUsers<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     callback: PubNub.ResultCallback<PubNub.AppContext.GetAllUUIDMetadataResponse<Custom>>,
@@ -790,7 +784,7 @@ declare class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata getAllUUIDMetadata} method instead.
    */
   fetchUsers<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.GetAllMetadataParameters<PubNub.AppContext.UUIDMetadataObject<Custom>>,
@@ -803,95 +797,95 @@ declare class PubNubCore<
    *
    * @returns Asynchronous get all User objects response.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata getAllUUIDMetadata} method instead.
    */
   fetchUsers<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters?: PubNub.AppContext.GetAllMetadataParameters<PubNub.AppContext.UUIDMetadataObject<Custom>>,
   ): Promise<PubNub.AppContext.GetAllUUIDMetadataResponse<Custom>>;
   /**
-   * Fetch User object for currently configured PubNub client `uuid`.
+   * Fetch User object for a currently configured PubNub client `uuid`.
    *
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata getUUIDMetadata} method instead.
    */
   fetchUser<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     callback: PubNub.ResultCallback<PubNub.AppContext.GetUUIDMetadataResponse<Custom>>,
   ): void;
   /**
-   * Fetch User object for currently configured PubNub client `uuid`.
+   * Fetch User object for a currently configured PubNub client `uuid`.
    *
-   * @param parameters - Request configuration parameters. Will fetch User object for currently
+   * @param parameters - Request configuration parameters. Will fetch a User object for a currently
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata getUUIDMetadata} method instead.
    */
   fetchUser<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.GetUUIDMetadataParameters,
     callback: PubNub.ResultCallback<PubNub.AppContext.GetUUIDMetadataResponse<Custom>>,
   ): void;
   /**
-   * Fetch User object for currently configured PubNub client `uuid`.
+   * Fetch User object for a currently configured PubNub client `uuid`.
    *
-   * @param [parameters] - Request configuration parameters. Will fetch User object for currently
+   * @param [parameters] - Request configuration parameters. Will fetch a User object for a currently
    * configured PubNub client `uuid` if not set.
    *
    * @returns Asynchronous get User object response.
    *
-   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata getUUIDMetadata} method instead.
    */
   fetchUser<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters?: PubNub.AppContext.GetUUIDMetadataParameters,
   ): Promise<PubNub.AppContext.GetUUIDMetadataResponse<Custom>>;
   /**
-   * Create User object.
+   * Create a User object.
    *
-   * @param parameters - Request configuration parameters. Will create User object for currently
+   * @param parameters - Request configuration parameters. Will create a User object for a currently
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
    */
   createUser<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.SetUUIDMetadataParameters<Custom>,
     callback: PubNub.ResultCallback<PubNub.AppContext.SetUUIDMetadataResponse<Custom>>,
   ): void;
   /**
-   * Create User object.
+   * Create a User object.
    *
-   * @param parameters - Request configuration parameters. Will create User object for currently
+   * @param parameters - Request configuration parameters. Will create User object for a currently
    * configured PubNub client `uuid` if not set.
    *
    * @returns Asynchronous create User object response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
    */
   createUser<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.SetUUIDMetadataParameters<Custom>,
   ): Promise<PubNub.AppContext.SetUUIDMetadataResponse<Custom>>;
   /**
-   * Update User object.
+   * Update a User object.
    *
    * @param parameters - Request configuration parameters. Will update User object for currently
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
    */
   updateUser<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.SetUUIDMetadataParameters<Custom>,
     callback: PubNub.ResultCallback<PubNub.AppContext.SetUUIDMetadataResponse<Custom>>,
   ): void;
   /**
-   * Update User object.
+   * Update a User object.
    *
-   * @param parameters - Request configuration parameters. Will update User object for currently
+   * @param parameters - Request configuration parameters. Will update a User object for a currently
    * configured PubNub client `uuid` if not set.
    *
    * @returns Asynchronous update User object response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
    */
   updateUser<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.SetUUIDMetadataParameters<Custom>,
@@ -899,20 +893,20 @@ declare class PubNubCore<
   /**
    * Remove a specific User object.
    *
-   * @param callback - Request completion handler callback. Will remove User object for currently
+   * @param callback - Request completion handler callback. Will remove a User object for a currently
    * configured PubNub client `uuid` if not set.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata removeUUIDMetadata} method instead.
    */
   removeUser(callback: PubNub.ResultCallback<PubNub.AppContext.RemoveUUIDMetadataResponse>): void;
   /**
    * Remove a specific User object.
    *
-   * @param parameters - Request configuration parameters. Will remove User object for currently
+   * @param parameters - Request configuration parameters. Will remove a User object for a currently
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata removeUUIDMetadata} method instead.
    */
   removeUser(
     parameters: PubNub.AppContext.RemoveUUIDMetadataParameters,
@@ -921,12 +915,12 @@ declare class PubNubCore<
   /**
    * Remove a specific User object.
    *
-   * @param [parameters] - Request configuration parameters. Will remove User object for currently
+   * @param [parameters] - Request configuration parameters. Will remove a User object for a currently
    * configured PubNub client `uuid` if not set.
    *
    * @returns Asynchronous User object remove response.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata removeUUIDMetadata} method instead.
    */
   removeUser(
     parameters?: PubNub.AppContext.RemoveUUIDMetadataParameters,
@@ -936,7 +930,7 @@ declare class PubNubCore<
    *
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata getAllChannelMetadata} method instead.
    */
   fetchSpaces<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     callback: PubNub.ResultCallback<PubNub.AppContext.GetAllChannelMetadataResponse<Custom>>,
@@ -947,7 +941,7 @@ declare class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata getAllChannelMetadata} method instead.
    */
   fetchSpaces<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.GetAllMetadataParameters<PubNub.AppContext.ChannelMetadataObject<Custom>>,
@@ -958,9 +952,9 @@ declare class PubNubCore<
    *
    * @param [parameters] - Request configuration parameters.
    *
-   * @returns Asynchronous get all Space objects response.
+   * @returns Asynchronous get all Space objects responses.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata getAllChannelMetadata} method instead.
    */
   fetchSpaces<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters?: PubNub.AppContext.GetAllMetadataParameters<PubNub.AppContext.ChannelMetadataObject<Custom>>,
@@ -971,7 +965,7 @@ declare class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getChannelMetadata getChannelMetadata} method instead.
    */
   fetchSpace<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.GetChannelMetadataParameters,
@@ -984,18 +978,18 @@ declare class PubNubCore<
    *
    * @returns Asynchronous get Channel metadata response.
    *
-   * @deprecated Use {@link PubNubCore#objects.getChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getChannelMetadata getChannelMetadata} method instead.
    */
   fetchSpace<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.GetChannelMetadataParameters,
   ): Promise<PubNub.AppContext.GetChannelMetadataResponse<Custom>>;
   /**
-   * Create specific Space object.
+   * Create a specific Space object.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
    */
   createSpace<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.SetChannelMetadataParameters<Custom>,
@@ -1008,7 +1002,7 @@ declare class PubNubCore<
    *
    * @returns Asynchronous create Space object response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
    */
   createSpace<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.SetChannelMetadataParameters<Custom>,
@@ -1019,7 +1013,7 @@ declare class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
    */
   updateSpace<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.SetChannelMetadataParameters<Custom>,
@@ -1032,18 +1026,18 @@ declare class PubNubCore<
    *
    * @returns Asynchronous update Space object response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
    */
   updateSpace<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.SetChannelMetadataParameters<Custom>,
   ): Promise<PubNub.AppContext.SetChannelMetadataResponse<Custom>>;
   /**
-   * Remove Space object.
+   * Remove a Space object.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata removeChannelMetadata} method instead.
    */
   removeSpace(
     parameters: PubNub.AppContext.RemoveChannelMetadataParameters,
@@ -1056,19 +1050,19 @@ declare class PubNubCore<
    *
    * @returns Asynchronous Space object remove response.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata removeChannelMetadata} method instead.
    */
   removeSpace(
     parameters: PubNub.AppContext.RemoveChannelMetadataParameters,
   ): Promise<PubNub.AppContext.RemoveChannelMetadataResponse>;
   /**
-   * Fetch paginated list of specific Space members or specific User memberships.
+   * Fetch a paginated list of specific Space members or specific User memberships.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getChannelMembers} or {@link PubNubCore#objects.getMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.getChannelMembers getChannelMembers} or
+   * {@link PubNubCore#objects.getMemberships getMemberships} methods instead.
    */
   fetchMemberships<
     RelationCustom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData,
@@ -1087,8 +1081,8 @@ declare class PubNubCore<
    *
    * @returns Asynchronous get specific Space members or specific User memberships response.
    *
-   * @deprecated Use {@link PubNubCore#objects.getChannelMembers} or {@link PubNubCore#objects.getMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.getChannelMembers getChannelMembers} or
+   * {@link PubNubCore#objects.getMemberships getMemberships} methods instead.
    */
   fetchMemberships<
     RelationCustom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData,
@@ -1105,8 +1099,8 @@ declare class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+   * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
    */
   addMemberships<
     Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData,
@@ -1127,8 +1121,8 @@ declare class PubNubCore<
    *
    * @returns Asynchronous add members to specific Space or memberships specific User response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+   * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
    */
   addMemberships<
     Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData,
@@ -1147,8 +1141,8 @@ declare class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+   * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
    */
   updateMemberships<
     Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData,
@@ -1169,8 +1163,8 @@ declare class PubNubCore<
    *
    * @returns Asynchronous update Space members or User memberships response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+   * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
    */
   updateMemberships<
     Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData,
@@ -1189,8 +1183,8 @@ declare class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-   * methods instead from `objects` API group.
+   * @deprecated Use {@link PubNubCore#objects.removeMemberships removeMemberships} or
+   * {@link PubNubCore#objects.removeChannelMembers removeChannelMembers} methods instead from `objects` API group.
    */
   removeMemberships<
     RelationCustom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData,
@@ -1209,8 +1203,8 @@ declare class PubNubCore<
    *
    * @returns Asynchronous memberships modification response.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-   * methods instead from `objects` API group.
+   * @deprecated Use {@link PubNubCore#objects.removeMemberships removeMemberships} or
+   * {@link PubNubCore#objects.removeChannelMembers removeChannelMembers} methods instead from `objects` API group.
    */
   removeMemberships<
     RelationCustom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData,
@@ -1293,7 +1287,7 @@ declare class PubNubCore<
    */
   getFileUrl(parameters: PubNub.FileSharing.FileUrlParameters): PubNub.FileSharing.FileUrlResponse;
   /**
-   * Download shared file from specific channel.
+   * Download a shared file from a specific channel.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -1303,7 +1297,7 @@ declare class PubNubCore<
     callback: PubNub.ResultCallback<PlatformFile>,
   ): void;
   /**
-   * Download shared file from specific channel.
+   * Download a shared file from a specific channel.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -1311,7 +1305,7 @@ declare class PubNubCore<
    */
   downloadFile(parameters: PubNub.FileSharing.DownloadFileParameters): Promise<PlatformFile>;
   /**
-   * Delete shared file from specific channel.
+   * Delete a shared file from a specific channel.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -1321,7 +1315,7 @@ declare class PubNubCore<
     callback: PubNub.ResultCallback<PubNub.FileSharing.DeleteFileResponse>,
   ): void;
   /**
-   * Delete shared file from specific channel.
+   * Delete a shared file from a specific channel.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -1341,14 +1335,82 @@ declare class PubNubCore<
    */
   time(): Promise<PubNub.Time.TimeResponse>;
   /**
+   * Set a connection status change event handler.
+   *
+   * @param listener - Listener function, which will be called each time when the connection status changes.
+   */
+  set onStatus(listener: ((status: PubNub.Status | PubNub.StatusEvent) => void) | undefined);
+  /**
+   * Set a new message handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new message
+   * is received from the real-time network.
+   */
+  set onMessage(listener: ((event: PubNub.Subscription.Message) => void) | undefined);
+  /**
+   * Set a new presence events handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new
+   * presence event is received from the real-time network.
+   */
+  set onPresence(listener: ((event: PubNub.Subscription.Presence) => void) | undefined);
+  /**
+   * Set a new signal handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new signal
+   * is received from the real-time network.
+   */
+  set onSignal(listener: ((event: PubNub.Subscription.Signal) => void) | undefined);
+  /**
+   * Set a new app context event handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new
+   * app context event is received from the real-time network.
+   */
+  set onObjects(listener: ((event: PubNub.Subscription.AppContextObject) => void) | undefined);
+  /**
+   * Set a new message reaction event handler.
+   *
+   * @param listener - Listener function, which will be called each time when a
+   * new message reaction event is received from the real-time network.
+   */
+  set onMessageAction(listener: ((event: PubNub.Subscription.MessageAction) => void) | undefined);
+  /**
+   * Set a new file handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new file
+   * is received from the real-time network.
+   */
+  set onFile(listener: ((event: PubNub.Subscription.File) => void) | undefined);
+  /**
+   * Set events handler.
+   *
+   * @param listener - Events listener configuration object, which lets specify handlers for multiple
+   * types of events.
+   */
+  addListener(listener: PubNub.Listener): void;
+  /**
+   * Remove real-time event listener.
+   *
+   * @param listener - Event listener configuration, which should be removed from the list of notified
+   * listeners. **Important:** Should be the same object which has been passed to the
+   * {@link addListener}.
+   */
+  removeListener(listener: PubNub.Listener): void;
+  /**
+   * Clear all real-time event listeners.
+   */
+  removeAllListeners(): void;
+  /**
    * Encrypt data.
    *
    * @param data - Stringified data which should be encrypted using `CryptoModule`.
-   * @deprecated
    * @param [customCipherKey] - Cipher key which should be used to encrypt data. **Deprecated:**
    * use {@link Configuration#cryptoModule|cryptoModule} instead.
    *
    * @returns Data encryption result as a string.
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   encrypt(data: string | PubNub.Payload, customCipherKey?: string): string;
   /**
@@ -1359,6 +1421,8 @@ declare class PubNubCore<
    * use {@link Configuration#cryptoModule|cryptoModule} instead.
    *
    * @returns Data decryption result as an object.
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   decrypt(data: string, customCipherKey?: string): PubNub.Payload | null;
   /**
@@ -1368,9 +1432,11 @@ declare class PubNubCore<
    *
    * @returns Asynchronous file encryption result.
    *
-   * @throws Error if source file not provided.
+   * @throws Error if source file isn't provided.
    * @throws File constructor not provided.
    * @throws Crypto module is missing (if non-legacy flow used).
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   encryptFile(file: PubNub.PubNubFileInterface): Promise<PubNub.PubNubFileInterface>;
   /**
@@ -1381,9 +1447,11 @@ declare class PubNubCore<
    *
    * @returns Asynchronous file encryption result.
    *
-   * @throws Error if source file not provided.
+   * @throws Error if source file isn't provided.
    * @throws File constructor not provided.
    * @throws Crypto module is missing (if non-legacy flow used).
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   encryptFile(key: string, file: PubNub.PubNubFileInterface): Promise<PubNub.PubNubFileInterface>;
   /**
@@ -1393,9 +1461,11 @@ declare class PubNubCore<
    *
    * @returns Asynchronous file decryption result.
    *
-   * @throws Error if source file not provided.
+   * @throws Error if source file isn't provided.
    * @throws File constructor not provided.
    * @throws Crypto module is missing (if non-legacy flow used).
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   decryptFile(file: PubNub.PubNubFileInterface): Promise<PubNub.PubNubFileInterface>;
   /**
@@ -1406,9 +1476,11 @@ declare class PubNubCore<
    *
    * @returns Asynchronous file decryption result.
    *
-   * @throws Error if source file not provided.
+   * @throws Error if source file isn't provided.
    * @throws File constructor not provided.
    * @throws Crypto module is missing (if non-legacy flow used).
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   decryptFile(
     key: string | PubNub.PubNubFileInterface,
@@ -1604,6 +1676,12 @@ declare namespace PubNub {
       file: PubNubFileInterface,
       File: PubNubFileConstructor<PubNubFileInterface, any>,
     ): Promise<PubNubFileInterface | undefined>;
+    /**
+     * Serialize crypto module information to string.
+     *
+     * @returns Serialized crypto module information.
+     */
+    toString(): string;
   }
 
   /**
@@ -2483,8 +2561,18 @@ declare namespace PubNub {
      * Log HTTP information.
      *
      * @default `false`
+     *
+     * @deprecated Use {@link UserConfiguration.logLevel logLevel} and {@link UserConfiguration.loggers loggers} instead.
      */
     logVerbosity?: boolean;
+    /**
+     * Minimum messages log level which should be passed to the logger.
+     */
+    logLevel?: LogLevel;
+    /**
+     * List of additional custom {@link Logger loggers} to which logged messages will be passed.
+     */
+    loggers?: Logger[];
     /**
      * If set to true, requests will be made over HTTPS.
      *
@@ -3048,6 +3136,252 @@ declare namespace PubNub {
   };
 
   /**
+   * Enum with available log levels.
+   */
+  export enum LogLevel {
+    /**
+     * Used to notify about every last detail:
+     * - function calls,
+     * - full payloads,
+     * - internal variables,
+     * - state-machine hops.
+     */
+    Trace = 0,
+    /**
+     * Used to notify about broad strokes of your SDK’s logic:
+     * - inputs/outputs to public methods,
+     * - network request
+     * - network response
+     * - decision branches.
+     */
+    Debug = 1,
+    /**
+     * Used to notify summary of what the SDK is doing under the hood:
+     * - initialized,
+     * - connected,
+     * - entity created.
+     */
+    Info = 2,
+    /**
+     * Used to notify about non-fatal events:
+     * - deprecations,
+     * - request retries.
+     */
+    Warn = 3,
+    /**
+     * Used to notify about:
+     * - exceptions,
+     * - HTTP failures,
+     * - invalid states.
+     */
+    Error = 4,
+    /**
+     * Logging disabled.
+     */
+    None = 5,
+  }
+
+  /** Re-export aliased type. */
+  export { LogLevel as LoggerLogLevel };
+
+  /**
+   * Stringified log levels presentation.
+   */
+  export type LogLevelString = Exclude<Lowercase<keyof typeof LogLevel>, 'none'>;
+
+  /**
+   * Basic content of a logged message.
+   */
+  export type BaseLogMessage = {
+    /**
+     * Date and time when the log message has been generated.
+     */
+    timestamp: Date;
+    /**
+     * Unique identifier of the PubNub client instance which generated the log message.
+     */
+    pubNubId: string;
+    /**
+     * Target log message level.
+     */
+    level: LogLevel;
+    /**
+     * Minimum log level which can be notified by {@link LoggerManager}.
+     *
+     * **Note:** This information can be used by {@link Logger logger} implementation show more information from a log
+     * message.
+     */
+    minimumLevel: LogLevel;
+    /**
+     * The call site from which a log message has been sent.
+     */
+    location?: string;
+  };
+
+  /**
+   * Plain text log message type.
+   *
+   * This type contains a pre-processed message.
+   */
+  export type TextLogMessage = BaseLogMessage & {
+    /**
+     * Data type which `message` represents.
+     */
+    messageType: 'text';
+    /**
+     * Textual message which has been logged.
+     */
+    message: string;
+  };
+
+  /**
+   * Dictionary log message type.
+   *
+   * This type contains a dictionary which should be serialized for output.
+   */
+  export type ObjectLogMessage = BaseLogMessage & {
+    /**
+     * Data type which `message` represents.
+     */
+    messageType: 'object';
+    /**
+     * Object which has been logged.
+     */
+    message: Record<string, unknown> | unknown[] | unknown;
+    /**
+     * Additional details which describe data in a provided object.
+     *
+     * **Note:** Will usually be used to prepend serialized dictionary if provided.
+     */
+    details?: string;
+    /**
+     * List of keys which should be filtered from a serialized object.
+     */
+    ignoredKeys?: string[] | ((key: string, object: Record<string, unknown>) => boolean);
+  };
+
+  /**
+   * Error log message type.
+   *
+   * This type contains an error type.
+   */
+  export type ErrorLogMessage = BaseLogMessage & {
+    /**
+     * Data type which `message` represents.
+     */
+    messageType: 'error';
+    /**
+     * Error with information about an exception or validation error.
+     */
+    message: PubNubError;
+  };
+
+  /**
+   * Network request message type.
+   *
+   * This type contains a type that represents data to be sent using the transport layer.
+   */
+  export type NetworkRequestLogMessage = BaseLogMessage & {
+    /**
+     * Data type which `message` represents.
+     */
+    messageType: 'network-request';
+    /**
+     * Object which is used to construct a transport-specific request object.
+     */
+    message: TransportRequest;
+    /**
+     * Additional information which can be useful when {@link NetworkRequestLogMessage.canceled canceled} is set to
+     * `true`.
+     */
+    details?: string;
+    /**
+     * Whether the request has been canceled or not.
+     */
+    canceled?: boolean;
+    /**
+     * Whether the request processing failed or not.
+     */
+    failed?: boolean;
+  };
+
+  /**
+   * Network response message type.
+   *
+   * This type contains a type that represents a service response for a previously sent request.
+   */
+  export type NetworkResponseLogMessage = BaseLogMessage & {
+    /**
+     * Data type which `message` represents.
+     */
+    messageType: 'network-response';
+    /**
+     * Object with data received from a transport-specific response object.
+     */
+    message: TransportResponse;
+  };
+
+  /**
+   * Logged message type.
+   */
+  export type LogMessage =
+    | TextLogMessage
+    | ObjectLogMessage
+    | ErrorLogMessage
+    | NetworkRequestLogMessage
+    | NetworkResponseLogMessage;
+
+  /**
+   * This interface is used by {@link LoggerManager logger manager} to handle log messages.
+   *
+   * You can implement this interface for your own needs or use built-in {@link ConsoleLogger console} logger.
+   *
+   * **Important:** Function that corresponds to the logged message level will be called only if
+   * {@link LoggerManager logger manager} configured to use high enough log level.
+   */
+  export interface Logger {
+    /**
+     * Process a `trace` level message.
+     *
+     * @param message - Message which should be handled by custom logger implementation.
+     */
+    trace(message: LogMessage): void;
+    /**
+     * Process a `debug` level message.
+     *
+     * @param message - Message which should be handled by custom logger implementation.
+     */
+    debug(message: LogMessage): void;
+    /**
+     * Process an `info` level message.
+     *
+     * @param message - Message which should be handled by custom logger implementation.
+     */
+    info(message: LogMessage): void;
+    /**
+     * Process a `warn` level message.
+     *
+     * @param message - Message which should be handled by custom logger implementation.
+     */
+    warn(message: LogMessage): void;
+    /**
+     * Process an `error` level message.
+     *
+     * @param message - Message which should be handled by custom logger implementation.
+     */
+    error(message: LogMessage): void;
+  }
+
+  /**
+   * PubNub operation error.
+   *
+   * When an operation can't be performed or there is an error from the server, this object will be returned.
+   */
+  export class PubNubError extends Error {
+    status?: Status | undefined;
+  }
+
+  /**
    * Represents the configuration options for keeping the transport connection alive.
    */
   export type TransportKeepAlive = {
@@ -3080,7 +3414,7 @@ declare namespace PubNub {
   /**
    * This interface is used to send requests to the PubNub API.
    *
-   * You can implement this interface for your types, or use one of the provided modules to use a
+   * You can implement this interface for your types or use one of the provided modules to use a
    * transport library.
    *
    * @interface
@@ -3109,7 +3443,7 @@ declare namespace PubNub {
   }
 
   /**
-   * Real-time events listener.
+   * Real-time events' listener.
    */
   export type Listener = {
     /**
@@ -4063,95 +4397,242 @@ declare namespace PubNub {
    */
   export type SubscriptionOptions = {
     /**
-     * Whether presence events for entity should be received or not.
+     * Whether presence events for an entity should be received or not.
      */
     receivePresenceEvents?: boolean;
+    /**
+     * Real-time event filtering function.
+     *
+     * Function can be used to filter out events which shouldn't be populated to the registered event listeners.
+     *
+     * **Note:** This function is called for each received event.
+     *
+     * @param event - Pre-processed event object from real-time subscription stream.
+     *
+     * @returns `true` if event should be populated to the event listeners.
+     */
+    filter?: (event: Subscription.SubscriptionResponse['messages'][0]) => boolean;
   };
+
+  /**
+   * Common interface for entities which can be used in subscription.
+   */
+  export interface SubscriptionCapable {
+    /**
+     * Create a subscribable's subscription object for real-time updates.
+     *
+     * Create a subscription object which can be used to subscribe to the real-time updates sent to the specific data
+     * stream.
+     *
+     * @param [subscriptionOptions] - Subscription object behavior customization options.
+     *
+     * @returns Configured and ready to use subscribable's subscription object.
+     */
+    subscription(subscriptionOptions?: SubscriptionOptions): EventEmitCapable;
+  }
+
+  export interface EventEmitCapable {
+    /**
+     * Set new message handler.
+     *
+     * Function, which will be called each time when a new message is received from the real-time network.
+     */
+    onMessage?: (event: Subscription.Message) => void;
+    /**
+     * Set a new presence events handler.
+     *
+     * Function, which will be called each time when a new presence event is received from the real-time network.
+     */
+    onPresence?: (event: Subscription.Presence) => void;
+    /**
+     * Set a new signal handler.
+     *
+     * Function, which will be called each time when a new signal is received from the real-time network.
+     */
+    onSignal?: (event: Subscription.Signal) => void;
+    /**
+     * Set a new app context event handler.
+     *
+     * Function, which will be called each time when a new app context event is received from the real-time network.
+     */
+    onObjects?: (event: Subscription.AppContextObject) => void;
+    /**
+     * Set a new message reaction event handler.
+     *
+     * Function, which will be called each time when a new message reaction event is received from the real-time network.
+     */
+    onMessageAction?: (event: Subscription.MessageAction) => void;
+    /**
+     * Set a new file handler.
+     *
+     * Function, which will be called each time when a new file is received from the real-time network.
+     */
+    onFile?: (event: Subscription.File) => void;
+    /**
+     * Set events handler.
+     *
+     * @param listener - Events listener configuration object, which lets specify handlers for multiple types of events.
+     */
+    addListener(listener: Listener): void;
+    /**
+     * Remove real-time event listener.
+     *
+     * @param listener - Event listeners which should be removed.
+     */
+    removeListener(listener: Listener): void;
+    /**
+     * Clear all real-time event listeners.
+     */
+    removeAllListeners(): void;
+  }
 
   /**
    * First-class objects which provides access to the channel app context object-specific APIs.
    */
-  export class ChannelMetadata {
+  export class ChannelMetadata extends Entity {
     /**
-     * Create channel's app context subscription object for real-time updates.
+     * Get unique channel metadata object identifier.
      *
-     * Create subscription object which can be used to subscribe to the real-time updates sent to the specific channel
-     * app context object.
+     * @returns Channel metadata identifier.
+     */
+    get id(): string;
+  }
+
+  /**
+   * Common entity interface.
+   */
+  export abstract class Entity implements EntityInterface, SubscriptionCapable {
+    /**
+     * Create a subscribable's subscription object for real-time updates.
      *
-     * @param [subscriptionOptions] - Channel's app context subscription object behavior customization options.
+     * Create a subscription object which can be used to subscribe to the real-time updates sent to the specific data
+     * stream.
      *
-     * @returns Configured and ready to use channel's app context subscription object.
+     * @param [subscriptionOptions] - Subscription object behavior customization options.
+     *
+     * @returns Configured and ready to use subscribable's subscription object.
      */
     subscription(subscriptionOptions?: SubscriptionOptions): Subscription;
+    /**
+     * Stringify entity object.
+     *
+     * @returns Serialized entity object.
+     */
+    toString(): string;
   }
+
+  /**
+   * Common entity interface.
+   */
+  export interface EntityInterface extends SubscriptionCapable {}
 
   /**
    * Single-entity subscription object which can be used to receive and handle real-time updates.
    */
-  export class Subscription extends SubscribeCapable {
+  export class Subscription extends SubscriptionBase {
     /**
-     * Merge entities' subscription objects into subscription set.
+     * Make a bare copy of the {@link Subscription} object.
      *
-     * @param subscription - Other entity's subscription object to be merged with receiver.
-     * @return Subscription set which contains both receiver and other entities' subscription objects.
+     * Copy won't have any type-specific listeners or added listener objects but will have the same internal state as
+     * the source object.
+     *
+     * @returns Bare copy of a {@link Subscription} object.
+     */
+    cloneEmpty(): Subscription;
+    /**
+     * Graceful {@link Subscription} object destruction.
+     *
+     * This is an instance destructor, which will properly deinitialize it:
+     * - remove and unset all listeners,
+     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
+     *
+     * **Important:** {@link Subscription#dispose dispose} won't have any effect if a subscription object is part of
+     * {@link SubscriptionSet set}. To gracefully dispose an object, it should be removed from the set using
+     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
+     * {@link Subscription#dispose dispose} not required).
+     *
+     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
+     */
+    dispose(): void;
+    /**
+     * Merge entities' subscription objects into {@link SubscriptionSet}.
+     *
+     * @param subscription - Another entity's subscription object to be merged with receiver.
+     *
+     * @return {@link SubscriptionSet} which contains both receiver and other entities' subscription objects.
      */
     addSubscription(subscription: Subscription): SubscriptionSet;
+    /**
+     * Stringify subscription object.
+     *
+     * @returns Serialized subscription object.
+     */
+    toString(): string;
   }
 
-  export abstract class SubscribeCapable {
+  /** Re-export aliased type. */
+  export { Subscription as SubscriptionObject };
+
+  /**
+   * Base subscribe object.
+   *
+   * Implementation of base functionality used by {@link SubscriptionObject Subscription} and {@link SubscriptionSet}.
+   */
+  export abstract class SubscriptionBase implements EventEmitCapable, EventHandleCapable {
     /**
-     * Start receiving real-time updates.
+     * Get a list of channels which is used for subscription.
      *
-     * @param subscribeParameters - Additional subscription configuration options which should be used
-     * for request.
+     * @returns List of channel names.
      */
-    subscribe(subscribeParameters?: { timetoken?: string }): void;
+    get channels(): string[];
     /**
-     * Stop real-time events processing.
-     */
-    unsubscribe(): void;
-    /**
-     * Set new message handler.
+     * Get a list of channel groups which is used for subscription.
      *
-     * @param onMessageListener - Listener function, which will be called each time when a new message
+     * @returns List of channel group names.
+     */
+    get channelGroups(): string[];
+    /**
+     * Set a new message handler.
+     *
+     * @param listener - Listener function, which will be called each time when a new message
      * is received from the real-time network.
      */
-    set onMessage(onMessageListener: (messageEvent: Subscription.Message) => void);
+    set onMessage(listener: ((event: Subscription.Message) => void) | undefined);
     /**
-     * Set new presence events handler.
+     * Set a new presence events handler.
      *
-     * @param onPresenceListener - Listener function, which will be called each time when a new
+     * @param listener - Listener function, which will be called each time when a new
      * presence event is received from the real-time network.
      */
-    set onPresence(onPresenceListener: (presenceEvent: Subscription.Presence) => void);
+    set onPresence(listener: ((event: Subscription.Presence) => void) | undefined);
     /**
-     * Set new signal handler.
+     * Set a new signal handler.
      *
-     * @param onSignalListener - Listener function, which will be called each time when a new signal
+     * @param listener - Listener function, which will be called each time when a new signal
      * is received from the real-time network.
      */
-    set onSignal(onSignalListener: (signalEvent: Subscription.Signal) => void);
+    set onSignal(listener: ((event: Subscription.Signal) => void) | undefined);
     /**
-     * Set new app context event handler.
+     * Set a new app context event handler.
      *
-     * @param onObjectsListener - Listener function, which will be called each time when a new
+     * @param listener - Listener function, which will be called each time when a new
      * app context event is received from the real-time network.
      */
-    set onObjects(onObjectsListener: (objectsEvent: Subscription.AppContextObject) => void);
+    set onObjects(listener: ((event: Subscription.AppContextObject) => void) | undefined);
     /**
-     * Set new message reaction event handler.
+     * Set a new message reaction event handler.
      *
-     * @param messageActionEventListener - Listener function, which will be called each time when a
+     * @param listener - Listener function, which will be called each time when a
      * new message reaction event is received from the real-time network.
      */
-    set onMessageAction(messageActionEventListener: (messageActionEvent: Subscription.MessageAction) => void);
+    set onMessageAction(listener: ((event: Subscription.MessageAction) => void) | undefined);
     /**
-     * Set new file handler.
+     * Set a new file handler.
      *
-     * @param fileEventListener - Listener function, which will be called each time when a new file
+     * @param listener - Listener function, which will be called each time when a new file
      * is received from the real-time network.
      */
-    set onFile(fileEventListener: (fileEvent: Subscription.File) => void);
+    set onFile(listener: ((event: Subscription.File) => void) | undefined);
     /**
      * Set events handler.
      *
@@ -4163,124 +4644,182 @@ declare namespace PubNub {
      * Remove events handler.
      *
      * @param listener - Event listener configuration, which should be removed from the list of notified
-     * listeners. **Important:** Should be the same object which has been passed to the
-     * {@link addListener}.
+     * listeners. **Important:** Should be the same object which has been passed to the {@link addListener}.
      */
     removeListener(listener: Listener): void;
     /**
-     * Get list of channels which is used for subscription.
-     *
-     * @returns List of channel names.
+     * Remove all events listeners.
      */
-    get channels(): string[];
+    removeAllListeners(): void;
     /**
-     * Get list of channel groups which is used for subscription.
+     * Make a bare copy of the subscription object.
      *
-     * @returns List of channel group names.
+     * Copy won't have any type-specific listeners or added listener objects but will have the same internal state as
+     * the source object.
+     *
+     * @returns Bare copy of a subscription object.
      */
-    get channelGroups(): string[];
+    abstract cloneEmpty(): SubscriptionBase;
+    /**
+     * Graceful object destruction.
+     *
+     * This is an instance destructor, which will properly deinitialize it:
+     * - remove and unset all listeners,
+     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
+     *
+     * **Important:** {@link SubscriptionBase#dispose dispose} won't have any effect if a subscription object is part of
+     * set. To gracefully dispose an object, it should be removed from the set using
+     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
+     * {@link SubscriptionBase#dispose dispose} not required.
+     *
+     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
+     */
+    dispose(): void;
+    /**
+     * Start receiving real-time updates.
+     *
+     * @param parameters - Additional subscription configuration options which should be used
+     * for request.
+     */
+    subscribe(parameters?: { timetoken?: string }): void;
+    /**
+     * Stop real-time events processing.
+     *
+     * **Important:** {@link SubscriptionBase#unsubscribe unsubscribe} won't have any effect if a subscription object
+     * is part of active (subscribed) set. To unsubscribe an object, it should be removed from the set using
+     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
+     * {@link SubscriptionBase#unsubscribe unsubscribe} not required.
+     *
+     * **Note:** Unsubscribed instance won't call the dispatcher to deliver updates to the listeners.
+     */
+    unsubscribe(): void;
   }
+
+  export interface EventHandleCapable {}
 
   /**
    * Multiple entities subscription set object which can be used to receive and handle real-time
    * updates.
    *
-   * Subscription set object represent collection of per-entity subscription objects and allow
+   * Subscription set object represents a collection of per-entity subscription objects and allows
    * processing them at once for subscription loop and events handling.
    */
-  export class SubscriptionSet extends SubscribeCapable {
+  export class SubscriptionSet extends SubscriptionBase {
     /**
-     * Add additional entity's subscription to the subscription set.
+     * Get a list of entities' subscription objects registered in a subscription set.
      *
-     * **Important:** Changes will be effective only after {@link SubscribeCapable#subscribe} call or
-     * next subscription loop.
-     *
-     * @param subscription - Other entity's subscription object, which should be added.
+     * @returns Entities' subscription objects list.
      */
-    addSubscription(subscription: Subscription): void;
+    get subscriptions(): PubNub.SubscriptionObject[];
     /**
-     * Remove entity's subscription object from the set.
+     * Make a bare copy of the {@link SubscriptionSet} object.
      *
-     * **Important:** Changes will be effective only after {@link SubscribeCapable#unsubscribe} call or
-     * next subscription loop.
+     * Copy won't have any type-specific listeners or added listener objects but will have the same internal state as
+     * the source object.
      *
-     * @param subscription - Other entity's subscription object, which should be removed.
+     * @returns Bare copy of a {@link SubscriptionSet} object.
      */
-    removeSubscription(subscription: Subscription): void;
+    cloneEmpty(): SubscriptionSet;
     /**
-     * Merge with other subscription set object.
+     * Graceful {@link SubscriptionSet} destruction.
      *
-     * **Important:** Changes will be effective only after {@link SubscribeCapable#subscribe} call or
-     * next subscription loop.
+     * This is an instance destructor, which will properly deinitialize it:
+     * - remove and unset all listeners,
+     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
+     *
+     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
+     */
+    dispose(): void;
+    /**
+     * Add an entity's subscription to the subscription set.
+     *
+     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+     *
+     * @param subscription - Another entity's subscription object, which should be added.
+     */
+    addSubscription(subscription: PubNub.SubscriptionObject): void;
+    /**
+     * Add an entity's subscriptions to the subscription set.
+     *
+     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+     *
+     * @param subscriptions - List of entity's subscription objects, which should be added.
+     */
+    addSubscriptions(subscriptions: PubNub.SubscriptionObject[]): void;
+    /**
+     * Remove an entity's subscription object from the set.
+     *
+     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+     *
+     * @param subscription - Another entity's subscription object, which should be removed.
+     */
+    removeSubscription(subscription: PubNub.SubscriptionObject): void;
+    /**
+     * Remove an entity's subscription objects from the set.
+     *
+     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+     *
+     * @param subscriptions - List entity's subscription objects, which should be removed.
+     */
+    removeSubscriptions(subscriptions: PubNub.SubscriptionObject[]): void;
+    /**
+     * Merge with another {@link SubscriptionSet} object.
+     *
+     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
      *
      * @param subscriptionSet - Other entities' subscription set, which should be joined.
      */
     addSubscriptionSet(subscriptionSet: SubscriptionSet): void;
     /**
-     * Subtract other subscription set object.
+     * Subtract another {@link SubscriptionSet} object.
      *
-     * **Important:** Changes will be effective only after {@link SubscribeCapable#unsubscribe} call or
-     * next subscription loop.
+     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
      *
      * @param subscriptionSet - Other entities' subscription set, which should be subtracted.
      */
     removeSubscriptionSet(subscriptionSet: SubscriptionSet): void;
     /**
-     * Get list of entities' subscription objects registered in subscription set.
+     * Stringify subscription object.
      *
-     * @returns Entities' subscription objects list.
+     * @returns Serialized subscription object.
      */
-    get subscriptions(): Subscription[];
+    toString(): string;
   }
 
   /**
    * First-class objects which provides access to the channel group-specific APIs.
    */
-  export class ChannelGroup {
+  export class ChannelGroup extends Entity {
     /**
-     * Create channel group's subscription object for real-time updates.
+     * Get a unique channel group name.
      *
-     * Create subscription object which can be used to subscribe to the real-time updates sent to the channels in
-     * specific channel group.
-     *
-     * @param [subscriptionOptions] - Channel group's subscription object behavior customization options.
-     *
-     * @returns Configured and ready to use channel group's subscription object.
+     * @returns Channel group name.
      */
-    subscription(subscriptionOptions?: SubscriptionOptions): Subscription;
+    get name(): string;
   }
 
   /**
    * First-class objects which provides access to the user app context object-specific APIs.
    */
-  export class UserMetadata {
+  export class UserMetadata extends Entity {
     /**
-     * Create user's app context subscription object for real-time updates.
+     * Get unique user metadata object identifier.
      *
-     * Create subscription object which can be used to subscribe to the real-time updates sent to the specific user
-     * app context object.
-     *
-     * @param [subscriptionOptions] - User's app context subscription object behavior customization options.
-     *
-     * @returns Configured and ready to use user's app context subscription object.
+     * @returns User metadata identifier.
      */
-    subscription(subscriptionOptions?: SubscriptionOptions): Subscription;
+    get id(): string;
   }
 
   /**
    * First-class objects which provides access to the channel-specific APIs.
    */
-  export class Channel {
+  export class Channel extends Entity {
     /**
-     * Create channel's subscription object for real-time updates.
+     * Get a unique channel name.
      *
-     * Create subscription object which can be used to subscribe to the real-time updates sent to the specific channel.
-     *
-     * @param [subscriptionOptions] - Channel's subscription object behavior customization options.
-     *
-     * @returns Configured and ready to use channel's subscription object.
+     * @returns Channel name.
      */
-    subscription(subscriptionOptions?: SubscriptionOptions): Subscription;
+    get name(): string;
   }
 
   /**
@@ -4466,7 +5005,7 @@ declare namespace PubNub {
       parameters?: AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>>,
     ): Promise<AppContext.GetAllUUIDMetadataResponse<Custom>>;
     /**
-     * Fetch UUID Metadata object for currently configured PubNub client `uuid`.
+     * Fetch a UUID Metadata object for the currently configured PubNub client `uuid`.
      *
      * @param callback - Request completion handler callback.
      */
@@ -4476,8 +5015,8 @@ declare namespace PubNub {
     /**
      * Fetch a specific UUID Metadata object.
      *
-     * @param parameters - Request configuration parameters. Will fetch UUID metadata object for
-     * currently configured PubNub client `uuid` if not set.
+     * @param parameters - Request configuration parameters. Will fetch a UUID metadata object for
+     * a currently configured PubNub client `uuid` if not set.
      * @param callback - Request completion handler callback.
      */
     getUUIDMetadata<Custom extends AppContext.CustomData = AppContext.CustomData>(
@@ -4496,9 +5035,9 @@ declare namespace PubNub {
       parameters?: AppContext.GetUUIDMetadataParameters,
     ): Promise<AppContext.GetUUIDMetadataResponse<Custom>>;
     /**
-     * Update specific UUID Metadata object.
+     * Update a specific UUID Metadata object.
      *
-     * @param parameters - Request configuration parameters. Will set UUID metadata for currently
+     * @param parameters - Request configuration parameters. Will set UUID metadata for a currently
      * configured PubNub client `uuid` if not set.
      * @param callback - Request completion handler callback.
      */
@@ -4518,7 +5057,7 @@ declare namespace PubNub {
       parameters: AppContext.SetUUIDMetadataParameters<Custom>,
     ): Promise<AppContext.SetUUIDMetadataResponse<Custom>>;
     /**
-     * Remove UUID Metadata object for currently configured PubNub client `uuid`.
+     * Remove a UUID Metadata object for currently configured PubNub client `uuid`.
      *
      * @param callback - Request completion handler callback.
      */
@@ -4749,7 +5288,7 @@ declare namespace PubNub {
       parameters?: AppContext.GetMembershipsParameters,
     ): Promise<AppContext.GetMembershipsResponse<MembershipCustom, ChannelCustom>>;
     /**
-     * Update specific UUID Memberships list.
+     * Update a specific UUID Memberships list.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -4808,7 +5347,8 @@ declare namespace PubNub {
      *
      * @returns Asynchronous get specific Space members or specific User memberships response.
      *
-     * @deprecated Use {@link PubNubObjects#getChannelMembers} or {@link PubNubObjects#getMemberships} methods instead.
+     * @deprecated Use {@link PubNubObjects#getChannelMembers getChannelMembers} or
+     * {@link PubNubObjects#getMemberships getMemberships} methods instead.
      */
     fetchMemberships<
       RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -4833,7 +5373,8 @@ declare namespace PubNub {
      * @returns Asynchronous add members to specific Space or memberships specific User response or
      * `void` in case if `callback` provided.
      *
-     * @deprecated Use {@link PubNubObjects#setChannelMembers} or {@link PubNubObjects#setMemberships} methods instead.
+     * @deprecated Use {@link PubNubObjects#setChannelMembers setChannelMembers} or
+     * {@link PubNubObjects#setMemberships setMemberships} methods instead.
      */
     addMemberships<
       Custom extends AppContext.CustomData = AppContext.CustomData,
@@ -4851,6 +5392,13 @@ declare namespace PubNub {
     >;
   }
 
+  /**
+   * Logging module manager.
+   *
+   * Manager responsible for log requests handling and forwarding to the registered {@link Logger logger} implementations.
+   */
+  export class LoggerManager {}
+
   export namespace Subscription {
     /**
      * Time cursor.
@@ -4865,7 +5413,7 @@ declare namespace PubNub {
        * Aside of specifying exact time of receiving data / event this token used to catchup /
        * follow on real-time updates.
        */
-      timetoken: string | number;
+      timetoken: string;
       /**
        * Data center region for which `timetoken` has been generated.
        */

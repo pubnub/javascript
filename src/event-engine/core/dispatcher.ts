@@ -6,8 +6,9 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Handler } from './handler';
 import { GenericInvocation, GenericMap, InvocationTypeFromMap } from './types';
+import { LoggerManager } from '../../core/components/logger-manager';
+import { Handler } from './handler';
 
 /**
  * Effects invocation processing handler function definition.
@@ -31,7 +32,10 @@ export class Dispatcher<
   Dependencies,
   Invocation extends GenericInvocation = InvocationTypeFromMap<Effects>,
 > {
-  constructor(private readonly dependencies: Dependencies) {}
+  constructor(
+    private readonly dependencies: Dependencies,
+    private readonly logger: LoggerManager,
+  ) {}
 
   private instances: Map<string, Handler<Effects[any], Dependencies>> = new Map();
   private handlers: Map<string, HandlerCreator<Effects[any], Dependencies>> = new Map();
@@ -41,6 +45,8 @@ export class Dispatcher<
   }
 
   dispatch(invocation: Invocation): void {
+    this.logger.trace(this.constructor.name, `Process invocation: ${invocation.type}`);
+
     if (invocation.type === 'CANCEL') {
       if (this.instances.has(invocation.payload)) {
         const instance = this.instances.get(invocation.payload);
@@ -56,10 +62,18 @@ export class Dispatcher<
     const handlerCreator = this.handlers.get(invocation.type);
 
     if (!handlerCreator) {
+      this.logger.error(this.constructor.name, `Unhandled invocation '${invocation.type}'`);
       throw new Error(`Unhandled invocation '${invocation.type}'`);
     }
 
     const instance = handlerCreator(invocation.payload, this.dependencies);
+
+    this.logger.trace(this.constructor.name, () => ({
+      messageType: 'object',
+      details: 'Call invocation handler with parameters:',
+      message: invocation.payload,
+      ignoredKeys: ['abortSignal'],
+    }));
 
     if (invocation.managed) {
       this.instances.set(invocation.type, instance);

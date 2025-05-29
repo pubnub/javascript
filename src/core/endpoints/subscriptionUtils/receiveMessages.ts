@@ -43,7 +43,7 @@ export class ReceiveMessagesSubscribeRequest extends BaseSubscribeRequest {
     if (channelGroups && channelGroups.length > 0) query['channel-group'] = channelGroups.sort().join(',');
     if (filterExpression && filterExpression.length > 0) query['filter-expr'] = filterExpression;
     if (typeof timetoken === 'string') {
-      if (timetoken && timetoken.length > 0) query['tt'] = timetoken;
+      if (timetoken && timetoken !== '0' && timetoken.length > 0) query['tt'] = timetoken;
     } else if (timetoken && timetoken > 0) query['tt'] = timetoken;
     if (region) query['tr'] = region;
 

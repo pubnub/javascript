@@ -7,6 +7,7 @@
 import { CancellationController, TransportMethod, TransportRequest } from '../core/types/transport-request';
 import { PrivateClientConfiguration } from '../core/interfaces/configuration';
 import { TransportResponse } from '../core/types/transport-response';
+import { LoggerManager } from '../core/components/logger-manager';
 import { TokenManager } from '../core/components/token_manager';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
 import StatusCategory from '../core/constants/categories';
@@ -52,6 +53,7 @@ class RequestSignature {
     private publishKey: string,
     private secretKey: string,
     private hasher: (input: string, secret: string) => string,
+    private logger: LoggerManager,
   ) {}
 
   /**
@@ -76,6 +78,11 @@ class RequestSignature {
 
       if (payload) signatureInput += payload;
     }
+
+    this.logger.trace(this.constructor.name, () => ({
+      messageType: 'text',
+      message: `Request signature input:\n${signatureInput}`,
+    }));
 
     return `v2.${this.hasher(signatureInput, this.secretKey)}`
       .replace(/\+/g, '-')
@@ -124,8 +131,17 @@ export class PubNubMiddleware implements Transport {
 
     if (process.env.CRYPTO_MODULE !== 'disabled') {
       if (keySet.secretKey && shaHMAC)
-        this.signatureGenerator = new RequestSignature(keySet.publishKey!, keySet.secretKey, shaHMAC);
+        this.signatureGenerator = new RequestSignature(keySet.publishKey!, keySet.secretKey, shaHMAC, this.logger);
     }
+  }
+
+  /**
+   * Retrieve registered loggers' manager.
+   *
+   * @returns Registered loggers' manager.
+   */
+  private get logger(): LoggerManager {
+    return this.configuration.clientConfiguration.logger();
   }
 
   makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
@@ -136,12 +152,12 @@ export class PubNubMiddleware implements Transport {
     if (retryPolicy !== undefined) {
       let retryTimeout: ReturnType<typeof setTimeout> | undefined;
       let activeCancellation: CancellationController | undefined;
-      let cancelled = false;
+      let canceled = false;
       let attempt = 0;
 
       const cancellation: CancellationController = {
         abort: (reason) => {
-          cancelled = true;
+          canceled = true;
           if (retryTimeout) clearTimeout(retryTimeout);
           if (activeCancellation) activeCancellation.abort(reason);
         },
@@ -149,8 +165,8 @@ export class PubNubMiddleware implements Transport {
 
       const retryableRequest = new Promise<TransportResponse>((resolve, reject) => {
         const trySendRequest = () => {
-          // Check whether request already has been cancelled and there is no retry should proceed.
-          if (cancelled) return;
+          // Check whether the request already has been canceled and there is no retry should proceed.
+          if (canceled) return;
 
           const [attemptPromise, attemptCancellation] = transport.makeSendable(this.request(req));
           activeCancellation = attemptCancellation;
@@ -169,6 +185,7 @@ export class PubNubMiddleware implements Transport {
 
             if (delay > 0) {
               attempt++;
+              this.logger.warn(this.constructor.name, `HTTP request retry #${attempt} in ${delay}ms.`);
               retryTimeout = setTimeout(() => trySendRequest(), delay);
             } else {
               if (res) resolve(res);
@@ -197,7 +214,7 @@ export class PubNubMiddleware implements Transport {
     req = this.configuration.transport.request(req);
     if (!req.queryParameters) req.queryParameters = {};
 
-    // Modify request with required information.
+    // Modify the request with required information.
     if (clientConfiguration.useInstanceId) req.queryParameters['instanceid'] = clientConfiguration.getInstanceId()!;
     if (!req.queryParameters['uuid']) req.queryParameters['uuid'] = clientConfiguration.userId!;
     if (clientConfiguration.useRequestId) req.queryParameters['requestid'] = req.identifier;
@@ -214,7 +231,7 @@ export class PubNubMiddleware implements Transport {
   }
 
   private authenticateRequest(req: TransportRequest) {
-    // Access management endpoints doesn't need authentication (signature required instead).
+    // Access management endpoints don't need authentication (signature required instead).
     if (req.path.startsWith('/v2/auth/') || req.path.startsWith('/v3/pam/') || req.path.startsWith('/time')) return;
 
     const { clientConfiguration, tokenManager } = this.configuration;

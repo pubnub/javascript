@@ -42,11 +42,7 @@ HandshakeFailedState.on(subscriptionChange.type, (context, { payload }) => {
 });
 
 HandshakeFailedState.on(reconnect.type, (context, { payload }) =>
-  HandshakingState.with({
-    channels: context.channels,
-    groups: context.groups,
-    cursor: payload.cursor || context.cursor,
-  }),
+  HandshakingState.with({ ...context, cursor: payload.cursor || context.cursor }),
 );
 
 HandshakeFailedState.on(restore.type, (context, { payload }) => {
@@ -56,7 +52,7 @@ HandshakeFailedState.on(restore.type, (context, { payload }) => {
     channels: payload.channels,
     groups: payload.groups,
     cursor: {
-      timetoken: payload.cursor.timetoken,
+      timetoken: `${payload.cursor.timetoken}`,
       region: payload.cursor.region ? payload.cursor.region : (context?.cursor?.region ?? 0),
     },
   });
