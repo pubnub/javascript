@@ -42,7 +42,10 @@ export const receiveMessages = createManagedEffect(
  */
 export const emitMessages = createEffect(
   'EMIT_MESSAGES',
-  (events: Subscription.SubscriptionResponse['messages']) => events,
+  (cursor: Subscription.SubscriptionCursor, events: Subscription.SubscriptionResponse['messages']) => ({
+    cursor,
+    events,
+  }),
 );
 
 /**

@@ -7,6 +7,7 @@ import { Buffer } from 'buffer';
 
 import { AbstractCryptoModule, CryptorConfiguration } from '../../../core/interfaces/crypto-module';
 import PubNubFile, { PubNubFileParameters } from '../../../file/modules/node';
+import { LoggerManager } from '../../../core/components/logger-manager';
 import { PubNubFileConstructor } from '../../../core/types/file';
 import { decode } from '../../../core/components/base64_codec';
 import { PubNubError } from '../../../errors/pubnub-error';
@@ -34,6 +35,22 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
    * {@link LegacyCryptor|Legacy} cryptor identifier.
    */
   static LEGACY_IDENTIFIER = '';
+
+  /**
+   * Assign registered loggers' manager.
+   *
+   * @param logger - Registered loggers' manager.
+   *
+   * @internal
+   */
+  set logger(logger: LoggerManager) {
+    if (this.defaultCryptor.identifier === NodeCryptoModule.LEGACY_IDENTIFIER)
+      (this.defaultCryptor as LegacyCryptor).logger = logger;
+    else {
+      const cryptor = this.cryptors.find((cryptor) => cryptor.identifier === NodeCryptoModule.LEGACY_IDENTIFIER);
+      if (cryptor) (cryptor as LegacyCryptor).logger = logger;
+    }
+  }
 
   // --------------------------------------------------------
   // --------------- Convenience functions ------------------

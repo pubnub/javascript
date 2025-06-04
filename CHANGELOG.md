@@ -1,3 +1,13 @@
+## v9.6.0
+June 04 2025
+
+#### Added
+- Standardize information printed by logger and places where it is printed.
+- Add `logLevel` and `loggers` configuration parameters to specify minimum log level and list of custom `Logger` interface implementations (when own logger needed).
+- Add the `cloneEmpty` function, which will let you make a “bare” copy of a subscription / subscription set object, which will have shared state with the original but clear list of event handlers.
+- Add a parameter for subscription where closure can be provided and filter events which should be delivered with listener.
+- When a new subscription object is created, it won't notify about messages from the past (edge case with active and inactive channel subscriptions).
+
 ## v9.5.2
 April 22 2025
 

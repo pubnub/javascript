@@ -6,11 +6,13 @@ import { Buffer } from 'buffer';
 import { NodeCryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 import type { NodeCryptoModule as CryptoModuleType } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 
+import { ExtendedConfiguration, PlatformConfiguration } from '../core/interfaces/configuration';
+import { PubNubConfiguration, setDefaults } from './components/configuration';
 import PubNubFile, { PubNubFileParameters } from '../file/modules/node';
 import { CryptorConfiguration } from '../core/interfaces/crypto-module';
 import { makeConfiguration } from '../core/components/configuration';
-import { PubNubConfiguration, setDefaults } from './components/configuration';
 import { TokenManager } from '../core/components/token_manager';
+import { Cryptography } from '../core/interfaces/cryptography';
 import { NodeTransport } from '../transport/node-transport';
 import { PubNubMiddleware } from '../transport/middleware';
 import { PubNubFileConstructor } from '../core/types/file';
@@ -20,8 +22,6 @@ import Crypto from '../core/components/cryptography';
 import { PubNubError } from '../errors/pubnub-error';
 import { PubNubCore } from '../core/pubnub-common';
 import Cbor from '../cbor/common';
-import { ExtendedConfiguration, PlatformConfiguration } from '../core/interfaces/configuration';
-import { Cryptography } from '../core/interfaces/cryptography';
 
 /**
  * PubNub client for Node.js platform.
@@ -70,12 +70,21 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
 
         if (process.env.CRYPTO_MODULE !== 'disabled') {
           return new NodeCryptoModule({
-            default: new LegacyCryptor({ ...cryptoConfiguration }),
+            default: new LegacyCryptor({
+              ...cryptoConfiguration,
+              ...(!cryptoConfiguration.logger ? { logger: clientConfiguration.logger() } : {}),
+            }),
             cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
           });
         } else return undefined;
       },
     );
+
+    if (process.env.CRYPTO_MODULE !== 'disabled') {
+      // Ensure that the logger has been passed to the user-provided crypto module.
+      if (clientConfiguration.getCryptoModule())
+        (clientConfiguration.getCryptoModule() as NodeCryptoModule).logger = clientConfiguration.logger();
+    }
 
     // Prepare Token manager.
     let tokenManager: TokenManager | undefined;
@@ -94,6 +103,7 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
         useRandomIVs: clientConfiguration.getUseRandomIVs(),
         customEncrypt: clientConfiguration.getCustomEncrypt(),
         customDecrypt: clientConfiguration.getCustomDecrypt(),
+        logger: clientConfiguration.logger(),
       });
     }
 
@@ -102,9 +112,9 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
 
     // Setup transport provider.
     const transport = new NodeTransport(
+      clientConfiguration.logger(),
       configuration.keepAlive,
       configuration.keepAliveSettings,
-      clientConfiguration.logVerbosity!,
     );
     const transportMiddleware = new PubNubMiddleware({
       clientConfiguration,

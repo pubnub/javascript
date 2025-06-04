@@ -58,7 +58,7 @@ ReceiveFailedState.on(restore.type, (context, { payload }) => {
   return HandshakingState.with({
     channels: payload.channels,
     groups: payload.groups,
-    cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
+    cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
   });
 });
 

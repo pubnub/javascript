@@ -32,7 +32,7 @@ export class HandshakeSubscribeRequest extends BaseSubscribeRequest {
 
   protected get queryParameters(): Query {
     const { channelGroups, filterExpression, state } = this.parameters;
-    const query: Query = { tt: 0, ee: '' };
+    const query: Query = { ee: '' };
 
     if (channelGroups && channelGroups.length > 0) query['channel-group'] = channelGroups.sort().join(',');
     if (filterExpression && filterExpression.length > 0) query['filter-expr'] = filterExpression;

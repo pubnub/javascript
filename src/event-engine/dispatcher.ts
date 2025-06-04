@@ -6,12 +6,12 @@
 
 import { PrivateClientConfiguration } from '../core/interfaces/configuration';
 import * as Subscription from '../core/types/api/subscription';
-import { PubNubError } from '../errors/pubnub-error';
+import StatusCategory from '../core/constants/categories';
 import { asyncHandler, Dispatcher, Engine } from './core';
+import { Payload, StatusEvent } from '../core/types/api';
+import { PubNubError } from '../errors/pubnub-error';
 import * as effects from './effects';
 import * as events from './events';
-import { Payload, StatusEvent } from '../core/types/api';
-import StatusCategory from '../core/constants/categories';
 
 /**
  * Subscription Event Engine dependencies set (configuration).
@@ -33,7 +33,10 @@ export type Dependencies = {
 
   delay: (milliseconds: number) => Promise<void>;
 
-  emitMessages: (events: Subscription.SubscriptionResponse['messages']) => void;
+  emitMessages: (
+    cursor: Subscription.SubscriptionCursor,
+    events: Subscription.SubscriptionResponse['messages'],
+  ) => void;
   emitStatus: (status: StatusEvent) => void;
 };
 
@@ -46,7 +49,7 @@ export type Dependencies = {
  */
 export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependencies> {
   constructor(engine: Engine<events.Events, effects.Effects>, dependencies: Dependencies) {
-    super(dependencies);
+    super(dependencies, dependencies.config.logger());
 
     this.on(
       effects.handshake.type,
@@ -97,8 +100,8 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
 
     this.on(
       effects.emitMessages.type,
-      asyncHandler(async (payload, _, { emitMessages }) => {
-        if (payload.length > 0) emitMessages(payload);
+      asyncHandler(async ({ cursor, events }, _, { emitMessages }) => {
+        if (events.length > 0) emitMessages(cursor, events);
       }),
     );
 

@@ -3,10 +3,12 @@
  */
 
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
-import { RequestRetryPolicy } from '../components/retryPolicy';
+import { RequestRetryPolicy } from '../components/retry-policy';
 import { PubNubError } from '../../errors/pubnub-error';
 import { ICryptoModule } from './crypto-module';
 import { KeySet, Payload } from '../types/api';
+import { Logger, LogLevel } from './logger';
+import { LoggerManager } from '../components/logger-manager';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -179,8 +181,20 @@ export type UserConfiguration = {
    * Log HTTP information.
    *
    * @default `false`
+   *
+   * @deprecated Use {@link UserConfiguration.logLevel logLevel} and {@link UserConfiguration.loggers loggers} instead.
    */
   logVerbosity?: boolean;
+
+  /**
+   * Minimum messages log level which should be passed to the logger.
+   */
+  logLevel?: LogLevel;
+
+  /**
+   * List of additional custom {@link Logger loggers} to which logged messages will be passed.
+   */
+  loggers?: Logger[];
 
   /**
    * If set to true, requests will be made over HTTPS.
@@ -592,6 +606,11 @@ export interface ClientConfiguration {
 export interface PrivateClientConfiguration
   extends ClientConfiguration,
     Omit<ExtendedConfiguration, 'subscribe_key' | 'publish_key' | 'secret_key' | 'uuid'> {
+  /**
+   * Registered loggers manager.
+   */
+  logger(): LoggerManager;
+
   /**
    * REST API endpoint access authorization key.
    *

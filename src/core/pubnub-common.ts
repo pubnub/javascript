@@ -4,19 +4,18 @@
 
 // region Imports
 // region Components
-import { Listener, ListenerManager } from './components/listener_manager';
+import { EventDispatcher, Listener } from './components/event-dispatcher';
 import { SubscriptionManager } from './components/subscription-manager';
 import NotificationsPayload from './components/push_payload';
 import { TokenManager } from './components/token_manager';
 import { AbstractRequest } from './components/request';
 import Crypto from './components/cryptography/index';
-import EventEmitter from './components/eventEmitter';
 import { encode } from './components/base64_codec';
 import uuidGenerator from './components/uuid';
 // endregion
 
 // region Types
-import { Payload, ResultCallback, Status, StatusCallback } from './types/api';
+import { Payload, ResultCallback, Status, StatusCallback, StatusEvent } from './types/api';
 // endregion
 
 // region Component Interfaces
@@ -32,7 +31,7 @@ import StatusCategory from './constants/categories';
 
 import { createValidationError, PubNubError } from '../errors/pubnub-error';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
-import { RetryPolicy, Endpoint } from './components/retryPolicy';
+import { RetryPolicy, Endpoint } from './components/retry-policy';
 
 // region Event Engine
 import { PresenceEventEngine } from '../event-engine/presence/presence';
@@ -46,6 +45,7 @@ import * as Signal from './endpoints/signal';
 import { SubscribeRequestParameters as SubscribeRequestParameters, SubscribeRequest } from './endpoints/subscribe';
 import { ReceiveMessagesSubscribeRequest } from './endpoints/subscriptionUtils/receiveMessages';
 import { HandshakeSubscribeRequest } from './endpoints/subscriptionUtils/handshake';
+import { Subscription as SubscriptionObject } from '../entities/subscription';
 import * as Subscription from './types/api/subscription';
 // endregion
 // region Presence
@@ -87,13 +87,15 @@ import { AuditRequest } from './endpoints/access_manager/audit';
 import * as PAM from './types/api/access-manager';
 // endregion
 // region Entities
-import { SubscribeCapable } from '../entities/SubscribeCapable';
-import { SubscriptionOptions } from '../entities/commonTypes';
-import { ChannelMetadata } from '../entities/ChannelMetadata';
-import { SubscriptionSet } from '../entities/SubscriptionSet';
-import { ChannelGroup } from '../entities/ChannelGroup';
-import { UserMetadata } from '../entities/UserMetadata';
-import { Channel } from '../entities/Channel';
+import { SubscriptionCapable, SubscriptionOptions } from '../entities/interfaces/subscription-capable';
+import { EventEmitCapable } from '../entities/interfaces/event-emit-capable';
+import { EntityInterface } from '../entities/interfaces/entity-interface';
+import { SubscriptionBase } from '../entities/subscription-base';
+import { ChannelMetadata } from '../entities/channel-metadata';
+import { SubscriptionSet } from '../entities/subscription-set';
+import { ChannelGroup } from '../entities/channel-group';
+import { UserMetadata } from '../entities/user-metadata';
+import { Channel } from '../entities/channel';
 // endregion
 // region Channel Groups
 import PubNubChannelGroups from './pubnub-channel-groups';
@@ -108,8 +110,15 @@ import PubNubObjects from './pubnub-objects';
 // region Time
 import * as Time from './endpoints/time';
 // endregion
-import { encodeString } from './utils';
+import { EventHandleCapable } from '../entities/interfaces/event-handle-capable';
 import { DownloadFileRequest } from './endpoints/file_upload/download_file';
+import { SubscriptionInput } from './types/api/subscription';
+import { LoggerManager } from './components/logger-manager';
+import { LogLevel as LoggerLogLevel } from './interfaces/logger';
+import { encodeString, messageFingerprint } from './utils';
+import { Entity } from '../entities/entity';
+import Categories from './constants/categories';
+
 // endregion
 
 // --------------------------------------------------------
@@ -157,7 +166,8 @@ export class PubNubCore<
   CryptographyTypes,
   FileConstructorParameters,
   PlatformFile extends Partial<PubNubFileInterface> = Record<string, unknown>,
-> {
+> implements EventEmitCapable
+{
   /**
    * PubNub client configuration.
    *
@@ -203,19 +213,11 @@ export class PubNubCore<
   private readonly crypto?: Crypto;
 
   /**
-   * Real-time event listeners manager.
-   *
-   * @internal
-   */
-  // @ts-expect-error Allowed to simplify interface when module can be disabled.
-  protected readonly listenerManager: ListenerManager;
-
-  /**
    * User's presence event engine.
    *
    * @internal
    */
-  private presenceEventEngine?: PresenceEventEngine;
+  private readonly presenceEventEngine?: PresenceEventEngine;
 
   /**
    * List of subscribe capable objects with active subscriptions.
@@ -225,7 +227,19 @@ export class PubNubCore<
    *
    * @internal
    */
-  private readonly subscribeCapable?: Set<SubscribeCapable>;
+  private eventHandleCapable: Record<string, EventEmitCapable & EventHandleCapable> = {};
+
+  /**
+   * Client-level subscription set.
+   *
+   * **Note:** client-level subscription set for {@link subscribe}, {@link unsubscribe}, and {@link unsubscribeAll}
+   * backward compatibility.
+   *
+   * **Important:** This should be removed as soon as the legacy subscription loop will be dropped.
+   *
+   * @internal
+   */
+  private _globalSubscriptionSet?: SubscriptionSet;
 
   /**
    * Subscription event engine.
@@ -242,12 +256,20 @@ export class PubNubCore<
   private readonly presenceState?: Record<string, Payload>;
 
   /**
-   * Real-time events emitter.
+   * Event emitter, which will notify listeners about updates received for channels / groups.
    *
    * @internal
    */
-  // @ts-expect-error Allowed to simplify interface when module can be disabled.
-  private readonly eventEmitter: EventEmitter;
+  private readonly eventDispatcher?: EventDispatcher;
+
+  /**
+   * Created entities.
+   *
+   * Map of entities which have been created to access.
+   *
+   * @internal
+   */
+  private readonly entities: Record<string, EntityInterface | undefined> = {};
 
   /**
    * PubNub App Context REST API entry point.
@@ -320,6 +342,11 @@ export class PubNubCore<
   static NoneRetryPolicy = RetryPolicy.None;
 
   /**
+   * Available minimum log levels.
+   */
+  static LogLevel = LoggerLogLevel;
+
+  /**
    * Construct notification payload which will trigger push notification.
    *
    * @param title - Title which will be shown on notification.
@@ -358,37 +385,69 @@ export class PubNubCore<
     this.transport = configuration.transport;
     this.crypto = configuration.crypto;
 
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: configuration.configuration as unknown as Record<string, unknown>,
+      details: 'Create with configuration:',
+      ignoredKeys(key: string, obj: Record<string, unknown>) {
+        return typeof obj[key] === 'function' || key.startsWith('_');
+      },
+    }));
+
     // API group entry points initialization.
     if (process.env.APP_CONTEXT_MODULE !== 'disabled')
       this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
     if (process.env.CHANNEL_GROUPS_MODULE !== 'disabled')
-      this._channelGroups = new PubNubChannelGroups(this._configuration.keySet, this.sendRequest.bind(this));
+      this._channelGroups = new PubNubChannelGroups(
+        this._configuration.logger(),
+        this._configuration.keySet,
+        this.sendRequest.bind(this),
+      );
     if (process.env.MOBILE_PUSH_MODULE !== 'disabled')
-      this._push = new PubNubPushNotifications(this._configuration.keySet, this.sendRequest.bind(this));
+      this._push = new PubNubPushNotifications(
+        this._configuration.logger(),
+        this._configuration.keySet,
+        this.sendRequest.bind(this),
+      );
 
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
-      // Prepare for real-time events announcement.
-      this.listenerManager = new ListenerManager();
-      this.eventEmitter = new EventEmitter(this.listenerManager);
-      this.subscribeCapable = new Set<SubscribeCapable>();
+      // Prepare for a real-time events announcement.
+      this.eventDispatcher = new EventDispatcher();
 
       if (this._configuration.enableEventEngine) {
         if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+          this.logger.debug('PubNub', 'Using new subscription loop management.');
           let heartbeatInterval = this._configuration.getHeartbeatInterval();
           this.presenceState = {};
 
           if (process.env.PRESENCE_MODULE !== 'disabled') {
             if (heartbeatInterval) {
               this.presenceEventEngine = new PresenceEventEngine({
-                heartbeat: this.heartbeat.bind(this),
-                leave: (parameters) => this.makeUnsubscribe(parameters, () => {}),
+                heartbeat: (parameters, callback) => {
+                  this.logger.trace('PresenceEventEngine', () => ({
+                    messageType: 'object',
+                    message: { ...parameters },
+                    details: 'Heartbeat with parameters:',
+                  }));
+
+                  return this.heartbeat(parameters, callback);
+                },
+                leave: (parameters) => {
+                  this.logger.trace('PresenceEventEngine', () => ({
+                    messageType: 'object',
+                    message: { ...parameters },
+                    details: 'Leave with parameters:',
+                  }));
+
+                  this.makeUnsubscribe(parameters, () => {});
+                },
                 heartbeatDelay: () =>
                   new Promise((resolve, reject) => {
                     heartbeatInterval = this._configuration.getHeartbeatInterval();
                     if (!heartbeatInterval) reject(new PubNubError('Heartbeat interval has been reset.'));
                     else setTimeout(resolve, heartbeatInterval * 1000);
                   }),
-                emitStatus: (status) => this.listenerManager.announceStatus(status),
+                emitStatus: (status) => this.emitStatus(status),
                 config: this._configuration,
                 presenceState: this.presenceState,
               });
@@ -396,19 +455,85 @@ export class PubNubCore<
           }
 
           this.eventEngine = new EventEngine({
-            handshake: this.subscribeHandshake.bind(this),
-            receiveMessages: this.subscribeReceiveMessages.bind(this),
+            handshake: (parameters) => {
+              this.logger.trace('EventEngine', () => ({
+                messageType: 'object',
+                message: { ...parameters },
+                details: 'Handshake with parameters:',
+                ignoredKeys: ['abortSignal', 'crypto', 'timeout', 'keySet', 'getFileUrl'],
+              }));
+
+              return this.subscribeHandshake(parameters);
+            },
+            receiveMessages: (parameters) => {
+              this.logger.trace('EventEngine', () => ({
+                messageType: 'object',
+                message: { ...parameters },
+                details: 'Receive messages with parameters:',
+                ignoredKeys: ['abortSignal', 'crypto', 'timeout', 'keySet', 'getFileUrl'],
+              }));
+
+              return this.subscribeReceiveMessages(parameters);
+            },
             delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-            join: this.join.bind(this),
-            leave: this.leave.bind(this),
-            leaveAll: this.leaveAll.bind(this),
-            presenceReconnect: this.presenceReconnect.bind(this),
-            presenceDisconnect: this.presenceDisconnect.bind(this),
+            join: (parameters) => {
+              this.logger.trace('EventEngine', () => ({
+                messageType: 'object',
+                message: { ...parameters },
+                details: 'Join with parameters:',
+              }));
+
+              this.join(parameters);
+            },
+            leave: (parameters) => {
+              this.logger.trace('EventEngine', () => ({
+                messageType: 'object',
+                message: { ...parameters },
+                details: 'Leave with parameters:',
+              }));
+
+              this.leave(parameters);
+            },
+            leaveAll: (parameters) => {
+              this.logger.trace('EventEngine', () => ({
+                messageType: 'object',
+                message: { ...parameters },
+                details: 'Leave all with parameters:',
+              }));
+
+              this.leaveAll(parameters);
+            },
+            presenceReconnect: (parameters) => {
+              this.logger.trace('EventEngine', () => ({
+                messageType: 'object',
+                message: { ...parameters },
+                details: 'Reconnect with parameters:',
+              }));
+
+              this.presenceReconnect(parameters);
+            },
+            presenceDisconnect: (parameters) => {
+              this.logger.trace('EventEngine', () => ({
+                messageType: 'object',
+                message: { ...parameters },
+                details: 'Disconnect with parameters:',
+              }));
+
+              this.presenceDisconnect(parameters);
+            },
             presenceState: this.presenceState,
             config: this._configuration,
-            emitMessages: (events) => {
+            emitMessages: (cursor, events) => {
               try {
-                events.forEach((event) => this.eventEmitter.emitEvent(event));
+                this.logger.debug('EventEngine', () => {
+                  const hashedEvents = events.map((event) => ({
+                    type: event.type,
+                    data: { ...event.data, pn_mfp: messageFingerprint(event.data) },
+                  }));
+                  return { messageType: 'object', message: hashedEvents, details: 'Received events:' };
+                });
+
+                events.forEach((event) => this.emitEvent(cursor, event));
               } catch (e) {
                 const errorStatus: Status = {
                   error: true,
@@ -416,21 +541,60 @@ export class PubNubCore<
                   errorData: e as Error,
                   statusCode: 0,
                 };
-                this.listenerManager.announceStatus(errorStatus);
+                this.emitStatus(errorStatus);
               }
             },
-            emitStatus: (status) => this.listenerManager.announceStatus(status),
+            emitStatus: (status) => this.emitStatus(status),
           });
         } else throw new Error('Event Engine error: subscription event engine module disabled');
       } else {
         if (process.env.SUBSCRIBE_MANAGER_MODULE !== 'disabled') {
+          this.logger.debug('PubNub', 'Using legacy subscription loop management.');
           this.subscriptionManager = new SubscriptionManager(
             this._configuration,
-            this.listenerManager,
-            this.eventEmitter,
-            this.makeSubscribe.bind(this),
-            this.heartbeat.bind(this),
-            this.makeUnsubscribe.bind(this),
+            (cursor, event) => {
+              try {
+                this.emitEvent(cursor, event);
+              } catch (e) {
+                const errorStatus: Status = {
+                  error: true,
+                  category: StatusCategory.PNUnknownCategory,
+                  errorData: e as Error,
+                  statusCode: 0,
+                };
+                this.emitStatus(errorStatus);
+              }
+            },
+            this.emitStatus.bind(this),
+            (parameters, callback) => {
+              this.logger.trace('SubscriptionManager', () => ({
+                messageType: 'object',
+                message: { ...parameters },
+                details: 'Subscribe with parameters:',
+                ignoredKeys: ['crypto', 'timeout', 'keySet', 'getFileUrl'],
+              }));
+
+              this.makeSubscribe(parameters, callback);
+            },
+            (parameters, callback) => {
+              this.logger.trace('SubscriptionManager', () => ({
+                messageType: 'object',
+                message: { ...parameters },
+                details: 'Heartbeat with parameters:',
+                ignoredKeys: ['crypto', 'timeout', 'keySet', 'getFileUrl'],
+              }));
+
+              return this.heartbeat(parameters, callback);
+            },
+            (parameters, callback) => {
+              this.logger.trace('SubscriptionManager', () => ({
+                messageType: 'object',
+                message: { ...parameters },
+                details: 'Leave with parameters:',
+              }));
+
+              this.makeUnsubscribe(parameters, callback);
+            },
             this.time.bind(this),
           );
         } else throw new Error('Subscription Manager error: subscription manager module disabled');
@@ -489,6 +653,7 @@ export class PubNubCore<
    * @param authKey - New authorization key which should be used with new requests.
    */
   setAuthKey(authKey: string): void {
+    this.logger.debug('PubNub', `Set auth key: ${authKey}`);
     this._configuration.setAuthKey(authKey);
   }
 
@@ -511,8 +676,14 @@ export class PubNubCore<
    * @throws Error empty user identifier has been provided.
    */
   set userId(value: string) {
-    if (!value || typeof value !== 'string' || value.trim().length === 0)
-      throw new Error('Missing or invalid userId parameter. Provide a valid string userId');
+    if (!value || typeof value !== 'string' || value.trim().length === 0) {
+      const error = new Error('Missing or invalid userId parameter. Provide a valid string userId');
+      this.logger.error('PubNub', () => ({ messageType: 'error', message: error }));
+
+      throw error;
+    }
+
+    this.logger.debug('PubNub', `Set user ID: ${value}`);
     this._configuration.userId = value;
   }
 
@@ -535,8 +706,14 @@ export class PubNubCore<
    * @throws Error empty user identifier has been provided.
    */
   setUserId(value: string): void {
-    if (!value || typeof value !== 'string' || value.trim().length === 0)
-      throw new Error('Missing or invalid userId parameter. Provide a valid string userId');
+    if (!value || typeof value !== 'string' || value.trim().length === 0) {
+      const error = new Error('Missing or invalid userId parameter. Provide a valid string userId');
+      this.logger.error('PubNub', () => ({ messageType: 'error', message: error }));
+
+      throw error;
+    }
+
+    this.logger.debug('PubNub', `Set user ID: ${value}`);
     this._configuration.userId = value;
   }
 
@@ -564,6 +741,7 @@ export class PubNubCore<
    * @param expression - New expression which should be used or `undefined` to disable filtering.
    */
   set filterExpression(expression: string | null | undefined) {
+    this.logger.debug('PubNub', `Set filter expression: ${expression}`);
     this._configuration.setFilterExpression(expression);
   }
 
@@ -573,6 +751,7 @@ export class PubNubCore<
    * @param expression - New expression which should be used or `undefined` to disable filtering.
    */
   setFilterExpression(expression: string | null): void {
+    this.logger.debug('PubNub', `Set filter expression: ${expression}`);
     this.filterExpression = expression;
   }
 
@@ -600,25 +779,37 @@ export class PubNubCore<
    * @param key - New key which should be used for data encryption / decryption.
    */
   setCipherKey(key: string): void {
+    this.logger.debug('PubNub', `Set cipher key: ${key}`);
     this.cipherKey = key;
   }
 
   /**
-   * Change heartbeat requests interval.
+   * Change a heartbeat requests interval.
    *
    * @param interval - New presence request heartbeat intervals.
    */
   set heartbeatInterval(interval: number) {
+    this.logger.debug('PubNub', `Set heartbeat interval: ${interval}`);
     this._configuration.setHeartbeatInterval(interval);
   }
 
   /**
-   * Change heartbeat requests interval.
+   * Change a heartbeat requests interval.
    *
    * @param interval - New presence request heartbeat intervals.
    */
   setHeartbeatInterval(interval: number): void {
+    this.logger.debug('PubNub', `Set heartbeat interval: ${interval}`);
     this.heartbeatInterval = interval;
+  }
+
+  /**
+   * Get registered loggers' manager.
+   *
+   * @returns Registered loggers' manager.
+   */
+  get logger(): LoggerManager {
+    return this._configuration.logger();
   }
 
   /**
@@ -634,9 +825,10 @@ export class PubNubCore<
    * Add framework's prefix.
    *
    * @param name - Name of the framework which would want to add own data into `pnsdk` suffix.
-   * @param suffix - Suffix with information about framework.
+   * @param suffix - Suffix with information about a framework.
    */
   _addPnsdkSuffix(name: string, suffix: string | number) {
+    this.logger.debug('PubNub', `Add '${name}' 'pnsdk' suffix: ${suffix}`);
     this._configuration._addPnsdkSuffix(name, suffix);
   }
 
@@ -665,9 +857,11 @@ export class PubNubCore<
    *
    * @throws Error empty user identifier has been provided.
    *
-   * @deprecated Use the {@link PubNubCore#setUserId} or {@link PubNubCore#userId} setter instead.
+   * @deprecated Use the {@link PubNubCore#setUserId setUserId} or {@link PubNubCore#userId userId} setter instead.
    */
   setUUID(value: string) {
+    this.logger.warn('PubNub', "'setUserId` is deprecated, please use 'setUserId' or 'userId' setter instead.");
+    this.logger.debug('PubNub', `Set UUID: ${value}`);
     this.userId = value;
   }
 
@@ -706,7 +900,10 @@ export class PubNubCore<
    * @returns `Channel` entity.
    */
   public channel(name: string): Channel {
-    return new Channel(name, this.eventEmitter, this);
+    let channel = this.entities[`${name}_ch`];
+    if (!channel) channel = this.entities[`${name}_ch`] = new Channel(name, this);
+
+    return channel as Channel;
   }
 
   /**
@@ -719,7 +916,10 @@ export class PubNubCore<
    * @returns `ChannelGroup` entity.
    */
   public channelGroup(name: string): ChannelGroup {
-    return new ChannelGroup(name, this.eventEmitter, this);
+    let channelGroup = this.entities[`${name}_chg`];
+    if (!channelGroup) channelGroup = this.entities[`${name}_chg`] = new ChannelGroup(name, this);
+
+    return channelGroup as ChannelGroup;
   }
 
   /**
@@ -732,7 +932,10 @@ export class PubNubCore<
    * @returns `ChannelMetadata` entity.
    */
   public channelMetadata(id: string): ChannelMetadata {
-    return new ChannelMetadata(id, this.eventEmitter, this);
+    let metadata = this.entities[`${id}_chm`];
+    if (!metadata) metadata = this.entities[`${id}_chm`] = new ChannelMetadata(id, this);
+
+    return metadata as ChannelMetadata;
   }
 
   /**
@@ -745,7 +948,10 @@ export class PubNubCore<
    * @returns `UserMetadata` entity.
    */
   public userMetadata(id: string): UserMetadata {
-    return new UserMetadata(id, this.eventEmitter, this);
+    let metadata = this.entities[`${id}_um`];
+    if (!metadata) metadata = this.entities[`${id}_um`] = new UserMetadata(id, this);
+
+    return metadata as UserMetadata;
   }
 
   /**
@@ -758,9 +964,14 @@ export class PubNubCore<
     channelGroups?: string[];
     subscriptionOptions?: SubscriptionOptions;
   }): SubscriptionSet {
-    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
-      return new SubscriptionSet({ ...parameters, eventEmitter: this.eventEmitter, pubnub: this });
-    } else throw new Error('Subscription error: subscription event engine module disabled');
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      // Prepare a list of entities for a set.
+      const entities: (EntityInterface & SubscriptionCapable)[] = [];
+      parameters.channels?.forEach((name) => entities.push(this.channel(name)));
+      parameters.channelGroups?.forEach((name) => entities.push(this.channelGroup(name)));
+
+      return new SubscriptionSet({ client: this, entities, options: parameters.subscriptionOptions });
+    } else throw new Error('Subscription set error: subscription module disabled');
   }
   // endregion
 
@@ -817,8 +1028,12 @@ export class PubNubCore<
     // Validate user-input.
     const validationResult = request.validate();
     if (validationResult) {
-      if (callback) return callback(createValidationError(validationResult), null);
-      throw new PubNubError('Validation failed, check status for details', createValidationError(validationResult));
+      const validationError = createValidationError(validationResult);
+
+      this.logger.error('PubNub', () => ({ messageType: 'error', message: validationError }));
+
+      if (callback) return callback(validationError, null);
+      throw new PubNubError('Validation failed, check status for details', validationError);
     }
 
     // Complete request configuration.
@@ -850,10 +1065,10 @@ export class PubNubCore<
     const [sendableRequest, cancellationController] = this.transport.makeSendable(transportRequest);
 
     /**
-     * **Important:** Because of multiple environments where JS SDK can be used control over
-     * cancellation had to be inverted to let transport provider solve request cancellation task
-     * more efficiently. As result, cancellation controller can be retrieved and used only after
-     * request will be scheduled by transport provider.
+     * **Important:** Because of multiple environments where JS SDK can be used, control over
+     * cancellation had to be inverted to let the transport provider solve a request cancellation task
+     * more efficiently. As a result, cancellation controller can be retrieved and used only after
+     *  the request will be scheduled by the transport provider.
      */
     request.cancellationController = cancellationController ? cancellationController : null;
 
@@ -861,7 +1076,7 @@ export class PubNubCore<
       .then((response) => {
         status.statusCode = response.status;
 
-        // Handle special case when request completed but not fully processed by PubNub service.
+        // Handle a special case when request completed but not fully processed by PubNub service.
         if (response.status !== 200 && response.status !== 204) {
           const responseText = PubNubCore.decoder.decode(response.body);
           const contentType = response.headers['content-type'];
@@ -884,9 +1099,26 @@ export class PubNubCore<
         const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
 
         // Notify callback (if possible).
-        if (callback) return callback(apiError.toStatus(operation), null);
+        if (callback) {
+          if (apiError.category !== Categories.PNCancelledCategory) {
+            this.logger.error('PubNub', () => ({
+              messageType: 'error',
+              message: apiError.toPubNubError(operation, 'REST API request processing error, check status for details'),
+            }));
+          }
 
-        throw apiError.toPubNubError(operation, 'REST API request processing error, check status for details');
+          return callback(apiError.toStatus(operation), null);
+        }
+
+        const pubNubError = apiError.toPubNubError(
+          operation,
+          'REST API request processing error, check status for details',
+        );
+
+        if (apiError.category !== Categories.PNCancelledCategory)
+          this.logger.error('PubNub', () => ({ messageType: 'error', message: pubNubError }));
+
+        throw pubNubError;
       });
   }
 
@@ -895,9 +1127,16 @@ export class PubNubCore<
    *
    * @param [isOffline] - Whether `offline` presence should be notified or not.
    */
-  public destroy(isOffline?: boolean): void {
+  public destroy(isOffline: boolean = false): void {
+    this.logger.info('PubNub', 'Destroying PubNub client.');
+
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
-      if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') this.subscribeCapable?.clear();
+      if (this._globalSubscriptionSet) {
+        this._globalSubscriptionSet.invalidate(true);
+        this._globalSubscriptionSet = undefined;
+      }
+      Object.values(this.eventHandleCapable).forEach((subscription) => subscription.invalidate(true));
+      this.eventHandleCapable = {};
 
       if (this.subscriptionManager) {
         this.subscriptionManager.unsubscribeAll(isOffline);
@@ -916,43 +1155,9 @@ export class PubNubCore<
    * @deprecated Use {@link destroy} method instead.
    */
   public stop(): void {
+    this.logger.warn('PubNub', "'stop' is deprecated, please use 'destroy' instead.");
     this.destroy();
   }
-  // endregion
-
-  // --------------------------------------------------------
-  // ----------------------- Listener -----------------------
-  // --------------------------------------------------------
-  // region Listener
-
-  /**
-   * Register real-time events listener.
-   *
-   * @param listener - Listener with event callbacks to handle different types of events.
-   */
-  public addListener(listener: Listener): void {
-    if (process.env.SUBSCRIBE_MODULE !== 'disabled') this.listenerManager.addListener(listener);
-    else throw new Error('Subscription error: subscription module disabled');
-  }
-
-  /**
-   * Remove real-time event listener.
-   *
-   * @param listener - Event listeners which should be removed.
-   */
-  public removeListener(listener: Listener): void {
-    if (process.env.SUBSCRIBE_MODULE !== 'disabled') this.listenerManager.removeListener(listener);
-    else throw new Error('Subscription error: subscription module disabled');
-  }
-
-  /**
-   * Clear all real-time event listeners.
-   */
-  public removeAllListeners(): void {
-    if (process.env.SUBSCRIBE_MODULE !== 'disabled') this.listenerManager.removeAllListeners();
-    else throw new Error('Subscription error: subscription module disabled');
-  }
-
   // endregion
 
   // --------------------------------------------------------
@@ -990,14 +1195,37 @@ export class PubNubCore<
     callback?: ResultCallback<Publish.PublishResponse>,
   ): Promise<Publish.PublishResponse | void> {
     if (process.env.PUBLISH_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Publish with parameters:',
+      }));
+
+      const isFireRequest = parameters.replicate === false && parameters.storeInHistory === false;
       const request = new Publish.PublishRequest({
         ...parameters,
         keySet: this._configuration.keySet,
         crypto: this._configuration.getCryptoModule(),
       });
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const logResponse = (response: Publish.PublishResponse | null) => {
+        if (!response) return;
+        this.logger.debug(
+          'PubNub',
+          `${isFireRequest ? 'Fire' : 'Publish'} success with timetoken: ${response.timetoken}`,
+        );
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Publish error: publish module disabled');
   }
   // endregion
@@ -1037,13 +1265,32 @@ export class PubNubCore<
     callback?: ResultCallback<Signal.SignalResponse>,
   ): Promise<Signal.SignalResponse | void> {
     if (process.env.PUBLISH_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Signal with parameters:',
+      }));
+
       const request = new Signal.SignalRequest({
         ...parameters,
         keySet: this._configuration.keySet,
       });
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const logResponse = (response: Signal.SignalResponse | null) => {
+        if (!response) return;
+        this.logger.debug('PubNub', `Publish success with timetoken: ${response.timetoken}`);
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Publish error: publish module disabled');
   }
   // endregion
@@ -1088,6 +1335,12 @@ export class PubNubCore<
     parameters: Publish.PublishParameters,
     callback?: ResultCallback<Publish.PublishResponse>,
   ): Promise<Publish.PublishResponse | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: 'Fire with parameters:',
+    }));
+
     callback ??= () => {};
     return this.publish({ ...parameters, replicate: false, storeInHistory: false }, callback);
   }
@@ -1097,6 +1350,34 @@ export class PubNubCore<
   // -------------------- Subscribe API ---------------------
   // --------------------------------------------------------
   // region Subscribe API
+
+  /**
+   * Global subscription set which supports legacy subscription interface.
+   *
+   * @returns Global subscription set.
+   *
+   * @internal
+   */
+  private get globalSubscriptionSet() {
+    if (!this._globalSubscriptionSet) this._globalSubscriptionSet = this.subscriptionSet({});
+
+    return this._globalSubscriptionSet;
+  }
+
+  /**
+   * Subscription-based current timetoken.
+   *
+   * @returns Timetoken based on current timetoken plus diff between current and loop start time.
+   *
+   * @internal
+   */
+  get subscriptionTimetoken(): string | undefined {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.subscriptionManager) return this.subscriptionManager.subscriptionTimetoken;
+      else if (this.eventEngine) return this.eventEngine.subscriptionTimetoken;
+    }
+    return undefined;
+  }
 
   /**
    * Get list of channels on which PubNub client currently subscribed.
@@ -1127,53 +1408,114 @@ export class PubNubCore<
   }
 
   /**
-   * Register subscribe capable object with active subscription.
+   * Register an events handler object ({@link Subscription} or {@link SubscriptionSet}) with an active subscription.
    *
-   * @param subscribeCapable - {@link Subscription} or {@link SubscriptionSet} object.
-   *
-   * @internal
-   */
-  public registerSubscribeCapable(subscribeCapable: SubscribeCapable) {
-    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
-      if (!this.subscribeCapable || this.subscribeCapable.has(subscribeCapable)) return;
-
-      this.subscribeCapable.add(subscribeCapable);
-    } else throw new Error('Subscription error: subscription event engine module disabled');
-  }
-
-  /**
-   * Unregister subscribe capable object with inactive subscription.
-   *
-   * @param subscribeCapable - {@link Subscription} or {@link SubscriptionSet} object.
+   * @param subscription - {@link Subscription} or {@link SubscriptionSet} object.
+   * @param [cursor] - Subscription catchup timetoken.
+   * @param [subscriptions] - List of subscriptions for partial subscription loop update.
    *
    * @internal
    */
-  public unregisterSubscribeCapable(subscribeCapable: SubscribeCapable) {
-    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
-      if (!this.subscribeCapable || !this.subscribeCapable.has(subscribeCapable)) return;
+  public registerEventHandleCapable(
+    subscription: SubscriptionBase,
+    cursor?: Subscription.SubscriptionCursor,
+    subscriptions?: EventHandleCapable[],
+  ) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      this.logger.trace('PubNub', () => ({
+        messageType: 'object',
+        message: {
+          subscription: subscription,
+          ...(cursor ? { cursor } : []),
+          ...(subscriptions ? { subscriptions } : {}),
+        },
+        details: `Register event handle capable:`,
+      }));
 
-      this.subscribeCapable.delete(subscribeCapable);
-    } else throw new Error('Subscription error: subscription event engine module disabled');
-  }
+      if (!this.eventHandleCapable[subscription.state.id])
+        this.eventHandleCapable[subscription.state.id] = subscription;
 
-  /**
-   * Retrieve list of subscribe capable entities currently used in subscription.
-   *
-   * @returns Channels and channel groups currently used in subscription.
-   *
-   * @internal
-   */
-  public getSubscribeCapableEntities(): { channels: string[]; channelGroups: string[] } {
-    if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
-      const entities: { channels: string[]; channelGroups: string[] } = { channels: [], channelGroups: [] };
-      if (!this.subscribeCapable) return entities;
-
-      for (const subscribeCapable of this.subscribeCapable) {
-        entities.channelGroups.push(...subscribeCapable.channelGroups);
-        entities.channels.push(...subscribeCapable.channels);
+      let subscriptionInput: SubscriptionInput;
+      if (!subscriptions || subscriptions.length === 0) subscriptionInput = subscription.subscriptionInput(false);
+      else {
+        subscriptionInput = new SubscriptionInput({});
+        subscriptions.forEach((subscription) => subscriptionInput.add(subscription.subscriptionInput(false)));
       }
-      return entities;
-    } else throw new Error('Subscription error: subscription event engine module disabled');
+
+      const parameters: Subscription.SubscribeParameters = {};
+      parameters.channels = subscriptionInput.channels;
+      parameters.channelGroups = subscriptionInput.channelGroups;
+      if (cursor) parameters.timetoken = cursor.timetoken;
+
+      if (this.subscriptionManager) this.subscriptionManager.subscribe(parameters);
+      else if (this.eventEngine) this.eventEngine.subscribe(parameters);
+    }
+  }
+
+  /**
+   * Unregister an events handler object ({@link Subscription} or {@link SubscriptionSet}) with inactive subscription.
+   *
+   * @param subscription - {@link Subscription} or {@link SubscriptionSet} object.
+   * @param [subscriptions] - List of subscriptions for partial subscription loop update.
+   *
+   * @internal
+   */
+  public unregisterEventHandleCapable(subscription: SubscriptionBase, subscriptions?: SubscriptionObject[]) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (!this.eventHandleCapable[subscription.state.id]) return;
+
+      const inUseSubscriptions: SubscriptionBase[] = [];
+
+      this.logger.trace('PubNub', () => ({
+        messageType: 'object',
+        message: { subscription: subscription, subscriptions },
+        details: `Unregister event handle capable:`,
+      }));
+
+      if (!subscriptions || subscriptions.length === 0) delete this.eventHandleCapable[subscription.state.id];
+
+      let subscriptionInput: SubscriptionInput;
+      if (!subscriptions || subscriptions.length === 0) {
+        subscriptionInput = subscription.subscriptionInput(true);
+        if (subscriptionInput.isEmpty) inUseSubscriptions.push(subscription);
+      } else {
+        subscriptionInput = new SubscriptionInput({});
+        subscriptions.forEach((subscription) => {
+          const input = subscription.subscriptionInput(true);
+          if (input.isEmpty) inUseSubscriptions.push(subscription);
+          else subscriptionInput.add(input);
+        });
+      }
+
+      if (inUseSubscriptions.length > 0) {
+        this.logger.trace('PubNub', () => {
+          const entities: Entity[] = [];
+          if (inUseSubscriptions[0] instanceof SubscriptionSet) {
+            inUseSubscriptions[0].subscriptions.forEach((subscription) =>
+              entities.push(subscription.state.entity as Entity),
+            );
+          } else
+            inUseSubscriptions.forEach((subscription) =>
+              entities.push((subscription as SubscriptionObject).state.entity as Entity),
+            );
+
+          return {
+            messageType: 'object',
+            message: { entities },
+            details: `Can't unregister event handle capable because entities still in use:`,
+          };
+        });
+      }
+
+      if (subscriptionInput.isEmpty) return;
+
+      const parameters: Presence.PresenceLeaveParameters = {};
+      parameters.channels = subscriptionInput.channels;
+      parameters.channelGroups = subscriptionInput.channelGroups;
+
+      if (this.subscriptionManager) this.subscriptionManager.unsubscribe(parameters);
+      else if (this.eventEngine) this.eventEngine.unsubscribe(parameters);
+    }
   }
 
   /**
@@ -1183,8 +1525,23 @@ export class PubNubCore<
    */
   public subscribe(parameters: Subscription.SubscribeParameters): void {
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
-      if (this.subscriptionManager) this.subscriptionManager.subscribe(parameters);
-      else if (this.eventEngine) this.eventEngine.subscribe(parameters);
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Subscribe with parameters:',
+      }));
+
+      // The addition of a new subscription set into the subscribed global subscription set will update the active
+      // subscription loop with new channels and groups.
+      const subscriptionSet = this.subscriptionSet({
+        ...parameters,
+        subscriptionOptions: { receivePresenceEvents: parameters.withPresence },
+      });
+      this.globalSubscriptionSet.addSubscriptionSet(subscriptionSet);
+      subscriptionSet.dispose();
+
+      const timetoken = typeof parameters.timetoken === 'number' ? `${parameters.timetoken}` : parameters.timetoken;
+      this.globalSubscriptionSet.subscribe({ timetoken });
     } else throw new Error('Subscription error: subscription module disabled');
   }
 
@@ -1220,11 +1577,11 @@ export class PubNubCore<
       /**
        * Allow subscription cancellation.
        *
-       * **Note:** Had to be done after scheduling because transport provider return cancellation
+       * **Note:** Had to be done after scheduling because the transport provider returns the cancellation
        * controller only when schedule new request.
        */
       if (this.subscriptionManager) {
-        // Creating identifiable abort caller.
+        // Creating an identifiable abort caller.
         const callableAbort = () => request.abort('Cancel long-poll subscribe request');
         callableAbort.identifier = request.requestIdentifier;
 
@@ -1240,8 +1597,27 @@ export class PubNubCore<
    */
   public unsubscribe(parameters: Presence.PresenceLeaveParameters): void {
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
-      if (this.subscriptionManager) this.subscriptionManager.unsubscribe(parameters);
-      else if (this.eventEngine) this.eventEngine.unsubscribe(parameters);
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Unsubscribe with parameters:',
+      }));
+
+      if (!this._globalSubscriptionSet) {
+        this.logger.debug('PubNub', 'There are no active subscriptions. Ignore.');
+        return;
+      }
+
+      const subscriptions = this.globalSubscriptionSet.subscriptions.filter((subscription) => {
+        const subscriptionInput = subscription.subscriptionInput(false);
+        if (subscriptionInput.isEmpty) return false;
+
+        for (const channel of parameters.channels ?? []) if (subscriptionInput.contains(channel)) return true;
+        for (const group of parameters.channelGroups ?? []) if (subscriptionInput.contains(group)) return true;
+      });
+
+      // Removal from the active subscription also will cause `unsubscribe`.
+      if (subscriptions.length > 0) this.globalSubscriptionSet.removeSubscriptions(subscriptions);
     } else throw new Error('Unsubscription error: subscription module disabled');
   }
 
@@ -1260,7 +1636,7 @@ export class PubNubCore<
       // Filtering out presence channels and groups.
       let { channels, channelGroups } = parameters;
 
-      // Remove `-pnpres` channels / groups if they not acceptable in current PubNub client configuration.
+      // Remove `-pnpres` channels / groups if they not acceptable in the current PubNub client configuration.
       if (!this._configuration.getKeepPresenceChannelsInPresenceRequests()) {
         if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
         if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
@@ -1288,7 +1664,14 @@ export class PubNubCore<
    */
   public unsubscribeAll() {
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
-      if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') this.subscribeCapable?.clear();
+      this.logger.debug('PubNub', 'Unsubscribe all channels and groups');
+
+      // Keeping a subscription set instance after invalidation so to make it possible to deliver the expected
+      // disconnection status.
+      if (this._globalSubscriptionSet) this._globalSubscriptionSet.invalidate(false);
+
+      Object.values(this.eventHandleCapable).forEach((subscription) => subscription.invalidate(false));
+      this.eventHandleCapable = {};
 
       if (this.subscriptionManager) this.subscriptionManager.unsubscribeAll();
       else if (this.eventEngine) this.eventEngine.unsubscribeAll();
@@ -1296,14 +1679,16 @@ export class PubNubCore<
   }
 
   /**
-   * Temporarily disconnect from real-time events stream.
+   * Temporarily disconnect from the real-time events stream.
    *
-   * **Note:** `isOffline` is set to `true` only when client experience network issues.
+   * **Note:** `isOffline` is set to `true` only when a client experiences network issues.
    *
    * @param [isOffline] - Whether `offline` presence should be notified or not.
    */
-  public disconnect(isOffline?: boolean): void {
+  public disconnect(isOffline: boolean = false): void {
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', `Disconnect (while offline? ${!!isOffline ? 'yes' : 'no'}`);
+
       if (this.subscriptionManager) this.subscriptionManager.disconnect();
       else if (this.eventEngine) this.eventEngine.disconnect(isOffline);
     } else throw new Error('Disconnection error: subscription module disabled');
@@ -1312,11 +1697,16 @@ export class PubNubCore<
   /**
    * Restore connection to the real-time events stream.
    *
-   * @param parameters - Reconnection catch up configuration. **Note:** available only with
-   * enabled event engine.
+   * @param parameters - Reconnection catch-up configuration. **Note:** available only with the enabled event engine.
    */
   public reconnect(parameters?: { timetoken?: string; region?: number }): void {
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Reconnect with parameters:',
+      }));
+
       if (this.subscriptionManager) this.subscriptionManager.reconnect();
       else if (this.eventEngine) this.eventEngine.reconnect(parameters ?? {});
     } else throw new Error('Reconnection error: subscription module disabled');
@@ -1345,7 +1735,7 @@ export class PubNubCore<
       /**
        * Allow subscription cancellation.
        *
-       * **Note:** Had to be done after scheduling because transport provider return cancellation
+       * **Note:** Had to be done after scheduling because the transport provider returns the cancellation
        * controller only when schedule new request.
        */
       const handshakeResponse = this.sendRequest(request);
@@ -1353,7 +1743,7 @@ export class PubNubCore<
         abortUnsubscribe();
         return response.cursor;
       });
-    } else throw new Error('Subscription error: subscription event engine module disabled');
+    } else throw new Error('Handshake subscription error: subscription event engine module disabled');
   }
 
   /**
@@ -1379,7 +1769,7 @@ export class PubNubCore<
       /**
        * Allow subscription cancellation.
        *
-       * **Note:** Had to be done after scheduling because transport provider return cancellation
+       * **Note:** Had to be done after scheduling because the transport provider returns the cancellation
        * controller only when schedule new request.
        */
       const receiveResponse = this.sendRequest(request);
@@ -1387,7 +1777,7 @@ export class PubNubCore<
         abortUnsubscribe();
         return response;
       });
-    } else throw new Error('Subscription error: subscription event engine module disabled');
+    } else throw new Error('Subscription receive error: subscription event engine module disabled');
   }
   // endregion
 
@@ -1432,10 +1822,30 @@ export class PubNubCore<
     callback?: ResultCallback<MessageAction.GetMessageActionsResponse>,
   ): Promise<MessageAction.GetMessageActionsResponse | void> {
     if (process.env.MESSAGE_REACTIONS_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Get message actions with parameters:',
+      }));
+
       const request = new GetMessageActionsRequest({ ...parameters, keySet: this._configuration.keySet });
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const logResponse = (response: MessageAction.GetMessageActionsResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug('PubNub', `Get message actions success. Received ${response.data.length} message actions.`);
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Get Message Actions error: message reactions module disabled');
   }
   // endregion
@@ -1476,10 +1886,32 @@ export class PubNubCore<
     callback?: ResultCallback<MessageAction.AddMessageActionResponse>,
   ): Promise<MessageAction.AddMessageActionResponse | void> {
     if (process.env.MESSAGE_REACTIONS_MODULE !== 'disabled') {
-      const request = new AddMessageActionRequest({ ...parameters, keySet: this._configuration.keySet });
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Add message action with parameters:',
+      }));
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const request = new AddMessageActionRequest({ ...parameters, keySet: this._configuration.keySet });
+      const logResponse = (response: MessageAction.AddMessageActionResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug(
+          'PubNub',
+          `Message action add success. Message action added with timetoken: ${response.data.actionTimetoken}`,
+        );
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Add Message Action error: message reactions module disabled');
   }
   // endregion
@@ -1520,10 +1952,31 @@ export class PubNubCore<
     callback?: ResultCallback<MessageAction.RemoveMessageActionResponse>,
   ): Promise<MessageAction.RemoveMessageActionResponse | void> {
     if (process.env.MESSAGE_REACTIONS_MODULE !== 'disabled') {
-      const request = new RemoveMessageAction({ ...parameters, keySet: this._configuration.keySet });
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Remove message action with parameters:',
+      }));
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const request = new RemoveMessageAction({ ...parameters, keySet: this._configuration.keySet });
+      const logResponse = (response: MessageAction.RemoveMessageActionResponse | null) => {
+        if (!response) return;
+        this.logger.debug(
+          'PubNub',
+          `Message action remove success. Removed message action with ${parameters.actionTimetoken} timetoken.`,
+        );
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Remove Message Action error: message reactions module disabled');
   }
   // endregion
@@ -1568,15 +2021,35 @@ export class PubNubCore<
     callback?: ResultCallback<History.FetchMessagesResponse>,
   ): Promise<History.FetchMessagesResponse | void> {
     if (process.env.MESSAGE_PERSISTENCE_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Fetch messages with parameters:',
+      }));
+
       const request = new FetchMessagesRequest({
         ...parameters,
         keySet: this._configuration.keySet,
         crypto: this._configuration.getCryptoModule(),
         getFileUrl: this.getFileUrl.bind(this),
       });
+      const logResponse = (response: History.FetchMessagesResponse | null) => {
+        if (!response) return;
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+        const messagesCount = Object.values(response.channels).reduce((acc, message) => acc + message.length, 0);
+        this.logger.debug('PubNub', `Fetch messages success. Received ${messagesCount} messages.`);
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Fetch Messages History error: message persistence module disabled');
   }
   // endregion
@@ -1621,10 +2094,29 @@ export class PubNubCore<
     callback?: ResultCallback<History.DeleteMessagesResponse>,
   ): Promise<History.DeleteMessagesResponse | void> {
     if (process.env.MESSAGE_PERSISTENCE_MODULE !== 'disabled') {
-      const request = new DeleteMessageRequest({ ...parameters, keySet: this._configuration.keySet });
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Delete messages with parameters:',
+      }));
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const request = new DeleteMessageRequest({ ...parameters, keySet: this._configuration.keySet });
+      const logResponse = (response: History.DeleteMessagesResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug('PubNub', `Delete messages success.`);
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Delete Messages error: message persistence module disabled');
   }
   // endregion
@@ -1663,10 +2155,35 @@ export class PubNubCore<
     callback?: ResultCallback<History.MessageCountResponse>,
   ): Promise<History.MessageCountResponse | void> {
     if (process.env.MESSAGE_PERSISTENCE_MODULE !== 'disabled') {
-      const request = new MessageCountRequest({ ...parameters, keySet: this._configuration.keySet });
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Get messages count with parameters:',
+      }));
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const request = new MessageCountRequest({ ...parameters, keySet: this._configuration.keySet });
+      const logResponse = (response: History.MessageCountResponse | null) => {
+        if (!response) return;
+
+        const messagesCount = Object.values(response.channels).reduce((acc, messagesCount) => acc + messagesCount, 0);
+        this.logger.debug(
+          'PubNub',
+          `Get messages count success. There are ${messagesCount} messages since provided reference timetoken${
+            parameters.channelTimetokens ? parameters.channelTimetokens.join(',') : ''.length > 1 ? 's' : ''
+          }.`,
+        );
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Get Messages Count error: message persistence module disabled');
   }
   // endregion
@@ -1709,14 +2226,33 @@ export class PubNubCore<
     callback?: ResultCallback<History.GetHistoryResponse>,
   ): Promise<History.GetHistoryResponse | void> {
     if (process.env.MESSAGE_PERSISTENCE_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Fetch history with parameters:',
+      }));
+
       const request = new GetHistoryRequest({
         ...parameters,
         keySet: this._configuration.keySet,
         crypto: this._configuration.getCryptoModule(),
       });
+      const logResponse = (response: History.GetHistoryResponse | null) => {
+        if (!response) return;
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+        this.logger.debug('PubNub', `Fetch history success. Received ${response.messages.length} messages.`);
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Get Messages History error: message persistence module disabled');
   }
   // endregion
@@ -1759,10 +2295,32 @@ export class PubNubCore<
     callback?: ResultCallback<Presence.HereNowResponse>,
   ): Promise<Presence.HereNowResponse | void> {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
-      const request = new HereNowRequest({ ...parameters, keySet: this._configuration.keySet });
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Here now with parameters:',
+      }));
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const request = new HereNowRequest({ ...parameters, keySet: this._configuration.keySet });
+      const logResponse = (response: Presence.HereNowResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug(
+          'PubNub',
+          `Here now success. There are ${response.totalOccupancy} participants in ${response.totalChannels} channels.`,
+        );
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Get Channel Here Now error: presence module disabled');
   }
   // endregion
@@ -1804,13 +2362,32 @@ export class PubNubCore<
     callback?: ResultCallback<Presence.WhereNowResponse>,
   ): Promise<Presence.WhereNowResponse | void> {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Where now with parameters:',
+      }));
+
       const request = new WhereNowRequest({
         uuid: parameters.uuid ?? this._configuration.userId!,
         keySet: this._configuration.keySet,
       });
+      const logResponse = (response: Presence.WhereNowResponse | null) => {
+        if (!response) return;
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+        this.logger.debug('PubNub', `Where now success. Currently present in ${response.channels.length} channels.`);
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Get UUID Here Now error: presence module disabled');
   }
   // endregion
@@ -1849,14 +2426,36 @@ export class PubNubCore<
     callback?: ResultCallback<Presence.GetPresenceStateResponse>,
   ): Promise<Presence.GetPresenceStateResponse | void> {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Get presence state with parameters:',
+      }));
+
       const request = new GetPresenceStateRequest({
         ...parameters,
         uuid: parameters.uuid ?? this._configuration.userId,
         keySet: this._configuration.keySet,
       });
+      const logResponse = (response: Presence.GetPresenceStateResponse | null) => {
+        if (!response) return;
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+        this.logger.debug(
+          'PubNub',
+          `Get presence state success. Received presence state for ${Object.keys(response.channels).length} channels.`,
+        );
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Get UUID State error: presence module disabled');
   }
   // endregion
@@ -1897,6 +2496,12 @@ export class PubNubCore<
     callback?: ResultCallback<Presence.SetPresenceStateResponse | Presence.PresenceHeartbeatResponse>,
   ): Promise<Presence.SetPresenceStateResponse | Presence.PresenceHeartbeatResponse | void> {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Set presence state with parameters:',
+      }));
+
       const { keySet, userId: userId } = this._configuration;
       const heartbeat = this._configuration.getPresenceTimeout();
       let request: AbstractRequest<
@@ -1914,18 +2519,36 @@ export class PubNubCore<
         }
       }
 
-      // Check whether state should be set with heartbeat or not.
-      if ('withHeartbeat' in parameters) {
+      // Check whether the state should be set with heartbeat or not.
+      if ('withHeartbeat' in parameters && parameters.withHeartbeat) {
         request = new HeartbeatRequest({ ...parameters, keySet, heartbeat });
       } else {
         request = new SetPresenceStateRequest({ ...parameters, keySet, uuid: userId! });
       }
+      const logResponse = (response: Presence.SetPresenceStateResponse | Presence.PresenceHeartbeatResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug(
+          'PubNub',
+          `Set presence state success.${
+            request instanceof HeartbeatRequest ? ' Presence state has been set using heartbeat endpoint.' : ''
+          }`,
+        );
+      };
 
       // Update state used by subscription manager.
       if (this.subscriptionManager) this.subscriptionManager.setState(parameters);
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Set UUID State error: presence module disabled');
   }
   // endregion
@@ -1934,11 +2557,18 @@ export class PubNubCore<
   /**
    * Manual presence management.
    *
-   * @param parameters - Desired presence state for provided list of channels and groups.
+   * @param parameters - Desired presence state for a provided list of channels and groups.
    */
   public presence(parameters: { connected: boolean; channels?: string[]; channelGroups?: string[] }) {
-    if (process.env.SUBSCRIBE_MANAGER_MODULE !== 'disabled') this.subscriptionManager?.changePresence(parameters);
-    else throw new Error('Change UUID presence error: subscription manager module disabled');
+    if (process.env.SUBSCRIBE_MANAGER_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Change presence with parameters:',
+      }));
+
+      this.subscriptionManager?.changePresence(parameters);
+    } else throw new Error('Change UUID presence error: subscription manager module disabled');
   }
   // endregion
 
@@ -1956,10 +2586,16 @@ export class PubNubCore<
     callback?: ResultCallback<Presence.PresenceHeartbeatResponse>,
   ) {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
+      this.logger.trace('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Heartbeat with parameters:',
+      }));
+
       // Filtering out presence channels and groups.
       let { channels, channelGroups } = parameters;
 
-      // Remove `-pnpres` channels / groups if they not acceptable in current PubNub client configuration.
+      // Remove `-pnpres` channels / groups if they not acceptable in the current PubNub client configuration.
       if (!this._configuration.getKeepPresenceChannelsInPresenceRequests()) {
         if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
         if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
@@ -1974,6 +2610,8 @@ export class PubNubCore<
           statusCode: 200,
         };
 
+        this.logger.trace('PubNub', 'There are no active subscriptions. Ignore.');
+
         if (callback) return callback(responseStatus, {});
         return Promise.resolve(responseStatus);
       }
@@ -1984,9 +2622,22 @@ export class PubNubCore<
         channelGroups,
         keySet: this._configuration.keySet,
       });
+      const logResponse = (response: Presence.PresenceHeartbeatResponse | null) => {
+        if (!response) return;
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+        this.logger.trace('PubNub', 'Heartbeat success.');
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Announce UUID Presence error: presence module disabled');
   }
   // endregion
@@ -2001,13 +2652,21 @@ export class PubNubCore<
    */
   private join(parameters: { channels?: string[]; groups?: string[] }) {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
+      this.logger.trace('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Join with parameters:',
+      }));
+
       if (this.presenceEventEngine) this.presenceEventEngine.join(parameters);
       else {
         this.heartbeat(
           {
             channels: parameters.channels,
             channelGroups: parameters.groups,
-            ...(this._configuration.maintainPresenceState && { state: this.presenceState }),
+            ...(this._configuration.maintainPresenceState &&
+              this.presenceState &&
+              Object.keys(this.presenceState).length > 0 && { state: this.presenceState }),
             heartbeat: this._configuration.getPresenceTimeout(),
           },
           () => {},
@@ -2025,6 +2684,12 @@ export class PubNubCore<
    */
   private presenceReconnect(parameters: { channels?: string[]; groups?: string[] }) {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
+      this.logger.trace('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Presence reconnect with parameters:',
+      }));
+
       if (this.presenceEventEngine) this.presenceEventEngine.reconnect();
       else {
         this.heartbeat(
@@ -2051,6 +2716,12 @@ export class PubNubCore<
    */
   private leave(parameters: { channels?: string[]; groups?: string[] }) {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
+      this.logger.trace('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Leave with parameters:',
+      }));
+
       if (this.presenceEventEngine) this.presenceEventEngine?.leave(parameters);
       else this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => {});
     } else throw new Error('Announce UUID Leave error: presence module disabled');
@@ -2065,7 +2736,13 @@ export class PubNubCore<
    */
   private leaveAll(parameters: { channels?: string[]; groups?: string[]; isOffline?: boolean } = {}) {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
-      if (this.presenceEventEngine) this.presenceEventEngine.leaveAll(parameters.isOffline);
+      this.logger.trace('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Leave all with parameters:',
+      }));
+
+      if (this.presenceEventEngine) this.presenceEventEngine.leaveAll(!!parameters.isOffline);
       else if (!parameters.isOffline)
         this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => {});
     } else throw new Error('Announce UUID Leave error: presence module disabled');
@@ -2080,7 +2757,13 @@ export class PubNubCore<
    */
   private presenceDisconnect(parameters: { channels?: string[]; groups?: string[]; isOffline?: boolean }) {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
-      if (this.presenceEventEngine) this.presenceEventEngine.disconnect(parameters.isOffline);
+      this.logger.trace('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Presence disconnect parameters:',
+      }));
+
+      if (this.presenceEventEngine) this.presenceEventEngine.disconnect(!!parameters.isOffline);
       else if (!parameters.isOffline)
         this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => {});
     } else throw new Error('Announce UUID Leave error: presence module disabled');
@@ -2107,7 +2790,7 @@ export class PubNubCore<
   /**
    * Grant token permission.
    *
-   * Generate access token with requested permissions.
+   * Generate an access token with requested permissions.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -2118,7 +2801,7 @@ export class PubNubCore<
   /**
    * Grant token permission.
    *
-   * Generate access token with requested permissions.
+   * Generate an access token with requested permissions.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -2130,10 +2813,32 @@ export class PubNubCore<
     callback?: ResultCallback<PAM.GrantTokenResponse>,
   ): Promise<PAM.GrantTokenResponse | void> {
     if (process.env.PAM_MODULE !== 'disabled') {
-      const request = new GrantTokenRequest({ ...parameters, keySet: this._configuration.keySet });
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Grant token permissions with parameters:',
+      }));
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const request = new GrantTokenRequest({ ...parameters, keySet: this._configuration.keySet });
+      const logResponse = (response: PAM.GrantTokenResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug(
+          'PubNub',
+          `Grant token permissions success. Received token with requested permissions: ${response}`,
+        );
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Grant Token error: PAM module disabled');
   }
   // endregion
@@ -2169,17 +2874,36 @@ export class PubNubCore<
     callback?: ResultCallback<PAM.RevokeTokenResponse>,
   ): Promise<PAM.RevokeTokenResponse | void> {
     if (process.env.PAM_MODULE !== 'disabled') {
-      const request = new RevokeTokenRequest({ token, keySet: this._configuration.keySet });
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { token },
+        details: 'Revoke token permissions with parameters:',
+      }));
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const request = new RevokeTokenRequest({ token, keySet: this._configuration.keySet });
+      const logResponse = (response: PAM.RevokeTokenResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug('PubNub', 'Revoke token permissions success.');
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Revoke Token error: PAM module disabled');
   }
   // endregion
 
   // region Token Manipulation
   /**
-   * Get current access token.
+   * Get a current access token.
    *
    * @returns Previously configured access token using {@link setToken} method.
    */
@@ -2188,7 +2912,7 @@ export class PubNubCore<
   }
 
   /**
-   * Get current access token.
+   * Get a current access token.
    *
    * @returns Previously configured access token using {@link setToken} method.
    */
@@ -2266,10 +2990,29 @@ export class PubNubCore<
     callback?: ResultCallback<PAM.PermissionsResponse>,
   ): Promise<PAM.PermissionsResponse | void> {
     if (process.env.PAM_MODULE !== 'disabled') {
-      const request = new GrantRequest({ ...parameters, keySet: this._configuration.keySet });
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Grant auth key(s) permissions with parameters:',
+      }));
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const request = new GrantRequest({ ...parameters, keySet: this._configuration.keySet });
+      const logResponse = (response: PAM.PermissionsResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug('PubNub', 'Grant auth key(s) permissions success.');
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Grant error: PAM module disabled');
   }
   // endregion
@@ -2311,10 +3054,30 @@ export class PubNubCore<
     callback?: ResultCallback<PAM.PermissionsResponse>,
   ): Promise<PAM.PermissionsResponse | void> {
     if (process.env.PAM_MODULE !== 'disabled') {
-      const request = new AuditRequest({ ...parameters, keySet: this._configuration.keySet });
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: 'Audit auth key(s) permissions with parameters:',
+      }));
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const request = new AuditRequest({ ...parameters, keySet: this._configuration.keySet });
+      const logResponse = (response: PAM.PermissionsResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug('PubNub', 'Audit auth key(s) permissions success.');
+      };
+
+      if (callback) {
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          return callback(status, response);
+        });
+      }
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Grant Permissions error: PAM module disabled');
   }
   // endregion
@@ -2339,7 +3102,7 @@ export class PubNubCore<
    *
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata getAllUUIDMetadata} method instead.
    */
   public fetchUsers<Custom extends AppContext.CustomData = AppContext.CustomData>(
     callback: ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
@@ -2351,7 +3114,7 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata getAllUUIDMetadata} method instead.
    */
   public fetchUsers<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>>,
@@ -2365,7 +3128,7 @@ export class PubNubCore<
    *
    * @returns Asynchronous get all User objects response.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata getAllUUIDMetadata} method instead.
    */
   public async fetchUsers<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters?: AppContext.GetAllMetadataParameters<AppContext.UUIDMetadataObject<Custom>>,
@@ -2379,7 +3142,7 @@ export class PubNubCore<
    *
    * @returns Asynchronous get all User objects response or `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata getAllUUIDMetadata} method instead.
    */
   public async fetchUsers<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parametersOrCallback?:
@@ -2387,30 +3150,37 @@ export class PubNubCore<
       | ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllUUIDMetadataResponse<Custom> | void> {
-    if (process.env.APP_CONTEXT_MODULE !== 'disabled')
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.warn('PubNub', "'fetchUsers' is deprecated. Use 'pubnub.objects.getAllUUIDMetadata' instead.");
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: !parametersOrCallback || typeof parametersOrCallback === 'function' ? {} : parametersOrCallback,
+        details: `Fetch all User objects with parameters:`,
+      }));
+
       return this.objects._getAllUUIDMetadata(parametersOrCallback, callback);
-    else throw new Error('Fetch Users Metadata error: App Context module disabled');
+    } else throw new Error('Fetch Users Metadata error: App Context module disabled');
   }
 
   /**
-   * Fetch User object for currently configured PubNub client `uuid`.
+   * Fetch User object for a currently configured PubNub client `uuid`.
    *
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata getUUIDMetadata} method instead.
    */
   public fetchUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     callback: ResultCallback<AppContext.GetUUIDMetadataResponse<Custom>>,
   ): void;
 
   /**
-   * Fetch User object for currently configured PubNub client `uuid`.
+   * Fetch User object for a currently configured PubNub client `uuid`.
    *
-   * @param parameters - Request configuration parameters. Will fetch User object for currently
+   * @param parameters - Request configuration parameters. Will fetch a User object for a currently
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata getUUIDMetadata} method instead.
    */
   public fetchUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.GetUUIDMetadataParameters,
@@ -2418,28 +3188,28 @@ export class PubNubCore<
   ): void;
 
   /**
-   * Fetch User object for currently configured PubNub client `uuid`.
+   * Fetch User object for a currently configured PubNub client `uuid`.
    *
-   * @param [parameters] - Request configuration parameters. Will fetch User object for currently
+   * @param [parameters] - Request configuration parameters. Will fetch a User object for a currently
    * configured PubNub client `uuid` if not set.
    *
    * @returns Asynchronous get User object response.
    *
-   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata getUUIDMetadata} method instead.
    */
   public async fetchUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters?: AppContext.GetUUIDMetadataParameters,
   ): Promise<AppContext.GetUUIDMetadataResponse<Custom>>;
 
   /**
-   * Fetch User object for currently configured PubNub client `uuid`.
+   * Fetch User object for a currently configured PubNub client `uuid`.
    *
    * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
    * @param [callback] - Request completion handler callback.
    *
    * @returns Asynchronous get User object response or `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata getUUIDMetadata} method instead.
    */
   async fetchUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parametersOrCallback?:
@@ -2447,19 +3217,31 @@ export class PubNubCore<
       | ResultCallback<AppContext.GetUUIDMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.GetUUIDMetadataResponse<Custom> | void> {
-    if (process.env.APP_CONTEXT_MODULE !== 'disabled')
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.warn('PubNub', "'fetchUser' is deprecated. Use 'pubnub.objects.getUUIDMetadata' instead.");
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message:
+          !parametersOrCallback || typeof parametersOrCallback === 'function'
+            ? { uuid: this.userId }
+            : parametersOrCallback,
+        details: `Fetch${
+          !parametersOrCallback || typeof parametersOrCallback === 'function' ? ' current' : ''
+        } User object with parameters:`,
+      }));
+
       return this.objects._getUUIDMetadata(parametersOrCallback, callback);
-    else throw new Error('Fetch User Metadata error: App Context module disabled');
+    } else throw new Error('Fetch User Metadata error: App Context module disabled');
   }
 
   /**
-   * Create User object.
+   * Create a User object.
    *
-   * @param parameters - Request configuration parameters. Will create User object for currently
+   * @param parameters - Request configuration parameters. Will create a User object for a currently
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
    */
   public createUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetUUIDMetadataParameters<Custom>,
@@ -2467,46 +3249,54 @@ export class PubNubCore<
   ): void;
 
   /**
-   * Create User object.
+   * Create a User object.
    *
-   * @param parameters - Request configuration parameters. Will create User object for currently
+   * @param parameters - Request configuration parameters. Will create User object for a currently
    * configured PubNub client `uuid` if not set.
    *
    * @returns Asynchronous create User object response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
    */
   public async createUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetUUIDMetadataParameters<Custom>,
   ): Promise<AppContext.SetUUIDMetadataResponse<Custom>>;
 
   /**
-   * Create User object.
+   * Create a User object.
    *
-   * @param parameters - Request configuration parameters. Will create User object for currently
+   * @param parameters - Request configuration parameters. Will create a User object for a currently
    * configured PubNub client `uuid` if not set.
    * @param [callback] - Request completion handler callback.
    *
    * @returns Asynchronous create User object response or `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
    */
   async createUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetUUIDMetadataParameters<Custom>,
     callback?: ResultCallback<AppContext.SetUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.SetUUIDMetadataResponse<Custom> | void> {
-    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._setUUIDMetadata(parameters, callback);
-    else throw new Error('Create User Metadata error: App Context module disabled');
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.warn('PubNub', "'createUser' is deprecated. Use 'pubnub.objects.setUUIDMetadata' instead.");
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Create User object with parameters:`,
+      }));
+
+      return this.objects._setUUIDMetadata(parameters, callback);
+    } else throw new Error('Create User Metadata error: App Context module disabled');
   }
 
   /**
-   * Update User object.
+   * Update a User object.
    *
    * @param parameters - Request configuration parameters. Will update User object for currently
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
    */
   public updateUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetUUIDMetadataParameters<Custom>,
@@ -2514,56 +3304,64 @@ export class PubNubCore<
   ): void;
 
   /**
-   * Update User object.
+   * Update a User object.
    *
-   * @param parameters - Request configuration parameters. Will update User object for currently
+   * @param parameters - Request configuration parameters. Will update a User object for a currently
    * configured PubNub client `uuid` if not set.
    *
    * @returns Asynchronous update User object response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
    */
   public async updateUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetUUIDMetadataParameters<Custom>,
   ): Promise<AppContext.SetUUIDMetadataResponse<Custom>>;
 
   /**
-   * Update User object.
+   * Update a User object.
    *
-   * @param parameters - Request configuration parameters. Will update User object for currently
+   * @param parameters - Request configuration parameters. Will update a User object for a currently
    * configured PubNub client `uuid` if not set.
    * @param [callback] - Request completion handler callback.
    *
    * @returns Asynchronous update User object response or `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
    */
   async updateUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetUUIDMetadataParameters<Custom>,
     callback?: ResultCallback<AppContext.SetUUIDMetadataResponse<Custom>>,
   ): Promise<AppContext.SetUUIDMetadataResponse<Custom> | void> {
-    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._setUUIDMetadata(parameters, callback);
-    else throw new Error('Update User Metadata error: App Context module disabled');
+    this.logger.warn('PubNub', "'updateUser' is deprecated. Use 'pubnub.objects.setUUIDMetadata' instead.");
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Update User object with parameters:`,
+      }));
+
+      return this.objects._setUUIDMetadata(parameters, callback);
+    } else throw new Error('Update User Metadata error: App Context module disabled');
   }
 
   /**
    * Remove a specific User object.
    *
-   * @param callback - Request completion handler callback. Will remove User object for currently
+   * @param callback - Request completion handler callback. Will remove a User object for a currently
    * configured PubNub client `uuid` if not set.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata removeUUIDMetadata} method instead.
    */
   public removeUser(callback: ResultCallback<AppContext.RemoveUUIDMetadataResponse>): void;
 
   /**
    * Remove a specific User object.
    *
-   * @param parameters - Request configuration parameters. Will remove User object for currently
+   * @param parameters - Request configuration parameters. Will remove a User object for a currently
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata removeUUIDMetadata} method instead.
    */
   public removeUser(
     parameters: AppContext.RemoveUUIDMetadataParameters,
@@ -2573,12 +3371,12 @@ export class PubNubCore<
   /**
    * Remove a specific User object.
    *
-   * @param [parameters] - Request configuration parameters. Will remove User object for currently
+   * @param [parameters] - Request configuration parameters. Will remove a User object for a currently
    * configured PubNub client `uuid` if not set.
    *
    * @returns Asynchronous User object remove response.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata removeUUIDMetadata} method instead.
    */
   public async removeUser(
     parameters?: AppContext.RemoveUUIDMetadataParameters,
@@ -2590,9 +3388,9 @@ export class PubNubCore<
    * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous User object remove response or `void` in case if `callback` provided.
+   * @returns Asynchronous User object removes response or `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata removeUUIDMetadata} method instead.
    */
   public async removeUser(
     parametersOrCallback?:
@@ -2600,9 +3398,21 @@ export class PubNubCore<
       | ResultCallback<AppContext.RemoveUUIDMetadataResponse>,
     callback?: ResultCallback<AppContext.RemoveUUIDMetadataResponse>,
   ): Promise<AppContext.RemoveUUIDMetadataResponse | void> {
-    if (process.env.APP_CONTEXT_MODULE !== 'disabled')
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.warn('PubNub', "'removeUser' is deprecated. Use 'pubnub.objects.removeUUIDMetadata' instead.");
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message:
+          !parametersOrCallback || typeof parametersOrCallback === 'function'
+            ? { uuid: this.userId }
+            : parametersOrCallback,
+        details: `Remove${
+          !parametersOrCallback || typeof parametersOrCallback === 'function' ? ' current' : ''
+        } User object with parameters:`,
+      }));
+
       return this.objects._removeUUIDMetadata(parametersOrCallback, callback);
-    else throw new Error('Remove User Metadata error: App Context module disabled');
+    } else throw new Error('Remove User Metadata error: App Context module disabled');
   }
 
   /**
@@ -2610,7 +3420,7 @@ export class PubNubCore<
    *
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata getAllChannelMetadata} method instead.
    */
   public fetchSpaces<Custom extends AppContext.CustomData = AppContext.CustomData>(
     callback: ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
@@ -2622,7 +3432,7 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata getAllChannelMetadata} method instead.
    */
   public fetchSpaces<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>>,
@@ -2634,9 +3444,9 @@ export class PubNubCore<
    *
    * @param [parameters] - Request configuration parameters.
    *
-   * @returns Asynchronous get all Space objects response.
+   * @returns Asynchronous get all Space objects responses.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata getAllChannelMetadata} method instead.
    */
   public async fetchSpaces<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters?: AppContext.GetAllMetadataParameters<AppContext.ChannelMetadataObject<Custom>>,
@@ -2651,7 +3461,7 @@ export class PubNubCore<
    * @returns Asynchronous get all Space objects response or `void` in case if `callback`
    * provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata getAllChannelMetadata} method instead.
    */
   async fetchSpaces<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parametersOrCallback?:
@@ -2659,9 +3469,16 @@ export class PubNubCore<
       | ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
     callback?: ResultCallback<AppContext.GetAllChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.GetAllChannelMetadataResponse<Custom> | void> {
-    if (process.env.APP_CONTEXT_MODULE !== 'disabled')
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.warn('PubNub', "'fetchSpaces' is deprecated. Use 'pubnub.objects.getAllChannelMetadata' instead.");
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: !parametersOrCallback || typeof parametersOrCallback === 'function' ? {} : parametersOrCallback,
+        details: `Fetch all Space objects with parameters:`,
+      }));
+
       return this.objects._getAllChannelMetadata(parametersOrCallback, callback);
-    else throw new Error('Fetch Spaces Metadata error: App Context module disabled');
+    } else throw new Error('Fetch Spaces Metadata error: App Context module disabled');
   }
 
   /**
@@ -2670,7 +3487,7 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getChannelMetadata getChannelMetadata} method instead.
    */
   public fetchSpace<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.GetChannelMetadataParameters,
@@ -2684,7 +3501,7 @@ export class PubNubCore<
    *
    * @returns Asynchronous get Channel metadata response.
    *
-   * @deprecated Use {@link PubNubCore#objects.getChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getChannelMetadata getChannelMetadata} method instead.
    */
   public async fetchSpace<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.GetChannelMetadataParameters,
@@ -2698,23 +3515,31 @@ export class PubNubCore<
    *
    * @returns Asynchronous get Space object response or `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.getChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getChannelMetadata getChannelMetadata} method instead.
    */
   async fetchSpace<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.GetChannelMetadataParameters,
     callback?: ResultCallback<AppContext.GetChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.GetChannelMetadataResponse<Custom> | void> {
-    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._getChannelMetadata(parameters, callback);
-    else throw new Error('Fetch Space Metadata error: App Context module disabled');
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.warn('PubNub', "'fetchSpace' is deprecated. Use 'pubnub.objects.getChannelMetadata' instead.");
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Fetch Space object with parameters:`,
+      }));
+
+      return this.objects._getChannelMetadata(parameters, callback);
+    } else throw new Error('Fetch Space Metadata error: App Context module disabled');
   }
 
   /**
-   * Create specific Space object.
+   * Create a specific Space object.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
    */
   public createSpace<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetChannelMetadataParameters<Custom>,
@@ -2728,7 +3553,7 @@ export class PubNubCore<
    *
    * @returns Asynchronous create Space object response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
    */
   public async createSpace<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetChannelMetadataParameters<Custom>,
@@ -2742,14 +3567,22 @@ export class PubNubCore<
    *
    * @returns Asynchronous create Space object response or `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
    */
   async createSpace<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetChannelMetadataParameters<Custom>,
     callback?: ResultCallback<AppContext.SetChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.SetChannelMetadataResponse<Custom> | void> {
-    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._setChannelMetadata(parameters, callback);
-    else throw new Error('Create Space Metadata error: App Context module disabled');
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.warn('PubNub', "'createSpace' is deprecated. Use 'pubnub.objects.setChannelMetadata' instead.");
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Create Space object with parameters:`,
+      }));
+
+      return this.objects._setChannelMetadata(parameters, callback);
+    } else throw new Error('Create Space Metadata error: App Context module disabled');
   }
 
   /**
@@ -2758,7 +3591,7 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
    */
   public updateSpace<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetChannelMetadataParameters<Custom>,
@@ -2772,7 +3605,7 @@ export class PubNubCore<
    *
    * @returns Asynchronous update Space object response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
    */
   public async updateSpace<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetChannelMetadataParameters<Custom>,
@@ -2786,23 +3619,31 @@ export class PubNubCore<
    *
    * @returns Asynchronous update Space object response or `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
    */
   async updateSpace<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.SetChannelMetadataParameters<Custom>,
     callback?: ResultCallback<AppContext.SetChannelMetadataResponse<Custom>>,
   ): Promise<AppContext.SetChannelMetadataResponse<Custom> | void> {
-    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._setChannelMetadata(parameters, callback);
-    else throw new Error('Update Space Metadata error: App Context module disabled');
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.warn('PubNub', "'updateSpace' is deprecated. Use 'pubnub.objects.setChannelMetadata' instead.");
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Update Space object with parameters:`,
+      }));
+
+      return this.objects._setChannelMetadata(parameters, callback);
+    } else throw new Error('Update Space Metadata error: App Context module disabled');
   }
 
   /**
-   * Remove Space object.
+   * Remove a Space object.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata removeChannelMetadata} method instead.
    */
   public removeSpace(
     parameters: AppContext.RemoveChannelMetadataParameters,
@@ -2816,7 +3657,7 @@ export class PubNubCore<
    *
    * @returns Asynchronous Space object remove response.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata removeChannelMetadata} method instead.
    */
   public async removeSpace(
     parameters: AppContext.RemoveChannelMetadataParameters,
@@ -2831,24 +3672,32 @@ export class PubNubCore<
    * @returns Asynchronous Space object remove response or `void` in case if `callback`
    * provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata removeChannelMetadata} method instead.
    */
   async removeSpace(
     parameters: AppContext.RemoveChannelMetadataParameters,
     callback?: ResultCallback<AppContext.RemoveChannelMetadataResponse>,
   ): Promise<AppContext.RemoveChannelMetadataResponse | void> {
-    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects._removeChannelMetadata(parameters, callback);
-    else throw new Error('Remove Space Metadata error: App Context module disabled');
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.warn('PubNub', "'removeSpace' is deprecated. Use 'pubnub.objects.removeChannelMetadata' instead.");
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Remove Space object with parameters:`,
+      }));
+
+      return this.objects._removeChannelMetadata(parameters, callback);
+    } else throw new Error('Remove Space Metadata error: App Context module disabled');
   }
 
   /**
-   * Fetch paginated list of specific Space members or specific User memberships.
+   * Fetch a paginated list of specific Space members or specific User memberships.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getChannelMembers} or {@link PubNubCore#objects.getMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.getChannelMembers getChannelMembers} or
+   * {@link PubNubCore#objects.getMemberships getMemberships} methods instead.
    */
   public fetchMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -2868,8 +3717,8 @@ export class PubNubCore<
    *
    * @returns Asynchronous get specific Space members or specific User memberships response.
    *
-   * @deprecated Use {@link PubNubCore#objects.getChannelMembers} or {@link PubNubCore#objects.getMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.getChannelMembers getChannelMembers} or
+   * {@link PubNubCore#objects.getMemberships getMemberships} methods instead.
    */
   public async fetchMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -2882,7 +3731,7 @@ export class PubNubCore<
   >;
 
   /**
-   * Fetch paginated list of specific Space members or specific User memberships.
+   * Fetch a paginated list of specific Space members or specific User memberships.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -2890,8 +3739,8 @@ export class PubNubCore<
    * @returns Asynchronous get specific Space members or specific User memberships response or
    * `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.getChannelMembers} or {@link PubNubCore#objects.getMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.getChannelMembers getChannelMembers} or
+   * {@link PubNubCore#objects.getMemberships getMemberships} methods instead.
    */
   public async fetchMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -2917,8 +3766,8 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+   * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
    */
   public addMemberships<
     Custom extends AppContext.CustomData = AppContext.CustomData,
@@ -2937,8 +3786,8 @@ export class PubNubCore<
    *
    * @returns Asynchronous add members to specific Space or memberships specific User response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+   * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
    */
   public async addMemberships<
     Custom extends AppContext.CustomData = AppContext.CustomData,
@@ -2958,8 +3807,8 @@ export class PubNubCore<
    * @returns Asynchronous add members to specific Space or memberships specific User response or
    * `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+   * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
    */
   async addMemberships<
     Custom extends AppContext.CustomData = AppContext.CustomData,
@@ -2980,8 +3829,8 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+   * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
    */
   public updateMemberships<
     Custom extends AppContext.CustomData = AppContext.CustomData,
@@ -3000,8 +3849,8 @@ export class PubNubCore<
    *
    * @returns Asynchronous update Space members or User memberships response.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+   * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
    */
   public async updateMemberships<
     Custom extends AppContext.CustomData = AppContext.CustomData,
@@ -3021,8 +3870,8 @@ export class PubNubCore<
    * @returns Asynchronous update Space members or User memberships response or `void` in case
    * if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-   * methods instead.
+   * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+   * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
    */
   async updateMemberships<
     Custom extends AppContext.CustomData = AppContext.CustomData,
@@ -3033,8 +3882,20 @@ export class PubNubCore<
       AppContext.SetMembershipsResponse<Custom, MetadataCustom> | AppContext.SetMembersResponse<Custom, MetadataCustom>
     >,
   ) {
-    if (process.env.APP_CONTEXT_MODULE !== 'disabled') return this.objects.addMemberships(parameters, callback);
-    else throw new Error('Update Memberships error: App Context module disabled');
+    if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.warn(
+        'PubNub',
+        "'addMemberships' is deprecated. Use 'pubnub.objects.setChannelMembers' or 'pubnub.objects.setMemberships'" +
+          ' instead.',
+      );
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Update memberships with parameters:`,
+      }));
+
+      return this.objects.addMemberships(parameters, callback);
+    } else throw new Error('Update Memberships error: App Context module disabled');
   }
 
   /**
@@ -3043,8 +3904,8 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-   * methods instead from `objects` API group.
+   * @deprecated Use {@link PubNubCore#objects.removeMemberships removeMemberships} or
+   * {@link PubNubCore#objects.removeChannelMembers removeChannelMembers} methods instead from `objects` API group.
    */
   public removeMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -3064,8 +3925,8 @@ export class PubNubCore<
    *
    * @returns Asynchronous memberships modification response.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-   * methods instead from `objects` API group.
+   * @deprecated Use {@link PubNubCore#objects.removeMemberships removeMemberships} or
+   * {@link PubNubCore#objects.removeChannelMembers removeChannelMembers} methods instead from `objects` API group.
    */
   public async removeMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -3082,8 +3943,8 @@ export class PubNubCore<
    *
    * @returns Asynchronous memberships modification response or `void` in case if `callback` provided.
    *
-   * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-   * methods instead from `objects` API group.
+   * @deprecated Use {@link PubNubCore#objects.removeMemberships removeMemberships} or
+   * {@link PubNubCore#objects.removeChannelMembers removeChannelMembers} methods instead from `objects` API group.
    */
   public async removeMemberships<
     RelationCustom extends AppContext.CustomData = AppContext.CustomData,
@@ -3100,6 +3961,17 @@ export class PubNubCore<
     | void
   > {
     if (process.env.APP_CONTEXT_MODULE !== 'disabled') {
+      this.logger.warn(
+        'PubNub',
+        "'removeMemberships' is deprecated. Use 'pubnub.objects.removeMemberships' or" +
+          " 'pubnub.objects.removeChannelMembers' instead.",
+      );
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Remove memberships with parameters:`,
+      }));
+
       if ('spaceId' in parameters) {
         const spaceParameters = parameters as AppContext.RemoveMembersParameters;
         const requestParameters = {
@@ -3194,6 +4066,12 @@ export class PubNubCore<
       if (!this._configuration.PubNubFile)
         throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
 
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Send file with parameters:`,
+      }));
+
       const sendFileRequest = new SendFileRequest<FileConstructorParameters>({
         ...parameters,
         keySet: this._configuration.keySet,
@@ -3212,12 +4090,18 @@ export class PubNubCore<
         category: StatusCategory.PNAcknowledgmentCategory,
         statusCode: 0,
       };
+      const logResponse = (response: FileSharing.SendFileResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug('PubNub', `Send file success. File shared with ${response.id} ID.`);
+      };
 
       return sendFileRequest
         .process()
         .then((response) => {
           status.statusCode = response.status;
 
+          logResponse(response);
           if (callback) return callback(status, response);
           return response;
         })
@@ -3226,10 +4110,15 @@ export class PubNubCore<
           if (error instanceof PubNubError) errorStatus = error.status;
           else if (error instanceof PubNubAPIError) errorStatus = error.toStatus(status.operation!);
 
+          this.logger.error('PubNub', () => ({
+            messageType: 'error',
+            message: new PubNubError('File sending error. Check status for details', errorStatus),
+          }));
+
           // Notify callback (if possible).
           if (callback && errorStatus) callback(errorStatus, null);
 
-          throw new PubNubError('REST API request processing error, check status for details', errorStatus);
+          throw new PubNubError('REST API request processing error. Check status for details', errorStatus);
         });
     } else throw new Error('Send File error: file sharing module disabled');
   }
@@ -3274,14 +4163,36 @@ export class PubNubCore<
       if (!this._configuration.PubNubFile)
         throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
 
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Publish file message with parameters:`,
+      }));
+
       const request = new PublishFileMessageRequest({
         ...parameters,
         keySet: this._configuration.keySet,
         crypto: this._configuration.getCryptoModule(),
       });
+      const logResponse = (response: FileSharing.PublishFileMessageResponse | null) => {
+        if (!response) return;
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+        this.logger.debug(
+          'PubNub',
+          `Publish file message success. File message published with timetoken: ${response.timetoken}`,
+        );
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Publish File error: file sharing module disabled');
   }
   // endregion
@@ -3320,10 +4231,29 @@ export class PubNubCore<
     callback?: ResultCallback<FileSharing.ListFilesResponse>,
   ): Promise<FileSharing.ListFilesResponse | void> {
     if (process.env.FILE_SHARING_MODULE !== 'disabled') {
-      const request = new FilesListRequest({ ...parameters, keySet: this._configuration.keySet });
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `List files with parameters:`,
+      }));
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const request = new FilesListRequest({ ...parameters, keySet: this._configuration.keySet });
+      const logResponse = (response: FileSharing.ListFilesResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug('PubNub', `List files success. There are ${response.count} uploaded files.`);
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('List Files error: file sharing module disabled');
   }
   // endregion
@@ -3358,7 +4288,7 @@ export class PubNubCore<
 
   // region Download
   /**
-   * Download shared file from specific channel.
+   * Download a shared file from a specific channel.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -3366,7 +4296,7 @@ export class PubNubCore<
   public downloadFile(parameters: FileSharing.DownloadFileParameters, callback: ResultCallback<PlatformFile>): void;
 
   /**
-   * Download shared file from specific channel.
+   * Download a shared file from a specific channel.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -3375,7 +4305,7 @@ export class PubNubCore<
   public async downloadFile(parameters: FileSharing.DownloadFileParameters): Promise<PlatformFile>;
 
   /**
-   * Download shared file from specific channel.
+   * Download a shared file from a specific channel.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -3390,6 +4320,12 @@ export class PubNubCore<
       if (!this._configuration.PubNubFile)
         throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
 
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Download file with parameters:`,
+      }));
+
       const request = new DownloadFileRequest<PlatformFile>({
         ...parameters,
         keySet: this._configuration.keySet,
@@ -3397,16 +4333,29 @@ export class PubNubCore<
         cryptography: this.cryptography ? (this.cryptography as Cryptography<ArrayBuffer>) : undefined,
         crypto: this._configuration.getCryptoModule(),
       });
+      const logResponse = (response: PlatformFile | null) => {
+        if (!response) return;
 
-      if (callback) return this.sendRequest(request, callback);
-      return (await this.sendRequest(request)) as PlatformFile;
+        this.logger.debug('PubNub', `Download file success.`);
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return (await this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      })) as PlatformFile;
     } else throw new Error('Download File error: file sharing module disabled');
   }
   // endregion
 
   // region Delete
   /**
-   * Delete shared file from specific channel.
+   * Delete a shared file from a specific channel.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -3417,7 +4366,7 @@ export class PubNubCore<
   ): void;
 
   /**
-   * Delete shared file from specific channel.
+   * Delete a shared file from a specific channel.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -3426,7 +4375,7 @@ export class PubNubCore<
   public async deleteFile(parameters: FileSharing.DeleteFileParameters): Promise<FileSharing.DeleteFileResponse>;
 
   /**
-   * Delete shared file from specific channel.
+   * Delete a shared file from a specific channel.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -3438,10 +4387,29 @@ export class PubNubCore<
     callback?: ResultCallback<FileSharing.DeleteFileResponse>,
   ): Promise<FileSharing.DeleteFileResponse | void> {
     if (process.env.FILE_SHARING_MODULE !== 'disabled') {
-      const request = new DeleteFileRequest({ ...parameters, keySet: this._configuration.keySet });
+      this.logger.debug('PubNub', () => ({
+        messageType: 'object',
+        message: { ...parameters },
+        details: `Delete file with parameters:`,
+      }));
 
-      if (callback) return this.sendRequest(request, callback);
-      return this.sendRequest(request);
+      const request = new DeleteFileRequest({ ...parameters, keySet: this._configuration.keySet });
+      const logResponse = (response: FileSharing.DeleteFileResponse | null) => {
+        if (!response) return;
+
+        this.logger.debug('PubNub', `Delete file success. Deleted file with ${parameters.id} ID.`);
+      };
+
+      if (callback)
+        return this.sendRequest(request, (status, response) => {
+          logResponse(response);
+          callback(status, response);
+        });
+
+      return this.sendRequest(request).then((response) => {
+        logResponse(response);
+        return response;
+      });
     } else throw new Error('Delete File error: file sharing module disabled');
   }
   // endregion
@@ -3474,10 +4442,184 @@ export class PubNubCore<
    * @returns Asynchronous get current timetoken response or `void` in case if `callback` provided.
    */
   async time(callback?: ResultCallback<Time.TimeResponse>): Promise<Time.TimeResponse | void> {
-    const request = new Time.TimeRequest();
+    this.logger.debug('PubNub', 'Get service time.');
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new Time.TimeRequest();
+    const logResponse = (response: Time.TimeResponse | null) => {
+      if (!response) return;
+
+      this.logger.debug('PubNub', `Get service time success. Current timetoken: ${response.timetoken}`);
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse(response);
+      return response;
+    });
+  }
+  // endregion
+
+  // --------------------------------------------------------
+  // -------------------- Event emitter ---------------------
+  // --------------------------------------------------------
+  // region Event emitter
+
+  /**
+   * Emit received a status update.
+   *
+   * Use global and local event dispatchers to deliver a status object.
+   *
+   * @param status - Status object which should be emitted through the listeners.
+   *
+   * @internal
+   */
+  emitStatus(status: Status | StatusEvent) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') this.eventDispatcher?.handleStatus(status);
+  }
+
+  /**
+   * Emit receiver real-time event.
+   *
+   * Use global and local event dispatchers to deliver an event object.
+   *
+   * @param cursor - Next subscription loop timetoken.
+   * @param event - Event object which should be emitted through the listeners.
+   *
+   * @internal
+   */
+  private emitEvent(cursor: Subscription.SubscriptionCursor, event: Subscription.SubscriptionResponse['messages'][0]) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this._globalSubscriptionSet) this._globalSubscriptionSet.handleEvent(cursor, event);
+      this.eventDispatcher?.handleEvent(event);
+
+      Object.values(this.eventHandleCapable).forEach((eventHandleCapable) => {
+        eventHandleCapable.handleEvent(cursor, event);
+      });
+    }
+  }
+
+  /**
+   * Set a connection status change event handler.
+   *
+   * @param listener - Listener function, which will be called each time when the connection status changes.
+   */
+  set onStatus(listener: ((status: Status | StatusEvent) => void) | undefined) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.onStatus = listener;
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
+   * Set a new message handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new message
+   * is received from the real-time network.
+   */
+  set onMessage(listener: ((event: Subscription.Message) => void) | undefined) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.onMessage = listener;
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
+   * Set a new presence events handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new
+   * presence event is received from the real-time network.
+   */
+  set onPresence(listener: ((event: Subscription.Presence) => void) | undefined) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.onPresence = listener;
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
+   * Set a new signal handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new signal
+   * is received from the real-time network.
+   */
+  set onSignal(listener: ((event: Subscription.Signal) => void) | undefined) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.onSignal = listener;
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
+   * Set a new app context event handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new
+   * app context event is received from the real-time network.
+   */
+  set onObjects(listener: ((event: Subscription.AppContextObject) => void) | undefined) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.onObjects = listener;
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
+   * Set a new message reaction event handler.
+   *
+   * @param listener - Listener function, which will be called each time when a
+   * new message reaction event is received from the real-time network.
+   */
+  set onMessageAction(listener: ((event: Subscription.MessageAction) => void) | undefined) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.onMessageAction = listener;
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
+   * Set a new file handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new file
+   * is received from the real-time network.
+   */
+  set onFile(listener: ((event: Subscription.File) => void) | undefined) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.onFile = listener;
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
+   * Set events handler.
+   *
+   * @param listener - Events listener configuration object, which lets specify handlers for multiple
+   * types of events.
+   */
+  addListener(listener: Listener) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) {
+        this.eventDispatcher.addListener(listener);
+      }
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
+   * Remove real-time event listener.
+   *
+   * @param listener - Event listener configuration, which should be removed from the list of notified
+   * listeners. **Important:** Should be the same object which has been passed to the
+   * {@link addListener}.
+   */
+  public removeListener(listener: Listener): void {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.removeListener(listener);
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
+   * Clear all real-time event listeners.
+   */
+  public removeAllListeners(): void {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.removeAllListeners();
+    } else throw new Error('Listener error: subscription module disabled');
   }
   // endregion
 
@@ -3491,13 +4633,16 @@ export class PubNubCore<
    * Encrypt data.
    *
    * @param data - Stringified data which should be encrypted using `CryptoModule`.
-   * @deprecated
    * @param [customCipherKey] - Cipher key which should be used to encrypt data. **Deprecated:**
    * use {@link Configuration#cryptoModule|cryptoModule} instead.
    *
    * @returns Data encryption result as a string.
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   public encrypt(data: string | Payload, customCipherKey?: string): string {
+    this.logger.warn('PubNub', "'encrypt' is deprecated. Use cryptoModule instead.");
+
     const cryptoModule = this._configuration.getCryptoModule();
 
     if (!customCipherKey && cryptoModule && typeof data === 'string') {
@@ -3521,8 +4666,12 @@ export class PubNubCore<
    * use {@link Configuration#cryptoModule|cryptoModule} instead.
    *
    * @returns Data decryption result as an object.
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   public decrypt(data: string, customCipherKey?: string): Payload | null {
+    this.logger.warn('PubNub', "'decrypt' is deprecated. Use cryptoModule instead.");
+
     const cryptoModule = this._configuration.getCryptoModule();
     if (!customCipherKey && cryptoModule) {
       const decrypted = cryptoModule.decrypt(data);
@@ -3546,9 +4695,11 @@ export class PubNubCore<
    *
    * @returns Asynchronous file encryption result.
    *
-   * @throws Error if source file not provided.
+   * @throws Error if source file isn't provided.
    * @throws File constructor not provided.
    * @throws Crypto module is missing (if non-legacy flow used).
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   public async encryptFile(file: PubNubFileInterface): Promise<PubNubFileInterface>;
 
@@ -3560,9 +4711,11 @@ export class PubNubCore<
    *
    * @returns Asynchronous file encryption result.
    *
-   * @throws Error if source file not provided.
+   * @throws Error if source file isn't provided.
    * @throws File constructor not provided.
    * @throws Crypto module is missing (if non-legacy flow used).
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   public async encryptFile(key: string, file: PubNubFileInterface): Promise<PubNubFileInterface>;
 
@@ -3575,9 +4728,11 @@ export class PubNubCore<
    *
    * @returns Asynchronous file encryption result.
    *
-   * @throws Error if source file not provided.
+   * @throws Error if a source file isn't provided.
    * @throws File constructor not provided.
    * @throws Crypto module is missing (if non-legacy flow used).
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   public async encryptFile(keyOrFile: string | PubNubFileInterface, file?: PubNubFileInterface) {
     if (typeof keyOrFile !== 'string') file = keyOrFile;
@@ -3606,9 +4761,11 @@ export class PubNubCore<
    *
    * @returns Asynchronous file decryption result.
    *
-   * @throws Error if source file not provided.
+   * @throws Error if source file isn't provided.
    * @throws File constructor not provided.
    * @throws Crypto module is missing (if non-legacy flow used).
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   public async decryptFile(file: PubNubFileInterface): Promise<PubNubFileInterface>;
 
@@ -3620,9 +4777,11 @@ export class PubNubCore<
    *
    * @returns Asynchronous file decryption result.
    *
-   * @throws Error if source file not provided.
+   * @throws Error if source file isn't provided.
    * @throws File constructor not provided.
    * @throws Crypto module is missing (if non-legacy flow used).
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   public async decryptFile(key: string | PubNubFileInterface, file?: PubNubFileInterface): Promise<PubNubFileInterface>;
 
@@ -3635,9 +4794,11 @@ export class PubNubCore<
    *
    * @returns Asynchronous file decryption result.
    *
-   * @throws Error if source file not provided.
+   * @throws Error if source file isn't provided.
    * @throws File constructor not provided.
    * @throws Crypto module is missing (if non-legacy flow used).
+   *
+   * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
   public async decryptFile(keyOrFile: string | PubNubFileInterface, file?: PubNubFileInterface) {
     if (typeof keyOrFile !== 'string') file = keyOrFile;

@@ -27,5 +27,9 @@ UnsubscribedState.on(subscriptionChange.type, (_, { payload }) => {
 UnsubscribedState.on(restore.type, (_, { payload }) => {
   if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
 
-  return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: payload.cursor });
+  return HandshakingState.with({
+    channels: payload.channels,
+    groups: payload.groups,
+    cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region },
+  });
 });

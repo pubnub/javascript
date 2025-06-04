@@ -4,12 +4,11 @@
  * @internal
  */
 
-import { Dispatcher, Engine } from '../core';
-import * as events from './events';
-import * as effects from './effects';
 import { Dependencies, PresenceEventEngineDispatcher } from './dispatcher';
-
 import { HeartbeatInactiveState } from './states/heartbeat_inactive';
+import { Dispatcher, Engine } from '../core';
+import * as effects from './effects';
+import * as events from './events';
 
 /**
  * Presence Event Engine Core.
@@ -17,7 +16,7 @@ import { HeartbeatInactiveState } from './states/heartbeat_inactive';
  * @internal
  */
 export class PresenceEventEngine {
-  private engine: Engine<events.Events, effects.Effects> = new Engine();
+  private readonly engine: Engine<events.Events, effects.Effects>;
   private dispatcher: Dispatcher<effects.Effects, Dependencies>;
 
   get _engine() {
@@ -27,7 +26,10 @@ export class PresenceEventEngine {
   private _unsubscribeEngine!: () => void;
 
   constructor(private dependencies: Dependencies) {
+    this.engine = new Engine(dependencies.config.logger());
     this.dispatcher = new PresenceEventEngineDispatcher(this.engine, dependencies);
+
+    dependencies.config.logger().debug(this.constructor.name, 'Create presence event engine.');
 
     this._unsubscribeEngine = this.engine.subscribe((change) => {
       if (change.type === 'invocationDispatched') {
@@ -55,7 +57,7 @@ export class PresenceEventEngine {
     this.engine.transition(events.left(channels ?? [], groups ?? []));
   }
 
-  leaveAll(isOffline?: boolean) {
+  leaveAll(isOffline: boolean = false) {
     this.engine.transition(events.leftAll(isOffline));
   }
 
@@ -63,7 +65,7 @@ export class PresenceEventEngine {
     this.engine.transition(events.reconnect());
   }
 
-  disconnect(isOffline?: boolean) {
+  disconnect(isOffline: boolean = false) {
     this.engine.transition(events.disconnect(isOffline));
   }
 

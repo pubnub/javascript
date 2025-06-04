@@ -4,18 +4,17 @@
  * @internal
  */
 
-import { Payload, ResultCallback, Status, StatusCallback, StatusEvent } from '../types/api';
+import { messageFingerprint, referenceSubscribeTimetoken, subscriptionTimetokenFromReference } from '../utils';
 import { SubscribeRequestParameters as SubscribeRequestParameters } from '../endpoints/subscribe';
+import { Payload, ResultCallback, Status, StatusCallback, StatusEvent } from '../types/api';
 import { PrivateClientConfiguration } from '../interfaces/configuration';
 import { HeartbeatRequest } from '../endpoints/presence/heartbeat';
 import { ReconnectionManager } from './reconnection_manager';
 import * as Subscription from '../types/api/subscription';
-import { ListenerManager } from './listener_manager';
 import StatusCategory from '../constants/categories';
 import { DedupingManager } from './deduping_manager';
 import * as Presence from '../types/api/presence';
 import { PubNubCore } from '../pubnub-common';
-import EventEmitter from './eventEmitter';
 
 /**
  * Subscription loop manager.
@@ -79,19 +78,25 @@ export class SubscriptionManager {
   private readonly channels: Record<string, Record<string, unknown>>;
 
   /**
-   * Timetoken which is used by the current subscription loop.
+   * High-precision timetoken of the moment when a new high-precision timetoken has been used for subscription
+   * loop.
    */
-  private currentTimetoken: string | number;
+  private referenceTimetoken?: string | null;
+
+  /**
+   * Timetoken, which is used by the current subscription loop.
+   */
+  private currentTimetoken: string;
 
   /**
    * Timetoken which has been used with previous subscription loop.
    */
-  private lastTimetoken: string | number;
+  private lastTimetoken: string;
 
   /**
    * User-provided timetoken or timetoken for catch up.
    */
-  private storedTimetoken: string | number | null;
+  private storedTimetoken: string | null;
 
   /**
    * Timetoken's region.
@@ -129,8 +134,11 @@ export class SubscriptionManager {
 
   constructor(
     private readonly configuration: PrivateClientConfiguration,
-    private readonly listenerManager: ListenerManager,
-    private readonly eventEmitter: EventEmitter,
+    private readonly emitEvent: (
+      cursor: Subscription.SubscriptionCursor,
+      event: Subscription.SubscriptionResponse['messages'][0],
+    ) => void,
+    private readonly emitStatus: (status: Status | StatusEvent) => void,
     private readonly subscribeCall: (
       parameters: Omit<SubscribeRequestParameters, 'crypto' | 'timeout' | 'keySet' | 'getFileUrl'>,
       callback: ResultCallback<Subscription.SubscriptionResponse>,
@@ -142,6 +150,8 @@ export class SubscriptionManager {
     private readonly leaveCall: (parameters: Presence.PresenceLeaveParameters, callback: StatusCallback) => void,
     time: typeof PubNubCore.prototype.time,
   ) {
+    configuration.logger().trace(this.constructor.name, 'Create manager.');
+
     this.reconnectionManager = new ReconnectionManager(time);
     this.dedupingManager = new DedupingManager(this.configuration);
     this.heartbeatChannelGroups = {};
@@ -158,12 +168,22 @@ export class SubscriptionManager {
     this.currentTimetoken = '0';
     this.lastTimetoken = '0';
     this.storedTimetoken = null;
+    this.referenceTimetoken = null;
 
     this.subscriptionStatusAnnounced = false;
     this.isOnline = true;
   }
 
   // region Information
+  /**
+   * Subscription-based current timetoken.
+   *
+   * @returns Timetoken based on current timetoken plus diff between current and loop start time.
+   */
+  get subscriptionTimetoken(): string | undefined {
+    return subscriptionTimetokenFromReference(this.currentTimetoken, this.referenceTimetoken ?? '0');
+  }
+
   get subscribedChannels(): string[] {
     return Object.keys(this.channels);
   }
@@ -212,12 +232,12 @@ export class SubscriptionManager {
 
     if (timetoken) {
       this.lastTimetoken = this.currentTimetoken;
-      this.currentTimetoken = timetoken;
+      this.currentTimetoken = `${timetoken}`;
     }
 
-    if (this.currentTimetoken !== '0' && this.currentTimetoken !== 0) {
+    if (this.currentTimetoken !== '0') {
       this.storedTimetoken = this.currentTimetoken;
-      this.currentTimetoken = 0;
+      this.currentTimetoken = '0';
     }
 
     channels?.forEach((channel) => {
@@ -240,7 +260,7 @@ export class SubscriptionManager {
     this.reconnect();
   }
 
-  public unsubscribe(parameters: Presence.PresenceLeaveParameters, isOffline?: boolean) {
+  public unsubscribe(parameters: Presence.PresenceLeaveParameters, isOffline: boolean = false) {
     let { channels, channelGroups } = parameters;
 
     const actualChannelGroups: Set<string> = new Set();
@@ -298,7 +318,7 @@ export class SubscriptionManager {
           else if ('message' in status && typeof status.message === 'string') errorMessage = status.message;
         }
 
-        this.listenerManager.announceStatus({
+        this.emitStatus({
           ...restOfStatus,
           error: errorMessage ?? false,
           affectedChannels: channels,
@@ -315,8 +335,9 @@ export class SubscriptionManager {
       Object.keys(this.channelGroups).length === 0 &&
       Object.keys(this.presenceChannelGroups).length === 0
     ) {
-      this.lastTimetoken = 0;
-      this.currentTimetoken = 0;
+      this.lastTimetoken = '0';
+      this.currentTimetoken = '0';
+      this.referenceTimetoken = null;
       this.storedTimetoken = null;
       this.region = null;
       this.reconnectionManager.stopPolling();
@@ -325,7 +346,7 @@ export class SubscriptionManager {
     this.reconnect(true);
   }
 
-  public unsubscribeAll(isOffline?: boolean) {
+  public unsubscribeAll(isOffline: boolean = false) {
     this.unsubscribe(
       {
         channels: this.subscribedChannels,
@@ -352,7 +373,7 @@ export class SubscriptionManager {
     Object.keys(this.presenceChannelGroups).forEach((group) => channelGroups.push(`${group}-pnpres`));
     Object.keys(this.presenceChannels).forEach((channel) => channels.push(`${channel}-pnpres`));
 
-    // There is no need to start subscription loop for empty list of data sources.
+    // There is no need to start subscription loop for an empty list of data sources.
     if (channels.length === 0 && channelGroups.length === 0) return;
 
     this.subscribeCall(
@@ -362,8 +383,8 @@ export class SubscriptionManager {
         state: this.presenceState,
         heartbeat: this.configuration.getPresenceTimeout(),
         timetoken: this.currentTimetoken,
-        region: this.region !== null ? this.region : undefined,
-        filterExpression: this.configuration.filterExpression,
+        ...(this.region !== null ? { region: this.region } : {}),
+        ...(this.configuration.filterExpression ? { filterExpression: this.configuration.filterExpression } : {}),
       },
       (status, result) => {
         this.processSubscribeResponse(status, result);
@@ -404,13 +425,13 @@ export class SubscriptionManager {
 
         if (status.error && this.configuration.autoNetworkDetection && this.isOnline) {
           this.isOnline = false;
-          this.listenerManager.announceNetworkDown();
+          this.emitStatus({ category: StatusCategory.PNNetworkDownCategory });
         }
 
         this.reconnectionManager.onReconnect(() => {
           if (this.configuration.autoNetworkDetection && !this.isOnline) {
             this.isOnline = true;
-            this.listenerManager.announceNetworkUp();
+            this.emitStatus({ category: StatusCategory.PNNetworkUpCategory });
           }
 
           this.reconnect();
@@ -422,19 +443,20 @@ export class SubscriptionManager {
             lastTimetoken: this.lastTimetoken,
             currentTimetoken: this.currentTimetoken,
           };
-          this.listenerManager.announceStatus(reconnectedAnnounce);
+          this.emitStatus(reconnectedAnnounce);
         });
 
         this.reconnectionManager.startPolling();
-        this.listenerManager.announceStatus({ ...status, category: StatusCategory.PNNetworkIssuesCategory });
+        this.emitStatus({ ...status, category: StatusCategory.PNNetworkIssuesCategory });
       } else if (status.category === StatusCategory.PNBadRequestCategory) {
         this.stopHeartbeatTimer();
-        this.listenerManager.announceStatus(status);
-      } else this.listenerManager.announceStatus(status);
+        this.emitStatus(status);
+      } else this.emitStatus(status);
 
       return;
     }
 
+    this.referenceTimetoken = referenceSubscribeTimetoken(result!.cursor.timetoken, this.storedTimetoken);
     if (this.storedTimetoken) {
       this.currentTimetoken = this.storedTimetoken;
       this.storedTimetoken = null;
@@ -455,7 +477,7 @@ export class SubscriptionManager {
       };
 
       this.subscriptionStatusAnnounced = true;
-      this.listenerManager.announceStatus(connected);
+      this.emitStatus(connected);
 
       // Clear pending channels and groups.
       this.pendingChannelGroupSubscriptions.clear();
@@ -466,20 +488,41 @@ export class SubscriptionManager {
     const { requestMessageCountThreshold, dedupeOnSubscribe } = this.configuration;
 
     if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
-      this.listenerManager.announceStatus({
+      this.emitStatus({
         category: StatusCategory.PNRequestMessageCountExceededCategory,
         operation: status.operation,
       });
     }
 
     try {
+      const cursor: Subscription.SubscriptionCursor = {
+        timetoken: this.currentTimetoken,
+        region: this.region ? this.region : undefined,
+      };
+
+      this.configuration.logger().debug(this.constructor.name, () => {
+        const hashedEvents = messages.map((event) => ({
+          type: event.type,
+          data: { ...event.data, pn_mfp: messageFingerprint(event.data) },
+        }));
+        return { messageType: 'object', message: hashedEvents, details: 'Received events:' };
+      });
+
       messages.forEach((message) => {
         if (dedupeOnSubscribe && 'message' in message.data && 'timetoken' in message.data) {
-          if (this.dedupingManager.isDuplicate(message.data)) return;
+          if (this.dedupingManager.isDuplicate(message.data)) {
+            this.configuration.logger().warn(this.constructor.name, () => ({
+              messageType: 'object',
+              message: message.data,
+              details: 'Duplicate message detected (skipped):',
+            }));
+
+            return;
+          }
           this.dedupingManager.addEntry(message.data);
         }
 
-        this.eventEmitter.emitEvent(message);
+        this.emitEvent(cursor, message);
       });
     } catch (e) {
       const errorStatus: Status = {
@@ -488,7 +531,7 @@ export class SubscriptionManager {
         errorData: e as Error,
         statusCode: 0,
       };
-      this.listenerManager.announceStatus(errorStatus);
+      this.emitStatus(errorStatus);
     }
 
     this.region = result!.cursor.region;
@@ -528,7 +571,7 @@ export class SubscriptionManager {
       });
 
       if (this.configuration.suppressLeaveEvents === false) {
-        this.leaveCall({ channels, channelGroups }, (status) => this.listenerManager.announceStatus(status));
+        this.leaveCall({ channels, channelGroups }, (status) => this.emitStatus(status));
       }
     }
 
@@ -541,7 +584,7 @@ export class SubscriptionManager {
     const heartbeatInterval = this.configuration.getHeartbeatInterval();
     if (!heartbeatInterval || heartbeatInterval === 0) return;
 
-    // Sending immediate heartbeat only if not working as smart heartbeat.
+    // Sending immediate heartbeat only if not working as a smart heartbeat.
     if (!this.configuration.useSmartHeartbeat) this.sendHeartbeat();
     this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), heartbeatInterval * 1000) as unknown as number;
   }
@@ -576,16 +619,15 @@ export class SubscriptionManager {
         state: this.presenceState,
       },
       (status) => {
-        if (status.error && this.configuration.announceFailedHeartbeats) this.listenerManager.announceStatus(status);
+        if (status.error && this.configuration.announceFailedHeartbeats) this.emitStatus(status);
         if (status.error && this.configuration.autoNetworkDetection && this.isOnline) {
           this.isOnline = false;
           this.disconnect();
-          this.listenerManager.announceNetworkDown();
+          this.emitStatus({ category: StatusCategory.PNNetworkDownCategory });
           this.reconnect();
         }
 
-        if (!status.error && this.configuration.announceSuccessfulHeartbeats)
-          this.listenerManager.announceStatus(status);
+        if (!status.error && this.configuration.announceSuccessfulHeartbeats) this.emitStatus(status);
       },
     );
   }

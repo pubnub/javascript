@@ -3,8 +3,7 @@
 
 import CborReader from 'cbor-js';
 
-// eslint-disable-next-line max-len
-import { AesCbcCryptor, LegacyCryptor, WebCryptoModule } from '../crypto/modules/WebCryptoModule/webCryptoModule';
+import { WebCryptoModule, AesCbcCryptor, LegacyCryptor } from '../crypto/modules/WebCryptoModule/webCryptoModule';
 import type { WebCryptoModule as CryptoModuleType } from '../crypto/modules/WebCryptoModule/webCryptoModule';
 
 import { SubscriptionWorkerMiddleware } from '../transport/subscription-worker/subscription-worker-middleware';
@@ -32,17 +31,18 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
   /**
    * Data encryption / decryption module constructor.
    */
-  // @ts-expect-error Allowed to simplify interface when module can be disabled.
-  static CryptoModule: typeof CryptoModuleType = process.env.CRYPTO_MODULE !== 'disabled' ? WebCryptoModule : undefined;
+  static CryptoModule: typeof CryptoModuleType | undefined =
+    process.env.CRYPTO_MODULE !== 'disabled' ? WebCryptoModule : undefined;
 
   /**
-   * Create and configure PubNub client core.
+   * Create and configure the PubNub client core.
    *
    * @param configuration - User-provided PubNub client configuration.
    *
    * @returns Configured and ready to use PubNub client.
    */
   constructor(configuration: PubNubConfiguration) {
+    const sharedWorkerRequested = configuration.subscriptionWorkerUrl !== undefined;
     const configurationCopy = setDefaults(configuration);
     const platformConfiguration: PubNubConfiguration & ExtendedConfiguration & PlatformConfiguration = {
       ...configurationCopy,
@@ -58,13 +58,24 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
         if (!cryptoConfiguration.cipherKey) return undefined;
 
         if (process.env.CRYPTO_MODULE !== 'disabled') {
-          return new WebCryptoModule({
-            default: new LegacyCryptor({ ...cryptoConfiguration }),
+          const cryptoModule = new WebCryptoModule({
+            default: new LegacyCryptor({
+              ...cryptoConfiguration,
+              ...(!cryptoConfiguration.logger ? { logger: clientConfiguration.logger() } : {}),
+            }),
             cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
           });
+
+          return cryptoModule;
         } else return undefined;
       },
     );
+
+    if (process.env.CRYPTO_MODULE !== 'disabled') {
+      // Ensure that the logger has been passed to the user-provided crypto module.
+      if (clientConfiguration.getCryptoModule())
+        (clientConfiguration.getCryptoModule() as WebCryptoModule).logger = clientConfiguration.logger();
+    }
 
     // Prepare Token manager.
     let tokenManager: TokenManager | undefined;
@@ -84,6 +95,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
           useRandomIVs: clientConfiguration.getUseRandomIVs(),
           customEncrypt: clientConfiguration.getCustomEncrypt(),
           customDecrypt: clientConfiguration.getCustomDecrypt(),
+          logger: clientConfiguration.logger(),
         });
       }
     }
@@ -92,11 +104,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
     if (process.env.CRYPTO_MODULE !== 'disabled') cryptography = new WebCryptography();
 
     // Setup transport provider.
-    let transport: Transport = new WebTransport(
-      platformConfiguration.transport,
-      clientConfiguration.keepAlive,
-      clientConfiguration.logVerbosity!,
-    );
+    let transport: Transport = new WebTransport(clientConfiguration.logger(), platformConfiguration.transport);
 
     if (process.env.SHARED_WORKER !== 'disabled') {
       if (configurationCopy.subscriptionWorkerUrl) {
@@ -110,16 +118,20 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
           heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
           workerOfflineClientsCheckInterval: platformConfiguration.subscriptionWorkerOfflineClientsCheckInterval!,
           workerUnsubscribeOfflineClients: platformConfiguration.subscriptionWorkerUnsubscribeOfflineClients!,
-          logVerbosity: clientConfiguration.logVerbosity!,
           workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity!,
           tokenManager,
           transport,
+          logger: clientConfiguration.logger(),
         });
         transport = middleware;
 
         window.onpagehide = (event: PageTransitionEvent) => {
           if (!event.persisted) middleware.terminate();
         };
+      } else if (sharedWorkerRequested) {
+        clientConfiguration
+          .logger()
+          .warn('PubNub', 'SharedWorker not supported in this browser. Fallback to the original transport.');
       }
     }
 
@@ -149,14 +161,18 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
   }
 
   private networkDownDetected() {
-    this.listenerManager.announceNetworkDown();
+    this.logger.debug('PubNub', 'Network down detected');
+
+    this.emitStatus({ category: PubNub.CATEGORIES.PNNetworkDownCategory });
 
     if (this._configuration.restore) this.disconnect(true);
     else this.destroy(true);
   }
 
   private networkUpDetected() {
-    this.listenerManager.announceNetworkUp();
+    this.logger.debug('PubNub', 'Network up detected');
+
+    this.emitStatus({ category: PubNub.CATEGORIES.PNNetworkUpCategory });
     this.reconnect();
   }
 }

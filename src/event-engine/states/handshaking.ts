@@ -23,6 +23,7 @@ import { ReceivingState } from './receiving';
 import { State } from '../core/state';
 import { PubNubAPIError } from '../../errors/pubnub-api-error';
 import RequestOperation from '../../core/constants/operations';
+import { adjustedTimetokenBy, referenceSubscribeTimetoken } from '../../core/utils';
 
 /**
  * Context which represent current Subscription Event Engine data state.
@@ -38,8 +39,8 @@ export type HandshakingStateContext = {
 /**
  * Initial subscription handshake (disconnected) state.
  *
- * State in which Subscription Event Engine tries to receive subscription cursor for next sequential subscribe REST
- * API calls.
+ * State in which Subscription Event Engine tries to receive the subscription cursor for the next sequential
+ * subscribe REST API calls.
  *
  * @internal
  */
@@ -63,6 +64,7 @@ HandshakingState.on(handshakeSuccess.type, (context, { payload }) =>
         timetoken: !!context.cursor?.timetoken ? context.cursor?.timetoken : payload.timetoken,
         region: payload.region,
       },
+      referenceTimetoken: referenceSubscribeTimetoken(payload.timetoken, context.cursor?.timetoken),
     },
     [
       emitStatus({
@@ -76,34 +78,24 @@ HandshakingState.on(handshakeSuccess.type, (context, { payload }) =>
 );
 
 HandshakingState.on(handshakeFailure.type, (context, event) =>
-  HandshakeFailedState.with(
-    {
-      channels: context.channels,
-      groups: context.groups,
-      cursor: context.cursor,
-      reason: event.payload,
-    },
-    [emitStatus({ category: categoryConstants.PNConnectionErrorCategory, error: event.payload.status?.category })],
-  ),
+  HandshakeFailedState.with({ ...context, reason: event.payload }, [
+    emitStatus({ category: categoryConstants.PNConnectionErrorCategory, error: event.payload.status?.category }),
+  ]),
 );
 
 HandshakingState.on(disconnect.type, (context, event) => {
-  if (!event.payload.isOffline)
-    return HandshakeStoppedState.with({ channels: context.channels, groups: context.groups, cursor: context.cursor });
+  if (!event.payload.isOffline) return HandshakeStoppedState.with({ ...context });
   else {
     const errorReason = PubNubAPIError.create(new Error('Network connection error')).toPubNubError(
       RequestOperation.PNSubscribeOperation,
     );
 
-    return HandshakeFailedState.with(
-      { channels: context.channels, groups: context.groups, cursor: context.cursor, reason: errorReason },
-      [
-        emitStatus({
-          category: categoryConstants.PNConnectionErrorCategory,
-          error: errorReason.status?.category,
-        }),
-      ],
-    );
+    return HandshakeFailedState.with({ ...context, reason: errorReason }, [
+      emitStatus({
+        category: categoryConstants.PNConnectionErrorCategory,
+        error: errorReason.status?.category,
+      }),
+    ]);
   }
 });
 
@@ -113,7 +105,7 @@ HandshakingState.on(restore.type, (context, { payload }) => {
   return HandshakingState.with({
     channels: payload.channels,
     groups: payload.groups,
-    cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context?.cursor?.region || 0 },
+    cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context?.cursor?.region || 0 },
   });
 });
 

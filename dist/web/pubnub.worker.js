@@ -158,10 +158,6 @@
     const aggregationTimers = new Map();
     // region State
     /**
-     * Service `ArrayBuffer` response decoder.
-     */
-    const decoder = new TextDecoder();
-    /**
      * Per-subscription key map of "offline" clients detection timeouts.
      */
     const pingTimeouts = {};
@@ -302,7 +298,6 @@
             requestOrId = requestOrId.identifier;
         if (client.subscription)
             isInitialSubscribe = client.subscription.timetoken === '0';
-        notifyRequestProcessing('start', [client], new Date().toISOString(), event.request);
         if (typeof requestOrId === 'string') {
             const scheduledRequest = serviceRequests[requestOrId];
             if (client) {
@@ -324,7 +319,6 @@
                 result.url = `${event.request.origin}${event.request.path}`;
                 result.clientIdentifier = event.clientIdentifier;
                 result.identifier = event.request.identifier;
-                notifyRequestProcessing('end', [client], new Date().toISOString(), event.request, body, headers.get('Content-Type'), 0);
                 publishClientEvent(client, result);
             }
             return;
@@ -404,7 +398,6 @@
         const heartbeatRequestKey = `${client.userId}_${(_a = clientAggregateAuthKey(client)) !== null && _a !== void 0 ? _a : ''}`;
         const hbRequestsBySubscriptionKey = serviceHeartbeatRequests[client.subscriptionKey];
         const hbRequests = (hbRequestsBySubscriptionKey !== null && hbRequestsBySubscriptionKey !== void 0 ? hbRequestsBySubscriptionKey : {})[heartbeatRequestKey];
-        notifyRequestProcessing('start', [client], new Date().toISOString(), event.request);
         if (!request) {
             consoleLog(`Previous heartbeat request has been sent less than ${client.heartbeatInterval} seconds ago. Skipping...`, client);
             let response;
@@ -424,7 +417,6 @@
             result.url = `${event.request.origin}${event.request.path}`;
             result.clientIdentifier = event.clientIdentifier;
             result.identifier = event.request.identifier;
-            notifyRequestProcessing('end', [client], new Date().toISOString(), event.request, body, response.headers.get('Content-Type'), 0);
             publishClientEvent(client, result);
             return;
         }
@@ -558,7 +550,6 @@
             type: 'send-request',
             clientIdentifier: clientWithRequest.clientIdentifier,
             subscriptionKey: clientWithRequest.subscriptionKey,
-            logVerbosity: clientWithRequest.logVerbosity,
             request,
         };
         handleSendSubscribeRequestEventForClients([[clientWithRequest, sendRequest]], sendRequest);
@@ -581,7 +572,7 @@
         (() => __awaiter(void 0, void 0, void 0, function* () {
             var _a;
             // Request progress support.
-            const start = new Date().getTime();
+            new Date().getTime();
             Promise.race([
                 fetch(requestFromTransportRequest(request), {
                     signal: (_a = abortControllers.get(request.identifier)) === null || _a === void 0 ? void 0 : _a.signal,
@@ -592,11 +583,10 @@
                 .then((response) => response.arrayBuffer().then((buffer) => [response, buffer]))
                 .then((response) => (responsePreProcess ? responsePreProcess(response) : response))
                 .then((response) => {
-                const responseBody = response[1].byteLength > 0 ? response[1] : undefined;
+                response[1].byteLength > 0 ? response[1] : undefined;
                 const clients = getClients();
                 if (clients.length === 0)
                     return;
-                notifyRequestProcessing('end', clients, new Date().toISOString(), request, responseBody, response[0].headers.get('Content-Type'), new Date().getTime() - start);
                 success(clients, response);
             })
                 .catch((error) => {
@@ -1048,65 +1038,6 @@
         return false;
     };
     /**
-     * Send request processing update.
-     *
-     * @param type - Type of processing event.
-     * @param clients - List of PubNub clients which should be notified about request progress.
-     * @param timestamp - Date and time when request processing update happened.
-     * @param [request] - Processed request information.
-     * @param [responseBody] - PubNub service response.
-     * @param [contentType] - PubNub service response content type.
-     * @param [duration] - How long it took to complete request.
-     */
-    const notifyRequestProcessing = (type, clients, timestamp, request, responseBody, contentType, duration) => {
-        var _a, _b;
-        if (clients.length === 0)
-            return;
-        const clientIds = (_a = sharedWorkerClients[clients[0].subscriptionKey]) !== null && _a !== void 0 ? _a : {};
-        const isSubscribeRequest = request && request.path.startsWith('/v2/subscribe');
-        let event;
-        if (type === 'start') {
-            event = {
-                type: 'request-progress-start',
-                clientIdentifier: '',
-                url: '',
-                timestamp,
-            };
-        }
-        else {
-            let response;
-            if (responseBody &&
-                contentType &&
-                (contentType.indexOf('text/javascript') !== -1 ||
-                    contentType.indexOf('application/json') !== -1 ||
-                    contentType.indexOf('text/plain') !== -1 ||
-                    contentType.indexOf('text/html') !== -1)) {
-                response = decoder.decode(responseBody);
-            }
-            event = {
-                type: 'request-progress-end',
-                clientIdentifier: '',
-                url: '',
-                response,
-                timestamp,
-                duration: duration,
-            };
-        }
-        for (const client of clients) {
-            if (isSubscribeRequest && !client.subscription)
-                continue;
-            const serviceWorkerClientId = clientIds[client.clientIdentifier];
-            const { request: clientRequest } = (_b = client.subscription) !== null && _b !== void 0 ? _b : {};
-            let decidedRequest = clientRequest !== null && clientRequest !== void 0 ? clientRequest : request;
-            if (!isSubscribeRequest)
-                decidedRequest = request;
-            if (client.logVerbosity && serviceWorkerClientId && decidedRequest) {
-                const payload = Object.assign(Object.assign({}, event), { clientIdentifier: client.clientIdentifier, url: `${decidedRequest.origin}${decidedRequest.path}`, query: decidedRequest.queryParameters });
-                publishClientEvent(client, payload);
-            }
-        }
-    };
-    /**
      * Send request processing result event.
      *
      * @param clients - List of PubNub clients which should be notified about request result.
@@ -1270,7 +1201,6 @@
             userId: event.userId,
             heartbeatInterval: event.heartbeatInterval,
             newlyRegistered: true,
-            logVerbosity: event.logVerbosity,
             offlineClientsCheckInterval: event.workerOfflineClientsCheckInterval,
             unsubscribeOfflineClients: event.workerUnsubscribeOfflineClients,
             workerLogVerbosity: event.workerLogVerbosity,
@@ -1527,7 +1457,6 @@
             type: 'send-request',
             clientIdentifier: client.clientIdentifier,
             subscriptionKey: client.subscriptionKey,
-            logVerbosity: client.logVerbosity,
             request: {
                 origin: client.origin,
                 path: `/v2/presence/sub-key/${client.subscriptionKey}/channel/${channelsString}/leave`,
@@ -1546,9 +1475,7 @@
      * Validate received event payload.
      */
     const validateEventPayload = (event) => {
-        const { clientIdentifier, subscriptionKey, logVerbosity } = event.data;
-        if (logVerbosity === undefined || typeof logVerbosity !== 'boolean')
-            return false;
+        const { clientIdentifier, subscriptionKey } = event.data;
         if (!clientIdentifier || typeof clientIdentifier !== 'string')
             return false;
         return !(!subscriptionKey || typeof subscriptionKey !== 'string');

@@ -33,11 +33,6 @@ type BasicEvent = {
   subscriptionKey: string;
 
   /**
-   * Whether verbose logging enabled or not.
-   */
-  logVerbosity: boolean;
-
-  /**
    * Interval at which Shared Worker should check whether PubNub instances which used it still active or not.
    */
   workerOfflineClientsCheckInterval?: number;
@@ -139,80 +134,6 @@ export type ClientEvent = RegisterEvent | PongEvent | SendRequestEvent | CancelR
 export type SharedWorkerConnected = {
   type: 'shared-worker-connected';
 };
-
-/**
- * {@link Request} processing start event.
- *
- * This event will be sent if {@link logVerbosity} set to `true` when worker will receive
- * {@link SendRequestEvent}.
- */
-export type RequestSendingStart = {
-  type: 'request-progress-start';
-
-  /**
-   * Receiving PubNub client unique identifier.
-   */
-  clientIdentifier: string;
-
-  /**
-   * Url of request which has been sent.
-   */
-  url: string;
-
-  /**
-   * Key / value pairs of request which has been sent.
-   */
-  query?: Query;
-
-  /**
-   * When request processing started.
-   */
-  timestamp: string;
-};
-/**
- * {@link Request} processing completion event.
- *
- * This event will be sent if {@link logVerbosity} set to `true` when worker will receive
- * response from service or error.
- */
-export type RequestSendingEnd = {
-  type: 'request-progress-end';
-
-  /**
-   * Receiving PubNub client unique identifier.
-   */
-  clientIdentifier: string;
-
-  /**
-   * Url of request which has been sent.
-   */
-  url: string;
-
-  /**
-   * Key / value pairs of request which has been sent.
-   */
-  query?: Query;
-
-  /**
-   * Stringified service response (if `Content-Type` allows it).
-   */
-  response: string | undefined;
-
-  /**
-   * How long it took to perform request.
-   */
-  duration: number;
-
-  /**
-   * When request processing ended.
-   */
-  timestamp: string;
-};
-
-/**
- * Request processing progress.
- */
-export type RequestSendingProgress = RequestSendingStart | RequestSendingEnd;
 
 /**
  * Request processing error.
@@ -369,7 +290,6 @@ export type SubscriptionWorkerEvent =
   | SharedWorkerConnected
   | SharedWorkerConsole
   | SharedWorkerPing
-  | RequestSendingProgress
   | RequestSendingResult;
 
 /**
@@ -428,11 +348,6 @@ type PubNubClientState = {
    * Whether instance registered for the first time or not.
    */
   newlyRegistered: boolean;
-
-  /**
-   * Whether verbose logging enabled or not.
-   */
-  logVerbosity: boolean;
 
   /**
    * Interval at which Shared Worker should check whether PubNub instances which used it still active or not.
@@ -576,11 +491,6 @@ const subscribeAggregationTimeout = 50;
 const aggregationTimers: Map<string, [[PubNubClientState, SendRequestEvent][], NodeJS.Timeout]> = new Map();
 
 // region State
-/**
- * Service `ArrayBuffer` response decoder.
- */
-const decoder = new TextDecoder();
-
 /**
  * Per-subscription key map of "offline" clients detection timeouts.
  */
@@ -802,7 +712,6 @@ const handleSendSubscribeRequestForClient = (
   if (!requestOrigin && typeof requestOrId !== 'string') requestOrId = requestOrId.identifier;
 
   if (client.subscription) isInitialSubscribe = client.subscription.timetoken === '0';
-  notifyRequestProcessing('start', [client], new Date().toISOString(), event.request);
 
   if (typeof requestOrId === 'string') {
     const scheduledRequest = serviceRequests[requestOrId];
@@ -829,16 +738,6 @@ const handleSendSubscribeRequestForClient = (
       result.url = `${event.request.origin}${event.request.path}`;
       result.clientIdentifier = event.clientIdentifier;
       result.identifier = event.request.identifier;
-
-      notifyRequestProcessing(
-        'end',
-        [client],
-        new Date().toISOString(),
-        event.request,
-        body,
-        headers.get('Content-Type'),
-        0,
-      );
 
       publishClientEvent(client, result);
     }
@@ -938,7 +837,6 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent) => {
   const heartbeatRequestKey = `${client.userId}_${clientAggregateAuthKey(client) ?? ''}`;
   const hbRequestsBySubscriptionKey = serviceHeartbeatRequests[client.subscriptionKey];
   const hbRequests = (hbRequestsBySubscriptionKey ?? {})[heartbeatRequestKey];
-  notifyRequestProcessing('start', [client], new Date().toISOString(), event.request);
 
   if (!request) {
     consoleLog(
@@ -966,16 +864,6 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent) => {
     result.url = `${event.request.origin}${event.request.path}`;
     result.clientIdentifier = event.clientIdentifier;
     result.identifier = event.request.identifier;
-
-    notifyRequestProcessing(
-      'end',
-      [client],
-      new Date().toISOString(),
-      event.request,
-      body,
-      response.headers.get('Content-Type'),
-      0,
-    );
 
     publishClientEvent(client, result);
     return;
@@ -1134,7 +1022,6 @@ const restartSubscribeRequestForClients = (clients: PubNubClientState[]) => {
     type: 'send-request',
     clientIdentifier: clientWithRequest.clientIdentifier,
     subscriptionKey: clientWithRequest.subscriptionKey,
-    logVerbosity: clientWithRequest.logVerbosity,
     request,
   };
 
@@ -1182,16 +1069,6 @@ const sendRequest = (
 
         const clients = getClients();
         if (clients.length === 0) return;
-
-        notifyRequestProcessing(
-          'end',
-          clients,
-          new Date().toISOString(),
-          request,
-          responseBody,
-          response[0].headers.get('Content-Type'),
-          new Date().getTime() - start,
-        );
 
         success(clients, response);
       })
@@ -1699,83 +1576,6 @@ const publishClientEvent = (client: PubNubClientState, event: SubscriptionWorker
 };
 
 /**
- * Send request processing update.
- *
- * @param type - Type of processing event.
- * @param clients - List of PubNub clients which should be notified about request progress.
- * @param timestamp - Date and time when request processing update happened.
- * @param [request] - Processed request information.
- * @param [responseBody] - PubNub service response.
- * @param [contentType] - PubNub service response content type.
- * @param [duration] - How long it took to complete request.
- */
-const notifyRequestProcessing = (
-  type: 'start' | 'end',
-  clients: PubNubClientState[],
-  timestamp: string,
-  request?: TransportRequest,
-  responseBody?: ArrayBuffer,
-  contentType?: string | null,
-  duration?: number,
-) => {
-  if (clients.length === 0) return;
-
-  const clientIds = sharedWorkerClients[clients[0].subscriptionKey] ?? {};
-  const isSubscribeRequest = request && request.path.startsWith('/v2/subscribe');
-  let event: RequestSendingProgress;
-
-  if (type === 'start') {
-    event = {
-      type: 'request-progress-start',
-      clientIdentifier: '',
-      url: '',
-      timestamp,
-    };
-  } else {
-    let response: string | undefined;
-    if (
-      responseBody &&
-      contentType &&
-      (contentType.indexOf('text/javascript') !== -1 ||
-        contentType.indexOf('application/json') !== -1 ||
-        contentType.indexOf('text/plain') !== -1 ||
-        contentType.indexOf('text/html') !== -1)
-    ) {
-      response = decoder.decode(responseBody);
-    }
-
-    event = {
-      type: 'request-progress-end',
-      clientIdentifier: '',
-      url: '',
-      response,
-      timestamp,
-      duration: duration!,
-    };
-  }
-
-  for (const client of clients) {
-    if (isSubscribeRequest && !client.subscription) continue;
-
-    const serviceWorkerClientId = clientIds[client.clientIdentifier];
-    const { request: clientRequest } = client.subscription ?? {};
-    let decidedRequest = clientRequest ?? request;
-    if (!isSubscribeRequest) decidedRequest = request;
-
-    if (client.logVerbosity && serviceWorkerClientId && decidedRequest) {
-      const payload = {
-        ...event,
-        clientIdentifier: client.clientIdentifier,
-        url: `${decidedRequest.origin}${decidedRequest.path}`,
-        query: decidedRequest.queryParameters,
-      };
-
-      publishClientEvent(client, payload);
-    }
-  }
-};
-
-/**
  * Send request processing result event.
  *
  * @param clients - List of PubNub clients which should be notified about request result.
@@ -1962,7 +1762,6 @@ const registerClientIfRequired = (event: RegisterEvent) => {
     userId: event.userId,
     heartbeatInterval: event.heartbeatInterval,
     newlyRegistered: true,
-    logVerbosity: event.logVerbosity,
     offlineClientsCheckInterval: event.workerOfflineClientsCheckInterval,
     unsubscribeOfflineClients: event.workerUnsubscribeOfflineClients,
     workerLogVerbosity: event.workerLogVerbosity,
@@ -2255,7 +2054,6 @@ const unsubscribeClient = (client: PubNubClientState) => {
     type: 'send-request',
     clientIdentifier: client.clientIdentifier,
     subscriptionKey: client.subscriptionKey,
-    logVerbosity: client.logVerbosity,
     request: {
       origin: client.origin,
       path: `/v2/presence/sub-key/${client.subscriptionKey}/channel/${channelsString}/leave`,
@@ -2276,8 +2074,7 @@ const unsubscribeClient = (client: PubNubClientState) => {
  * Validate received event payload.
  */
 const validateEventPayload = (event: MessageEvent<ClientEvent>): boolean => {
-  const { clientIdentifier, subscriptionKey, logVerbosity } = event.data as ClientEvent;
-  if (logVerbosity === undefined || typeof logVerbosity !== 'boolean') return false;
+  const { clientIdentifier, subscriptionKey } = event.data as ClientEvent;
   if (!clientIdentifier || typeof clientIdentifier !== 'string') return false;
 
   return !(!subscriptionKey || typeof subscriptionKey !== 'string');

@@ -39,7 +39,7 @@ export class PubNub extends PubNubCore<null, null> {
     const transportMiddleware = new PubNubMiddleware({
       clientConfiguration,
       tokenManager,
-      transport: new TitaniumTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity),
+      transport: new TitaniumTransport(clientConfiguration.logger(), clientConfiguration.keepAlive),
     });
 
     super({

@@ -68,11 +68,10 @@ export class SetUUIDMetadataRequest<
   }
 
   protected get headers(): Record<string, string> | undefined {
-    if (this.parameters.ifMatchesEtag) {
-      return { ...(super.headers ?? {}), 'If-Match': this.parameters.ifMatchesEtag };
-    } else {
-      return super.headers;
-    }
+    let headers = super.headers ?? {};
+    if (this.parameters.ifMatchesEtag) headers = { ...headers, 'If-Match': this.parameters.ifMatchesEtag };
+
+    return { ...headers, 'Content-Type': 'application/json' };
   }
 
   protected get path(): string {

@@ -64,6 +64,7 @@ export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
           useRandomIVs: clientConfiguration.getUseRandomIVs(),
           customEncrypt: clientConfiguration.getCustomEncrypt(),
           customDecrypt: clientConfiguration.getCustomDecrypt(),
+          logger: clientConfiguration.logger(),
         });
       }
     }
@@ -72,7 +73,7 @@ export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
     const transportMiddleware = new PubNubMiddleware({
       clientConfiguration,
       tokenManager,
-      transport: new ReactNativeTransport(clientConfiguration.keepAlive, clientConfiguration.logVerbosity!),
+      transport: new ReactNativeTransport(clientConfiguration.logger(), clientConfiguration.keepAlive),
     });
 
     super({

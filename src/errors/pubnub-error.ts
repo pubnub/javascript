@@ -2,8 +2,8 @@
  * PubNub operation error module.
  */
 
-import { Status } from '../core/types/api';
 import StatusCategory from '../core/constants/categories';
+import { Status } from '../core/types/api';
 
 /**
  * PubNub operation error.

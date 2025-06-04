@@ -6,6 +6,7 @@
 
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
 import { TransportResponse } from '../core/types/transport-response';
+import { LoggerManager } from '../core/components/logger-manager';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
 import { Transport } from '../core/interfaces/transport';
 import { PubNubFileInterface } from '../core/types/file';
@@ -85,18 +86,26 @@ export class WebTransport implements Transport {
   /**
    * Create and configure transport provider for Web and Rect environments.
    *
-   * @param [transport] - API which should be used to make network requests.
-   * @param [keepAlive] - Whether client should try to keep connections open for reuse or not.
-   * @param logVerbosity - Whether verbose logs should be printed or not.
+   * @param logger - Registered loggers' manager.
+   * @param [transport] - API, which should be used to make network requests.
    *
    * @internal
    */
   constructor(
+    private readonly logger: LoggerManager,
     private readonly transport: 'fetch' | 'xhr' = 'fetch',
-    private keepAlive: boolean = false,
-    private readonly logVerbosity: boolean = false,
   ) {
-    if (transport === 'fetch' && (!window || !window.fetch)) this.transport = 'xhr';
+    logger.debug(this.constructor.name, `Create with configuration:\n  - transport: ${transport}`);
+
+    if (transport === 'fetch' && (!window || !window.fetch)) {
+      logger.warn(
+        this.constructor.name,
+        `'${transport}' not supported in this browser. Fallback to the 'xhr' transport.`,
+      );
+
+      this.transport = 'xhr';
+    }
+
     if (this.transport !== 'fetch') return;
 
     // Keeping reference on current `window.fetch` function.
@@ -106,16 +115,19 @@ export class WebTransport implements Transport {
     if (this.isFetchMonkeyPatched()) {
       WebTransport.originalFetch = WebTransport.getOriginalFetch();
 
-      if (!logVerbosity) return;
+      logger.warn(this.constructor.name, "Native Web Fetch API 'fetch' function monkey patched.");
 
-      console.warn("[PubNub] Native Web Fetch API 'fetch' function monkey patched.");
-
-      if (!this.isFetchMonkeyPatched(WebTransport.originalFetch))
-        console.info("[PubNub] Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
-      else
-        console.warn(
-          '[PubNub] Unable receive native Web Fetch API. There can be issues with subscribe long-poll cancellation',
+      if (!this.isFetchMonkeyPatched(WebTransport.originalFetch)) {
+        logger.info(
+          this.constructor.name,
+          "Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.",
         );
+      } else {
+        logger.warn(
+          this.constructor.name,
+          'Unable receive native Web Fetch API. There can be issues with subscribe long-poll  cancellation',
+        );
+      }
     }
   }
 
@@ -123,48 +135,76 @@ export class WebTransport implements Transport {
     const abortController = new AbortController();
     const cancellation: WebCancellationController = {
       abortController,
-      abort: (reason) => !abortController.signal.aborted && abortController.abort(reason),
+      abort: (reason) => {
+        if (!abortController.signal.aborted) {
+          this.logger.trace(this.constructor.name, `On-demand request aborting: ${reason}`);
+          abortController.abort(reason);
+        }
+      },
     };
 
     return [
       this.webTransportRequestFromTransportRequest(req).then((request) => {
-        const start = new Date().getTime();
-
-        this.logRequestProcessProgress(request, req.body);
+        this.logger.debug(this.constructor.name, () => ({ messageType: 'network-request', message: req }));
 
         return this.sendRequest(request, cancellation)
           .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer] =>
             response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]),
           )
           .then((response) => {
-            const responseBody = response[1].byteLength > 0 ? response[1] : undefined;
+            const body = response[1].byteLength > 0 ? response[1] : undefined;
             const { status, headers: requestHeaders } = response[0];
             const headers: Record<string, string> = {};
 
             // Copy Headers object content into plain Record.
             requestHeaders.forEach((value, key) => (headers[key] = value.toLowerCase()));
 
-            const transportResponse: TransportResponse = {
-              status,
-              url: request.url,
-              headers,
-              body: responseBody,
-            };
+            const transportResponse: TransportResponse = { status, url: request.url, headers, body };
+
+            this.logger.debug(this.constructor.name, () => ({
+              messageType: 'network-response',
+              message: transportResponse,
+            }));
 
             if (status >= 400) throw PubNubAPIError.create(transportResponse);
-
-            this.logRequestProcessProgress(request, undefined, new Date().getTime() - start, responseBody);
 
             return transportResponse;
           })
           .catch((error) => {
-            let fetchError = error;
+            const errorMessage = (typeof error === 'string' ? error : (error as Error).message).toLowerCase();
+            let fetchError = typeof error === 'string' ? new Error(error) : (error as Error);
 
-            if (typeof error === 'string') {
-              const errorMessage = error.toLowerCase();
-              fetchError = new Error(error);
+            if (errorMessage.includes('timeout')) {
+              this.logger.warn(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: 'Timeout',
+                canceled: true,
+              }));
+            } else if (errorMessage.includes('cancel') || errorMessage.includes('abort')) {
+              this.logger.debug(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: 'Aborted',
+                canceled: true,
+              }));
 
-              if (!errorMessage.includes('timeout') && errorMessage.includes('cancel')) fetchError.name = 'AbortError';
+              fetchError = new Error('Aborted');
+              fetchError.name = 'AbortError';
+            } else if (errorMessage.includes('network')) {
+              this.logger.warn(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: 'Network error',
+                failed: true,
+              }));
+            } else {
+              this.logger.warn(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: PubNubAPIError.create(fetchError).message,
+                failed: true,
+              }));
             }
 
             throw PubNubAPIError.create(fetchError);
@@ -249,6 +289,7 @@ export class WebTransport implements Transport {
     return new Promise<Response>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open(req.method, req.url, true);
+      let aborted = false;
 
       // Setup request
       xhr.responseType = 'arraybuffer';
@@ -256,15 +297,25 @@ export class WebTransport implements Transport {
 
       controller.abortController.signal.onabort = () => {
         if (xhr.readyState == XMLHttpRequest.DONE || xhr.readyState == XMLHttpRequest.UNSENT) return;
+        aborted = true;
         xhr.abort();
       };
 
       Object.entries(req.headers ?? {}).forEach(([key, value]) => xhr.setRequestHeader(key, value));
 
       // Setup handlers to match `fetch` results handling.
-      xhr.onabort = () => reject(new Error('Aborted'));
-      xhr.ontimeout = () => reject(new Error('Request timeout'));
-      xhr.onerror = () => reject(new Error('Request timeout'));
+      xhr.onabort = () => {
+        reject(new Error('Aborted'));
+      };
+      xhr.ontimeout = () => {
+        reject(new Error('Request timeout'));
+      };
+      xhr.onerror = () => {
+        if (!aborted) {
+          const response = this.transportResponseFromXHR(req.url, xhr);
+          reject(new Error(PubNubAPIError.create(response).message));
+        }
+      };
 
       xhr.onload = () => {
         const headers = new Headers();
@@ -296,7 +347,7 @@ export class WebTransport implements Transport {
     let body: string | ArrayBuffer | FormData | undefined;
     let path = req.path;
 
-    // Create multipart request body.
+    // Create a multipart request body.
     if (req.formData && req.formData.length > 0) {
       // Reset query parameters to conform to signed URL
       req.queryParameters = {};
@@ -307,28 +358,43 @@ export class WebTransport implements Transport {
       try {
         const fileData = await file.toArrayBuffer();
         formData.append('file', new Blob([fileData], { type: 'application/octet-stream' }), file.name);
-      } catch (_) {
+      } catch (toBufferError) {
+        this.logger.warn(this.constructor.name, () => ({ messageType: 'error', message: toBufferError }));
+
         try {
           const fileData = await file.toFileUri();
           // @ts-expect-error React Native File Uri support.
           formData.append('file', fileData, file.name);
-        } catch (_) {}
+        } catch (toFileURLError) {
+          this.logger.error(this.constructor.name, () => ({ messageType: 'error', message: toFileURLError }));
+        }
       }
 
       body = formData;
     }
     // Handle regular body payload (if passed).
     else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) {
-      // Compressing body if browser has native support.
+      // Compressing body if the browser has native support.
       if (req.compressible && typeof CompressionStream !== 'undefined') {
+        const bodyArrayBuffer = typeof req.body === 'string' ? WebTransport.encoder.encode(req.body) : req.body;
+        const initialBodySize = bodyArrayBuffer.byteLength;
         const bodyStream = new ReadableStream({
           start(controller) {
-            controller.enqueue(typeof req.body === 'string' ? WebTransport.encoder.encode(req.body) : req.body);
+            controller.enqueue(bodyArrayBuffer);
             controller.close();
           },
         });
 
         body = await new Response(bodyStream.pipeThrough(new CompressionStream('deflate'))).arrayBuffer();
+        this.logger.trace(this.constructor.name, () => {
+          const compressedSize = (body! as ArrayBuffer).byteLength;
+          const ratio = (compressedSize / initialBodySize).toFixed(2);
+
+          return {
+            messageType: 'text',
+            message: `Body of ${initialBodySize} bytes, compressed by ${ratio}x to ${compressedSize} bytes.`,
+          };
+        });
       } else body = req.body;
     }
 
@@ -345,48 +411,7 @@ export class WebTransport implements Transport {
   }
 
   /**
-   * Log out request processing progress and result.
-   *
-   * @param request - Platform-specific
-   * @param [requestBody] - POST / PATCH body.
-   * @param [elapsed] - How many seconds passed since request processing started.
-   * @param [body] - Service response (if available).
-   *
-   * @internal
-   */
-  protected logRequestProcessProgress(
-    request: WebTransportRequest,
-    requestBody: TransportRequest['body'],
-    elapsed?: number,
-    body?: ArrayBuffer,
-  ) {
-    if (!this.logVerbosity) return;
-
-    const { protocol, host, pathname, search } = new URL(request.url);
-    const timestamp = new Date().toISOString();
-
-    if (!elapsed) {
-      let outgoing = `[${timestamp}]\n${protocol}//${host}${pathname}\n${search}`;
-      if (requestBody && (typeof requestBody === 'string' || requestBody instanceof ArrayBuffer)) {
-        if (typeof requestBody === 'string') outgoing += `\n\n${requestBody}`;
-        else outgoing += `\n\n${WebTransport.decoder.decode(requestBody)}`;
-      }
-
-      console.log(`<<<<<`);
-      console.log(outgoing);
-      console.log('-----');
-    } else {
-      let outgoing = `[${timestamp} / ${elapsed}]\n${protocol}//${host}${pathname}\n${search}`;
-      if (body) outgoing += `\n\n${WebTransport.decoder.decode(body)}`;
-
-      console.log('>>>>>>');
-      console.log(outgoing);
-      console.log('-----');
-    }
-  }
-
-  /**
-   * Check whether original `fetch` has been monkey patched or not.
+   * Check whether the original ` fetch ` has been monkey patched or not.
    *
    * @returns `true` if original `fetch` has been patched.
    */
@@ -397,7 +422,27 @@ export class WebTransport implements Transport {
   }
 
   /**
-   * Retrieve original `fetch` implementation.
+   * Create service response from {@link XMLHttpRequest} processing result.
+   *
+   * @param url - Used endpoint url.
+   * @param xhr - `HTTPClient`, which has been used to make a request.
+   *
+   * @returns  Pre-processed transport response.
+   */
+  private transportResponseFromXHR(url: string, xhr: XMLHttpRequest): TransportResponse {
+    const allHeaders = xhr.getAllResponseHeaders().split('\n');
+    const headers: Record<string, string> = {};
+
+    for (const header of allHeaders) {
+      const [key, value] = header.trim().split(':');
+      if (key && value) headers[key.toLowerCase()] = value.trim();
+    }
+
+    return { status: xhr.status, url, headers, body: xhr.response as ArrayBuffer };
+  }
+
+  /**
+   * Retrieve the original ` fetch ` implementation.
    *
    * Retrieve implementation which hasn't been patched by APM tools.
    *

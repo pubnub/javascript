@@ -16,7 +16,7 @@ import * as Subscription from '../../core/types/api/subscription';
  *
  * @internal
  */
-type ReceiveStoppedStateContext = {
+export type ReceiveStoppedStateContext = {
   channels: string[];
   groups: string[];
   cursor: Subscription.SubscriptionCursor;
@@ -44,7 +44,7 @@ ReceiveStoppedState.on(restore.type, (context, { payload }) => {
   return ReceiveStoppedState.with({
     channels: payload.channels,
     groups: payload.groups,
-    cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
+    cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
   });
 });
 

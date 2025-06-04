@@ -505,6 +505,16 @@
 	        this.defaultCryptor = configuration.default;
 	        this.cryptors = (_a = configuration.cryptors) !== null && _a !== void 0 ? _a : [];
 	    }
+	    /**
+	     * Assign registered loggers' manager.
+	     *
+	     * @param _logger - Registered loggers' manager.
+	     *
+	     * @internal
+	     */
+	    set logger(_logger) {
+	        throw new Error('Method not implemented.');
+	    }
 	    // endregion
 	    // --------------------------------------------------------
 	    // ----------------------- Helpers ------------------------
@@ -517,6 +527,15 @@
 	     */
 	    getAllCryptors() {
 	        return [this.defaultCryptor, ...this.cryptors];
+	    }
+	    // endregion
+	    /**
+	     * Serialize crypto module information to string.
+	     *
+	     * @returns Serialized crypto module information.
+	     */
+	    toString() {
+	        return `${this.constructor.name} { default: ${this.defaultCryptor.toString()}, cryptors: [${this.cryptors.map((c) => c.toString()).join(', ')}]}`;
 	    }
 	}
 	/**
@@ -1993,6 +2012,14 @@
 	        }
 	        return this.CryptoJS.lib.WordArray.create(wa, b.length);
 	    }
+	    /**
+	     * Serialize cryptor information to string.
+	     *
+	     * @returns Serialized cryptor information.
+	     */
+	    toString() {
+	        return `${this.constructor.name} { cipherKey: ${this.cipherKey} }`;
+	    }
 	}
 	/**
 	 * Cryptor block size.
@@ -2055,12 +2082,39 @@
 	         * Allowed crypto modes.
 	         */
 	        this.allowedModes = ['ecb', 'cbc'];
+	        this.logger = configuration.logger;
 	        this.defaultOptions = {
 	            encryptKey: true,
 	            keyEncoding: 'utf8',
 	            keyLength: 256,
 	            mode: 'cbc',
 	        };
+	    }
+	    /**
+	     * Update registered loggers' manager.
+	     *
+	     * @param [logger] - Logger, which crypto should use.
+	     */
+	    set logger(logger) {
+	        this._logger = logger;
+	        if (this.logger) {
+	            this.logger.debug('Crypto', () => ({
+	                messageType: 'object',
+	                message: this.configuration,
+	                details: 'Create with configuration:',
+	                ignoredKeys(key, obj) {
+	                    return typeof obj[key] === 'function' || key === 'logger';
+	                },
+	            }));
+	        }
+	    }
+	    /**
+	     * Get loggers' manager.
+	     *
+	     * @returns Loggers' manager (if set).
+	     */
+	    get logger() {
+	        return this._logger;
 	    }
 	    /**
 	     * Generate HMAC-SHA256 hash from input data.
@@ -2096,8 +2150,11 @@
 	     * @returns Encrypted `data`.
 	     */
 	    encrypt(data, customCipherKey, options) {
-	        if (this.configuration.customEncrypt)
+	        if (this.configuration.customEncrypt) {
+	            if (this.logger)
+	                this.logger.warn(this.constructor.name, "'customEncrypt' is deprecated. Consult docs for better alternative.");
 	            return this.configuration.customEncrypt(data);
+	        }
 	        return this.pnEncrypt(data, customCipherKey, options);
 	    }
 	    /**
@@ -2110,8 +2167,11 @@
 	     * @returns Decrypted `data`.
 	     */
 	    decrypt(data, customCipherKey, options) {
-	        if (this.configuration.customDecrypt)
+	        if (this.configuration.customDecrypt) {
+	            if (this.logger)
+	                this.logger.warn(this.constructor.name, "'customDecrypt' is deprecated. Consult docs for better alternative.");
 	            return this.configuration.customDecrypt(data);
+	        }
 	        return this.pnDecrypt(data, customCipherKey, options);
 	    }
 	    /**
@@ -2127,6 +2187,13 @@
 	        const decidedCipherKey = customCipherKey !== null && customCipherKey !== void 0 ? customCipherKey : this.configuration.cipherKey;
 	        if (!decidedCipherKey)
 	            return data;
+	        if (this.logger) {
+	            this.logger.debug(this.constructor.name, () => ({
+	                messageType: 'object',
+	                message: Object.assign({ data, cipherKey: decidedCipherKey }, (options !== null && options !== void 0 ? options : {})),
+	                details: 'Encrypt with parameters:',
+	            }));
+	        }
 	        options = this.parseOptions(options);
 	        const mode = this.getMode(options);
 	        const cipherKey = this.getPaddedKey(decidedCipherKey, options);
@@ -2157,6 +2224,13 @@
 	        const decidedCipherKey = customCipherKey !== null && customCipherKey !== void 0 ? customCipherKey : this.configuration.cipherKey;
 	        if (!decidedCipherKey)
 	            return data;
+	        if (this.logger) {
+	            this.logger.debug(this.constructor.name, () => ({
+	                messageType: 'object',
+	                message: Object.assign({ data, cipherKey: decidedCipherKey }, (options !== null && options !== void 0 ? options : {})),
+	                details: 'Decrypt with parameters:',
+	            }));
+	        }
 	        options = this.parseOptions(options);
 	        const mode = this.getMode(options);
 	        const cipherKey = this.getPaddedKey(decidedCipherKey, options);
@@ -2172,6 +2246,8 @@
 	                return JSON.parse(plainJSON);
 	            }
 	            catch (e) {
+	                if (this.logger)
+	                    this.logger.error(this.constructor.name, () => ({ messageType: 'error', message: e }));
 	                return null;
 	            }
 	        }
@@ -2185,6 +2261,8 @@
 	                return JSON.parse(plainJSON);
 	            }
 	            catch (e) {
+	                if (this.logger)
+	                    this.logger.error(this.constructor.name, () => ({ messageType: 'error', message: e }));
 	                return null;
 	            }
 	        }
@@ -2518,6 +2596,14 @@
 	        this.cryptor = new Crypto(Object.assign({}, config));
 	        this.fileCryptor = new WebCryptography();
 	    }
+	    /**
+	     * Update registered loggers' manager.
+	     *
+	     * @param [logger] - Logger, which crypto should use.
+	     */
+	    set logger(logger) {
+	        this.cryptor.logger = logger;
+	    }
 	    // --------------------------------------------------------
 	    // --------------------- Encryption -----------------------
 	    // --------------------------------------------------------
@@ -2561,6 +2647,21 @@
 	    get identifier() {
 	        return '';
 	    }
+	    // endregion
+	    /**
+	     * Serialize cryptor information to string.
+	     *
+	     * @returns Serialized cryptor information.
+	     */
+	    toString() {
+	        const configurationEntries = Object.entries(this.config).reduce((acc, [key, value]) => {
+	            if (key === 'logger')
+	                return acc;
+	            acc.push(`${key}: ${typeof value === 'function' ? '<function>' : value}`);
+	            return acc;
+	        }, []);
+	        return `${this.constructor.name} { ${configurationEntries.join(', ')} }`;
+	    }
 	}
 	/**
 	 * `string` to {@link ArrayBuffer} response decoder.
@@ -2578,6 +2679,22 @@
 	 * CryptoModule for browser platform.
 	 */
 	class WebCryptoModule extends AbstractCryptoModule {
+	    /**
+	     * Assign registered loggers' manager.
+	     *
+	     * @param logger - Registered loggers' manager.
+	     *
+	     * @internal
+	     */
+	    set logger(logger) {
+	        if (this.defaultCryptor.identifier === WebCryptoModule.LEGACY_IDENTIFIER)
+	            this.defaultCryptor.logger = logger;
+	        else {
+	            const cryptor = this.cryptors.find((cryptor) => cryptor.identifier === WebCryptoModule.LEGACY_IDENTIFIER);
+	            if (cryptor)
+	                cryptor.logger = logger;
+	        }
+	    }
 	    // --------------------------------------------------------
 	    // --------------- Convenience functions ------------------
 	    // -------------------------------------------------------
@@ -3191,19 +3308,18 @@
 	            type: 'client-unregister',
 	            clientIdentifier: this.configuration.clientIdentifier,
 	            subscriptionKey: this.configuration.subscriptionKey,
-	            logVerbosity: this.configuration.logVerbosity,
 	        });
 	    }
 	    makeSendable(req) {
 	        // Use default request flow for non-subscribe / presence leave requests.
 	        if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/heartbeat') && !req.path.endsWith('/leave'))
 	            return this.configuration.transport.makeSendable(req);
+	        this.configuration.logger.debug(this.constructor.name, 'Process request with SharedWorker transport.');
 	        let controller;
 	        const sendRequestEvent = {
 	            type: 'send-request',
 	            clientIdentifier: this.configuration.clientIdentifier,
 	            subscriptionKey: this.configuration.subscriptionKey,
-	            logVerbosity: this.configuration.logVerbosity,
 	            request: req,
 	        };
 	        if (req.cancellable) {
@@ -3213,7 +3329,6 @@
 	                        type: 'cancel-request',
 	                        clientIdentifier: this.configuration.clientIdentifier,
 	                        subscriptionKey: this.configuration.subscriptionKey,
-	                        logVerbosity: this.configuration.logVerbosity,
 	                        identifier: req.identifier,
 	                    };
 	                    // Cancel active request with specified identifier.
@@ -3223,8 +3338,8 @@
 	        }
 	        return [
 	            new Promise((resolve, reject) => {
-	                // Associate Promise resolution / reject with request identifier for future usage in
-	                // `onmessage` handler block to return results.
+	                // Associate Promise resolution / reject with a request identifier for future usage in
+	                //  the `onmessage ` handler block to return results.
 	                this.callbacks.set(req.identifier, { resolve, reject });
 	                // Trigger request processing by Service Worker.
 	                this.parsedAccessTokenForRequest(req)
@@ -3247,7 +3362,7 @@
 	     * @param outOfOrder - Whether event should be processed first then enqueued queue.
 	     */
 	    scheduleEventPost(event, outOfOrder = false) {
-	        // Trigger request processing by subscription worker.
+	        // Trigger request processing by a subscription worker.
 	        const subscriptionWorker = this.sharedSubscriptionWorker;
 	        if (subscriptionWorker)
 	            subscriptionWorker.port.postMessage(event);
@@ -3262,11 +3377,11 @@
 	     * Dequeue and post events from the queue to the subscription worker.
 	     */
 	    flushScheduledEvents() {
-	        // Trigger request processing by subscription worker.
+	        // Trigger request processing by a subscription worker.
 	        const subscriptionWorker = this.sharedSubscriptionWorker;
 	        if (!subscriptionWorker || this.workerEventsQueue.length === 0)
 	            return;
-	        // Clean up from cancelled events.
+	        // Clean up from canceled events.
 	        const outdatedEvents = [];
 	        for (let i = 0; i < this.workerEventsQueue.length; i++) {
 	            const event = this.workerEventsQueue[i];
@@ -3300,7 +3415,16 @@
 	    setupSubscriptionWorker() {
 	        if (typeof SharedWorker === 'undefined')
 	            return;
-	        this.subscriptionWorker = new SharedWorker(this.configuration.workerUrl, `/pubnub-${this.configuration.sdkVersion}`);
+	        try {
+	            this.subscriptionWorker = new SharedWorker(this.configuration.workerUrl, `/pubnub-${this.configuration.sdkVersion}`);
+	        }
+	        catch (error) {
+	            this.configuration.logger.error(this.constructor.name, () => ({
+	                messageType: 'error',
+	                message: error,
+	            }));
+	            throw error;
+	        }
 	        this.subscriptionWorker.port.start();
 	        // Register PubNub client within subscription worker.
 	        this.scheduleEventPost({
@@ -3309,7 +3433,6 @@
 	            subscriptionKey: this.configuration.subscriptionKey,
 	            userId: this.configuration.userId,
 	            heartbeatInterval: this.configuration.heartbeatInterval,
-	            logVerbosity: this.configuration.logVerbosity,
 	            workerOfflineClientsCheckInterval: this.configuration.workerOfflineClientsCheckInterval,
 	            workerUnsubscribeOfflineClients: this.configuration.workerUnsubscribeOfflineClients,
 	            workerLogVerbosity: this.configuration.workerLogVerbosity,
@@ -3326,28 +3449,25 @@
 	            data.clientIdentifier !== this.configuration.clientIdentifier)
 	            return;
 	        if (data.type === 'shared-worker-connected') {
+	            this.configuration.logger.trace('SharedWorker', 'Ready for events processing.');
 	            this.subscriptionWorkerReady = true;
 	            this.flushScheduledEvents();
 	        }
 	        else if (data.type === 'shared-worker-console-log') {
-	            console.log(`[SharedWorker] ${data.message}`);
+	            this.configuration.logger.debug('SharedWorker', data.message);
 	        }
 	        else if (data.type === 'shared-worker-console-dir') {
-	            if (data.message)
-	                console.log(`[SharedWorker] ${data.message}`);
-	            console.dir(data.data, { depth: 10 });
-	        }
-	        else if (data.type === 'shared-worker-ping') {
-	            const { logVerbosity, subscriptionKey, clientIdentifier } = this.configuration;
-	            this.scheduleEventPost({
-	                type: 'client-pong',
-	                subscriptionKey,
-	                clientIdentifier,
-	                logVerbosity,
+	            this.configuration.logger.debug('SharedWorker', () => {
+	                return {
+	                    messageType: 'object',
+	                    message: data.data,
+	                    details: data.message ? data.message : undefined,
+	                };
 	            });
 	        }
-	        else if (data.type === 'request-progress-start' || data.type === 'request-progress-end') {
-	            this.logRequestProgress(data);
+	        else if (data.type === 'shared-worker-ping') {
+	            const { subscriptionKey, clientIdentifier } = this.configuration;
+	            this.scheduleEventPost({ type: 'client-pong', subscriptionKey, clientIdentifier });
 	        }
 	        else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
 	            const { resolve, reject } = this.callbacks.get(data.identifier);
@@ -3449,24 +3569,6 @@
 	            }
 	            return [token, typeof btoa !== 'undefined' ? btoa(accessToken) : accessToken];
 	        });
-	    }
-	    /**
-	     * Print request progress information.
-	     *
-	     * @param information - Request progress information from worker.
-	     */
-	    logRequestProgress(information) {
-	        var _a, _b;
-	        if (information.type === 'request-progress-start') {
-	            console.log('<<<<<');
-	            console.log(`[${information.timestamp}] ${information.url}\n${JSON.stringify((_a = information.query) !== null && _a !== void 0 ? _a : {})}`);
-	            console.log('-----');
-	        }
-	        else {
-	            console.log('>>>>>>');
-	            console.log(`[${information.timestamp} / ${information.duration}] ${information.url}\n${JSON.stringify((_b = information.query) !== null && _b !== void 0 ? _b : {})}\n${information.response}`);
-	            console.log('-----');
-	        }
 	    }
 	}
 
@@ -3752,9 +3854,10 @@
 	 */
 	const setDefaults = (configuration) => {
 	    var _a, _b, _c, _d, _e, _f;
-	    // Force disable service workers if environment doesn't support them.
-	    if (configuration.subscriptionWorkerUrl && typeof SharedWorker === 'undefined')
+	    // Force to disable service workers if the environment doesn't support them.
+	    if (configuration.subscriptionWorkerUrl && typeof SharedWorker === 'undefined') {
 	        configuration.subscriptionWorkerUrl = null;
+	    }
 	    return Object.assign(Object.assign({}, setDefaults$1(configuration)), { 
 	        // Set platform-specific options.
 	        listenToBrowserNetworkEvents: (_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : LISTEN_TO_BROWSER_NETWORK_EVENTS, subscriptionWorkerUrl: configuration.subscriptionWorkerUrl, subscriptionWorkerOfflineClientsCheckInterval: (_b = configuration.subscriptionWorkerOfflineClientsCheckInterval) !== null && _b !== void 0 ? _b : SUBSCRIPTION_WORKER_OFFLINE_CLIENTS_CHECK_INTERVAL, subscriptionWorkerUnsubscribeOfflineClients: (_c = configuration.subscriptionWorkerUnsubscribeOfflineClients) !== null && _c !== void 0 ? _c : SUBSCRIPTION_WORKER_UNSUBSCRIBE_OFFLINE_CLIENTS, subscriptionWorkerLogVerbosity: (_d = configuration.subscriptionWorkerLogVerbosity) !== null && _d !== void 0 ? _d : SUBSCRIPTION_WORKER_LOG_VERBOSITY, transport: (_e = configuration.transport) !== null && _e !== void 0 ? _e : TRANSPORT, keepAlive: (_f = configuration.keepAlive) !== null && _f !== void 0 ? _f : KEEP_ALIVE });
@@ -4077,6 +4180,629 @@
 	};
 
 	/**
+	 * Enum with available log levels.
+	 */
+	var LogLevel;
+	(function (LogLevel) {
+	    /**
+	     * Used to notify about every last detail:
+	     * - function calls,
+	     * - full payloads,
+	     * - internal variables,
+	     * - state-machine hops.
+	     */
+	    LogLevel[LogLevel["Trace"] = 0] = "Trace";
+	    /**
+	     * Used to notify about broad strokes of your SDK’s logic:
+	     * - inputs/outputs to public methods,
+	     * - network request
+	     * - network response
+	     * - decision branches.
+	     */
+	    LogLevel[LogLevel["Debug"] = 1] = "Debug";
+	    /**
+	     * Used to notify summary of what the SDK is doing under the hood:
+	     * - initialized,
+	     * - connected,
+	     * - entity created.
+	     */
+	    LogLevel[LogLevel["Info"] = 2] = "Info";
+	    /**
+	     * Used to notify about non-fatal events:
+	     * - deprecations,
+	     * - request retries.
+	     */
+	    LogLevel[LogLevel["Warn"] = 3] = "Warn";
+	    /**
+	     * Used to notify about:
+	     * - exceptions,
+	     * - HTTP failures,
+	     * - invalid states.
+	     */
+	    LogLevel[LogLevel["Error"] = 4] = "Error";
+	    /**
+	     * Logging disabled.
+	     */
+	    LogLevel[LogLevel["None"] = 5] = "None";
+	})(LogLevel || (LogLevel = {}));
+
+	/**
+	 * Logging module manager.
+	 *
+	 * Manager responsible for log requests handling and forwarding to the registered {@link Logger logger} implementations.
+	 */
+	class LoggerManager {
+	    /**
+	     * Create and configure loggers' manager.
+	     *
+	     * @param pubNubId - Unique identifier of PubNub instance which will use this logger.
+	     * @param minLogLevel - Minimum messages log level to be logged.
+	     * @param loggers - List of additional loggers which should be used along with user-provided custom loggers.
+	     *
+	     * @internal
+	     */
+	    constructor(pubNubId, minLogLevel, loggers) {
+	        this.pubNubId = pubNubId;
+	        this.minLogLevel = minLogLevel;
+	        this.loggers = loggers;
+	    }
+	    /**
+	     * Get current log level.
+	     *
+	     * @returns Current log level.
+	     *
+	     * @internal
+	     */
+	    get logLevel() {
+	        return this.minLogLevel;
+	    }
+	    /**
+	     * Process a `trace` level message.
+	     *
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    trace(location, messageFactory) {
+	        this.log(LogLevel.Trace, location, messageFactory);
+	    }
+	    /**
+	     * Process a `debug` level message.
+	     *
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    debug(location, messageFactory) {
+	        this.log(LogLevel.Debug, location, messageFactory);
+	    }
+	    /**
+	     * Process an `info` level message.
+	     *
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    info(location, messageFactory) {
+	        this.log(LogLevel.Info, location, messageFactory);
+	    }
+	    /**
+	     * Process a `warn` level message.
+	     *
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    warn(location, messageFactory) {
+	        this.log(LogLevel.Warn, location, messageFactory);
+	    }
+	    /**
+	     * Process an `error` level message.
+	     *
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    error(location, messageFactory) {
+	        this.log(LogLevel.Error, location, messageFactory);
+	    }
+	    /**
+	     * Process log message.
+	     *
+	     * @param logLevel - Logged message level.
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    log(logLevel, location, messageFactory) {
+	        // Check whether a log message should be handled at all or not.
+	        if (logLevel < this.minLogLevel || this.loggers.length === 0)
+	            return;
+	        const level = LogLevel[logLevel].toLowerCase();
+	        const message = Object.assign({ timestamp: new Date(), pubNubId: this.pubNubId, level: logLevel, minimumLevel: this.minLogLevel, location }, (typeof messageFactory === 'function' ? messageFactory() : { messageType: 'text', message: messageFactory }));
+	        this.loggers.forEach((logger) => logger[level](message));
+	    }
+	}
+
+	/**
+	 * PubNub package utilities module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Percent-encode input string.
+	 *
+	 * **Note:** Encode content in accordance of the `PubNub` service requirements.
+	 *
+	 * @param input - Source string or number for encoding.
+	 *
+	 * @returns Percent-encoded string.
+	 *
+	 * @internal
+	 */
+	const encodeString = (input) => {
+	    return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
+	};
+	/**
+	 * Percent-encode list of names (channels).
+	 *
+	 * @param names - List of names which should be encoded.
+	 *
+	 * @param [defaultString] - String which should be used in case if {@link names} is empty.
+	 *
+	 * @returns String which contains encoded names joined by non-encoded `,`.
+	 *
+	 * @internal
+	 */
+	const encodeNames = (names, defaultString) => {
+	    const encodedNames = names.map((name) => encodeString(name));
+	    return encodedNames.length ? encodedNames.join(',') : (defaultString !== null && defaultString !== void 0 ? defaultString : '');
+	};
+	/**
+	 * @internal
+	 */
+	const removeSingleOccurrence = (source, elementsToRemove) => {
+	    const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
+	    return source.filter((e) => {
+	        if (elementsToRemove.includes(e) && !removed[e]) {
+	            removed[e] = true;
+	            return false;
+	        }
+	        return true;
+	    });
+	};
+	/**
+	 * @internal
+	 */
+	const findUniqueCommonElements = (a, b) => {
+	    return [...a].filter((value) => b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value));
+	};
+	/**
+	 * Transform query key / value pairs to the string.
+	 *
+	 * @param query - Key / value pairs of the request query parameters.
+	 *
+	 * @returns Stringified query key / value pairs.
+	 *
+	 * @internal
+	 */
+	const queryStringFromObject = (query) => {
+	    return Object.keys(query)
+	        .map((key) => {
+	        const queryValue = query[key];
+	        if (!Array.isArray(queryValue))
+	            return `${key}=${encodeString(queryValue)}`;
+	        return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
+	    })
+	        .join('&');
+	};
+	/**
+	 * Adjust `timetoken` to represent current time in PubNub's high-precision time format.
+	 *
+	 * @param timetoken - Timetoken recently used for subscribe long-poll request.
+	 * @param [referenceTimetoken] - Previously computed reference timetoken.
+	 *
+	 * @returns Adjusted timetoken if recent timetoken available.
+	 */
+	const subscriptionTimetokenFromReference = (timetoken, referenceTimetoken) => {
+	    if (referenceTimetoken === '0' || timetoken === '0')
+	        return undefined;
+	    const timetokenDiff = adjustedTimetokenBy(`${Date.now()}0000`, referenceTimetoken, false);
+	    return adjustedTimetokenBy(timetoken, timetokenDiff, true);
+	};
+	/**
+	 * Create reference timetoken based on subscribe timetoken and the user's local time.
+	 *
+	 * Subscription-based reference timetoken allows later computing approximate timetoken at any point in time.
+	 *
+	 * @param [serviceTimetoken] - Timetoken received from the PubNub subscribe service.
+	 * @param [catchUpTimetoken] - Previously stored or user-provided catch-up timetoken.
+	 * @param [referenceTimetoken] - Previously computed reference timetoken. **Important:** This value should be used
+	 * in the case of restore because the actual time when service and catch-up timetokens are received is really
+	 * different from the current local time.
+	 *
+	 * @returns Reference timetoken.
+	 */
+	const referenceSubscribeTimetoken = (serviceTimetoken, catchUpTimetoken, referenceTimetoken) => {
+	    if (!serviceTimetoken || serviceTimetoken.length === 0)
+	        return undefined;
+	    if (catchUpTimetoken && catchUpTimetoken.length > 0 && catchUpTimetoken !== '0') {
+	        // Compensate reference timetoken because catch-up timetoken has been used.
+	        const timetokensDiff = adjustedTimetokenBy(serviceTimetoken, catchUpTimetoken, false);
+	        return adjustedTimetokenBy(referenceTimetoken !== null && referenceTimetoken !== void 0 ? referenceTimetoken : `${Date.now()}0000`, timetokensDiff.replace('-', ''), Number(timetokensDiff) < 0);
+	    }
+	    else if (referenceTimetoken && referenceTimetoken.length > 0 && referenceTimetoken !== '0')
+	        return referenceTimetoken;
+	    else
+	        return `${Date.now()}0000`;
+	};
+	/**
+	 * High-precision time token adjustment.
+	 *
+	 * @param timetoken - Source timetoken which should be adjusted.
+	 * @param value - Value in nanoseconds which should be used for source timetoken adjustment.
+	 * @param increment - Whether source timetoken should be incremented or decremented.
+	 *
+	 * @returns Adjusted high-precision PubNub timetoken.
+	 */
+	const adjustedTimetokenBy = (timetoken, value, increment) => {
+	    // Normalize value to the PubNub's high-precision time format.
+	    value = value.padStart(17, '0');
+	    const secA = timetoken.slice(0, 10);
+	    const tickA = timetoken.slice(10, 17);
+	    const secB = value.slice(0, 10);
+	    const tickB = value.slice(10, 17);
+	    let seconds = Number(secA);
+	    let ticks = Number(tickA);
+	    seconds += Number(secB) * (increment ? 1 : -1);
+	    ticks += Number(tickB) * (increment ? 1 : -1);
+	    if (ticks >= 10000000) {
+	        seconds += Math.floor(ticks / 10000000);
+	        ticks %= 10000000;
+	    }
+	    else if (ticks < 0) {
+	        if (seconds > 0) {
+	            seconds -= 1;
+	            ticks += 10000000;
+	        }
+	        else if (seconds < 0)
+	            ticks *= -1;
+	    }
+	    return seconds !== 0 ? `${seconds}${`${ticks}`.padStart(7, '0')}` : `${ticks}`;
+	};
+	/**
+	 * Compute received update (message, event) fingerprint.
+	 *
+	 * @param input - Data payload from subscribe API response.
+	 *
+	 * @returns Received update fingerprint.
+	 */
+	const messageFingerprint = (input) => {
+	    const msg = typeof input !== 'string' ? JSON.stringify(input) : input;
+	    const mfp = new Uint32Array(1);
+	    let walk = 0;
+	    let len = msg.length;
+	    while (len-- > 0)
+	        mfp[0] = (mfp[0] << 5) - mfp[0] + msg.charCodeAt(walk++);
+	    return mfp[0].toString(16).padStart(8, '0');
+	};
+
+	/**
+	 * Default console-based logger.
+	 *
+	 * **Important:** This logger is always added as part of {@link LoggerManager} instance configuration and can't be
+	 * removed.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Custom {@link Logger} implementation to show a message in the native console.
+	 */
+	class ConsoleLogger {
+	    /**
+	     * Process a `trace` level message.
+	     *
+	     * @param message - Message which should be handled by custom logger implementation.
+	     */
+	    debug(message) {
+	        this.log(message);
+	    }
+	    /**
+	     * Process a `debug` level message.
+	     *
+	     * @param message - Message which should be handled by custom logger implementation.
+	     */
+	    error(message) {
+	        this.log(message);
+	    }
+	    /**
+	     * Process an `info` level message.
+	     *
+	     * @param message - Message which should be handled by custom logger implementation.
+	     */
+	    info(message) {
+	        this.log(message);
+	    }
+	    /**
+	     * Process a `warn` level message.
+	     *
+	     * @param message - Message which should be handled by custom logger implementation.
+	     */
+	    trace(message) {
+	        this.log(message);
+	    }
+	    /**
+	     * Process an `error` level message.
+	     *
+	     * @param message - Message which should be handled by custom logger implementation.
+	     */
+	    warn(message) {
+	        this.log(message);
+	    }
+	    /**
+	     * Process log message object.
+	     *
+	     * @param message - Object with information which can be used to identify level and prepare log entry payload.
+	     */
+	    log(message) {
+	        const logLevelString = LogLevel[message.level];
+	        const level = logLevelString.toLowerCase();
+	        console[level === 'trace' ? 'debug' : level](`${message.timestamp.toISOString()} PubNub-${message.pubNubId} ${logLevelString.padEnd(5, ' ')}${message.location ? ` ${message.location}` : ''} ${this.logMessage(message)}`);
+	    }
+	    /**
+	     * Get a pre-formatted log message.
+	     *
+	     * @param message - Log message which should be stringified.
+	     *
+	     * @returns String formatted for log entry in console.
+	     */
+	    logMessage(message) {
+	        if (message.messageType === 'text')
+	            return message.message;
+	        else if (message.messageType === 'object')
+	            return `${message.details ? `${message.details}\n` : ''}${this.formattedObject(message)}`;
+	        else if (message.messageType === 'network-request') {
+	            const showOnlyBasicInfo = !!message.canceled || !!message.failed;
+	            const headersList = message.minimumLevel === LogLevel.Trace && !showOnlyBasicInfo ? this.formattedHeaders(message) : undefined;
+	            const request = message.message;
+	            const queryString = request.queryParameters && Object.keys(request.queryParameters).length > 0
+	                ? queryStringFromObject(request.queryParameters)
+	                : undefined;
+	            const url = `${request.origin}${request.path}${queryString ? `?${queryString}` : ''}`;
+	            const formattedBody = !showOnlyBasicInfo ? this.formattedBody(message) : undefined;
+	            let action = 'Sending';
+	            if (showOnlyBasicInfo)
+	                action = `${!!message.canceled ? 'Canceled' : 'Failed'}${message.details ? ` (${message.details})` : ''}`;
+	            const padding = ((formattedBody === null || formattedBody === void 0 ? void 0 : formattedBody.formData) ? 'FormData' : 'Method').length;
+	            return `${action} HTTP request:\n  ${this.paddedString('Method', padding)}: ${request.method}\n  ${this.paddedString('URL', padding)}: ${url}${headersList ? `\n  ${this.paddedString('Headers', padding)}:\n${headersList}` : ''}${(formattedBody === null || formattedBody === void 0 ? void 0 : formattedBody.formData) ? `\n  ${this.paddedString('FormData', padding)}:\n${formattedBody.formData}` : ''}${(formattedBody === null || formattedBody === void 0 ? void 0 : formattedBody.body) ? `\n  ${this.paddedString('Body', padding)}:\n${formattedBody.body}` : ''}`;
+	        }
+	        else if (message.messageType === 'network-response') {
+	            const headersList = message.minimumLevel === LogLevel.Trace ? this.formattedHeaders(message) : undefined;
+	            const formattedBody = this.formattedBody(message);
+	            const padding = ((formattedBody === null || formattedBody === void 0 ? void 0 : formattedBody.formData) ? 'Headers' : 'Status').length;
+	            const response = message.message;
+	            return `Received HTTP response:\n  ${this.paddedString('URL', padding)}: ${response.url}\n  ${this.paddedString('Status', padding)}: ${response.status}${headersList ? `\n  ${this.paddedString('Headers', padding)}:\n${headersList}` : ''}${(formattedBody === null || formattedBody === void 0 ? void 0 : formattedBody.body) ? `\n  ${this.paddedString('Body', padding)}:\n${formattedBody.body}` : ''}`;
+	        }
+	        else if (message.messageType === 'error') {
+	            const formattedStatus = this.formattedErrorStatus(message);
+	            const error = message.message;
+	            return `${error.name}: ${error.message}${formattedStatus ? `\n${formattedStatus}` : ''}`;
+	        }
+	        return '<unknown log message data>';
+	    }
+	    /**
+	     * Get a pre-formatted object (dictionary / array).
+	     *
+	     * @param message - Log message which may contain an object for formatting.
+	     *
+	     * @returns String formatted for log entry in console or `undefined` if a log message doesn't have suitable data.
+	     */
+	    formattedObject(message) {
+	        const stringify = (obj, level = 1, skipIndentOnce = false) => {
+	            const maxIndentReached = level === 10;
+	            const targetIndent = ' '.repeat(level * 2);
+	            const lines = [];
+	            const isIgnored = (key, obj) => {
+	                if (!message.ignoredKeys)
+	                    return false;
+	                if (typeof message.ignoredKeys === 'function')
+	                    return message.ignoredKeys(key, obj);
+	                return message.ignoredKeys.includes(key);
+	            };
+	            if (typeof obj === 'string')
+	                lines.push(`${targetIndent}- ${obj}`);
+	            else if (typeof obj === 'number')
+	                lines.push(`${targetIndent}- ${obj}`);
+	            else if (typeof obj === 'boolean')
+	                lines.push(`${targetIndent}- ${obj}`);
+	            else if (obj === null)
+	                lines.push(`${targetIndent}- null`);
+	            else if (obj === undefined)
+	                lines.push(`${targetIndent}- undefined`);
+	            else if (typeof obj === 'function')
+	                lines.push(`${targetIndent}- <function>`);
+	            else if (typeof obj === 'object') {
+	                if (!Array.isArray(obj) && typeof obj.toString === 'function' && obj.toString().indexOf('[object') !== 0) {
+	                    lines.push(`${skipIndentOnce ? '' : targetIndent}${obj.toString()}`);
+	                    skipIndentOnce = false;
+	                }
+	                else if (Array.isArray(obj)) {
+	                    for (const element of obj) {
+	                        const indent = skipIndentOnce ? '' : targetIndent;
+	                        if (element === null)
+	                            lines.push(`${indent}- null`);
+	                        else if (element === undefined)
+	                            lines.push(`${indent}- undefined`);
+	                        else if (typeof element === 'function')
+	                            lines.push(`${indent}- <function>`);
+	                        else if (typeof element === 'object') {
+	                            const isArray = Array.isArray(element);
+	                            const entry = maxIndentReached ? '...' : stringify(element, level + 1, !isArray);
+	                            lines.push(`${indent}-${isArray && !maxIndentReached ? '\n' : ' '}${entry}`);
+	                        }
+	                        else
+	                            lines.push(`${indent}- ${element}`);
+	                        skipIndentOnce = false;
+	                    }
+	                }
+	                else {
+	                    const object = obj;
+	                    const keys = Object.keys(object);
+	                    const maxKeyLen = keys.reduce((max, key) => Math.max(max, isIgnored(key, object) ? max : key.length), 0);
+	                    for (const key of keys) {
+	                        if (isIgnored(key, object))
+	                            continue;
+	                        const indent = skipIndentOnce ? '' : targetIndent;
+	                        const raw = object[key];
+	                        const paddedKey = key.padEnd(maxKeyLen, ' ');
+	                        if (raw === null)
+	                            lines.push(`${indent}${paddedKey}: null`);
+	                        else if (raw === undefined)
+	                            lines.push(`${indent}${paddedKey}: undefined`);
+	                        else if (typeof raw === 'function')
+	                            lines.push(`${indent}${paddedKey}: <function>`);
+	                        else if (typeof raw === 'object') {
+	                            const isArray = Array.isArray(raw);
+	                            const isEmptyArray = isArray && raw.length === 0;
+	                            const hasToString = !isArray && typeof raw.toString === 'function' && raw.toString().indexOf('[object') !== 0;
+	                            const entry = maxIndentReached ? '...' : isEmptyArray ? '[]' : stringify(raw, level + 1, hasToString);
+	                            lines.push(`${indent}${paddedKey}:${maxIndentReached || hasToString || isEmptyArray ? ' ' : '\n'}${entry}`);
+	                        }
+	                        else
+	                            lines.push(`${indent}${paddedKey}: ${raw}`);
+	                        skipIndentOnce = false;
+	                    }
+	                }
+	            }
+	            return lines.join('\n');
+	        };
+	        return stringify(message.message);
+	    }
+	    /**
+	     * Get a pre-formatted headers list.
+	     *
+	     * @param message - Log message which may contain an object with headers to be used for formatting.
+	     *
+	     * @returns String formatted for log entry in console or `undefined` if a log message not related to the network data.
+	     */
+	    formattedHeaders(message) {
+	        if (!message.message.headers)
+	            return undefined;
+	        const headers = message.message.headers;
+	        const maxHeaderLength = Object.keys(headers).reduce((max, key) => Math.max(max, key.length), 0);
+	        return Object.keys(headers)
+	            .map((key) => `    - ${key.toLowerCase().padEnd(maxHeaderLength, ' ')}: ${headers[key]}`)
+	            .join('\n');
+	    }
+	    /**
+	     * Get a pre-formatted body.
+	     *
+	     * @param message - Log message which may contain an object with `body` (request or response).
+	     *
+	     * @returns Object with formatted string of form data and / or body for log entry in console or `undefined` if a log
+	     * message not related to the network data.
+	     */
+	    formattedBody(message) {
+	        var _a;
+	        if (!message.message.headers)
+	            return undefined;
+	        let stringifiedFormData;
+	        let stringifiedBody;
+	        const headers = message.message.headers;
+	        const contentType = (_a = headers['content-type']) !== null && _a !== void 0 ? _a : headers['Content-Type'];
+	        const formData = 'formData' in message.message ? message.message.formData : undefined;
+	        const body = message.message.body;
+	        // The presence of this object means that we are sending `multipart/form-data` (potentially uploading a file).
+	        if (formData) {
+	            const maxFieldLength = formData.reduce((max, { key }) => Math.max(max, key.length), 0);
+	            stringifiedFormData = formData
+	                .map(({ key, value }) => `    - ${key.padEnd(maxFieldLength, ' ')}: ${value}`)
+	                .join('\n');
+	        }
+	        if (!body)
+	            return { formData: stringifiedFormData };
+	        if (typeof body === 'string') {
+	            stringifiedBody = `    ${body}`;
+	        }
+	        else if (body instanceof ArrayBuffer) {
+	            if (contentType && (contentType.indexOf('javascript') !== -1 || contentType.indexOf('json') !== -1))
+	                stringifiedBody = `    ${ConsoleLogger.decoder.decode(body)}`;
+	            else
+	                stringifiedBody = `    ArrayBuffer { byteLength: ${body.byteLength} }`;
+	        }
+	        else {
+	            stringifiedBody = `    File { name: ${body.name}${body.contentLength ? `, contentLength: ${body.contentLength}` : ''}${body.mimeType ? `, mimeType: ${body.mimeType}` : ''} }`;
+	        }
+	        return { body: stringifiedBody, formData: stringifiedFormData };
+	    }
+	    /**
+	     * Get a pre-formatted status object.
+	     *
+	     * @param message - Log message which may contain a {@link Status} object.
+	     *
+	     * @returns String formatted for log entry in console or `undefined` if a log message doesn't have {@link Status}
+	     * object.
+	     */
+	    formattedErrorStatus(message) {
+	        if (!message.message.status)
+	            return undefined;
+	        const status = message.message.status;
+	        const errorData = status.errorData;
+	        let stringifiedErrorData;
+	        if (ConsoleLogger.isError(errorData)) {
+	            stringifiedErrorData = `    ${errorData.name}: ${errorData.message}`;
+	            if (errorData.stack) {
+	                stringifiedErrorData += `\n${errorData.stack
+                    .split('\n')
+                    .map((line) => `      ${line}`)
+                    .join('\n')}`;
+	            }
+	        }
+	        else if (errorData) {
+	            try {
+	                stringifiedErrorData = `    ${JSON.stringify(errorData)}`;
+	            }
+	            catch (_) {
+	                stringifiedErrorData = `    ${errorData}`;
+	            }
+	        }
+	        return `  Category  : ${status.category}\n  Operation : ${status.operation}\n  Status    : ${status.statusCode}${stringifiedErrorData ? `\n  Error data:\n${stringifiedErrorData}` : ''}`;
+	    }
+	    /**
+	     * Append the required amount of space to provide proper padding.
+	     *
+	     * @param str - Source string which should be appended with necessary number of spaces.
+	     * @param maxLength - Maximum length of the string to which source string should be padded.
+	     * @returns End-padded string.
+	     */
+	    paddedString(str, maxLength) {
+	        return str.padEnd(maxLength - str.length, ' ');
+	    }
+	    /**
+	     * Check whether passed object is {@link Error} instance.
+	     *
+	     * @param errorData - Object which should be checked.
+	     *
+	     * @returns `true` in case if an object actually {@link Error}.
+	     */
+	    static isError(errorData) {
+	        if (!errorData)
+	            return false;
+	        return errorData instanceof Error || Object.prototype.toString.call(errorData) === '[object Error]';
+	    }
+	}
+	/**
+	 * Binary data decoder.
+	 */
+	ConsoleLogger.decoder = new TextDecoder();
+
+	/**
 	 * {@link PubNub} client configuration module.
 	 *
 	 * @internal
@@ -4102,8 +4828,8 @@
 	 * @internal
 	 */
 	const makeConfiguration = (base, setupCryptoModule) => {
-	    var _a, _b, _c;
-	    // Set default retry policy for subscribe (if new subscribe logic not used).
+	    var _a, _b, _c, _d;
+	    // Set the default retry policy for subscribing (if new subscribe logic not used).
 	    if (!base.retryConfiguration && base.enableEventEngine) {
 	        base.retryConfiguration = RetryPolicy.ExponentialRetryPolicy({
 	            minimumDelay: 2,
@@ -4121,21 +4847,35 @@
 	            ],
 	        });
 	    }
+	    const instanceId = `pn-${uuidGenerator.createUUID()}`;
+	    if (base.logVerbosity)
+	        base.logLevel = LogLevel.Debug;
+	    else if (base.logLevel === undefined)
+	        base.logLevel = LogLevel.None;
+	    // Prepare loggers manager.
+	    const loggerManager = new LoggerManager(hashFromString(instanceId), base.logLevel, [
+	        ...((_a = base.loggers) !== null && _a !== void 0 ? _a : []),
+	        new ConsoleLogger(),
+	    ]);
+	    if (base.logVerbosity !== undefined)
+	        loggerManager.warn('Configuration', "'logVerbosity' is deprecated. Use 'logLevel' instead.");
 	    // Ensure that retry policy has proper configuration (if has been set).
-	    (_a = base.retryConfiguration) === null || _a === void 0 ? void 0 : _a.validate();
-	    (_b = base.useRandomIVs) !== null && _b !== void 0 ? _b : (base.useRandomIVs = USE_RANDOM_INITIALIZATION_VECTOR);
+	    (_b = base.retryConfiguration) === null || _b === void 0 ? void 0 : _b.validate();
+	    (_c = base.useRandomIVs) !== null && _c !== void 0 ? _c : (base.useRandomIVs = USE_RANDOM_INITIALIZATION_VECTOR);
+	    if (base.useRandomIVs)
+	        loggerManager.warn('Configuration', "'useRandomIVs' is deprecated. Use 'cryptoModule' instead.");
 	    // Override origin value.
-	    base.origin = standardOrigin((_c = base.ssl) !== null && _c !== void 0 ? _c : false, base.origin);
+	    base.origin = standardOrigin((_d = base.ssl) !== null && _d !== void 0 ? _d : false, base.origin);
 	    const cryptoModule = base.cryptoModule;
 	    if (cryptoModule)
 	        delete base.cryptoModule;
-	    const clientConfiguration = Object.assign(Object.assign({}, base), { _pnsdkSuffix: {}, _instanceId: `pn-${uuidGenerator.createUUID()}`, _cryptoModule: undefined, _cipherKey: undefined, _setupCryptoModule: setupCryptoModule, get instanceId() {
-	            if (this.useInstanceId)
+	    const clientConfiguration = Object.assign(Object.assign({}, base), { _pnsdkSuffix: {}, _loggerManager: loggerManager, _instanceId: instanceId, _cryptoModule: undefined, _cipherKey: undefined, _setupCryptoModule: setupCryptoModule, get instanceId() {
+	            if (base.useInstanceId)
 	                return this._instanceId;
 	            return undefined;
 	        },
 	        getInstanceId() {
-	            if (this.useInstanceId)
+	            if (base.useInstanceId)
 	                return this._instanceId;
 	            return undefined;
 	        },
@@ -4146,6 +4886,9 @@
 	            if (!value || typeof value !== 'string' || value.trim().length === 0)
 	                throw new Error('Missing or invalid userId parameter. Provide a valid string userId');
 	            this.userId = value;
+	        },
+	        logger() {
+	            return this._loggerManager;
 	        },
 	        getAuthKey() {
 	            return this.authKey;
@@ -4175,6 +4918,7 @@
 	                useRandomIVs: base.useRandomIVs,
 	                customEncrypt: this.getCustomEncrypt(),
 	                customDecrypt: this.getCustomDecrypt(),
+	                logger: this.logger(),
 	            });
 	        },
 	        getCryptoModule() {
@@ -4213,7 +4957,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.5.2';
+	            return '9.6.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -4242,8 +4986,10 @@
 	            return base.customDecrypt;
 	        } });
 	    // Setup `CryptoModule` if possible.
-	    if (base.cipherKey)
+	    if (base.cipherKey) {
+	        loggerManager.warn('Configuration', "'cipherKey' is deprecated. Use 'cryptoModule' instead.");
 	        clientConfiguration.setCipherKey(base.cipherKey);
+	    }
 	    else if (cryptoModule)
 	        clientConfiguration._cryptoModule = cryptoModule;
 	    return clientConfiguration;
@@ -4261,6 +5007,21 @@
 	    if (typeof origin === 'string')
 	        return `${protocol}${origin}`;
 	    return `${protocol}${origin[Math.floor(Math.random() * origin.length)]}`;
+	};
+	/**
+	 * Compute 32bit hash string from source value.
+	 *
+	 * @param value - String from which hash string should be computed.
+	 *
+	 * @returns Computed hash.
+	 */
+	const hashFromString = (value) => {
+	    let basis = 0x811c9dc5;
+	    for (let i = 0; i < value.length; i++) {
+	        basis ^= value.charCodeAt(i);
+	        basis = (basis + ((basis << 1) + (basis << 4) + (basis << 7) + (basis << 8) + (basis << 24))) >>> 0;
+	    }
+	    return basis.toString(16).padStart(8, '0');
 	};
 
 	/**
@@ -4433,79 +5194,6 @@
 	})(TransportMethod || (TransportMethod = {}));
 
 	/**
-	 * PubNub package utilities module.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Percent-encode input string.
-	 *
-	 * **Note:** Encode content in accordance of the `PubNub` service requirements.
-	 *
-	 * @param input - Source string or number for encoding.
-	 *
-	 * @returns Percent-encoded string.
-	 *
-	 * @internal
-	 */
-	const encodeString = (input) => {
-	    return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
-	};
-	/**
-	 * Percent-encode list of names (channels).
-	 *
-	 * @param names - List of names which should be encoded.
-	 *
-	 * @param [defaultString] - String which should be used in case if {@link names} is empty.
-	 *
-	 * @returns String which contains encoded names joined by non-encoded `,`.
-	 *
-	 * @internal
-	 */
-	const encodeNames = (names, defaultString) => {
-	    const encodedNames = names.map((name) => encodeString(name));
-	    return encodedNames.length ? encodedNames.join(',') : (defaultString !== null && defaultString !== void 0 ? defaultString : '');
-	};
-	/**
-	 * @internal
-	 */
-	const removeSingleOccurrence = (source, elementsToRemove) => {
-	    const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
-	    return source.filter((e) => {
-	        if (elementsToRemove.includes(e) && !removed[e]) {
-	            removed[e] = true;
-	            return false;
-	        }
-	        return true;
-	    });
-	};
-	/**
-	 * @internal
-	 */
-	const findUniqueCommonElements = (a, b) => {
-	    return [...a].filter((value) => b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value));
-	};
-	/**
-	 * Transform query key / value pairs to the string.
-	 *
-	 * @param query - Key / value pairs of the request query parameters.
-	 *
-	 * @returns Stringified query key / value pairs.
-	 *
-	 * @internal
-	 */
-	const queryStringFromObject = (query) => {
-	    return Object.keys(query)
-	        .map((key) => {
-	        const queryValue = query[key];
-	        if (!Array.isArray(queryValue))
-	            return `${key}=${encodeString(queryValue)}`;
-	        return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
-	    })
-	        .join('&');
-	};
-
-	/**
 	 * Common PubNub Network Provider middleware module.
 	 *
 	 * @internal
@@ -4516,10 +5204,11 @@
 	 * @internal
 	 */
 	class RequestSignature {
-	    constructor(publishKey, secretKey, hasher) {
+	    constructor(publishKey, secretKey, hasher, logger) {
 	        this.publishKey = publishKey;
 	        this.secretKey = secretKey;
 	        this.hasher = hasher;
+	        this.logger = logger;
 	    }
 	    /**
 	     * Compute request signature.
@@ -4542,6 +5231,10 @@
 	            if (payload)
 	                signatureInput += payload;
 	        }
+	        this.logger.trace(this.constructor.name, () => ({
+	            messageType: 'text',
+	            message: `Request signature input:\n${signatureInput}`,
+	        }));
 	        return `v2.${this.hasher(signatureInput, this.secretKey)}`
 	            .replace(/\+/g, '-')
 	            .replace(/\//g, '_')
@@ -4580,8 +5273,16 @@
 	        const { clientConfiguration: { keySet }, shaHMAC, } = configuration;
 	        {
 	            if (keySet.secretKey && shaHMAC)
-	                this.signatureGenerator = new RequestSignature(keySet.publishKey, keySet.secretKey, shaHMAC);
+	                this.signatureGenerator = new RequestSignature(keySet.publishKey, keySet.secretKey, shaHMAC, this.logger);
 	        }
+	    }
+	    /**
+	     * Retrieve registered loggers' manager.
+	     *
+	     * @returns Registered loggers' manager.
+	     */
+	    get logger() {
+	        return this.configuration.clientConfiguration.logger();
 	    }
 	    makeSendable(req) {
 	        const retryPolicy = this.configuration.clientConfiguration.retryConfiguration;
@@ -4590,11 +5291,11 @@
 	        if (retryPolicy !== undefined) {
 	            let retryTimeout;
 	            let activeCancellation;
-	            let cancelled = false;
+	            let canceled = false;
 	            let attempt = 0;
 	            const cancellation = {
 	                abort: (reason) => {
-	                    cancelled = true;
+	                    canceled = true;
 	                    if (retryTimeout)
 	                        clearTimeout(retryTimeout);
 	                    if (activeCancellation)
@@ -4603,8 +5304,8 @@
 	            };
 	            const retryableRequest = new Promise((resolve, reject) => {
 	                const trySendRequest = () => {
-	                    // Check whether request already has been cancelled and there is no retry should proceed.
-	                    if (cancelled)
+	                    // Check whether the request already has been canceled and there is no retry should proceed.
+	                    if (canceled)
 	                        return;
 	                    const [attemptPromise, attemptCancellation] = transport.makeSendable(this.request(req));
 	                    activeCancellation = attemptCancellation;
@@ -4618,6 +5319,7 @@
 	                            delay = retryPolicy.getDelay(attempt, res);
 	                        if (delay > 0) {
 	                            attempt++;
+	                            this.logger.warn(this.constructor.name, `HTTP request retry #${attempt} in ${delay}ms.`);
 	                            retryTimeout = setTimeout(() => trySendRequest(), delay);
 	                        }
 	                        else {
@@ -4644,7 +5346,7 @@
 	        req = this.configuration.transport.request(req);
 	        if (!req.queryParameters)
 	            req.queryParameters = {};
-	        // Modify request with required information.
+	        // Modify the request with required information.
 	        if (clientConfiguration.useInstanceId)
 	            req.queryParameters['instanceid'] = clientConfiguration.getInstanceId();
 	        if (!req.queryParameters['uuid'])
@@ -4661,7 +5363,7 @@
 	    }
 	    authenticateRequest(req) {
 	        var _a;
-	        // Access management endpoints doesn't need authentication (signature required instead).
+	        // Access management endpoints don't need authentication (signature required instead).
 	        if (req.path.startsWith('/v2/auth/') || req.path.startsWith('/v3/pam/') || req.path.startsWith('/time'))
 	            return;
 	        const { clientConfiguration, tokenManager } = this.configuration;
@@ -4717,18 +5419,19 @@
 	    /**
 	     * Create and configure transport provider for Web and Rect environments.
 	     *
-	     * @param [transport] - API which should be used to make network requests.
-	     * @param [keepAlive] - Whether client should try to keep connections open for reuse or not.
-	     * @param logVerbosity - Whether verbose logs should be printed or not.
+	     * @param logger - Registered loggers' manager.
+	     * @param [transport] - API, which should be used to make network requests.
 	     *
 	     * @internal
 	     */
-	    constructor(transport = 'fetch', keepAlive = false, logVerbosity = false) {
+	    constructor(logger, transport = 'fetch') {
+	        this.logger = logger;
 	        this.transport = transport;
-	        this.keepAlive = keepAlive;
-	        this.logVerbosity = logVerbosity;
-	        if (transport === 'fetch' && (!window || !window.fetch))
+	        logger.debug(this.constructor.name, `Create with configuration:\n  - transport: ${transport}`);
+	        if (transport === 'fetch' && (!window || !window.fetch)) {
+	            logger.warn(this.constructor.name, `'${transport}' not supported in this browser. Fallback to the 'xhr' transport.`);
 	            this.transport = 'xhr';
+	        }
 	        if (this.transport !== 'fetch')
 	            return;
 	        // Keeping reference on current `window.fetch` function.
@@ -4736,51 +5439,82 @@
 	        // Check whether `fetch` has been monkey patched or not.
 	        if (this.isFetchMonkeyPatched()) {
 	            WebTransport.originalFetch = WebTransport.getOriginalFetch();
-	            if (!logVerbosity)
-	                return;
-	            console.warn("[PubNub] Native Web Fetch API 'fetch' function monkey patched.");
-	            if (!this.isFetchMonkeyPatched(WebTransport.originalFetch))
-	                console.info("[PubNub] Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
-	            else
-	                console.warn('[PubNub] Unable receive native Web Fetch API. There can be issues with subscribe long-poll cancellation');
+	            logger.warn(this.constructor.name, "Native Web Fetch API 'fetch' function monkey patched.");
+	            if (!this.isFetchMonkeyPatched(WebTransport.originalFetch)) {
+	                logger.info(this.constructor.name, "Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
+	            }
+	            else {
+	                logger.warn(this.constructor.name, 'Unable receive native Web Fetch API. There can be issues with subscribe long-poll  cancellation');
+	            }
 	        }
 	    }
 	    makeSendable(req) {
 	        const abortController = new AbortController();
 	        const cancellation = {
 	            abortController,
-	            abort: (reason) => !abortController.signal.aborted && abortController.abort(reason),
+	            abort: (reason) => {
+	                if (!abortController.signal.aborted) {
+	                    this.logger.trace(this.constructor.name, `On-demand request aborting: ${reason}`);
+	                    abortController.abort(reason);
+	                }
+	            },
 	        };
 	        return [
 	            this.webTransportRequestFromTransportRequest(req).then((request) => {
-	                const start = new Date().getTime();
-	                this.logRequestProcessProgress(request, req.body);
+	                this.logger.debug(this.constructor.name, () => ({ messageType: 'network-request', message: req }));
 	                return this.sendRequest(request, cancellation)
 	                    .then((response) => response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]))
 	                    .then((response) => {
-	                    const responseBody = response[1].byteLength > 0 ? response[1] : undefined;
+	                    const body = response[1].byteLength > 0 ? response[1] : undefined;
 	                    const { status, headers: requestHeaders } = response[0];
 	                    const headers = {};
 	                    // Copy Headers object content into plain Record.
 	                    requestHeaders.forEach((value, key) => (headers[key] = value.toLowerCase()));
-	                    const transportResponse = {
-	                        status,
-	                        url: request.url,
-	                        headers,
-	                        body: responseBody,
-	                    };
+	                    const transportResponse = { status, url: request.url, headers, body };
+	                    this.logger.debug(this.constructor.name, () => ({
+	                        messageType: 'network-response',
+	                        message: transportResponse,
+	                    }));
 	                    if (status >= 400)
 	                        throw PubNubAPIError.create(transportResponse);
-	                    this.logRequestProcessProgress(request, undefined, new Date().getTime() - start, responseBody);
 	                    return transportResponse;
 	                })
 	                    .catch((error) => {
-	                    let fetchError = error;
-	                    if (typeof error === 'string') {
-	                        const errorMessage = error.toLowerCase();
-	                        fetchError = new Error(error);
-	                        if (!errorMessage.includes('timeout') && errorMessage.includes('cancel'))
-	                            fetchError.name = 'AbortError';
+	                    const errorMessage = (typeof error === 'string' ? error : error.message).toLowerCase();
+	                    let fetchError = typeof error === 'string' ? new Error(error) : error;
+	                    if (errorMessage.includes('timeout')) {
+	                        this.logger.warn(this.constructor.name, () => ({
+	                            messageType: 'network-request',
+	                            message: req,
+	                            details: 'Timeout',
+	                            canceled: true,
+	                        }));
+	                    }
+	                    else if (errorMessage.includes('cancel') || errorMessage.includes('abort')) {
+	                        this.logger.debug(this.constructor.name, () => ({
+	                            messageType: 'network-request',
+	                            message: req,
+	                            details: 'Aborted',
+	                            canceled: true,
+	                        }));
+	                        fetchError = new Error('Aborted');
+	                        fetchError.name = 'AbortError';
+	                    }
+	                    else if (errorMessage.includes('network')) {
+	                        this.logger.warn(this.constructor.name, () => ({
+	                            messageType: 'network-request',
+	                            message: req,
+	                            details: 'Network error',
+	                            failed: true,
+	                        }));
+	                    }
+	                    else {
+	                        this.logger.warn(this.constructor.name, () => ({
+	                            messageType: 'network-request',
+	                            message: req,
+	                            details: PubNubAPIError.create(fetchError).message,
+	                            failed: true,
+	                        }));
 	                    }
 	                    throw PubNubAPIError.create(fetchError);
 	                });
@@ -4864,19 +5598,30 @@
 	                var _a;
 	                const xhr = new XMLHttpRequest();
 	                xhr.open(req.method, req.url, true);
+	                let aborted = false;
 	                // Setup request
 	                xhr.responseType = 'arraybuffer';
 	                xhr.timeout = req.timeout * 1000;
 	                controller.abortController.signal.onabort = () => {
 	                    if (xhr.readyState == XMLHttpRequest.DONE || xhr.readyState == XMLHttpRequest.UNSENT)
 	                        return;
+	                    aborted = true;
 	                    xhr.abort();
 	                };
 	                Object.entries((_a = req.headers) !== null && _a !== void 0 ? _a : {}).forEach(([key, value]) => xhr.setRequestHeader(key, value));
 	                // Setup handlers to match `fetch` results handling.
-	                xhr.onabort = () => reject(new Error('Aborted'));
-	                xhr.ontimeout = () => reject(new Error('Request timeout'));
-	                xhr.onerror = () => reject(new Error('Request timeout'));
+	                xhr.onabort = () => {
+	                    reject(new Error('Aborted'));
+	                };
+	                xhr.ontimeout = () => {
+	                    reject(new Error('Request timeout'));
+	                };
+	                xhr.onerror = () => {
+	                    if (!aborted) {
+	                        const response = this.transportResponseFromXHR(req.url, xhr);
+	                        reject(new Error(PubNubAPIError.create(response).message));
+	                    }
+	                };
 	                xhr.onload = () => {
 	                    const headers = new Headers();
 	                    xhr
@@ -4906,7 +5651,7 @@
 	        return __awaiter(this, void 0, void 0, function* () {
 	            let body;
 	            let path = req.path;
-	            // Create multipart request body.
+	            // Create a multipart request body.
 	            if (req.formData && req.formData.length > 0) {
 	                // Reset query parameters to conform to signed URL
 	                req.queryParameters = {};
@@ -4918,27 +5663,40 @@
 	                    const fileData = yield file.toArrayBuffer();
 	                    formData.append('file', new Blob([fileData], { type: 'application/octet-stream' }), file.name);
 	                }
-	                catch (_) {
+	                catch (toBufferError) {
+	                    this.logger.warn(this.constructor.name, () => ({ messageType: 'error', message: toBufferError }));
 	                    try {
 	                        const fileData = yield file.toFileUri();
 	                        // @ts-expect-error React Native File Uri support.
 	                        formData.append('file', fileData, file.name);
 	                    }
-	                    catch (_) { }
+	                    catch (toFileURLError) {
+	                        this.logger.error(this.constructor.name, () => ({ messageType: 'error', message: toFileURLError }));
+	                    }
 	                }
 	                body = formData;
 	            }
 	            // Handle regular body payload (if passed).
 	            else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) {
-	                // Compressing body if browser has native support.
+	                // Compressing body if the browser has native support.
 	                if (req.compressible && typeof CompressionStream !== 'undefined') {
+	                    const bodyArrayBuffer = typeof req.body === 'string' ? WebTransport.encoder.encode(req.body) : req.body;
+	                    const initialBodySize = bodyArrayBuffer.byteLength;
 	                    const bodyStream = new ReadableStream({
 	                        start(controller) {
-	                            controller.enqueue(typeof req.body === 'string' ? WebTransport.encoder.encode(req.body) : req.body);
+	                            controller.enqueue(bodyArrayBuffer);
 	                            controller.close();
 	                        },
 	                    });
 	                    body = yield new Response(bodyStream.pipeThrough(new CompressionStream('deflate'))).arrayBuffer();
+	                    this.logger.trace(this.constructor.name, () => {
+	                        const compressedSize = body.byteLength;
+	                        const ratio = (compressedSize / initialBodySize).toFixed(2);
+	                        return {
+	                            messageType: 'text',
+	                            message: `Body of ${initialBodySize} bytes, compressed by ${ratio}x to ${compressedSize} bytes.`,
+	                        };
+	                    });
 	                }
 	                else
 	                    body = req.body;
@@ -4955,43 +5713,7 @@
 	        });
 	    }
 	    /**
-	     * Log out request processing progress and result.
-	     *
-	     * @param request - Platform-specific
-	     * @param [requestBody] - POST / PATCH body.
-	     * @param [elapsed] - How many seconds passed since request processing started.
-	     * @param [body] - Service response (if available).
-	     *
-	     * @internal
-	     */
-	    logRequestProcessProgress(request, requestBody, elapsed, body) {
-	        if (!this.logVerbosity)
-	            return;
-	        const { protocol, host, pathname, search } = new URL(request.url);
-	        const timestamp = new Date().toISOString();
-	        if (!elapsed) {
-	            let outgoing = `[${timestamp}]\n${protocol}//${host}${pathname}\n${search}`;
-	            if (requestBody && (typeof requestBody === 'string' || requestBody instanceof ArrayBuffer)) {
-	                if (typeof requestBody === 'string')
-	                    outgoing += `\n\n${requestBody}`;
-	                else
-	                    outgoing += `\n\n${WebTransport.decoder.decode(requestBody)}`;
-	            }
-	            console.log(`<<<<<`);
-	            console.log(outgoing);
-	            console.log('-----');
-	        }
-	        else {
-	            let outgoing = `[${timestamp} / ${elapsed}]\n${protocol}//${host}${pathname}\n${search}`;
-	            if (body)
-	                outgoing += `\n\n${WebTransport.decoder.decode(body)}`;
-	            console.log('>>>>>>');
-	            console.log(outgoing);
-	            console.log('-----');
-	        }
-	    }
-	    /**
-	     * Check whether original `fetch` has been monkey patched or not.
+	     * Check whether the original ` fetch ` has been monkey patched or not.
 	     *
 	     * @returns `true` if original `fetch` has been patched.
 	     */
@@ -5000,7 +5722,25 @@
 	        return !fetchString.includes('[native code]') && fetch.name !== 'fetch';
 	    }
 	    /**
-	     * Retrieve original `fetch` implementation.
+	     * Create service response from {@link XMLHttpRequest} processing result.
+	     *
+	     * @param url - Used endpoint url.
+	     * @param xhr - `HTTPClient`, which has been used to make a request.
+	     *
+	     * @returns  Pre-processed transport response.
+	     */
+	    transportResponseFromXHR(url, xhr) {
+	        const allHeaders = xhr.getAllResponseHeaders().split('\n');
+	        const headers = {};
+	        for (const header of allHeaders) {
+	            const [key, value] = header.trim().split(':');
+	            if (key && value)
+	                headers[key.toLowerCase()] = value.trim();
+	        }
+	        return { status: xhr.status, url, headers, body: xhr.response };
+	    }
+	    /**
+	     * Retrieve the original ` fetch ` implementation.
 	     *
 	     * Retrieve implementation which hasn't been patched by APM tools.
 	     *
@@ -5032,1324 +5772,6 @@
 	 * @internal
 	 */
 	WebTransport.decoder = new TextDecoder();
-
-	/**
-	 * Events listener manager module.
-	 */
-	/**
-	 * Real-time listeners' manager.
-	 *
-	 * @internal
-	 */
-	class ListenerManager {
-	    constructor() {
-	        /**
-	         * List of registered event listeners.
-	         */
-	        this.listeners = [];
-	        // endregion
-	    }
-	    /**
-	     * Register new real-time events listener.
-	     *
-	     * @param listener - Listener with event callbacks to handle different types of events.
-	     */
-	    addListener(listener) {
-	        this.listeners.push(listener);
-	    }
-	    /**
-	     * Remove real-time event listener.
-	     *
-	     * @param listener - Event listeners which should be removed.
-	     */
-	    removeListener(listener) {
-	        const listenerIdx = this.listeners.indexOf(listener);
-	        if (listenerIdx !== -1)
-	            this.listeners.splice(listenerIdx, 1);
-	    }
-	    /**
-	     * Clear all real-time event listeners.
-	     */
-	    removeAllListeners() {
-	        this.listeners = [];
-	    }
-	    /**
-	     * Announce PubNub client status change event.
-	     *
-	     * @param status - PubNub client status.
-	     */
-	    announceStatus(status) {
-	        this.listeners.forEach((listener) => {
-	            if (listener.status)
-	                listener.status(status);
-	        });
-	    }
-	    /**
-	     * Announce channel presence change event.
-	     *
-	     * @param presence - Channel presence change information.
-	     */
-	    announcePresence(presence) {
-	        this.listeners.forEach((listener) => {
-	            if (listener.presence)
-	                listener.presence(presence);
-	        });
-	    }
-	    /**
-	     * Announce real-time message event.
-	     *
-	     * @param message - Received real-time message.
-	     */
-	    announceMessage(message) {
-	        this.listeners.forEach((listener) => {
-	            if (listener.message)
-	                listener.message(message);
-	        });
-	    }
-	    /**
-	     * Announce real-time signal event.
-	     *
-	     * @param signal - Received real-time signal.
-	     */
-	    announceSignal(signal) {
-	        this.listeners.forEach((listener) => {
-	            if (listener.signal)
-	                listener.signal(signal);
-	        });
-	    }
-	    /**
-	     * Announce message actions change event.
-	     *
-	     * @param messageAction - Message action change information.
-	     */
-	    announceMessageAction(messageAction) {
-	        this.listeners.forEach((listener) => {
-	            if (listener.messageAction)
-	                listener.messageAction(messageAction);
-	        });
-	    }
-	    /**
-	     * Announce fie share event.
-	     *
-	     * @param file - Shared file information.
-	     */
-	    announceFile(file) {
-	        this.listeners.forEach((listener) => {
-	            if (listener.file)
-	                listener.file(file);
-	        });
-	    }
-	    /**
-	     * Announce App Context Object change event.
-	     *
-	     * @param object - App Context change information.
-	     */
-	    announceObjects(object) {
-	        this.listeners.forEach((listener) => {
-	            if (listener.objects)
-	                listener.objects(object);
-	        });
-	    }
-	    /**
-	     * Announce network up status.
-	     */
-	    announceNetworkUp() {
-	        this.listeners.forEach((listener) => {
-	            if (listener.status) {
-	                listener.status({
-	                    category: StatusCategory$1.PNNetworkUpCategory,
-	                });
-	            }
-	        });
-	    }
-	    /**
-	     * Announce network down status.
-	     */
-	    announceNetworkDown() {
-	        this.listeners.forEach((listener) => {
-	            if (listener.status) {
-	                listener.status({
-	                    category: StatusCategory$1.PNNetworkDownCategory,
-	                });
-	            }
-	        });
-	    }
-	    // --------------------------------------------------------
-	    // ---------------------- Deprecated ----------------------
-	    // --------------------------------------------------------
-	    // region Deprecated
-	    /**
-	     * Announce User App Context Object change event.
-	     *
-	     * @param user - User App Context change information.
-	     *
-	     * @deprecated Use {@link announceObjects} method instead.
-	     */
-	    announceUser(user) {
-	        this.listeners.forEach((listener) => {
-	            if (listener.user)
-	                listener.user(user);
-	        });
-	    }
-	    /**
-	     * Announce Space App Context Object change event.
-	     *
-	     * @param space - Space App Context change information.
-	     *
-	     * @deprecated Use {@link announceObjects} method instead.
-	     */
-	    announceSpace(space) {
-	        this.listeners.forEach((listener) => {
-	            if (listener.space)
-	                listener.space(space);
-	        });
-	    }
-	    /**
-	     * Announce VSP Membership App Context Object change event.
-	     *
-	     * @param membership - VSP Membership App Context change information.
-	     *
-	     * @deprecated Use {@link announceObjects} method instead.
-	     */
-	    announceMembership(membership) {
-	        this.listeners.forEach((listener) => {
-	            if (listener.membership)
-	                listener.membership(membership);
-	        });
-	    }
-	}
-
-	/**
-	 * Subscription reconnection-manager.
-	 *
-	 * **Note:** Reconnection manger rely on legacy time-based availability check.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Network "discovery" manager.
-	 *
-	 * Manager perform periodic `time` API calls to identify network availability.
-	 *
-	 * @internal
-	 */
-	class ReconnectionManager {
-	    constructor(time) {
-	        this.time = time;
-	    }
-	    /**
-	     * Configure reconnection handler.
-	     *
-	     * @param callback - Successful availability check notify callback.
-	     */
-	    onReconnect(callback) {
-	        this.callback = callback;
-	    }
-	    /**
-	     * Start periodic "availability" check.
-	     */
-	    startPolling() {
-	        this.timeTimer = setInterval(() => this.callTime(), 3000);
-	    }
-	    /**
-	     * Stop periodic "availability" check.
-	     */
-	    stopPolling() {
-	        if (this.timeTimer)
-	            clearInterval(this.timeTimer);
-	        this.timeTimer = null;
-	    }
-	    callTime() {
-	        this.time((status) => {
-	            if (!status.error) {
-	                this.stopPolling();
-	                if (this.callback)
-	                    this.callback();
-	            }
-	        });
-	    }
-	}
-
-	/**
-	 * Messages de-duplication manager module.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Real-time events deduplication manager.
-	 *
-	 * @internal
-	 */
-	class DedupingManager {
-	    /**
-	     * Create and configure real-time events de-duplication manager.
-	     *
-	     * @param config - PubNub client configuration object.
-	     */
-	    constructor({ maximumCacheSize }) {
-	        this.maximumCacheSize = maximumCacheSize;
-	        this.hashHistory = [];
-	    }
-	    /**
-	     * Compute unique real-time event payload key.
-	     *
-	     * @param message - Received real-time event payload for which unique key should be computed.
-	     * @returns Unique real-time event payload key in messages cache.
-	     */
-	    getKey(message) {
-	        var _a;
-	        return `${message.timetoken}-${this.hashCode(JSON.stringify((_a = message.message) !== null && _a !== void 0 ? _a : '')).toString()}`;
-	    }
-	    /**
-	     * Check whether there is similar message already received or not.
-	     *
-	     * @param message - Received real-time event payload which should be checked for duplicates.
-	     * @returns `true` in case if similar payload already has been received before.
-	     */
-	    isDuplicate(message) {
-	        return this.hashHistory.includes(this.getKey(message));
-	    }
-	    /**
-	     * Store received message to be used later for duplicate detection.
-	     *
-	     * @param message - Received real-time event payload.
-	     */
-	    addEntry(message) {
-	        if (this.hashHistory.length >= this.maximumCacheSize) {
-	            this.hashHistory.shift();
-	        }
-	        this.hashHistory.push(this.getKey(message));
-	    }
-	    /**
-	     * Clean up cached messages.
-	     */
-	    clearHistory() {
-	        this.hashHistory = [];
-	    }
-	    /**
-	     * Compute message hash sum.
-	     *
-	     * @param payload - Received payload for which hash sum should be computed.
-	     * @returns {number} - Resulting hash sum.
-	     */
-	    hashCode(payload) {
-	        let hash = 0;
-	        if (payload.length === 0)
-	            return hash;
-	        for (let i = 0; i < payload.length; i += 1) {
-	            const character = payload.charCodeAt(i);
-	            hash = (hash << 5) - hash + character; // eslint-disable-line
-	            hash = hash & hash; // eslint-disable-line
-	        }
-	        return hash;
-	    }
-	}
-
-	/**
-	 * Subscription manager module.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Subscription loop manager.
-	 *
-	 * @internal
-	 */
-	class SubscriptionManager {
-	    constructor(configuration, listenerManager, eventEmitter, subscribeCall, heartbeatCall, leaveCall, time) {
-	        this.configuration = configuration;
-	        this.listenerManager = listenerManager;
-	        this.eventEmitter = eventEmitter;
-	        this.subscribeCall = subscribeCall;
-	        this.heartbeatCall = heartbeatCall;
-	        this.leaveCall = leaveCall;
-	        this.reconnectionManager = new ReconnectionManager(time);
-	        this.dedupingManager = new DedupingManager(this.configuration);
-	        this.heartbeatChannelGroups = {};
-	        this.heartbeatChannels = {};
-	        this.presenceChannelGroups = {};
-	        this.presenceChannels = {};
-	        this.heartbeatTimer = null;
-	        this.presenceState = {};
-	        this.pendingChannelGroupSubscriptions = new Set();
-	        this.pendingChannelSubscriptions = new Set();
-	        this.channelGroups = {};
-	        this.channels = {};
-	        this.currentTimetoken = '0';
-	        this.lastTimetoken = '0';
-	        this.storedTimetoken = null;
-	        this.subscriptionStatusAnnounced = false;
-	        this.isOnline = true;
-	    }
-	    // region Information
-	    get subscribedChannels() {
-	        return Object.keys(this.channels);
-	    }
-	    get subscribedChannelGroups() {
-	        return Object.keys(this.channelGroups);
-	    }
-	    get abort() {
-	        return this._subscribeAbort;
-	    }
-	    set abort(call) {
-	        this._subscribeAbort = call;
-	    }
-	    // endregion
-	    // region Subscription
-	    disconnect() {
-	        this.stopSubscribeLoop();
-	        this.stopHeartbeatTimer();
-	        this.reconnectionManager.stopPolling();
-	    }
-	    /**
-	     * Restart subscription loop with current state.
-	     *
-	     * @param forUnsubscribe - Whether restarting subscription loop as part of channels list change on
-	     * unsubscribe or not.
-	     */
-	    reconnect(forUnsubscribe = false) {
-	        this.startSubscribeLoop(forUnsubscribe);
-	        // Starting heartbeat loop for provided channels and groups.
-	        if (!forUnsubscribe && !this.configuration.useSmartHeartbeat)
-	            this.startHeartbeatTimer();
-	    }
-	    /**
-	     * Update channels and groups used in subscription loop.
-	     *
-	     * @param parameters - Subscribe configuration parameters.
-	     */
-	    subscribe(parameters) {
-	        const { channels, channelGroups, timetoken, withPresence = false, withHeartbeats = false } = parameters;
-	        if (timetoken) {
-	            this.lastTimetoken = this.currentTimetoken;
-	            this.currentTimetoken = timetoken;
-	        }
-	        if (this.currentTimetoken !== '0' && this.currentTimetoken !== 0) {
-	            this.storedTimetoken = this.currentTimetoken;
-	            this.currentTimetoken = 0;
-	        }
-	        channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => {
-	            this.pendingChannelSubscriptions.add(channel);
-	            this.channels[channel] = {};
-	            if (withPresence)
-	                this.presenceChannels[channel] = {};
-	            if (withHeartbeats || this.configuration.getHeartbeatInterval())
-	                this.heartbeatChannels[channel] = {};
-	        });
-	        channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.forEach((group) => {
-	            this.pendingChannelGroupSubscriptions.add(group);
-	            this.channelGroups[group] = {};
-	            if (withPresence)
-	                this.presenceChannelGroups[group] = {};
-	            if (withHeartbeats || this.configuration.getHeartbeatInterval())
-	                this.heartbeatChannelGroups[group] = {};
-	        });
-	        this.subscriptionStatusAnnounced = false;
-	        this.reconnect();
-	    }
-	    unsubscribe(parameters, isOffline) {
-	        let { channels, channelGroups } = parameters;
-	        const actualChannelGroups = new Set();
-	        const actualChannels = new Set();
-	        channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => {
-	            if (channel in this.channels) {
-	                delete this.channels[channel];
-	                actualChannels.add(channel);
-	                if (channel in this.heartbeatChannels)
-	                    delete this.heartbeatChannels[channel];
-	            }
-	            if (channel in this.presenceState)
-	                delete this.presenceState[channel];
-	            if (channel in this.presenceChannels) {
-	                delete this.presenceChannels[channel];
-	                actualChannels.add(channel);
-	            }
-	        });
-	        channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.forEach((group) => {
-	            if (group in this.channelGroups) {
-	                delete this.channelGroups[group];
-	                actualChannelGroups.add(group);
-	                if (group in this.heartbeatChannelGroups)
-	                    delete this.heartbeatChannelGroups[group];
-	            }
-	            if (group in this.presenceState)
-	                delete this.presenceState[group];
-	            if (group in this.presenceChannelGroups) {
-	                delete this.presenceChannelGroups[group];
-	                actualChannelGroups.add(group);
-	            }
-	        });
-	        // There is no need to unsubscribe to empty list of data sources.
-	        if (actualChannels.size === 0 && actualChannelGroups.size === 0)
-	            return;
-	        if (this.configuration.suppressLeaveEvents === false && !isOffline) {
-	            channelGroups = Array.from(actualChannelGroups);
-	            channels = Array.from(actualChannels);
-	            this.leaveCall({ channels, channelGroups }, (status) => {
-	                const { error } = status, restOfStatus = __rest(status, ["error"]);
-	                let errorMessage;
-	                if (error) {
-	                    if (status.errorData &&
-	                        typeof status.errorData === 'object' &&
-	                        'message' in status.errorData &&
-	                        typeof status.errorData.message === 'string')
-	                        errorMessage = status.errorData.message;
-	                    else if ('message' in status && typeof status.message === 'string')
-	                        errorMessage = status.message;
-	                }
-	                this.listenerManager.announceStatus(Object.assign(Object.assign({}, restOfStatus), { error: errorMessage !== null && errorMessage !== void 0 ? errorMessage : false, affectedChannels: channels, affectedChannelGroups: channelGroups, currentTimetoken: this.currentTimetoken, lastTimetoken: this.lastTimetoken }));
-	            });
-	        }
-	        if (Object.keys(this.channels).length === 0 &&
-	            Object.keys(this.presenceChannels).length === 0 &&
-	            Object.keys(this.channelGroups).length === 0 &&
-	            Object.keys(this.presenceChannelGroups).length === 0) {
-	            this.lastTimetoken = 0;
-	            this.currentTimetoken = 0;
-	            this.storedTimetoken = null;
-	            this.region = null;
-	            this.reconnectionManager.stopPolling();
-	        }
-	        this.reconnect(true);
-	    }
-	    unsubscribeAll(isOffline) {
-	        this.unsubscribe({
-	            channels: this.subscribedChannels,
-	            channelGroups: this.subscribedChannelGroups,
-	        }, isOffline);
-	    }
-	    /**
-	     * Start next subscription loop.
-	     *
-	     * @param restartOnUnsubscribe - Whether restarting subscription loop as part of channels list change on
-	     * unsubscribe or not.
-	     *
-	     * @internal
-	     */
-	    startSubscribeLoop(restartOnUnsubscribe = false) {
-	        this.stopSubscribeLoop();
-	        const channelGroups = [...Object.keys(this.channelGroups)];
-	        const channels = [...Object.keys(this.channels)];
-	        Object.keys(this.presenceChannelGroups).forEach((group) => channelGroups.push(`${group}-pnpres`));
-	        Object.keys(this.presenceChannels).forEach((channel) => channels.push(`${channel}-pnpres`));
-	        // There is no need to start subscription loop for empty list of data sources.
-	        if (channels.length === 0 && channelGroups.length === 0)
-	            return;
-	        this.subscribeCall({
-	            channels,
-	            channelGroups,
-	            state: this.presenceState,
-	            heartbeat: this.configuration.getPresenceTimeout(),
-	            timetoken: this.currentTimetoken,
-	            region: this.region !== null ? this.region : undefined,
-	            filterExpression: this.configuration.filterExpression,
-	        }, (status, result) => {
-	            this.processSubscribeResponse(status, result);
-	        });
-	        if (!restartOnUnsubscribe && this.configuration.useSmartHeartbeat)
-	            this.startHeartbeatTimer();
-	    }
-	    stopSubscribeLoop() {
-	        if (this._subscribeAbort) {
-	            this._subscribeAbort();
-	            this._subscribeAbort = null;
-	        }
-	    }
-	    /**
-	     * Process subscribe REST API endpoint response.
-	     */
-	    processSubscribeResponse(status, result) {
-	        if (status.error) {
-	            // Ignore aborted request.
-	            if ((typeof status.errorData === 'object' &&
-	                'name' in status.errorData &&
-	                status.errorData.name === 'AbortError') ||
-	                status.category === StatusCategory$1.PNCancelledCategory)
-	                return;
-	            if (status.category === StatusCategory$1.PNTimeoutCategory) {
-	                this.startSubscribeLoop();
-	            }
-	            else if (status.category === StatusCategory$1.PNNetworkIssuesCategory ||
-	                status.category === StatusCategory$1.PNMalformedResponseCategory) {
-	                this.disconnect();
-	                if (status.error && this.configuration.autoNetworkDetection && this.isOnline) {
-	                    this.isOnline = false;
-	                    this.listenerManager.announceNetworkDown();
-	                }
-	                this.reconnectionManager.onReconnect(() => {
-	                    if (this.configuration.autoNetworkDetection && !this.isOnline) {
-	                        this.isOnline = true;
-	                        this.listenerManager.announceNetworkUp();
-	                    }
-	                    this.reconnect();
-	                    this.subscriptionStatusAnnounced = true;
-	                    const reconnectedAnnounce = {
-	                        category: StatusCategory$1.PNReconnectedCategory,
-	                        operation: status.operation,
-	                        lastTimetoken: this.lastTimetoken,
-	                        currentTimetoken: this.currentTimetoken,
-	                    };
-	                    this.listenerManager.announceStatus(reconnectedAnnounce);
-	                });
-	                this.reconnectionManager.startPolling();
-	                this.listenerManager.announceStatus(Object.assign(Object.assign({}, status), { category: StatusCategory$1.PNNetworkIssuesCategory }));
-	            }
-	            else if (status.category === StatusCategory$1.PNBadRequestCategory) {
-	                this.stopHeartbeatTimer();
-	                this.listenerManager.announceStatus(status);
-	            }
-	            else
-	                this.listenerManager.announceStatus(status);
-	            return;
-	        }
-	        if (this.storedTimetoken) {
-	            this.currentTimetoken = this.storedTimetoken;
-	            this.storedTimetoken = null;
-	        }
-	        else {
-	            this.lastTimetoken = this.currentTimetoken;
-	            this.currentTimetoken = result.cursor.timetoken;
-	        }
-	        if (!this.subscriptionStatusAnnounced) {
-	            const connected = {
-	                category: StatusCategory$1.PNConnectedCategory,
-	                operation: status.operation,
-	                affectedChannels: Array.from(this.pendingChannelSubscriptions),
-	                subscribedChannels: this.subscribedChannels,
-	                affectedChannelGroups: Array.from(this.pendingChannelGroupSubscriptions),
-	                lastTimetoken: this.lastTimetoken,
-	                currentTimetoken: this.currentTimetoken,
-	            };
-	            this.subscriptionStatusAnnounced = true;
-	            this.listenerManager.announceStatus(connected);
-	            // Clear pending channels and groups.
-	            this.pendingChannelGroupSubscriptions.clear();
-	            this.pendingChannelSubscriptions.clear();
-	        }
-	        const { messages } = result;
-	        const { requestMessageCountThreshold, dedupeOnSubscribe } = this.configuration;
-	        if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
-	            this.listenerManager.announceStatus({
-	                category: StatusCategory$1.PNRequestMessageCountExceededCategory,
-	                operation: status.operation,
-	            });
-	        }
-	        try {
-	            messages.forEach((message) => {
-	                if (dedupeOnSubscribe && 'message' in message.data && 'timetoken' in message.data) {
-	                    if (this.dedupingManager.isDuplicate(message.data))
-	                        return;
-	                    this.dedupingManager.addEntry(message.data);
-	                }
-	                this.eventEmitter.emitEvent(message);
-	            });
-	        }
-	        catch (e) {
-	            const errorStatus = {
-	                error: true,
-	                category: StatusCategory$1.PNUnknownCategory,
-	                errorData: e,
-	                statusCode: 0,
-	            };
-	            this.listenerManager.announceStatus(errorStatus);
-	        }
-	        this.region = result.cursor.region;
-	        this.startSubscribeLoop();
-	    }
-	    // endregion
-	    // region Presence
-	    /**
-	     * Update `uuid` state which should be sent with subscribe request.
-	     *
-	     * @param parameters - Channels and groups with state which should be associated to `uuid`.
-	     */
-	    setState(parameters) {
-	        const { state, channels, channelGroups } = parameters;
-	        channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => channel in this.channels && (this.presenceState[channel] = state));
-	        channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.forEach((group) => group in this.channelGroups && (this.presenceState[group] = state));
-	    }
-	    /**
-	     * Manual presence management.
-	     *
-	     * @param parameters - Desired presence state for provided list of channels and groups.
-	     */
-	    changePresence(parameters) {
-	        const { connected, channels, channelGroups } = parameters;
-	        if (connected) {
-	            channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => (this.heartbeatChannels[channel] = {}));
-	            channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.forEach((group) => (this.heartbeatChannelGroups[group] = {}));
-	        }
-	        else {
-	            channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => {
-	                if (channel in this.heartbeatChannels)
-	                    delete this.heartbeatChannels[channel];
-	            });
-	            channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.forEach((group) => {
-	                if (group in this.heartbeatChannelGroups)
-	                    delete this.heartbeatChannelGroups[group];
-	            });
-	            if (this.configuration.suppressLeaveEvents === false) {
-	                this.leaveCall({ channels, channelGroups }, (status) => this.listenerManager.announceStatus(status));
-	            }
-	        }
-	        this.reconnect();
-	    }
-	    startHeartbeatTimer() {
-	        this.stopHeartbeatTimer();
-	        const heartbeatInterval = this.configuration.getHeartbeatInterval();
-	        if (!heartbeatInterval || heartbeatInterval === 0)
-	            return;
-	        // Sending immediate heartbeat only if not working as smart heartbeat.
-	        if (!this.configuration.useSmartHeartbeat)
-	            this.sendHeartbeat();
-	        this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), heartbeatInterval * 1000);
-	    }
-	    /**
-	     * Stop heartbeat.
-	     *
-	     * Stop timer which trigger {@link HeartbeatRequest} sending with configured presence intervals.
-	     */
-	    stopHeartbeatTimer() {
-	        if (!this.heartbeatTimer)
-	            return;
-	        clearInterval(this.heartbeatTimer);
-	        this.heartbeatTimer = null;
-	    }
-	    /**
-	     * Send heartbeat request.
-	     */
-	    sendHeartbeat() {
-	        const heartbeatChannelGroups = Object.keys(this.heartbeatChannelGroups);
-	        const heartbeatChannels = Object.keys(this.heartbeatChannels);
-	        // There is no need to start heartbeat loop if there is no channels and groups to use.
-	        if (heartbeatChannels.length === 0 && heartbeatChannelGroups.length === 0)
-	            return;
-	        this.heartbeatCall({
-	            channels: heartbeatChannels,
-	            channelGroups: heartbeatChannelGroups,
-	            heartbeat: this.configuration.getPresenceTimeout(),
-	            state: this.presenceState,
-	        }, (status) => {
-	            if (status.error && this.configuration.announceFailedHeartbeats)
-	                this.listenerManager.announceStatus(status);
-	            if (status.error && this.configuration.autoNetworkDetection && this.isOnline) {
-	                this.isOnline = false;
-	                this.disconnect();
-	                this.listenerManager.announceNetworkDown();
-	                this.reconnect();
-	            }
-	            if (!status.error && this.configuration.announceSuccessfulHeartbeats)
-	                this.listenerManager.announceStatus(status);
-	        });
-	    }
-	}
-
-	// --------------------------------------------------------
-	// ------------------------ Types -------------------------
-	// --------------------------------------------------------
-	// region Types
-	// endregion
-	// endregion
-	/**
-	 * Base notification payload object.
-	 */
-	class BaseNotificationPayload {
-	    /**
-	     * Base notification provider payload object.
-	     *
-	     * @internal
-	     *
-	     * @param payload - Object which contains vendor-specific preformatted push notification payload.
-	     * @param title - Notification main title.
-	     * @param body - Notification body (main messages).
-	     */
-	    constructor(payload, title, body) {
-	        this._payload = payload;
-	        this.setDefaultPayloadStructure();
-	        this.title = title;
-	        this.body = body;
-	    }
-	    /**
-	     * Retrieve resulting notification payload content for message.
-	     *
-	     * @returns Preformatted push notification payload data.
-	     */
-	    get payload() {
-	        return this._payload;
-	    }
-	    /**
-	     * Update notification title.
-	     *
-	     * @param value - New notification title.
-	     */
-	    set title(value) {
-	        this._title = value;
-	    }
-	    /**
-	     * Update notification subtitle.
-	     *
-	     * @param value - New second-line notification title.
-	     */
-	    set subtitle(value) {
-	        this._subtitle = value;
-	    }
-	    /**
-	     * Update notification body.
-	     *
-	     * @param value - Update main notification message (shown when expanded).
-	     */
-	    set body(value) {
-	        this._body = value;
-	    }
-	    /**
-	     * Update application badge number.
-	     *
-	     * @param value - Number which should be shown in application badge upon receiving notification.
-	     */
-	    set badge(value) {
-	        this._badge = value;
-	    }
-	    /**
-	     * Update notification sound.
-	     *
-	     * @param value - Name of the sound file which should be played upon notification receive.
-	     */
-	    set sound(value) {
-	        this._sound = value;
-	    }
-	    /**
-	     * Platform-specific structure initialization.
-	     *
-	     * @internal
-	     */
-	    setDefaultPayloadStructure() { }
-	    /**
-	     * Translate data object into PubNub push notification payload object.
-	     *
-	     * @internal
-	     *
-	     * @returns Preformatted push notification payload.
-	     */
-	    toObject() {
-	        return {};
-	    }
-	}
-	/**
-	 * Message payload for Apple Push Notification Service.
-	 */
-	class APNSNotificationPayload extends BaseNotificationPayload {
-	    constructor() {
-	        super(...arguments);
-	        /**
-	         * Type of push notification service for which payload will be created.
-	         *
-	         * @internal
-	         */
-	        this._apnsPushType = 'apns';
-	        /**
-	         * Whether resulting payload should trigger silent notification or not.
-	         *
-	         * @internal
-	         */
-	        this._isSilent = false;
-	    }
-	    get payload() {
-	        return this._payload;
-	    }
-	    /**
-	     * Update notification receivers configuration.
-	     *
-	     * @param value - New APNS2 configurations.
-	     */
-	    set configurations(value) {
-	        if (!value || !value.length)
-	            return;
-	        this._configurations = value;
-	    }
-	    /**
-	     * Notification payload.
-	     *
-	     * @returns Platform-specific part of PubNub notification payload.
-	     */
-	    get notification() {
-	        return this.payload.aps;
-	    }
-	    /**
-	     * Notification title.
-	     *
-	     * @returns Main notification title.
-	     */
-	    get title() {
-	        return this._title;
-	    }
-	    /**
-	     * Update notification title.
-	     *
-	     * @param value - New notification title.
-	     */
-	    set title(value) {
-	        if (!value || !value.length)
-	            return;
-	        this.payload.aps.alert.title = value;
-	        this._title = value;
-	    }
-	    /**
-	     * Notification subtitle.
-	     *
-	     * @returns Second-line notification title.
-	     */
-	    get subtitle() {
-	        return this._subtitle;
-	    }
-	    /**
-	     * Update notification subtitle.
-	     *
-	     * @param value - New second-line notification title.
-	     */
-	    set subtitle(value) {
-	        if (!value || !value.length)
-	            return;
-	        this.payload.aps.alert.subtitle = value;
-	        this._subtitle = value;
-	    }
-	    /**
-	     * Notification body.
-	     *
-	     * @returns Main notification message (shown when expanded).
-	     */
-	    get body() {
-	        return this._body;
-	    }
-	    /**
-	     * Update notification body.
-	     *
-	     * @param value - Update main notification message (shown when expanded).
-	     */
-	    set body(value) {
-	        if (!value || !value.length)
-	            return;
-	        this.payload.aps.alert.body = value;
-	        this._body = value;
-	    }
-	    /**
-	     * Retrieve unread notifications number.
-	     *
-	     * @returns Number of unread notifications which should be shown on application badge.
-	     */
-	    get badge() {
-	        return this._badge;
-	    }
-	    /**
-	     * Update application badge number.
-	     *
-	     * @param value - Number which should be shown in application badge upon receiving notification.
-	     */
-	    set badge(value) {
-	        if (value === undefined || value === null)
-	            return;
-	        this.payload.aps.badge = value;
-	        this._badge = value;
-	    }
-	    /**
-	     * Retrieve notification sound file.
-	     *
-	     * @returns Notification sound file name from resource bundle.
-	     */
-	    get sound() {
-	        return this._sound;
-	    }
-	    /**
-	     * Update notification sound.
-	     *
-	     * @param value - Name of the sound file which should be played upon notification receive.
-	     */
-	    set sound(value) {
-	        if (!value || !value.length)
-	            return;
-	        this.payload.aps.sound = value;
-	        this._sound = value;
-	    }
-	    /**
-	     * Set whether notification should be silent or not.
-	     *
-	     * `content-available` notification type will be used to deliver silent notification if set to `true`.
-	     *
-	     * @param value - Whether notification should be sent as silent or not.
-	     */
-	    set silent(value) {
-	        this._isSilent = value;
-	    }
-	    /**
-	     * Setup push notification payload default content.
-	     *
-	     * @internal
-	     */
-	    setDefaultPayloadStructure() {
-	        this.payload.aps = { alert: {} };
-	    }
-	    /**
-	     * Translate data object into PubNub push notification payload object.
-	     *
-	     * @internal
-	     *
-	     * @returns Preformatted push notification payload.
-	     */
-	    toObject() {
-	        const payload = Object.assign({}, this.payload);
-	        const { aps } = payload;
-	        let { alert } = aps;
-	        if (this._isSilent)
-	            aps['content-available'] = 1;
-	        if (this._apnsPushType === 'apns2') {
-	            if (!this._configurations || !this._configurations.length)
-	                throw new ReferenceError('APNS2 configuration is missing');
-	            const configurations = [];
-	            this._configurations.forEach((configuration) => {
-	                configurations.push(this.objectFromAPNS2Configuration(configuration));
-	            });
-	            if (configurations.length)
-	                payload.pn_push = configurations;
-	        }
-	        if (!alert || !Object.keys(alert).length)
-	            delete aps.alert;
-	        if (this._isSilent) {
-	            delete aps.alert;
-	            delete aps.badge;
-	            delete aps.sound;
-	            alert = {};
-	        }
-	        return this._isSilent || (alert && Object.keys(alert).length) ? payload : null;
-	    }
-	    /**
-	     * Create PubNub push notification service APNS2 configuration information object.
-	     *
-	     * @internal
-	     *
-	     * @param configuration - Source user-provided APNS2 configuration.
-	     *
-	     * @returns Preformatted for PubNub service APNS2 configuration information.
-	     */
-	    objectFromAPNS2Configuration(configuration) {
-	        if (!configuration.targets || !configuration.targets.length)
-	            throw new ReferenceError('At least one APNS2 target should be provided');
-	        const { collapseId, expirationDate } = configuration;
-	        const objectifiedConfiguration = {
-	            auth_method: 'token',
-	            targets: configuration.targets.map((target) => this.objectFromAPNSTarget(target)),
-	            version: 'v2',
-	        };
-	        if (collapseId && collapseId.length)
-	            objectifiedConfiguration.collapse_id = collapseId;
-	        if (expirationDate)
-	            objectifiedConfiguration.expiration = expirationDate.toISOString();
-	        return objectifiedConfiguration;
-	    }
-	    /**
-	     * Create PubNub push notification service APNS2 target information object.
-	     *
-	     * @internal
-	     *
-	     * @param target - Source user-provided data.
-	     *
-	     * @returns Preformatted for PubNub service APNS2 target information.
-	     */
-	    objectFromAPNSTarget(target) {
-	        if (!target.topic || !target.topic.length)
-	            throw new TypeError("Target 'topic' undefined.");
-	        const { topic, environment = 'development', excludedDevices = [] } = target;
-	        const objectifiedTarget = { topic, environment };
-	        if (excludedDevices.length)
-	            objectifiedTarget.excluded_devices = excludedDevices;
-	        return objectifiedTarget;
-	    }
-	}
-	/**
-	 * Message payload for Firebase Cloud Messaging service.
-	 */
-	class FCMNotificationPayload extends BaseNotificationPayload {
-	    get payload() {
-	        return this._payload;
-	    }
-	    /**
-	     * Notification payload.
-	     *
-	     * @returns Platform-specific part of PubNub notification payload.
-	     */
-	    get notification() {
-	        return this.payload.notification;
-	    }
-	    /**
-	     * Silent notification payload.
-	     *
-	     * @returns Silent notification payload (data notification).
-	     */
-	    get data() {
-	        return this.payload.data;
-	    }
-	    /**
-	     * Notification title.
-	     *
-	     * @returns Main notification title.
-	     */
-	    get title() {
-	        return this._title;
-	    }
-	    /**
-	     * Update notification title.
-	     *
-	     * @param value - New notification title.
-	     */
-	    set title(value) {
-	        if (!value || !value.length)
-	            return;
-	        this.payload.notification.title = value;
-	        this._title = value;
-	    }
-	    /**
-	     * Notification body.
-	     *
-	     * @returns Main notification message (shown when expanded).
-	     */
-	    get body() {
-	        return this._body;
-	    }
-	    /**
-	     * Update notification body.
-	     *
-	     * @param value - Update main notification message (shown when expanded).
-	     */
-	    set body(value) {
-	        if (!value || !value.length)
-	            return;
-	        this.payload.notification.body = value;
-	        this._body = value;
-	    }
-	    /**
-	     * Retrieve notification sound file.
-	     *
-	     * @returns Notification sound file name from resource bundle.
-	     */
-	    get sound() {
-	        return this._sound;
-	    }
-	    /**
-	     * Update notification sound.
-	     *
-	     * @param value - Name of the sound file which should be played upon notification receive.
-	     */
-	    set sound(value) {
-	        if (!value || !value.length)
-	            return;
-	        this.payload.notification.sound = value;
-	        this._sound = value;
-	    }
-	    /**
-	     * Retrieve notification icon file.
-	     *
-	     * @returns Notification icon file name from resource bundle.
-	     */
-	    get icon() {
-	        return this._icon;
-	    }
-	    /**
-	     * Update notification icon.
-	     *
-	     * @param value - Name of the icon file which should be shown on notification.
-	     */
-	    set icon(value) {
-	        if (!value || !value.length)
-	            return;
-	        this.payload.notification.icon = value;
-	        this._icon = value;
-	    }
-	    /**
-	     * Retrieve notifications grouping tag.
-	     *
-	     * @returns Notifications grouping tag.
-	     */
-	    get tag() {
-	        return this._tag;
-	    }
-	    /**
-	     * Update notifications grouping tag.
-	     *
-	     * @param value - String which will be used to group similar notifications in notification center.
-	     */
-	    set tag(value) {
-	        if (!value || !value.length)
-	            return;
-	        this.payload.notification.tag = value;
-	        this._tag = value;
-	    }
-	    /**
-	     * Set whether notification should be silent or not.
-	     *
-	     * All notification data will be sent under `data` field if set to `true`.
-	     *
-	     * @param value - Whether notification should be sent as silent or not.
-	     */
-	    set silent(value) {
-	        this._isSilent = value;
-	    }
-	    /**
-	     * Setup push notification payload default content.
-	     *
-	     * @internal
-	     */
-	    setDefaultPayloadStructure() {
-	        this.payload.notification = {};
-	        this.payload.data = {};
-	    }
-	    /**
-	     * Translate data object into PubNub push notification payload object.
-	     *
-	     * @internal
-	     *
-	     * @returns Preformatted push notification payload.
-	     */
-	    toObject() {
-	        let data = Object.assign({}, this.payload.data);
-	        let notification = null;
-	        const payload = {};
-	        // Check whether additional data has been passed outside 'data' object and put it into it if required.
-	        if (Object.keys(this.payload).length > 2) {
-	            const _a = this.payload, additionalData = __rest(_a, ["notification", "data"]);
-	            data = Object.assign(Object.assign({}, data), additionalData);
-	        }
-	        if (this._isSilent)
-	            data.notification = this.payload.notification;
-	        else
-	            notification = this.payload.notification;
-	        if (Object.keys(data).length)
-	            payload.data = data;
-	        if (notification && Object.keys(notification).length)
-	            payload.notification = notification;
-	        return Object.keys(payload).length ? payload : null;
-	    }
-	}
-	class NotificationsPayload {
-	    /**
-	     * Create push notification payload holder.
-	     *
-	     * @internal
-	     *
-	     * @param title - String which will be shown at the top of the notification (below app name).
-	     * @param body - String with message which should be shown when user will check notification.
-	     */
-	    constructor(title, body) {
-	        this._payload = { apns: {}, fcm: {} };
-	        this._title = title;
-	        this._body = body;
-	        this.apns = new APNSNotificationPayload(this._payload.apns, title, body);
-	        this.fcm = new FCMNotificationPayload(this._payload.fcm, title, body);
-	    }
-	    /**
-	     * Enable or disable push notification debugging message.
-	     *
-	     * @param value - Whether debug message from push notification scheduler should be published to the specific
-	     * channel or not.
-	     */
-	    set debugging(value) {
-	        this._debugging = value;
-	    }
-	    /**
-	     * Notification title.
-	     *
-	     * @returns Main notification title.
-	     */
-	    get title() {
-	        return this._title;
-	    }
-	    /**
-	     * Notification subtitle.
-	     *
-	     * @returns Second-line notification title.
-	     */
-	    get subtitle() {
-	        return this._subtitle;
-	    }
-	    /**
-	     * Update notification subtitle.
-	     *
-	     * @param value - New second-line notification title.
-	     */
-	    set subtitle(value) {
-	        this._subtitle = value;
-	        this.apns.subtitle = value;
-	        this.fcm.subtitle = value;
-	    }
-	    /**
-	     * Notification body.
-	     *
-	     * @returns Main notification message (shown when expanded).
-	     */
-	    get body() {
-	        return this._body;
-	    }
-	    /**
-	     * Retrieve unread notifications number.
-	     *
-	     * @returns Number of unread notifications which should be shown on application badge.
-	     */
-	    get badge() {
-	        return this._badge;
-	    }
-	    /**
-	     * Update application badge number.
-	     *
-	     * @param value - Number which should be shown in application badge upon receiving notification.
-	     */
-	    set badge(value) {
-	        this._badge = value;
-	        this.apns.badge = value;
-	        this.fcm.badge = value;
-	    }
-	    /**
-	     * Retrieve notification sound file.
-	     *
-	     * @returns Notification sound file name from resource bundle.
-	     */
-	    get sound() {
-	        return this._sound;
-	    }
-	    /**
-	     * Update notification sound.
-	     *
-	     * @param value - Name of the sound file which should be played upon notification receive.
-	     */
-	    set sound(value) {
-	        this._sound = value;
-	        this.apns.sound = value;
-	        this.fcm.sound = value;
-	    }
-	    /**
-	     * Build notifications platform for requested platforms.
-	     *
-	     * @param platforms - List of platforms for which payload should be added to final dictionary. Supported values:
-	     * fcm, apns, and apns2.
-	     *
-	     * @returns Object with data, which can be sent with publish method call and trigger remote notifications for
-	     * specified platforms.
-	     */
-	    buildPayload(platforms) {
-	        const payload = {};
-	        if (platforms.includes('apns') || platforms.includes('apns2')) {
-	            // @ts-expect-error Override APNS version.
-	            this.apns._apnsPushType = platforms.includes('apns') ? 'apns' : 'apns2';
-	            const apnsPayload = this.apns.toObject();
-	            if (apnsPayload && Object.keys(apnsPayload).length)
-	                payload.pn_apns = apnsPayload;
-	        }
-	        if (platforms.includes('fcm')) {
-	            const fcmPayload = this.fcm.toObject();
-	            if (fcmPayload && Object.keys(fcmPayload).length)
-	                payload.pn_gcm = fcmPayload;
-	        }
-	        if (Object.keys(payload).length && this._debugging)
-	            payload.pn_debug = true;
-	        return payload;
-	    }
-	}
 
 	/**
 	 * Network request module.
@@ -7130,188 +6552,1361 @@
 	}
 
 	/**
-	 * Real-time events emitter module.
-	 *
-	 * @internal
+	 * Events dispatcher module.
 	 */
 	/**
-	 * Real-time events' emitter.
+	 * Real-time events dispatcher.
 	 *
-	 * Emitter responsible for forwarding received real-time events to the closures which has been
-	 * registered for specific events handling.
+	 * Class responsible for listener management and invocation.
 	 *
 	 * @internal
 	 */
-	class EventEmitter {
-	    constructor(listenerManager) {
-	        this.listenerManager = listenerManager;
+	class EventDispatcher {
+	    constructor() {
 	        /**
-	         * Map of channels to listener callbacks for them.
+	         * Whether listeners has been added or not.
 	         */
-	        this.channelListenerMap = new Map();
+	        this.hasListeners = false;
 	        /**
-	         * Map of channel group names to the listener callbacks for them.
+	         * List of registered event handlers.
+	         *
+	         * **Note:** the First element is reserved for type-based event handlers.
 	         */
-	        this.groupListenerMap = new Map();
+	        this.listeners = [{ count: -1, listener: {} }];
 	    }
 	    /**
-	     * Emit specific real-time event.
+	     * Set a connection status change event handler.
 	     *
-	     * Proper listener will be notified basing on event `type`.
-	     *
-	     * @param event - Received real-time event.
+	     * @param listener - Listener function, which will be called each time when the connection status changes.
 	     */
-	    emitEvent(event) {
-	        var _a;
-	        if (event.type === PubNubEventType.Message) {
-	            this.listenerManager.announceMessage(event.data);
-	            this.announce('message', event.data, event.data.channel, event.data.subscription);
-	        }
-	        else if (event.type === PubNubEventType.Signal) {
-	            this.listenerManager.announceSignal(event.data);
-	            this.announce('signal', event.data, event.data.channel, event.data.subscription);
-	        }
-	        else if (event.type === PubNubEventType.Presence) {
-	            this.listenerManager.announcePresence(event.data);
-	            this.announce('presence', event.data, (_a = event.data.subscription) !== null && _a !== void 0 ? _a : event.data.channel, event.data.subscription);
-	        }
+	    set onStatus(listener) {
+	        this.updateTypeOrObjectListener({ add: !!listener, listener, type: 'status' });
+	    }
+	    /**
+	     * Set a new message handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new message
+	     * is received from the real-time network.
+	     */
+	    set onMessage(listener) {
+	        this.updateTypeOrObjectListener({ add: !!listener, listener, type: 'message' });
+	    }
+	    /**
+	     * Set a new presence events handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new
+	     * presence event is received from the real-time network.
+	     */
+	    set onPresence(listener) {
+	        this.updateTypeOrObjectListener({ add: !!listener, listener, type: 'presence' });
+	    }
+	    /**
+	     * Set a new signal handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new signal
+	     * is received from the real-time network.
+	     */
+	    set onSignal(listener) {
+	        this.updateTypeOrObjectListener({ add: !!listener, listener, type: 'signal' });
+	    }
+	    /**
+	     * Set a new app context event handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new
+	     * app context event is received from the real-time network.
+	     */
+	    set onObjects(listener) {
+	        this.updateTypeOrObjectListener({ add: !!listener, listener, type: 'objects' });
+	    }
+	    /**
+	     * Set a new message reaction event handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a
+	     * new message reaction event is received from the real-time network.
+	     */
+	    set onMessageAction(listener) {
+	        this.updateTypeOrObjectListener({ add: !!listener, listener, type: 'messageAction' });
+	    }
+	    /**
+	     * Set a new file handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new file
+	     * is received from the real-time network.
+	     */
+	    set onFile(listener) {
+	        this.updateTypeOrObjectListener({ add: !!listener, listener, type: 'file' });
+	    }
+	    /**
+	     * Dispatch received a real-time update.
+	     *
+	     * @param event - A real-time event from multiplexed subscription.
+	     */
+	    handleEvent(event) {
+	        if (!this.hasListeners)
+	            return;
+	        if (event.type === PubNubEventType.Message)
+	            this.announce('message', event.data);
+	        else if (event.type === PubNubEventType.Signal)
+	            this.announce('signal', event.data);
+	        else if (event.type === PubNubEventType.Presence)
+	            this.announce('presence', event.data);
 	        else if (event.type === PubNubEventType.AppContext) {
 	            const { data: objectEvent } = event;
 	            const { message: object } = objectEvent;
-	            this.listenerManager.announceObjects(objectEvent);
-	            this.announce('objects', objectEvent, objectEvent.channel, objectEvent.subscription);
+	            this.announce('objects', objectEvent);
 	            if (object.type === 'uuid') {
 	                const { message, channel } = objectEvent, restEvent = __rest(objectEvent, ["message", "channel"]);
 	                const { event, type } = object, restObject = __rest(object, ["event", "type"]);
 	                const userEvent = Object.assign(Object.assign({}, restEvent), { spaceId: channel, message: Object.assign(Object.assign({}, restObject), { event: event === 'set' ? 'updated' : 'removed', type: 'user' }) });
-	                this.listenerManager.announceUser(userEvent);
-	                this.announce('user', userEvent, userEvent.spaceId, userEvent.subscription);
+	                this.announce('user', userEvent);
 	            }
 	            else if (object.type === 'channel') {
 	                const { message, channel } = objectEvent, restEvent = __rest(objectEvent, ["message", "channel"]);
 	                const { event, type } = object, restObject = __rest(object, ["event", "type"]);
 	                const spaceEvent = Object.assign(Object.assign({}, restEvent), { spaceId: channel, message: Object.assign(Object.assign({}, restObject), { event: event === 'set' ? 'updated' : 'removed', type: 'space' }) });
-	                this.listenerManager.announceSpace(spaceEvent);
-	                this.announce('space', spaceEvent, spaceEvent.spaceId, spaceEvent.subscription);
+	                this.announce('space', spaceEvent);
 	            }
 	            else if (object.type === 'membership') {
 	                const { message, channel } = objectEvent, restEvent = __rest(objectEvent, ["message", "channel"]);
 	                const { event, data } = object, restObject = __rest(object, ["event", "data"]);
 	                const { uuid, channel: channelMeta } = data, restData = __rest(data, ["uuid", "channel"]);
 	                const membershipEvent = Object.assign(Object.assign({}, restEvent), { spaceId: channel, message: Object.assign(Object.assign({}, restObject), { event: event === 'set' ? 'updated' : 'removed', data: Object.assign(Object.assign({}, restData), { user: uuid, space: channelMeta }) }) });
-	                this.listenerManager.announceMembership(membershipEvent);
-	                this.announce('membership', membershipEvent, membershipEvent.spaceId, membershipEvent.subscription);
+	                this.announce('membership', membershipEvent);
 	            }
 	        }
-	        else if (event.type === PubNubEventType.MessageAction) {
-	            this.listenerManager.announceMessageAction(event.data);
-	            this.announce('messageAction', event.data, event.data.channel, event.data.subscription);
-	        }
-	        else if (event.type === PubNubEventType.Files) {
-	            this.listenerManager.announceFile(event.data);
-	            this.announce('file', event.data, event.data.channel, event.data.subscription);
-	        }
+	        else if (event.type === PubNubEventType.MessageAction)
+	            this.announce('messageAction', event.data);
+	        else if (event.type === PubNubEventType.Files)
+	            this.announce('file', event.data);
 	    }
 	    /**
-	     * Register real-time event listener for specific channels and groups.
+	     * Dispatch received connection status change.
 	     *
-	     * @param listener - Listener with event callbacks to handle different types of events.
-	     * @param [channels] - List of channels for which listener should be registered.
-	     * @param [groups] - List of channel groups for which listener should be registered.
-	     * @param [listenerId] - Unique listener identifier which is used to update previous setup.
-	     *
-	     * @returns Registered listener identifier.
+	     * @param status - Status object which should be emitter for all status listeners.
 	     */
-	    addListener(listener, channels, groups, listenerId) {
-	        listenerId !== null && listenerId !== void 0 ? listenerId : (listenerId = uuidGenerator.createUUID());
-	        // Register event-listener listener globally.
-	        if (!(channels && groups)) {
-	            this.listenerManager.addListener(listener);
-	        }
-	        else {
-	            channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => {
-	                if (this.channelListenerMap.has(channel)) {
-	                    const channelListeners = this.channelListenerMap.get(channel);
-	                    channelListeners.push({ id: listenerId, listener });
-	                }
-	                else
-	                    this.channelListenerMap.set(channel, [{ id: listenerId, listener }]);
-	            });
-	            groups === null || groups === void 0 ? void 0 : groups.forEach((group) => {
-	                if (this.groupListenerMap.has(group)) {
-	                    const groupListeners = this.groupListenerMap.get(group);
-	                    groupListeners.push({ id: listenerId, listener });
-	                }
-	                else
-	                    this.groupListenerMap.set(group, [{ id: listenerId, listener }]);
-	            });
-	        }
-	        return listenerId;
+	    handleStatus(status) {
+	        if (!this.hasListeners)
+	            return;
+	        this.announce('status', status);
 	    }
 	    /**
-	     * Remove real-time event listener.
+	     * Add events handler.
 	     *
-	     * @param listener - Event listeners which should be removed.
-	     * @param listenerId - Unique listener identifier assigned to it during addition.
-	     * @param channels - List of channels for which listener should be removed.
-	     * @param groups - List of channel groups for which listener should be removed.
+	     * @param listener - Events listener configuration object, which lets specify handlers for multiple types of events.
 	     */
-	    removeListener(listener, listenerId, channels, groups) {
-	        if (!(channels && groups)) {
-	            this.listenerManager.removeListener(listener);
-	        }
-	        else {
-	            channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => {
-	                const channelListeners = this.channelListenerMap.get(channel);
-	                if (channelListeners) {
-	                    const listenerObject = channelListeners.find((listenerObject) => listenerObject.id === listenerId);
-	                    const listenerIdx = listenerObject ? channelListeners.indexOf(listenerObject) : -1;
-	                    if (listenerIdx !== -1)
-	                        channelListeners.splice(listenerIdx, 1);
-	                }
-	            });
-	            groups === null || groups === void 0 ? void 0 : groups.forEach((group) => {
-	                const groupListeners = this.groupListenerMap.get(group);
-	                if (groupListeners) {
-	                    const listenerObject = groupListeners.find((listenerObject) => listenerObject.id === listenerId);
-	                    const listenerIdx = listenerObject ? groupListeners.indexOf(listenerObject) : -1;
-	                    if (listenerIdx !== -1)
-	                        groupListeners.splice(listenerIdx, 1);
-	                }
-	            });
-	        }
+	    addListener(listener) {
+	        this.updateTypeOrObjectListener({ add: true, listener });
 	    }
-	    /**
-	     * Clear all real-time event listeners.
-	     */
+	    removeListener(listener) {
+	        this.updateTypeOrObjectListener({ add: false, listener });
+	    }
 	    removeAllListeners() {
-	        this.listenerManager.removeAllListeners();
-	        this.channelListenerMap.clear();
-	        this.groupListenerMap.clear();
+	        this.listeners = [{ count: -1, listener: {} }];
+	        this.hasListeners = false;
+	    }
+	    updateTypeOrObjectListener(parameters) {
+	        if (parameters.type) {
+	            if (typeof parameters.listener === 'function')
+	                this.listeners[0].listener[parameters.type] = parameters.listener;
+	            else
+	                delete this.listeners[0].listener[parameters.type];
+	        }
+	        else if (parameters.listener && typeof parameters.listener !== 'function') {
+	            let listenerObject;
+	            let listenerExists = false;
+	            for (listenerObject of this.listeners) {
+	                if (listenerObject.listener === parameters.listener) {
+	                    if (parameters.add) {
+	                        listenerObject.count++;
+	                        listenerExists = true;
+	                    }
+	                    else {
+	                        listenerObject.count--;
+	                        if (listenerObject.count === 0)
+	                            this.listeners.splice(this.listeners.indexOf(listenerObject), 1);
+	                    }
+	                    break;
+	                }
+	            }
+	            if (parameters.add && !listenerExists)
+	                this.listeners.push({ count: 1, listener: parameters.listener });
+	        }
+	        this.hasListeners = this.listeners.length > 1 || Object.keys(this.listeners[0]).length > 0;
 	    }
 	    /**
-	     * Announce real-time event to all listeners.
+	     * Announce a real-time event to all listeners.
 	     *
 	     * @param type - Type of event which should be announced.
 	     * @param event - Announced real-time event payload.
-	     * @param channel - Name of the channel for which registered listeners should be notified.
-	     * @param group - Name of the channel group for which registered listeners should be notified.
 	     */
-	    announce(type, event, channel, group) {
-	        if (event && this.channelListenerMap.has(channel))
-	            this.channelListenerMap.get(channel).forEach((listenerObject) => {
-	                const typedListener = listenerObject.listener[type];
-	                // @ts-expect-error Dynamic events mapping.
-	                if (typedListener)
-	                    typedListener(event);
+	    announce(type, event) {
+	        this.listeners.forEach(({ listener }) => {
+	            const typedListener = listener[type];
+	            // @ts-expect-error Dynamic events mapping.
+	            if (typedListener)
+	                typedListener(event);
+	        });
+	    }
+	}
+
+	/**
+	 * Subscription reconnection-manager.
+	 *
+	 * **Note:** Reconnection manger rely on legacy time-based availability check.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Network "discovery" manager.
+	 *
+	 * Manager perform periodic `time` API calls to identify network availability.
+	 *
+	 * @internal
+	 */
+	class ReconnectionManager {
+	    constructor(time) {
+	        this.time = time;
+	    }
+	    /**
+	     * Configure reconnection handler.
+	     *
+	     * @param callback - Successful availability check notify callback.
+	     */
+	    onReconnect(callback) {
+	        this.callback = callback;
+	    }
+	    /**
+	     * Start periodic "availability" check.
+	     */
+	    startPolling() {
+	        this.timeTimer = setInterval(() => this.callTime(), 3000);
+	    }
+	    /**
+	     * Stop periodic "availability" check.
+	     */
+	    stopPolling() {
+	        if (this.timeTimer)
+	            clearInterval(this.timeTimer);
+	        this.timeTimer = null;
+	    }
+	    callTime() {
+	        this.time((status) => {
+	            if (!status.error) {
+	                this.stopPolling();
+	                if (this.callback)
+	                    this.callback();
+	            }
+	        });
+	    }
+	}
+
+	/**
+	 * Messages de-duplication manager module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Real-time events deduplication manager.
+	 *
+	 * @internal
+	 */
+	class DedupingManager {
+	    /**
+	     * Create and configure real-time events de-duplication manager.
+	     *
+	     * @param config - PubNub client configuration object.
+	     */
+	    constructor(config) {
+	        this.config = config;
+	        config.logger().debug(this.constructor.name, () => ({
+	            messageType: 'object',
+	            message: { maximumCacheSize: config.maximumCacheSize },
+	            details: 'Create with configuration:',
+	        }));
+	        this.maximumCacheSize = config.maximumCacheSize;
+	        this.hashHistory = [];
+	    }
+	    /**
+	     * Compute unique real-time event payload key.
+	     *
+	     * @param message - Received real-time event payload for which unique key should be computed.
+	     * @returns Unique real-time event payload key in messages cache.
+	     */
+	    getKey(message) {
+	        var _a;
+	        return `${message.timetoken}-${this.hashCode(JSON.stringify((_a = message.message) !== null && _a !== void 0 ? _a : '')).toString()}`;
+	    }
+	    /**
+	     * Check whether there is similar message already received or not.
+	     *
+	     * @param message - Received real-time event payload which should be checked for duplicates.
+	     * @returns `true` in case if similar payload already has been received before.
+	     */
+	    isDuplicate(message) {
+	        return this.hashHistory.includes(this.getKey(message));
+	    }
+	    /**
+	     * Store received message to be used later for duplicate detection.
+	     *
+	     * @param message - Received real-time event payload.
+	     */
+	    addEntry(message) {
+	        if (this.hashHistory.length >= this.maximumCacheSize) {
+	            this.hashHistory.shift();
+	        }
+	        this.hashHistory.push(this.getKey(message));
+	    }
+	    /**
+	     * Clean up cached messages.
+	     */
+	    clearHistory() {
+	        this.hashHistory = [];
+	    }
+	    /**
+	     * Compute message hash sum.
+	     *
+	     * @param payload - Received payload for which hash sum should be computed.
+	     * @returns {number} - Resulting hash sum.
+	     */
+	    hashCode(payload) {
+	        let hash = 0;
+	        if (payload.length === 0)
+	            return hash;
+	        for (let i = 0; i < payload.length; i += 1) {
+	            const character = payload.charCodeAt(i);
+	            hash = (hash << 5) - hash + character; // eslint-disable-line
+	            hash = hash & hash; // eslint-disable-line
+	        }
+	        return hash;
+	    }
+	}
+
+	/**
+	 * Subscription manager module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Subscription loop manager.
+	 *
+	 * @internal
+	 */
+	class SubscriptionManager {
+	    constructor(configuration, emitEvent, emitStatus, subscribeCall, heartbeatCall, leaveCall, time) {
+	        this.configuration = configuration;
+	        this.emitEvent = emitEvent;
+	        this.emitStatus = emitStatus;
+	        this.subscribeCall = subscribeCall;
+	        this.heartbeatCall = heartbeatCall;
+	        this.leaveCall = leaveCall;
+	        configuration.logger().trace(this.constructor.name, 'Create manager.');
+	        this.reconnectionManager = new ReconnectionManager(time);
+	        this.dedupingManager = new DedupingManager(this.configuration);
+	        this.heartbeatChannelGroups = {};
+	        this.heartbeatChannels = {};
+	        this.presenceChannelGroups = {};
+	        this.presenceChannels = {};
+	        this.heartbeatTimer = null;
+	        this.presenceState = {};
+	        this.pendingChannelGroupSubscriptions = new Set();
+	        this.pendingChannelSubscriptions = new Set();
+	        this.channelGroups = {};
+	        this.channels = {};
+	        this.currentTimetoken = '0';
+	        this.lastTimetoken = '0';
+	        this.storedTimetoken = null;
+	        this.referenceTimetoken = null;
+	        this.subscriptionStatusAnnounced = false;
+	        this.isOnline = true;
+	    }
+	    // region Information
+	    /**
+	     * Subscription-based current timetoken.
+	     *
+	     * @returns Timetoken based on current timetoken plus diff between current and loop start time.
+	     */
+	    get subscriptionTimetoken() {
+	        var _a;
+	        return subscriptionTimetokenFromReference(this.currentTimetoken, (_a = this.referenceTimetoken) !== null && _a !== void 0 ? _a : '0');
+	    }
+	    get subscribedChannels() {
+	        return Object.keys(this.channels);
+	    }
+	    get subscribedChannelGroups() {
+	        return Object.keys(this.channelGroups);
+	    }
+	    get abort() {
+	        return this._subscribeAbort;
+	    }
+	    set abort(call) {
+	        this._subscribeAbort = call;
+	    }
+	    // endregion
+	    // region Subscription
+	    disconnect() {
+	        this.stopSubscribeLoop();
+	        this.stopHeartbeatTimer();
+	        this.reconnectionManager.stopPolling();
+	    }
+	    /**
+	     * Restart subscription loop with current state.
+	     *
+	     * @param forUnsubscribe - Whether restarting subscription loop as part of channels list change on
+	     * unsubscribe or not.
+	     */
+	    reconnect(forUnsubscribe = false) {
+	        this.startSubscribeLoop(forUnsubscribe);
+	        // Starting heartbeat loop for provided channels and groups.
+	        if (!forUnsubscribe && !this.configuration.useSmartHeartbeat)
+	            this.startHeartbeatTimer();
+	    }
+	    /**
+	     * Update channels and groups used in subscription loop.
+	     *
+	     * @param parameters - Subscribe configuration parameters.
+	     */
+	    subscribe(parameters) {
+	        const { channels, channelGroups, timetoken, withPresence = false, withHeartbeats = false } = parameters;
+	        if (timetoken) {
+	            this.lastTimetoken = this.currentTimetoken;
+	            this.currentTimetoken = `${timetoken}`;
+	        }
+	        if (this.currentTimetoken !== '0') {
+	            this.storedTimetoken = this.currentTimetoken;
+	            this.currentTimetoken = '0';
+	        }
+	        channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => {
+	            this.pendingChannelSubscriptions.add(channel);
+	            this.channels[channel] = {};
+	            if (withPresence)
+	                this.presenceChannels[channel] = {};
+	            if (withHeartbeats || this.configuration.getHeartbeatInterval())
+	                this.heartbeatChannels[channel] = {};
+	        });
+	        channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.forEach((group) => {
+	            this.pendingChannelGroupSubscriptions.add(group);
+	            this.channelGroups[group] = {};
+	            if (withPresence)
+	                this.presenceChannelGroups[group] = {};
+	            if (withHeartbeats || this.configuration.getHeartbeatInterval())
+	                this.heartbeatChannelGroups[group] = {};
+	        });
+	        this.subscriptionStatusAnnounced = false;
+	        this.reconnect();
+	    }
+	    unsubscribe(parameters, isOffline = false) {
+	        let { channels, channelGroups } = parameters;
+	        const actualChannelGroups = new Set();
+	        const actualChannels = new Set();
+	        channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => {
+	            if (channel in this.channels) {
+	                delete this.channels[channel];
+	                actualChannels.add(channel);
+	                if (channel in this.heartbeatChannels)
+	                    delete this.heartbeatChannels[channel];
+	            }
+	            if (channel in this.presenceState)
+	                delete this.presenceState[channel];
+	            if (channel in this.presenceChannels) {
+	                delete this.presenceChannels[channel];
+	                actualChannels.add(channel);
+	            }
+	        });
+	        channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.forEach((group) => {
+	            if (group in this.channelGroups) {
+	                delete this.channelGroups[group];
+	                actualChannelGroups.add(group);
+	                if (group in this.heartbeatChannelGroups)
+	                    delete this.heartbeatChannelGroups[group];
+	            }
+	            if (group in this.presenceState)
+	                delete this.presenceState[group];
+	            if (group in this.presenceChannelGroups) {
+	                delete this.presenceChannelGroups[group];
+	                actualChannelGroups.add(group);
+	            }
+	        });
+	        // There is no need to unsubscribe to empty list of data sources.
+	        if (actualChannels.size === 0 && actualChannelGroups.size === 0)
+	            return;
+	        if (this.configuration.suppressLeaveEvents === false && !isOffline) {
+	            channelGroups = Array.from(actualChannelGroups);
+	            channels = Array.from(actualChannels);
+	            this.leaveCall({ channels, channelGroups }, (status) => {
+	                const { error } = status, restOfStatus = __rest(status, ["error"]);
+	                let errorMessage;
+	                if (error) {
+	                    if (status.errorData &&
+	                        typeof status.errorData === 'object' &&
+	                        'message' in status.errorData &&
+	                        typeof status.errorData.message === 'string')
+	                        errorMessage = status.errorData.message;
+	                    else if ('message' in status && typeof status.message === 'string')
+	                        errorMessage = status.message;
+	                }
+	                this.emitStatus(Object.assign(Object.assign({}, restOfStatus), { error: errorMessage !== null && errorMessage !== void 0 ? errorMessage : false, affectedChannels: channels, affectedChannelGroups: channelGroups, currentTimetoken: this.currentTimetoken, lastTimetoken: this.lastTimetoken }));
 	            });
-	        if (group && this.groupListenerMap.has(group))
-	            this.groupListenerMap.get(group).forEach((listenerObject) => {
-	                const typedListener = listenerObject.listener[type];
-	                // @ts-expect-error Dynamic events mapping.
-	                if (typedListener)
-	                    typedListener(event);
+	        }
+	        if (Object.keys(this.channels).length === 0 &&
+	            Object.keys(this.presenceChannels).length === 0 &&
+	            Object.keys(this.channelGroups).length === 0 &&
+	            Object.keys(this.presenceChannelGroups).length === 0) {
+	            this.lastTimetoken = '0';
+	            this.currentTimetoken = '0';
+	            this.referenceTimetoken = null;
+	            this.storedTimetoken = null;
+	            this.region = null;
+	            this.reconnectionManager.stopPolling();
+	        }
+	        this.reconnect(true);
+	    }
+	    unsubscribeAll(isOffline = false) {
+	        this.unsubscribe({
+	            channels: this.subscribedChannels,
+	            channelGroups: this.subscribedChannelGroups,
+	        }, isOffline);
+	    }
+	    /**
+	     * Start next subscription loop.
+	     *
+	     * @param restartOnUnsubscribe - Whether restarting subscription loop as part of channels list change on
+	     * unsubscribe or not.
+	     *
+	     * @internal
+	     */
+	    startSubscribeLoop(restartOnUnsubscribe = false) {
+	        this.stopSubscribeLoop();
+	        const channelGroups = [...Object.keys(this.channelGroups)];
+	        const channels = [...Object.keys(this.channels)];
+	        Object.keys(this.presenceChannelGroups).forEach((group) => channelGroups.push(`${group}-pnpres`));
+	        Object.keys(this.presenceChannels).forEach((channel) => channels.push(`${channel}-pnpres`));
+	        // There is no need to start subscription loop for an empty list of data sources.
+	        if (channels.length === 0 && channelGroups.length === 0)
+	            return;
+	        this.subscribeCall(Object.assign(Object.assign({ channels,
+	            channelGroups, state: this.presenceState, heartbeat: this.configuration.getPresenceTimeout(), timetoken: this.currentTimetoken }, (this.region !== null ? { region: this.region } : {})), (this.configuration.filterExpression ? { filterExpression: this.configuration.filterExpression } : {})), (status, result) => {
+	            this.processSubscribeResponse(status, result);
+	        });
+	        if (!restartOnUnsubscribe && this.configuration.useSmartHeartbeat)
+	            this.startHeartbeatTimer();
+	    }
+	    stopSubscribeLoop() {
+	        if (this._subscribeAbort) {
+	            this._subscribeAbort();
+	            this._subscribeAbort = null;
+	        }
+	    }
+	    /**
+	     * Process subscribe REST API endpoint response.
+	     */
+	    processSubscribeResponse(status, result) {
+	        if (status.error) {
+	            // Ignore aborted request.
+	            if ((typeof status.errorData === 'object' &&
+	                'name' in status.errorData &&
+	                status.errorData.name === 'AbortError') ||
+	                status.category === StatusCategory$1.PNCancelledCategory)
+	                return;
+	            if (status.category === StatusCategory$1.PNTimeoutCategory) {
+	                this.startSubscribeLoop();
+	            }
+	            else if (status.category === StatusCategory$1.PNNetworkIssuesCategory ||
+	                status.category === StatusCategory$1.PNMalformedResponseCategory) {
+	                this.disconnect();
+	                if (status.error && this.configuration.autoNetworkDetection && this.isOnline) {
+	                    this.isOnline = false;
+	                    this.emitStatus({ category: StatusCategory$1.PNNetworkDownCategory });
+	                }
+	                this.reconnectionManager.onReconnect(() => {
+	                    if (this.configuration.autoNetworkDetection && !this.isOnline) {
+	                        this.isOnline = true;
+	                        this.emitStatus({ category: StatusCategory$1.PNNetworkUpCategory });
+	                    }
+	                    this.reconnect();
+	                    this.subscriptionStatusAnnounced = true;
+	                    const reconnectedAnnounce = {
+	                        category: StatusCategory$1.PNReconnectedCategory,
+	                        operation: status.operation,
+	                        lastTimetoken: this.lastTimetoken,
+	                        currentTimetoken: this.currentTimetoken,
+	                    };
+	                    this.emitStatus(reconnectedAnnounce);
+	                });
+	                this.reconnectionManager.startPolling();
+	                this.emitStatus(Object.assign(Object.assign({}, status), { category: StatusCategory$1.PNNetworkIssuesCategory }));
+	            }
+	            else if (status.category === StatusCategory$1.PNBadRequestCategory) {
+	                this.stopHeartbeatTimer();
+	                this.emitStatus(status);
+	            }
+	            else
+	                this.emitStatus(status);
+	            return;
+	        }
+	        this.referenceTimetoken = referenceSubscribeTimetoken(result.cursor.timetoken, this.storedTimetoken);
+	        if (this.storedTimetoken) {
+	            this.currentTimetoken = this.storedTimetoken;
+	            this.storedTimetoken = null;
+	        }
+	        else {
+	            this.lastTimetoken = this.currentTimetoken;
+	            this.currentTimetoken = result.cursor.timetoken;
+	        }
+	        if (!this.subscriptionStatusAnnounced) {
+	            const connected = {
+	                category: StatusCategory$1.PNConnectedCategory,
+	                operation: status.operation,
+	                affectedChannels: Array.from(this.pendingChannelSubscriptions),
+	                subscribedChannels: this.subscribedChannels,
+	                affectedChannelGroups: Array.from(this.pendingChannelGroupSubscriptions),
+	                lastTimetoken: this.lastTimetoken,
+	                currentTimetoken: this.currentTimetoken,
+	            };
+	            this.subscriptionStatusAnnounced = true;
+	            this.emitStatus(connected);
+	            // Clear pending channels and groups.
+	            this.pendingChannelGroupSubscriptions.clear();
+	            this.pendingChannelSubscriptions.clear();
+	        }
+	        const { messages } = result;
+	        const { requestMessageCountThreshold, dedupeOnSubscribe } = this.configuration;
+	        if (requestMessageCountThreshold && messages.length >= requestMessageCountThreshold) {
+	            this.emitStatus({
+	                category: StatusCategory$1.PNRequestMessageCountExceededCategory,
+	                operation: status.operation,
 	            });
+	        }
+	        try {
+	            const cursor = {
+	                timetoken: this.currentTimetoken,
+	                region: this.region ? this.region : undefined,
+	            };
+	            this.configuration.logger().debug(this.constructor.name, () => {
+	                const hashedEvents = messages.map((event) => ({
+	                    type: event.type,
+	                    data: Object.assign(Object.assign({}, event.data), { pn_mfp: messageFingerprint(event.data) }),
+	                }));
+	                return { messageType: 'object', message: hashedEvents, details: 'Received events:' };
+	            });
+	            messages.forEach((message) => {
+	                if (dedupeOnSubscribe && 'message' in message.data && 'timetoken' in message.data) {
+	                    if (this.dedupingManager.isDuplicate(message.data)) {
+	                        this.configuration.logger().warn(this.constructor.name, () => ({
+	                            messageType: 'object',
+	                            message: message.data,
+	                            details: 'Duplicate message detected (skipped):',
+	                        }));
+	                        return;
+	                    }
+	                    this.dedupingManager.addEntry(message.data);
+	                }
+	                this.emitEvent(cursor, message);
+	            });
+	        }
+	        catch (e) {
+	            const errorStatus = {
+	                error: true,
+	                category: StatusCategory$1.PNUnknownCategory,
+	                errorData: e,
+	                statusCode: 0,
+	            };
+	            this.emitStatus(errorStatus);
+	        }
+	        this.region = result.cursor.region;
+	        this.startSubscribeLoop();
+	    }
+	    // endregion
+	    // region Presence
+	    /**
+	     * Update `uuid` state which should be sent with subscribe request.
+	     *
+	     * @param parameters - Channels and groups with state which should be associated to `uuid`.
+	     */
+	    setState(parameters) {
+	        const { state, channels, channelGroups } = parameters;
+	        channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => channel in this.channels && (this.presenceState[channel] = state));
+	        channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.forEach((group) => group in this.channelGroups && (this.presenceState[group] = state));
+	    }
+	    /**
+	     * Manual presence management.
+	     *
+	     * @param parameters - Desired presence state for provided list of channels and groups.
+	     */
+	    changePresence(parameters) {
+	        const { connected, channels, channelGroups } = parameters;
+	        if (connected) {
+	            channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => (this.heartbeatChannels[channel] = {}));
+	            channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.forEach((group) => (this.heartbeatChannelGroups[group] = {}));
+	        }
+	        else {
+	            channels === null || channels === void 0 ? void 0 : channels.forEach((channel) => {
+	                if (channel in this.heartbeatChannels)
+	                    delete this.heartbeatChannels[channel];
+	            });
+	            channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.forEach((group) => {
+	                if (group in this.heartbeatChannelGroups)
+	                    delete this.heartbeatChannelGroups[group];
+	            });
+	            if (this.configuration.suppressLeaveEvents === false) {
+	                this.leaveCall({ channels, channelGroups }, (status) => this.emitStatus(status));
+	            }
+	        }
+	        this.reconnect();
+	    }
+	    startHeartbeatTimer() {
+	        this.stopHeartbeatTimer();
+	        const heartbeatInterval = this.configuration.getHeartbeatInterval();
+	        if (!heartbeatInterval || heartbeatInterval === 0)
+	            return;
+	        // Sending immediate heartbeat only if not working as a smart heartbeat.
+	        if (!this.configuration.useSmartHeartbeat)
+	            this.sendHeartbeat();
+	        this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), heartbeatInterval * 1000);
+	    }
+	    /**
+	     * Stop heartbeat.
+	     *
+	     * Stop timer which trigger {@link HeartbeatRequest} sending with configured presence intervals.
+	     */
+	    stopHeartbeatTimer() {
+	        if (!this.heartbeatTimer)
+	            return;
+	        clearInterval(this.heartbeatTimer);
+	        this.heartbeatTimer = null;
+	    }
+	    /**
+	     * Send heartbeat request.
+	     */
+	    sendHeartbeat() {
+	        const heartbeatChannelGroups = Object.keys(this.heartbeatChannelGroups);
+	        const heartbeatChannels = Object.keys(this.heartbeatChannels);
+	        // There is no need to start heartbeat loop if there is no channels and groups to use.
+	        if (heartbeatChannels.length === 0 && heartbeatChannelGroups.length === 0)
+	            return;
+	        this.heartbeatCall({
+	            channels: heartbeatChannels,
+	            channelGroups: heartbeatChannelGroups,
+	            heartbeat: this.configuration.getPresenceTimeout(),
+	            state: this.presenceState,
+	        }, (status) => {
+	            if (status.error && this.configuration.announceFailedHeartbeats)
+	                this.emitStatus(status);
+	            if (status.error && this.configuration.autoNetworkDetection && this.isOnline) {
+	                this.isOnline = false;
+	                this.disconnect();
+	                this.emitStatus({ category: StatusCategory$1.PNNetworkDownCategory });
+	                this.reconnect();
+	            }
+	            if (!status.error && this.configuration.announceSuccessfulHeartbeats)
+	                this.emitStatus(status);
+	        });
+	    }
+	}
+
+	// --------------------------------------------------------
+	// ------------------------ Types -------------------------
+	// --------------------------------------------------------
+	// region Types
+	// endregion
+	// endregion
+	/**
+	 * Base notification payload object.
+	 */
+	class BaseNotificationPayload {
+	    /**
+	     * Base notification provider payload object.
+	     *
+	     * @internal
+	     *
+	     * @param payload - Object which contains vendor-specific preformatted push notification payload.
+	     * @param title - Notification main title.
+	     * @param body - Notification body (main messages).
+	     */
+	    constructor(payload, title, body) {
+	        this._payload = payload;
+	        this.setDefaultPayloadStructure();
+	        this.title = title;
+	        this.body = body;
+	    }
+	    /**
+	     * Retrieve resulting notification payload content for message.
+	     *
+	     * @returns Preformatted push notification payload data.
+	     */
+	    get payload() {
+	        return this._payload;
+	    }
+	    /**
+	     * Update notification title.
+	     *
+	     * @param value - New notification title.
+	     */
+	    set title(value) {
+	        this._title = value;
+	    }
+	    /**
+	     * Update notification subtitle.
+	     *
+	     * @param value - New second-line notification title.
+	     */
+	    set subtitle(value) {
+	        this._subtitle = value;
+	    }
+	    /**
+	     * Update notification body.
+	     *
+	     * @param value - Update main notification message (shown when expanded).
+	     */
+	    set body(value) {
+	        this._body = value;
+	    }
+	    /**
+	     * Update application badge number.
+	     *
+	     * @param value - Number which should be shown in application badge upon receiving notification.
+	     */
+	    set badge(value) {
+	        this._badge = value;
+	    }
+	    /**
+	     * Update notification sound.
+	     *
+	     * @param value - Name of the sound file which should be played upon notification receive.
+	     */
+	    set sound(value) {
+	        this._sound = value;
+	    }
+	    /**
+	     * Platform-specific structure initialization.
+	     *
+	     * @internal
+	     */
+	    setDefaultPayloadStructure() { }
+	    /**
+	     * Translate data object into PubNub push notification payload object.
+	     *
+	     * @internal
+	     *
+	     * @returns Preformatted push notification payload.
+	     */
+	    toObject() {
+	        return {};
+	    }
+	}
+	/**
+	 * Message payload for Apple Push Notification Service.
+	 */
+	class APNSNotificationPayload extends BaseNotificationPayload {
+	    constructor() {
+	        super(...arguments);
+	        /**
+	         * Type of push notification service for which payload will be created.
+	         *
+	         * @internal
+	         */
+	        this._apnsPushType = 'apns';
+	        /**
+	         * Whether resulting payload should trigger silent notification or not.
+	         *
+	         * @internal
+	         */
+	        this._isSilent = false;
+	    }
+	    get payload() {
+	        return this._payload;
+	    }
+	    /**
+	     * Update notification receivers configuration.
+	     *
+	     * @param value - New APNS2 configurations.
+	     */
+	    set configurations(value) {
+	        if (!value || !value.length)
+	            return;
+	        this._configurations = value;
+	    }
+	    /**
+	     * Notification payload.
+	     *
+	     * @returns Platform-specific part of PubNub notification payload.
+	     */
+	    get notification() {
+	        return this.payload.aps;
+	    }
+	    /**
+	     * Notification title.
+	     *
+	     * @returns Main notification title.
+	     */
+	    get title() {
+	        return this._title;
+	    }
+	    /**
+	     * Update notification title.
+	     *
+	     * @param value - New notification title.
+	     */
+	    set title(value) {
+	        if (!value || !value.length)
+	            return;
+	        this.payload.aps.alert.title = value;
+	        this._title = value;
+	    }
+	    /**
+	     * Notification subtitle.
+	     *
+	     * @returns Second-line notification title.
+	     */
+	    get subtitle() {
+	        return this._subtitle;
+	    }
+	    /**
+	     * Update notification subtitle.
+	     *
+	     * @param value - New second-line notification title.
+	     */
+	    set subtitle(value) {
+	        if (!value || !value.length)
+	            return;
+	        this.payload.aps.alert.subtitle = value;
+	        this._subtitle = value;
+	    }
+	    /**
+	     * Notification body.
+	     *
+	     * @returns Main notification message (shown when expanded).
+	     */
+	    get body() {
+	        return this._body;
+	    }
+	    /**
+	     * Update notification body.
+	     *
+	     * @param value - Update main notification message (shown when expanded).
+	     */
+	    set body(value) {
+	        if (!value || !value.length)
+	            return;
+	        this.payload.aps.alert.body = value;
+	        this._body = value;
+	    }
+	    /**
+	     * Retrieve unread notifications number.
+	     *
+	     * @returns Number of unread notifications which should be shown on application badge.
+	     */
+	    get badge() {
+	        return this._badge;
+	    }
+	    /**
+	     * Update application badge number.
+	     *
+	     * @param value - Number which should be shown in application badge upon receiving notification.
+	     */
+	    set badge(value) {
+	        if (value === undefined || value === null)
+	            return;
+	        this.payload.aps.badge = value;
+	        this._badge = value;
+	    }
+	    /**
+	     * Retrieve notification sound file.
+	     *
+	     * @returns Notification sound file name from resource bundle.
+	     */
+	    get sound() {
+	        return this._sound;
+	    }
+	    /**
+	     * Update notification sound.
+	     *
+	     * @param value - Name of the sound file which should be played upon notification receive.
+	     */
+	    set sound(value) {
+	        if (!value || !value.length)
+	            return;
+	        this.payload.aps.sound = value;
+	        this._sound = value;
+	    }
+	    /**
+	     * Set whether notification should be silent or not.
+	     *
+	     * `content-available` notification type will be used to deliver silent notification if set to `true`.
+	     *
+	     * @param value - Whether notification should be sent as silent or not.
+	     */
+	    set silent(value) {
+	        this._isSilent = value;
+	    }
+	    /**
+	     * Setup push notification payload default content.
+	     *
+	     * @internal
+	     */
+	    setDefaultPayloadStructure() {
+	        this.payload.aps = { alert: {} };
+	    }
+	    /**
+	     * Translate data object into PubNub push notification payload object.
+	     *
+	     * @internal
+	     *
+	     * @returns Preformatted push notification payload.
+	     */
+	    toObject() {
+	        const payload = Object.assign({}, this.payload);
+	        const { aps } = payload;
+	        let { alert } = aps;
+	        if (this._isSilent)
+	            aps['content-available'] = 1;
+	        if (this._apnsPushType === 'apns2') {
+	            if (!this._configurations || !this._configurations.length)
+	                throw new ReferenceError('APNS2 configuration is missing');
+	            const configurations = [];
+	            this._configurations.forEach((configuration) => {
+	                configurations.push(this.objectFromAPNS2Configuration(configuration));
+	            });
+	            if (configurations.length)
+	                payload.pn_push = configurations;
+	        }
+	        if (!alert || !Object.keys(alert).length)
+	            delete aps.alert;
+	        if (this._isSilent) {
+	            delete aps.alert;
+	            delete aps.badge;
+	            delete aps.sound;
+	            alert = {};
+	        }
+	        return this._isSilent || (alert && Object.keys(alert).length) ? payload : null;
+	    }
+	    /**
+	     * Create PubNub push notification service APNS2 configuration information object.
+	     *
+	     * @internal
+	     *
+	     * @param configuration - Source user-provided APNS2 configuration.
+	     *
+	     * @returns Preformatted for PubNub service APNS2 configuration information.
+	     */
+	    objectFromAPNS2Configuration(configuration) {
+	        if (!configuration.targets || !configuration.targets.length)
+	            throw new ReferenceError('At least one APNS2 target should be provided');
+	        const { collapseId, expirationDate } = configuration;
+	        const objectifiedConfiguration = {
+	            auth_method: 'token',
+	            targets: configuration.targets.map((target) => this.objectFromAPNSTarget(target)),
+	            version: 'v2',
+	        };
+	        if (collapseId && collapseId.length)
+	            objectifiedConfiguration.collapse_id = collapseId;
+	        if (expirationDate)
+	            objectifiedConfiguration.expiration = expirationDate.toISOString();
+	        return objectifiedConfiguration;
+	    }
+	    /**
+	     * Create PubNub push notification service APNS2 target information object.
+	     *
+	     * @internal
+	     *
+	     * @param target - Source user-provided data.
+	     *
+	     * @returns Preformatted for PubNub service APNS2 target information.
+	     */
+	    objectFromAPNSTarget(target) {
+	        if (!target.topic || !target.topic.length)
+	            throw new TypeError("Target 'topic' undefined.");
+	        const { topic, environment = 'development', excludedDevices = [] } = target;
+	        const objectifiedTarget = { topic, environment };
+	        if (excludedDevices.length)
+	            objectifiedTarget.excluded_devices = excludedDevices;
+	        return objectifiedTarget;
+	    }
+	}
+	/**
+	 * Message payload for Firebase Cloud Messaging service.
+	 */
+	class FCMNotificationPayload extends BaseNotificationPayload {
+	    get payload() {
+	        return this._payload;
+	    }
+	    /**
+	     * Notification payload.
+	     *
+	     * @returns Platform-specific part of PubNub notification payload.
+	     */
+	    get notification() {
+	        return this.payload.notification;
+	    }
+	    /**
+	     * Silent notification payload.
+	     *
+	     * @returns Silent notification payload (data notification).
+	     */
+	    get data() {
+	        return this.payload.data;
+	    }
+	    /**
+	     * Notification title.
+	     *
+	     * @returns Main notification title.
+	     */
+	    get title() {
+	        return this._title;
+	    }
+	    /**
+	     * Update notification title.
+	     *
+	     * @param value - New notification title.
+	     */
+	    set title(value) {
+	        if (!value || !value.length)
+	            return;
+	        this.payload.notification.title = value;
+	        this._title = value;
+	    }
+	    /**
+	     * Notification body.
+	     *
+	     * @returns Main notification message (shown when expanded).
+	     */
+	    get body() {
+	        return this._body;
+	    }
+	    /**
+	     * Update notification body.
+	     *
+	     * @param value - Update main notification message (shown when expanded).
+	     */
+	    set body(value) {
+	        if (!value || !value.length)
+	            return;
+	        this.payload.notification.body = value;
+	        this._body = value;
+	    }
+	    /**
+	     * Retrieve notification sound file.
+	     *
+	     * @returns Notification sound file name from resource bundle.
+	     */
+	    get sound() {
+	        return this._sound;
+	    }
+	    /**
+	     * Update notification sound.
+	     *
+	     * @param value - Name of the sound file which should be played upon notification receive.
+	     */
+	    set sound(value) {
+	        if (!value || !value.length)
+	            return;
+	        this.payload.notification.sound = value;
+	        this._sound = value;
+	    }
+	    /**
+	     * Retrieve notification icon file.
+	     *
+	     * @returns Notification icon file name from resource bundle.
+	     */
+	    get icon() {
+	        return this._icon;
+	    }
+	    /**
+	     * Update notification icon.
+	     *
+	     * @param value - Name of the icon file which should be shown on notification.
+	     */
+	    set icon(value) {
+	        if (!value || !value.length)
+	            return;
+	        this.payload.notification.icon = value;
+	        this._icon = value;
+	    }
+	    /**
+	     * Retrieve notifications grouping tag.
+	     *
+	     * @returns Notifications grouping tag.
+	     */
+	    get tag() {
+	        return this._tag;
+	    }
+	    /**
+	     * Update notifications grouping tag.
+	     *
+	     * @param value - String which will be used to group similar notifications in notification center.
+	     */
+	    set tag(value) {
+	        if (!value || !value.length)
+	            return;
+	        this.payload.notification.tag = value;
+	        this._tag = value;
+	    }
+	    /**
+	     * Set whether notification should be silent or not.
+	     *
+	     * All notification data will be sent under `data` field if set to `true`.
+	     *
+	     * @param value - Whether notification should be sent as silent or not.
+	     */
+	    set silent(value) {
+	        this._isSilent = value;
+	    }
+	    /**
+	     * Setup push notification payload default content.
+	     *
+	     * @internal
+	     */
+	    setDefaultPayloadStructure() {
+	        this.payload.notification = {};
+	        this.payload.data = {};
+	    }
+	    /**
+	     * Translate data object into PubNub push notification payload object.
+	     *
+	     * @internal
+	     *
+	     * @returns Preformatted push notification payload.
+	     */
+	    toObject() {
+	        let data = Object.assign({}, this.payload.data);
+	        let notification = null;
+	        const payload = {};
+	        // Check whether additional data has been passed outside 'data' object and put it into it if required.
+	        if (Object.keys(this.payload).length > 2) {
+	            const _a = this.payload, additionalData = __rest(_a, ["notification", "data"]);
+	            data = Object.assign(Object.assign({}, data), additionalData);
+	        }
+	        if (this._isSilent)
+	            data.notification = this.payload.notification;
+	        else
+	            notification = this.payload.notification;
+	        if (Object.keys(data).length)
+	            payload.data = data;
+	        if (notification && Object.keys(notification).length)
+	            payload.notification = notification;
+	        return Object.keys(payload).length ? payload : null;
+	    }
+	}
+	class NotificationsPayload {
+	    /**
+	     * Create push notification payload holder.
+	     *
+	     * @internal
+	     *
+	     * @param title - String which will be shown at the top of the notification (below app name).
+	     * @param body - String with message which should be shown when user will check notification.
+	     */
+	    constructor(title, body) {
+	        this._payload = { apns: {}, fcm: {} };
+	        this._title = title;
+	        this._body = body;
+	        this.apns = new APNSNotificationPayload(this._payload.apns, title, body);
+	        this.fcm = new FCMNotificationPayload(this._payload.fcm, title, body);
+	    }
+	    /**
+	     * Enable or disable push notification debugging message.
+	     *
+	     * @param value - Whether debug message from push notification scheduler should be published to the specific
+	     * channel or not.
+	     */
+	    set debugging(value) {
+	        this._debugging = value;
+	    }
+	    /**
+	     * Notification title.
+	     *
+	     * @returns Main notification title.
+	     */
+	    get title() {
+	        return this._title;
+	    }
+	    /**
+	     * Notification subtitle.
+	     *
+	     * @returns Second-line notification title.
+	     */
+	    get subtitle() {
+	        return this._subtitle;
+	    }
+	    /**
+	     * Update notification subtitle.
+	     *
+	     * @param value - New second-line notification title.
+	     */
+	    set subtitle(value) {
+	        this._subtitle = value;
+	        this.apns.subtitle = value;
+	        this.fcm.subtitle = value;
+	    }
+	    /**
+	     * Notification body.
+	     *
+	     * @returns Main notification message (shown when expanded).
+	     */
+	    get body() {
+	        return this._body;
+	    }
+	    /**
+	     * Retrieve unread notifications number.
+	     *
+	     * @returns Number of unread notifications which should be shown on application badge.
+	     */
+	    get badge() {
+	        return this._badge;
+	    }
+	    /**
+	     * Update application badge number.
+	     *
+	     * @param value - Number which should be shown in application badge upon receiving notification.
+	     */
+	    set badge(value) {
+	        this._badge = value;
+	        this.apns.badge = value;
+	        this.fcm.badge = value;
+	    }
+	    /**
+	     * Retrieve notification sound file.
+	     *
+	     * @returns Notification sound file name from resource bundle.
+	     */
+	    get sound() {
+	        return this._sound;
+	    }
+	    /**
+	     * Update notification sound.
+	     *
+	     * @param value - Name of the sound file which should be played upon notification receive.
+	     */
+	    set sound(value) {
+	        this._sound = value;
+	        this.apns.sound = value;
+	        this.fcm.sound = value;
+	    }
+	    /**
+	     * Build notifications platform for requested platforms.
+	     *
+	     * @param platforms - List of platforms for which payload should be added to final dictionary. Supported values:
+	     * fcm, apns, and apns2.
+	     *
+	     * @returns Object with data, which can be sent with publish method call and trigger remote notifications for
+	     * specified platforms.
+	     */
+	    buildPayload(platforms) {
+	        const payload = {};
+	        if (platforms.includes('apns') || platforms.includes('apns2')) {
+	            // @ts-expect-error Override APNS version.
+	            this.apns._apnsPushType = platforms.includes('apns') ? 'apns' : 'apns2';
+	            const apnsPayload = this.apns.toObject();
+	            if (apnsPayload && Object.keys(apnsPayload).length)
+	                payload.pn_apns = apnsPayload;
+	        }
+	        if (platforms.includes('fcm')) {
+	            const fcmPayload = this.fcm.toObject();
+	            if (fcmPayload && Object.keys(fcmPayload).length)
+	                payload.pn_gcm = fcmPayload;
+	        }
+	        if (Object.keys(payload).length && this._debugging)
+	            payload.pn_debug = true;
+	        return payload;
 	    }
 	}
 
@@ -7397,19 +7992,30 @@
 	 *
 	 * @internal
 	 */
-	/* eslint-disable @typescript-eslint/no-explicit-any */
 	/**
 	 * Generic event engine.
 	 *
 	 * @internal
 	 */
 	class Engine extends Subject {
+	    constructor(logger) {
+	        super(true);
+	        this.logger = logger;
+	        this._pendingEvents = [];
+	        this._inTransition = false;
+	    }
+	    get currentState() {
+	        return this._currentState;
+	    }
+	    get currentContext() {
+	        return this._currentContext;
+	    }
 	    describe(label) {
 	        return new State(label);
 	    }
 	    start(initialState, initialContext) {
-	        this.currentState = initialState;
-	        this.currentContext = initialContext;
+	        this._currentState = initialState;
+	        this._currentContext = initialContext;
 	        this.notify({
 	            type: 'engineStarted',
 	            state: initialState,
@@ -7418,26 +8024,49 @@
 	        return;
 	    }
 	    transition(event) {
-	        if (!this.currentState) {
+	        if (!this._currentState) {
+	            this.logger.error(this.constructor.name, 'Finite state machine is not started');
 	            throw new Error('Start the engine first');
 	        }
+	        if (this._inTransition) {
+	            this.logger.trace(this.constructor.name, () => ({
+	                messageType: 'object',
+	                message: event,
+	                details: 'Event engine in transition. Enqueue received event:',
+	            }));
+	            this._pendingEvents.push(event);
+	            return;
+	        }
+	        else
+	            this._inTransition = true;
+	        this.logger.trace(this.constructor.name, () => ({
+	            messageType: 'object',
+	            message: event,
+	            details: 'Event engine received event:',
+	        }));
 	        this.notify({
 	            type: 'eventReceived',
 	            event: event,
 	        });
-	        const transition = this.currentState.transition(this.currentContext, event);
+	        const transition = this._currentState.transition(this._currentContext, event);
 	        if (transition) {
 	            const [newState, newContext, effects] = transition;
-	            for (const effect of this.currentState.exitEffects) {
+	            this.logger.trace(this.constructor.name, `Exiting state: ${this._currentState.label}`);
+	            for (const effect of this._currentState.exitEffects) {
 	                this.notify({
 	                    type: 'invocationDispatched',
-	                    invocation: effect(this.currentContext),
+	                    invocation: effect(this._currentContext),
 	                });
 	            }
-	            const oldState = this.currentState;
-	            this.currentState = newState;
-	            const oldContext = this.currentContext;
-	            this.currentContext = newContext;
+	            this.logger.trace(this.constructor.name, () => ({
+	                messageType: 'object',
+	                details: `Entering '${newState.label}' state with context:`,
+	                message: newContext,
+	            }));
+	            const oldState = this._currentState;
+	            this._currentState = newState;
+	            const oldContext = this._currentContext;
+	            this._currentContext = newContext;
 	            this.notify({
 	                type: 'transitionDone',
 	                fromState: oldState,
@@ -7452,13 +8081,28 @@
 	                    invocation: effect,
 	                });
 	            }
-	            for (const effect of this.currentState.enterEffects) {
+	            for (const effect of this._currentState.enterEffects) {
 	                this.notify({
 	                    type: 'invocationDispatched',
-	                    invocation: effect(this.currentContext),
+	                    invocation: effect(this._currentContext),
 	                });
 	            }
+	            this._inTransition = false;
+	            // Check whether a pending task should be dequeued.
+	            if (this._pendingEvents.length > 0) {
+	                const nextEvent = this._pendingEvents.shift();
+	                if (nextEvent) {
+	                    this.logger.trace(this.constructor.name, () => ({
+	                        messageType: 'object',
+	                        message: nextEvent,
+	                        details: 'De-queueing pending event:',
+	                    }));
+	                    this.transition(nextEvent);
+	                }
+	            }
 	        }
+	        else
+	            this.logger.warn(this.constructor.name, `No transition from '${this._currentState.label}' found for event: ${event.type}`);
 	    }
 	}
 
@@ -7475,8 +8119,9 @@
 	 * @internal
 	 */
 	class Dispatcher {
-	    constructor(dependencies) {
+	    constructor(dependencies, logger) {
 	        this.dependencies = dependencies;
+	        this.logger = logger;
 	        this.instances = new Map();
 	        this.handlers = new Map();
 	    }
@@ -7484,6 +8129,7 @@
 	        this.handlers.set(type, handlerCreator);
 	    }
 	    dispatch(invocation) {
+	        this.logger.trace(this.constructor.name, `Process invocation: ${invocation.type}`);
 	        if (invocation.type === 'CANCEL') {
 	            if (this.instances.has(invocation.payload)) {
 	                const instance = this.instances.get(invocation.payload);
@@ -7494,9 +8140,16 @@
 	        }
 	        const handlerCreator = this.handlers.get(invocation.type);
 	        if (!handlerCreator) {
+	            this.logger.error(this.constructor.name, `Unhandled invocation '${invocation.type}'`);
 	            throw new Error(`Unhandled invocation '${invocation.type}'`);
 	        }
 	        const instance = handlerCreator(invocation.payload, this.dependencies);
+	        this.logger.trace(this.constructor.name, () => ({
+	            messageType: 'object',
+	            details: 'Call invocation handler with parameters:',
+	            message: invocation.payload,
+	            ignoredKeys: ['abortSignal'],
+	        }));
 	        if (invocation.managed) {
 	            this.instances.set(invocation.type, instance);
 	        }
@@ -7643,87 +8296,6 @@
 	const asyncHandler = (handlerFunction) => (payload, dependencies) => new AsyncHandler(payload, dependencies, handlerFunction);
 
 	/**
-	 * Presence Event Engine events module.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Reconnect event.
-	 *
-	 * Event is sent each time when user restores real-time updates processing and notifies other present subscribers
-	 * about joining back.
-	 *
-	 * @internal
-	 */
-	const reconnect$1 = createEvent('RECONNECT', () => ({}));
-	/**
-	 * Disconnect event.
-	 *
-	 * Event is sent when user wants to temporarily stop real-time updates processing and notifies other present
-	 * subscribers about leaving.
-	 *
-	 * @internal
-	 */
-	const disconnect$1 = createEvent('DISCONNECT', (isOffline) => ({ isOffline }));
-	/**
-	 * Channel / group join event.
-	 *
-	 * Event is sent when user adds new channels / groups to the active channels / groups list and notifies other present
-	 * subscribers about joining.
-	 *
-	 * @internal
-	 */
-	const joined = createEvent('JOINED', (channels, groups) => ({
-	    channels,
-	    groups,
-	}));
-	/**
-	 * Channel / group leave event.
-	 *
-	 * Event is sent when user removes channels / groups from the active channels / groups list and notifies other present
-	 * subscribers about leaving.
-	 *
-	 * @internal
-	 */
-	const left = createEvent('LEFT', (channels, groups) => ({
-	    channels,
-	    groups,
-	}));
-	/**
-	 * Leave all event.
-	 *
-	 * Event is sent when user doesn't want to receive any real-time updates anymore and notifies other
-	 * subscribers on previously active channels / groups about leaving.
-	 *
-	 * @internal
-	 */
-	const leftAll = createEvent('LEFT_ALL', (isOffline) => ({ isOffline }));
-	/**
-	 * Presence heartbeat success event.
-	 *
-	 * Event is sent by corresponding effect handler if REST API call was successful.
-	 *
-	 * @internal
-	 */
-	const heartbeatSuccess = createEvent('HEARTBEAT_SUCCESS', (statusCode) => ({ statusCode }));
-	/**
-	 * Presence heartbeat did fail event.
-	 *
-	 * Event is sent by corresponding effect handler if REST API call failed.
-	 *
-	 * @internal
-	 */
-	const heartbeatFailure = createEvent('HEARTBEAT_FAILURE', (error) => error);
-	/**
-	 * Delayed presence heartbeat event.
-	 *
-	 * Event is sent by corresponding effect handler when delay timer between heartbeat calls fired.
-	 *
-	 * @internal
-	 */
-	const timesUp = createEvent('TIMES_UP', () => ({}));
-
-	/**
 	 * Presence Event Engine effects module.
 	 *
 	 * @internal
@@ -7769,6 +8341,87 @@
 	const wait = createManagedEffect('WAIT', () => ({}));
 
 	/**
+	 * Presence Event Engine events module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Reconnect event.
+	 *
+	 * Event is sent each time when user restores real-time updates processing and notifies other present subscribers
+	 * about joining back.
+	 *
+	 * @internal
+	 */
+	const reconnect$1 = createEvent('RECONNECT', () => ({}));
+	/**
+	 * Disconnect event.
+	 *
+	 * Event is sent when user wants to temporarily stop real-time updates processing and notifies other present
+	 * subscribers about leaving.
+	 *
+	 * @internal
+	 */
+	const disconnect$1 = createEvent('DISCONNECT', (isOffline = false) => ({ isOffline }));
+	/**
+	 * Channel / group join event.
+	 *
+	 * Event is sent when user adds new channels / groups to the active channels / groups list and notifies other present
+	 * subscribers about joining.
+	 *
+	 * @internal
+	 */
+	const joined = createEvent('JOINED', (channels, groups) => ({
+	    channels,
+	    groups,
+	}));
+	/**
+	 * Channel / group leave event.
+	 *
+	 * Event is sent when user removes channels / groups from the active channels / groups list and notifies other present
+	 * subscribers about leaving.
+	 *
+	 * @internal
+	 */
+	const left = createEvent('LEFT', (channels, groups) => ({
+	    channels,
+	    groups,
+	}));
+	/**
+	 * Leave all event.
+	 *
+	 * Event is sent when user doesn't want to receive any real-time updates anymore and notifies other
+	 * subscribers on previously active channels / groups about leaving.
+	 *
+	 * @internal
+	 */
+	const leftAll = createEvent('LEFT_ALL', (isOffline = false) => ({ isOffline }));
+	/**
+	 * Presence heartbeat success event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call was successful.
+	 *
+	 * @internal
+	 */
+	const heartbeatSuccess = createEvent('HEARTBEAT_SUCCESS', (statusCode) => ({ statusCode }));
+	/**
+	 * Presence heartbeat did fail event.
+	 *
+	 * Event is sent by corresponding effect handler if REST API call failed.
+	 *
+	 * @internal
+	 */
+	const heartbeatFailure = createEvent('HEARTBEAT_FAILURE', (error) => error);
+	/**
+	 * Delayed presence heartbeat event.
+	 *
+	 * Event is sent by corresponding effect handler when delay timer between heartbeat calls fired.
+	 *
+	 * @internal
+	 */
+	const timesUp = createEvent('TIMES_UP', () => ({}));
+
+	/**
 	 * Presence Event Engine effects dispatcher.
 	 *
 	 * @internal
@@ -7782,7 +8435,7 @@
 	 */
 	class PresenceEventEngineDispatcher extends Dispatcher {
 	    constructor(engine, dependencies) {
-	        super(dependencies);
+	        super(dependencies, dependencies.config.logger());
 	        this.on(heartbeat.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { heartbeat, presenceState, config }) {
 	            try {
 	                const result = yield heartbeat(Object.assign(Object.assign({ channels: payload.channels, channelGroups: payload.groups }, (config.maintainPresenceState && { state: presenceState })), { heartbeat: config.presenceTimeout }));
@@ -7991,10 +8644,11 @@
 	    }
 	    constructor(dependencies) {
 	        this.dependencies = dependencies;
-	        this.engine = new Engine();
 	        this.channels = [];
 	        this.groups = [];
+	        this.engine = new Engine(dependencies.config.logger());
 	        this.dispatcher = new PresenceEventEngineDispatcher(this.engine, dependencies);
+	        dependencies.config.logger().debug(this.constructor.name, 'Create presence event engine.');
 	        this._unsubscribeEngine = this.engine.subscribe((change) => {
 	            if (change.type === 'invocationDispatched') {
 	                this.dispatcher.dispatch(change.invocation);
@@ -8014,13 +8668,13 @@
 	        }
 	        this.engine.transition(left(channels !== null && channels !== void 0 ? channels : [], groups !== null && groups !== void 0 ? groups : []));
 	    }
-	    leaveAll(isOffline) {
+	    leaveAll(isOffline = false) {
 	        this.engine.transition(leftAll(isOffline));
 	    }
 	    reconnect() {
 	        this.engine.transition(reconnect$1());
 	    }
-	    disconnect(isOffline) {
+	    disconnect(isOffline = false) {
 	        this.engine.transition(disconnect$1(isOffline));
 	    }
 	    dispose() {
@@ -8062,7 +8716,10 @@
 	 *
 	 * @internal
 	 */
-	const emitMessages = createEffect('EMIT_MESSAGES', (events) => events);
+	const emitMessages = createEffect('EMIT_MESSAGES', (cursor, events) => ({
+	    cursor,
+	    events,
+	}));
 	/**
 	 * Emit subscription status change effect.
 	 *
@@ -8080,11 +8737,11 @@
 	/**
 	 * Subscription list change event.
 	 *
-	 * Event is sent each time when user would like to change list of active channels / groups.
+	 * Event is sent each time when the user would like to change a list of active channels / groups.
 	 *
 	 * @internal
 	 */
-	const subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', (channels, groups, isOffline) => ({
+	const subscriptionChange = createEvent('SUBSCRIPTION_CHANGED', (channels, groups, isOffline = false) => ({
 	    channels,
 	    groups,
 	    isOffline,
@@ -8092,7 +8749,7 @@
 	/**
 	 * Subscription loop restore.
 	 *
-	 * Event is sent when user would like to try catch up on missed updates by providing specific timetoken.
+	 * Event is sent when a user would like to try to catch up on missed updates by providing specific timetoken.
 	 *
 	 * @internal
 	 */
@@ -8107,15 +8764,15 @@
 	/**
 	 * Initial subscription handshake success event.
 	 *
-	 * Event is sent by corresponding effect handler if REST API call was successful.
+	 * Event is sent by the corresponding effect handler if the REST API call was successful.
 	 *
 	 * @internal
 	 */
 	const handshakeSuccess = createEvent('HANDSHAKE_SUCCESS', (cursor) => cursor);
 	/**
-	 * Initial subscription handshake did fail event.
+	 * The initial subscription handshake did fail event.
 	 *
-	 * Event is sent by corresponding effect handler if REST API call failed.
+	 * Event is sent by the corresponding effect handler if the REST API call failed.
 	 *
 	 * @internal
 	 */
@@ -8123,7 +8780,7 @@
 	/**
 	 * Subscription successfully received real-time updates event.
 	 *
-	 * Event is sent by corresponding effect handler if REST API call was successful.
+	 * Event is sent by the corresponding effect handler if the REST API call was successful.
 	 *
 	 * @internal
 	 */
@@ -8134,7 +8791,7 @@
 	/**
 	 * Subscription did fail to receive real-time updates event.
 	 *
-	 * Event is sent by corresponding effect handler if REST API call failed.
+	 * Event is sent by the corresponding effect handler if the REST API call failed.
 	 *
 	 * @internal
 	 */
@@ -8142,15 +8799,15 @@
 	/**
 	 * Client disconnect event.
 	 *
-	 * Event is sent when user wants to temporarily stop real-time updates receive.
+	 * Event is sent when the user wants to temporarily stop real-time updates receive.
 	 *
 	 * @internal
 	 */
-	const disconnect = createEvent('DISCONNECT', (isOffline) => ({ isOffline }));
+	const disconnect = createEvent('DISCONNECT', (isOffline = false) => ({ isOffline }));
 	/**
 	 * Client reconnect event.
 	 *
-	 * Event is sent when user wants to restore real-time updates receive.
+	 * Event is sent when the user wants to restore real-time updates receive.
 	 *
 	 * @internal
 	 */
@@ -8163,70 +8820,39 @@
 	/**
 	 * Completely stop real-time updates receive event.
 	 *
-	 * Event is sent when user doesn't want to receive any real-time updates anymore.
+	 * Event is sent when the user doesn't want to receive any real-time updates anymore.
 	 *
 	 * @internal
 	 */
 	const unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', () => ({}));
 
 	/**
-	 * Subscribe Event Engine effects dispatcher.
+	 * Unsubscribed / disconnected state module.
 	 *
 	 * @internal
 	 */
 	/**
-	 * Subscribe Event Engine dispatcher.
+	 * Unsubscribed / disconnected state.
 	 *
-	 * Dispatcher responsible for subscription events handling and corresponding effects execution.
+	 * State in which Subscription Event Engine doesn't process any real-time updates.
 	 *
 	 * @internal
 	 */
-	class EventEngineDispatcher extends Dispatcher {
-	    constructor(engine, dependencies) {
-	        super(dependencies);
-	        this.on(handshake.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { handshake, presenceState, config }) {
-	            abortSignal.throwIfAborted();
-	            try {
-	                const result = yield handshake(Object.assign({ abortSignal: abortSignal, channels: payload.channels, channelGroups: payload.groups, filterExpression: config.filterExpression }, (config.maintainPresenceState && { state: presenceState })));
-	                return engine.transition(handshakeSuccess(result));
-	            }
-	            catch (e) {
-	                if (e instanceof PubNubError) {
-	                    if (e.status && e.status.category == StatusCategory$1.PNCancelledCategory)
-	                        return;
-	                    return engine.transition(handshakeFailure(e));
-	                }
-	            }
-	        })));
-	        this.on(receiveMessages.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { receiveMessages, config }) {
-	            abortSignal.throwIfAborted();
-	            try {
-	                const result = yield receiveMessages({
-	                    abortSignal: abortSignal,
-	                    channels: payload.channels,
-	                    channelGroups: payload.groups,
-	                    timetoken: payload.cursor.timetoken,
-	                    region: payload.cursor.region,
-	                    filterExpression: config.filterExpression,
-	                });
-	                engine.transition(receiveSuccess(result.cursor, result.messages));
-	            }
-	            catch (error) {
-	                if (error instanceof PubNubError) {
-	                    if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
-	                        return;
-	                    if (!abortSignal.aborted)
-	                        return engine.transition(receiveFailure(error));
-	                }
-	            }
-	        })));
-	        this.on(emitMessages.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitMessages }) {
-	            if (payload.length > 0)
-	                emitMessages(payload);
-	        })));
-	        this.on(emitStatus.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitStatus }) { return emitStatus(payload); })));
-	    }
-	}
+	const UnsubscribedState = new State('UNSUBSCRIBED');
+	UnsubscribedState.on(subscriptionChange.type, (_, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups });
+	});
+	UnsubscribedState.on(restore.type, (_, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakingState.with({
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region },
+	    });
+	});
 
 	/**
 	 * Stopped initial subscription handshake (disconnected) state.
@@ -8255,7 +8881,7 @@
 	    return HandshakeStoppedState.with({
 	        channels: payload.channels,
 	        groups: payload.groups,
-	        cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || ((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0 },
+	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || ((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0 },
 	    });
 	});
 	HandshakeStoppedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
@@ -8279,11 +8905,7 @@
 	        return UnsubscribedState.with(undefined);
 	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
 	});
-	HandshakeFailedState.on(reconnect.type, (context, { payload }) => HandshakingState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	    cursor: payload.cursor || context.cursor,
-	}));
+	HandshakeFailedState.on(reconnect.type, (context, { payload }) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: payload.cursor || context.cursor })));
 	HandshakeFailedState.on(restore.type, (context, { payload }) => {
 	    var _a, _b;
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
@@ -8292,12 +8914,84 @@
 	        channels: payload.channels,
 	        groups: payload.groups,
 	        cursor: {
-	            timetoken: payload.cursor.timetoken,
+	            timetoken: `${payload.cursor.timetoken}`,
 	            region: payload.cursor.region ? payload.cursor.region : ((_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0),
 	        },
 	    });
 	});
 	HandshakeFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
+
+	/**
+	 * Initial subscription handshake (disconnected) state.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Initial subscription handshake (disconnected) state.
+	 *
+	 * State in which Subscription Event Engine tries to receive the subscription cursor for the next sequential
+	 * subscribe REST API calls.
+	 *
+	 * @internal
+	 */
+	const HandshakingState = new State('HANDSHAKING');
+	HandshakingState.onEnter((context) => handshake(context.channels, context.groups));
+	HandshakingState.onExit(() => handshake.cancel);
+	HandshakingState.on(subscriptionChange.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+	});
+	HandshakingState.on(handshakeSuccess.type, (context, { payload }) => {
+	    var _a, _b, _c, _d, _e;
+	    return ReceivingState.with({
+	        channels: context.channels,
+	        groups: context.groups,
+	        cursor: {
+	            timetoken: !!((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) ? (_b = context.cursor) === null || _b === void 0 ? void 0 : _b.timetoken : payload.timetoken,
+	            region: payload.region,
+	        },
+	        referenceTimetoken: referenceSubscribeTimetoken(payload.timetoken, (_c = context.cursor) === null || _c === void 0 ? void 0 : _c.timetoken),
+	    }, [
+	        emitStatus({
+	            category: StatusCategory$1.PNConnectedCategory,
+	            affectedChannels: context.channels.slice(0),
+	            affectedChannelGroups: context.groups.slice(0),
+	            currentTimetoken: !!((_d = context.cursor) === null || _d === void 0 ? void 0 : _d.timetoken) ? (_e = context.cursor) === null || _e === void 0 ? void 0 : _e.timetoken : payload.timetoken,
+	        }),
+	    ]);
+	});
+	HandshakingState.on(handshakeFailure.type, (context, event) => {
+	    var _a;
+	    return HandshakeFailedState.with(Object.assign(Object.assign({}, context), { reason: event.payload }), [
+	        emitStatus({ category: StatusCategory$1.PNConnectionErrorCategory, error: (_a = event.payload.status) === null || _a === void 0 ? void 0 : _a.category }),
+	    ]);
+	});
+	HandshakingState.on(disconnect.type, (context, event) => {
+	    var _a;
+	    if (!event.payload.isOffline)
+	        return HandshakeStoppedState.with(Object.assign({}, context));
+	    else {
+	        const errorReason = PubNubAPIError.create(new Error('Network connection error')).toPubNubError(RequestOperation$1.PNSubscribeOperation);
+	        return HandshakeFailedState.with(Object.assign(Object.assign({}, context), { reason: errorReason }), [
+	            emitStatus({
+	                category: StatusCategory$1.PNConnectionErrorCategory,
+	                error: (_a = errorReason.status) === null || _a === void 0 ? void 0 : _a.category,
+	            }),
+	        ]);
+	    }
+	});
+	HandshakingState.on(restore.type, (context, { payload }) => {
+	    var _a;
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakingState.with({
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || ((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0 },
+	    });
+	});
+	HandshakingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
 
 	/**
 	 * Stopped real-time updates (disconnected) state module.
@@ -8324,7 +9018,7 @@
 	    return ReceiveStoppedState.with({
 	        channels: payload.channels,
 	        groups: payload.groups,
-	        cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
+	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
 	    });
 	});
 	ReceiveStoppedState.on(reconnect.type, (context, { payload }) => {
@@ -8376,7 +9070,7 @@
 	    return HandshakingState.with({
 	        channels: payload.channels,
 	        groups: payload.groups,
-	        cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
+	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
 	    });
 	});
 	ReceiveFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));
@@ -8396,11 +9090,12 @@
 	const ReceivingState = new State('RECEIVING');
 	ReceivingState.onEnter((context) => receiveMessages(context.channels, context.groups, context.cursor));
 	ReceivingState.onExit(() => receiveMessages.cancel);
-	ReceivingState.on(receiveSuccess.type, (context, { payload }) => {
-	    return ReceivingState.with({ channels: context.channels, groups: context.groups, cursor: payload.cursor }, [
-	        emitMessages(payload.events),
-	    ]);
-	});
+	ReceivingState.on(receiveSuccess.type, (context, { payload }) => ReceivingState.with({
+	    channels: context.channels,
+	    groups: context.groups,
+	    cursor: payload.cursor,
+	    referenceTimetoken: referenceSubscribeTimetoken(payload.cursor.timetoken),
+	}, [emitMessages(context.cursor, payload.events)]));
 	ReceivingState.on(subscriptionChange.type, (context, { payload }) => {
 	    var _a;
 	    if (payload.channels.length === 0 && payload.groups.length === 0) {
@@ -8413,7 +9108,12 @@
 	                    : StatusCategory$1.PNDisconnectedUnexpectedlyCategory }, (errorCategory ? { error: errorCategory } : {}))),
 	        ]);
 	    }
-	    return ReceivingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor }, [
+	    return ReceivingState.with({
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: context.cursor,
+	        referenceTimetoken: context.referenceTimetoken,
+	    }, [
 	        emitStatus({
 	            category: StatusCategory$1.PNSubscriptionChangedCategory,
 	            affectedChannels: payload.channels.slice(0),
@@ -8428,7 +9128,8 @@
 	    return ReceivingState.with({
 	        channels: payload.channels,
 	        groups: payload.groups,
-	        cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || context.cursor.region },
+	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
+	        referenceTimetoken: referenceSubscribeTimetoken(context.cursor.timetoken, `${payload.cursor.timetoken}`, context.referenceTimetoken),
 	    }, [
 	        emitStatus({
 	            category: StatusCategory$1.PNSubscriptionChangedCategory,
@@ -8447,13 +9148,13 @@
 	ReceivingState.on(disconnect.type, (context, event) => {
 	    var _a;
 	    if (!event.payload.isOffline) {
-	        return ReceiveStoppedState.with({ channels: context.channels, groups: context.groups, cursor: context.cursor }, [
+	        return ReceiveStoppedState.with(Object.assign({}, context), [
 	            emitStatus({ category: StatusCategory$1.PNDisconnectedCategory }),
 	        ]);
 	    }
 	    else {
 	        const errorReason = PubNubAPIError.create(new Error('Network connection error')).toPubNubError(RequestOperation$1.PNSubscribeOperation);
-	        return ReceiveFailedState.with({ channels: context.channels, groups: context.groups, cursor: context.cursor, reason: errorReason }, [
+	        return ReceiveFailedState.with(Object.assign(Object.assign({}, context), { reason: errorReason }), [
 	            emitStatus({
 	                category: StatusCategory$1.PNDisconnectedUnexpectedlyCategory,
 	                error: (_a = errorReason.status) === null || _a === void 0 ? void 0 : _a.category,
@@ -8464,102 +9165,63 @@
 	ReceivingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
 
 	/**
-	 * Initial subscription handshake (disconnected) state.
+	 * Subscribe Event Engine effects dispatcher.
 	 *
 	 * @internal
 	 */
 	/**
-	 * Initial subscription handshake (disconnected) state.
+	 * Subscribe Event Engine dispatcher.
 	 *
-	 * State in which Subscription Event Engine tries to receive subscription cursor for next sequential subscribe REST
-	 * API calls.
+	 * Dispatcher responsible for subscription events handling and corresponding effects execution.
 	 *
 	 * @internal
 	 */
-	const HandshakingState = new State('HANDSHAKING');
-	HandshakingState.onEnter((context) => handshake(context.channels, context.groups));
-	HandshakingState.onExit(() => handshake.cancel);
-	HandshakingState.on(subscriptionChange.type, (context, { payload }) => {
-	    if (payload.channels.length === 0 && payload.groups.length === 0)
-	        return UnsubscribedState.with(undefined);
-	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
-	});
-	HandshakingState.on(handshakeSuccess.type, (context, { payload }) => {
-	    var _a, _b, _c, _d;
-	    return ReceivingState.with({
-	        channels: context.channels,
-	        groups: context.groups,
-	        cursor: {
-	            timetoken: !!((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) ? (_b = context.cursor) === null || _b === void 0 ? void 0 : _b.timetoken : payload.timetoken,
-	            region: payload.region,
-	        },
-	    }, [
-	        emitStatus({
-	            category: StatusCategory$1.PNConnectedCategory,
-	            affectedChannels: context.channels.slice(0),
-	            affectedChannelGroups: context.groups.slice(0),
-	            currentTimetoken: !!((_c = context.cursor) === null || _c === void 0 ? void 0 : _c.timetoken) ? (_d = context.cursor) === null || _d === void 0 ? void 0 : _d.timetoken : payload.timetoken,
-	        }),
-	    ]);
-	});
-	HandshakingState.on(handshakeFailure.type, (context, event) => {
-	    var _a;
-	    return HandshakeFailedState.with({
-	        channels: context.channels,
-	        groups: context.groups,
-	        cursor: context.cursor,
-	        reason: event.payload,
-	    }, [emitStatus({ category: StatusCategory$1.PNConnectionErrorCategory, error: (_a = event.payload.status) === null || _a === void 0 ? void 0 : _a.category })]);
-	});
-	HandshakingState.on(disconnect.type, (context, event) => {
-	    var _a;
-	    if (!event.payload.isOffline)
-	        return HandshakeStoppedState.with({ channels: context.channels, groups: context.groups, cursor: context.cursor });
-	    else {
-	        const errorReason = PubNubAPIError.create(new Error('Network connection error')).toPubNubError(RequestOperation$1.PNSubscribeOperation);
-	        return HandshakeFailedState.with({ channels: context.channels, groups: context.groups, cursor: context.cursor, reason: errorReason }, [
-	            emitStatus({
-	                category: StatusCategory$1.PNConnectionErrorCategory,
-	                error: (_a = errorReason.status) === null || _a === void 0 ? void 0 : _a.category,
-	            }),
-	        ]);
+	class EventEngineDispatcher extends Dispatcher {
+	    constructor(engine, dependencies) {
+	        super(dependencies, dependencies.config.logger());
+	        this.on(handshake.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { handshake, presenceState, config }) {
+	            abortSignal.throwIfAborted();
+	            try {
+	                const result = yield handshake(Object.assign({ abortSignal: abortSignal, channels: payload.channels, channelGroups: payload.groups, filterExpression: config.filterExpression }, (config.maintainPresenceState && { state: presenceState })));
+	                return engine.transition(handshakeSuccess(result));
+	            }
+	            catch (e) {
+	                if (e instanceof PubNubError) {
+	                    if (e.status && e.status.category == StatusCategory$1.PNCancelledCategory)
+	                        return;
+	                    return engine.transition(handshakeFailure(e));
+	                }
+	            }
+	        })));
+	        this.on(receiveMessages.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { receiveMessages, config }) {
+	            abortSignal.throwIfAborted();
+	            try {
+	                const result = yield receiveMessages({
+	                    abortSignal: abortSignal,
+	                    channels: payload.channels,
+	                    channelGroups: payload.groups,
+	                    timetoken: payload.cursor.timetoken,
+	                    region: payload.cursor.region,
+	                    filterExpression: config.filterExpression,
+	                });
+	                engine.transition(receiveSuccess(result.cursor, result.messages));
+	            }
+	            catch (error) {
+	                if (error instanceof PubNubError) {
+	                    if (error.status && error.status.category == StatusCategory$1.PNCancelledCategory)
+	                        return;
+	                    if (!abortSignal.aborted)
+	                        return engine.transition(receiveFailure(error));
+	                }
+	            }
+	        })));
+	        this.on(emitMessages.type, asyncHandler((_a, _1, _b) => __awaiter(this, [_a, _1, _b], void 0, function* ({ cursor, events }, _, { emitMessages }) {
+	            if (events.length > 0)
+	                emitMessages(cursor, events);
+	        })));
+	        this.on(emitStatus.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { emitStatus }) { return emitStatus(payload); })));
 	    }
-	});
-	HandshakingState.on(restore.type, (context, { payload }) => {
-	    var _a;
-	    if (payload.channels.length === 0 && payload.groups.length === 0)
-	        return UnsubscribedState.with(undefined);
-	    return HandshakingState.with({
-	        channels: payload.channels,
-	        groups: payload.groups,
-	        cursor: { timetoken: payload.cursor.timetoken, region: payload.cursor.region || ((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0 },
-	    });
-	});
-	HandshakingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
-
-	/**
-	 * Unsubscribed / disconnected state module.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Unsubscribed / disconnected state.
-	 *
-	 * State in which Subscription Event Engine doesn't process any real-time updates.
-	 *
-	 * @internal
-	 */
-	const UnsubscribedState = new State('UNSUBSCRIBED');
-	UnsubscribedState.on(subscriptionChange.type, (_, { payload }) => {
-	    if (payload.channels.length === 0 && payload.groups.length === 0)
-	        return UnsubscribedState.with(undefined);
-	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups });
-	});
-	UnsubscribedState.on(restore.type, (_, { payload }) => {
-	    if (payload.channels.length === 0 && payload.groups.length === 0)
-	        return UnsubscribedState.with(undefined);
-	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: payload.cursor });
-	});
+	}
 
 	/**
 	 * Subscribe Event Engine module.
@@ -8576,17 +9238,36 @@
 	        return this.engine;
 	    }
 	    constructor(dependencies) {
-	        this.engine = new Engine();
 	        this.channels = [];
 	        this.groups = [];
 	        this.dependencies = dependencies;
+	        this.engine = new Engine(dependencies.config.logger());
 	        this.dispatcher = new EventEngineDispatcher(this.engine, dependencies);
+	        dependencies.config.logger().debug(this.constructor.name, 'Create subscribe event engine.');
 	        this._unsubscribeEngine = this.engine.subscribe((change) => {
 	            if (change.type === 'invocationDispatched') {
 	                this.dispatcher.dispatch(change.invocation);
 	            }
 	        });
 	        this.engine.start(UnsubscribedState, undefined);
+	    }
+	    /**
+	     * Subscription-based current timetoken.
+	     *
+	     * @returns Timetoken based on current timetoken plus diff between current and loop start time.
+	     */
+	    get subscriptionTimetoken() {
+	        const currentState = this.engine.currentState;
+	        if (!currentState)
+	            return undefined;
+	        let referenceTimetoken;
+	        let currentTimetoken = '0';
+	        if (currentState.label === ReceivingState.label) {
+	            const context = this.engine.currentContext;
+	            currentTimetoken = context.cursor.timetoken;
+	            referenceTimetoken = context.referenceTimetoken;
+	        }
+	        return subscriptionTimetokenFromReference(currentTimetoken, referenceTimetoken !== null && referenceTimetoken !== void 0 ? referenceTimetoken : '0');
 	    }
 	    subscribe({ channels, channelGroups, timetoken, withPresence, }) {
 	        this.channels = [...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])];
@@ -8636,7 +9317,7 @@
 	            }
 	        }
 	    }
-	    unsubscribeAll(isOffline) {
+	    unsubscribeAll(isOffline = false) {
 	        const channelGroups = this.getSubscribedChannels();
 	        const channels = this.getSubscribedChannels();
 	        this.channels = [];
@@ -8657,7 +9338,7 @@
 	        if (this.dependencies.presenceReconnect)
 	            this.dependencies.presenceReconnect({ channels, groups: channelGroups });
 	    }
-	    disconnect(isOffline) {
+	    disconnect(isOffline = false) {
 	        const channelGroups = this.getSubscribedChannels();
 	        const channels = this.getSubscribedChannels();
 	        this.engine.transition(disconnect(isOffline));
@@ -8751,7 +9432,7 @@
 	    get headers() {
 	        var _a;
 	        if (!this.parameters.sendByPost)
-	            return undefined;
+	            return super.headers;
 	        return Object.assign(Object.assign({}, ((_a = super.headers) !== null && _a !== void 0 ? _a : {})), { 'Content-Type': 'application/json' });
 	    }
 	    get body() {
@@ -8857,7 +9538,7 @@
 	        if (filterExpression && filterExpression.length > 0)
 	            query['filter-expr'] = filterExpression;
 	        if (typeof timetoken === 'string') {
-	            if (timetoken && timetoken.length > 0)
+	            if (timetoken && timetoken !== '0' && timetoken.length > 0)
 	                query['tt'] = timetoken;
 	        }
 	        else if (timetoken && timetoken > 0)
@@ -8890,7 +9571,7 @@
 	    }
 	    get queryParameters() {
 	        const { channelGroups, filterExpression, state } = this.parameters;
-	        const query = { tt: 0, ee: '' };
+	        const query = { ee: '' };
 	        if (channelGroups && channelGroups.length > 0)
 	            query['channel-group'] = channelGroups.sort().join(',');
 	        if (filterExpression && filterExpression.length > 0)
@@ -10225,91 +10906,383 @@
 	    }
 	}
 
-	class SubscribeCapable {
+	/**
+	 * SubscriptionCapable entity type.
+	 *
+	 * @internal
+	 */
+	var SubscriptionType;
+	(function (SubscriptionType) {
 	    /**
-	     * Start receiving real-time updates.
-	     *
-	     * @param subscribeParameters - Additional subscription configuration options which should be used
-	     * for request.
+	     * Channel identifier, which is part of the URI path.
 	     */
-	    subscribe(subscribeParameters) {
-	        const timetoken = subscribeParameters === null || subscribeParameters === void 0 ? void 0 : subscribeParameters.timetoken;
-	        this.pubnub.registerSubscribeCapable(this);
-	        this.subscribedAutomatically = false;
-	        this.subscribed = true;
-	        this.pubnub.subscribe(Object.assign({ channels: this.channelNames, channelGroups: this.groupNames }, (timetoken !== null && timetoken !== '' && { timetoken: timetoken })));
+	    SubscriptionType[SubscriptionType["Channel"] = 0] = "Channel";
+	    /**
+	     * Channel group identifiers, which is part of the query parameters.
+	     */
+	    SubscriptionType[SubscriptionType["ChannelGroup"] = 1] = "ChannelGroup";
+	})(SubscriptionType || (SubscriptionType = {}));
+
+	/**
+	 * User-provided channels and groups for subscription.
+	 *
+	 * Object contains information about channels and groups for which real-time updates should be retrieved from the
+	 * PubNub network.
+	 *
+	 * @internal
+	 */
+	class SubscriptionInput {
+	    /**
+	     * Create a subscription input object.
+	     *
+	     * @param channels - List of channels which will be used with subscribe REST API to receive real-time updates.
+	     * @param channelGroups - List of channel groups which will be used with subscribe REST API to receive real-time
+	     * updates.
+	     */
+	    constructor({ channels, channelGroups }) {
+	        /**
+	         * Whether the user input is empty or not.
+	         */
+	        this.isEmpty = true;
+	        this._channelGroups = new Set((channelGroups !== null && channelGroups !== void 0 ? channelGroups : []).filter((value) => value.length > 0));
+	        this._channels = new Set((channels !== null && channels !== void 0 ? channels : []).filter((value) => value.length > 0));
+	        this.isEmpty = this._channels.size === 0 && this._channelGroups.size === 0;
 	    }
 	    /**
-	     * Stop real-time events processing.
+	     * Retrieve a list of user-provided channel names.
+	     *
+	     * @returns List of user-provided channel names.
 	     */
-	    unsubscribe() {
-	        this.pubnub.unregisterSubscribeCapable(this);
-	        this.subscribedAutomatically = false;
-	        this.subscribed = false;
-	        const { channels, channelGroups } = this.pubnub.getSubscribeCapableEntities();
-	        // Identify channels and groups from which PubNub client can safely unsubscribe.
-	        const filteredChannelGroups = this.groupNames.filter((cg) => !channelGroups.includes(cg));
-	        const filteredChannels = this.channelNames.filter((ch) => !channels.includes(ch));
-	        if (filteredChannels.length === 0 && filteredChannelGroups.length === 0)
-	            return;
-	        this.pubnub.unsubscribe({
-	            channels: filteredChannels,
-	            channelGroups: filteredChannelGroups,
+	    get channels() {
+	        if (this.isEmpty)
+	            return [];
+	        return Array.from(this._channels);
+	    }
+	    /**
+	     * Retrieve a list of user-provided channel group names.
+	     *
+	     * @returns List of user-provided channel group names.
+	     */
+	    get channelGroups() {
+	        if (this.isEmpty)
+	            return [];
+	        return Array.from(this._channelGroups);
+	    }
+	    /**
+	     * Check if the given name is contained in the channel or channel group.
+	     *
+	     * @param name - Containing the name to be checked.
+	     *
+	     * @returns `true` if the name is found in the channel or channel group, `false` otherwise.
+	     */
+	    contains(name) {
+	        if (this.isEmpty)
+	            return false;
+	        return this._channels.has(name) || this._channelGroups.has(name);
+	    }
+	    /**
+	     * Create a new subscription input which will contain all channels and channel groups from both inputs.
+	     *
+	     * @param input - Another subscription input that should be used to aggregate data in new instance.
+	     *
+	     * @returns New subscription input instance with combined channels and channel groups.
+	     */
+	    with(input) {
+	        return new SubscriptionInput({
+	            channels: [...this._channels, ...input._channels],
+	            channelGroups: [...this._channelGroups, ...input._channelGroups],
 	        });
 	    }
 	    /**
-	     * Set new message handler.
+	     * Create a new subscription input which will contain only channels and groups which not present in the input.
 	     *
-	     * @param onMessageListener - Listener function, which will be called each time when a new message
-	     * is received from the real-time network.
+	     * @param input - Another subscription input which should be used to filter data in new instance.
+	     *
+	     * @returns New subscription input instance with filtered channels and channel groups.
 	     */
-	    set onMessage(onMessageListener) {
-	        this.typeBasedListener.message = onMessageListener;
+	    without(input) {
+	        return new SubscriptionInput({
+	            channels: [...this._channels].filter((value) => !input._channels.has(value)),
+	            channelGroups: [...this._channelGroups].filter((value) => !input._channelGroups.has(value)),
+	        });
 	    }
 	    /**
-	     * Set new presence events handler.
+	     * Add data from another subscription input to the receiver.
 	     *
-	     * @param onPresenceListener - Listener function, which will be called each time when a new
+	     * @param input - Another subscription input whose data should be added to the receiver.
+	     *
+	     * @returns Receiver instance with updated channels and channel groups.
+	     */
+	    add(input) {
+	        if (input._channelGroups.size > 0)
+	            this._channelGroups = new Set([...this._channelGroups, ...input._channelGroups]);
+	        if (input._channels.size > 0)
+	            this._channels = new Set([...this._channels, ...input._channels]);
+	        this.isEmpty = this._channels.size === 0 && this._channelGroups.size === 0;
+	        return this;
+	    }
+	    /**
+	     * Remove data from another subscription input from the receiver.
+	     *
+	     * @param input - Another subscription input whose data should be removed from the receiver.
+	     *
+	     * @returns Receiver instance with updated channels and channel groups.
+	     */
+	    remove(input) {
+	        if (input._channelGroups.size > 0)
+	            this._channelGroups = new Set([...this._channelGroups].filter((value) => !input._channelGroups.has(value)));
+	        if (input._channels.size > 0)
+	            this._channels = new Set([...this._channels].filter((value) => !input._channels.has(value)));
+	        return this;
+	    }
+	    /**
+	     * Remove all data from subscription input.
+	     *
+	     * @returns Receiver instance with updated channels and channel groups.
+	     */
+	    removeAll() {
+	        this._channels.clear();
+	        this._channelGroups.clear();
+	        this.isEmpty = true;
+	        return this;
+	    }
+	    /**
+	     * Serialize a subscription input to string.
+	     *
+	     * @returns Printable string representation of a subscription input.
+	     */
+	    toString() {
+	        return `SubscriptionInput { channels: [${this.channels.join(', ')}], channelGroups: [${this.channelGroups.join(', ')}], is empty: ${this.isEmpty ? 'true' : 'false'}} }`;
+	    }
+	}
+	// endregion
+
+	/**
+	 * Subscription state object.
+	 *
+	 * State object used across multiple subscription object clones.
+	 *
+	 * @internal
+	 */
+	class SubscriptionBaseState {
+	    /**
+	     * Create a base subscription state object.
+	     *
+	     * @param client - PubNub client which will work with a subscription object.
+	     * @param subscriptionInput - User's input to be used with subscribe REST API.
+	     * @param options - Subscription behavior options.
+	     * @param referenceTimetoken - High-precision timetoken of the moment when subscription was created for entity.
+	     */
+	    constructor(client, subscriptionInput, options, referenceTimetoken) {
+	        /**
+	         * Whether a subscribable object subscribed or not.
+	         */
+	        this._isSubscribed = false;
+	        /**
+	         * The list of references to all {@link SubscriptionBase} clones created for this reference.
+	         */
+	        this.clones = {};
+	        /**
+	         * List of a parent subscription state objects list.
+	         *
+	         * List is used to track usage of a subscription object in other subscription object sets.
+	         *
+	         * **Important:** Tracking is required to prevent unexpected unsubscriptions if an object still has a parent.
+	         */
+	        this.parents = [];
+	        /**
+	         * Unique subscription object identifier.
+	         */
+	        this._id = uuidGenerator.createUUID();
+	        this.referenceTimetoken = referenceTimetoken;
+	        this.subscriptionInput = subscriptionInput;
+	        this.options = options;
+	        this.client = client;
+	    }
+	    /**
+	     * Get unique subscription object identifier.
+	     *
+	     * @returns Unique subscription object identifier.
+	     */
+	    get id() {
+	        return this._id;
+	    }
+	    /**
+	     * Check whether a subscription object is the last clone or not.
+	     *
+	     * @returns `true` if a subscription object is the last clone.
+	     */
+	    get isLastClone() {
+	        return Object.keys(this.clones).length === 1;
+	    }
+	    /**
+	     * Get whether a subscribable object subscribed or not.
+	     *
+	     * **Warning:** This method shouldn't be overridden by {@link SubscriptionSet}.
+	     *
+	     * @returns Whether a subscribable object subscribed or not.
+	     */
+	    get isSubscribed() {
+	        if (this._isSubscribed)
+	            return true;
+	        // Checking whether any of "parents" is subscribed.
+	        return this.parents.length > 0 && this.parents.some((state) => state.isSubscribed);
+	    }
+	    /**
+	     * Update active subscription state.
+	     *
+	     * @param value - New subscription state.
+	     */
+	    set isSubscribed(value) {
+	        if (this.isSubscribed === value)
+	            return;
+	        this._isSubscribed = value;
+	    }
+	    /**
+	     * Add a parent subscription state object to mark the linkage.
+	     *
+	     * @param parent - Parent subscription state object.
+	     *
+	     * @internal
+	     */
+	    addParentState(parent) {
+	        if (!this.parents.includes(parent))
+	            this.parents.push(parent);
+	    }
+	    /**
+	     * Remove a parent subscription state object.
+	     *
+	     * @param parent - Parent object for which linkage should be broken.
+	     *
+	     * @internal
+	     */
+	    removeParentState(parent) {
+	        const parentStateIndex = this.parents.indexOf(parent);
+	        if (parentStateIndex !== -1)
+	            this.parents.splice(parentStateIndex, 1);
+	    }
+	    /**
+	     * Store a clone of a {@link SubscriptionBase} instance with a given instance ID.
+	     *
+	     * @param id - The instance ID to associate with clone.
+	     * @param instance - Reference to the subscription instance to store as a clone.
+	     */
+	    storeClone(id, instance) {
+	        if (!this.clones[id])
+	            this.clones[id] = instance;
+	    }
+	}
+	/**
+	 * Base subscribe object.
+	 *
+	 * Implementation of base functionality used by {@link SubscriptionObject Subscription} and {@link SubscriptionSet}.
+	 */
+	class SubscriptionBase {
+	    /**
+	     * Create a subscription object from the state.
+	     *
+	     * @param state - Subscription state object.
+	     *
+	     * @internal
+	     */
+	    constructor(state) {
+	        /**
+	         * Unique subscription object identifier.
+	         *
+	         * @internal
+	         */
+	        this.id = uuidGenerator.createUUID();
+	        /**
+	         * Event emitter, which will notify listeners about updates received for channels / groups.
+	         *
+	         * @internal
+	         */
+	        this.eventDispatcher = new EventDispatcher();
+	        this._state = state;
+	    }
+	    /**
+	     * Subscription state.
+	     *
+	     * @returns Subscription state object.
+	     *
+	     * @internal
+	     */
+	    get state() {
+	        return this._state;
+	    }
+	    /**
+	     * Get a list of channels which is used for subscription.
+	     *
+	     * @returns List of channel names.
+	     */
+	    get channels() {
+	        return this.state.subscriptionInput.channels.slice(0);
+	    }
+	    /**
+	     * Get a list of channel groups which is used for subscription.
+	     *
+	     * @returns List of channel group names.
+	     */
+	    get channelGroups() {
+	        return this.state.subscriptionInput.channelGroups.slice(0);
+	    }
+	    // --------------------------------------------------------
+	    // -------------------- Event emitter ---------------------
+	    // --------------------------------------------------------
+	    // region Event emitter
+	    /**
+	     * Set a new message handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new message
+	     * is received from the real-time network.
+	     */
+	    set onMessage(listener) {
+	        this.eventDispatcher.onMessage = listener;
+	    }
+	    /**
+	     * Set a new presence events handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new
 	     * presence event is received from the real-time network.
 	     */
-	    set onPresence(onPresenceListener) {
-	        this.typeBasedListener.presence = onPresenceListener;
+	    set onPresence(listener) {
+	        this.eventDispatcher.onPresence = listener;
 	    }
 	    /**
-	     * Set new signal handler.
+	     * Set a new signal handler.
 	     *
-	     * @param onSignalListener - Listener function, which will be called each time when a new signal
+	     * @param listener - Listener function, which will be called each time when a new signal
 	     * is received from the real-time network.
 	     */
-	    set onSignal(onSignalListener) {
-	        this.typeBasedListener.signal = onSignalListener;
+	    set onSignal(listener) {
+	        this.eventDispatcher.onSignal = listener;
 	    }
 	    /**
-	     * Set new app context event handler.
+	     * Set a new app context event handler.
 	     *
-	     * @param onObjectsListener - Listener function, which will be called each time when a new
+	     * @param listener - Listener function, which will be called each time when a new
 	     * app context event is received from the real-time network.
 	     */
-	    set onObjects(onObjectsListener) {
-	        this.typeBasedListener.objects = onObjectsListener;
+	    set onObjects(listener) {
+	        this.eventDispatcher.onObjects = listener;
 	    }
 	    /**
-	     * Set new message reaction event handler.
+	     * Set a new message reaction event handler.
 	     *
-	     * @param messageActionEventListener - Listener function, which will be called each time when a
+	     * @param listener - Listener function, which will be called each time when a
 	     * new message reaction event is received from the real-time network.
 	     */
-	    set onMessageAction(messageActionEventListener) {
-	        this.typeBasedListener.messageAction = messageActionEventListener;
+	    set onMessageAction(listener) {
+	        this.eventDispatcher.onMessageAction = listener;
 	    }
 	    /**
-	     * Set new file handler.
+	     * Set a new file handler.
 	     *
-	     * @param fileEventListener - Listener function, which will be called each time when a new file
+	     * @param listener - Listener function, which will be called each time when a new file
 	     * is received from the real-time network.
 	     */
-	    set onFile(fileEventListener) {
-	        this.typeBasedListener.file = fileEventListener;
+	    set onFile(listener) {
+	        this.eventDispatcher.onFile = listener;
 	    }
 	    /**
 	     * Set events handler.
@@ -10318,518 +11291,1096 @@
 	     * types of events.
 	     */
 	    addListener(listener) {
-	        if (this.aggregatedListener && this.aggregatedListener !== listener)
-	            this.removeListener(this.aggregatedListener);
-	        this.aggregatedListenerId = this.eventEmitter.addListener(listener, this.channelNames, this.groupNames);
-	        this.aggregatedListener = listener;
+	        this.eventDispatcher.addListener(listener);
 	    }
 	    /**
 	     * Remove events handler.
 	     *
 	     * @param listener - Event listener configuration, which should be removed from the list of notified
-	     * listeners. **Important:** Should be the same object which has been passed to the
-	     * {@link addListener}.
+	     * listeners. **Important:** Should be the same object which has been passed to the {@link addListener}.
 	     */
 	    removeListener(listener) {
-	        if (!this.aggregatedListener)
+	        this.eventDispatcher.removeListener(listener);
+	    }
+	    /**
+	     * Remove all events listeners.
+	     */
+	    removeAllListeners() {
+	        this.eventDispatcher.removeAllListeners();
+	    }
+	    /**
+	     * Dispatch received a real-time update.
+	     *
+	     * @param cursor - A time cursor for the next portion of events.
+	     * @param event - A real-time event from multiplexed subscription.
+	     *
+	     * @return `true` if receiver has consumed event.
+	     *
+	     * @internal
+	     */
+	    handleEvent(cursor, event) {
+	        var _a;
+	        if (!this.state.cursor || cursor > this.state.cursor)
+	            this.state.cursor = cursor;
+	        // Check whether this is an old `old` event and it should be ignored or not.
+	        if (this.state.referenceTimetoken && event.data.timetoken < this.state.referenceTimetoken) {
+	            this.state.client.logger.trace(this.constructor.name, () => ({
+	                messageType: 'text',
+	                message: `Event timetoken (${event.data.timetoken}) is older than reference timetoken (${this.state.referenceTimetoken}) for ${this.id} subscription object. Ignoring event.`,
+	            }));
 	            return;
-	        this.eventEmitter.removeListener(listener, this.aggregatedListenerId, this.channelNames, this.groupNames);
-	        this.aggregatedListenerId = undefined;
-	        this.aggregatedListener = undefined;
+	        }
+	        // Don't pass events which are filtered out by the user-provided function.
+	        if (((_a = this.state.options) === null || _a === void 0 ? void 0 : _a.filter) && !this.state.options.filter(event)) {
+	            this.state.client.logger.trace(this.constructor.name, `Event filtered out by filter function for ${this.id} subscription object. Ignoring event.`);
+	            return;
+	        }
+	        const clones = Object.values(this.state.clones);
+	        if (clones.length > 0) {
+	            this.state.client.logger.trace(this.constructor.name, `Notify ${this.id} subscription object clones (count: ${clones.length}) about received event.`);
+	        }
+	        clones.forEach((subscription) => subscription.eventDispatcher.handleEvent(event));
 	    }
 	    /**
-	     * Get list of channels which is used for subscription.
+	     * Graceful object destruction.
 	     *
-	     * @returns List of channel names.
+	     * This is an instance destructor, which will properly deinitialize it:
+	     * - remove and unset all listeners,
+	     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
+	     *
+	     * **Important:** {@link SubscriptionBase#dispose dispose} won't have any effect if a subscription object is part of
+	     * set. To gracefully dispose an object, it should be removed from the set using
+	     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
+	     * {@link SubscriptionBase#dispose dispose} not required.
+	     *
+	     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
 	     */
-	    get channels() {
-	        return this.channelNames.slice(0);
+	    dispose() {
+	        const keys = Object.keys(this.state.clones);
+	        if (keys.length > 1) {
+	            this.state.client.logger.debug(this.constructor.name, `Remove subscription object clone on dispose: ${this.id}`);
+	            delete this.state.clones[this.id];
+	        }
+	        else if (keys.length === 1 && this.state.clones[this.id]) {
+	            this.state.client.logger.debug(this.constructor.name, `Unsubscribe subscription object on dispose: ${this.id}`);
+	            this.unsubscribe();
+	        }
 	    }
 	    /**
-	     * Get list of channel groups which is used for subscription.
+	     * Invalidate subscription object.
 	     *
-	     * @returns List of channel group names.
+	     * Clean up resources used by a subscription object.
+	     *
+	     * **Note:** An invalidated instance won't call the dispatcher to deliver updates to the listeners.
+	     *
+	     * @param forDestroy - Whether subscription object invalidated as part of PubNub client destroy process or not.
+	     *
+	     * @internal
 	     */
-	    get channelGroups() {
-	        return this.groupNames.slice(0);
+	    invalidate(forDestroy = false) {
+	        this.state._isSubscribed = false;
+	        if (forDestroy) {
+	            delete this.state.clones[this.id];
+	            if (Object.keys(this.state.clones).length === 0) {
+	                this.state.client.logger.trace(this.constructor.name, 'Last clone removed. Reset shared subscription state.');
+	                this.state.subscriptionInput.removeAll();
+	                this.state.parents = [];
+	            }
+	        }
+	    }
+	    /**
+	     * Start receiving real-time updates.
+	     *
+	     * @param parameters - Additional subscription configuration options which should be used
+	     * for request.
+	     */
+	    subscribe(parameters) {
+	        if (this.state.isSubscribed) {
+	            this.state.client.logger.trace(this.constructor.name, 'Already subscribed. Ignoring subscribe request.');
+	            return;
+	        }
+	        this.state.client.logger.debug(this.constructor.name, () => {
+	            if (!parameters)
+	                return { messageType: 'text', message: 'Subscribe' };
+	            return { messageType: 'object', message: parameters, details: 'Subscribe with parameters:' };
+	        });
+	        this.state.isSubscribed = true;
+	        this.updateSubscription({ subscribing: true, timetoken: parameters === null || parameters === void 0 ? void 0 : parameters.timetoken });
+	    }
+	    /**
+	     * Stop real-time events processing.
+	     *
+	     * **Important:** {@link SubscriptionBase#unsubscribe unsubscribe} won't have any effect if a subscription object
+	     * is part of active (subscribed) set. To unsubscribe an object, it should be removed from the set using
+	     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
+	     * {@link SubscriptionBase#unsubscribe unsubscribe} not required.
+	     *
+	     * **Note:** Unsubscribed instance won't call the dispatcher to deliver updates to the listeners.
+	     */
+	    unsubscribe() {
+	        // Check whether an instance-level subscription flag not set or parent has active subscription.
+	        if (!this.state._isSubscribed || this.state.isSubscribed) {
+	            // Warn if a user tries to unsubscribe using specific subscription which subscribed as part of a subscription set.
+	            if (!this.state._isSubscribed && this.state.parents.length > 0 && this.state.isSubscribed) {
+	                this.state.client.logger.warn(this.constructor.name, () => ({
+	                    messageType: 'object',
+	                    details: 'Subscription is subscribed as part of a subscription set. Remove from active sets to unsubscribe:',
+	                    message: this.state.parents.filter((subscriptionSet) => subscriptionSet.isSubscribed),
+	                }));
+	                return;
+	            }
+	            else if (!this.state._isSubscribed) {
+	                this.state.client.logger.trace(this.constructor.name, 'Not subscribed. Ignoring unsubscribe request.');
+	                return;
+	            }
+	        }
+	        this.state.client.logger.debug(this.constructor.name, 'Unsubscribe');
+	        this.state.isSubscribed = true;
+	        delete this.state.cursor;
+	        this.updateSubscription({ subscribing: false });
+	    }
+	    /**
+	     * Update channels and groups used by subscription loop.
+	     *
+	     * @param parameters - Subscription loop update parameters.
+	     * @param parameters.subscribing - Whether subscription updates as part of subscription or unsubscription.
+	     * @param [parameters.timetoken] - Subscription catch-up timetoken.
+	     * @param [parameters.subscriptions] - List of subscriptions which should be used to modify a subscription loop
+	     * object.
+	     *
+	     * @internal
+	     */
+	    updateSubscription(parameters) {
+	        var _a, _b;
+	        if (parameters === null || parameters === void 0 ? void 0 : parameters.timetoken) {
+	            if (((_a = this.state.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) && ((_b = this.state.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) !== '0') {
+	                if (parameters.timetoken !== '0' && parameters.timetoken > this.state.cursor.timetoken)
+	                    this.state.cursor.timetoken = parameters.timetoken;
+	            }
+	            else
+	                this.state.cursor = { timetoken: parameters.timetoken };
+	        }
+	        const subscriptions = parameters.subscriptions && parameters.subscriptions.length > 0 ? parameters.subscriptions : undefined;
+	        if (parameters.subscribing) {
+	            this.register(Object.assign(Object.assign({}, (parameters.timetoken ? { cursor: this.state.cursor } : {})), (subscriptions ? { subscriptions } : {})));
+	        }
+	        else
+	            this.unregister(subscriptions);
 	    }
 	}
 
 	/**
+	 * {@link SubscriptionSet} state object.
+	 *
+	 * State object used across multiple {@link SubscriptionSet} object clones.
+	 *
+	 * @internal
+	 */
+	class SubscriptionSetState extends SubscriptionBaseState {
+	    /**
+	     * Create a subscription state object.
+	     *
+	     * @param parameters - State configuration options
+	     * @param parameters.client - PubNub client which will work with a subscription object.
+	     * @param parameters.subscriptions - List of subscriptions managed by set.
+	     * @param [parameters.options] - Subscription behavior options.
+	     */
+	    constructor(parameters) {
+	        const subscriptionInput = new SubscriptionInput({});
+	        parameters.subscriptions.forEach((subscription) => subscriptionInput.add(subscription.state.subscriptionInput));
+	        super(parameters.client, subscriptionInput, parameters.options, parameters.client.subscriptionTimetoken);
+	        this.subscriptions = parameters.subscriptions;
+	    }
+	    /**
+	     * Add a single subscription object to the set.
+	     *
+	     * @param subscription - Another entity's subscription object, which should be added.
+	     */
+	    addSubscription(subscription) {
+	        if (this.subscriptions.includes(subscription))
+	            return;
+	        subscription.state.addParentState(this);
+	        this.subscriptions.push(subscription);
+	        // Update subscription input.
+	        this.subscriptionInput.add(subscription.state.subscriptionInput);
+	    }
+	    /**
+	     * Remove a single subscription object from the set.
+	     *
+	     * @param subscription - Another entity's subscription object, which should be removed.
+	     * @param clone - Whether a target subscription is a clone.
+	     */
+	    removeSubscription(subscription, clone) {
+	        const index = this.subscriptions.indexOf(subscription);
+	        if (index === -1)
+	            return;
+	        this.subscriptions.splice(index, 1);
+	        if (!clone)
+	            subscription.state.removeParentState(this);
+	        // Update subscription input.
+	        this.subscriptionInput.remove(subscription.state.subscriptionInput);
+	    }
+	    /**
+	     * Remove any registered subscription object.
+	     */
+	    removeAllSubscriptions() {
+	        this.subscriptions.forEach((subscription) => subscription.state.removeParentState(this));
+	        this.subscriptions.splice(0, this.subscriptions.length);
+	        this.subscriptionInput.removeAll();
+	    }
+	}
+	/**
 	 * Multiple entities subscription set object which can be used to receive and handle real-time
 	 * updates.
 	 *
-	 * Subscription set object represent collection of per-entity subscription objects and allow
+	 * Subscription set object represents a collection of per-entity subscription objects and allows
 	 * processing them at once for subscription loop and events handling.
 	 */
-	class SubscriptionSet extends SubscribeCapable {
+	class SubscriptionSet extends SubscriptionBase {
 	    /**
 	     * Create entities' subscription set object.
 	     *
-	     * Subscription set object represent collection of per-entity subscription objects and allow
+	     * Subscription set object represents a collection of per-entity subscription objects and allows
 	     * processing them at once for subscription loop and events handling.
 	     *
-	     * @param channels - List of channels which should be used in subscription loop.
-	     * @param channelGroups - List of channel groups which should be used in subscription loop.
-	     * @param subscriptionOptions - Entities' subscription object configuration.
-	     * @param eventEmitter - Event emitter, which will notify listeners about updates received for
-	     * entities' channels / groups.
-	     * @param pubnub - PubNub instance which will perform subscribe / unsubscribe requests for
-	     * entities.
+	     * @param parameters - Subscription set object configuration.
 	     *
 	     * @returns Ready to use entities' subscription set object.
 	     *
 	     * @internal
 	     */
-	    constructor({ channels = [], channelGroups = [], subscriptionOptions, eventEmitter, pubnub, }) {
-	        super();
-	        /**
-	         * List of channel names for subscription loop.
-	         *
-	         * List of entities' names which can have additional entries depending on from configuration
-	         * options. Presence events observing adds additional name to be used along with entity name.
-	         *
-	         * **Note:** Depending on from the entities' type, they may provide a list of channels which are
-	         * used to receive real-time updates for it.
-	         *
-	         * @internal
-	         */
-	        this.channelNames = [];
-	        /**
-	         * List of channel group names for subscription loop.
-	         *
-	         * List of entities' names which can have additional entries depending on from configuration
-	         * options. Presence events observing adds additional name to be used along with entity name.
-	         *
-	         * **Note:** Depending on from the entities' type, they may provide a list of channels which are
-	         * used to receive real-time updates for it.
-	         *
-	         * @internal
-	         */
-	        this.groupNames = [];
-	        /**
-	         * List of per-entity subscription objects.
-	         *
-	         * @internal
-	         */
-	        this.subscriptionList = [];
-	        /**
-	         * Whether subscribed ({@link SubscribeCapable#subscribe}) automatically during subscription
-	         * object / sets manipulation or not.
-	         *
-	         * @internal
-	         */
-	        this.subscribedAutomatically = false;
-	        /**
-	         * Whether subscribable object subscribed ({@link SubscribeCapable#subscribe}) or not.
-	         *
-	         * @internal
-	         */
-	        this.subscribed = false;
-	        this.options = subscriptionOptions;
-	        this.eventEmitter = eventEmitter;
-	        this.pubnub = pubnub;
-	        channels.forEach((c) => this.subscriptionList.push(this.pubnub.channel(c).subscription(this.options)));
-	        channelGroups.forEach((cg) => this.subscriptionList.push(this.pubnub.channelGroup(cg).subscription(this.options)));
-	        this.typeBasedListener = {};
-	        this.typeBasedListenerId = eventEmitter.addListener(this.typeBasedListener, this.channelNames, this.groupNames);
-	        this.updateListeners();
-	    }
-	    /**
-	     * Add additional entity's subscription to the subscription set.
-	     *
-	     * **Important:** Changes will be effective only after {@link SubscribeCapable#subscribe} call or
-	     * next subscription loop.
-	     *
-	     * @param subscription - Other entity's subscription object, which should be added.
-	     */
-	    addSubscription(subscription) {
-	        if (!this.subscriptionList.includes(subscription))
-	            this.subscriptionList.push(subscription);
-	        // Make sure to listen events on channels / groups added with `subscription`.
-	        this.updateListeners();
-	        // Subscribe subscription object if subscription set already subscribed.
-	        // @ts-expect-error: Required access of protected field.
-	        if (this.subscribed && !subscription.subscribed) {
-	            subscription.subscribe();
-	            // @ts-expect-error: Required modification of protected field.
-	            subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
+	    constructor(parameters) {
+	        let state;
+	        if ('client' in parameters) {
+	            let subscriptions = [];
+	            if (!parameters.subscriptions && parameters.entities) {
+	                parameters.entities.forEach((entity) => subscriptions.push(entity.subscription(parameters.options)));
+	            }
+	            else if (parameters.subscriptions)
+	                subscriptions = parameters.subscriptions;
+	            state = new SubscriptionSetState({ client: parameters.client, subscriptions, options: parameters.options });
+	            subscriptions.forEach((subscription) => subscription.state.addParentState(state));
+	            state.client.logger.debug('SubscriptionSet', () => ({
+	                messageType: 'object',
+	                details: 'Create subscription set with parameters:',
+	                message: Object.assign({ subscriptions: state.subscriptions }, (parameters.options ? parameters.options : {})),
+	            }));
 	        }
-	    }
-	    /**
-	     * Remove entity's subscription object from the set.
-	     *
-	     * **Important:** Changes will be effective only after {@link SubscribeCapable#unsubscribe} call or
-	     * next subscription loop.
-	     *
-	     * @param subscription - Other entity's subscription object, which should be removed.
-	     */
-	    removeSubscription(subscription) {
-	        this.subscriptionList = this.subscriptionList.filter((sub) => sub !== subscription);
-	        // Make sure to stop listening for events from channels / groups removed with `subscription`.
-	        this.updateListeners();
-	        // @ts-expect-error: Required access of protected field.
-	        if (subscription.subscribedAutomatically)
-	            subscription.unsubscribe();
-	    }
-	    /**
-	     * Merge with other subscription set object.
-	     *
-	     * **Important:** Changes will be effective only after {@link SubscribeCapable#subscribe} call or
-	     * next subscription loop.
-	     *
-	     * @param subscriptionSet - Other entities' subscription set, which should be joined.
-	     */
-	    addSubscriptionSet(subscriptionSet) {
-	        this.subscriptionList = Array.from(new Set([...this.subscriptionList, ...subscriptionSet.subscriptions]));
-	        // Make sure to listen events on channels / groups added with `subscription set`.
-	        this.updateListeners();
-	        // Subscribe subscription object if subscription set already subscribed.
-	        if (this.subscribed && !subscriptionSet.subscribed) {
-	            subscriptionSet.subscribe();
-	            subscriptionSet.subscribedAutomatically = true; // should be placed after .subscribe() call.
+	        else {
+	            state = parameters.state;
+	            state.client.logger.debug('SubscriptionSet', 'Create subscription set clone');
 	        }
+	        super(state);
+	        this.state.storeClone(this.id, this);
+	        // Update a parent sets list for original set subscriptions.
+	        state.subscriptions.forEach((subscription) => subscription.addParentSet(this));
 	    }
 	    /**
-	     * Subtract other subscription set object.
+	     * Get a {@link SubscriptionSet} object state.
 	     *
-	     * **Important:** Changes will be effective only after {@link SubscribeCapable#unsubscribe} call or
-	     * next subscription loop.
+	     * @returns: {@link SubscriptionSet} object state.
 	     *
-	     * @param subscriptionSet - Other entities' subscription set, which should be subtracted.
+	     * @internal
 	     */
-	    removeSubscriptionSet(subscriptionSet) {
-	        this.subscriptionList = this.subscriptionList.filter((sub) => !subscriptionSet.subscriptions.includes(sub));
-	        // Make sure to stop listening for events from channels / groups removed with `subscription set`.
-	        this.updateListeners();
-	        if (subscriptionSet.subscribedAutomatically)
-	            subscriptionSet.unsubscribe();
+	    get state() {
+	        return super.state;
 	    }
 	    /**
-	     * Get list of entities' subscription objects registered in subscription set.
+	     * Get a list of entities' subscription objects registered in a subscription set.
 	     *
 	     * @returns Entities' subscription objects list.
 	     */
 	    get subscriptions() {
-	        return this.subscriptionList.slice(0);
+	        return this.state.subscriptions.slice(0);
 	    }
+	    // --------------------------------------------------------
+	    // -------------------- Event handler ---------------------
+	    // --------------------------------------------------------
+	    // region Event handler
 	    /**
-	     * Update listeners for current {@link SubscriptionSet} state.
+	     * Dispatch received a real-time update.
 	     *
-	     * When {@link Subscription} or {@link SubscriptionSet} added / removed it is **required** to
-	     * update mapping of channels / groups (based on current {@link SubscriptionSet} state) to the
-	     * event listeners.
+	     * @param cursor - A time cursor for the next portion of events.
+	     * @param event - A real-time event from multiplexed subscription.
+	     *
+	     * @return `true` if receiver has consumed event.
 	     *
 	     * @internal
 	     */
-	    updateListeners() {
-	        // Actual list of channels and groups.
-	        const channelGroups = [];
-	        const channels = [];
-	        // Gather actual information about active channels / groups.
-	        this.subscriptionList.forEach((subscription) => {
-	            if (subscription.channelGroups.length)
-	                channelGroups.push(...subscription.channelGroups);
-	            if (subscription.channels.length)
-	                channels.push(...subscription.channels);
-	        });
-	        // Identify channels / groups which should be added / removed.
-	        const channelsToRemove = this.channelNames.filter((channel) => !channels.includes(channel));
-	        const groupsToRemove = this.groupNames.filter((group) => !channelGroups.includes(group));
-	        const channelsToAdd = channels.filter((channel) => !this.channelNames.includes(channel));
-	        const groupsToAdd = channelGroups.filter((group) => !this.groupNames.includes(group));
-	        // Removing type-based listener for unused channels / groups.
-	        if (channelsToRemove.length || groupsToRemove.length) {
-	            this.eventEmitter.removeListener(this.typeBasedListener, this.typeBasedListenerId, channelsToRemove, groupsToRemove);
+	    handleEvent(cursor, event) {
+	        var _a;
+	        // Check whether an event is not designated for this subscription set.
+	        if (!this.state.subscriptionInput.contains((_a = event.data.subscription) !== null && _a !== void 0 ? _a : event.data.channel))
+	            return;
+	        // Check whether `event` can be processed or not.
+	        if (!this.state._isSubscribed) {
+	            this.state.client.logger.trace(this.constructor.name, `Subscription set ${this.id} is not subscribed. Ignoring event.`);
+	            return;
 	        }
-	        // Adding type-based listener for unused channels / groups.
-	        if (channelsToAdd.length || groupsToAdd.length)
-	            this.eventEmitter.addListener(this.typeBasedListener, channelsToAdd, groupsToAdd, this.typeBasedListenerId);
-	        const aggregatedListener = this.aggregatedListener;
-	        if (aggregatedListener)
-	            this.removeListener(aggregatedListener);
-	        // Set actual list of channels and groups.
-	        this.groupNames = channelGroups;
-	        this.channelNames = channels;
-	        if (aggregatedListener)
-	            this.addListener(aggregatedListener);
+	        super.handleEvent(cursor, event);
+	        if (this.state.subscriptions.length > 0) {
+	            this.state.client.logger.trace(this.constructor.name, `Notify ${this.id} subscription set subscriptions (count: ${this.state.subscriptions.length}) about received event.`);
+	        }
+	        this.state.subscriptions.forEach((subscription) => subscription.handleEvent(cursor, event));
+	    }
+	    // endregion
+	    /**
+	     User-provided subscription input associated with this {@link SubscriptionSet} object.
+	     *
+	     * @param forUnsubscribe - Whether list subscription input created for unsubscription (means entity should be free).
+	     *
+	     * @returns Subscription input object.
+	     *
+	     * @internal
+	     */
+	    subscriptionInput(forUnsubscribe = false) {
+	        let subscriptionInput = this.state.subscriptionInput;
+	        this.state.subscriptions.forEach((subscription) => {
+	            if (forUnsubscribe && subscription.state.entity.subscriptionsCount > 0)
+	                subscriptionInput = subscriptionInput.without(subscription.state.subscriptionInput);
+	        });
+	        return subscriptionInput;
+	    }
+	    /**
+	     * Make a bare copy of the {@link SubscriptionSet} object.
+	     *
+	     * Copy won't have any type-specific listeners or added listener objects but will have the same internal state as
+	     * the source object.
+	     *
+	     * @returns Bare copy of a {@link SubscriptionSet} object.
+	     */
+	    cloneEmpty() {
+	        return new SubscriptionSet({ state: this.state });
+	    }
+	    /**
+	     * Graceful {@link SubscriptionSet} destruction.
+	     *
+	     * This is an instance destructor, which will properly deinitialize it:
+	     * - remove and unset all listeners,
+	     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
+	     *
+	     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
+	     */
+	    dispose() {
+	        const isLastClone = this.state.isLastClone;
+	        this.state.subscriptions.forEach((subscription) => {
+	            subscription.removeParentSet(this);
+	            if (isLastClone)
+	                subscription.state.removeParentState(this.state);
+	        });
+	        super.dispose();
+	    }
+	    /**
+	     * Invalidate {@link SubscriptionSet} object.
+	     *
+	     * Clean up resources used by a subscription object. All {@link SubscriptionObject subscription} objects will be
+	     * removed.
+	     *
+	     * **Important:** This method is used only when a global subscription set is used (backward compatibility).
+	     *
+	     * **Note:** An invalidated instance won't call the dispatcher to deliver updates to the listeners.
+	     *
+	     * @param forDestroy - Whether subscription object invalidated as part of PubNub client destroy process or not.
+	     *
+	     * @internal
+	     */
+	    invalidate(forDestroy = false) {
+	        const subscriptions = forDestroy ? this.state.subscriptions.slice(0) : this.state.subscriptions;
+	        subscriptions.forEach((subscription) => {
+	            if (forDestroy) {
+	                subscription.state.entity.decreaseSubscriptionCount(this.state.id);
+	                subscription.removeParentSet(this);
+	            }
+	            subscription.invalidate(forDestroy);
+	        });
+	        if (forDestroy)
+	            this.state.removeAllSubscriptions();
+	        super.invalidate();
+	    }
+	    /**
+	     * Add an entity's subscription to the subscription set.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscription - Another entity's subscription object, which should be added.
+	     */
+	    addSubscription(subscription) {
+	        this.addSubscriptions([subscription]);
+	    }
+	    /**
+	     * Add an entity's subscriptions to the subscription set.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscriptions - List of entity's subscription objects, which should be added.
+	     */
+	    addSubscriptions(subscriptions) {
+	        const inactiveSubscriptions = [];
+	        const activeSubscriptions = [];
+	        this.state.client.logger.debug(this.constructor.name, () => {
+	            const ignoredSubscriptions = [];
+	            const subscriptionsToAdd = [];
+	            subscriptions.forEach((subscription) => {
+	                if (!this.state.subscriptions.includes(subscription))
+	                    subscriptionsToAdd.push(subscription);
+	                else
+	                    ignoredSubscriptions.push(subscription);
+	            });
+	            return {
+	                messageType: 'object',
+	                details: `Add subscriptions to ${this.id} (subscriptions count: ${this.state.subscriptions.length + subscriptionsToAdd.length}):`,
+	                message: { addedSubscriptions: subscriptionsToAdd, ignoredSubscriptions },
+	            };
+	        });
+	        subscriptions
+	            .filter((subscription) => !this.state.subscriptions.includes(subscription))
+	            .forEach((subscription) => {
+	            if (subscription.state.isSubscribed)
+	                activeSubscriptions.push(subscription);
+	            else
+	                inactiveSubscriptions.push(subscription);
+	            subscription.addParentSet(this);
+	            this.state.addSubscription(subscription);
+	        });
+	        // Check whether there are any subscriptions for which the subscription loop should be changed or not.
+	        if ((activeSubscriptions.length === 0 && inactiveSubscriptions.length === 0) || !this.state.isSubscribed)
+	            return;
+	        activeSubscriptions.forEach(({ state }) => state.entity.increaseSubscriptionCount(this.state.id));
+	        if (inactiveSubscriptions.length > 0)
+	            this.updateSubscription({ subscribing: true, subscriptions: inactiveSubscriptions });
+	    }
+	    /**
+	     * Remove an entity's subscription object from the set.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscription - Another entity's subscription object, which should be removed.
+	     */
+	    removeSubscription(subscription) {
+	        this.removeSubscriptions([subscription]);
+	    }
+	    /**
+	     * Remove an entity's subscription objects from the set.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscriptions - List entity's subscription objects, which should be removed.
+	     */
+	    removeSubscriptions(subscriptions) {
+	        const activeSubscriptions = [];
+	        this.state.client.logger.debug(this.constructor.name, () => {
+	            const ignoredSubscriptions = [];
+	            const subscriptionsToRemove = [];
+	            subscriptions.forEach((subscription) => {
+	                if (this.state.subscriptions.includes(subscription))
+	                    subscriptionsToRemove.push(subscription);
+	                else
+	                    ignoredSubscriptions.push(subscription);
+	            });
+	            return {
+	                messageType: 'object',
+	                details: `Remove subscriptions from ${this.id} (subscriptions count: ${this.state.subscriptions.length}):`,
+	                message: { removedSubscriptions: subscriptionsToRemove, ignoredSubscriptions },
+	            };
+	        });
+	        subscriptions
+	            .filter((subscription) => this.state.subscriptions.includes(subscription))
+	            .forEach((subscription) => {
+	            if (subscription.state.isSubscribed)
+	                activeSubscriptions.push(subscription);
+	            subscription.removeParentSet(this);
+	            this.state.removeSubscription(subscription, subscription.parentSetsCount > 1);
+	        });
+	        // Check whether there are any subscriptions for which the subscription loop should be changed or not.
+	        if (activeSubscriptions.length === 0 || !this.state.isSubscribed)
+	            return;
+	        this.updateSubscription({ subscribing: false, subscriptions: activeSubscriptions });
+	    }
+	    /**
+	     * Merge with another {@link SubscriptionSet} object.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscriptionSet - Other entities' subscription set, which should be joined.
+	     */
+	    addSubscriptionSet(subscriptionSet) {
+	        this.addSubscriptions(subscriptionSet.subscriptions);
+	    }
+	    /**
+	     * Subtract another {@link SubscriptionSet} object.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscriptionSet - Other entities' subscription set, which should be subtracted.
+	     */
+	    removeSubscriptionSet(subscriptionSet) {
+	        this.removeSubscriptions(subscriptionSet.subscriptions);
+	    }
+	    /**
+	     * Register {@link SubscriptionSet} object for real-time events' retrieval.
+	     *
+	     * @param parameters - Object registration parameters.
+	     * @param [parameters.cursor] - Subscription real-time events catch-up cursor.
+	     * @param [parameters.subscriptions] - List of subscription objects which should be registered (in case of partial
+	     * modification).
+	     *
+	     * @internal
+	     */
+	    register(parameters) {
+	        var _a;
+	        const subscriptions = ((_a = parameters.subscriptions) !== null && _a !== void 0 ? _a : this.state.subscriptions);
+	        subscriptions.forEach(({ state }) => state.entity.increaseSubscriptionCount(this.state.id));
+	        this.state.client.logger.trace(this.constructor.name, () => ({
+	            messageType: 'text',
+	            message: `Register subscription for real-time events: ${this}`,
+	        }));
+	        this.state.client.registerEventHandleCapable(this, parameters.cursor, subscriptions);
+	    }
+	    /**
+	     * Unregister {@link SubscriptionSet} object from real-time events' retrieval.
+	     *
+	     * @param [subscriptions] - List of subscription objects which should be unregistered (in case of partial
+	     * modification).
+	     *
+	     * @internal
+	     */
+	    unregister(subscriptions) {
+	        const activeSubscriptions = (subscriptions !== null && subscriptions !== void 0 ? subscriptions : this.state.subscriptions);
+	        activeSubscriptions.forEach(({ state }) => state.entity.decreaseSubscriptionCount(this.state.id));
+	        this.state.client.logger.trace(this.constructor.name, () => ({
+	            messageType: 'text',
+	            message: `Unregister subscription from real-time events: ${this}`,
+	        }));
+	        this.state.client.unregisterEventHandleCapable(this, activeSubscriptions);
+	    }
+	    /**
+	     * Stringify subscription object.
+	     *
+	     * @returns Serialized subscription object.
+	     */
+	    toString() {
+	        const state = this.state;
+	        return `${this.constructor.name} { id: ${this.id}, stateId: ${state.id}, clonesCount: ${Object.keys(this.state.clones).length}, isSubscribed: ${state.isSubscribed}, subscriptions: [${state.subscriptions
+            .map((sub) => sub.toString())
+            .join(', ')}] }`;
 	    }
 	}
 
 	/**
+	 * {@link Subscription} state object.
+	 *
+	 * State object used across multiple {@link Subscription} object clones.
+	 *
+	 * @internal
+	 */
+	class SubscriptionState extends SubscriptionBaseState {
+	    /**
+	     * Create a subscription state object.
+	     *
+	     * @param parameters - State configuration options
+	     * @param parameters.client - PubNub client which will work with a subscription object.
+	     * @param parameters.entity - Entity for which a subscription object has been created.
+	     * @param [parameters.options] - Subscription behavior options.
+	     */
+	    constructor(parameters) {
+	        var _a, _b;
+	        const names = parameters.entity.subscriptionNames((_b = (_a = parameters.options) === null || _a === void 0 ? void 0 : _a.receivePresenceEvents) !== null && _b !== void 0 ? _b : false);
+	        const subscriptionInput = new SubscriptionInput({
+	            [parameters.entity.subscriptionType == SubscriptionType.Channel ? 'channels' : 'channelGroups']: names,
+	        });
+	        super(parameters.client, subscriptionInput, parameters.options, parameters.client.subscriptionTimetoken);
+	        this.entity = parameters.entity;
+	    }
+	}
+	/**
 	 * Single-entity subscription object which can be used to receive and handle real-time updates.
 	 */
-	class Subscription extends SubscribeCapable {
+	class Subscription extends SubscriptionBase {
 	    /**
-	     * Create entity's subscription object.
+	     * Create a subscribing capable object for entity.
 	     *
-	     * @param channels - List of channels which should be used in subscription loop.
-	     * @param channelGroups - List of channel groups which should be used in subscription loop.
-	     * @param subscriptionOptions - Per-entity subscription object configuration.
-	     * @param eventEmitter - Event emitter, which will notify listeners about updates received for
-	     * entity channels / groups.
-	     * @param pubnub - PubNub instance which will perform subscribe / unsubscribe requests for entity.
-	     *
-	     * @returns Ready to use entity's subscription object.
+	     * @param parameters - Subscription object configuration.
 	     *
 	     * @internal
 	     */
-	    constructor({ channels, channelGroups, subscriptionOptions, eventEmitter, pubnub, }) {
-	        super();
+	    constructor(parameters) {
+	        if ('client' in parameters) {
+	            parameters.client.logger.debug('Subscription', () => ({
+	                messageType: 'object',
+	                details: 'Create subscription with parameters:',
+	                message: Object.assign({ entity: parameters.entity }, (parameters.options ? parameters.options : {})),
+	            }));
+	        }
+	        else
+	            parameters.state.client.logger.debug('Subscription', 'Create subscription clone');
+	        super('state' in parameters ? parameters.state : new SubscriptionState(parameters));
 	        /**
-	         * List of channel names for subscription loop.
+	         * List of subscription {@link SubscriptionSet sets} which contains {@link Subscription subscription}.
 	         *
-	         * Entity may have few because of subscription configuration options. Presence events observing
-	         * adds additional name to be used along with entity name.
+	         * List if used to track usage of a specific {@link Subscription subscription} in other subscription
+	         * {@link SubscriptionSet sets}.
 	         *
-	         * **Note:** Depending on from the entity type, it may provide a list of channels which are used
-	         * to receive real-time updates for it.
+	         * **Important:** Tracking is required to prevent cloned instance dispose if there are sets that still use it.
 	         *
 	         * @internal
 	         */
-	        this.channelNames = [];
+	        this.parents = [];
 	        /**
-	         * List of channel group names for subscription loop.
+	         * List of fingerprints from updates which has been handled already.
 	         *
-	         * Entity may have few because of subscription configuration options. Presence events observing
-	         * adds additional name to be used along with entity name.
-	         *
-	         * **Note:** Depending on from the entity type, it may provide a list of channel groups which is
-	         * sed to receive real-time updates for it.
+	         * **Important:** Tracking is required to avoid repetitive call of the subscription object's listener when the object
+	         * is part of multiple subscribed sets. Handler will be called once, and then the fingerprint will be stored in this
+	         * list to avoid another listener call for it.
 	         *
 	         * @internal
 	         */
-	        this.groupNames = [];
-	        /**
-	         * Whether subscribed ({@link SubscribeCapable#subscribe}) automatically during subscription
-	         * object / sets manipulation or not.
-	         *
-	         * @internal
-	         */
-	        this.subscribedAutomatically = false;
-	        /**
-	         * Whether subscribable object subscribed ({@link SubscribeCapable#subscribe}) or not.
-	         *
-	         * @internal
-	         */
-	        this.subscribed = false;
-	        this.channelNames = channels;
-	        this.groupNames = channelGroups;
-	        this.options = subscriptionOptions;
-	        this.pubnub = pubnub;
-	        this.eventEmitter = eventEmitter;
-	        this.typeBasedListener = {};
-	        eventEmitter.addListener(this.typeBasedListener, this.channelNames, this.groupNames);
+	        this.handledUpdates = [];
+	        this.state.storeClone(this.id, this);
 	    }
 	    /**
-	     * Merge entities' subscription objects into subscription set.
+	     * Get a {@link Subscription} object state.
 	     *
-	     * @param subscription - Other entity's subscription object to be merged with receiver.
-	     * @return Subscription set which contains both receiver and other entities' subscription objects.
+	     * @returns: {@link Subscription} object state.
+	     *
+	     * @internal
+	     */
+	    get state() {
+	        return super.state;
+	    }
+	    /**
+	     * Get number of {@link SubscriptionSet} which use this subscription object.
+	     *
+	     * @returns Number of {@link SubscriptionSet} which use this subscription object.
+	     *
+	     * @internal
+	     */
+	    get parentSetsCount() {
+	        return this.parents.length;
+	    }
+	    // --------------------------------------------------------
+	    // -------------------- Event handler ---------------------
+	    // --------------------------------------------------------
+	    // region Event handler
+	    /**
+	     * Dispatch received a real-time update.
+	     *
+	     * @param cursor - A time cursor for the next portion of events.
+	     * @param event - A real-time event from multiplexed subscription.
+	     *
+	     * @return `true` if receiver has consumed event.
+	     *
+	     * @internal
+	     */
+	    handleEvent(cursor, event) {
+	        var _a;
+	        if (!this.state.isSubscribed)
+	            return;
+	        if (this.parentSetsCount > 0) {
+	            const fingerprint = messageFingerprint(event.data);
+	            if (this.handledUpdates.includes(fingerprint)) {
+	                this.state.client.logger.trace(this.constructor.name, `Message (${fingerprint}) already handled. Ignoring.`);
+	                return;
+	            }
+	            // Update a list of tracked messages and shrink it if too big.
+	            this.handledUpdates.push(fingerprint);
+	            if (this.handledUpdates.length > 10)
+	                this.handledUpdates.shift();
+	        }
+	        // Check whether an event is not designated for this subscription set.
+	        if (!this.state.subscriptionInput.contains((_a = event.data.subscription) !== null && _a !== void 0 ? _a : event.data.channel))
+	            return;
+	        super.handleEvent(cursor, event);
+	    }
+	    // endregion
+	    /**
+	     * User-provided subscription input associated with this {@link Subscription} object.
+	     *
+	     * @param forUnsubscribe - Whether list subscription input created for unsubscription (means entity should be free).
+	     *
+	     * @returns Subscription input object.
+	     *
+	     * @internal
+	     */
+	    subscriptionInput(forUnsubscribe = false) {
+	        if (forUnsubscribe && this.state.entity.subscriptionsCount > 0)
+	            return new SubscriptionInput({});
+	        return this.state.subscriptionInput;
+	    }
+	    /**
+	     * Make a bare copy of the {@link Subscription} object.
+	     *
+	     * Copy won't have any type-specific listeners or added listener objects but will have the same internal state as
+	     * the source object.
+	     *
+	     * @returns Bare copy of a {@link Subscription} object.
+	     */
+	    cloneEmpty() {
+	        return new Subscription({ state: this.state });
+	    }
+	    /**
+	     * Graceful {@link Subscription} object destruction.
+	     *
+	     * This is an instance destructor, which will properly deinitialize it:
+	     * - remove and unset all listeners,
+	     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
+	     *
+	     * **Important:** {@link Subscription#dispose dispose} won't have any effect if a subscription object is part of
+	     * {@link SubscriptionSet set}. To gracefully dispose an object, it should be removed from the set using
+	     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
+	     * {@link Subscription#dispose dispose} not required).
+	     *
+	     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
+	     */
+	    dispose() {
+	        if (this.parentSetsCount > 0) {
+	            this.state.client.logger.debug(this.constructor.name, () => ({
+	                messageType: 'text',
+	                message: `'${this.state.entity.subscriptionNames()}' subscription still in use. Ignore dispose request.`,
+	            }));
+	            return;
+	        }
+	        this.handledUpdates.splice(0, this.handledUpdates.length);
+	        super.dispose();
+	    }
+	    /**
+	     * Invalidate subscription object.
+	     *
+	     * Clean up resources used by a subscription object.
+	     *
+	     * **Note:** An invalidated instance won't call the dispatcher to deliver updates to the listeners.
+	     *
+	     * @param forDestroy - Whether subscription object invalidated as part of PubNub client destroy process or not.
+	     *
+	     * @internal
+	     */
+	    invalidate(forDestroy = false) {
+	        if (forDestroy)
+	            this.state.entity.decreaseSubscriptionCount(this.state.id);
+	        this.handledUpdates.splice(0, this.handledUpdates.length);
+	        super.invalidate(forDestroy);
+	    }
+	    /**
+	     * Add another {@link SubscriptionSet} into which subscription has been added.
+	     *
+	     * @param parent - {@link SubscriptionSet} which has been modified.
+	     *
+	     * @internal
+	     */
+	    addParentSet(parent) {
+	        if (!this.parents.includes(parent)) {
+	            this.parents.push(parent);
+	            this.state.client.logger.trace(this.constructor.name, `Add parent subscription set for ${this.id}: ${parent.id}. Parent subscription set count: ${this.parentSetsCount}`);
+	        }
+	    }
+	    /**
+	     * Remove {@link SubscriptionSet} upon subscription removal from it.
+	     *
+	     * @param parent - {@link SubscriptionSet} which has been modified.
+	     *
+	     * @internal
+	     */
+	    removeParentSet(parent) {
+	        const parentIndex = this.parents.indexOf(parent);
+	        if (parentIndex !== -1) {
+	            this.parents.splice(parentIndex, 1);
+	            this.state.client.logger.trace(this.constructor.name, `Remove parent subscription set from ${this.id}: ${parent.id}. Parent subscription set count: ${this.parentSetsCount}`);
+	        }
+	        if (this.parentSetsCount === 0)
+	            this.handledUpdates.splice(0, this.handledUpdates.length);
+	    }
+	    /**
+	     * Merge entities' subscription objects into {@link SubscriptionSet}.
+	     *
+	     * @param subscription - Another entity's subscription object to be merged with receiver.
+	     *
+	     * @return {@link SubscriptionSet} which contains both receiver and other entities' subscription objects.
 	     */
 	    addSubscription(subscription) {
+	        this.state.client.logger.debug(this.constructor.name, () => ({
+	            messageType: 'text',
+	            message: `Create set with subscription: ${subscription}`,
+	        }));
 	        const subscriptionSet = new SubscriptionSet({
-	            channels: [...this.channelNames, ...subscription.channels],
-	            channelGroups: [...this.groupNames, ...subscription.channelGroups],
-	            subscriptionOptions: Object.assign(Object.assign({}, this.options), subscription === null || subscription === void 0 ? void 0 : subscription.options),
-	            eventEmitter: this.eventEmitter,
-	            pubnub: this.pubnub,
+	            client: this.state.client,
+	            subscriptions: [this, subscription],
+	            options: this.state.options,
 	        });
-	        // Subscribe whole subscription set if it has been created with receiving subscription object
-	        // which is already subscribed.
-	        if (this.subscribed) {
-	            if (!subscription.subscribed) {
-	                subscription.subscribe();
-	                subscription.subscribedAutomatically = true; // should be placed after .subscribe() call.
-	            }
-	            if (this.aggregatedListener)
-	                subscriptionSet.addListener(this.aggregatedListener);
-	            this.pubnub.registerSubscribeCapable(subscriptionSet);
-	            // @ts-expect-error: Required modification of protected field.
-	            subscriptionSet.subscribed = true;
-	        }
+	        // Check whether a source subscription is already subscribed or not.
+	        if (!this.state.isSubscribed && !subscription.state.isSubscribed)
+	            return subscriptionSet;
+	        this.state.client.logger.trace(this.constructor.name, 'Subscribe resulting set because the receiver is already subscribed.');
+	        // Subscribing resulting subscription set because source subscription was subscribed.
+	        subscriptionSet.subscribe();
 	        return subscriptionSet;
+	    }
+	    /**
+	     * Register {@link Subscription} object for real-time events' retrieval.
+	     *
+	     * **Note:** Superclass calls this method only in response to a {@link Subscription.subscribe subscribe} method call.
+	     *
+	     * @param parameters - Object registration parameters.
+	     * @param [parameters.cursor] - Subscription real-time events catch-up cursor.
+	     * @param [parameters.subscriptions] - List of subscription objects which should be registered (in case of partial
+	     * modification).
+	     *
+	     * @internal
+	     */
+	    register(parameters) {
+	        this.state.entity.increaseSubscriptionCount(this.state.id);
+	        this.state.client.logger.trace(this.constructor.name, () => ({
+	            messageType: 'text',
+	            message: `Register subscription for real-time events: ${this}`,
+	        }));
+	        this.state.client.registerEventHandleCapable(this, parameters.cursor);
+	    }
+	    /**
+	     * Unregister {@link Subscription} object from real-time events' retrieval.
+	     *
+	     * **Note:** Superclass calls this method only in response to a {@link Subscription.unsubscribe unsubscribe} method
+	     * call.
+	     *
+	     * @param [_subscriptions] - List of subscription objects which should be unregistered (in case of partial
+	     * modification).
+	     *
+	     * @internal
+	     */
+	    unregister(_subscriptions) {
+	        this.state.entity.decreaseSubscriptionCount(this.state.id);
+	        this.state.client.logger.trace(this.constructor.name, () => ({
+	            messageType: 'text',
+	            message: `Unregister subscription from real-time events: ${this}`,
+	        }));
+	        this.handledUpdates.splice(0, this.handledUpdates.length);
+	        this.state.client.unregisterEventHandleCapable(this);
+	    }
+	    /**
+	     * Stringify subscription object.
+	     *
+	     * @returns Serialized subscription object.
+	     */
+	    toString() {
+	        const state = this.state;
+	        return `${this.constructor.name} { id: ${this.id}, stateId: ${state.id}, entity: ${state.entity
+            .subscriptionNames(false)
+            .pop()}, clonesCount: ${Object.keys(state.clones).length}, isSubscribed: ${state.isSubscribed}, parentSetsCount: ${this.parentSetsCount}, cursor: ${state.cursor ? state.cursor.timetoken : 'not set'}, referenceTimetoken: ${state.referenceTimetoken ? state.referenceTimetoken : 'not set'} }`;
+	    }
+	}
+
+	/**
+	 * Common entity interface.
+	 */
+	class Entity {
+	    /**
+	     * Create an entity instance.
+	     *
+	     * @param nameOrId - Identifier which will be used with subscription loop.
+	     * @param client - PubNub instance which has been used to create this entity.
+	     *
+	     * @internal
+	     */
+	    constructor(nameOrId, client) {
+	        /**
+	         * List of subscription state object IDs which are using this entity.
+	         *
+	         * @internal
+	         */
+	        this.subscriptionStateIds = [];
+	        this.client = client;
+	        this._nameOrId = nameOrId;
+	    }
+	    /**
+	     * Type of subscription entity.
+	     *
+	     * Type defines where it will be used with multiplexed subscribe REST API calls.
+	     *
+	     * @retuerns One of {@link SubscriptionType} enum fields.
+	     *
+	     * @internal
+	     */
+	    get subscriptionType() {
+	        return SubscriptionType.Channel;
+	    }
+	    /**
+	     * Names for an object to be used in subscription.
+	     *
+	     * Provided strings will be used with multiplexed subscribe REST API calls.
+	     *
+	     * @param receivePresenceEvents - Whether presence events should be observed or not.
+	     *
+	     * @returns List of names with multiplexed subscribe REST API calls (may include additional names to receive presence
+	     * updates).
+	     *
+	     * @internal
+	     */
+	    subscriptionNames(receivePresenceEvents) {
+	        {
+	            return [
+	                this._nameOrId,
+	                ...(receivePresenceEvents && !this._nameOrId.endsWith('-pnpres') ? [`${this._nameOrId}-pnpres`] : []),
+	            ];
+	        }
+	    }
+	    /**
+	     * Create a subscribable's subscription object for real-time updates.
+	     *
+	     * Create a subscription object which can be used to subscribe to the real-time updates sent to the specific data
+	     * stream.
+	     *
+	     * @param [subscriptionOptions] - Subscription object behavior customization options.
+	     *
+	     * @returns Configured and ready to use subscribable's subscription object.
+	     */
+	    subscription(subscriptionOptions) {
+	        {
+	            return new Subscription({
+	                client: this.client,
+	                entity: this,
+	                options: subscriptionOptions,
+	            });
+	        }
+	    }
+	    /**
+	     * How many active subscriptions use this entity.
+	     *
+	     * @internal
+	     */
+	    get subscriptionsCount() {
+	        return this.subscriptionStateIds.length;
+	    }
+	    /**
+	     * Increase the number of active subscriptions.
+	     *
+	     * @param subscriptionStateId - Unique identifier of the subscription state object which doesn't use entity anymore.
+	     *
+	     * @internal
+	     */
+	    increaseSubscriptionCount(subscriptionStateId) {
+	        {
+	            if (!this.subscriptionStateIds.includes(subscriptionStateId))
+	                this.subscriptionStateIds.push(subscriptionStateId);
+	        }
+	    }
+	    /**
+	     * Decrease the number of active subscriptions.
+	     *
+	     * **Note:** As long as the entity is used by at least one subscription, it can't be removed from the subscription.
+	     *
+	     * @param subscriptionStateId - Unique identifier of the subscription state object which doesn't use entity anymore.
+	     *
+	     * @internal
+	     */
+	    decreaseSubscriptionCount(subscriptionStateId) {
+	        {
+	            const index = this.subscriptionStateIds.indexOf(subscriptionStateId);
+	            if (index >= 0)
+	                this.subscriptionStateIds.splice(index, 1);
+	        }
+	    }
+	    /**
+	     * Stringify entity object.
+	     *
+	     * @returns Serialized entity object.
+	     */
+	    toString() {
+	        return `${this.constructor.name} { nameOrId: ${this._nameOrId}, subscriptionsCount: ${this.subscriptionsCount} }`;
 	    }
 	}
 
 	/**
 	 * First-class objects which provides access to the channel app context object-specific APIs.
 	 */
-	class ChannelMetadata {
+	class ChannelMetadata extends Entity {
 	    /**
-	     * Create channel app context object entity.
+	     * Get unique channel metadata object identifier.
 	     *
-	     * @param id - Channel app context object identifier which will be used with subscription loop.
-	     * @param eventEmitter - Event emitter, which will notify listeners about updates received on
-	     * channel's subscription.
-	     * @param pubnub - PubNub instance which will use this entity.
+	     * @returns Channel metadata identifier.
+	     */
+	    get id() {
+	        return this._nameOrId;
+	    }
+	    /**
+	     * Names for an object to be used in subscription.
 	     *
-	     * @returns Ready to use channel app context object entity.
+	     * Provided strings will be used with multiplexed subscribe REST API calls.
+	     *
+	     * @param _receivePresenceEvents - Whether presence events should be observed or not.
+	     *
+	     * @returns List of names with multiplexed subscribe REST API calls (may include additional names to receive presence
+	     * updates).
 	     *
 	     * @internal
 	     */
-	    constructor(id, eventEmitter, pubnub) {
-	        this.eventEmitter = eventEmitter;
-	        this.pubnub = pubnub;
-	        this.id = id;
-	    }
-	    /**
-	     * Create channel's app context subscription object for real-time updates.
-	     *
-	     * Create subscription object which can be used to subscribe to the real-time updates sent to the specific channel
-	     * app context object.
-	     *
-	     * @param [subscriptionOptions] - Channel's app context subscription object behavior customization options.
-	     *
-	     * @returns Configured and ready to use channel's app context subscription object.
-	     */
-	    subscription(subscriptionOptions) {
-	        {
-	            return new Subscription({
-	                channels: [this.id],
-	                channelGroups: [],
-	                subscriptionOptions: subscriptionOptions,
-	                eventEmitter: this.eventEmitter,
-	                pubnub: this.pubnub,
-	            });
-	        }
+	    subscriptionNames(_receivePresenceEvents) {
+	        return [this.id];
 	    }
 	}
 
 	/**
 	 * First-class objects which provides access to the channel group-specific APIs.
 	 */
-	class ChannelGroup {
+	class ChannelGroup extends Entity {
 	    /**
-	     * Create simple channel entity.
+	     * Get a unique channel group name.
 	     *
-	     * @param name - Name of the channel group which will be used with subscription loop.
-	     * @param eventEmitter - Event emitter, which will notify listeners about updates received on
-	     * channel group's subscription.
-	     * @param pubnub - PubNub instance which will use this entity.
+	     * @returns Channel group name.
+	     */
+	    get name() {
+	        return this._nameOrId;
+	    }
+	    /**
+	     * Type of subscription entity.
 	     *
-	     * @returns Ready to use channel group entity.
+	     * Type defines where it will be used with multiplexed subscribe REST API calls.
+	     *
+	     * @retuerns One of {@link SubscriptionType} enum fields.
 	     *
 	     * @internal
 	     */
-	    constructor(name, eventEmitter, pubnub) {
-	        this.eventEmitter = eventEmitter;
-	        this.pubnub = pubnub;
-	        this.name = name;
-	    }
-	    /**
-	     * Create channel group's subscription object for real-time updates.
-	     *
-	     * Create subscription object which can be used to subscribe to the real-time updates sent to the channels in
-	     * specific channel group.
-	     *
-	     * @param [subscriptionOptions] - Channel group's subscription object behavior customization options.
-	     *
-	     * @returns Configured and ready to use channel group's subscription object.
-	     */
-	    subscription(subscriptionOptions) {
-	        {
-	            const channelGroups = [this.name];
-	            if ((subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) && !this.name.endsWith('-pnpres'))
-	                channelGroups.push(`${this.name}-pnpres`);
-	            return new Subscription({
-	                channels: [],
-	                channelGroups,
-	                subscriptionOptions: subscriptionOptions,
-	                eventEmitter: this.eventEmitter,
-	                pubnub: this.pubnub,
-	            });
-	        }
+	    get subscriptionType() {
+	        return SubscriptionType.ChannelGroup;
 	    }
 	}
 
 	/**
 	 * First-class objects which provides access to the user app context object-specific APIs.
 	 */
-	class UserMetadata {
+	class UserMetadata extends Entity {
 	    /**
-	     * Create user app context object entity.
+	     * Get unique user metadata object identifier.
 	     *
-	     * @param id - User app context object identifier which will be used with subscription loop.
-	     * @param eventEmitter - Event emitter, which will notify listeners about updates received on
-	     * channel's subscription.
-	     * @param pubnub - PubNub instance which will use this entity.
+	     * @returns User metadata identifier.
+	     */
+	    get id() {
+	        return this._nameOrId;
+	    }
+	    /**
+	     * Names for an object to be used in subscription.
 	     *
-	     * @returns Ready to use user app context object entity.
+	     * Provided strings will be used with multiplexed subscribe REST API calls.
+	     *
+	     * @param _receivePresenceEvents - Whether presence events should be observed or not.
+	     *
+	     * @returns List of names with multiplexed subscribe REST API calls (may include additional names to receive presence
+	     * updates).
 	     *
 	     * @internal
 	     */
-	    constructor(id, eventEmitter, pubnub) {
-	        this.eventEmitter = eventEmitter;
-	        this.pubnub = pubnub;
-	        this.id = id;
-	    }
-	    /**
-	     * Create user's app context subscription object for real-time updates.
-	     *
-	     * Create subscription object which can be used to subscribe to the real-time updates sent to the specific user
-	     * app context object.
-	     *
-	     * @param [subscriptionOptions] - User's app context subscription object behavior customization options.
-	     *
-	     * @returns Configured and ready to use user's app context subscription object.
-	     */
-	    subscription(subscriptionOptions) {
-	        {
-	            return new Subscription({
-	                channels: [this.id],
-	                channelGroups: [],
-	                subscriptionOptions: subscriptionOptions,
-	                eventEmitter: this.eventEmitter,
-	                pubnub: this.pubnub,
-	            });
-	        }
+	    subscriptionNames(_receivePresenceEvents) {
+	        return [this.id];
 	    }
 	}
 
 	/**
 	 * First-class objects which provides access to the channel-specific APIs.
 	 */
-	class Channel {
+	class Channel extends Entity {
 	    /**
-	     * Create simple channel entity.
+	     * Get a unique channel name.
 	     *
-	     * @param name - Name of the channel which will be used with subscription loop.
-	     * @param eventEmitter - Event emitter, which will notify listeners about updates received on
-	     * channel's subscription.
-	     * @param pubnub - PubNub instance which will use this entity.
-	     *
-	     * @returns Ready to use channel entity.
-	     *
-	     * @internal
+	     * @returns Channel name.
 	     */
-	    constructor(name, eventEmitter, pubnub) {
-	        this.eventEmitter = eventEmitter;
-	        this.pubnub = pubnub;
-	        this.name = name;
-	    }
-	    /**
-	     * Create channel's subscription object for real-time updates.
-	     *
-	     * Create subscription object which can be used to subscribe to the real-time updates sent to the specific channel.
-	     *
-	     * @param [subscriptionOptions] - Channel's subscription object behavior customization options.
-	     *
-	     * @returns Configured and ready to use channel's subscription object.
-	     */
-	    subscription(subscriptionOptions) {
-	        {
-	            const channels = [this.name];
-	            if ((subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.receivePresenceEvents) && !this.name.endsWith('-pnpres'))
-	                channels.push(`${this.name}-pnpres`);
-	            return new Subscription({
-	                channels,
-	                channelGroups: [],
-	                subscriptionOptions: subscriptionOptions,
-	                eventEmitter: this.eventEmitter,
-	                pubnub: this.pubnub,
-	            });
-	        }
+	    get name() {
+	        return this._nameOrId;
 	    }
 	}
 
@@ -11042,15 +12593,17 @@
 	    /**
 	     * Create stream / channel group API access object.
 	     *
+	     * @param logger - Registered loggers' manager.
 	     * @param keySet - PubNub account keys set which should be used for REST API calls.
 	     * @param sendRequest - Function which should be used to send REST API calls.
 	     *
 	     * @internal
 	     */
-	    constructor(keySet, 
+	    constructor(logger, keySet, 
 	    /* eslint-disable  @typescript-eslint/no-explicit-any */
 	    sendRequest) {
 	        this.sendRequest = sendRequest;
+	        this.logger = logger;
 	        this.keySet = keySet;
 	    }
 	    /**
@@ -11064,10 +12617,26 @@
 	     */
 	    listChannels(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'List channel group channels with parameters:',
+	            }));
 	            const request = new ListChannelGroupChannels(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.info('PubNub', `List channel group channels success. Received ${response.channels.length} channels.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -11081,10 +12650,22 @@
 	     */
 	    listGroups(callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', 'List all channel groups.');
 	            const request = new ListChannelGroupsRequest({ keySet: this.keySet });
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.info('PubNub', `List all channel groups success. Received ${response.groups.length} groups.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -11098,10 +12679,25 @@
 	     */
 	    addChannels(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Add channels to the channel group with parameters:',
+	            }));
 	            const request = new AddChannelGroupChannelsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = () => {
+	                this.logger.info('PubNub', `Add channels to the channel group success.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status) => {
+	                    if (!status.error)
+	                        logResponse();
+	                    callback(status);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse();
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -11115,14 +12711,29 @@
 	     */
 	    removeChannels(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Remove channels from the channel group with parameters:',
+	            }));
 	            const request = new RemoveChannelGroupChannelsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = () => {
+	                this.logger.info('PubNub', `Remove channels from the channel group success.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status) => {
+	                    if (!status.error)
+	                        logResponse();
+	                    callback(status);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse();
+	                return response;
+	            });
 	        });
 	    }
 	    /**
-	     * Remove channel group.
+	     * Remove a channel group.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -11131,10 +12742,25 @@
 	     */
 	    deleteGroup(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Remove a channel group with parameters:',
+	            }));
 	            const request = new DeleteChannelGroupRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = () => {
+	                this.logger.info('PubNub', `Remove a channel group success. Removed '${parameters.channelGroup}' channel group.'`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status) => {
+	                    if (!status.error)
+	                        logResponse();
+	                    callback(status);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse();
+	                return response;
+	            });
 	        });
 	    }
 	}
@@ -11336,15 +12962,17 @@
 	    /**
 	     * Create mobile push notifications API access object.
 	     *
+	     * @param logger - Registered loggers' manager.
 	     * @param keySet - PubNub account keys set which should be used for REST API calls.
 	     * @param sendRequest - Function which should be used to send REST API calls.
 	     *
 	     * @internal
 	     */
-	    constructor(keySet, 
+	    constructor(logger, keySet, 
 	    /* eslint-disable  @typescript-eslint/no-explicit-any */
 	    sendRequest) {
 	        this.sendRequest = sendRequest;
+	        this.logger = logger;
 	        this.keySet = keySet;
 	    }
 	    /**
@@ -11357,10 +12985,26 @@
 	     */
 	    listChannels(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `List push-enabled channels with parameters:`,
+	            }));
 	            const request = new ListDevicePushNotificationChannelsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `List push-enabled channels success. Received ${response.channels.length} channels.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -11371,10 +13015,25 @@
 	     */
 	    addChannels(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Add push-enabled channels with parameters:`,
+	            }));
 	            const request = new AddDevicePushNotificationChannelsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = () => {
+	                this.logger.debug('PubNub', `Add push-enabled channels success.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status) => {
+	                    if (!status.error)
+	                        logResponse();
+	                    callback(status);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse();
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -11385,10 +13044,25 @@
 	     */
 	    removeChannels(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Remove push-enabled channels with parameters:`,
+	            }));
 	            const request = new RemoveDevicePushNotificationChannelsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = () => {
+	                this.logger.debug('PubNub', `Remove push-enabled channels success.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status) => {
+	                    if (!status.error)
+	                        logResponse();
+	                    callback(status);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse();
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -11399,10 +13073,25 @@
 	     */
 	    deleteDevice(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Remove push notifications for device with parameters:`,
+	            }));
 	            const request = new RemoveDevicePushNotificationRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = () => {
+	                this.logger.debug('PubNub', `Remove push notifications for device success.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status) => {
+	                    if (!status.error)
+	                        logResponse();
+	                    callback(status);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse();
+	                return response;
+	            });
 	        });
 	    }
 	}
@@ -11711,6 +13400,10 @@
 	            includeFlags.push('channel.custom');
 	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ count: `${include.totalCount}` }, (includeFlags.length > 0 ? { include: includeFlags.join(',') } : {})), (filter ? { filter } : {})), ((page === null || page === void 0 ? void 0 : page.next) ? { start: page.next } : {})), ((page === null || page === void 0 ? void 0 : page.prev) ? { end: page.prev } : {})), (limit ? { limit } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
+	    get headers() {
+	        var _a;
+	        return Object.assign(Object.assign({}, ((_a = super.headers) !== null && _a !== void 0 ? _a : {})), { 'Content-Type': 'application/json' });
+	    }
 	    get body() {
 	        const { channels, type } = this.parameters;
 	        return JSON.stringify({
@@ -11861,15 +13554,6 @@
 	            return 'Channel cannot be empty';
 	        if (!this.parameters.data)
 	            return 'Data cannot be empty';
-	    }
-	    get headers() {
-	        var _a;
-	        if (this.parameters.ifMatchesEtag) {
-	            return Object.assign(Object.assign({}, ((_a = super.headers) !== null && _a !== void 0 ? _a : {})), { 'If-Match': this.parameters.ifMatchesEtag });
-	        }
-	        else {
-	            return super.headers;
-	        }
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, } = this.parameters;
@@ -12130,6 +13814,10 @@
 	            includeFlags.push('uuid.custom');
 	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ count: `${include.totalCount}` }, (includeFlags.length > 0 ? { include: includeFlags.join(',') } : {})), (filter ? { filter } : {})), ((page === null || page === void 0 ? void 0 : page.next) ? { start: page.next } : {})), ((page === null || page === void 0 ? void 0 : page.prev) ? { end: page.prev } : {})), (limit ? { limit } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
+	    get headers() {
+	        var _a;
+	        return Object.assign(Object.assign({}, ((_a = super.headers) !== null && _a !== void 0 ? _a : {})), { 'Content-Type': 'application/json' });
+	    }
 	    get body() {
 	        const { uuids, type } = this.parameters;
 	        return JSON.stringify({
@@ -12237,12 +13925,10 @@
 	    }
 	    get headers() {
 	        var _a;
-	        if (this.parameters.ifMatchesEtag) {
-	            return Object.assign(Object.assign({}, ((_a = super.headers) !== null && _a !== void 0 ? _a : {})), { 'If-Match': this.parameters.ifMatchesEtag });
-	        }
-	        else {
-	            return super.headers;
-	        }
+	        let headers = (_a = super.headers) !== null && _a !== void 0 ? _a : {};
+	        if (this.parameters.ifMatchesEtag)
+	            headers = Object.assign(Object.assign({}, headers), { 'If-Match': this.parameters.ifMatchesEtag });
+	        return Object.assign(Object.assign({}, headers), { 'Content-Type': 'application/json' });
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, uuid, } = this.parameters;
@@ -12281,6 +13967,16 @@
 	        this.sendRequest = sendRequest;
 	    }
 	    /**
+	     * Get registered loggers' manager.
+	     *
+	     * @returns Registered loggers' manager.
+	     *
+	     * @internal
+	     */
+	    get logger() {
+	        return this.configuration.logger();
+	    }
+	    /**
 	     * Fetch a paginated list of UUID Metadata objects.
 	     *
 	     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
@@ -12290,6 +13986,11 @@
 	     */
 	    getAllUUIDMetadata(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: !parametersOrCallback || typeof parametersOrCallback === 'function' ? {} : parametersOrCallback,
+	                details: `Get all UUID metadata objects with parameters:`,
+	            }));
 	            return this._getAllUUIDMetadata(parametersOrCallback, callback);
 	        });
 	    }
@@ -12309,9 +14010,20 @@
 	            const parameters = parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
 	            callback !== null && callback !== void 0 ? callback : (callback = typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined);
 	            const request = new GetAllUUIDMetadataRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Get all UUID metadata success. Received ${response.totalCount} UUID metadata objects.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12324,6 +14036,13 @@
 	     */
 	    getUUIDMetadata(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: !parametersOrCallback || typeof parametersOrCallback === 'function'
+	                    ? { uuid: this.configuration.userId }
+	                    : parametersOrCallback,
+	                details: `Get ${!parametersOrCallback || typeof parametersOrCallback === 'function' ? ' current' : ''} UUID metadata object with parameters:`,
+	            }));
 	            return this._getUUIDMetadata(parametersOrCallback, callback);
 	        });
 	    }
@@ -12343,17 +14062,30 @@
 	            // Get user request parameters.
 	            const parameters = parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
 	            callback !== null && callback !== void 0 ? callback : (callback = typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined);
-	            if (parameters.userId)
+	            if (parameters.userId) {
+	                this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
 	                parameters.uuid = parameters.userId;
+	            }
 	            (_a = parameters.uuid) !== null && _a !== void 0 ? _a : (parameters.uuid = this.configuration.userId);
 	            const request = new GetUUIDMetadataRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Get UUID metadata object success. Received '${parameters.uuid}' UUID metadata object.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
-	     * Update specific UUID Metadata object.
+	     * Update a specific UUID Metadata object.
 	     *
 	     * @param parameters - Request configuration parameters. Will set UUID metadata for currently
 	     * configured PubNub client `uuid` if not set.
@@ -12363,11 +14095,16 @@
 	     */
 	    setUUIDMetadata(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Set UUID metadata object with parameters:`,
+	            }));
 	            return this._setUUIDMetadata(parameters, callback);
 	        });
 	    }
 	    /**
-	     * Update specific UUID Metadata object.
+	     * Update a specific UUID Metadata object.
 	     *
 	     * @internal
 	     *
@@ -12380,13 +14117,26 @@
 	    _setUUIDMetadata(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
-	            if (parameters.userId)
+	            if (parameters.userId) {
+	                this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
 	                parameters.uuid = parameters.userId;
+	            }
 	            (_a = parameters.uuid) !== null && _a !== void 0 ? _a : (parameters.uuid = this.configuration.userId);
 	            const request = new SetUUIDMetadataRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Set UUID metadata object success. Updated '${parameters.uuid}' UUID metadata object.'`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12399,6 +14149,13 @@
 	     */
 	    removeUUIDMetadata(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: !parametersOrCallback || typeof parametersOrCallback === 'function'
+	                    ? { uuid: this.configuration.userId }
+	                    : parametersOrCallback,
+	                details: `Remove${!parametersOrCallback || typeof parametersOrCallback === 'function' ? ' current' : ''} UUID metadata object with parameters:`,
+	            }));
 	            return this._removeUUIDMetadata(parametersOrCallback, callback);
 	        });
 	    }
@@ -12418,13 +14175,26 @@
 	            // Get user request parameters.
 	            const parameters = parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
 	            callback !== null && callback !== void 0 ? callback : (callback = typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined);
-	            if (parameters.userId)
+	            if (parameters.userId) {
+	                this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
 	                parameters.uuid = parameters.userId;
+	            }
 	            (_a = parameters.uuid) !== null && _a !== void 0 ? _a : (parameters.uuid = this.configuration.userId);
 	            const request = new RemoveUUIDMetadataRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Remove UUID metadata object success. Removed '${parameters.uuid}' UUID metadata object.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12438,6 +14208,11 @@
 	     */
 	    getAllChannelMetadata(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: !parametersOrCallback || typeof parametersOrCallback === 'function' ? {} : parametersOrCallback,
+	                details: `Get all Channel metadata objects with parameters:`,
+	            }));
 	            return this._getAllChannelMetadata(parametersOrCallback, callback);
 	        });
 	    }
@@ -12458,9 +14233,20 @@
 	            const parameters = parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
 	            callback !== null && callback !== void 0 ? callback : (callback = typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined);
 	            const request = new GetAllChannelsMetadataRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Get all Channel metadata objects success. Received ${response.totalCount} Channel metadata objects.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12473,6 +14259,11 @@
 	     */
 	    getChannelMetadata(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Get Channel metadata object with parameters:`,
+	            }));
 	            return this._getChannelMetadata(parameters, callback);
 	        });
 	    }
@@ -12489,9 +14280,20 @@
 	    _getChannelMetadata(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const request = new GetChannelMetadataRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Get Channel metadata object success. Received '${parameters.channel}' Channel metadata object.'`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12504,6 +14306,11 @@
 	     */
 	    setChannelMetadata(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Set Channel metadata object with parameters:`,
+	            }));
 	            return this._setChannelMetadata(parameters, callback);
 	        });
 	    }
@@ -12520,9 +14327,20 @@
 	    _setChannelMetadata(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const request = new SetChannelMetadataRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Set Channel metadata object success. Updated '${parameters.channel}' Channel metadata object.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12536,6 +14354,11 @@
 	     */
 	    removeChannelMetadata(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Remove Channel metadata object with parameters:`,
+	            }));
 	            return this._removeChannelMetadata(parameters, callback);
 	        });
 	    }
@@ -12553,9 +14376,20 @@
 	    _removeChannelMetadata(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const request = new RemoveChannelMetadataRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Remove Channel metadata object success. Removed '${parameters.channel}' Channel metadata object.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12568,10 +14402,26 @@
 	     */
 	    getChannelMembers(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Get channel members with parameters:`,
+	            }));
 	            const request = new GetChannelMembersRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Get channel members success. Received ${response.totalCount} channel members.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12585,10 +14435,26 @@
 	     */
 	    setChannelMembers(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Set channel members with parameters:`,
+	            }));
 	            const request = new SetChannelMembersRequest(Object.assign(Object.assign({}, parameters), { type: 'set', keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Set channel members success. There are ${response.totalCount} channel members now.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12601,10 +14467,26 @@
 	     */
 	    removeChannelMembers(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Remove channel members with parameters:`,
+	            }));
 	            const request = new SetChannelMembersRequest(Object.assign(Object.assign({}, parameters), { type: 'delete', keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Remove channel members success. There are ${response.totalCount} channel members now.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12621,13 +14503,31 @@
 	            // Get user request parameters.
 	            const parameters = parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
 	            callback !== null && callback !== void 0 ? callback : (callback = typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined);
-	            if (parameters.userId)
+	            if (parameters.userId) {
+	                this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
 	                parameters.uuid = parameters.userId;
+	            }
 	            (_a = parameters.uuid) !== null && _a !== void 0 ? _a : (parameters.uuid = this.configuration.userId);
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Get memberships with parameters:`,
+	            }));
 	            const request = new GetUUIDMembershipsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Get memberships success. Received ${response.totalCount} memberships.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12642,13 +14542,31 @@
 	    setMemberships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
-	            if (parameters.userId)
+	            if (parameters.userId) {
+	                this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
 	                parameters.uuid = parameters.userId;
+	            }
 	            (_a = parameters.uuid) !== null && _a !== void 0 ? _a : (parameters.uuid = this.configuration.userId);
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Set memberships with parameters:`,
+	            }));
 	            const request = new SetUUIDMembershipsRequest(Object.assign(Object.assign({}, parameters), { type: 'set', keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Set memberships success. There are ${response.totalCount} memberships now.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    /**
@@ -12663,13 +14581,31 @@
 	    removeMemberships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
-	            if (parameters.userId)
+	            if (parameters.userId) {
+	                this.logger.warn('PubNub', `'userId' parameter is deprecated. Use 'uuid' instead.`);
 	                parameters.uuid = parameters.userId;
+	            }
 	            (_a = parameters.uuid) !== null && _a !== void 0 ? _a : (parameters.uuid = this.configuration.userId);
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Remove memberships with parameters:`,
+	            }));
 	            const request = new SetUUIDMembershipsRequest(Object.assign(Object.assign({}, parameters), { type: 'delete', keySet: this.keySet }));
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Remove memberships success. There are ${response.totalCount} memberships now.`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
 	    }
 	    // endregion
@@ -12686,11 +14622,19 @@
 	     *
 	     * @returns Asynchronous get specific Space members or specific User memberships response.
 	     *
-	     * @deprecated Use {@link PubNubObjects#getChannelMembers} or {@link PubNubObjects#getMemberships} methods instead.
+	     * @deprecated Use {@link PubNubObjects#getChannelMembers getChannelMembers} or
+	     * {@link PubNubObjects#getMemberships getMemberships} methods instead.
 	     */
 	    fetchMemberships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a, _b;
+	            this.logger.warn('PubNub', "'fetchMemberships' is deprecated. Use 'pubnub.objects.getChannelMembers' or 'pubnub.objects.getMemberships'" +
+	                ' instead.');
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Fetch memberships with parameters:`,
+	            }));
 	            if ('spaceId' in parameters) {
 	                const spaceParameters = parameters;
 	                const mappedParameters = {
@@ -12762,11 +14706,19 @@
 	     * @returns Asynchronous add members to specific Space or memberships specific User response or
 	     * `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubObjects#setChannelMembers} or {@link PubNubObjects#setMemberships} methods instead.
+	     * @deprecated Use {@link PubNubObjects#setChannelMembers setChannelMembers} or
+	     * {@link PubNubObjects#setMemberships setMemberships} methods instead.
 	     */
 	    addMemberships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a, _b, _c, _d, _e, _f;
+	            this.logger.warn('PubNub', "'addMemberships' is deprecated. Use 'pubnub.objects.setChannelMembers' or 'pubnub.objects.setMemberships'" +
+	                ' instead.');
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: `Add memberships with parameters:`,
+	            }));
 	            if ('spaceId' in parameters) {
 	                const spaceParameters = parameters;
 	                const mappedParameters = {
@@ -12922,29 +14874,67 @@
 	     * @internal
 	     */
 	    constructor(configuration) {
+	        /**
+	         * List of subscribe capable objects with active subscriptions.
+	         *
+	         * Track list of {@link Subscription} and {@link SubscriptionSet} objects with active
+	         * subscription.
+	         *
+	         * @internal
+	         */
+	        this.eventHandleCapable = {};
+	        /**
+	         * Created entities.
+	         *
+	         * Map of entities which have been created to access.
+	         *
+	         * @internal
+	         */
+	        this.entities = {};
 	        this._configuration = configuration.configuration;
 	        this.cryptography = configuration.cryptography;
 	        this.tokenManager = configuration.tokenManager;
 	        this.transport = configuration.transport;
 	        this.crypto = configuration.crypto;
+	        this.logger.debug('PubNub', () => ({
+	            messageType: 'object',
+	            message: configuration.configuration,
+	            details: 'Create with configuration:',
+	            ignoredKeys(key, obj) {
+	                return typeof obj[key] === 'function' || key.startsWith('_');
+	            },
+	        }));
 	        // API group entry points initialization.
 	        this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
-	        this._channelGroups = new PubNubChannelGroups(this._configuration.keySet, this.sendRequest.bind(this));
-	        this._push = new PubNubPushNotifications(this._configuration.keySet, this.sendRequest.bind(this));
+	        this._channelGroups = new PubNubChannelGroups(this._configuration.logger(), this._configuration.keySet, this.sendRequest.bind(this));
+	        this._push = new PubNubPushNotifications(this._configuration.logger(), this._configuration.keySet, this.sendRequest.bind(this));
 	        {
-	            // Prepare for real-time events announcement.
-	            this.listenerManager = new ListenerManager();
-	            this.eventEmitter = new EventEmitter(this.listenerManager);
-	            this.subscribeCapable = new Set();
+	            // Prepare for a real-time events announcement.
+	            this.eventDispatcher = new EventDispatcher();
 	            if (this._configuration.enableEventEngine) {
 	                {
+	                    this.logger.debug('PubNub', 'Using new subscription loop management.');
 	                    let heartbeatInterval = this._configuration.getHeartbeatInterval();
 	                    this.presenceState = {};
 	                    {
 	                        if (heartbeatInterval) {
 	                            this.presenceEventEngine = new PresenceEventEngine({
-	                                heartbeat: this.heartbeat.bind(this),
-	                                leave: (parameters) => this.makeUnsubscribe(parameters, () => { }),
+	                                heartbeat: (parameters, callback) => {
+	                                    this.logger.trace('PresenceEventEngine', () => ({
+	                                        messageType: 'object',
+	                                        message: Object.assign({}, parameters),
+	                                        details: 'Heartbeat with parameters:',
+	                                    }));
+	                                    return this.heartbeat(parameters, callback);
+	                                },
+	                                leave: (parameters) => {
+	                                    this.logger.trace('PresenceEventEngine', () => ({
+	                                        messageType: 'object',
+	                                        message: Object.assign({}, parameters),
+	                                        details: 'Leave with parameters:',
+	                                    }));
+	                                    this.makeUnsubscribe(parameters, () => { });
+	                                },
 	                                heartbeatDelay: () => new Promise((resolve, reject) => {
 	                                    heartbeatInterval = this._configuration.getHeartbeatInterval();
 	                                    if (!heartbeatInterval)
@@ -12952,26 +14942,84 @@
 	                                    else
 	                                        setTimeout(resolve, heartbeatInterval * 1000);
 	                                }),
-	                                emitStatus: (status) => this.listenerManager.announceStatus(status),
+	                                emitStatus: (status) => this.emitStatus(status),
 	                                config: this._configuration,
 	                                presenceState: this.presenceState,
 	                            });
 	                        }
 	                    }
 	                    this.eventEngine = new EventEngine({
-	                        handshake: this.subscribeHandshake.bind(this),
-	                        receiveMessages: this.subscribeReceiveMessages.bind(this),
+	                        handshake: (parameters) => {
+	                            this.logger.trace('EventEngine', () => ({
+	                                messageType: 'object',
+	                                message: Object.assign({}, parameters),
+	                                details: 'Handshake with parameters:',
+	                                ignoredKeys: ['abortSignal', 'crypto', 'timeout', 'keySet', 'getFileUrl'],
+	                            }));
+	                            return this.subscribeHandshake(parameters);
+	                        },
+	                        receiveMessages: (parameters) => {
+	                            this.logger.trace('EventEngine', () => ({
+	                                messageType: 'object',
+	                                message: Object.assign({}, parameters),
+	                                details: 'Receive messages with parameters:',
+	                                ignoredKeys: ['abortSignal', 'crypto', 'timeout', 'keySet', 'getFileUrl'],
+	                            }));
+	                            return this.subscribeReceiveMessages(parameters);
+	                        },
 	                        delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
-	                        join: this.join.bind(this),
-	                        leave: this.leave.bind(this),
-	                        leaveAll: this.leaveAll.bind(this),
-	                        presenceReconnect: this.presenceReconnect.bind(this),
-	                        presenceDisconnect: this.presenceDisconnect.bind(this),
+	                        join: (parameters) => {
+	                            this.logger.trace('EventEngine', () => ({
+	                                messageType: 'object',
+	                                message: Object.assign({}, parameters),
+	                                details: 'Join with parameters:',
+	                            }));
+	                            this.join(parameters);
+	                        },
+	                        leave: (parameters) => {
+	                            this.logger.trace('EventEngine', () => ({
+	                                messageType: 'object',
+	                                message: Object.assign({}, parameters),
+	                                details: 'Leave with parameters:',
+	                            }));
+	                            this.leave(parameters);
+	                        },
+	                        leaveAll: (parameters) => {
+	                            this.logger.trace('EventEngine', () => ({
+	                                messageType: 'object',
+	                                message: Object.assign({}, parameters),
+	                                details: 'Leave all with parameters:',
+	                            }));
+	                            this.leaveAll(parameters);
+	                        },
+	                        presenceReconnect: (parameters) => {
+	                            this.logger.trace('EventEngine', () => ({
+	                                messageType: 'object',
+	                                message: Object.assign({}, parameters),
+	                                details: 'Reconnect with parameters:',
+	                            }));
+	                            this.presenceReconnect(parameters);
+	                        },
+	                        presenceDisconnect: (parameters) => {
+	                            this.logger.trace('EventEngine', () => ({
+	                                messageType: 'object',
+	                                message: Object.assign({}, parameters),
+	                                details: 'Disconnect with parameters:',
+	                            }));
+	                            this.presenceDisconnect(parameters);
+	                        },
 	                        presenceState: this.presenceState,
 	                        config: this._configuration,
-	                        emitMessages: (events) => {
+	                        emitMessages: (cursor, events) => {
 	                            try {
-	                                events.forEach((event) => this.eventEmitter.emitEvent(event));
+	                                this.logger.debug('EventEngine', () => {
+	                                    const hashedEvents = events.map((event) => ({
+	                                        type: event.type,
+	                                        data: Object.assign(Object.assign({}, event.data), { pn_mfp: messageFingerprint(event.data) }),
+	                                    }));
+	                                    return { messageType: 'object', message: hashedEvents, details: 'Received events:' };
+	                                });
+	                                events.forEach((event) => this.emitEvent(cursor, event));
 	                            }
 	                            catch (e) {
 	                                const errorStatus = {
@@ -12980,16 +15028,53 @@
 	                                    errorData: e,
 	                                    statusCode: 0,
 	                                };
-	                                this.listenerManager.announceStatus(errorStatus);
+	                                this.emitStatus(errorStatus);
 	                            }
 	                        },
-	                        emitStatus: (status) => this.listenerManager.announceStatus(status),
+	                        emitStatus: (status) => this.emitStatus(status),
 	                    });
 	                }
 	            }
 	            else {
 	                {
-	                    this.subscriptionManager = new SubscriptionManager(this._configuration, this.listenerManager, this.eventEmitter, this.makeSubscribe.bind(this), this.heartbeat.bind(this), this.makeUnsubscribe.bind(this), this.time.bind(this));
+	                    this.logger.debug('PubNub', 'Using legacy subscription loop management.');
+	                    this.subscriptionManager = new SubscriptionManager(this._configuration, (cursor, event) => {
+	                        try {
+	                            this.emitEvent(cursor, event);
+	                        }
+	                        catch (e) {
+	                            const errorStatus = {
+	                                error: true,
+	                                category: StatusCategory$1.PNUnknownCategory,
+	                                errorData: e,
+	                                statusCode: 0,
+	                            };
+	                            this.emitStatus(errorStatus);
+	                        }
+	                    }, this.emitStatus.bind(this), (parameters, callback) => {
+	                        this.logger.trace('SubscriptionManager', () => ({
+	                            messageType: 'object',
+	                            message: Object.assign({}, parameters),
+	                            details: 'Subscribe with parameters:',
+	                            ignoredKeys: ['crypto', 'timeout', 'keySet', 'getFileUrl'],
+	                        }));
+	                        this.makeSubscribe(parameters, callback);
+	                    }, (parameters, callback) => {
+	                        this.logger.trace('SubscriptionManager', () => ({
+	                            messageType: 'object',
+	                            message: Object.assign({}, parameters),
+	                            details: 'Heartbeat with parameters:',
+	                            ignoredKeys: ['crypto', 'timeout', 'keySet', 'getFileUrl'],
+	                        }));
+	                        return this.heartbeat(parameters, callback);
+	                    }, (parameters, callback) => {
+	                        this.logger.trace('SubscriptionManager', () => ({
+	                            messageType: 'object',
+	                            message: Object.assign({}, parameters),
+	                            details: 'Leave with parameters:',
+	                        }));
+	                        this.makeUnsubscribe(parameters, callback);
+	                    }, this.time.bind(this));
 	                }
 	            }
 	        }
@@ -13041,6 +15126,7 @@
 	     * @param authKey - New authorization key which should be used with new requests.
 	     */
 	    setAuthKey(authKey) {
+	        this.logger.debug('PubNub', `Set auth key: ${authKey}`);
 	        this._configuration.setAuthKey(authKey);
 	    }
 	    /**
@@ -13061,8 +15147,12 @@
 	     * @throws Error empty user identifier has been provided.
 	     */
 	    set userId(value) {
-	        if (!value || typeof value !== 'string' || value.trim().length === 0)
-	            throw new Error('Missing or invalid userId parameter. Provide a valid string userId');
+	        if (!value || typeof value !== 'string' || value.trim().length === 0) {
+	            const error = new Error('Missing or invalid userId parameter. Provide a valid string userId');
+	            this.logger.error('PubNub', () => ({ messageType: 'error', message: error }));
+	            throw error;
+	        }
+	        this.logger.debug('PubNub', `Set user ID: ${value}`);
 	        this._configuration.userId = value;
 	    }
 	    /**
@@ -13083,8 +15173,12 @@
 	     * @throws Error empty user identifier has been provided.
 	     */
 	    setUserId(value) {
-	        if (!value || typeof value !== 'string' || value.trim().length === 0)
-	            throw new Error('Missing or invalid userId parameter. Provide a valid string userId');
+	        if (!value || typeof value !== 'string' || value.trim().length === 0) {
+	            const error = new Error('Missing or invalid userId parameter. Provide a valid string userId');
+	            this.logger.error('PubNub', () => ({ messageType: 'error', message: error }));
+	            throw error;
+	        }
+	        this.logger.debug('PubNub', `Set user ID: ${value}`);
 	        this._configuration.userId = value;
 	    }
 	    /**
@@ -13110,6 +15204,7 @@
 	     * @param expression - New expression which should be used or `undefined` to disable filtering.
 	     */
 	    set filterExpression(expression) {
+	        this.logger.debug('PubNub', `Set filter expression: ${expression}`);
 	        this._configuration.setFilterExpression(expression);
 	    }
 	    /**
@@ -13118,6 +15213,7 @@
 	     * @param expression - New expression which should be used or `undefined` to disable filtering.
 	     */
 	    setFilterExpression(expression) {
+	        this.logger.debug('PubNub', `Set filter expression: ${expression}`);
 	        this.filterExpression = expression;
 	    }
 	    /**
@@ -13142,23 +15238,34 @@
 	     * @param key - New key which should be used for data encryption / decryption.
 	     */
 	    setCipherKey(key) {
+	        this.logger.debug('PubNub', `Set cipher key: ${key}`);
 	        this.cipherKey = key;
 	    }
 	    /**
-	     * Change heartbeat requests interval.
+	     * Change a heartbeat requests interval.
 	     *
 	     * @param interval - New presence request heartbeat intervals.
 	     */
 	    set heartbeatInterval(interval) {
+	        this.logger.debug('PubNub', `Set heartbeat interval: ${interval}`);
 	        this._configuration.setHeartbeatInterval(interval);
 	    }
 	    /**
-	     * Change heartbeat requests interval.
+	     * Change a heartbeat requests interval.
 	     *
 	     * @param interval - New presence request heartbeat intervals.
 	     */
 	    setHeartbeatInterval(interval) {
+	        this.logger.debug('PubNub', `Set heartbeat interval: ${interval}`);
 	        this.heartbeatInterval = interval;
+	    }
+	    /**
+	     * Get registered loggers' manager.
+	     *
+	     * @returns Registered loggers' manager.
+	     */
+	    get logger() {
+	        return this._configuration.logger();
 	    }
 	    /**
 	     * Get PubNub SDK version.
@@ -13172,9 +15279,10 @@
 	     * Add framework's prefix.
 	     *
 	     * @param name - Name of the framework which would want to add own data into `pnsdk` suffix.
-	     * @param suffix - Suffix with information about framework.
+	     * @param suffix - Suffix with information about a framework.
 	     */
 	    _addPnsdkSuffix(name, suffix) {
+	        this.logger.debug('PubNub', `Add '${name}' 'pnsdk' suffix: ${suffix}`);
 	        this._configuration._addPnsdkSuffix(name, suffix);
 	    }
 	    // --------------------------------------------------------
@@ -13200,9 +15308,11 @@
 	     *
 	     * @throws Error empty user identifier has been provided.
 	     *
-	     * @deprecated Use the {@link PubNubCore#setUserId} or {@link PubNubCore#userId} setter instead.
+	     * @deprecated Use the {@link PubNubCore#setUserId setUserId} or {@link PubNubCore#userId userId} setter instead.
 	     */
 	    setUUID(value) {
+	        this.logger.warn('PubNub', "'setUserId` is deprecated, please use 'setUserId' or 'userId' setter instead.");
+	        this.logger.debug('PubNub', `Set UUID: ${value}`);
 	        this.userId = value;
 	    }
 	    /**
@@ -13237,7 +15347,10 @@
 	     * @returns `Channel` entity.
 	     */
 	    channel(name) {
-	        return new Channel(name, this.eventEmitter, this);
+	        let channel = this.entities[`${name}_ch`];
+	        if (!channel)
+	            channel = this.entities[`${name}_ch`] = new Channel(name, this);
+	        return channel;
 	    }
 	    /**
 	     * Create a `ChannelGroup` entity.
@@ -13249,7 +15362,10 @@
 	     * @returns `ChannelGroup` entity.
 	     */
 	    channelGroup(name) {
-	        return new ChannelGroup(name, this.eventEmitter, this);
+	        let channelGroup = this.entities[`${name}_chg`];
+	        if (!channelGroup)
+	            channelGroup = this.entities[`${name}_chg`] = new ChannelGroup(name, this);
+	        return channelGroup;
 	    }
 	    /**
 	     * Create a `ChannelMetadata` entity.
@@ -13261,7 +15377,10 @@
 	     * @returns `ChannelMetadata` entity.
 	     */
 	    channelMetadata(id) {
-	        return new ChannelMetadata(id, this.eventEmitter, this);
+	        let metadata = this.entities[`${id}_chm`];
+	        if (!metadata)
+	            metadata = this.entities[`${id}_chm`] = new ChannelMetadata(id, this);
+	        return metadata;
 	    }
 	    /**
 	     * Create a `UserMetadata` entity.
@@ -13273,7 +15392,10 @@
 	     * @returns `UserMetadata` entity.
 	     */
 	    userMetadata(id) {
-	        return new UserMetadata(id, this.eventEmitter, this);
+	        let metadata = this.entities[`${id}_um`];
+	        if (!metadata)
+	            metadata = this.entities[`${id}_um`] = new UserMetadata(id, this);
+	        return metadata;
 	    }
 	    /**
 	     * Create subscriptions set object.
@@ -13281,8 +15403,13 @@
 	     * @param parameters - Subscriptions set configuration parameters.
 	     */
 	    subscriptionSet(parameters) {
+	        var _a, _b;
 	        {
-	            return new SubscriptionSet(Object.assign(Object.assign({}, parameters), { eventEmitter: this.eventEmitter, pubnub: this }));
+	            // Prepare a list of entities for a set.
+	            const entities = [];
+	            (_a = parameters.channels) === null || _a === void 0 ? void 0 : _a.forEach((name) => entities.push(this.channel(name)));
+	            (_b = parameters.channelGroups) === null || _b === void 0 ? void 0 : _b.forEach((name) => entities.push(this.channelGroup(name)));
+	            return new SubscriptionSet({ client: this, entities, options: parameters.subscriptionOptions });
 	        }
 	    }
 	    /**
@@ -13303,9 +15430,11 @@
 	            // Validate user-input.
 	            const validationResult = request.validate();
 	            if (validationResult) {
+	                const validationError = createValidationError(validationResult);
+	                this.logger.error('PubNub', () => ({ messageType: 'error', message: validationError }));
 	                if (callback)
-	                    return callback(createValidationError(validationResult), null);
-	                throw new PubNubError('Validation failed, check status for details', createValidationError(validationResult));
+	                    return callback(validationError, null);
+	                throw new PubNubError('Validation failed, check status for details', validationError);
 	            }
 	            // Complete request configuration.
 	            const transportRequest = request.request();
@@ -13331,16 +15460,16 @@
 	            };
 	            const [sendableRequest, cancellationController] = this.transport.makeSendable(transportRequest);
 	            /**
-	             * **Important:** Because of multiple environments where JS SDK can be used control over
-	             * cancellation had to be inverted to let transport provider solve request cancellation task
-	             * more efficiently. As result, cancellation controller can be retrieved and used only after
-	             * request will be scheduled by transport provider.
+	             * **Important:** Because of multiple environments where JS SDK can be used, control over
+	             * cancellation had to be inverted to let the transport provider solve a request cancellation task
+	             * more efficiently. As a result, cancellation controller can be retrieved and used only after
+	             *  the request will be scheduled by the transport provider.
 	             */
 	            request.cancellationController = cancellationController ? cancellationController : null;
 	            return sendableRequest
 	                .then((response) => {
 	                status.statusCode = response.status;
-	                // Handle special case when request completed but not fully processed by PubNub service.
+	                // Handle a special case when request completed but not fully processed by PubNub service.
 	                if (response.status !== 200 && response.status !== 204) {
 	                    const responseText = PubNubCore.decoder.decode(response.body);
 	                    const contentType = response.headers['content-type'];
@@ -13363,9 +15492,19 @@
 	                .catch((error) => {
 	                const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
 	                // Notify callback (if possible).
-	                if (callback)
+	                if (callback) {
+	                    if (apiError.category !== StatusCategory$1.PNCancelledCategory) {
+	                        this.logger.error('PubNub', () => ({
+	                            messageType: 'error',
+	                            message: apiError.toPubNubError(operation, 'REST API request processing error, check status for details'),
+	                        }));
+	                    }
 	                    return callback(apiError.toStatus(operation), null);
-	                throw apiError.toPubNubError(operation, 'REST API request processing error, check status for details');
+	                }
+	                const pubNubError = apiError.toPubNubError(operation, 'REST API request processing error, check status for details');
+	                if (apiError.category !== StatusCategory$1.PNCancelledCategory)
+	                    this.logger.error('PubNub', () => ({ messageType: 'error', message: pubNubError }));
+	                throw pubNubError;
 	            });
 	        });
 	    }
@@ -13374,10 +15513,15 @@
 	     *
 	     * @param [isOffline] - Whether `offline` presence should be notified or not.
 	     */
-	    destroy(isOffline) {
-	        var _a;
+	    destroy(isOffline = false) {
+	        this.logger.info('PubNub', 'Destroying PubNub client.');
 	        {
-	            (_a = this.subscribeCapable) === null || _a === void 0 ? void 0 : _a.clear();
+	            if (this._globalSubscriptionSet) {
+	                this._globalSubscriptionSet.invalidate(true);
+	                this._globalSubscriptionSet = undefined;
+	            }
+	            Object.values(this.eventHandleCapable).forEach((subscription) => subscription.invalidate(true));
+	            this.eventHandleCapable = {};
 	            if (this.subscriptionManager) {
 	                this.subscriptionManager.unsubscribeAll(isOffline);
 	                this.subscriptionManager.disconnect();
@@ -13396,34 +15540,8 @@
 	     * @deprecated Use {@link destroy} method instead.
 	     */
 	    stop() {
+	        this.logger.warn('PubNub', "'stop' is deprecated, please use 'destroy' instead.");
 	        this.destroy();
-	    }
-	    // endregion
-	    // --------------------------------------------------------
-	    // ----------------------- Listener -----------------------
-	    // --------------------------------------------------------
-	    // region Listener
-	    /**
-	     * Register real-time events listener.
-	     *
-	     * @param listener - Listener with event callbacks to handle different types of events.
-	     */
-	    addListener(listener) {
-	        this.listenerManager.addListener(listener);
-	    }
-	    /**
-	     * Remove real-time event listener.
-	     *
-	     * @param listener - Event listeners which should be removed.
-	     */
-	    removeListener(listener) {
-	        this.listenerManager.removeListener(listener);
-	    }
-	    /**
-	     * Clear all real-time event listeners.
-	     */
-	    removeAllListeners() {
-	        this.listenerManager.removeAllListeners();
 	    }
 	    /**
 	     * Publish data to a specific channel.
@@ -13436,10 +15554,27 @@
 	    publish(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Publish with parameters:',
+	                }));
+	                const isFireRequest = parameters.replicate === false && parameters.storeInHistory === false;
 	                const request = new PublishRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `${isFireRequest ? 'Fire' : 'Publish'} success with timetoken: ${response.timetoken}`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13454,10 +15589,26 @@
 	    signal(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Signal with parameters:',
+	                }));
 	                const request = new SignalRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Publish success with timetoken: ${response.timetoken}`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13473,6 +15624,11 @@
 	     */
 	    fire(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Fire with parameters:',
+	            }));
 	            callback !== null && callback !== void 0 ? callback : (callback = () => { });
 	            return this.publish(Object.assign(Object.assign({}, parameters), { replicate: false, storeInHistory: false }), callback);
 	        });
@@ -13482,6 +15638,34 @@
 	    // -------------------- Subscribe API ---------------------
 	    // --------------------------------------------------------
 	    // region Subscribe API
+	    /**
+	     * Global subscription set which supports legacy subscription interface.
+	     *
+	     * @returns Global subscription set.
+	     *
+	     * @internal
+	     */
+	    get globalSubscriptionSet() {
+	        if (!this._globalSubscriptionSet)
+	            this._globalSubscriptionSet = this.subscriptionSet({});
+	        return this._globalSubscriptionSet;
+	    }
+	    /**
+	     * Subscription-based current timetoken.
+	     *
+	     * @returns Timetoken based on current timetoken plus diff between current and loop start time.
+	     *
+	     * @internal
+	     */
+	    get subscriptionTimetoken() {
+	        {
+	            if (this.subscriptionManager)
+	                return this.subscriptionManager.subscriptionTimetoken;
+	            else if (this.eventEngine)
+	                return this.eventEngine.subscriptionTimetoken;
+	        }
+	        return undefined;
+	    }
 	    /**
 	     * Get list of channels on which PubNub client currently subscribed.
 	     *
@@ -13511,50 +15695,101 @@
 	        return [];
 	    }
 	    /**
-	     * Register subscribe capable object with active subscription.
+	     * Register an events handler object ({@link Subscription} or {@link SubscriptionSet}) with an active subscription.
 	     *
-	     * @param subscribeCapable - {@link Subscription} or {@link SubscriptionSet} object.
-	     *
-	     * @internal
-	     */
-	    registerSubscribeCapable(subscribeCapable) {
-	        {
-	            if (!this.subscribeCapable || this.subscribeCapable.has(subscribeCapable))
-	                return;
-	            this.subscribeCapable.add(subscribeCapable);
-	        }
-	    }
-	    /**
-	     * Unregister subscribe capable object with inactive subscription.
-	     *
-	     * @param subscribeCapable - {@link Subscription} or {@link SubscriptionSet} object.
+	     * @param subscription - {@link Subscription} or {@link SubscriptionSet} object.
+	     * @param [cursor] - Subscription catchup timetoken.
+	     * @param [subscriptions] - List of subscriptions for partial subscription loop update.
 	     *
 	     * @internal
 	     */
-	    unregisterSubscribeCapable(subscribeCapable) {
+	    registerEventHandleCapable(subscription, cursor, subscriptions) {
 	        {
-	            if (!this.subscribeCapable || !this.subscribeCapable.has(subscribeCapable))
-	                return;
-	            this.subscribeCapable.delete(subscribeCapable);
-	        }
-	    }
-	    /**
-	     * Retrieve list of subscribe capable entities currently used in subscription.
-	     *
-	     * @returns Channels and channel groups currently used in subscription.
-	     *
-	     * @internal
-	     */
-	    getSubscribeCapableEntities() {
-	        {
-	            const entities = { channels: [], channelGroups: [] };
-	            if (!this.subscribeCapable)
-	                return entities;
-	            for (const subscribeCapable of this.subscribeCapable) {
-	                entities.channelGroups.push(...subscribeCapable.channelGroups);
-	                entities.channels.push(...subscribeCapable.channels);
+	            this.logger.trace('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign(Object.assign({ subscription: subscription }, (cursor ? { cursor } : [])), (subscriptions ? { subscriptions } : {})),
+	                details: `Register event handle capable:`,
+	            }));
+	            if (!this.eventHandleCapable[subscription.state.id])
+	                this.eventHandleCapable[subscription.state.id] = subscription;
+	            let subscriptionInput;
+	            if (!subscriptions || subscriptions.length === 0)
+	                subscriptionInput = subscription.subscriptionInput(false);
+	            else {
+	                subscriptionInput = new SubscriptionInput({});
+	                subscriptions.forEach((subscription) => subscriptionInput.add(subscription.subscriptionInput(false)));
 	            }
-	            return entities;
+	            const parameters = {};
+	            parameters.channels = subscriptionInput.channels;
+	            parameters.channelGroups = subscriptionInput.channelGroups;
+	            if (cursor)
+	                parameters.timetoken = cursor.timetoken;
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.subscribe(parameters);
+	            else if (this.eventEngine)
+	                this.eventEngine.subscribe(parameters);
+	        }
+	    }
+	    /**
+	     * Unregister an events handler object ({@link Subscription} or {@link SubscriptionSet}) with inactive subscription.
+	     *
+	     * @param subscription - {@link Subscription} or {@link SubscriptionSet} object.
+	     * @param [subscriptions] - List of subscriptions for partial subscription loop update.
+	     *
+	     * @internal
+	     */
+	    unregisterEventHandleCapable(subscription, subscriptions) {
+	        {
+	            if (!this.eventHandleCapable[subscription.state.id])
+	                return;
+	            const inUseSubscriptions = [];
+	            this.logger.trace('PubNub', () => ({
+	                messageType: 'object',
+	                message: { subscription: subscription, subscriptions },
+	                details: `Unregister event handle capable:`,
+	            }));
+	            if (!subscriptions || subscriptions.length === 0)
+	                delete this.eventHandleCapable[subscription.state.id];
+	            let subscriptionInput;
+	            if (!subscriptions || subscriptions.length === 0) {
+	                subscriptionInput = subscription.subscriptionInput(true);
+	                if (subscriptionInput.isEmpty)
+	                    inUseSubscriptions.push(subscription);
+	            }
+	            else {
+	                subscriptionInput = new SubscriptionInput({});
+	                subscriptions.forEach((subscription) => {
+	                    const input = subscription.subscriptionInput(true);
+	                    if (input.isEmpty)
+	                        inUseSubscriptions.push(subscription);
+	                    else
+	                        subscriptionInput.add(input);
+	                });
+	            }
+	            if (inUseSubscriptions.length > 0) {
+	                this.logger.trace('PubNub', () => {
+	                    const entities = [];
+	                    if (inUseSubscriptions[0] instanceof SubscriptionSet) {
+	                        inUseSubscriptions[0].subscriptions.forEach((subscription) => entities.push(subscription.state.entity));
+	                    }
+	                    else
+	                        inUseSubscriptions.forEach((subscription) => entities.push(subscription.state.entity));
+	                    return {
+	                        messageType: 'object',
+	                        message: { entities },
+	                        details: `Can't unregister event handle capable because entities still in use:`,
+	                    };
+	                });
+	            }
+	            if (subscriptionInput.isEmpty)
+	                return;
+	            const parameters = {};
+	            parameters.channels = subscriptionInput.channels;
+	            parameters.channelGroups = subscriptionInput.channelGroups;
+	            if (this.subscriptionManager)
+	                this.subscriptionManager.unsubscribe(parameters);
+	            else if (this.eventEngine)
+	                this.eventEngine.unsubscribe(parameters);
 	        }
 	    }
 	    /**
@@ -13564,10 +15799,18 @@
 	     */
 	    subscribe(parameters) {
 	        {
-	            if (this.subscriptionManager)
-	                this.subscriptionManager.subscribe(parameters);
-	            else if (this.eventEngine)
-	                this.eventEngine.subscribe(parameters);
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Subscribe with parameters:',
+	            }));
+	            // The addition of a new subscription set into the subscribed global subscription set will update the active
+	            // subscription loop with new channels and groups.
+	            const subscriptionSet = this.subscriptionSet(Object.assign(Object.assign({}, parameters), { subscriptionOptions: { receivePresenceEvents: parameters.withPresence } }));
+	            this.globalSubscriptionSet.addSubscriptionSet(subscriptionSet);
+	            subscriptionSet.dispose();
+	            const timetoken = typeof parameters.timetoken === 'number' ? `${parameters.timetoken}` : parameters.timetoken;
+	            this.globalSubscriptionSet.subscribe({ timetoken });
 	        }
 	    }
 	    /**
@@ -13592,11 +15835,11 @@
 	            /**
 	             * Allow subscription cancellation.
 	             *
-	             * **Note:** Had to be done after scheduling because transport provider return cancellation
+	             * **Note:** Had to be done after scheduling because the transport provider returns the cancellation
 	             * controller only when schedule new request.
 	             */
 	            if (this.subscriptionManager) {
-	                // Creating identifiable abort caller.
+	                // Creating an identifiable abort caller.
 	                const callableAbort = () => request.abort('Cancel long-poll subscribe request');
 	                callableAbort.identifier = request.requestIdentifier;
 	                this.subscriptionManager.abort = callableAbort;
@@ -13610,10 +15853,30 @@
 	     */
 	    unsubscribe(parameters) {
 	        {
-	            if (this.subscriptionManager)
-	                this.subscriptionManager.unsubscribe(parameters);
-	            else if (this.eventEngine)
-	                this.eventEngine.unsubscribe(parameters);
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Unsubscribe with parameters:',
+	            }));
+	            if (!this._globalSubscriptionSet) {
+	                this.logger.debug('PubNub', 'There are no active subscriptions. Ignore.');
+	                return;
+	            }
+	            const subscriptions = this.globalSubscriptionSet.subscriptions.filter((subscription) => {
+	                var _a, _b;
+	                const subscriptionInput = subscription.subscriptionInput(false);
+	                if (subscriptionInput.isEmpty)
+	                    return false;
+	                for (const channel of (_a = parameters.channels) !== null && _a !== void 0 ? _a : [])
+	                    if (subscriptionInput.contains(channel))
+	                        return true;
+	                for (const group of (_b = parameters.channelGroups) !== null && _b !== void 0 ? _b : [])
+	                    if (subscriptionInput.contains(group))
+	                        return true;
+	            });
+	            // Removal from the active subscription also will cause `unsubscribe`.
+	            if (subscriptions.length > 0)
+	                this.globalSubscriptionSet.removeSubscriptions(subscriptions);
 	        }
 	    }
 	    /**
@@ -13630,7 +15893,7 @@
 	        {
 	            // Filtering out presence channels and groups.
 	            let { channels, channelGroups } = parameters;
-	            // Remove `-pnpres` channels / groups if they not acceptable in current PubNub client configuration.
+	            // Remove `-pnpres` channels / groups if they not acceptable in the current PubNub client configuration.
 	            if (!this._configuration.getKeepPresenceChannelsInPresenceRequests()) {
 	                if (channelGroups)
 	                    channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
@@ -13653,9 +15916,14 @@
 	     * Unsubscribe from all channels and groups.
 	     */
 	    unsubscribeAll() {
-	        var _a;
 	        {
-	            (_a = this.subscribeCapable) === null || _a === void 0 ? void 0 : _a.clear();
+	            this.logger.debug('PubNub', 'Unsubscribe all channels and groups');
+	            // Keeping a subscription set instance after invalidation so to make it possible to deliver the expected
+	            // disconnection status.
+	            if (this._globalSubscriptionSet)
+	                this._globalSubscriptionSet.invalidate(false);
+	            Object.values(this.eventHandleCapable).forEach((subscription) => subscription.invalidate(false));
+	            this.eventHandleCapable = {};
 	            if (this.subscriptionManager)
 	                this.subscriptionManager.unsubscribeAll();
 	            else if (this.eventEngine)
@@ -13663,14 +15931,15 @@
 	        }
 	    }
 	    /**
-	     * Temporarily disconnect from real-time events stream.
+	     * Temporarily disconnect from the real-time events stream.
 	     *
-	     * **Note:** `isOffline` is set to `true` only when client experience network issues.
+	     * **Note:** `isOffline` is set to `true` only when a client experiences network issues.
 	     *
 	     * @param [isOffline] - Whether `offline` presence should be notified or not.
 	     */
-	    disconnect(isOffline) {
+	    disconnect(isOffline = false) {
 	        {
+	            this.logger.debug('PubNub', `Disconnect (while offline? ${!!isOffline ? 'yes' : 'no'}`);
 	            if (this.subscriptionManager)
 	                this.subscriptionManager.disconnect();
 	            else if (this.eventEngine)
@@ -13680,11 +15949,15 @@
 	    /**
 	     * Restore connection to the real-time events stream.
 	     *
-	     * @param parameters - Reconnection catch up configuration. **Note:** available only with
-	     * enabled event engine.
+	     * @param parameters - Reconnection catch-up configuration. **Note:** available only with the enabled event engine.
 	     */
 	    reconnect(parameters) {
 	        {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Reconnect with parameters:',
+	            }));
 	            if (this.subscriptionManager)
 	                this.subscriptionManager.reconnect();
 	            else if (this.eventEngine)
@@ -13708,7 +15981,7 @@
 	                /**
 	                 * Allow subscription cancellation.
 	                 *
-	                 * **Note:** Had to be done after scheduling because transport provider return cancellation
+	                 * **Note:** Had to be done after scheduling because the transport provider returns the cancellation
 	                 * controller only when schedule new request.
 	                 */
 	                const handshakeResponse = this.sendRequest(request);
@@ -13736,7 +16009,7 @@
 	                /**
 	                 * Allow subscription cancellation.
 	                 *
-	                 * **Note:** Had to be done after scheduling because transport provider return cancellation
+	                 * **Note:** Had to be done after scheduling because the transport provider returns the cancellation
 	                 * controller only when schedule new request.
 	                 */
 	                const receiveResponse = this.sendRequest(request);
@@ -13758,10 +16031,26 @@
 	    getMessageActions(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Get message actions with parameters:',
+	                }));
 	                const request = new GetMessageActionsRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Get message actions success. Received ${response.data.length} message actions.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13776,10 +16065,26 @@
 	    addMessageAction(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Add message action with parameters:',
+	                }));
 	                const request = new AddMessageActionRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Message action add success. Message action added with timetoken: ${response.data.actionTimetoken}`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13794,10 +16099,26 @@
 	    removeMessageAction(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Remove message action with parameters:',
+	                }));
 	                const request = new RemoveMessageAction(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Message action remove success. Removed message action with ${parameters.actionTimetoken} timetoken.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13812,10 +16133,27 @@
 	    fetchMessages(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Fetch messages with parameters:',
+	                }));
 	                const request = new FetchMessagesRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    const messagesCount = Object.values(response.channels).reduce((acc, message) => acc + message.length, 0);
+	                    this.logger.debug('PubNub', `Fetch messages success. Received ${messagesCount} messages.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13832,10 +16170,26 @@
 	    deleteMessages(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Delete messages with parameters:',
+	                }));
 	                const request = new DeleteMessageRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Delete messages success.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13850,10 +16204,27 @@
 	    messageCounts(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Get messages count with parameters:',
+	                }));
 	                const request = new MessageCountRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    const messagesCount = Object.values(response.channels).reduce((acc, messagesCount) => acc + messagesCount, 0);
+	                    this.logger.debug('PubNub', `Get messages count success. There are ${messagesCount} messages since provided reference timetoken${parameters.channelTimetokens ? parameters.channelTimetokens.join(',') : ''.length > 1 ? 's' : ''}.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13870,10 +16241,26 @@
 	    history(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Fetch history with parameters:',
+	                }));
 	                const request = new GetHistoryRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Fetch history success. Received ${response.messages.length} messages.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13888,10 +16275,26 @@
 	    hereNow(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Here now with parameters:',
+	                }));
 	                const request = new HereNowRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Here now success. There are ${response.totalOccupancy} participants in ${response.totalChannels} channels.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13909,13 +16312,29 @@
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Where now with parameters:',
+	                }));
 	                const request = new WhereNowRequest({
 	                    uuid: (_a = parameters.uuid) !== null && _a !== void 0 ? _a : this._configuration.userId,
 	                    keySet: this._configuration.keySet,
 	                });
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Where now success. Currently present in ${response.channels.length} channels.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13931,10 +16350,26 @@
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Get presence state with parameters:',
+	                }));
 	                const request = new GetPresenceStateRequest(Object.assign(Object.assign({}, parameters), { uuid: (_a = parameters.uuid) !== null && _a !== void 0 ? _a : this._configuration.userId, keySet: this._configuration.keySet }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Get presence state success. Received presence state for ${Object.keys(response.channels).length} channels.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13950,6 +16385,11 @@
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a, _b;
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Set presence state with parameters:',
+	                }));
 	                const { keySet, userId: userId } = this._configuration;
 	                const heartbeat = this._configuration.getPresenceTimeout();
 	                let request;
@@ -13961,19 +16401,30 @@
 	                        (_b = parameters.channelGroups) === null || _b === void 0 ? void 0 : _b.forEach((group) => (presenceState[group] = parameters.state));
 	                    }
 	                }
-	                // Check whether state should be set with heartbeat or not.
-	                if ('withHeartbeat' in parameters) {
+	                // Check whether the state should be set with heartbeat or not.
+	                if ('withHeartbeat' in parameters && parameters.withHeartbeat) {
 	                    request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { keySet, heartbeat }));
 	                }
 	                else {
 	                    request = new SetPresenceStateRequest(Object.assign(Object.assign({}, parameters), { keySet, uuid: userId }));
 	                }
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Set presence state success.${request instanceof HeartbeatRequest ? ' Presence state has been set using heartbeat endpoint.' : ''}`);
+	                };
 	                // Update state used by subscription manager.
 	                if (this.subscriptionManager)
 	                    this.subscriptionManager.setState(parameters);
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -13982,11 +16433,18 @@
 	    /**
 	     * Manual presence management.
 	     *
-	     * @param parameters - Desired presence state for provided list of channels and groups.
+	     * @param parameters - Desired presence state for a provided list of channels and groups.
 	     */
 	    presence(parameters) {
 	        var _a;
-	        (_a = this.subscriptionManager) === null || _a === void 0 ? void 0 : _a.changePresence(parameters);
+	        {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Change presence with parameters:',
+	            }));
+	            (_a = this.subscriptionManager) === null || _a === void 0 ? void 0 : _a.changePresence(parameters);
+	        }
 	    }
 	    // endregion
 	    // region Heartbeat
@@ -14001,9 +16459,14 @@
 	    heartbeat(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.trace('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: 'Heartbeat with parameters:',
+	                }));
 	                // Filtering out presence channels and groups.
 	                let { channels, channelGroups } = parameters;
-	                // Remove `-pnpres` channels / groups if they not acceptable in current PubNub client configuration.
+	                // Remove `-pnpres` channels / groups if they not acceptable in the current PubNub client configuration.
 	                if (!this._configuration.getKeepPresenceChannelsInPresenceRequests()) {
 	                    if (channelGroups)
 	                        channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
@@ -14018,15 +16481,27 @@
 	                        category: StatusCategory$1.PNAcknowledgmentCategory,
 	                        statusCode: 200,
 	                    };
+	                    this.logger.trace('PubNub', 'There are no active subscriptions. Ignore.');
 	                    if (callback)
 	                        return callback(responseStatus, {});
 	                    return Promise.resolve(responseStatus);
 	                }
 	                const request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { channels,
 	                    channelGroups, keySet: this._configuration.keySet }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.trace('PubNub', 'Heartbeat success.');
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -14041,10 +16516,17 @@
 	     */
 	    join(parameters) {
 	        {
+	            this.logger.trace('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Join with parameters:',
+	            }));
 	            if (this.presenceEventEngine)
 	                this.presenceEventEngine.join(parameters);
 	            else {
-	                this.heartbeat(Object.assign(Object.assign({ channels: parameters.channels, channelGroups: parameters.groups }, (this._configuration.maintainPresenceState && { state: this.presenceState })), { heartbeat: this._configuration.getPresenceTimeout() }), () => { });
+	                this.heartbeat(Object.assign(Object.assign({ channels: parameters.channels, channelGroups: parameters.groups }, (this._configuration.maintainPresenceState &&
+	                    this.presenceState &&
+	                    Object.keys(this.presenceState).length > 0 && { state: this.presenceState })), { heartbeat: this._configuration.getPresenceTimeout() }), () => { });
 	            }
 	        }
 	    }
@@ -14057,6 +16539,11 @@
 	     */
 	    presenceReconnect(parameters) {
 	        {
+	            this.logger.trace('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Presence reconnect with parameters:',
+	            }));
 	            if (this.presenceEventEngine)
 	                this.presenceEventEngine.reconnect();
 	            else {
@@ -14076,6 +16563,11 @@
 	    leave(parameters) {
 	        var _a;
 	        {
+	            this.logger.trace('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Leave with parameters:',
+	            }));
 	            if (this.presenceEventEngine)
 	                (_a = this.presenceEventEngine) === null || _a === void 0 ? void 0 : _a.leave(parameters);
 	            else
@@ -14091,8 +16583,13 @@
 	     */
 	    leaveAll(parameters = {}) {
 	        {
+	            this.logger.trace('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Leave all with parameters:',
+	            }));
 	            if (this.presenceEventEngine)
-	                this.presenceEventEngine.leaveAll(parameters.isOffline);
+	                this.presenceEventEngine.leaveAll(!!parameters.isOffline);
 	            else if (!parameters.isOffline)
 	                this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => { });
 	        }
@@ -14106,8 +16603,13 @@
 	     */
 	    presenceDisconnect(parameters) {
 	        {
+	            this.logger.trace('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Presence disconnect parameters:',
+	            }));
 	            if (this.presenceEventEngine)
-	                this.presenceEventEngine.disconnect(parameters.isOffline);
+	                this.presenceEventEngine.disconnect(!!parameters.isOffline);
 	            else if (!parameters.isOffline)
 	                this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => { });
 	        }
@@ -14115,7 +16617,7 @@
 	    /**
 	     * Grant token permission.
 	     *
-	     * Generate access token with requested permissions.
+	     * Generate an access token with requested permissions.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -14143,7 +16645,7 @@
 	    // endregion
 	    // region Token Manipulation
 	    /**
-	     * Get current access token.
+	     * Get a current access token.
 	     *
 	     * @returns Previously configured access token using {@link setToken} method.
 	     */
@@ -14151,7 +16653,7 @@
 	        return this.tokenManager && this.tokenManager.getToken();
 	    }
 	    /**
-	     * Get current access token.
+	     * Get a current access token.
 	     *
 	     * @returns Previously configured access token using {@link setToken} method.
 	     */
@@ -14238,58 +16740,92 @@
 	     *
 	     * @returns Asynchronous get all User objects response or `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata} method instead.
+	     * @deprecated Use {@link PubNubCore#objects.getAllUUIDMetadata getAllUUIDMetadata} method instead.
 	     */
 	    fetchUsers(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            return this.objects._getAllUUIDMetadata(parametersOrCallback, callback);
+	            {
+	                this.logger.warn('PubNub', "'fetchUsers' is deprecated. Use 'pubnub.objects.getAllUUIDMetadata' instead.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: !parametersOrCallback || typeof parametersOrCallback === 'function' ? {} : parametersOrCallback,
+	                    details: `Fetch all User objects with parameters:`,
+	                }));
+	                return this.objects._getAllUUIDMetadata(parametersOrCallback, callback);
+	            }
 	        });
 	    }
 	    /**
-	     * Fetch User object for currently configured PubNub client `uuid`.
+	     * Fetch User object for a currently configured PubNub client `uuid`.
 	     *
 	     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
 	     * @param [callback] - Request completion handler callback.
 	     *
 	     * @returns Asynchronous get User object response or `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata} method instead.
+	     * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata getUUIDMetadata} method instead.
 	     */
 	    fetchUser(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            return this.objects._getUUIDMetadata(parametersOrCallback, callback);
+	            {
+	                this.logger.warn('PubNub', "'fetchUser' is deprecated. Use 'pubnub.objects.getUUIDMetadata' instead.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: !parametersOrCallback || typeof parametersOrCallback === 'function'
+	                        ? { uuid: this.userId }
+	                        : parametersOrCallback,
+	                    details: `Fetch${!parametersOrCallback || typeof parametersOrCallback === 'function' ? ' current' : ''} User object with parameters:`,
+	                }));
+	                return this.objects._getUUIDMetadata(parametersOrCallback, callback);
+	            }
 	        });
 	    }
 	    /**
-	     * Create User object.
+	     * Create a User object.
 	     *
-	     * @param parameters - Request configuration parameters. Will create User object for currently
+	     * @param parameters - Request configuration parameters. Will create a User object for a currently
 	     * configured PubNub client `uuid` if not set.
 	     * @param [callback] - Request completion handler callback.
 	     *
 	     * @returns Asynchronous create User object response or `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+	     * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
 	     */
 	    createUser(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            return this.objects._setUUIDMetadata(parameters, callback);
+	            {
+	                this.logger.warn('PubNub', "'createUser' is deprecated. Use 'pubnub.objects.setUUIDMetadata' instead.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Create User object with parameters:`,
+	                }));
+	                return this.objects._setUUIDMetadata(parameters, callback);
+	            }
 	        });
 	    }
 	    /**
-	     * Update User object.
+	     * Update a User object.
 	     *
-	     * @param parameters - Request configuration parameters. Will update User object for currently
+	     * @param parameters - Request configuration parameters. Will update a User object for a currently
 	     * configured PubNub client `uuid` if not set.
 	     * @param [callback] - Request completion handler callback.
 	     *
 	     * @returns Asynchronous update User object response or `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata} method instead.
+	     * @deprecated Use {@link PubNubCore#objects.setUUIDMetadata setUUIDMetadata} method instead.
 	     */
 	    updateUser(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            return this.objects._setUUIDMetadata(parameters, callback);
+	            this.logger.warn('PubNub', "'updateUser' is deprecated. Use 'pubnub.objects.setUUIDMetadata' instead.");
+	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Update User object with parameters:`,
+	                }));
+	                return this.objects._setUUIDMetadata(parameters, callback);
+	            }
 	        });
 	    }
 	    /**
@@ -14298,13 +16834,23 @@
 	     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
 	     * @param [callback] - Request completion handler callback.
 	     *
-	     * @returns Asynchronous User object remove response or `void` in case if `callback` provided.
+	     * @returns Asynchronous User object removes response or `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata} method instead.
+	     * @deprecated Use {@link PubNubCore#objects.removeUUIDMetadata removeUUIDMetadata} method instead.
 	     */
 	    removeUser(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            return this.objects._removeUUIDMetadata(parametersOrCallback, callback);
+	            {
+	                this.logger.warn('PubNub', "'removeUser' is deprecated. Use 'pubnub.objects.removeUUIDMetadata' instead.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: !parametersOrCallback || typeof parametersOrCallback === 'function'
+	                        ? { uuid: this.userId }
+	                        : parametersOrCallback,
+	                    details: `Remove${!parametersOrCallback || typeof parametersOrCallback === 'function' ? ' current' : ''} User object with parameters:`,
+	                }));
+	                return this.objects._removeUUIDMetadata(parametersOrCallback, callback);
+	            }
 	        });
 	    }
 	    /**
@@ -14316,11 +16862,19 @@
 	     * @returns Asynchronous get all Space objects response or `void` in case if `callback`
 	     * provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata} method instead.
+	     * @deprecated Use {@link PubNubCore#objects.getAllChannelMetadata getAllChannelMetadata} method instead.
 	     */
 	    fetchSpaces(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            return this.objects._getAllChannelMetadata(parametersOrCallback, callback);
+	            {
+	                this.logger.warn('PubNub', "'fetchSpaces' is deprecated. Use 'pubnub.objects.getAllChannelMetadata' instead.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: !parametersOrCallback || typeof parametersOrCallback === 'function' ? {} : parametersOrCallback,
+	                    details: `Fetch all Space objects with parameters:`,
+	                }));
+	                return this.objects._getAllChannelMetadata(parametersOrCallback, callback);
+	            }
 	        });
 	    }
 	    /**
@@ -14331,11 +16885,19 @@
 	     *
 	     * @returns Asynchronous get Space object response or `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.getChannelMetadata} method instead.
+	     * @deprecated Use {@link PubNubCore#objects.getChannelMetadata getChannelMetadata} method instead.
 	     */
 	    fetchSpace(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            return this.objects._getChannelMetadata(parameters, callback);
+	            {
+	                this.logger.warn('PubNub', "'fetchSpace' is deprecated. Use 'pubnub.objects.getChannelMetadata' instead.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Fetch Space object with parameters:`,
+	                }));
+	                return this.objects._getChannelMetadata(parameters, callback);
+	            }
 	        });
 	    }
 	    /**
@@ -14346,11 +16908,19 @@
 	     *
 	     * @returns Asynchronous create Space object response or `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+	     * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
 	     */
 	    createSpace(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            return this.objects._setChannelMetadata(parameters, callback);
+	            {
+	                this.logger.warn('PubNub', "'createSpace' is deprecated. Use 'pubnub.objects.setChannelMetadata' instead.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Create Space object with parameters:`,
+	                }));
+	                return this.objects._setChannelMetadata(parameters, callback);
+	            }
 	        });
 	    }
 	    /**
@@ -14361,11 +16931,19 @@
 	     *
 	     * @returns Asynchronous update Space object response or `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.setChannelMetadata} method instead.
+	     * @deprecated Use {@link PubNubCore#objects.setChannelMetadata setChannelMetadata} method instead.
 	     */
 	    updateSpace(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            return this.objects._setChannelMetadata(parameters, callback);
+	            {
+	                this.logger.warn('PubNub', "'updateSpace' is deprecated. Use 'pubnub.objects.setChannelMetadata' instead.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Update Space object with parameters:`,
+	                }));
+	                return this.objects._setChannelMetadata(parameters, callback);
+	            }
 	        });
 	    }
 	    /**
@@ -14377,15 +16955,23 @@
 	     * @returns Asynchronous Space object remove response or `void` in case if `callback`
 	     * provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata} method instead.
+	     * @deprecated Use {@link PubNubCore#objects.removeChannelMetadata removeChannelMetadata} method instead.
 	     */
 	    removeSpace(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            return this.objects._removeChannelMetadata(parameters, callback);
+	            {
+	                this.logger.warn('PubNub', "'removeSpace' is deprecated. Use 'pubnub.objects.removeChannelMetadata' instead.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Remove Space object with parameters:`,
+	                }));
+	                return this.objects._removeChannelMetadata(parameters, callback);
+	            }
 	        });
 	    }
 	    /**
-	     * Fetch paginated list of specific Space members or specific User memberships.
+	     * Fetch a paginated list of specific Space members or specific User memberships.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -14393,8 +16979,8 @@
 	     * @returns Asynchronous get specific Space members or specific User memberships response or
 	     * `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.getChannelMembers} or {@link PubNubCore#objects.getMemberships}
-	     * methods instead.
+	     * @deprecated Use {@link PubNubCore#objects.getChannelMembers getChannelMembers} or
+	     * {@link PubNubCore#objects.getMemberships getMemberships} methods instead.
 	     */
 	    fetchMemberships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -14410,8 +16996,8 @@
 	     * @returns Asynchronous add members to specific Space or memberships specific User response or
 	     * `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-	     * methods instead.
+	     * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+	     * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
 	     */
 	    addMemberships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -14427,12 +17013,21 @@
 	     * @returns Asynchronous update Space members or User memberships response or `void` in case
 	     * if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.setChannelMembers} or {@link PubNubCore#objects.setMemberships}
-	     * methods instead.
+	     * @deprecated Use {@link PubNubCore#objects.setChannelMembers setChannelMembers} or
+	     * {@link PubNubCore#objects.setMemberships setMemberships} methods instead.
 	     */
 	    updateMemberships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            return this.objects.addMemberships(parameters, callback);
+	            {
+	                this.logger.warn('PubNub', "'addMemberships' is deprecated. Use 'pubnub.objects.setChannelMembers' or 'pubnub.objects.setMemberships'" +
+	                    ' instead.');
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Update memberships with parameters:`,
+	                }));
+	                return this.objects.addMemberships(parameters, callback);
+	            }
 	        });
 	    }
 	    /**
@@ -14443,13 +17038,20 @@
 	     *
 	     * @returns Asynchronous memberships modification response or `void` in case if `callback` provided.
 	     *
-	     * @deprecated Use {@link PubNubCore#objects.removeMemberships} or {@link PubNubCore#objects.removeChannelMembers}
-	     * methods instead from `objects` API group.
+	     * @deprecated Use {@link PubNubCore#objects.removeMemberships removeMemberships} or
+	     * {@link PubNubCore#objects.removeChannelMembers removeChannelMembers} methods instead from `objects` API group.
 	     */
 	    removeMemberships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a, _b, _c;
 	            {
+	                this.logger.warn('PubNub', "'removeMemberships' is deprecated. Use 'pubnub.objects.removeMemberships' or" +
+	                    " 'pubnub.objects.removeChannelMembers' instead.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Remove memberships with parameters:`,
+	                }));
 	                if ('spaceId' in parameters) {
 	                    const spaceParameters = parameters;
 	                    const requestParameters = {
@@ -14509,6 +17111,11 @@
 	            {
 	                if (!this._configuration.PubNubFile)
 	                    throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Send file with parameters:`,
+	                }));
 	                const sendFileRequest = new SendFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, PubNubFile: this._configuration.PubNubFile, fileUploadPublishRetryLimit: this._configuration.fileUploadPublishRetryLimit, file: parameters.file, sendRequest: this.sendRequest.bind(this), publishFile: this.publishFile.bind(this), crypto: this._configuration.getCryptoModule(), cryptography: this.cryptography ? this.cryptography : undefined }));
 	                const status = {
 	                    error: false,
@@ -14516,10 +17123,16 @@
 	                    category: StatusCategory$1.PNAcknowledgmentCategory,
 	                    statusCode: 0,
 	                };
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Send file success. File shared with ${response.id} ID.`);
+	                };
 	                return sendFileRequest
 	                    .process()
 	                    .then((response) => {
 	                    status.statusCode = response.status;
+	                    logResponse(response);
 	                    if (callback)
 	                        return callback(status, response);
 	                    return response;
@@ -14530,10 +17143,14 @@
 	                        errorStatus = error.status;
 	                    else if (error instanceof PubNubAPIError)
 	                        errorStatus = error.toStatus(status.operation);
+	                    this.logger.error('PubNub', () => ({
+	                        messageType: 'error',
+	                        message: new PubNubError('File sending error. Check status for details', errorStatus),
+	                    }));
 	                    // Notify callback (if possible).
 	                    if (callback && errorStatus)
 	                        callback(errorStatus, null);
-	                    throw new PubNubError('REST API request processing error, check status for details', errorStatus);
+	                    throw new PubNubError('REST API request processing error. Check status for details', errorStatus);
 	                });
 	            }
 	        });
@@ -14551,10 +17168,26 @@
 	            {
 	                if (!this._configuration.PubNubFile)
 	                    throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Publish file message with parameters:`,
+	                }));
 	                const request = new PublishFileMessageRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule() }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Publish file message success. File message published with timetoken: ${response.timetoken}`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -14569,10 +17202,26 @@
 	    listFiles(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `List files with parameters:`,
+	                }));
 	                const request = new FilesListRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `List files success. There are ${response.count} uploaded files.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -14602,7 +17251,7 @@
 	        }
 	    }
 	    /**
-	     * Download shared file from specific channel.
+	     * Download a shared file from a specific channel.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -14614,15 +17263,31 @@
 	            {
 	                if (!this._configuration.PubNubFile)
 	                    throw new Error("Validation failed: 'PubNubFile' not configured or file upload not supported by the platform.");
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Download file with parameters:`,
+	                }));
 	                const request = new DownloadFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, PubNubFile: this._configuration.PubNubFile, cryptography: this.cryptography ? this.cryptography : undefined, crypto: this._configuration.getCryptoModule() }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Download file success.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return (yield this.sendRequest(request));
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return (yield this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                }));
 	            }
 	        });
 	    }
 	    /**
-	     * Delete shared file from specific channel.
+	     * Delete a shared file from a specific channel.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -14632,10 +17297,26 @@
 	    deleteFile(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                this.logger.debug('PubNub', () => ({
+	                    messageType: 'object',
+	                    message: Object.assign({}, parameters),
+	                    details: `Delete file with parameters:`,
+	                }));
 	                const request = new DeleteFileRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet }));
+	                const logResponse = (response) => {
+	                    if (!response)
+	                        return;
+	                    this.logger.debug('PubNub', `Delete file success. Deleted file with ${parameters.id} ID.`);
+	                };
 	                if (callback)
-	                    return this.sendRequest(request, callback);
-	                return this.sendRequest(request);
+	                    return this.sendRequest(request, (status, response) => {
+	                        logResponse(response);
+	                        callback(status, response);
+	                    });
+	                return this.sendRequest(request).then((response) => {
+	                    logResponse(response);
+	                    return response;
+	                });
 	            }
 	        });
 	    }
@@ -14648,11 +17329,180 @@
 	     */
 	    time(callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', 'Get service time.');
 	            const request = new TimeRequest();
+	            const logResponse = (response) => {
+	                if (!response)
+	                    return;
+	                this.logger.debug('PubNub', `Get service time success. Current timetoken: ${response.timetoken}`);
+	            };
 	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
+	                return this.sendRequest(request, (status, response) => {
+	                    logResponse(response);
+	                    callback(status, response);
+	                });
+	            return this.sendRequest(request).then((response) => {
+	                logResponse(response);
+	                return response;
+	            });
 	        });
+	    }
+	    // endregion
+	    // --------------------------------------------------------
+	    // -------------------- Event emitter ---------------------
+	    // --------------------------------------------------------
+	    // region Event emitter
+	    /**
+	     * Emit received a status update.
+	     *
+	     * Use global and local event dispatchers to deliver a status object.
+	     *
+	     * @param status - Status object which should be emitted through the listeners.
+	     *
+	     * @internal
+	     */
+	    emitStatus(status) {
+	        var _a;
+	        (_a = this.eventDispatcher) === null || _a === void 0 ? void 0 : _a.handleStatus(status);
+	    }
+	    /**
+	     * Emit receiver real-time event.
+	     *
+	     * Use global and local event dispatchers to deliver an event object.
+	     *
+	     * @param cursor - Next subscription loop timetoken.
+	     * @param event - Event object which should be emitted through the listeners.
+	     *
+	     * @internal
+	     */
+	    emitEvent(cursor, event) {
+	        var _a;
+	        {
+	            if (this._globalSubscriptionSet)
+	                this._globalSubscriptionSet.handleEvent(cursor, event);
+	            (_a = this.eventDispatcher) === null || _a === void 0 ? void 0 : _a.handleEvent(event);
+	            Object.values(this.eventHandleCapable).forEach((eventHandleCapable) => {
+	                eventHandleCapable.handleEvent(cursor, event);
+	            });
+	        }
+	    }
+	    /**
+	     * Set a connection status change event handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when the connection status changes.
+	     */
+	    set onStatus(listener) {
+	        {
+	            if (this.eventDispatcher)
+	                this.eventDispatcher.onStatus = listener;
+	        }
+	    }
+	    /**
+	     * Set a new message handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new message
+	     * is received from the real-time network.
+	     */
+	    set onMessage(listener) {
+	        {
+	            if (this.eventDispatcher)
+	                this.eventDispatcher.onMessage = listener;
+	        }
+	    }
+	    /**
+	     * Set a new presence events handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new
+	     * presence event is received from the real-time network.
+	     */
+	    set onPresence(listener) {
+	        {
+	            if (this.eventDispatcher)
+	                this.eventDispatcher.onPresence = listener;
+	        }
+	    }
+	    /**
+	     * Set a new signal handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new signal
+	     * is received from the real-time network.
+	     */
+	    set onSignal(listener) {
+	        {
+	            if (this.eventDispatcher)
+	                this.eventDispatcher.onSignal = listener;
+	        }
+	    }
+	    /**
+	     * Set a new app context event handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new
+	     * app context event is received from the real-time network.
+	     */
+	    set onObjects(listener) {
+	        {
+	            if (this.eventDispatcher)
+	                this.eventDispatcher.onObjects = listener;
+	        }
+	    }
+	    /**
+	     * Set a new message reaction event handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a
+	     * new message reaction event is received from the real-time network.
+	     */
+	    set onMessageAction(listener) {
+	        {
+	            if (this.eventDispatcher)
+	                this.eventDispatcher.onMessageAction = listener;
+	        }
+	    }
+	    /**
+	     * Set a new file handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new file
+	     * is received from the real-time network.
+	     */
+	    set onFile(listener) {
+	        {
+	            if (this.eventDispatcher)
+	                this.eventDispatcher.onFile = listener;
+	        }
+	    }
+	    /**
+	     * Set events handler.
+	     *
+	     * @param listener - Events listener configuration object, which lets specify handlers for multiple
+	     * types of events.
+	     */
+	    addListener(listener) {
+	        {
+	            if (this.eventDispatcher) {
+	                this.eventDispatcher.addListener(listener);
+	            }
+	        }
+	    }
+	    /**
+	     * Remove real-time event listener.
+	     *
+	     * @param listener - Event listener configuration, which should be removed from the list of notified
+	     * listeners. **Important:** Should be the same object which has been passed to the
+	     * {@link addListener}.
+	     */
+	    removeListener(listener) {
+	        {
+	            if (this.eventDispatcher)
+	                this.eventDispatcher.removeListener(listener);
+	        }
+	    }
+	    /**
+	     * Clear all real-time event listeners.
+	     */
+	    removeAllListeners() {
+	        {
+	            if (this.eventDispatcher)
+	                this.eventDispatcher.removeAllListeners();
+	        }
 	    }
 	    // endregion
 	    // --------------------------------------------------------
@@ -14664,13 +17514,15 @@
 	     * Encrypt data.
 	     *
 	     * @param data - Stringified data which should be encrypted using `CryptoModule`.
-	     * @deprecated
 	     * @param [customCipherKey] - Cipher key which should be used to encrypt data. **Deprecated:**
 	     * use {@link Configuration#cryptoModule|cryptoModule} instead.
 	     *
 	     * @returns Data encryption result as a string.
+	     *
+	     * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
 	     */
 	    encrypt(data, customCipherKey) {
+	        this.logger.warn('PubNub', "'encrypt' is deprecated. Use cryptoModule instead.");
 	        const cryptoModule = this._configuration.getCryptoModule();
 	        if (!customCipherKey && cryptoModule && typeof data === 'string') {
 	            const encrypted = cryptoModule.encrypt(data);
@@ -14690,8 +17542,11 @@
 	     * use {@link Configuration#cryptoModule|cryptoModule} instead.
 	     *
 	     * @returns Data decryption result as an object.
+	     *
+	     * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
 	     */
 	    decrypt(data, customCipherKey) {
+	        this.logger.warn('PubNub', "'decrypt' is deprecated. Use cryptoModule instead.");
 	        const cryptoModule = this._configuration.getCryptoModule();
 	        if (!customCipherKey && cryptoModule) {
 	            const decrypted = cryptoModule.decrypt(data);
@@ -14712,9 +17567,11 @@
 	     *
 	     * @returns Asynchronous file encryption result.
 	     *
-	     * @throws Error if source file not provided.
+	     * @throws Error if a source file isn't provided.
 	     * @throws File constructor not provided.
 	     * @throws Crypto module is missing (if non-legacy flow used).
+	     *
+	     * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
 	     */
 	    encryptFile(keyOrFile, file) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -14744,9 +17601,11 @@
 	     *
 	     * @returns Asynchronous file decryption result.
 	     *
-	     * @throws Error if source file not provided.
+	     * @throws Error if source file isn't provided.
 	     * @throws File constructor not provided.
 	     * @throws Crypto module is missing (if non-legacy flow used).
+	     *
+	     * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
 	     */
 	    decryptFile(keyOrFile, file) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -14806,6 +17665,10 @@
 	 * retry policy for all requests (setting `undefined` for retry configuration will set default policy).
 	 */
 	PubNubCore.NoneRetryPolicy = RetryPolicy.None;
+	/**
+	 * Available minimum log levels.
+	 */
+	PubNubCore.LogLevel = LogLevel;
 
 	/**
 	 * Cbor decoder module.
@@ -14848,7 +17711,7 @@
 	 */
 	class PubNub extends PubNubCore {
 	    /**
-	     * Create and configure PubNub client core.
+	     * Create and configure the PubNub client core.
 	     *
 	     * @param configuration - User-provided PubNub client configuration.
 	     *
@@ -14856,6 +17719,7 @@
 	     */
 	    constructor(configuration) {
 	        var _a;
+	        const sharedWorkerRequested = configuration.subscriptionWorkerUrl !== undefined;
 	        const configurationCopy = setDefaults(configuration);
 	        const platformConfiguration = Object.assign(Object.assign({}, configurationCopy), { sdkFamily: 'Web' });
 	        platformConfiguration.PubNubFile = PubNubFile;
@@ -14864,12 +17728,18 @@
 	            if (!cryptoConfiguration.cipherKey)
 	                return undefined;
 	            {
-	                return new WebCryptoModule({
-	                    default: new LegacyCryptor(Object.assign({}, cryptoConfiguration)),
+	                const cryptoModule = new WebCryptoModule({
+	                    default: new LegacyCryptor(Object.assign(Object.assign({}, cryptoConfiguration), (!cryptoConfiguration.logger ? { logger: clientConfiguration.logger() } : {}))),
 	                    cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
 	                });
+	                return cryptoModule;
 	            }
 	        });
+	        {
+	            // Ensure that the logger has been passed to the user-provided crypto module.
+	            if (clientConfiguration.getCryptoModule())
+	                clientConfiguration.getCryptoModule().logger = clientConfiguration.logger();
+	        }
 	        // Prepare Token manager.
 	        let tokenManager;
 	        {
@@ -14885,13 +17755,14 @@
 	                    useRandomIVs: clientConfiguration.getUseRandomIVs(),
 	                    customEncrypt: clientConfiguration.getCustomEncrypt(),
 	                    customDecrypt: clientConfiguration.getCustomDecrypt(),
+	                    logger: clientConfiguration.logger(),
 	                });
 	            }
 	        }
 	        let cryptography;
 	        cryptography = new WebCryptography();
 	        // Setup transport provider.
-	        let transport = new WebTransport(platformConfiguration.transport, clientConfiguration.keepAlive, clientConfiguration.logVerbosity);
+	        let transport = new WebTransport(clientConfiguration.logger(), platformConfiguration.transport);
 	        {
 	            if (configurationCopy.subscriptionWorkerUrl) {
 	                // Inject subscription worker into transport provider stack.
@@ -14904,16 +17775,21 @@
 	                    heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
 	                    workerOfflineClientsCheckInterval: platformConfiguration.subscriptionWorkerOfflineClientsCheckInterval,
 	                    workerUnsubscribeOfflineClients: platformConfiguration.subscriptionWorkerUnsubscribeOfflineClients,
-	                    logVerbosity: clientConfiguration.logVerbosity,
 	                    workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
 	                    tokenManager,
 	                    transport,
+	                    logger: clientConfiguration.logger(),
 	                });
 	                transport = middleware;
 	                window.onpagehide = (event) => {
 	                    if (!event.persisted)
 	                        middleware.terminate();
 	                };
+	            }
+	            else if (sharedWorkerRequested) {
+	                clientConfiguration
+	                    .logger()
+	                    .warn('PubNub', 'SharedWorker not supported in this browser. Fallback to the original transport.');
 	            }
 	        }
 	        const transportMiddleware = new PubNubMiddleware({
@@ -14938,21 +17814,22 @@
 	        }
 	    }
 	    networkDownDetected() {
-	        this.listenerManager.announceNetworkDown();
+	        this.logger.debug('PubNub', 'Network down detected');
+	        this.emitStatus({ category: PubNub.CATEGORIES.PNNetworkDownCategory });
 	        if (this._configuration.restore)
 	            this.disconnect(true);
 	        else
 	            this.destroy(true);
 	    }
 	    networkUpDetected() {
-	        this.listenerManager.announceNetworkUp();
+	        this.logger.debug('PubNub', 'Network up detected');
+	        this.emitStatus({ category: PubNub.CATEGORIES.PNNetworkUpCategory });
 	        this.reconnect();
 	    }
 	}
 	/**
 	 * Data encryption / decryption module constructor.
 	 */
-	// @ts-expect-error Allowed to simplify interface when module can be disabled.
 	PubNub.CryptoModule = WebCryptoModule ;
 
 	return PubNub;

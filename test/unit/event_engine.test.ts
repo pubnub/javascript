@@ -1,6 +1,7 @@
 import nock from 'nock';
 
 import StatusCategory from '../../src/core/constants/categories';
+import { Status, StatusEvent } from '../../src/core/types/api';
 import PubNub from '../../src/node/index';
 import utils from '../utils';
 
@@ -8,6 +9,8 @@ describe('EventEngine', () => {
   // @ts-expect-error Access event engine core for test purpose.
   let engine: PubNub['eventEngine']['engine'];
   let pubnub: PubNub;
+  let stateChanges: { type: string; toState: { label: string } }[] = [];
+  let receivedStatuses: (Status | StatusEvent)[] = [];
 
   before(() => {
     nock.disableNetConnect();
@@ -21,18 +24,22 @@ describe('EventEngine', () => {
 
   beforeEach(() => {
     nock.cleanAll();
+    receivedStatuses = [];
+    stateChanges = [];
 
     pubnub = new PubNub({
       subscribeKey: 'demo',
       publishKey: 'demo',
       uuid: 'test-js',
+      // @ts-expect-error Force override default value.
+      useRequestId: false,
       enableEventEngine: true,
     });
 
     // @ts-expect-error Access event engine core for test purpose.
     engine = pubnub.eventEngine!._engine;
 
-    unsub = engine.subscribe((_change: Record<string, any>) => {
+    unsub = engine.subscribe((_change: Record<string, unknown>) => {
       // FOR DEBUG
       // console.dir(_change);
     });
@@ -40,11 +47,19 @@ describe('EventEngine', () => {
 
   afterEach(() => {
     unsub();
+    pubnub.destroy(true);
   });
 
   function forStatus(statusCategory: StatusCategory, timeout?: number) {
     return new Promise<void>((resolve, reject) => {
       let timeoutId: ReturnType<typeof setTimeout>;
+
+      for (const status of receivedStatuses) {
+        if (status.category === statusCategory) {
+          resolve();
+          return;
+        }
+      }
 
       pubnub.addListener({
         status: (statusEvent) => {
@@ -89,6 +104,13 @@ describe('EventEngine', () => {
     return new Promise<void>((resolve, reject) => {
       let timeoutId: NodeJS.Timeout | null = null;
 
+      for (const change of stateChanges) {
+        if (change.type === 'transitionDone' && change.toState.label === stateLabel) {
+          resolve();
+          return;
+        }
+      }
+
       const unsubscribe = engine.subscribe((change: { type: string; toState: { label: string } }) => {
         if (change.type === 'transitionDone' && change.toState.label === stateLabel) {
           if (timeoutId) clearTimeout(timeoutId);
@@ -128,8 +150,19 @@ describe('EventEngine', () => {
   }
 
   it('should work correctly', async () => {
-    utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');
-    utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');
+    utils.createPresenceMockScopes({ subKey: 'demo', presenceType: 'heartbeat', requests: [{ channels: ['test'] }] });
+    utils.createPresenceMockScopes({ subKey: 'demo', presenceType: 'leave', requests: [{ channels: ['test'] }] });
+    utils.createSubscribeMockScopes({
+      subKey: 'demo',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'test-js',
+      eventEngine: true,
+      requests: [
+        { channels: ['test'], messages: [] },
+        { channels: ['test'], messages: [], replyDelay: 500 },
+      ],
+    });
+    engine.subscribe((change: { type: string; toState: { label: string } }) => stateChanges.push(change));
 
     pubnub.subscribe({ channels: ['test'] });
 
@@ -141,18 +174,29 @@ describe('EventEngine', () => {
   });
 
   it('should work correctly', async () => {
-    utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');
-    utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');
-    utils
-      .createNock()
-      .get('/v2/subscribe/demo/test,test1/0')
-      .query(true)
-      .reply(200, '{"t":{"t":"12345","r":1}, "m":[]}');
-    utils
-      .createNock()
-      .get('/v2/subscribe/demo/test,test1/0')
-      .query(true)
-      .reply(200, '{"t":{"t":"12345","r":1}, "m":[]}');
+    utils.createPresenceMockScopes({
+      subKey: 'demo',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['test'] }, { channels: ['test', 'test1'] }],
+    });
+    utils.createPresenceMockScopes({
+      subKey: 'demo',
+      presenceType: 'leave',
+      requests: [{ channels: ['test', 'test1'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'demo',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'test-js',
+      eventEngine: true,
+      requests: [
+        { channels: ['test'], messages: [] },
+        { channels: ['test', 'test1'], messages: [] },
+        { channels: ['test', 'test1'], messages: [], replyDelay: 500 },
+      ],
+    });
+    engine.subscribe((change: { type: string; toState: { label: string } }) => stateChanges.push(change));
+    pubnub.addListener({ status: (statusEvent) => receivedStatuses.push(statusEvent) });
 
     pubnub.subscribe({ channels: ['test'] });
 

@@ -5,6 +5,7 @@
  */
 
 import { Payload } from '../types/api';
+import { PrivateClientConfiguration } from '../interfaces/configuration';
 
 /**
  * Base real-time event payload type required by the manager.
@@ -32,8 +33,14 @@ export class DedupingManager {
    *
    * @param config - PubNub client configuration object.
    */
-  constructor({ maximumCacheSize }: { maximumCacheSize: number }) {
-    this.maximumCacheSize = maximumCacheSize;
+  constructor(private readonly config: PrivateClientConfiguration) {
+    config.logger().debug(this.constructor.name, () => ({
+      messageType: 'object',
+      message: { maximumCacheSize: config.maximumCacheSize },
+      details: 'Create with configuration:',
+    }));
+
+    this.maximumCacheSize = config.maximumCacheSize;
     this.hashHistory = [];
   }
 

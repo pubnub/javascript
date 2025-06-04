@@ -15,6 +15,7 @@ import * as zlib from 'zlib';
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
 import { Transport, TransportKeepAlive } from '../core/interfaces/transport';
 import { TransportResponse } from '../core/types/transport-response';
+import { LoggerManager } from '../core/components/logger-manager';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
 import { PubNubFileInterface } from '../core/types/file';
 import { queryStringFromObject } from '../core/utils';
@@ -33,6 +34,11 @@ export class NodeTransport implements Transport {
   protected static decoder = new TextDecoder();
 
   /**
+   * {@link string|String} to {@link ArrayBuffer} response decoder.
+   */
+  protected static encoder = new TextEncoder();
+
+  /**
    * Request proxy configuration.
    *
    * @internal
@@ -49,19 +55,25 @@ export class NodeTransport implements Transport {
   /**
    * Creates a new `fetch`-based transport instance.
    *
+   * @param logger - Registered loggers' manager.
    * @param keepAlive - Indicates whether keep-alive should be enabled.
    * @param [keepAliveSettings] - Optional settings for keep-alive.
-   * @param [logVerbosity] - Whether verbose logging enabled or not.
    *
    * @returns Transport for performing network requests.
    *
    * @internal
    */
   constructor(
+    private readonly logger: LoggerManager,
     private readonly keepAlive: boolean = false,
     private readonly keepAliveSettings: TransportKeepAlive = { timeout: 30000 },
-    private readonly logVerbosity: boolean = false,
-  ) {}
+  ) {
+    logger.debug(this.constructor.name, () => ({
+      messageType: 'object',
+      message: { keepAlive, keepAliveSettings },
+      details: 'Create with configuration:',
+    }));
+  }
 
   /**
    * Update request proxy configuration.
@@ -71,6 +83,8 @@ export class NodeTransport implements Transport {
    * @internal
    */
   public setProxy(configuration?: ProxyAgentOptions) {
+    if (configuration) this.logger.debug(this.constructor.name, 'Proxy configuration has been set.');
+    else this.logger.debug(this.constructor.name, 'Proxy configuration has been removed.');
     this.proxyConfiguration = configuration;
   }
 
@@ -81,10 +95,11 @@ export class NodeTransport implements Transport {
     if (req.cancellable) {
       abortController = new AbortController();
       controller = {
-        // Storing controller inside to prolong object lifetime.
+        // Storing a controller inside to prolong object lifetime.
         abortController,
         abort: (reason) => {
           if (!abortController || abortController.signal.aborted) return;
+          this.logger.trace(this.constructor.name, `On-demand request aborting: ${reason}`);
           abortController?.abort(reason);
         },
       } as CancellationController;
@@ -92,9 +107,7 @@ export class NodeTransport implements Transport {
 
     return [
       this.requestFromTransportRequest(req).then((request) => {
-        const start = new Date().getTime();
-
-        this.logRequestProcessProgress(request, req.body);
+        this.logger.debug(this.constructor.name, () => ({ messageType: 'network-request', message: req }));
 
         return fetch(request, {
           signal: abortController?.signal,
@@ -118,19 +131,49 @@ export class NodeTransport implements Transport {
               body: responseBody,
             };
 
-            if (status >= 400) throw PubNubAPIError.create(transportResponse);
+            this.logger.debug(this.constructor.name, () => ({
+              messageType: 'network-response',
+              message: transportResponse,
+            }));
 
-            this.logRequestProcessProgress(request, undefined, new Date().getTime() - start, responseBody);
+            if (status >= 400) throw PubNubAPIError.create(transportResponse);
 
             return transportResponse;
           })
           .catch((error) => {
-            let fetchError = error;
+            const errorMessage = (typeof error === 'string' ? error : (error as Error).message).toLowerCase();
+            let fetchError = typeof error === 'string' ? new Error(error) : (error as Error);
 
-            if (typeof error === 'string') {
-              const errorMessage = error.toLowerCase();
-              if (errorMessage.includes('timeout') || !errorMessage.includes('cancel')) fetchError = new Error(error);
-              else if (errorMessage.includes('cancel')) fetchError = new AbortError('Aborted');
+            if (errorMessage.includes('timeout')) {
+              this.logger.warn(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: 'Timeout',
+                canceled: true,
+              }));
+            } else if (errorMessage.includes('cancel') || errorMessage.includes('abort')) {
+              this.logger.debug(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: 'Aborted',
+                canceled: true,
+              }));
+
+              fetchError = new AbortError('Aborted');
+            } else if (errorMessage.includes('network')) {
+              this.logger.warn(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: 'Network error',
+                failed: true,
+              }));
+            } else {
+              this.logger.warn(this.constructor.name, () => ({
+                messageType: 'network-request',
+                message: req,
+                details: PubNubAPIError.create(fetchError).message,
+                failed: true,
+              }));
             }
 
             throw PubNubAPIError.create(fetchError);
@@ -175,8 +218,25 @@ export class NodeTransport implements Transport {
     }
     // Handle regular body payload (if passed).
     else if (req.body && (typeof req.body === 'string' || req.body instanceof ArrayBuffer)) {
+      let initialBodySize = 0;
+      if (req.compressible) {
+        initialBodySize =
+          typeof req.body === 'string' ? NodeTransport.encoder.encode(req.body).byteLength : req.body.byteLength;
+      }
       // Compressing body (if required).
       body = req.compressible ? zlib.deflateSync(req.body) : req.body;
+
+      if (req.compressible) {
+        this.logger.trace(this.constructor.name, () => {
+          const compressedSize = (body! as ArrayBuffer).byteLength;
+          const ratio = (compressedSize / initialBodySize).toFixed(2);
+
+          return {
+            messageType: 'text',
+            message: `Body of ${initialBodySize} bytes, compressed by ${ratio}x to ${compressedSize} bytes.`,
+          };
+        });
+      }
     }
 
     if (req.queryParameters && Object.keys(req.queryParameters).length !== 0)
@@ -204,7 +264,7 @@ export class NodeTransport implements Transport {
    * @internal
    */
   private agentForTransportRequest(req: TransportRequest): HttpAgent | HttpsAgent | undefined {
-    // Create proxy agent (if possible).
+    // Create a proxy agent (if possible).
     if (this.proxyConfiguration)
       return this.proxyAgent ? this.proxyAgent : (this.proxyAgent = new ProxyAgent(this.proxyConfiguration));
 
@@ -216,44 +276,5 @@ export class NodeTransport implements Transport {
     else if (!useSecureAgent && this.httpAgent === undefined) this.httpAgent = new HttpAgent(agentOptions);
 
     return useSecureAgent ? this.httpsAgent : this.httpAgent;
-  }
-
-  /**
-   * Log out request processing progress and result.
-   *
-   * @param request - Platform-specific request object.
-   * @param [requestBody] - POST / PATCH body.
-   * @param [elapsed] - How many times passed since request processing started.
-   * @param [body] - Service response (if available).
-   */
-  protected logRequestProcessProgress(
-    request: Request,
-    requestBody: TransportRequest['body'],
-    elapsed?: number,
-    body?: ArrayBuffer,
-  ) {
-    if (!this.logVerbosity) return;
-
-    const { protocol, host, pathname, search } = new URL(request.url);
-    const timestamp = new Date().toISOString();
-
-    if (!elapsed) {
-      let outgoing = `[${timestamp}]\n${protocol}//${host}${pathname}\n${search}`;
-      if (requestBody && (typeof requestBody === 'string' || requestBody instanceof ArrayBuffer)) {
-        if (typeof requestBody === 'string') outgoing += `\n\n${requestBody}`;
-        else outgoing += `\n\n${NodeTransport.decoder.decode(requestBody)}`;
-      }
-
-      console.log('<<<<<');
-      console.log(outgoing);
-      console.log('-----');
-    } else {
-      let outgoing = `[${timestamp} / ${elapsed}]\n${protocol}//${host}${pathname}\n${search}`;
-      if (body) outgoing += `\n\n${NodeTransport.decoder.decode(body)}`;
-
-      console.log('>>>>>>');
-      console.log(outgoing);
-      console.log('-----');
-    }
   }
 }

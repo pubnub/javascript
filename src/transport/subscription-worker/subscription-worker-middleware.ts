@@ -9,6 +9,7 @@
 
 import { CancellationController, TransportRequest } from '../../core/types/transport-request';
 import { TransportResponse } from '../../core/types/transport-response';
+import { LoggerManager } from '../../core/components/logger-manager';
 import { TokenManager } from '../../core/components/token_manager';
 import * as PubNubSubscriptionWorker from './subscription-worker';
 import { PubNubAPIError } from '../../errors/pubnub-api-error';
@@ -48,11 +49,6 @@ type PubNubMiddlewareConfiguration = {
   sdkVersion: string;
 
   /**
-   * Whether verbose logging enabled or not.
-   */
-  logVerbosity: boolean;
-
-  /**
    * Interval at which Shared Worker should check whether PubNub instances which used it still active or not.
    */
   workerOfflineClientsCheckInterval: number;
@@ -83,6 +79,11 @@ type PubNubMiddlewareConfiguration = {
    * Platform-specific transport for requests processing.
    */
   transport: Transport;
+
+  /**
+   * Registered logger's manager.
+   */
+  logger: LoggerManager;
 };
 
 // endregion
@@ -141,7 +142,6 @@ export class SubscriptionWorkerMiddleware implements Transport {
       type: 'client-unregister',
       clientIdentifier: this.configuration.clientIdentifier,
       subscriptionKey: this.configuration.subscriptionKey,
-      logVerbosity: this.configuration.logVerbosity,
     });
   }
 
@@ -150,12 +150,13 @@ export class SubscriptionWorkerMiddleware implements Transport {
     if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/heartbeat') && !req.path.endsWith('/leave'))
       return this.configuration.transport.makeSendable(req);
 
+    this.configuration.logger.debug(this.constructor.name, 'Process request with SharedWorker transport.');
+
     let controller: CancellationController | undefined;
     const sendRequestEvent: PubNubSubscriptionWorker.SendRequestEvent = {
       type: 'send-request',
       clientIdentifier: this.configuration.clientIdentifier,
       subscriptionKey: this.configuration.subscriptionKey,
-      logVerbosity: this.configuration.logVerbosity,
       request: req,
     };
 
@@ -166,7 +167,6 @@ export class SubscriptionWorkerMiddleware implements Transport {
             type: 'cancel-request',
             clientIdentifier: this.configuration.clientIdentifier,
             subscriptionKey: this.configuration.subscriptionKey,
-            logVerbosity: this.configuration.logVerbosity,
             identifier: req.identifier,
           };
 
@@ -178,8 +178,8 @@ export class SubscriptionWorkerMiddleware implements Transport {
 
     return [
       new Promise((resolve, reject) => {
-        // Associate Promise resolution / reject with request identifier for future usage in
-        // `onmessage` handler block to return results.
+        // Associate Promise resolution / reject with a request identifier for future usage in
+        //  the `onmessage ` handler block to return results.
         this.callbacks!.set(req.identifier, { resolve, reject });
 
         // Trigger request processing by Service Worker.
@@ -205,7 +205,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
    * @param outOfOrder - Whether event should be processed first then enqueued queue.
    */
   private scheduleEventPost(event: PubNubSubscriptionWorker.ClientEvent, outOfOrder: boolean = false) {
-    // Trigger request processing by subscription worker.
+    // Trigger request processing by a subscription worker.
     const subscriptionWorker = this.sharedSubscriptionWorker;
     if (subscriptionWorker) subscriptionWorker.port.postMessage(event);
     else {
@@ -218,11 +218,11 @@ export class SubscriptionWorkerMiddleware implements Transport {
    * Dequeue and post events from the queue to the subscription worker.
    */
   private flushScheduledEvents(): void {
-    // Trigger request processing by subscription worker.
+    // Trigger request processing by a subscription worker.
     const subscriptionWorker = this.sharedSubscriptionWorker;
     if (!subscriptionWorker || this.workerEventsQueue.length === 0) return;
 
-    // Clean up from cancelled events.
+    // Clean up from canceled events.
     const outdatedEvents: PubNubSubscriptionWorker.ClientEvent[] = [];
     for (let i = 0; i < this.workerEventsQueue.length; i++) {
       const event = this.workerEventsQueue[i];
@@ -260,10 +260,19 @@ export class SubscriptionWorkerMiddleware implements Transport {
   private setupSubscriptionWorker(): void {
     if (typeof SharedWorker === 'undefined') return;
 
-    this.subscriptionWorker = new SharedWorker(
-      this.configuration.workerUrl,
-      `/pubnub-${this.configuration.sdkVersion}`,
-    );
+    try {
+      this.subscriptionWorker = new SharedWorker(
+        this.configuration.workerUrl,
+        `/pubnub-${this.configuration.sdkVersion}`,
+      );
+    } catch (error) {
+      this.configuration.logger.error(this.constructor.name, () => ({
+        messageType: 'error',
+        message: error,
+      }));
+
+      throw error;
+    }
 
     this.subscriptionWorker.port.start();
 
@@ -275,7 +284,6 @@ export class SubscriptionWorkerMiddleware implements Transport {
         subscriptionKey: this.configuration.subscriptionKey,
         userId: this.configuration.userId,
         heartbeatInterval: this.configuration.heartbeatInterval,
-        logVerbosity: this.configuration.logVerbosity,
         workerOfflineClientsCheckInterval: this.configuration.workerOfflineClientsCheckInterval,
         workerUnsubscribeOfflineClients: this.configuration.workerUnsubscribeOfflineClients,
         workerLogVerbosity: this.configuration.workerLogVerbosity,
@@ -300,24 +308,23 @@ export class SubscriptionWorkerMiddleware implements Transport {
       return;
 
     if (data.type === 'shared-worker-connected') {
+      this.configuration.logger.trace('SharedWorker', 'Ready for events processing.');
       this.subscriptionWorkerReady = true;
       this.flushScheduledEvents();
     } else if (data.type === 'shared-worker-console-log') {
-      console.log(`[SharedWorker] ${data.message}`);
+      this.configuration.logger.debug('SharedWorker', data.message);
     } else if (data.type === 'shared-worker-console-dir') {
-      if (data.message) console.log(`[SharedWorker] ${data.message}`);
-      console.dir(data.data, { depth: 10 });
-    } else if (data.type === 'shared-worker-ping') {
-      const { logVerbosity, subscriptionKey, clientIdentifier } = this.configuration;
-
-      this.scheduleEventPost({
-        type: 'client-pong',
-        subscriptionKey,
-        clientIdentifier,
-        logVerbosity,
+      this.configuration.logger.debug('SharedWorker', () => {
+        return {
+          messageType: 'object',
+          message: data.data,
+          details: data.message ? data.message : undefined,
+        };
       });
-    } else if (data.type === 'request-progress-start' || data.type === 'request-progress-end') {
-      this.logRequestProgress(data);
+    } else if (data.type === 'shared-worker-ping') {
+      const { subscriptionKey, clientIdentifier } = this.configuration;
+
+      this.scheduleEventPost({ type: 'client-pong', subscriptionKey, clientIdentifier });
     } else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
       const { resolve, reject } = this.callbacks!.get(data.identifier)!;
 
@@ -425,26 +432,5 @@ export class SubscriptionWorkerMiddleware implements Transport {
     }
 
     return [token, typeof btoa !== 'undefined' ? btoa(accessToken) : accessToken];
-  }
-
-  /**
-   * Print request progress information.
-   *
-   * @param information - Request progress information from worker.
-   */
-  private logRequestProgress(information: PubNubSubscriptionWorker.RequestSendingProgress) {
-    if (information.type === 'request-progress-start') {
-      console.log('<<<<<');
-      console.log(`[${information.timestamp}] ${information.url}\n${JSON.stringify(information.query ?? {})}`);
-      console.log('-----');
-    } else {
-      console.log('>>>>>>');
-      console.log(
-        `[${information.timestamp} / ${information.duration}] ${information.url}\n${JSON.stringify(
-          information.query ?? {},
-        )}\n${information.response}`,
-      );
-      console.log('-----');
-    }
   }
 }

@@ -1,5 +1,18 @@
 ---
 changelog:
+  - date: 2025-06-04
+    version: v9.6.0
+    changes:
+      - type: feature
+        text: "Standardize information printed by logger and places where it is printed."
+      - type: feature
+        text: "Add `logLevel` and `loggers` configuration parameters to specify minimum log level and list of custom `Logger` interface implementations (when own logger needed)."
+      - type: feature
+        text: "Add the `cloneEmpty` function, which will let you make a “bare” copy of a subscription / subscription set object, which will have shared state with the original but clear list of event handlers."
+      - type: feature
+        text: "Add a parameter for subscription where closure can be provided and filter events which should be delivered with listener."
+      - type: feature
+        text: "When a new subscription object is created, it won't notify about messages from the past (edge case with active and inactive channel subscriptions)."
   - date: 2025-04-22
     version: v9.5.2
     changes:
@@ -1236,7 +1249,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.5.2'
+version: '9.6.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1252,7 +1265,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.5.2.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.6.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1923,7 +1936,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.5.2/pubnub.9.5.2.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.6.0/pubnub.9.6.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

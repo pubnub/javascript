@@ -190,7 +190,7 @@ export class PublishRequest extends AbstractRequest<PublishResponse, ServiceResp
   }
 
   protected get headers(): Record<string, string> | undefined {
-    if (!this.parameters.sendByPost) return undefined;
+    if (!this.parameters.sendByPost) return super.headers;
     return { ...(super.headers ?? {}), 'Content-Type': 'application/json' };
   }
 

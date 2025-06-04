@@ -11,6 +11,7 @@ import { EncryptedDataType, ICryptor } from './ICryptor';
 import { ILegacyCryptor } from './ILegacyCryptor';
 import AesCbcCryptor from './aesCbcCryptor';
 import LegacyCryptor from './legacyCryptor';
+import { LoggerManager } from '../../../core/components/logger-manager';
 
 /**
  * Re-export bundled cryptors.
@@ -30,6 +31,22 @@ export class WebCryptoModule extends AbstractCryptoModule<CryptorType> {
    * {@link LegacyCryptor|Legacy} cryptor identifier.
    */
   static LEGACY_IDENTIFIER = '';
+
+  /**
+   * Assign registered loggers' manager.
+   *
+   * @param logger - Registered loggers' manager.
+   *
+   * @internal
+   */
+  set logger(logger: LoggerManager) {
+    if (this.defaultCryptor.identifier === WebCryptoModule.LEGACY_IDENTIFIER)
+      (this.defaultCryptor as LegacyCryptor).logger = logger;
+    else {
+      const cryptor = this.cryptors.find((cryptor) => cryptor.identifier === WebCryptoModule.LEGACY_IDENTIFIER);
+      if (cryptor) (cryptor as LegacyCryptor).logger = logger;
+    }
+  }
 
   // --------------------------------------------------------
   // --------------- Convenience functions ------------------

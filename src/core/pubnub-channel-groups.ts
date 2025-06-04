@@ -9,11 +9,19 @@ import { ListChannelGroupChannels } from './endpoints/channel_groups/list_channe
 import { DeleteChannelGroupRequest } from './endpoints/channel_groups/delete_group';
 import { ListChannelGroupsRequest } from './endpoints/channel_groups/list_groups';
 import * as ChannelGroups from './types/api/channel-groups';
+import { LoggerManager } from './components/logger-manager';
 
 /**
  * PubNub Stream / Channel group API interface.
  */
 export default class PubNubChannelGroups {
+  /**
+   * Registered loggers' manager.
+   *
+   * @internal
+   */
+  private readonly logger: LoggerManager;
+
   /**
    * PubNub account keys set which should be used for REST API calls.
    *
@@ -32,17 +40,20 @@ export default class PubNubChannelGroups {
   /**
    * Create stream / channel group API access object.
    *
+   * @param logger - Registered loggers' manager.
    * @param keySet - PubNub account keys set which should be used for REST API calls.
    * @param sendRequest - Function which should be used to send REST API calls.
    *
    * @internal
    */
   constructor(
+    logger: LoggerManager,
     keySet: KeySet,
     /* eslint-disable  @typescript-eslint/no-explicit-any */
     sendRequest: SendRequestFunction<any, any>,
   ) {
     this.sendRequest = sendRequest;
+    this.logger = logger;
     this.keySet = keySet;
   }
 
@@ -86,10 +97,28 @@ export default class PubNubChannelGroups {
     parameters: ChannelGroups.ListChannelGroupChannelsParameters,
     callback?: ResultCallback<ChannelGroups.ListChannelGroupChannelsResponse>,
   ): Promise<ChannelGroups.ListChannelGroupChannelsResponse | void> {
-    const request = new ListChannelGroupChannels({ ...parameters, keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: 'List channel group channels with parameters:',
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new ListChannelGroupChannels({ ...parameters, keySet: this.keySet });
+    const logResponse = (response: ChannelGroups.ListChannelGroupChannelsResponse | null) => {
+      if (!response) return;
+      this.logger.info('PubNub', `List channel group channels success. Received ${response.channels.length} channels.`);
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse(response);
+      return response;
+    });
   }
 
   // region Deprecated
@@ -123,10 +152,24 @@ export default class PubNubChannelGroups {
   public async listGroups(
     callback?: ResultCallback<ChannelGroups.ListAllChannelGroupsResponse>,
   ): Promise<ChannelGroups.ListAllChannelGroupsResponse | void> {
-    const request = new ListChannelGroupsRequest({ keySet: this.keySet });
+    this.logger.debug('PubNub', 'List all channel groups.');
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new ListChannelGroupsRequest({ keySet: this.keySet });
+    const logResponse = (response: ChannelGroups.ListAllChannelGroupsResponse | null) => {
+      if (!response) return;
+      this.logger.info('PubNub', `List all channel groups success. Received ${response.groups.length} groups.`);
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status, response) => {
+        logResponse(response);
+        callback(status, response);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse(response);
+      return response;
+    });
   }
   // endregion
   // endregion
@@ -168,10 +211,27 @@ export default class PubNubChannelGroups {
     parameters: ChannelGroups.ManageChannelGroupChannelsParameters,
     callback?: StatusCallback,
   ): Promise<Record<string, unknown> | void> {
-    const request = new AddChannelGroupChannelsRequest({ ...parameters, keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: 'Add channels to the channel group with parameters:',
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new AddChannelGroupChannelsRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = () => {
+      this.logger.info('PubNub', `Add channels to the channel group success.`);
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status) => {
+        if (!status.error) logResponse();
+        callback(status);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse();
+      return response;
+    });
   }
 
   /**
@@ -206,10 +266,27 @@ export default class PubNubChannelGroups {
     parameters: ChannelGroups.ManageChannelGroupChannelsParameters,
     callback?: StatusCallback,
   ): Promise<Record<string, unknown> | void> {
-    const request = new RemoveChannelGroupChannelsRequest({ ...parameters, keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: 'Remove channels from the channel group with parameters:',
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new RemoveChannelGroupChannelsRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = () => {
+      this.logger.info('PubNub', `Remove channels from the channel group success.`);
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status) => {
+        if (!status.error) logResponse();
+        callback(status);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse();
+      return response;
+    });
   }
 
   /**
@@ -230,7 +307,7 @@ export default class PubNubChannelGroups {
   public async deleteGroup(parameters: ChannelGroups.DeleteChannelGroupParameters): Promise<Record<string, unknown>>;
 
   /**
-   * Remove channel group.
+   * Remove a channel group.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -241,10 +318,30 @@ export default class PubNubChannelGroups {
     parameters: ChannelGroups.DeleteChannelGroupParameters,
     callback?: StatusCallback,
   ): Promise<Record<string, unknown> | void> {
-    const request = new DeleteChannelGroupRequest({ ...parameters, keySet: this.keySet });
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: 'Remove a channel group with parameters:',
+    }));
 
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
+    const request = new DeleteChannelGroupRequest({ ...parameters, keySet: this.keySet });
+    const logResponse = () => {
+      this.logger.info(
+        'PubNub',
+        `Remove a channel group success. Removed '${parameters.channelGroup}' channel group.'`,
+      );
+    };
+
+    if (callback)
+      return this.sendRequest(request, (status) => {
+        if (!status.error) logResponse();
+        callback(status);
+      });
+
+    return this.sendRequest(request).then((response) => {
+      logResponse();
+      return response;
+    });
   }
 
   // endregion

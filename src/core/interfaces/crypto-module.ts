@@ -3,6 +3,7 @@
  */
 
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
+import { LoggerManager } from '../components/logger-manager';
 import { Payload } from '../types/api';
 
 /**
@@ -44,12 +45,28 @@ export type CryptorConfiguration = {
    * @deprecated Instead use {@link cryptoModule} for data decryption.
    */
   customDecrypt?: (data: string) => string;
+
+  /**
+   * Registered loggers' manager.
+   *
+   * @internal
+   */
+  logger?: LoggerManager;
 };
 
 /**
  * Base crypto module interface.
  */
 export interface ICryptoModule {
+  /**
+   * Update module's logger.
+   *
+   * @param logger - Logger, which should be used by crypto module.
+   *
+   * @internal
+   */
+  set logger(logger: LoggerManager);
+
   // --------------------------------------------------------
   // --------------------- Encryption -----------------------
   // --------------------------------------------------------
@@ -124,6 +141,13 @@ export abstract class AbstractCryptoModule<C> implements ICryptoModule {
    */
   protected static decoder = new TextDecoder();
 
+  /**
+   * Registered loggers' manager.
+   *
+   * @internal
+   */
+  static logger: LoggerManager;
+
   defaultCryptor: C;
   cryptors: C[];
 
@@ -164,6 +188,17 @@ export abstract class AbstractCryptoModule<C> implements ICryptoModule {
   constructor(configuration: CryptoModuleConfiguration<C>) {
     this.defaultCryptor = configuration.default;
     this.cryptors = configuration.cryptors ?? [];
+  }
+
+  /**
+   * Assign registered loggers' manager.
+   *
+   * @param _logger - Registered loggers' manager.
+   *
+   * @internal
+   */
+  set logger(_logger: LoggerManager) {
+    throw new Error('Method not implemented.');
   }
 
   // --------------------------------------------------------
@@ -238,4 +273,15 @@ export abstract class AbstractCryptoModule<C> implements ICryptoModule {
     return [this.defaultCryptor, ...this.cryptors];
   }
   // endregion
+
+  /**
+   * Serialize crypto module information to string.
+   *
+   * @returns Serialized crypto module information.
+   */
+  toString() {
+    return `${this.constructor.name} { default: ${(
+      this.defaultCryptor as object
+    ).toString()}, cryptors: [${this.cryptors.map((c) => (c as object).toString()).join(', ')}]}`;
+  }
 }
