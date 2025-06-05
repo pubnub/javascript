@@ -1,4 +1,4 @@
-# PubNub JavaScript SDK (V4)
+# PubNub JavaScript SDK (V9)
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/2859917905c549b8bfa27630ff276fce)](https://www.codacy.com/app/PubNub/javascript?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pubnub/javascript&amp;utm_campaign=Badge_Grade)
 [![npm](https://img.shields.io/npm/v/pubnub.svg)]()
