@@ -2785,7 +2785,10 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public grantToken(parameters: PAM.GrantTokenParameters | PAM.ObjectsGrantTokenParameters, callback: ResultCallback<PAM.GrantTokenResponse>): void;
+  public grantToken(
+    parameters: PAM.GrantTokenParameters | PAM.ObjectsGrantTokenParameters,
+    callback: ResultCallback<PAM.GrantTokenResponse>,
+  ): void;
 
   /**
    * Grant token permission.
@@ -2796,7 +2799,9 @@ export class PubNubCore<
    *
    * @returns Asynchronous grant token response.
    */
-  public async grantToken(parameters: PAM.GrantTokenParameters | PAM.ObjectsGrantTokenParameters): Promise<PAM.GrantTokenResponse>;
+  public async grantToken(
+    parameters: PAM.GrantTokenParameters | PAM.ObjectsGrantTokenParameters,
+  ): Promise<PAM.GrantTokenResponse>;
 
   /**
    * Grant token permission.
