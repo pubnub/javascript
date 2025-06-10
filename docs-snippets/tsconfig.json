@@ -1,0 +1,21 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+      "module": "esnext",
+      "target": "es2017",
+      "outDir": "./docs",
+      "rootDir": "..",
+      "noEmit": true,
+      "skipLibCheck": true,
+      "resolveJsonModule": true,
+      "esModuleInterop": true,
+      
+      "baseUrl": "..",
+    },
+    "include": [
+      "**/*.ts"
+    ],
+    "exclude": [
+      "node_modules"
+    ]
+  }
