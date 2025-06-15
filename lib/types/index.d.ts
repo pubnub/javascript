@@ -522,8 +522,6 @@ declare class PubNubCore<
    * @param parameters - Request configuration parameters.
    *
    * @returns Asynchronous delete messages response.
-   *
-   * @deprecated
    */
   deleteMessages(parameters: PubNub.History.DeleteMessagesParameters): Promise<PubNub.History.DeleteMessagesResponse>;
   /**
