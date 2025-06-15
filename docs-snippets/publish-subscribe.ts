@@ -6,7 +6,6 @@ const pubnub = new PubNub({
   userId: 'userId',
 });
 
-
 // snippet.publishJsonSerialisedMessage
 const newMessage = {
     text: 'Hi There!',
@@ -71,7 +70,7 @@ const newMessage = {
     console.log(status); // {error: true, operation: "PNPublishOperation", statusCode: 400, errorData: Error, category: "PNBadRequestCategory"}
   }
   // snippet.end
-  
+  // *********** Compilation Error due to wrong code *****************
   // // snippet.publishUnsuccessfulMissingChannel
   // try {
   //   const result = await pubnub.publish({
@@ -112,4 +111,90 @@ subscriptionSet.unsubscribe()
 
 // snippet.ubsubscribeAll
 pubnub.unsubscribeAll()
+// snippet.end
+
+// *************** OLD SUBSCRIBE SYNTAX ***************
+// snippet.OLDsubscribeMultipleChannels
+pubnub.subscribe({
+  channels: ['my_channel_1', 'my_channel_2', 'my_channel_3']
+});
+// snippet.end
+
+// snippet.OLDsubscribeWithPresence
+pubnub.subscribe({
+  channels: ["my_channel"],
+  withPresence: true,
+});
+// snippet.end
+
+// snippet.OLDsubscribeWithWildCardChannels
+pubnub.subscribe({
+  channels: ["ab.*"],
+});
+// snippet.end
+
+// snippet.OLDsubscribeWithState
+pubnub.addListener({
+  status: async (statusEvent) => {
+      if (statusEvent.category === "PNConnectedCategory") {
+          try {
+              await pubnub.setState({
+                  state: {
+                      some: "state",
+                  },
+              });
+          } catch (status) {
+              // handle setState error
+          }
+      }
+  },
+  message: (messageEvent) => {
+      // handle message
+  },
+  presence: (presenceEvent) => {
+      // handle presence
+  },
+});
+
+pubnub.subscribe({
+  channels: ["ch1", "ch2", "ch3"],
+});
+// snippet.end
+
+// snippet.OLDsubscribeChannelGroup
+pubnub.subscribe({
+  channelGroups: ["my_channelGroup"],
+});
+// snippet.end
+
+// snippet.OLDsubscribeChannelGroupWithPresence
+pubnub.subscribe({
+  channelGroups: ["family"],
+  withPresence: true,
+});
+// snippet.end
+
+// snippet.OLDsubscribeMultipleChannelGroup
+pubnub.subscribe({
+  channelGroups: ["my_channelGroup1", "my_channelGroup2", "my_channelGroup3"],
+});
+// snippet.end
+
+// snippet.OLDsubscribeChannelGroupAndChannels
+pubnub.subscribe({
+  channels: ["my_channel"],
+  channelGroups: ["my_channelGroup"],
+});
+// snippet.end
+
+// snippet.OLDUnsubscribeMultipleChannels
+pubnub.unsubscribe({
+  channels: ["chan1", "chan2", "chan3"],
+});
+// snippet.end
+
+// snippet.OLDUnsubscribeMultipleChannelGroup
+pubnub.unsubscribe({
+  channelGroups: ["demo_group1", "demo_group2"],
+});
 // snippet.end

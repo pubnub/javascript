@@ -1,0 +1,62 @@
+import PubNub from '../../lib/types';
+import fs from 'fs';
+
+const pubnub = new PubNub({
+    publishKey: 'demo',
+    subscribeKey: 'demo',
+    userId: 'myUniqueUserId',
+  });
+
+// snippet.encryptMessageBasicUsage
+// Create a crypto module instance with AES-CBC encryption
+const cryptoModule = PubNub.CryptoModule.aesCbcCryptoModule({
+    cipherKey: "pubnubenigma"
+  });
+  
+  // Function to encrypt a message
+  function encryptMessage() {
+    const msgContent = "This is the data I wish to encrypt.";
+    console.log(`Original Message: ${msgContent}`);
+  
+    // Encrypt the message
+    const encryptedMessage = cryptoModule.encrypt(JSON.stringify(msgContent));
+    console.log(`Encrypted Message: ${encryptedMessage}`);
+  }
+  
+  // Execute the function to encrypt the message
+  encryptMessage();
+// snippet.end
+
+// snippet.encryptFileBasicUsage
+
+// Node.js example
+// import fs from 'fs';
+
+const fileBuffer = fs.readFileSync('./cat_picture.jpg');
+
+const file = pubnub.File.create({ data: fileBuffer, name: 'cat_picture.jpg', mimeType: 'image/jpeg' });
+
+const encryptedFile = await pubnub.encryptFile(file);
+// snippet.end
+
+let encrypted = '..';
+// snippet.decryptBasicUsage
+var decrypted = pubnub.decrypt(encrypted); // Pass the encrypted data as the first parameter in decrypt Method
+// snippet.end
+
+// snippet.decryptFileBasicUsage
+
+const fileBufferData = fs.readFileSync('./cat_picture_encrypted.jpg');
+
+const fileData = pubnub.File.create({ data: fileBuffer, name: 'cat_picture.jpg', mimeType: 'image/jpeg' });
+
+const decryptedFile = await pubnub.decryptFile(fileData);
+// snippet.end
+
+// snippet.setProxyBasicUsage
+pubnub.setProxy({
+    hostname: 'YOUR_HOSTNAME',
+      port: 8080,
+    protocol: 'YOUR_PROTOCOL'
+});
+// snippet.end

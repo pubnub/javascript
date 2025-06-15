@@ -9,8 +9,12 @@
       "skipLibCheck": true,
       "resolveJsonModule": true,
       "esModuleInterop": true,
-      
+      "allowSyntheticDefaultImports": true,
+      "moduleResolution": "node",
       "baseUrl": "..",
+      "paths": {
+        "pubnub": ["lib/node/index.js"]
+      }
     },
     "include": [
       "**/*.ts"

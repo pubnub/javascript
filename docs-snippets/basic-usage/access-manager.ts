@@ -1,14 +1,12 @@
 import PubNub from '../../lib/types';
-// snippet.accessManagerBasicUsage
-// import PubNub
 
-// Initialize PubNub with demo keys
 const pubnub = new PubNub({
     publishKey: 'demo',
     subscribeKey: 'demo',
     userId: 'myUniqueUserId'
   });
 
+// snippet.accessManagerBasicUsage
 // Function to use grantToken method
 async function grantAccessToken() {
   try {

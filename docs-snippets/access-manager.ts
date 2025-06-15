@@ -1,6 +1,5 @@
 import PubNub from '../lib/types';
 
-// Initialize PubNub with demo keys
 const pubnub = new PubNub({
     publishKey: 'demo',
     subscribeKey: 'demo',

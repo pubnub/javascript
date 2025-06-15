@@ -1,13 +1,12 @@
 import PubNub from '../../lib/types';
 
-// snippet.eventListenerBasicUsage
-// Initialize PubNub with demo keys
 const pubnub = new PubNub({
   publishKey: 'demo',
   subscribeKey: 'demo',
   userId: 'myUniqueUserId',
 });
 
+// snippet.eventListenerBasicUsage
 // create a subscription from a channel entity
 const channel = pubnub.channel('channel_1')
 const subscription1 = channel.subscription({ receivePresenceEvents: true });
@@ -28,9 +27,9 @@ subscription1.addListener({
     presence: (p) => { console.log('Presence event', p) },
 });
 
-// add event-specific message reactions listener 
+// add event-specific message actions listener 
 subscriptionSet1.onMessageAction = (p) => {
-      console.log('Message reaction event:', p);
+      console.log('Message action event:', p);
 };
 
 subscription1.subscribe();
@@ -43,3 +42,4 @@ pubnub.addListener({
     status: (s) => {console.log('Status', s.category) }
 });
 // snippet.end
+

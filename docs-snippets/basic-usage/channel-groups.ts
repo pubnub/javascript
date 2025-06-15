@@ -1,13 +1,12 @@
 import PubNub from '../../lib/types';
 
-// snippet.addChannelsToGroupBasicUsage
-// Initialize PubNub with demo keys
 const pubnub = new PubNub({
   publishKey: 'demo',
   subscribeKey: 'demo',
   userId: 'myUniqueUserId'
 });
 
+// snippet.addChannelsToGroupBasicUsage
 // Function to add channels to a channel group
 async function addChannelsToGroup() {
   try {
@@ -27,11 +26,12 @@ addChannelsToGroup();
 
 // snippet.listChannelsInGroupBasicUsage
 // assuming an intialized PubNub instance already exists
+// to get some data in response, first add some channels to the group using addChannels() method.
 try {
     const response = await pubnub.channelGroups.listChannels({
         channelGroup: "myChannelGroup",
     });
-    console.log("Listing push channels for the device");
+    console.log(`Listing push channels for the device: ${response}`);
     response.channels.forEach((channel: string) => {
         console.log(channel);
     });

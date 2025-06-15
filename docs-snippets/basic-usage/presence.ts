@@ -1,37 +1,36 @@
-// snippet.hereNowBasicUsage
 import PubNub from '../../lib/types';
 
-// Initialize PubNub with demo keys
 const pubnub = new PubNub({
-    publishKey: 'demo',
-    subscribeKey: 'demo',
-    userId: 'myUniqueUserId'
-  });
-  
-  // Function to get presence information for a channel
-  async function getHereNow() {
-    try {
-      const result = await pubnub.hereNow({
-        channels: ["ch1"],
-        channelGroups: ["cg1"],
-        includeUUIDs: true,
-        includeState: true,
-      });
-      console.log(`Here Now Result: ${result}`);
-    } catch (error) {
-      console.log(`Here Now failed with error: ${error}`);
-    }
+  publishKey: 'demo',
+  subscribeKey: 'demo',
+  userId: 'myUniqueUserId',
+});
+
+// snippet.hereNowBasicUsage
+// Function to get presence information for a channel
+async function getHereNow() {
+  try {
+    const result = await pubnub.hereNow({
+      channels: ['ch1'],
+      channelGroups: ['cg1'],
+      includeUUIDs: true,
+      includeState: true,
+    });
+    console.log(`Here Now Result: ${result}`);
+  } catch (error) {
+    console.log(`Here Now failed with error: ${error}`);
   }
-  
-  // Execute the function to get presence information
-  getHereNow();
+}
+
+// Execute the function to get presence information
+getHereNow();
 
 // snippet.end
 
 // snippet.whereNowBasicUsage
 try {
   const response = await pubnub.whereNow({
-      uuid: "uuid",
+    uuid: 'uuid',
   });
 } catch (status) {
   console.log(status);
@@ -41,9 +40,9 @@ try {
 // snippet.setStateBasicUsage
 try {
   const response = await pubnub.setState({
-      state: { status: "online" },
-      channels: ["ch1"],
-      channelGroups: ["cg1"],
+    state: { status: 'online' },
+    channels: ['ch1'],
+    channelGroups: ['cg1'],
   });
 } catch (status) {
   console.log(status);
@@ -53,9 +52,9 @@ try {
 // snippet.getStateBasicUsage
 try {
   const response = await pubnub.getState({
-      uuid: "uuid",
-      channels: ["ch1"],
-      channelGroups: ["cg1"],
+    uuid: 'uuid',
+    channels: ['ch1'],
+    channelGroups: ['cg1'],
   });
 } catch (status) {
   console.log(status);

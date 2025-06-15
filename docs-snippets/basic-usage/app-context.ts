@@ -1,14 +1,14 @@
 import PubNub from '../../lib/types';
-// snippet.getAllUUIDMetadataBasicUsage
-// import PubNub
-// Initialize PubNub with demo keys
+
 const pubnub = new PubNub({
     publishKey: 'demo',
     subscribeKey: 'demo',
     userId: 'myUniqueUserId'
   });
 
+  // snippet.getAllUUIDMetadataBasicUsage
 // Function to get all UUID metadata
+// to get some data in response, add user metadata using setUUIDMetadata method
 async function getAllUUIDMetadata() {
   try {
     const response = await pubnub.objects.getAllUUIDMetadata();
@@ -23,7 +23,7 @@ getAllUUIDMetadata();
 // snippet.end
 
 // snippet.getUUIDMetadataBasicUsage
-// Using UUID from the config
+// Using UUID from the config  - default when uuid is not passed in the method
 try {
     const response = await pubnub.objects.getUUIDMetadata();
     console.log(`getUUIDMetadata response: ${response}`);
@@ -43,7 +43,7 @@ try {
 // snippet.end
 
 // snippet.setUUIDMetadataBasicUsage
-// Using UUID from the config
+// Using UUID from the config  - default when uuid is not passed in the method
 try {
     const response = await pubnub.objects.setUUIDMetadata({
         data: {
@@ -60,6 +60,7 @@ try {
         uuid: "myUuid",
         data: {},
     });
+    console.log(`setUUIDMetadata response: ${response}`);
 } catch (status) {
     console.log(`setUUIDMetadata failed with error: ${status}`);
 }
@@ -67,7 +68,7 @@ try {
 // snippet.end
 
 // snippet.removeUUIDMetadataBasicUsage
-// Using UUID from the config
+// Using UUID from the config  - default when uuid is not passed in the method
 try {
     const response = await pubnub.objects.removeUUIDMetadata();
 } catch (status) {
@@ -85,7 +86,7 @@ try {
 // snippet.end
 
 // snippet.getAllChannelMetadataBasicUsage
-// Get the total number of channels
+// Get the total number of channels included in the response.
 try {
     const response = await pubnub.objects.getAllChannelMetadata({
         include: {
@@ -96,11 +97,12 @@ try {
     console.log(`getAllChannelMetadata failed with error: ${status}`);
 }
 
-// Get all channels that have IDs starting with "pro."
+// Get all channels with the filter option. To get all channel which has Id ending 'Team'.
 try {
     const response = await pubnub.objects.getAllChannelMetadata({
         filter: 'name LIKE "*Team"',
     });
+    console.log(`getAllChannelMetadata response: ${response}`);
 } catch (status) {
     console.log(`getAllChannelMetadata failed with error: ${status}`);
 }
@@ -204,6 +206,7 @@ try {
             channelFields: true,
         },
     });
+    console.log(`setMemberships response: ${response}`);
 } catch (status) {
     console.log(`setMemberships failed with error: ${status}`);
 }
@@ -238,6 +241,7 @@ try {
             UUIDFields: true,
         },
     });
+    console.log(`getChannelMembers response: ${response}`);
 } catch (status) {
     console.log(`getChannelMembers failed with error: ${status}`);
 }
@@ -248,6 +252,7 @@ try {
         channel: "myChannel",
         filter: 'description LIKE "*admin*"',
     });
+    console.log(`getChannelMembers response: ${response}`);
 } catch (status) {
     console.log(`getChannelMembers failed with error: ${status}`);
 }
@@ -263,6 +268,7 @@ try {
             { id: "uuid-3", custom: { role: "Super Admin" } },
         ],
     });
+    console.log(`setChannelMembers response: ${response}`);
 } catch (status) {
     console.log(`setChannelMembers failed with error: ${status}`);
 }
