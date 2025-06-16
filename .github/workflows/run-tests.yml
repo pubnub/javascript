@@ -51,6 +51,7 @@ jobs:
           npm install
           npm run ${{ matrix.env }}
       - name: Test docs snippets syntax
+        if: matrix.node == '18.18.0' && matrix.env == 'ci:node'
         run: npm run test:snippets
       - name: Cancel workflow runs for commit on error
         if: failure()
