@@ -50,6 +50,8 @@ jobs:
         run: |
           npm install
           npm run ${{ matrix.env }}
+      - name: Test docs snippets syntax
+        run: npm run test:snippets
       - name: Cancel workflow runs for commit on error
         if: failure()
         uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
