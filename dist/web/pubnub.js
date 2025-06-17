@@ -17765,7 +17765,7 @@
 	        let transport = new WebTransport(clientConfiguration.logger(), platformConfiguration.transport);
 	        {
 	            if (configurationCopy.subscriptionWorkerUrl) {
-	                // Inject subscription worker into transport provider stack.
+	                // Inject subscription worker into the transport provider stack.
 	                const middleware = new SubscriptionWorkerMiddleware({
 	                    clientIdentifier: clientConfiguration._instanceId,
 	                    subscriptionKey: clientConfiguration.subscribeKey,

@@ -435,18 +435,20 @@
      * Handle client request to leave request.
      *
      * @param data - Leave event details.
-     * @param [client] - Specific client to handle leave request.
+     * @param [invalidatedClient] - Specific client to handle leave request.
+     * @param [invalidatedClientServiceRequestId] - Identifier of the service request ID for which the invalidated
+     * client waited for a subscribe response.
      */
-    const handleSendLeaveRequestEvent = (data, client) => {
+    const handleSendLeaveRequestEvent = (data, invalidatedClient, invalidatedClientServiceRequestId) => {
         var _a, _b;
         var _c;
-        client = client !== null && client !== void 0 ? client : pubNubClients[data.clientIdentifier];
-        const request = leaveTransportRequestFromEvent(data);
+        const client = invalidatedClient !== null && invalidatedClient !== void 0 ? invalidatedClient : pubNubClients[data.clientIdentifier];
+        const request = leaveTransportRequestFromEvent(data, invalidatedClient);
         if (!client)
             return;
         // Clean up client subscription information if there is no more channels / groups to use.
         const { subscription, heartbeat } = client;
-        const serviceRequestId = subscription === null || subscription === void 0 ? void 0 : subscription.serviceRequestId;
+        const serviceRequestId = invalidatedClientServiceRequestId !== null && invalidatedClientServiceRequestId !== void 0 ? invalidatedClientServiceRequestId : subscription === null || subscription === void 0 ? void 0 : subscription.serviceRequestId;
         if (subscription && subscription.channels.length === 0 && subscription.channelGroups.length === 0) {
             subscription.channelGroupQuery = '';
             subscription.path = '';
@@ -571,8 +573,6 @@
     const sendRequest = (request, getClients, success, failure, responsePreProcess) => {
         (() => __awaiter(void 0, void 0, void 0, function* () {
             var _a;
-            // Request progress support.
-            new Date().getTime();
             Promise.race([
                 fetch(requestFromTransportRequest(request), {
                     signal: (_a = abortControllers.get(request.identifier)) === null || _a === void 0 ? void 0 : _a.signal,
@@ -583,7 +583,6 @@
                 .then((response) => response.arrayBuffer().then((buffer) => [response, buffer]))
                 .then((response) => (responsePreProcess ? responsePreProcess(response) : response))
                 .then((response) => {
-                response[1].byteLength > 0 ? response[1] : undefined;
                 const clients = getClients();
                 if (clients.length === 0)
                     return;
@@ -872,9 +871,10 @@
         if (aggregated && hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier) {
             const expectedTimestamp = hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp + minimumHeartbeatInterval * 1000;
             const currentTimestamp = Date.now();
-            // Check whether it is too soon to send request or not (5 is leeway which let send request a bit earlier).
-            // Request should be sent if previous attempt failed.
-            if (!failedPreviousRequest && currentTimestamp < expectedTimestamp && expectedTimestamp - currentTimestamp > 5000)
+            // Check whether it is too soon to send request or not.
+            // Request should be sent if a previous attempt failed.
+            const leeway = minimumHeartbeatInterval * 0.05 * 1000;
+            if (!failedPreviousRequest && currentTimestamp < expectedTimestamp && expectedTimestamp - currentTimestamp > leeway)
                 return undefined;
         }
         delete hbRequestsBySubscriptionKey[heartbeatRequestKey].response;
@@ -928,15 +928,16 @@
      *
      * Filter out channels and groups, which is still in use by other PubNub client instances from leave request.
      *
-     * @param event - Client's send leave event request.
+     * @param event - Client's sending leave event request.
+     * @param [invalidatedClient] - Invalidated PubNub client state.
      *
-     * @returns Final transport request or `undefined` in case if there is no channels and groups for which request can be
+     * @returns Final transport request or `undefined` in case if there are no channels and groups for which request can be
      * done.
      */
-    const leaveTransportRequestFromEvent = (event) => {
+    const leaveTransportRequestFromEvent = (event, invalidatedClient) => {
         var _a;
-        const client = pubNubClients[event.clientIdentifier];
-        const clients = clientsForSendLeaveRequestEvent(event);
+        const client = invalidatedClient !== null && invalidatedClient !== void 0 ? invalidatedClient : pubNubClients[event.clientIdentifier];
+        const clients = clientsForSendLeaveRequestEvent(event, invalidatedClient);
         let channelGroups = channelGroupsFromRequest(event.request);
         let channels = channelsFromRequest(event.request);
         const request = Object.assign({}, event.request);
@@ -1385,11 +1386,12 @@
         const invalidatedClient = pubNubClients[clientId];
         delete pubNubClients[clientId];
         let clients = pubNubClientsBySubscriptionKey[subscriptionKey];
+        let serviceRequestId;
         // Unsubscribe invalidated PubNub client.
         if (invalidatedClient) {
             // Cancel long-poll request if possible.
             if (invalidatedClient.subscription) {
-                const { serviceRequestId } = invalidatedClient.subscription;
+                serviceRequestId = invalidatedClient.subscription.serviceRequestId;
                 delete invalidatedClient.subscription.serviceRequestId;
                 if (serviceRequestId)
                     cancelRequest(serviceRequestId);
@@ -1403,7 +1405,7 @@
             }
             // Leave subscribed channels / groups properly.
             if (invalidatedClient.unsubscribeOfflineClients)
-                unsubscribeClient(invalidatedClient);
+                unsubscribeClient(invalidatedClient, serviceRequestId);
         }
         if (clients) {
             // Clean up linkage between client and subscription key.
@@ -1436,10 +1438,17 @@
             for (const _client of clients)
                 consoleLog(message, _client);
     };
-    const unsubscribeClient = (client) => {
+    /**
+     * Unsubscribe offline / invalidated PubNub client.
+     *
+     * @param client - Invalidated PubNub client state object.
+     * @param [invalidatedClientServiceRequestId] - Identifier of the service request ID for which the invalidated
+     * client waited for a subscribe response.
+     */
+    const unsubscribeClient = (client, invalidatedClientServiceRequestId) => {
         if (!client.subscription)
             return;
-        const { channels, channelGroups, serviceRequestId } = client.subscription;
+        const { channels, channelGroups } = client.subscription;
         const encodedChannelGroups = (channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])
             .filter((name) => !name.endsWith('-pnpres'))
             .map((name) => encodeString(name))
@@ -1469,7 +1478,7 @@
                 identifier: query.requestid,
             },
         };
-        handleSendLeaveRequestEvent(request, client);
+        handleSendLeaveRequestEvent(request, client, invalidatedClientServiceRequestId);
     };
     /**
      * Validate received event payload.
@@ -1583,12 +1592,13 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
      * - `auth` key
      *
      * @param event - Send leave request event information.
+     * @param [invalidatedClient] - Invalidated PubNub client state.
      *
      * @returns List of PubNub client states which works from other pages for the same user.
      */
-    const clientsForSendLeaveRequestEvent = (event) => {
+    const clientsForSendLeaveRequestEvent = (event, invalidatedClient) => {
         var _a;
-        const reqClient = pubNubClients[event.clientIdentifier];
+        const reqClient = invalidatedClient !== null && invalidatedClient !== void 0 ? invalidatedClient : pubNubClients[event.clientIdentifier];
         if (!reqClient)
             return [];
         const query = event.request.queryParameters;
