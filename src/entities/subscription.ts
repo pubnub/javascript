@@ -142,6 +142,7 @@ export class Subscription extends SubscriptionBase {
     if (!this.state.isSubscribed) return;
 
     if (this.parentSetsCount > 0) {
+      // Creating from whole payload (not only for published messages).
       const fingerprint = messageFingerprint(event.data);
       if (this.handledUpdates.includes(fingerprint)) {
         this.state.client.logger.trace(this.constructor.name, `Message (${fingerprint}) already handled. Ignoring.`);

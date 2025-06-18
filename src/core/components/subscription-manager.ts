@@ -5,7 +5,7 @@
  */
 
 import { messageFingerprint, referenceSubscribeTimetoken, subscriptionTimetokenFromReference } from '../utils';
-import { SubscribeRequestParameters as SubscribeRequestParameters } from '../endpoints/subscribe';
+import { PubNubEventType, SubscribeRequestParameters as SubscribeRequestParameters } from '../endpoints/subscribe';
 import { Payload, ResultCallback, Status, StatusCallback, StatusEvent } from '../types/api';
 import { PrivateClientConfiguration } from '../interfaces/configuration';
 import { HeartbeatRequest } from '../endpoints/presence/heartbeat';
@@ -501,10 +501,13 @@ export class SubscriptionManager {
       };
 
       this.configuration.logger().debug(this.constructor.name, () => {
-        const hashedEvents = messages.map((event) => ({
-          type: event.type,
-          data: { ...event.data, pn_mfp: messageFingerprint(event.data) },
-        }));
+        const hashedEvents = messages.map((event) => {
+          const pn_mfp =
+            event.type === PubNubEventType.Message || event.type === PubNubEventType.Signal
+              ? messageFingerprint(event.data.message)
+              : undefined;
+          return pn_mfp ? { type: event.type, data: { ...event.data, pn_mfp } } : event;
+        });
         return { messageType: 'object', message: hashedEvents, details: 'Received events:' };
       });
 

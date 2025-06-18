@@ -4957,7 +4957,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.6.0';
+	            return '9.6.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -7182,10 +7182,12 @@
 	                region: this.region ? this.region : undefined,
 	            };
 	            this.configuration.logger().debug(this.constructor.name, () => {
-	                const hashedEvents = messages.map((event) => ({
-	                    type: event.type,
-	                    data: Object.assign(Object.assign({}, event.data), { pn_mfp: messageFingerprint(event.data) }),
-	                }));
+	                const hashedEvents = messages.map((event) => {
+	                    const pn_mfp = event.type === PubNubEventType.Message || event.type === PubNubEventType.Signal
+	                        ? messageFingerprint(event.data.message)
+	                        : undefined;
+	                    return pn_mfp ? { type: event.type, data: Object.assign(Object.assign({}, event.data), { pn_mfp }) } : event;
+	                });
 	                return { messageType: 'object', message: hashedEvents, details: 'Received events:' };
 	            });
 	            messages.forEach((message) => {
@@ -11976,6 +11978,7 @@
 	        if (!this.state.isSubscribed)
 	            return;
 	        if (this.parentSetsCount > 0) {
+	            // Creating from whole payload (not only for published messages).
 	            const fingerprint = messageFingerprint(event.data);
 	            if (this.handledUpdates.includes(fingerprint)) {
 	                this.state.client.logger.trace(this.constructor.name, `Message (${fingerprint}) already handled. Ignoring.`);
@@ -15013,10 +15016,12 @@
 	                        emitMessages: (cursor, events) => {
 	                            try {
 	                                this.logger.debug('EventEngine', () => {
-	                                    const hashedEvents = events.map((event) => ({
-	                                        type: event.type,
-	                                        data: Object.assign(Object.assign({}, event.data), { pn_mfp: messageFingerprint(event.data) }),
-	                                    }));
+	                                    const hashedEvents = events.map((event) => {
+	                                        const pn_mfp = event.type === PubNubEventType.Message || event.type === PubNubEventType.Signal
+	                                            ? messageFingerprint(event.data.message)
+	                                            : undefined;
+	                                        return pn_mfp ? { type: event.type, data: Object.assign(Object.assign({}, event.data), { pn_mfp }) } : event;
+	                                    });
 	                                    return { messageType: 'object', message: hashedEvents, details: 'Received events:' };
 	                                });
 	                                events.forEach((event) => this.emitEvent(cursor, event));
@@ -17765,7 +17770,7 @@
 	        let transport = new WebTransport(clientConfiguration.logger(), platformConfiguration.transport);
 	        {
 	            if (configurationCopy.subscriptionWorkerUrl) {
-	                // Inject subscription worker into transport provider stack.
+	                // Inject subscription worker into the transport provider stack.
 	                const middleware = new SubscriptionWorkerMiddleware({
 	                    clientIdentifier: clientConfiguration._instanceId,
 	                    subscriptionKey: clientConfiguration.subscribeKey,

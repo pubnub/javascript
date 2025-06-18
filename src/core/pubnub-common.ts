@@ -42,7 +42,11 @@ import * as Publish from './endpoints/publish';
 import * as Signal from './endpoints/signal';
 // endregion
 // region Subscription
-import { SubscribeRequestParameters as SubscribeRequestParameters, SubscribeRequest } from './endpoints/subscribe';
+import {
+  SubscribeRequestParameters as SubscribeRequestParameters,
+  SubscribeRequest,
+  PubNubEventType,
+} from './endpoints/subscribe';
 import { ReceiveMessagesSubscribeRequest } from './endpoints/subscriptionUtils/receiveMessages';
 import { HandshakeSubscribeRequest } from './endpoints/subscriptionUtils/handshake';
 import { Subscription as SubscriptionObject } from '../entities/subscription';
@@ -526,10 +530,13 @@ export class PubNubCore<
             emitMessages: (cursor, events) => {
               try {
                 this.logger.debug('EventEngine', () => {
-                  const hashedEvents = events.map((event) => ({
-                    type: event.type,
-                    data: { ...event.data, pn_mfp: messageFingerprint(event.data) },
-                  }));
+                  const hashedEvents = events.map((event) => {
+                    const pn_mfp =
+                      event.type === PubNubEventType.Message || event.type === PubNubEventType.Signal
+                        ? messageFingerprint(event.data.message)
+                        : undefined;
+                    return pn_mfp ? { type: event.type, data: { ...event.data, pn_mfp } } : event;
+                  });
                   return { messageType: 'object', message: hashedEvents, details: 'Received events:' };
                 });
 
