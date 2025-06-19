@@ -4767,7 +4767,7 @@ declare namespace PubNub {
      *
      * @param subscriptionSet - Other entities' subscription set, which should be joined.
      */
-    addSubscriptionSet(subscriptionSet: SubscriptionSet): void;
+    addSubscriptionSet(subscriptionSet: SubscriptionSet): SubscriptionSet;
     /**
      * Subtract another {@link SubscriptionSet} object.
      *

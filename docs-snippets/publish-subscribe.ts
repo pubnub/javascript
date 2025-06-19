@@ -198,3 +198,46 @@ pubnub.unsubscribe({
   channelGroups: ["demo_group1", "demo_group2"],
 });
 // snippet.end
+
+{
+  // snippet.subscriptionSetFrom2IndividualSubscriptions
+  // create a subscription from a channel entity
+  const channel = pubnub.channel('channel_1')
+  const subscription1 = channel.subscription({ receivePresenceEvents: true });
+  
+  // create a subscription from a channel group entity
+  const channelGroup = pubnub.channelGroup('channelGroup_1')
+  const subscription2 = channelGroup.subscription();
+  
+  // add 2 subscriptions to create a subscription set
+  const subscriptionSet = subscription1.addSubscription(subscription2);
+  
+  // add another subscription to the set
+  const subscription3 = pubnub.channel('channel_3').subscription({ receivePresenceEvents: false });
+  subscriptionSet.addSubscription(subscription3);
+  
+  // remove a subscription from a subscription set
+  subscriptionSet.removeSubscription(subscription3);
+  
+  subscriptionSet.subscribe();
+  // snippet.end
+}
+
+{
+// snippet.SubscriptionSetFrom2Sets
+// create a subscription set with multiple channels
+const subscriptionSet1 = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'] });
+
+// create a subscription set with multiple channel groups and options
+const subscriptionSet2 = pubnub.subscriptionSet({ 
+  channels: ['ch1', 'ch2'], 
+  subscriptionOptions: { receivePresenceEvents: true } 
+});
+
+// create a new subscription set from 2 sets
+const subscriptionSet3 = subscriptionSet1.addSubscriptionSet(subscriptionSet2);
+
+// you can also remove sets
+const subscriptionSetWithChannelsOnly = subscriptionSet3.removeSubscriptionSet(subscriptionSet2);
+// snippet.end
+}
