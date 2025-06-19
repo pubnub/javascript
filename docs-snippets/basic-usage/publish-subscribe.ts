@@ -99,6 +99,11 @@ subscription1.unsubscribe();
 subscriptionSet1.unsubscribe();
 // snippet.end
 
+// snippet.subscriptionSetSubscribeBasicUsage
+const channelsSubscriptionSet = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'] });
+channelsSubscriptionSet.subscribe();
+// snippet.end
+
 // snippet.unsubscribeAllBasicUsage
 // create a subscription set with multiple channels
 const subscriptionSet = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'] });
