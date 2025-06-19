@@ -60,3 +60,17 @@ try {
   console.log(status);
 }
 // snippet.end
+
+
+// snippet.basicUsageWithPromises
+pubnub.hereNow({
+  channels: ["ch1"],
+  channelGroups : ["cg1"],
+  includeUUIDs: true,
+  includeState: true
+}).then((response) => {
+  console.log(response)
+}).catch((error) => {
+  console.log(error)
+});
+// snippet.end
