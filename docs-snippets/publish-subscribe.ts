@@ -234,10 +234,10 @@ const subscriptionSet2 = pubnub.subscriptionSet({
   subscriptionOptions: { receivePresenceEvents: true } 
 });
 
-// create a new subscription set from 2 sets
-const subscriptionSet3 = subscriptionSet1.addSubscriptionSet(subscriptionSet2);
+// add a subscription set to another subscription set
+subscriptionSet1.addSubscriptionSet(subscriptionSet2);
 
-// you can also remove sets
-const subscriptionSetWithChannelsOnly = subscriptionSet3.removeSubscriptionSet(subscriptionSet2);
+// remove a subscription set from another subscription set
+subscriptionSet1.removeSubscriptionSet(subscriptionSet2);
 // snippet.end
 }
