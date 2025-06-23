@@ -18,6 +18,14 @@ pubnub.setAuthKey("my_authkey");
 pubnub.setFilterExpression("such=wow");
 // snippet.end
 
+// snippet.getFilterExpressionBasicUsage
+pubnub.getFilterExpression();
+// snippet.end
+
+// snippet.generateUUIDBasicUsage(deprecated)
+PubNub.generateUUID();
+// snippet.end
+
 // snippet.configurationBasicUsage
 // Initialize PubNub with your keys
 var pubnub = new PubNub({
