@@ -1,4 +1,4 @@
-import PubNub from '../../lib/types';
+import PubNub, { PubNubError } from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -8,24 +8,24 @@ const pubnub = new PubNub({
 
 // snippet.addMessageActionBasicUsage
 // first publish a message using publish() method to get the message timetoken
-async function addReactionToMessage() {
-  try {
-    const response = await pubnub.addMessageAction({
-      channel: 'channel_name',
-      messageTimetoken: 'replace_with_message_timetoken', // Replace with actual message timetoken
-      action: {
-        type: 'reaction',
-        value: 'smiley_face',
-      },
-    });
-    console.log(`Message reaction added successfully: ${response}`);
-  } catch (error) {
-    console.log(`Error adding reaction: ${error}`);
-  }
+try {
+  const response = await pubnub.addMessageAction({
+    channel: 'channel_name',
+    messageTimetoken: 'replace_with_message_timetoken', // Replace with actual message timetoken
+    action: {
+      type: 'reaction',
+      value: 'smiley_face',
+    },
+  });
+  console.log('Message reaction added successfully:', response);
+} catch (error) {
+  console.error(
+    `Error adding reaction: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 
-// Execute the function to add a message action
-addReactionToMessage();
 // snippet.end
 
 // snippet.removeMessageActionBasicUsage
@@ -35,9 +35,13 @@ try {
     messageTimetoken: 'replace_with_message_timetoken',
     actionTimetoken: 'replace_with_action_timetoken',
   });
-  console.log(`Message action removed successfully: ${response}`);
+  console.log('Message action removed successfully:', response);
 } catch (error) {
-  console.log(`Error removing message action: ${error}`);
+  console.error(
+    `Error removing message action: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
@@ -50,8 +54,12 @@ try {
     end: 'replace_with_end_timetoken',
     limit: 100,
   });
-  console.log(`Message actions retrieved successfully: ${response}`);
+  console.log('Message actions retrieved successfully:', response);
 } catch (error) {
-  console.log(`Error retrieving message actions: ${error}`);
+  console.error(
+    `Error retrieving message actions: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end

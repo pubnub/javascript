@@ -1,4 +1,4 @@
-import PubNub from '../../lib/types';
+import PubNub, { PubNubError } from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -8,23 +8,21 @@ const pubnub = new PubNub({
 
 // snippet.hereNowBasicUsage
 // Function to get presence information for a channel
-async function getHereNow() {
-  try {
-    const result = await pubnub.hereNow({
-      channels: ['ch1'],
-      channelGroups: ['cg1'],
-      includeUUIDs: true,
-      includeState: true,
-    });
-    console.log(`Here Now Result: ${result}`);
-  } catch (error) {
-    console.log(`Here Now failed with error: ${error}`);
-  }
+try {
+  const result = await pubnub.hereNow({
+    channels: ['ch1'],
+    channelGroups: ['cg1'],
+    includeUUIDs: true,
+    includeState: true,
+  });
+  console.log('Here Now Result:', result);
+} catch (error) {
+  console.error(
+    `Here Now failed with error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
-
-// Execute the function to get presence information
-getHereNow();
-
 // snippet.end
 
 // snippet.whereNowBasicUsage
@@ -32,8 +30,13 @@ try {
   const response = await pubnub.whereNow({
     uuid: 'uuid',
   });
-} catch (status) {
-  console.log(status);
+  console.log('State set successfully:', response);
+} catch (error) {
+  console.error(
+    `State set failed: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
@@ -44,8 +47,13 @@ try {
     channels: ['ch1'],
     channelGroups: ['cg1'],
   });
-} catch (status) {
-  console.log(status);
+  console.log('State set successfully:', response);
+} catch (error) {
+  console.error(
+    `State set failed: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
@@ -56,21 +64,28 @@ try {
     channels: ['ch1'],
     channelGroups: ['cg1'],
   });
-} catch (status) {
-  console.log(status);
+  console.log('State retrieved successfully:', response);
+} catch (error) {
+  console.error(
+    `State retrieval failed: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
-
 // snippet.basicUsageWithPromises
-pubnub.hereNow({
-  channels: ["ch1"],
-  channelGroups : ["cg1"],
-  includeUUIDs: true,
-  includeState: true
-}).then((response) => {
-  console.log(response)
-}).catch((error) => {
-  console.log(error)
-});
+pubnub
+  .hereNow({
+    channels: ['ch1'],
+    channelGroups: ['cg1'],
+    includeUUIDs: true,
+    includeState: true,
+  })
+  .then((response) => {
+    console.log(response);
+  })
+  .catch((error) => {
+    console.log(error);
+  });
 // snippet.end

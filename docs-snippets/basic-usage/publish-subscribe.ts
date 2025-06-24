@@ -1,4 +1,4 @@
-import PubNub from '../../lib/types';
+import PubNub, { PubNubError } from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -7,8 +7,6 @@ const pubnub = new PubNub({
 });
 
 // snippet.publishBasicUsage
-// Function to publish a message
-async function publishMessage() {
   try {
     const response = await pubnub.publish({
       message: { text: 'Hello World' },
@@ -20,12 +18,12 @@ async function publishMessage() {
     });
     console.log('Publish Success:', response);
   } catch (error) {
-    console.log('Publish Failed:', error);
+    console.error(
+      `Publish Failed: ${error}.${
+        (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+      }`,
+    );
   }
-}
-
-// Execute the function to publish the message
-publishMessage();
 // snippet.end
 
 // snippet.signalBasicUsage
@@ -35,10 +33,14 @@ try {
     channel: 'foo',
     customMessageType: 'text-message',
   });
-  console.log(`signal response: ${response}`);
-} catch (status) {
+  console.log('signal response:', response);
+} catch (error) {
   // handle error
-  console.log(`signal failed with error: ${status}`);
+  console.error(
+    `Signal failed with error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
@@ -57,9 +59,13 @@ try {
   });
 
   console.log(`message published with timetoken: ${response.timetoken}`);
-} catch (status) {
+} catch (error) {
   // handle error
-  console.log(`fire failed with error: ${status}`);
+  console.error(
+    `Fire failed with error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
