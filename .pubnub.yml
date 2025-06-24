@@ -1,5 +1,12 @@
 ---
 changelog:
+  - date: 2025-06-18
+    version: v9.6.1
+    changes:
+      - type: bug
+        text: "Fix issue that has been caused by the race of conditions on tab close and led to `presence leave` for channels that were still in use."
+      - type: improvement
+        text: "Make leeway depending from the minimal heartbeat interval (5% from it) to filter out too rapid heartbeat calls."
   - date: 2025-06-04
     version: v9.6.0
     changes:
@@ -1249,7 +1256,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.6.0'
+version: '9.6.1'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1265,7 +1272,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.6.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.6.1.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1936,7 +1943,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.6.0/pubnub.9.6.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.6.1/pubnub.9.6.1.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

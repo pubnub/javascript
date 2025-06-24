@@ -1,3 +1,12 @@
+## v9.6.1
+June 18 2025
+
+#### Fixed
+- Fix issue that has been caused by the race of conditions on tab close and led to `presence leave` for channels that were still in use.
+
+#### Modified
+- Make leeway depending from the minimal heartbeat interval (5% from it) to filter out too rapid heartbeat calls.
+
 ## v9.6.0
 June 04 2025
 
