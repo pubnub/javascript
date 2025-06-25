@@ -10,6 +10,8 @@ const pubnub = new PubNub({
 // snippet.sendFileBasicUsage
 // Function to send a file to a channel
 try {
+  // in node.js, make sure to import 'fs'
+  // and use the createReadStream method to read the file
   const myFile = fs.createReadStream('./cat_picture.jpg');
 
   const response = await pubnub.sendFile({
