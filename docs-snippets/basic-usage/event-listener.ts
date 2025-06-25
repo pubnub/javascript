@@ -50,4 +50,3 @@ pubnub.addListener({
   },
 });
 // snippet.end
-
