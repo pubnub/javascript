@@ -10,25 +10,26 @@ const pubnub = new PubNub({
 // snippet.downloadFileWebBasicUsage
 // In browser
 // download the intended file
-let file;
-try {
-  file = await pubnub.downloadFile({
-    channel: 'my_channel',
-    id: '...',
-    name: 'cat_picture.jpg',
-  });
-} catch (error) {
-  console.error(
-    `Download file error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
-}
+const downloadFile = async () => {
+  try {
+    const file = await pubnub.downloadFile({
+      channel: 'my_channel',
+      id: '...',
+      name: 'cat_picture.jpg',
+    });
 
-// have proper html element to display the file
-const myImageTag = document.createElement('img');
-myImageTag.src = URL.createObjectURL(await file!.toFile());
+    // have proper html element to display the file
+    const myImageTag = document.createElement('img');
+    myImageTag.src = URL.createObjectURL(await file!.toFile());
 
-// attach the file content to the html element
-document.body.appendChild(myImageTag);
+    // attach the file content to the html element
+    document.body.appendChild(myImageTag);
+  } catch (error) {
+    console.error(
+      `Download file error: ${error}.${
+        (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+      }`,
+    );
+  }
+};
 // snippet.end

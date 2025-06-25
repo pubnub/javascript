@@ -3,7 +3,7 @@ import PubNub from '../lib/types';
 // snippet.configurationCryptoModule
 // encrypts using 256-bit AES-CBC cipher (recommended)
 // decrypts data encrypted with the legacy and the 256 bit AES-CBC ciphers
-var pubnub = new PubNub({
+const pubnub = new PubNub({
     subscribeKey: 'YOUR_SUBSCRIBE_KEY',
     userId: 'YOUR_USER_ID',
     cryptoModule: PubNub.CryptoModule.aesCbcCryptoModule({cipherKey: 'pubnubenigma'})
@@ -11,7 +11,7 @@ var pubnub = new PubNub({
   
   // encrypts with 128-bit cipher key entropy (legacy)
   // decrypts data encrypted with the legacy and the 256-bit AES-CBC ciphers
-var pubnub = new PubNub({
+const pubnubLegacy = new PubNub({
     subscribeKey: 'YOUR_SUBSCRIBE_KEY',
     userId: 'YOUR_USER_ID',
     cryptoModule: PubNub.CryptoModule.legacyCryptoModule({cipherKey: 'pubnubenigma'})
@@ -19,7 +19,7 @@ var pubnub = new PubNub({
 // snippet.end
 
 // snippet.configurationServerOpertaion
-var pubnub = new PubNub({
+const pubnubServer = new PubNub({
     subscribeKey: "mySubscribeKey",
     publishKey: "myPublishKey",
     userId: "myUniqueUserId",
@@ -31,14 +31,14 @@ var pubnub = new PubNub({
 // snippet.configurationRealOnlyClient
 // Initialize for Read Only Client
 
-var pubnub = new PubNub({
+const pubnubReadOnly = new PubNub({
     subscribeKey: "mySubscribeKey",
     userId: "myUniqueUserId"
 });
 // snippet.end
 
 // snippet.configurationSSLEnabled
-var pubnub = new PubNub({
+const pubnubSSL = new PubNub({
     subscribeKey: "mySubscribeKey",
     publishKey: "myPublishKey",
     cryptoModule: PubNub.CryptoModule.aesCbcCryptoModule({cipherKey: 'pubnubenigma'}),
@@ -50,5 +50,5 @@ var pubnub = new PubNub({
 // snippet.end
 
 // snippet.generateUUIDdeprected
-var uuid = PubNub.generateUUID();
+const uuid = PubNub.generateUUID();
 // snippet.end

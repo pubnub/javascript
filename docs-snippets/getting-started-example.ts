@@ -20,13 +20,14 @@ pubnub.addListener({
     // Handle message event
     console.log('New message:', event.message);
     // Format and display received message
-    let displayText;
-    if (typeof event.message === 'object' && event.message && 'text' in event.message) {
-      const messageObj = event.message as { text?: string; sender?: string };
-      displayText = `${messageObj.sender || 'User'}: ${messageObj.text}`;
-    } else {
-      displayText = `Message: ${JSON.stringify(event.message)}`;
-    }
+    const displayText = (() => {
+      if (typeof event.message === 'object' && event.message && 'text' in event.message) {
+        const messageObj = event.message as { text?: string; sender?: string };
+        return `${messageObj.sender || 'User'}: ${messageObj.text}`;
+      } else {
+        return `Message: ${JSON.stringify(event.message)}`;
+      }
+    })();
     console.log(displayText);
   },
 

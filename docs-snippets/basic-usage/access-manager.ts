@@ -45,12 +45,14 @@ try {
 
 // snippet.parseTokenBasicUsage
 pubnub.parseToken(
-  'p0thisAkFl043rhDdHRsCkNyZXisRGNoYW6hanNlY3JldAFDZ3Jwsample3KgQ3NwY6BDcGF0pERjaGFuoENnctokenVzcqBDc3BjoERtZXRhoENzaWdYIGOAeTyWGJI',
+  'p0thisAkFl043rhDdHRsCkNyZXisRGNoYW6hanNlY3JldAFDZ3Jwsample3KgQ3NwY6BDcGF0pERjaGFuoENnc' +
+    'tokenVzcqBDc3BjoERtZXRhoENzaWdYIGOAeTyWGJI',
 );
 // snippet.end
 
 // snippet.setTokenBasicUsage
 pubnub.setToken(
-  'p0thisAkFl043rhDdHRsCkNyZXisRGNoYW6hanNlY3JldAFDZ3Jwsample3KgQ3NwY6BDcGF0pERjaGFuoENnctokenVzcqBDc3BjoERtZXRhoENzaWdYIGOAeTyWGJI',
+  'p0thisAkFl043rhDdHRsCkNyZXisRGNoYW6hanNlY3JldAFDZ3Jwsample3KgQ3NwY6BDcGF0pERjaGFuoENnc' +
+    'tokenVzcqBDc3BjoERtZXRhoENzaWdYIGOAeTyWGJI',
 );
 // snippet.end

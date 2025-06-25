@@ -9,7 +9,7 @@ const pubnub = new PubNub({
 // snippet.hereNowWithState
 try {
     const response = await pubnub.hereNow({
-        channels: ["my_channel"],
+        channels: ['my_channel'],
         includeState: true,
     });
     console.log(`hereNow response: ${response}`);
@@ -21,7 +21,7 @@ try {
 // snippet.hereNowFetchOccupancyOnly
 try {
     const response = await pubnub.hereNow({
-        channels: ["my_channel"],
+        channels: ['my_channel'],
         includeUUIDs: false,
     });
     console.log(`hereNow response: ${response}`);
@@ -34,7 +34,7 @@ try {
 // snippet.hereNowChannelGroup
 try {
     const response = await pubnub.hereNow({
-        channelGroups: ["my_channel_group"] 
+        channelGroups: ['my_channel_group'],
     });
     console.log(`hereNow response: ${response}`);
 } catch (status) {

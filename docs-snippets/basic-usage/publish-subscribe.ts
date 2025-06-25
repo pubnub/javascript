@@ -7,23 +7,23 @@ const pubnub = new PubNub({
 });
 
 // snippet.publishBasicUsage
-  try {
-    const response = await pubnub.publish({
-      message: { text: 'Hello World' },
-      channel: 'my_channel',
-      sendByPost: false,
-      storeInHistory: true,
-      meta: { sender: 'user123' },
-      customMessageType: 'text-message',
-    });
-    console.log('Publish Success:', response);
-  } catch (error) {
-    console.error(
-      `Publish Failed: ${error}.${
-        (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-      }`,
-    );
-  }
+try {
+  const response = await pubnub.publish({
+    message: { text: 'Hello World' },
+    channel: 'my_channel',
+    sendByPost: false,
+    storeInHistory: true,
+    meta: { sender: 'user123' },
+    customMessageType: 'text-message',
+  });
+  console.log('Publish Success:', response);
+} catch (error) {
+  console.error(
+    `Publish Failed: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
+}
 // snippet.end
 
 // snippet.signalBasicUsage
@@ -124,17 +124,16 @@ groupSubscription1.subscribe();
 pubnub.unsubscribeAll();
 // snippet.end
 
-
 // ***********  OLD SYNTAX ***********
 // snippet.OLDsubscribeBasicUsage
 pubnub.subscribe({
-  channels: ["my_channel"],
+  channels: ['my_channel'],
 });
 // snippet.end
 
 // snippet.OLDUnsubscribeBasicUsage
 pubnub.unsubscribe({
-  channels: ["my_channel"],
+  channels: ['my_channel'],
 });
 // snippet.end
 

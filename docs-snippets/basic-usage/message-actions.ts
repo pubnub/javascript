@@ -46,7 +46,8 @@ try {
 // snippet.end
 
 // snippet.getMessageActionsBasicUsage
-// to get some data in response, first publish a message and then add a message action using addMessageAction() method.
+// to get some data in response, first publish a message and then add a message action
+// using addMessageAction() method.
 try {
   const response = await pubnub.getMessageActions({
     channel: 'channel_name',

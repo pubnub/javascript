@@ -27,9 +27,9 @@ try {
 
 // snippet.downloadFileCustomCipherKey
 const file = await pubnub.downloadFile({
-  channel: "my_channel",
-  id: "...",
-  name: "cat_picture.jpg",
-  cipherKey: "myCipherKey",
+  channel: 'my_channel',
+  id: '...',
+  name: 'cat_picture.jpg',
+  cipherKey: 'myCipherKey',
 });
 // snippet.end

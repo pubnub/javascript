@@ -142,8 +142,8 @@ try {
 
 // snippet.buildNotificationPayloadBasicUsage
 
-let builder = PubNub.notificationPayload('Chat invitation', "You have been invited to 'quiz' chat");
-let messagePayload = builder.buildPayload(['apns2', 'fcm']);
+const builder = PubNub.notificationPayload('Chat invitation', "You have been invited to 'quiz' chat");
+const messagePayload = builder.buildPayload(['apns2', 'fcm']);
 // add required fields to the payload
 
 const response = await pubnub.publish({

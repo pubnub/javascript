@@ -1,7 +1,7 @@
 import PubNub from '../../src/web/index';
 
 // snippet.configurationBasicUsageSubscriptionWorkerUrl
-var pubnub = new PubNub({
+const pubnub = new PubNub({
   subscribeKey: 'demo',
   publishKey: 'demo',
   userId: 'unique-user-id',
@@ -29,7 +29,7 @@ PubNub.generateUUID();
 
 // snippet.configurationBasicUsage
 // Initialize PubNub with your keys
-var pubnub = new PubNub({
+const pubnubConfig = new PubNub({
   subscribeKey: 'YOUR_SUBSCRIBE_KEY',
   publishKey: 'YOUR_PUBLISH_KEY',
   userId: 'YOUR_USER_ID',

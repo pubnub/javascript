@@ -14,7 +14,7 @@ const customField = { visible: 'team' };
 
 // Function to set and then update channel metadata
 try {
-  let response = await pubnub.objects.setChannelMetadata({
+  const response = await pubnub.objects.setChannelMetadata({
     channel: channel,
     data: {
       name: name,
@@ -25,22 +25,22 @@ try {
   console.log('The channel has been created with name and description.\n');
 
   // Fetch current object with custom fields
-  let currentObjectResponse = await pubnub.objects.getChannelMetadata({
+  const currentObjectResponse = await pubnub.objects.getChannelMetadata({
     channel: channel,
     include: {
       customFields: true,
     },
   });
-  let currentObject = currentObjectResponse.data;
+  const currentObject = currentObjectResponse.data;
 
   // Initialize the custom field object
-  let custom = currentObject.custom || {};
+  const custom = currentObject.custom || {};
 
   // Add or update the field
   custom['edit'] = 'admin';
 
   // Writing the updated object back to the server
-  let setResponse = await pubnub.objects.setChannelMetadata({
+  const setResponse = await pubnub.objects.setChannelMetadata({
     channel: channel,
     data: {
       name: currentObject.name || '',

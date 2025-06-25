@@ -32,9 +32,9 @@ const file = pubnub.File.create({ data: fileBuffer, name: 'cat_picture.jpg', mim
 const encryptedFile = await pubnub.encryptFile(file);
 // snippet.end
 
-let encrypted = '..';
+const encrypted = '..';
 // snippet.decryptBasicUsage
-var decrypted = pubnub.decrypt(encrypted); // Pass the encrypted data as the first parameter in decrypt Method
+const decrypted = pubnub.decrypt(encrypted); // Pass the encrypted data as the first parameter in decrypt Method
 // snippet.end
 
 // snippet.decryptFileBasicUsage

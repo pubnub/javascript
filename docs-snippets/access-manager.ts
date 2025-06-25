@@ -47,7 +47,9 @@ try {
   });
 } catch (error) {
   console.error(
-    `Grant token error: ${error}.${(error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''}`,
+    `Grant token error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
   );
 }
 // snippet.end
@@ -122,7 +124,9 @@ try {
   });
 } catch (error) {
   console.error(
-    `Grant token error: ${error}.${(error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''}`,
+    `Grant token error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
   );
 }
 // snippet.end
