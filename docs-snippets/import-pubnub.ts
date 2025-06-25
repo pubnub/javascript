@@ -9,8 +9,8 @@ import fs from 'fs';
 // snippet.PubNubinitBasicUsage
 // Initialize PubNub with your keys
 const pubnub = new PubNub({
-    publishKey: 'YOUR_PUBLISH_KEY',
-    subscribeKey: 'YOUR_SUBSCRIBE_KEY',
-    userId: 'YOUR_USER_ID',
-  });
+  publishKey: 'YOUR_PUBLISH_KEY',
+  subscribeKey: 'YOUR_SUBSCRIBE_KEY',
+  userId: 'YOUR_USER_ID',
+});
 // snippet.end

@@ -90,7 +90,7 @@ try {
     }`,
   );
 }
-let fileContent = await file!.toBlob();
+const fileContent = await file!.toBlob();
 // snippet.end
 
 // snippet.deleteFileBasicUsage

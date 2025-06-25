@@ -139,4 +139,4 @@ pubnub.unsubscribe({
 
 // snippet.OLDUnsubscribeAllBasicUsage
 pubnub.unsubscribeAll();
-// snippet.end  
+// snippet.end
