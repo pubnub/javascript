@@ -16170,7 +16170,6 @@
 	     *
 	     * @returns Asynchronous delete messages response or `void` in case if `callback` provided.
 	     *
-	     * @deprecated
 	     */
 	    deleteMessages(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {

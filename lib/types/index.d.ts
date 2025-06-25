@@ -510,7 +510,6 @@ declare class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated
    */
   deleteMessages(
     parameters: PubNub.History.DeleteMessagesParameters,
@@ -659,7 +658,7 @@ declare class PubNubCore<
    * @param callback - Request completion handler callback.
    */
   grantToken(
-    parameters: PubNub.PAM.GrantTokenParameters | PubNub.PAM.ObjectsGrantTokenParameters,
+    parameters: PubNub.PAM.GrantTokenParameters,
     callback: PubNub.ResultCallback<PubNub.PAM.GrantTokenResponse>,
   ): void;
   /**
@@ -671,7 +670,7 @@ declare class PubNubCore<
    *
    * @returns Asynchronous grant token response.
    */
-  grantToken(parameters: PubNub.PAM.GrantTokenParameters | PubNub.PAM.ObjectsGrantTokenParameters): Promise<PubNub.PAM.GrantTokenResponse>;
+  grantToken(parameters: PubNub.PAM.GrantTokenParameters): Promise<PubNub.PAM.GrantTokenResponse>;
   /**
    * Revoke token permission.
    *
