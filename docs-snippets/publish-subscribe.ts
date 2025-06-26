@@ -88,26 +88,6 @@ try {
   );
 }
 // snippet.end
-// *********** Compilation Error due to wrong code *****************
-// // snippet.publishUnsuccessfulMissingChannel
-// try {
-//   const result = await pubnub.publish({
-//       message: "hello world!",
-//   });
-// } catch (status) {
-//   console.log(status); // {message: "Missing Channel", type: "validationError", error: true}
-// }
-// // snippet.end
-
-// // snippet.publishUnsuccessfulMissingMessage
-// try {
-//   const result = await pubnub.publish({
-//       channel: "ch1",
-//   });
-// } catch (status) {
-//   console.log(status); // {message: "Missing Message", type: "validationError", error: true}
-// }
-// // snippet.end
 
 // snippet.createSubscription
 const channel = pubnub.channel('my_channel');
@@ -160,7 +140,7 @@ pubnub.addListener({
             some: 'state',
           },
         });
-      } catch (status) {
+      } catch (error) {
         // handle setState error
       }
     }

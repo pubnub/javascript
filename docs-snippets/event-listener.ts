@@ -61,7 +61,7 @@ subscription.addListener({
   },
   // App Context
   objects: (objectEvent) => {
-    const channel = objectEvent.channel; // Channel to which the event belongs
+    const channel = objectEvent.channel; // channel Id or a User Id of updated/set app context metadata object
     const channelGroup = objectEvent.subscription; // Channel group
     const timetoken = objectEvent.timetoken; // Event timetoken
     const event = objectEvent.message.data.type; // Event name

@@ -1,4 +1,4 @@
-import PubNub from '../../lib/types';
+import PubNub, { PubNubError } from '../../lib/types';
 
 // Initialize PubNub with demo keys
 const pubnub = new PubNub({
@@ -9,41 +9,38 @@ const pubnub = new PubNub({
 
 // snippet.addDeciveToChannelBasicUsage
 // Function to add a device to a channel for APNs2
-async function addDeviceToChannelAPNs2() {
-  try {
-    const result = await pubnub.push.addChannels({
-      channels: ['a', 'b'],
-      device: 'niceDevice',
-      pushGateway: 'apns2',
-      environment: 'production',
-      topic: 'com.example.bundle_id',
-    });
-    console.log('Operation done for APNs2!');
-    console.log('Response:', result);
-  } catch (error) {
-    console.log('Operation failed with error for APNs2:', error);
-  }
+try {
+  const response = await pubnub.push.addChannels({
+    channels: ['a', 'b'],
+    device: 'niceDevice',
+    pushGateway: 'apns2',
+    environment: 'production',
+    topic: 'com.example.bundle_id',
+  });
+  console.log('device added to channels response:', response);
+} catch (error) {
+  console.error(
+    `Error adding device to channels: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 
 // Function to add a device to a channel for FCM
-async function addDeviceToChannelFCM() {
-  try {
-    const result = await pubnub.push.addChannels({
-      channels: ['a', 'b'],
-      device: 'niceDevice',
-      pushGateway: 'gcm',
-    });
-    console.log('Operation done for FCM!');
-    console.log('Response:', result);
-  } catch (error) {
-    console.log('Operation failed with error for FCM:', error);
-  }
+try {
+  const response = await pubnub.push.addChannels({
+    channels: ['a', 'b'],
+    device: 'niceDevice',
+    pushGateway: 'gcm',
+  });
+  console.log('device added to channels response:', response);
+} catch (error) {
+  console.error(
+    `Error adding device to channels: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
-
-// Execute the functions to add the device to channels
-addDeviceToChannelAPNs2();
-addDeviceToChannelFCM();
-
 // snippet.end
 
 // snippet.listChannelsForDeviceBasicUsage
@@ -55,12 +52,16 @@ try {
     environment: 'production',
     topic: 'com.example.bundle_id',
   });
-  console.log(`listing channels for device response: ${response}`);
+  console.log('listing channels for device response:', response);
   response.channels.forEach((channel: string) => {
     console.log(channel);
   });
-} catch (status) {
-  console.log(`listing channels for device failed with error: ${status}`);
+} catch (error) {
+  console.error(
+    `Error listing channels for device: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 
 // for FCM
@@ -70,13 +71,17 @@ try {
     pushGateway: 'gcm',
   });
 
-  console.log(`listing channels for device response: ${response}`);
+  console.log('listing channels for device response:', response);
 
   response.channels.forEach((channel: string) => {
     console.log(channel);
   });
-} catch (status) {
-  console.log(`listing channels for device failed with error: ${status}`);
+} catch (error) {
+  console.error(
+    `Error listing channels for device: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
@@ -91,9 +96,13 @@ try {
     topic: 'com.example.bundle_id',
   });
 
-  console.log(`removing device from channel response: ${response}`);
-} catch (status) {
-  console.log(`removing device from channel failed with error: ${status}`);
+  console.log('removing device from channel response:', response);
+} catch (error) {
+  console.error(
+    `Error removing device from channel: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 
 // for FCM
@@ -104,9 +113,13 @@ try {
     pushGateway: 'gcm',
   });
 
-  console.log(`removing device from channel response: ${response}`);
-} catch (status) {
-  console.log(`removing device from channel failed with error: ${status}`);
+  console.log('removing device from channel response:', response);
+} catch (error) {
+  console.error(
+    `Error removing device from channel: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
@@ -121,9 +134,13 @@ try {
     topic: 'com.example.bundle_id',
   });
 
-  console.log(`deleteDevice response: ${response}`);
-} catch (status) {
-  console.log(`deleteDevice failed with error: ${status}`);
+  console.log('deleteDevice response:', response);
+} catch (error) {
+  console.error(
+    `Error deleting device: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 
 // for FCM
@@ -133,9 +150,13 @@ try {
     pushGateway: 'gcm',
   });
 
-  console.log(`deleteDevice response: ${response}`);
-} catch (status) {
-  console.log(`deleteDevice failed with error: ${status}`);
+  console.log('deleteDevice response:', response);
+} catch (error) {
+  console.error(
+    `Error deleting device: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 
 // snippet.end
@@ -145,12 +166,17 @@ try {
 const builder = PubNub.notificationPayload('Chat invitation', "You have been invited to 'quiz' chat");
 const messagePayload = builder.buildPayload(['apns2', 'fcm']);
 // add required fields to the payload
-
-const response = await pubnub.publish({
-  message: messagePayload,
-  channel: 'chat-bot',
-});
-
-console.log(`publish response: ${response}`);
-
+try {
+  const response = await pubnub.publish({
+    message: messagePayload,
+    channel: 'chat-bot',
+  });
+  console.log('publish response:', response);
+} catch (error) {
+  console.error(
+    `Error publishing message: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
+}
 // snippet.end

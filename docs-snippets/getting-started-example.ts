@@ -46,7 +46,12 @@ pubnub.addListener({
       console.log('Connected to PubNub chat!');
       console.log('Your user ID is:', pubnub.userId);
     } else if (event.category === 'PNNetworkIssuesCategory') {
-      console.log('Connection lost. Attempting to reconnect...');
+      // if eventEngine is not enabled, this event will be triggered when subscription encounter network issues.
+      console.log('Connection lost');
+      // handle reconnection
+    } else if (event.category === 'PNDisconnectedUnexpectedlyCategory') {
+      // If enableEventEngine: true set in the constructor, this event will be triggered when the connection is lost.
+      console.log('Disconnected unexpectedly.');
     }
   },
 });

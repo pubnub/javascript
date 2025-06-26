@@ -1,4 +1,4 @@
-import PubNub from '../lib/types';
+import PubNub, { PubNubError } from '../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -19,9 +19,13 @@ try {
     file: { data: myFile, name: 'cat_picture.jpg', mimeType: 'application/json' },
     cipherKey: 'myCipherKey',
   });
-  console.log(`File sent successfully: ${response}`);
+  console.log('File sent successfully:', response);
 } catch (error) {
-  console.error('Error sending file:', error);
+  console.error(
+    `Error sending file: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 

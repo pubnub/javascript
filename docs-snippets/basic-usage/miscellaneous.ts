@@ -38,6 +38,8 @@ const decrypted = pubnub.decrypt(encrypted); // Pass the encrypted data as the f
 // snippet.end
 
 // snippet.decryptFileBasicUsage
+// Node.js example.
+// import fs from 'fs';
 const fileBufferData = fs.readFileSync('./cat_picture_encrypted.jpg');
 
 const fileData = pubnub.File.create({ data: fileBuffer, name: 'cat_picture.jpg', mimeType: 'image/jpeg' });
@@ -46,6 +48,7 @@ const decryptedFile = await pubnub.decryptFile(fileData);
 // snippet.end
 
 // snippet.setProxyBasicUsage
+// This method is only available for NodeJS.
 pubnub.setProxy({
   hostname: 'YOUR_HOSTNAME',
   port: 8080,

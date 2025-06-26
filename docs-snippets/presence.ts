@@ -1,4 +1,4 @@
-import PubNub from '../lib/types';
+import PubNub, { PubNubError } from '../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -12,9 +12,13 @@ try {
     channels: ['my_channel'],
     includeState: true,
   });
-  console.log(`hereNow response: ${response}`);
-} catch (status) {
-  console.log(`hereNow failed with error: ${status}`);
+  console.log('hereNow response:', response);
+} catch (error) {
+  console.error(
+    `hereNow failed with error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
@@ -24,9 +28,13 @@ try {
     channels: ['my_channel'],
     includeUUIDs: false,
   });
-  console.log(`hereNow response: ${response}`);
-} catch (status) {
-  console.log(`hereNow failed with error: ${status}`);
+  console.log('hereNow response:', response);
+} catch (error) {
+  console.error(
+    `hereNow failed with error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
@@ -35,8 +43,12 @@ try {
   const response = await pubnub.hereNow({
     channelGroups: ['my_channel_group'],
   });
-  console.log(`hereNow response: ${response}`);
-} catch (status) {
-  console.log(`hereNow failed with error: ${status}`);
+  console.log('hereNow response:', response);
+} catch (error) {
+  console.error(
+    `hereNow failed with error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end

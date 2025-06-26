@@ -1,4 +1,4 @@
-import PubNub from '../lib/types';
+import PubNub, { PubNubError } from '../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -15,9 +15,13 @@ try {
     includeMessageActions: true,
     includeCustomMessageType: true,
   });
-  console.log(`fetch messages response: ${response}`);
-} catch (status) {
-  console.log(`fetch messages failed with error: ${status}`);
+  console.log('fetch messages response:', response);
+} catch (error) {
+  console.error(
+    `fetch messages failed with error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
@@ -28,9 +32,13 @@ try {
     start: 'replace-with-start-timetoken',
     end: 'replace-with-end-timetoken',
   });
-  console.log(`delete messages response: ${response}`);
+  console.log('delete messages response:', response);
 } catch (error) {
-  console.log(`delete messages failed with error: ${error}`);
+  console.error(
+    `delete messages failed with error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end
 
@@ -44,8 +52,12 @@ try {
       'replace-with-channel-timetoken-ch3', // timetoken for channel ch3
     ],
   });
-  console.log(`message count response: ${response}`);
-} catch (status) {
-  console.log(`message count failed with error: ${status}`);
+  console.log('message count response:', response);
+} catch (error) {
+  console.error(
+    `message count failed with error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
 }
 // snippet.end

@@ -1,4 +1,4 @@
-import PubNub, { Subscription } from '../lib/types';
+import PubNub, { PubNubError, Subscription } from '../lib/types';
 
 // snippet.gettingStartedInitPubnub
 const pubnub = new PubNub({
@@ -35,8 +35,14 @@ pubnub.addListener({
     // Handle status event
     if (event.category === 'PNConnectedCategory') {
       console.log('Connected to PubNub chat!');
+      console.log('Your user ID is:', pubnub.userId);
     } else if (event.category === 'PNNetworkIssuesCategory') {
-      console.log('Connection lost. Attempting to reconnect...');
+      // if eventEngine is not enabled, this event will be triggered when subscription encounter network issues.
+      console.log('Connection lost');
+      // handle reconnection
+    } else if (event.category === 'PNDisconnectedUnexpectedlyCategory') {
+      // If enableEventEngine: true set in the constructor, this event will be triggered when the connection is lost.
+      console.log('Disconnected unexpectedly.');
     }
   },
 });
@@ -72,7 +78,11 @@ async function publishMessage(text: string) {
     console.log(`Message published with timetoken: ${result.timetoken}`);
     console.log(`You: ${text}`);
   } catch (error) {
-    console.error(`Publish failed: ${error}`);
+    console.error(
+      `Publish failed: ${error}.${
+        (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+      }`,
+    );
   }
 }
 
