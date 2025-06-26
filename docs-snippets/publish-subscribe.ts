@@ -240,21 +240,19 @@ pubnub.unsubscribe({
   // snippet.end
 }
 
-{
-  // snippet.SubscriptionSetFrom2Sets
-  // create a subscription set with multiple channels
-  const subscriptionSet1 = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'] });
+// snippet.SubscriptionSetFrom2Sets
+// create a subscription set with multiple channels
+const subscriptionSet1 = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'] });
 
-  // create a subscription set with multiple channel groups and options
-  const subscriptionSet2 = pubnub.subscriptionSet({
-    channels: ['ch1', 'ch2'],
-    subscriptionOptions: { receivePresenceEvents: true },
-  });
+// create a subscription set with multiple channel groups and options
+const subscriptionSet2 = pubnub.subscriptionSet({
+  channels: ['ch1', 'ch2'],
+  subscriptionOptions: { receivePresenceEvents: true },
+});
 
-  // add a subscription set to another subscription set
-  subscriptionSet1.addSubscriptionSet(subscriptionSet2);
+// add a subscription set to another subscription set
+subscriptionSet1.addSubscriptionSet(subscriptionSet2);
 
-  // remove a subscription set from another subscription set
-  subscriptionSet1.removeSubscriptionSet(subscriptionSet2);
-  // snippet.end
-}
+// remove a subscription set from another subscription set
+subscriptionSet1.removeSubscriptionSet(subscriptionSet2);
+// snippet.end

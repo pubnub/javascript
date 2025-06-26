@@ -44,9 +44,9 @@ try {
 // snippet.end
 
 // snippet.parseTokenBasicUsage
-pubnub.parseToken('p0thisAkFl043rhDdHRsCkNyZXisRGNoYW6hanNlY3JldAFDZ3Jwsample3KgQ3NwY6BDcGF0pERjaGFuoENnctokenVzcqBDc3BjoERtZXRhoENzaWdYIGOAeTyWGJI');
+pubnub.parseToken('use-token-string-generated-by-grantToken()');
 // snippet.end
 
 // snippet.setTokenBasicUsage
-pubnub.setToken('p0thisAkFl043rhDdHRsCkNyZXisRGNoYW6hanNlY3JldAFDZ3Jwsample3KgQ3NwY6BDcGF0pERjaGFuoENnctokenVzcqBDc3BjoERtZXRhoENzaWdYIGOAeTyWGJI');
+pubnub.setToken('use-token-string-generated-by-grantToken()');
 // snippet.end
