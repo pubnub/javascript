@@ -52,3 +52,15 @@ pubnub.setProxy({
   protocol: 'YOUR_PROTOCOL',
 });
 // snippet.end
+
+// snippet.disconnectBasicUsage
+pubnub.disconnect();
+// snippet.end
+
+// snippet.reconnectBasicUsage
+pubnub.reconnect();
+// snippet.end
+
+// snippet.deleteProxy
+pubnub.setProxy();
+// snippet.end
