@@ -1,4 +1,4 @@
-import PubNub from '../lib/types';
+import PubNub, { PubNubError } from '../lib/types';
 
 // snippet.gettingStartedCompleteExample
 // Save this file as index.js/.ts
@@ -85,15 +85,18 @@ async function publishMessage(text: string) {
     });
 
     // Success message (timetoken is the unique ID for this message)
-    console.log(`\nMessage sent successfully!`);
+    console.log(`\n✅ Message sent successfully!`);
   } catch (error) {
     // Handle publish errors
-    console.error(`\n❌ Failed to send message: ${error}`);
+    console.error(
+      `\n❌ Failed to send message: ${error}.${
+        (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+      }`,
+    );
   }
 }
 
 // 7. define the message and Publish that message.
 const text_message = 'Hello, world!';
 publishMessage(text_message);
-
 // snippet.end
