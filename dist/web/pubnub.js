@@ -4962,7 +4962,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.6.2';
+	            return '9.7.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -9328,7 +9328,7 @@
 	        }
 	    }
 	    unsubscribeAll(isOffline = false) {
-	        const channelGroups = this.getSubscribedChannels();
+	        const channelGroups = this.getSubscribedChannelGroups();
 	        const channels = this.getSubscribedChannels();
 	        this.channels = [];
 	        this.groups = [];
@@ -15896,7 +15896,9 @@
 	                message: { subscription: subscription, subscriptions },
 	                details: `Unregister event handle capable:`,
 	            }));
-	            if (!subscriptions || subscriptions.length === 0)
+	            if (!subscriptions ||
+	                subscriptions.length === 0 ||
+	                (subscriptions && subscription instanceof SubscriptionSet && subscriptions === subscriptions))
 	                delete this.eventHandleCapable[subscription.state.id];
 	            let subscriptionInput;
 	            if (!subscriptions || subscriptions.length === 0) {
