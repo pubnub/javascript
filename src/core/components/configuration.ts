@@ -7,12 +7,12 @@
 import { ExtendedConfiguration, PlatformConfiguration, PrivateClientConfiguration } from '../interfaces/configuration';
 import { CryptorConfiguration, ICryptoModule } from '../interfaces/crypto-module';
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
+import { ConsoleLogger } from '../../loggers/console-logger';
 import { Endpoint, RetryPolicy } from './retry-policy';
-import { Payload } from '../types/api';
-import uuidGenerator from './uuid';
 import { LogLevel } from '../interfaces/logger';
 import { LoggerManager } from './logger-manager';
-import { ConsoleLogger } from '../../loggers/console-logger';
+import { Payload } from '../types/api';
+import uuidGenerator from './uuid';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------

@@ -202,6 +202,21 @@ export abstract class SubscriptionBase implements EventEmitCapable, EventHandleC
   }
 
   /**
+   * Retrieve subscription type.
+   *
+   * There is two types:
+   * - Subscription
+   * - SubscriptionSet
+   *
+   * @returns One of subscription types.
+   *
+   * @internal
+   */
+  get subscriptionType(): 'Subscription' | 'SubscriptionSet' {
+    return 'Subscription';
+  }
+
+  /**
    * Subscription state.
    *
    * @returns Subscription state object.
@@ -354,7 +369,7 @@ export abstract class SubscriptionBase implements EventEmitCapable, EventHandleC
 
     // Check whether this is an old `old` event and it should be ignored or not.
     if (this.state.referenceTimetoken && event.data.timetoken < this.state.referenceTimetoken) {
-      this.state.client.logger.trace(this.constructor.name, () => ({
+      this.state.client.logger.trace(this.subscriptionType, () => ({
         messageType: 'text',
         message: `Event timetoken (${event.data.timetoken}) is older than reference timetoken (${
           this.state.referenceTimetoken
@@ -367,7 +382,7 @@ export abstract class SubscriptionBase implements EventEmitCapable, EventHandleC
     // Don't pass events which are filtered out by the user-provided function.
     if (this.state.options?.filter && !this.state.options.filter(event)) {
       this.state.client.logger.trace(
-        this.constructor.name,
+        this.subscriptionType,
         `Event filtered out by filter function for ${this.id} subscription object. Ignoring event.`,
       );
 
@@ -377,7 +392,7 @@ export abstract class SubscriptionBase implements EventEmitCapable, EventHandleC
     const clones = Object.values(this.state.clones);
     if (clones.length > 0) {
       this.state.client.logger.trace(
-        this.constructor.name,
+        this.subscriptionType,
         `Notify ${this.id} subscription object clones (count: ${clones.length}) about received event.`,
       );
     }
@@ -414,10 +429,10 @@ export abstract class SubscriptionBase implements EventEmitCapable, EventHandleC
     const keys = Object.keys(this.state.clones);
 
     if (keys.length > 1) {
-      this.state.client.logger.debug(this.constructor.name, `Remove subscription object clone on dispose: ${this.id}`);
+      this.state.client.logger.debug(this.subscriptionType, `Remove subscription object clone on dispose: ${this.id}`);
       delete this.state.clones[this.id];
     } else if (keys.length === 1 && this.state.clones[this.id]) {
-      this.state.client.logger.debug(this.constructor.name, `Unsubscribe subscription object on dispose: ${this.id}`);
+      this.state.client.logger.debug(this.subscriptionType, `Unsubscribe subscription object on dispose: ${this.id}`);
       this.unsubscribe();
     }
   }
@@ -440,7 +455,7 @@ export abstract class SubscriptionBase implements EventEmitCapable, EventHandleC
       delete this.state.clones[this.id];
 
       if (Object.keys(this.state.clones).length === 0) {
-        this.state.client.logger.trace(this.constructor.name, 'Last clone removed. Reset shared subscription state.');
+        this.state.client.logger.trace(this.subscriptionType, 'Last clone removed. Reset shared subscription state.');
         this.state.subscriptionInput.removeAll();
         this.state.parents = [];
       }
@@ -455,11 +470,11 @@ export abstract class SubscriptionBase implements EventEmitCapable, EventHandleC
    */
   subscribe(parameters?: { timetoken?: string }) {
     if (this.state.isSubscribed) {
-      this.state.client.logger.trace(this.constructor.name, 'Already subscribed. Ignoring subscribe request.');
+      this.state.client.logger.trace(this.subscriptionType, 'Already subscribed. Ignoring subscribe request.');
       return;
     }
 
-    this.state.client.logger.debug(this.constructor.name, () => {
+    this.state.client.logger.debug(this.subscriptionType, () => {
       if (!parameters) return { messageType: 'text', message: 'Subscribe' };
       return { messageType: 'object', message: parameters, details: 'Subscribe with parameters:' };
     });
@@ -483,21 +498,21 @@ export abstract class SubscriptionBase implements EventEmitCapable, EventHandleC
     if (!this.state._isSubscribed || this.state.isSubscribed) {
       // Warn if a user tries to unsubscribe using specific subscription which subscribed as part of a subscription set.
       if (!this.state._isSubscribed && this.state.parents.length > 0 && this.state.isSubscribed) {
-        this.state.client.logger.warn(this.constructor.name, () => ({
+        this.state.client.logger.warn(this.subscriptionType, () => ({
           messageType: 'object',
           details: 'Subscription is subscribed as part of a subscription set. Remove from active sets to unsubscribe:',
           message: this.state.parents.filter((subscriptionSet) => subscriptionSet.isSubscribed),
         }));
         return;
       } else if (!this.state._isSubscribed) {
-        this.state.client.logger.trace(this.constructor.name, 'Not subscribed. Ignoring unsubscribe request.');
+        this.state.client.logger.trace(this.subscriptionType, 'Not subscribed. Ignoring unsubscribe request.');
         return;
       }
     }
 
-    this.state.client.logger.debug(this.constructor.name, 'Unsubscribe');
+    this.state.client.logger.debug(this.subscriptionType, 'Unsubscribe');
 
-    this.state.isSubscribed = true;
+    this.state.isSubscribed = false;
     delete this.state.cursor;
 
     this.updateSubscription({ subscribing: false });

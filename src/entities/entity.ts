@@ -44,6 +44,23 @@ export abstract class Entity implements EntityInterface, SubscriptionCapable {
   }
 
   /**
+   * Retrieve entity type.
+   *
+   * There is four types:
+   * - Channel
+   * - ChannelGroups
+   * - ChannelMetadata
+   * - UserMetadata
+   *
+   * @return One of known entity types.
+   *
+   * @internal
+   */
+  get entityType(): 'Channel' | 'ChannelGroups' | 'ChannelMetadata' | 'UserMetadata' {
+    return 'Channel';
+  }
+
+  /**
    * Type of subscription entity.
    *
    * Type defines where it will be used with multiplexed subscribe REST API calls.
@@ -143,6 +160,6 @@ export abstract class Entity implements EntityInterface, SubscriptionCapable {
    * @returns Serialized entity object.
    */
   toString(): string {
-    return `${this.constructor.name} { nameOrId: ${this._nameOrId}, subscriptionsCount: ${this.subscriptionsCount} }`;
+    return `${this.entityType} { nameOrId: ${this._nameOrId}, subscriptionsCount: ${this.subscriptionsCount} }`;
   }
 }

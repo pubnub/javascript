@@ -150,7 +150,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
     if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/heartbeat') && !req.path.endsWith('/leave'))
       return this.configuration.transport.makeSendable(req);
 
-    this.configuration.logger.debug(this.constructor.name, 'Process request with SharedWorker transport.');
+    this.configuration.logger.debug('SubscriptionWorkerMiddleware', 'Process request with SharedWorker transport.');
 
     let controller: CancellationController | undefined;
     const sendRequestEvent: PubNubSubscriptionWorker.SendRequestEvent = {
@@ -266,7 +266,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
         `/pubnub-${this.configuration.sdkVersion}`,
       );
     } catch (error) {
-      this.configuration.logger.error(this.constructor.name, () => ({
+      this.configuration.logger.error('SubscriptionWorkerMiddleware', () => ({
         messageType: 'error',
         message: error,
       }));

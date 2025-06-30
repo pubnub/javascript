@@ -68,7 +68,7 @@ export class NodeTransport implements Transport {
     private readonly keepAlive: boolean = false,
     private readonly keepAliveSettings: TransportKeepAlive = { timeout: 30000 },
   ) {
-    logger.debug(this.constructor.name, () => ({
+    logger.debug('NodeTransport', () => ({
       messageType: 'object',
       message: { keepAlive, keepAliveSettings },
       details: 'Create with configuration:',
@@ -83,8 +83,8 @@ export class NodeTransport implements Transport {
    * @internal
    */
   public setProxy(configuration?: ProxyAgentOptions) {
-    if (configuration) this.logger.debug(this.constructor.name, 'Proxy configuration has been set.');
-    else this.logger.debug(this.constructor.name, 'Proxy configuration has been removed.');
+    if (configuration) this.logger.debug('NodeTransport', 'Proxy configuration has been set.');
+    else this.logger.debug('NodeTransport', 'Proxy configuration has been removed.');
     this.proxyConfiguration = configuration;
   }
 
@@ -99,7 +99,7 @@ export class NodeTransport implements Transport {
         abortController,
         abort: (reason) => {
           if (!abortController || abortController.signal.aborted) return;
-          this.logger.trace(this.constructor.name, `On-demand request aborting: ${reason}`);
+          this.logger.trace('NodeTransport', `On-demand request aborting: ${reason}`);
           abortController?.abort(reason);
         },
       } as CancellationController;
@@ -107,7 +107,7 @@ export class NodeTransport implements Transport {
 
     return [
       this.requestFromTransportRequest(req).then((request) => {
-        this.logger.debug(this.constructor.name, () => ({ messageType: 'network-request', message: req }));
+        this.logger.debug('NodeTransport', () => ({ messageType: 'network-request', message: req }));
 
         return fetch(request, {
           signal: abortController?.signal,
@@ -131,7 +131,7 @@ export class NodeTransport implements Transport {
               body: responseBody,
             };
 
-            this.logger.debug(this.constructor.name, () => ({
+            this.logger.debug('NodeTransport', () => ({
               messageType: 'network-response',
               message: transportResponse,
             }));
@@ -145,14 +145,14 @@ export class NodeTransport implements Transport {
             let fetchError = typeof error === 'string' ? new Error(error) : (error as Error);
 
             if (errorMessage.includes('timeout')) {
-              this.logger.warn(this.constructor.name, () => ({
+              this.logger.warn('NodeTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: 'Timeout',
                 canceled: true,
               }));
             } else if (errorMessage.includes('cancel') || errorMessage.includes('abort')) {
-              this.logger.debug(this.constructor.name, () => ({
+              this.logger.debug('NodeTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: 'Aborted',
@@ -161,14 +161,14 @@ export class NodeTransport implements Transport {
 
               fetchError = new AbortError('Aborted');
             } else if (errorMessage.includes('network')) {
-              this.logger.warn(this.constructor.name, () => ({
+              this.logger.warn('NodeTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: 'Network error',
                 failed: true,
               }));
             } else {
-              this.logger.warn(this.constructor.name, () => ({
+              this.logger.warn('NodeTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: PubNubAPIError.create(fetchError).message,
@@ -227,7 +227,7 @@ export class NodeTransport implements Transport {
       body = req.compressible ? zlib.deflateSync(req.body) : req.body;
 
       if (req.compressible) {
-        this.logger.trace(this.constructor.name, () => {
+        this.logger.trace('NodeTransport', () => {
           const compressedSize = (body! as ArrayBuffer).byteLength;
           const ratio = (compressedSize / initialBodySize).toFixed(2);
 

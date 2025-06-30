@@ -37,7 +37,7 @@ export class EventEngine {
     this.engine = new Engine(dependencies.config.logger());
     this.dispatcher = new EventEngineDispatcher(this.engine, dependencies);
 
-    dependencies.config.logger().debug(this.constructor.name, 'Create subscribe event engine.');
+    dependencies.config.logger().debug('EventEngine', 'Create subscribe event engine.');
 
     this._unsubscribeEngine = this.engine.subscribe((change) => {
       if (change.type === 'invocationDispatched') {

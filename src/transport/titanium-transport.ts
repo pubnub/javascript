@@ -32,7 +32,7 @@ export class TitaniumTransport implements Transport {
     private readonly logger: LoggerManager,
     private readonly keepAlive: boolean = false,
   ) {
-    logger.debug(this.constructor.name, `Create with configuration:\n  - keep-alive: ${keepAlive}`);
+    logger.debug('TitaniumTransport', `Create with configuration:\n  - keep-alive: ${keepAlive}`);
   }
 
   makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
@@ -44,7 +44,7 @@ export class TitaniumTransport implements Transport {
       controller = {
         abort: () => {
           if (!aborted) {
-            this.logger.trace(this.constructor.name, 'On-demand request aborting.');
+            this.logger.trace('TitaniumTransport', 'On-demand request aborting.');
             aborted = true;
             xhr.abort();
           }
@@ -56,12 +56,12 @@ export class TitaniumTransport implements Transport {
       new Promise<TransportResponse>((resolve, reject) => {
         const start = new Date().getTime();
 
-        this.logger.debug(this.constructor.name, () => ({ messageType: 'network-request', message: req }));
+        this.logger.debug('TitaniumTransport', () => ({ messageType: 'network-request', message: req }));
 
         xhr.onload = () => {
           const response = this.transportResponseFromXHR(url, xhr);
 
-          this.logger.debug(this.constructor.name, () => ({
+          this.logger.debug('TitaniumTransport', () => ({
             messageType: 'network-response',
             message: response,
           }));
@@ -74,7 +74,7 @@ export class TitaniumTransport implements Transport {
           let error: PubNubAPIError;
 
           if (aborted) {
-            this.logger.debug(this.constructor.name, () => ({
+            this.logger.debug('TitaniumTransport', () => ({
               messageType: 'network-request',
               message: req,
               details: 'Aborted',
@@ -83,7 +83,7 @@ export class TitaniumTransport implements Transport {
 
             error = PubNubAPIError.create(new Error('Aborted'));
           } else if (xhr.timeout >= elapsed - 100) {
-            this.logger.warn(this.constructor.name, () => ({
+            this.logger.warn('TitaniumTransport', () => ({
               messageType: 'network-request',
               message: req,
               details: 'Timeout',
@@ -92,7 +92,7 @@ export class TitaniumTransport implements Transport {
 
             error = PubNubAPIError.create(new Error('Request timeout'));
           } else if (xhr.status === 0) {
-            this.logger.warn(this.constructor.name, () => ({
+            this.logger.warn('TitaniumTransport', () => ({
               messageType: 'network-request',
               message: req,
               details: 'Network error',
@@ -104,7 +104,7 @@ export class TitaniumTransport implements Transport {
             const response = this.transportResponseFromXHR(url, xhr);
             error = PubNubAPIError.create(response);
 
-            this.logger.warn(this.constructor.name, () => ({
+            this.logger.warn('TitaniumTransport', () => ({
               messageType: 'network-request',
               message: req,
               details: error.message,

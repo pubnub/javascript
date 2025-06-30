@@ -54,7 +54,6 @@ class AsyncHandler<Payload, Dependencies> extends Handler<Payload, Dependencies>
 
   start() {
     this.asyncFunction(this.payload, this.abortSignal, this.dependencies).catch((error) => {
-      // console.log('Unhandled error:', error);
       // swallow the error
     });
   }

@@ -5,6 +5,23 @@ import { Entity } from './entity';
  */
 export class UserMetadata extends Entity {
   /**
+   * Retrieve entity type.
+   *
+   * There is four types:
+   * - Channel
+   * - ChannelGroups
+   * - ChannelMetadata
+   * - UserMetadata
+   *
+   * @return One of known entity types.
+   *
+   * @internal
+   */
+  override get entityType(): 'Channel' | 'ChannelGroups' | 'ChannelMetadata' | 'UserMetadata' {
+    return 'UserMetadata';
+  }
+
+  /**
    * Get unique user metadata object identifier.
    *
    * @returns User metadata identifier.

@@ -6,6 +6,23 @@ import { Entity } from './entity';
  */
 export class ChannelGroup extends Entity {
   /**
+   * Retrieve entity type.
+   *
+   * There is four types:
+   * - Channel
+   * - ChannelGroups
+   * - ChannelMetadata
+   * - UserMetadata
+   *
+   * @return One of known entity types.
+   *
+   * @internal
+   */
+  override get entityType(): 'Channel' | 'ChannelGroups' | 'ChannelMetadata' | 'UserMetadata' {
+    return 'ChannelGroups';
+  }
+
+  /**
    * Get a unique channel group name.
    *
    * @returns Channel group name.

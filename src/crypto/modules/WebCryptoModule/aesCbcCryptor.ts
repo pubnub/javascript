@@ -166,6 +166,6 @@ export default class AesCbcCryptor implements ICryptor {
    * @returns Serialized cryptor information.
    */
   toString() {
-    return `${this.constructor.name} { cipherKey: ${this.cipherKey} }`;
+    return `AesCbcCryptor { cipherKey: ${this.cipherKey} }`;
   }
 }

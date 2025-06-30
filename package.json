@@ -54,10 +54,14 @@
     "messaging"
   ],
   "dependencies": {
+    "@jsonjoy.com/json-pack": "^1.2.0",
+    "@levischuck/tiny-cbor": "^0.3.1",
     "agentkeepalive": "^3.5.2",
     "buffer": "^6.0.3",
     "cbor-js": "^0.1.0",
     "cbor-sync": "^1.0.4",
+    "cbor-x": "^1.6.0",
+    "cborg": "^4.2.12",
     "fflate": "^0.8.2",
     "form-data": "^4.0.0",
     "lil-uuid": "^0.1.1",

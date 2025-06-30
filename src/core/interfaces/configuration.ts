@@ -67,11 +67,6 @@ const USE_SMART_HEARTBEAT = false;
 const KEEP_ALIVE = false;
 
 /**
- * Whether verbose logging should be enabled or not.
- */
-const USE_VERBOSE_LOGGING = false;
-
-/**
  * Whether leave events should be suppressed or not.
  */
 const SUPPRESS_LEAVE_EVENTS = false;
@@ -771,7 +766,6 @@ export interface PrivateClientConfiguration
 export const setDefaults = (configuration: UserConfiguration): ExtendedConfiguration => {
   // Copy configuration.
   const configurationCopy = { ...configuration };
-  configurationCopy.logVerbosity ??= USE_VERBOSE_LOGGING;
   configurationCopy.ssl ??= USE_SSL;
   configurationCopy.transactionalRequestTimeout ??= TRANSACTIONAL_REQUEST_TIMEOUT;
   configurationCopy.subscribeRequestTimeout ??= SUBSCRIBE_REQUEST_TIMEOUT;

@@ -54,12 +54,12 @@ export class Engine<Events extends GenericMap, Effects extends GenericMap> exten
 
   transition<K extends keyof Events & string>(event: Event<K, Events[K]>) {
     if (!this._currentState) {
-      this.logger.error(this.constructor.name, 'Finite state machine is not started');
+      this.logger.error('Engine', 'Finite state machine is not started');
       throw new Error('Start the engine first');
     }
 
     if (this._inTransition) {
-      this.logger.trace(this.constructor.name, () => ({
+      this.logger.trace('Engine', () => ({
         messageType: 'object',
         message: event,
         details: 'Event engine in transition. Enqueue received event:',
@@ -69,7 +69,7 @@ export class Engine<Events extends GenericMap, Effects extends GenericMap> exten
       return;
     } else this._inTransition = true;
 
-    this.logger.trace(this.constructor.name, () => ({
+    this.logger.trace('Engine', () => ({
       messageType: 'object',
       message: event,
       details: 'Event engine received event:',
@@ -85,7 +85,7 @@ export class Engine<Events extends GenericMap, Effects extends GenericMap> exten
     if (transition) {
       const [newState, newContext, effects] = transition;
 
-      this.logger.trace(this.constructor.name, `Exiting state: ${this._currentState.label}`);
+      this.logger.trace('Engine', `Exiting state: ${this._currentState.label}`);
 
       for (const effect of this._currentState.exitEffects) {
         this.notify({
@@ -94,7 +94,7 @@ export class Engine<Events extends GenericMap, Effects extends GenericMap> exten
         });
       }
 
-      this.logger.trace(this.constructor.name, () => ({
+      this.logger.trace('Engine', () => ({
         messageType: 'object',
         details: `Entering '${newState.label}' state with context:`,
         message: newContext,
@@ -127,27 +127,23 @@ export class Engine<Events extends GenericMap, Effects extends GenericMap> exten
           invocation: effect(this._currentContext),
         });
       }
-
-      this._inTransition = false;
-
-      // Check whether a pending task should be dequeued.
-      if (this._pendingEvents.length > 0) {
-        const nextEvent = this._pendingEvents.shift();
-
-        if (nextEvent) {
-          this.logger.trace(this.constructor.name, () => ({
-            messageType: 'object',
-            message: nextEvent,
-            details: 'De-queueing pending event:',
-          }));
-
-          this.transition(nextEvent);
-        }
-      }
     } else
-      this.logger.warn(
-        this.constructor.name,
-        `No transition from '${this._currentState.label}' found for event: ${event.type}`,
-      );
+      this.logger.warn('Engine', `No transition from '${this._currentState.label}' found for event: ${event.type}`);
+    this._inTransition = false;
+
+    // Check whether a pending task should be dequeued.
+    if (this._pendingEvents.length > 0) {
+      const nextEvent = this._pendingEvents.shift();
+
+      if (nextEvent) {
+        this.logger.trace('Engine', () => ({
+          messageType: 'object',
+          message: nextEvent,
+          details: 'De-queueing pending event:',
+        }));
+
+        this.transition(nextEvent);
+      }
+    }
   }
 }

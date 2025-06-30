@@ -213,11 +213,20 @@ export class ConsoleLogger implements Logger {
             else if (typeof raw === 'object') {
               const isArray = Array.isArray(raw);
               const isEmptyArray = isArray && raw.length === 0;
+              const isEmptyObject = !isArray && !(raw instanceof String) && Object.keys(raw).length === 0;
               const hasToString =
                 !isArray && typeof raw.toString === 'function' && raw.toString().indexOf('[object') !== 0;
-              const entry = maxIndentReached ? '...' : isEmptyArray ? '[]' : stringify(raw, level + 1, hasToString);
+              const entry = maxIndentReached
+                ? '...'
+                : isEmptyArray
+                  ? '[]'
+                  : isEmptyObject
+                    ? '{}'
+                    : stringify(raw, level + 1, hasToString);
               lines.push(
-                `${indent}${paddedKey}:${maxIndentReached || hasToString || isEmptyArray ? ' ' : '\n'}${entry}`,
+                `${indent}${paddedKey}:${
+                  maxIndentReached || hasToString || isEmptyArray || isEmptyObject ? ' ' : '\n'
+                }${entry}`,
               );
             } else lines.push(`${indent}${paddedKey}: ${raw}`);
 
@@ -283,10 +292,10 @@ export class ConsoleLogger implements Logger {
 
     if (typeof body === 'string') {
       stringifiedBody = `    ${body}`;
-    } else if (body instanceof ArrayBuffer) {
+    } else if (body instanceof ArrayBuffer || Object.prototype.toString.call(body) === '[object ArrayBuffer]') {
       if (contentType && (contentType.indexOf('javascript') !== -1 || contentType.indexOf('json') !== -1))
-        stringifiedBody = `    ${ConsoleLogger.decoder.decode(body)}`;
-      else stringifiedBody = `    ArrayBuffer { byteLength: ${body.byteLength} }`;
+        stringifiedBody = `    ${ConsoleLogger.decoder.decode(body as ArrayBuffer)}`;
+      else stringifiedBody = `    ArrayBuffer { byteLength: ${(body as ArrayBuffer).byteLength} }`;
     } else {
       stringifiedBody = `    File { name: ${body.name}${
         body.contentLength ? `, contentLength: ${body.contentLength}` : ''

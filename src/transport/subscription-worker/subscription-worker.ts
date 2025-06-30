@@ -450,6 +450,11 @@ type PubNubClientState = {
 
   heartbeat?: {
     /**
+     * Previous heartbeat send event.
+     */
+    heartbeatEvent?: SendRequestEvent;
+
+    /**
      * List of channels for which user's presence has been announced by the PubNub client.
      */
     channels: string[];
@@ -465,6 +470,14 @@ type PubNubClientState = {
      * Per-channel/group state associated with specific user.
      */
     presenceState?: Record<string, Payload | undefined>;
+
+    /**
+     * Heartbeat timer.
+     *
+     * Timer which is started with first heartbeat request and repeat inside of SharedWorker to bypass browser's
+     * timers throttling.
+     */
+    timer?: ReturnType<typeof setInterval>;
   };
 };
 // endregion
@@ -904,6 +917,7 @@ const handleSendLeaveRequestEvent = (
   const request = leaveTransportRequestFromEvent(data, invalidatedClient);
 
   if (!client) return;
+
   // Clean up client subscription information if there is no more channels / groups to use.
   const { subscription, heartbeat } = client;
   const serviceRequestId = invalidatedClientServiceRequestId ?? subscription?.serviceRequestId;
@@ -927,6 +941,12 @@ const handleSendLeaveRequestEvent = (
         hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier === client.clientIdentifier
       )
         delete hbRequestsBySubscriptionKey[heartbeatRequestKey]!.clientIdentifier;
+
+      if (heartbeat.timer) {
+        clearInterval(heartbeat.timer);
+        delete heartbeat.heartbeatEvent;
+        delete heartbeat.timer;
+      }
     }
   }
 
@@ -1821,11 +1841,13 @@ const unRegisterClient = (event: UnRegisterEvent) => {
  * Use information from request to populate list of channels and other useful information.
  *
  * @param event - Send request.
+ * @returns `true` if channels / groups list has been changed. May return `undefined` because `client` is missing.
  */
-const updateClientSubscribeStateIfRequired = (event: SendRequestEvent) => {
+const updateClientSubscribeStateIfRequired = (event: SendRequestEvent): boolean | undefined => {
   const query = event.request.queryParameters!;
   const { clientIdentifier } = event;
   const client = pubNubClients[clientIdentifier];
+  let changed = false;
 
   // This should never happen.
   if (!client) return;
@@ -1835,6 +1857,7 @@ const updateClientSubscribeStateIfRequired = (event: SendRequestEvent) => {
 
   let subscription = client.subscription;
   if (!subscription) {
+    changed = true;
     subscription = {
       path: '',
       channelGroupQuery: '',
@@ -1877,12 +1900,16 @@ const updateClientSubscribeStateIfRequired = (event: SendRequestEvent) => {
 
   if (subscription.path !== event.request.path) {
     subscription.path = event.request.path;
-    subscription.channels = channelsFromRequest(event.request);
+    const _channelsFromRequest = channelsFromRequest(event.request);
+    if (!changed) changed = includesStrings(subscription.channels, _channelsFromRequest);
+    subscription.channels = _channelsFromRequest;
   }
 
   if (subscription.channelGroupQuery !== channelGroupQuery) {
     subscription.channelGroupQuery = channelGroupQuery;
-    subscription.channelGroups = channelGroupsFromRequest(event.request);
+    const _channelGroupsFromRequest = channelGroupsFromRequest(event.request);
+    if (!changed) changed = includesStrings(subscription.channelGroups, _channelGroupsFromRequest);
+    subscription.channelGroups = _channelGroupsFromRequest;
   }
 
   let { authKey } = client;
@@ -1911,7 +1938,8 @@ const updateClientSubscribeStateIfRequired = (event: SendRequestEvent) => {
  * @param event - Send heartbeat request event.
  */
 const updateClientHeartbeatState = (event: SendRequestEvent) => {
-  const client = pubNubClients[event.clientIdentifier];
+  const { clientIdentifier } = event;
+  const client = pubNubClients[clientIdentifier];
   const { request } = event;
 
   // This should never happen.
@@ -1921,6 +1949,17 @@ const updateClientHeartbeatState = (event: SendRequestEvent) => {
     channels: [],
     channelGroups: [],
   });
+
+  _clientHeartbeat.heartbeatEvent = { ...event };
+  if (!_clientHeartbeat.timer) {
+    _clientHeartbeat.timer = setInterval(() => {
+      const client = pubNubClients[clientIdentifier];
+      // This should never happen.
+      if (!client || !client.heartbeat || !client.heartbeat.heartbeatEvent) return;
+
+      handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent);
+    }, client.heartbeatInterval! * 1000);
+  }
 
   // Update presence heartbeat information about client.
   _clientHeartbeat.channelGroups = channelGroupsFromRequest(request).filter((group) => !group.endsWith('-pnpres'));
@@ -1986,6 +2025,10 @@ const invalidateClient = (subscriptionKey: string, clientId: string) => {
       delete invalidatedClient.subscription.serviceRequestId;
       if (serviceRequestId) cancelRequest(serviceRequestId);
     }
+
+    // Make sure to stop heartbeat timer.
+    if (invalidatedClient.heartbeat && invalidatedClient.heartbeat.timer)
+      clearInterval(invalidatedClient.heartbeat.timer);
 
     if (serviceHeartbeatRequests[subscriptionKey]) {
       const hbRequestsBySubscriptionKey = (serviceHeartbeatRequests[subscriptionKey] ??= {});

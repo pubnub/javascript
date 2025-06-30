@@ -535,7 +535,7 @@
 	     * @returns Serialized crypto module information.
 	     */
 	    toString() {
-	        return `${this.constructor.name} { default: ${this.defaultCryptor.toString()}, cryptors: [${this.cryptors.map((c) => c.toString()).join(', ')}]}`;
+	        return `AbstractCryptoModule { default: ${this.defaultCryptor.toString()}, cryptors: [${this.cryptors.map((c) => c.toString()).join(', ')}]}`;
 	    }
 	}
 	/**
@@ -2018,7 +2018,7 @@
 	     * @returns Serialized cryptor information.
 	     */
 	    toString() {
-	        return `${this.constructor.name} { cipherKey: ${this.cipherKey} }`;
+	        return `AesCbcCryptor { cipherKey: ${this.cipherKey} }`;
 	    }
 	}
 	/**
@@ -2152,7 +2152,7 @@
 	    encrypt(data, customCipherKey, options) {
 	        if (this.configuration.customEncrypt) {
 	            if (this.logger)
-	                this.logger.warn(this.constructor.name, "'customEncrypt' is deprecated. Consult docs for better alternative.");
+	                this.logger.warn('Crypto', "'customEncrypt' is deprecated. Consult docs for better alternative.");
 	            return this.configuration.customEncrypt(data);
 	        }
 	        return this.pnEncrypt(data, customCipherKey, options);
@@ -2169,7 +2169,7 @@
 	    decrypt(data, customCipherKey, options) {
 	        if (this.configuration.customDecrypt) {
 	            if (this.logger)
-	                this.logger.warn(this.constructor.name, "'customDecrypt' is deprecated. Consult docs for better alternative.");
+	                this.logger.warn('Crypto', "'customDecrypt' is deprecated. Consult docs for better alternative.");
 	            return this.configuration.customDecrypt(data);
 	        }
 	        return this.pnDecrypt(data, customCipherKey, options);
@@ -2188,7 +2188,7 @@
 	        if (!decidedCipherKey)
 	            return data;
 	        if (this.logger) {
-	            this.logger.debug(this.constructor.name, () => ({
+	            this.logger.debug('Crypto', () => ({
 	                messageType: 'object',
 	                message: Object.assign({ data, cipherKey: decidedCipherKey }, (options !== null && options !== void 0 ? options : {})),
 	                details: 'Encrypt with parameters:',
@@ -2225,7 +2225,7 @@
 	        if (!decidedCipherKey)
 	            return data;
 	        if (this.logger) {
-	            this.logger.debug(this.constructor.name, () => ({
+	            this.logger.debug('Crypto', () => ({
 	                messageType: 'object',
 	                message: Object.assign({ data, cipherKey: decidedCipherKey }, (options !== null && options !== void 0 ? options : {})),
 	                details: 'Decrypt with parameters:',
@@ -2247,7 +2247,7 @@
 	            }
 	            catch (e) {
 	                if (this.logger)
-	                    this.logger.error(this.constructor.name, () => ({ messageType: 'error', message: e }));
+	                    this.logger.error('Crypto', () => ({ messageType: 'error', message: e }));
 	                return null;
 	            }
 	        }
@@ -2262,7 +2262,7 @@
 	            }
 	            catch (e) {
 	                if (this.logger)
-	                    this.logger.error(this.constructor.name, () => ({ messageType: 'error', message: e }));
+	                    this.logger.error('Crypto', () => ({ messageType: 'error', message: e }));
 	                return null;
 	            }
 	        }
@@ -2660,7 +2660,7 @@
 	            acc.push(`${key}: ${typeof value === 'function' ? '<function>' : value}`);
 	            return acc;
 	        }, []);
-	        return `${this.constructor.name} { ${configurationEntries.join(', ')} }`;
+	        return `AesCbcCryptor { ${configurationEntries.join(', ')} }`;
 	    }
 	}
 	/**
@@ -3314,7 +3314,7 @@
 	        // Use default request flow for non-subscribe / presence leave requests.
 	        if (!req.path.startsWith('/v2/subscribe') && !req.path.endsWith('/heartbeat') && !req.path.endsWith('/leave'))
 	            return this.configuration.transport.makeSendable(req);
-	        this.configuration.logger.debug(this.constructor.name, 'Process request with SharedWorker transport.');
+	        this.configuration.logger.debug('SubscriptionWorkerMiddleware', 'Process request with SharedWorker transport.');
 	        let controller;
 	        const sendRequestEvent = {
 	            type: 'send-request',
@@ -3419,7 +3419,7 @@
 	            this.subscriptionWorker = new SharedWorker(this.configuration.workerUrl, `/pubnub-${this.configuration.sdkVersion}`);
 	        }
 	        catch (error) {
-	            this.configuration.logger.error(this.constructor.name, () => ({
+	            this.configuration.logger.error('SubscriptionWorkerMiddleware', () => ({
 	                messageType: 'error',
 	                message: error,
 	            }));
@@ -3581,12 +3581,13 @@
 	 * Re-map CBOR object keys from potentially C buffer strings to actual strings.
 	 *
 	 * @param obj CBOR which should be remapped to stringified keys.
+	 * @param nestingLevel PAM token structure nesting level.
 	 *
 	 * @returns Dictionary with stringified keys.
 	 *
 	 * @internal
 	 */
-	function stringifyBufferKeys(obj) {
+	function stringifyBufferKeys(obj, nestingLevel = 0) {
 	    const isObject = (value) => typeof value === 'object' && value !== null && value.constructor === Object;
 	    const isString = (value) => typeof value === 'string' || value instanceof String;
 	    const isNumber = (value) => typeof value === 'number' && isFinite(value);
@@ -3597,16 +3598,18 @@
 	        const keyIsString = isString(key);
 	        let stringifiedKey = key;
 	        const value = obj[key];
-	        if (keyIsString && key.indexOf(',') >= 0) {
-	            const bytes = key.split(',').map(Number);
-	            stringifiedKey = bytes.reduce((string, byte) => {
-	                return string + String.fromCharCode(byte);
-	            }, '');
+	        if (nestingLevel < 2) {
+	            if (keyIsString && key.indexOf(',') >= 0) {
+	                const bytes = key.split(',').map(Number);
+	                stringifiedKey = bytes.reduce((string, byte) => {
+	                    return string + String.fromCharCode(byte);
+	                }, '');
+	            }
+	            else if (isNumber(key) || (keyIsString && !isNaN(Number(key)))) {
+	                stringifiedKey = String.fromCharCode(isNumber(key) ? key : parseInt(key, 10));
+	            }
 	        }
-	        else if (isNumber(key) || (keyIsString && !isNaN(Number(key)))) {
-	            stringifiedKey = String.fromCharCode(isNumber(key) ? key : parseInt(key, 10));
-	        }
-	        normalizedObject[stringifiedKey] = isObject(value) ? stringifyBufferKeys(value) : value;
+	        normalizedObject[stringifiedKey] = isObject(value) ? stringifyBufferKeys(value, nestingLevel + 1) : value;
 	    });
 	    return normalizedObject;
 	}
@@ -3660,10 +3663,6 @@
 	 */
 	const KEEP_ALIVE$1 = false;
 	/**
-	 * Whether verbose logging should be enabled or not.
-	 */
-	const USE_VERBOSE_LOGGING = false;
-	/**
 	 * Whether leave events should be suppressed or not.
 	 */
 	const SUPPRESS_LEAVE_EVENTS = false;
@@ -3711,29 +3710,28 @@
 	 * @internal
 	 */
 	const setDefaults$1 = (configuration) => {
-	    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
+	    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
 	    // Copy configuration.
 	    const configurationCopy = Object.assign({}, configuration);
-	    (_a = configurationCopy.logVerbosity) !== null && _a !== void 0 ? _a : (configurationCopy.logVerbosity = USE_VERBOSE_LOGGING);
-	    (_b = configurationCopy.ssl) !== null && _b !== void 0 ? _b : (configurationCopy.ssl = USE_SSL);
-	    (_c = configurationCopy.transactionalRequestTimeout) !== null && _c !== void 0 ? _c : (configurationCopy.transactionalRequestTimeout = TRANSACTIONAL_REQUEST_TIMEOUT);
-	    (_d = configurationCopy.subscribeRequestTimeout) !== null && _d !== void 0 ? _d : (configurationCopy.subscribeRequestTimeout = SUBSCRIBE_REQUEST_TIMEOUT);
-	    (_e = configurationCopy.fileRequestTimeout) !== null && _e !== void 0 ? _e : (configurationCopy.fileRequestTimeout = FILE_REQUEST_TIMEOUT);
-	    (_f = configurationCopy.restore) !== null && _f !== void 0 ? _f : (configurationCopy.restore = RESTORE);
-	    (_g = configurationCopy.useInstanceId) !== null && _g !== void 0 ? _g : (configurationCopy.useInstanceId = USE_INSTANCE_ID);
-	    (_h = configurationCopy.suppressLeaveEvents) !== null && _h !== void 0 ? _h : (configurationCopy.suppressLeaveEvents = SUPPRESS_LEAVE_EVENTS);
-	    (_j = configurationCopy.requestMessageCountThreshold) !== null && _j !== void 0 ? _j : (configurationCopy.requestMessageCountThreshold = DEDUPE_CACHE_SIZE);
-	    (_k = configurationCopy.autoNetworkDetection) !== null && _k !== void 0 ? _k : (configurationCopy.autoNetworkDetection = AUTO_NETWORK_DETECTION);
-	    (_l = configurationCopy.enableEventEngine) !== null && _l !== void 0 ? _l : (configurationCopy.enableEventEngine = ENABLE_EVENT_ENGINE);
-	    (_m = configurationCopy.maintainPresenceState) !== null && _m !== void 0 ? _m : (configurationCopy.maintainPresenceState = MAINTAIN_PRESENCE_STATE);
-	    (_o = configurationCopy.useSmartHeartbeat) !== null && _o !== void 0 ? _o : (configurationCopy.useSmartHeartbeat = USE_SMART_HEARTBEAT);
-	    (_p = configurationCopy.keepAlive) !== null && _p !== void 0 ? _p : (configurationCopy.keepAlive = KEEP_ALIVE$1);
+	    (_a = configurationCopy.ssl) !== null && _a !== void 0 ? _a : (configurationCopy.ssl = USE_SSL);
+	    (_b = configurationCopy.transactionalRequestTimeout) !== null && _b !== void 0 ? _b : (configurationCopy.transactionalRequestTimeout = TRANSACTIONAL_REQUEST_TIMEOUT);
+	    (_c = configurationCopy.subscribeRequestTimeout) !== null && _c !== void 0 ? _c : (configurationCopy.subscribeRequestTimeout = SUBSCRIBE_REQUEST_TIMEOUT);
+	    (_d = configurationCopy.fileRequestTimeout) !== null && _d !== void 0 ? _d : (configurationCopy.fileRequestTimeout = FILE_REQUEST_TIMEOUT);
+	    (_e = configurationCopy.restore) !== null && _e !== void 0 ? _e : (configurationCopy.restore = RESTORE);
+	    (_f = configurationCopy.useInstanceId) !== null && _f !== void 0 ? _f : (configurationCopy.useInstanceId = USE_INSTANCE_ID);
+	    (_g = configurationCopy.suppressLeaveEvents) !== null && _g !== void 0 ? _g : (configurationCopy.suppressLeaveEvents = SUPPRESS_LEAVE_EVENTS);
+	    (_h = configurationCopy.requestMessageCountThreshold) !== null && _h !== void 0 ? _h : (configurationCopy.requestMessageCountThreshold = DEDUPE_CACHE_SIZE);
+	    (_j = configurationCopy.autoNetworkDetection) !== null && _j !== void 0 ? _j : (configurationCopy.autoNetworkDetection = AUTO_NETWORK_DETECTION);
+	    (_k = configurationCopy.enableEventEngine) !== null && _k !== void 0 ? _k : (configurationCopy.enableEventEngine = ENABLE_EVENT_ENGINE);
+	    (_l = configurationCopy.maintainPresenceState) !== null && _l !== void 0 ? _l : (configurationCopy.maintainPresenceState = MAINTAIN_PRESENCE_STATE);
+	    (_m = configurationCopy.useSmartHeartbeat) !== null && _m !== void 0 ? _m : (configurationCopy.useSmartHeartbeat = USE_SMART_HEARTBEAT);
+	    (_o = configurationCopy.keepAlive) !== null && _o !== void 0 ? _o : (configurationCopy.keepAlive = KEEP_ALIVE$1);
 	    if (configurationCopy.userId && configurationCopy.uuid)
 	        throw new PubNubError("PubNub client configuration error: use only 'userId'");
-	    (_q = configurationCopy.userId) !== null && _q !== void 0 ? _q : (configurationCopy.userId = configurationCopy.uuid);
+	    (_p = configurationCopy.userId) !== null && _p !== void 0 ? _p : (configurationCopy.userId = configurationCopy.uuid);
 	    if (!configurationCopy.userId)
 	        throw new PubNubError("PubNub client configuration error: 'userId' not set");
-	    else if (((_r = configurationCopy.userId) === null || _r === void 0 ? void 0 : _r.trim().length) === 0)
+	    else if (((_q = configurationCopy.userId) === null || _q === void 0 ? void 0 : _q.trim().length) === 0)
 	        throw new PubNubError("PubNub client configuration error: 'userId' is empty");
 	    // Generate default origin subdomains.
 	    if (!configurationCopy.origin)
@@ -3863,322 +3861,6 @@
 	        listenToBrowserNetworkEvents: (_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : LISTEN_TO_BROWSER_NETWORK_EVENTS, subscriptionWorkerUrl: configuration.subscriptionWorkerUrl, subscriptionWorkerOfflineClientsCheckInterval: (_b = configuration.subscriptionWorkerOfflineClientsCheckInterval) !== null && _b !== void 0 ? _b : SUBSCRIPTION_WORKER_OFFLINE_CLIENTS_CHECK_INTERVAL, subscriptionWorkerUnsubscribeOfflineClients: (_c = configuration.subscriptionWorkerUnsubscribeOfflineClients) !== null && _c !== void 0 ? _c : SUBSCRIPTION_WORKER_UNSUBSCRIBE_OFFLINE_CLIENTS, subscriptionWorkerLogVerbosity: (_d = configuration.subscriptionWorkerLogVerbosity) !== null && _d !== void 0 ? _d : SUBSCRIPTION_WORKER_LOG_VERBOSITY, transport: (_e = configuration.transport) !== null && _e !== void 0 ? _e : TRANSPORT, keepAlive: (_f = configuration.keepAlive) !== null && _f !== void 0 ? _f : KEEP_ALIVE });
 	};
 
-	// --------------------------------------------------------
-	// ------------------------ Types -------------------------
-	// --------------------------------------------------------
-	// region Types
-	/**
-	 * List of known endpoint groups (by context).
-	 */
-	var Endpoint;
-	(function (Endpoint) {
-	    /**
-	     * Unknown endpoint.
-	     *
-	     * @internal
-	     */
-	    Endpoint["Unknown"] = "UnknownEndpoint";
-	    /**
-	     * The endpoints to send messages.
-	     *
-	     * This is related to the following functionality:
-	     * - `publish`
-	     * - `signal`
-	     * - `publish file`
-	     * - `fire`
-	     */
-	    Endpoint["MessageSend"] = "MessageSendEndpoint";
-	    /**
-	     * The endpoint for real-time update retrieval.
-	     *
-	     * This is related to the following functionality:
-	     * - `subscribe`
-	     */
-	    Endpoint["Subscribe"] = "SubscribeEndpoint";
-	    /**
-	     * The endpoint to access and manage `user_id` presence and fetch channel presence information.
-	     *
-	     * This is related to the following functionality:
-	     * - `get presence state`
-	     * - `set presence state`
-	     * - `here now`
-	     * - `where now`
-	     * - `heartbeat`
-	     */
-	    Endpoint["Presence"] = "PresenceEndpoint";
-	    /**
-	     * The endpoint to access and manage files in channel-specific storage.
-	     *
-	     * This is related to the following functionality:
-	     * - `send file`
-	     * - `download file`
-	     * - `list files`
-	     * - `delete file`
-	     */
-	    Endpoint["Files"] = "FilesEndpoint";
-	    /**
-	     * The endpoint to access and manage messages for a specific channel(s) in the persistent storage.
-	     *
-	     * This is related to the following functionality:
-	     * - `fetch messages / message actions`
-	     * - `delete messages`
-	     * - `messages count`
-	     */
-	    Endpoint["MessageStorage"] = "MessageStorageEndpoint";
-	    /**
-	     * The endpoint to access and manage channel groups.
-	     *
-	     * This is related to the following functionality:
-	     * - `add channels to group`
-	     * - `list channels in group`
-	     * - `remove channels from group`
-	     * - `list channel groups`
-	     */
-	    Endpoint["ChannelGroups"] = "ChannelGroupsEndpoint";
-	    /**
-	     * The endpoint to access and manage device registration for channel push notifications.
-	     *
-	     * This is related to the following functionality:
-	     * - `enable channels for push notifications`
-	     * - `list push notification enabled channels`
-	     * - `disable push notifications for channels`
-	     * - `disable push notifications for all channels`
-	     */
-	    Endpoint["DevicePushNotifications"] = "DevicePushNotificationsEndpoint";
-	    /**
-	     * The endpoint to access and manage App Context objects.
-	     *
-	     * This is related to the following functionality:
-	     * - `set UUID metadata`
-	     * - `get UUID metadata`
-	     * - `remove UUID metadata`
-	     * - `get all UUID metadata`
-	     * - `set Channel metadata`
-	     * - `get Channel metadata`
-	     * - `remove Channel metadata`
-	     * - `get all Channel metadata`
-	     * - `manage members`
-	     * - `list members`
-	     * - `manage memberships`
-	     * - `list memberships`
-	     */
-	    Endpoint["AppContext"] = "AppContextEndpoint";
-	    /**
-	     * The endpoint to access and manage reactions for a specific message.
-	     *
-	     * This is related to the following functionality:
-	     * - `add message action`
-	     * - `get message actions`
-	     * - `remove message action`
-	     */
-	    Endpoint["MessageReactions"] = "MessageReactionsEndpoint";
-	})(Endpoint || (Endpoint = {}));
-	// endregion
-	/**
-	 * Failed request retry policy.
-	 */
-	class RetryPolicy {
-	    static None() {
-	        return {
-	            shouldRetry(_request, _response, _errorCategory, _attempt) {
-	                return false;
-	            },
-	            getDelay(_attempt, _response) {
-	                return -1;
-	            },
-	            validate() {
-	                return true;
-	            },
-	        };
-	    }
-	    static LinearRetryPolicy(configuration) {
-	        var _a;
-	        return {
-	            delay: configuration.delay,
-	            maximumRetry: configuration.maximumRetry,
-	            excluded: (_a = configuration.excluded) !== null && _a !== void 0 ? _a : [],
-	            shouldRetry(request, response, error, attempt) {
-	                return isRetriableRequest(request, response, error, attempt !== null && attempt !== void 0 ? attempt : 0, this.maximumRetry, this.excluded);
-	            },
-	            getDelay(_, response) {
-	                let delay = -1;
-	                if (response && response.headers['retry-after'] !== undefined)
-	                    delay = parseInt(response.headers['retry-after'], 10);
-	                if (delay === -1)
-	                    delay = this.delay;
-	                return (delay + Math.random()) * 1000;
-	            },
-	            validate() {
-	                if (this.delay < 2)
-	                    throw new Error('Delay can not be set less than 2 seconds for retry');
-	                if (this.maximumRetry > 10)
-	                    throw new Error('Maximum retry for linear retry policy can not be more than 10');
-	            },
-	        };
-	    }
-	    static ExponentialRetryPolicy(configuration) {
-	        var _a;
-	        return {
-	            minimumDelay: configuration.minimumDelay,
-	            maximumDelay: configuration.maximumDelay,
-	            maximumRetry: configuration.maximumRetry,
-	            excluded: (_a = configuration.excluded) !== null && _a !== void 0 ? _a : [],
-	            shouldRetry(request, response, error, attempt) {
-	                return isRetriableRequest(request, response, error, attempt !== null && attempt !== void 0 ? attempt : 0, this.maximumRetry, this.excluded);
-	            },
-	            getDelay(attempt, response) {
-	                let delay = -1;
-	                if (response && response.headers['retry-after'] !== undefined)
-	                    delay = parseInt(response.headers['retry-after'], 10);
-	                if (delay === -1)
-	                    delay = Math.min(Math.pow(2, attempt), this.maximumDelay);
-	                return (delay + Math.random()) * 1000;
-	            },
-	            validate() {
-	                if (this.minimumDelay < 2)
-	                    throw new Error('Minimum delay can not be set less than 2 seconds for retry');
-	                else if (this.maximumDelay > 150)
-	                    throw new Error('Maximum delay can not be set more than 150 seconds for' + ' retry');
-	                else if (this.maximumRetry > 6)
-	                    throw new Error('Maximum retry for exponential retry policy can not be more than 6');
-	            },
-	        };
-	    }
-	}
-	/**
-	 * Check whether request can be retried or not.
-	 *
-	 * @param req - Request for which retry ability is checked.
-	 * @param res - Service response which should be taken into consideration.
-	 * @param errorCategory - Request processing error category.
-	 * @param retryAttempt - Current retry attempt.
-	 * @param maximumRetry - Maximum retry attempts count according to the retry policy.
-	 * @param excluded - List of endpoints for which retry policy won't be applied.
-	 *
-	 * @return `true` if request can be retried.
-	 *
-	 * @internal
-	 */
-	const isRetriableRequest = (req, res, errorCategory, retryAttempt, maximumRetry, excluded) => {
-	    if (errorCategory) {
-	        if (errorCategory === StatusCategory$1.PNCancelledCategory ||
-	            errorCategory === StatusCategory$1.PNBadRequestCategory ||
-	            errorCategory === StatusCategory$1.PNAccessDeniedCategory)
-	            return false;
-	    }
-	    if (isExcludedRequest(req, excluded))
-	        return false;
-	    else if (retryAttempt > maximumRetry)
-	        return false;
-	    return res ? res.status === 429 || res.status >= 500 : true;
-	};
-	/**
-	 * Check whether the provided request is in the list of endpoints for which retry is not allowed or not.
-	 *
-	 * @param req - Request which will be tested.
-	 * @param excluded - List of excluded endpoints configured for retry policy.
-	 *
-	 * @returns `true` if request has been excluded and shouldn't be retried.
-	 *
-	 * @internal
-	 */
-	const isExcludedRequest = (req, excluded) => excluded && excluded.length > 0 ? excluded.includes(endpointFromRequest(req)) : false;
-	/**
-	 * Identify API group from transport request.
-	 *
-	 * @param req - Request for which `path` will be analyzed to identify REST API group.
-	 *
-	 * @returns Endpoint group to which request belongs.
-	 *
-	 * @internal
-	 */
-	const endpointFromRequest = (req) => {
-	    let endpoint = Endpoint.Unknown;
-	    if (req.path.startsWith('/v2/subscribe'))
-	        endpoint = Endpoint.Subscribe;
-	    else if (req.path.startsWith('/publish/') || req.path.startsWith('/signal/'))
-	        endpoint = Endpoint.MessageSend;
-	    else if (req.path.startsWith('/v2/presence'))
-	        endpoint = Endpoint.Presence;
-	    else if (req.path.startsWith('/v2/history') || req.path.startsWith('/v3/history'))
-	        endpoint = Endpoint.MessageStorage;
-	    else if (req.path.startsWith('/v1/message-actions/'))
-	        endpoint = Endpoint.MessageReactions;
-	    else if (req.path.startsWith('/v1/channel-registration/'))
-	        endpoint = Endpoint.ChannelGroups;
-	    else if (req.path.startsWith('/v2/objects/'))
-	        endpoint = Endpoint.ChannelGroups;
-	    else if (req.path.startsWith('/v1/push/') || req.path.startsWith('/v2/push/'))
-	        endpoint = Endpoint.DevicePushNotifications;
-	    else if (req.path.startsWith('/v1/files/'))
-	        endpoint = Endpoint.Files;
-	    return endpoint;
-	};
-
-	var uuid = {exports: {}};
-
-	/*! lil-uuid - v0.1 - MIT License - https://github.com/lil-js/uuid */
-	uuid.exports;
-
-	(function (module, exports) {
-		(function (root, factory) {
-		  {
-		    factory(exports);
-		    if (module !== null) {
-		      module.exports = exports.uuid;
-		    }
-		  }
-		}(commonjsGlobal, function (exports) {
-		  var VERSION = '0.1.0';
-		  var uuidRegex = {
-		    '3': /^[0-9A-F]{8}-[0-9A-F]{4}-3[0-9A-F]{3}-[0-9A-F]{4}-[0-9A-F]{12}$/i,
-		    '4': /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
-		    '5': /^[0-9A-F]{8}-[0-9A-F]{4}-5[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
-		    all: /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i
-		  };
-
-		  function uuid() {
-		    var uuid = '', i, random;
-		    for (i = 0; i < 32; i++) {
-		      random = Math.random() * 16 | 0;
-		      if (i === 8 || i === 12 || i === 16 || i === 20) uuid += '-';
-		      uuid += (i === 12 ? 4 : (i === 16 ? (random & 3 | 8) : random)).toString(16);
-		    }
-		    return uuid
-		  }
-
-		  function isUUID(str, version) {
-		    var pattern = uuidRegex[version || 'all'];
-		    return pattern && pattern.test(str) || false
-		  }
-
-		  uuid.isUUID = isUUID;
-		  uuid.VERSION = VERSION;
-
-		  exports.uuid = uuid;
-		  exports.isUUID = isUUID;
-		})); 
-	} (uuid, uuid.exports));
-
-	var uuidExports = uuid.exports;
-	var uuidGenerator$1 = /*@__PURE__*/getDefaultExportFromCjs(uuidExports);
-
-	/**
-	 * Random identifier generator helper module.
-	 *
-	 * @internal
-	 */
-	/** @internal */
-	var uuidGenerator = {
-	    createUUID() {
-	        if (uuidGenerator$1.uuid) {
-	            return uuidGenerator$1.uuid();
-	        }
-	        // @ts-expect-error Depending on module type it may be callable.
-	        return uuidGenerator$1();
-	    },
-	};
-
 	/**
 	 * Enum with available log levels.
 	 */
@@ -4225,110 +3907,6 @@
 	     */
 	    LogLevel[LogLevel["None"] = 5] = "None";
 	})(LogLevel || (LogLevel = {}));
-
-	/**
-	 * Logging module manager.
-	 *
-	 * Manager responsible for log requests handling and forwarding to the registered {@link Logger logger} implementations.
-	 */
-	class LoggerManager {
-	    /**
-	     * Create and configure loggers' manager.
-	     *
-	     * @param pubNubId - Unique identifier of PubNub instance which will use this logger.
-	     * @param minLogLevel - Minimum messages log level to be logged.
-	     * @param loggers - List of additional loggers which should be used along with user-provided custom loggers.
-	     *
-	     * @internal
-	     */
-	    constructor(pubNubId, minLogLevel, loggers) {
-	        this.pubNubId = pubNubId;
-	        this.minLogLevel = minLogLevel;
-	        this.loggers = loggers;
-	    }
-	    /**
-	     * Get current log level.
-	     *
-	     * @returns Current log level.
-	     *
-	     * @internal
-	     */
-	    get logLevel() {
-	        return this.minLogLevel;
-	    }
-	    /**
-	     * Process a `trace` level message.
-	     *
-	     * @param location - Call site from which a log message has been sent.
-	     * @param messageFactory - Lazy message factory function or string for a text log message.
-	     *
-	     * @internal
-	     */
-	    trace(location, messageFactory) {
-	        this.log(LogLevel.Trace, location, messageFactory);
-	    }
-	    /**
-	     * Process a `debug` level message.
-	     *
-	     * @param location - Call site from which a log message has been sent.
-	     * @param messageFactory - Lazy message factory function or string for a text log message.
-	     *
-	     * @internal
-	     */
-	    debug(location, messageFactory) {
-	        this.log(LogLevel.Debug, location, messageFactory);
-	    }
-	    /**
-	     * Process an `info` level message.
-	     *
-	     * @param location - Call site from which a log message has been sent.
-	     * @param messageFactory - Lazy message factory function or string for a text log message.
-	     *
-	     * @internal
-	     */
-	    info(location, messageFactory) {
-	        this.log(LogLevel.Info, location, messageFactory);
-	    }
-	    /**
-	     * Process a `warn` level message.
-	     *
-	     * @param location - Call site from which a log message has been sent.
-	     * @param messageFactory - Lazy message factory function or string for a text log message.
-	     *
-	     * @internal
-	     */
-	    warn(location, messageFactory) {
-	        this.log(LogLevel.Warn, location, messageFactory);
-	    }
-	    /**
-	     * Process an `error` level message.
-	     *
-	     * @param location - Call site from which a log message has been sent.
-	     * @param messageFactory - Lazy message factory function or string for a text log message.
-	     *
-	     * @internal
-	     */
-	    error(location, messageFactory) {
-	        this.log(LogLevel.Error, location, messageFactory);
-	    }
-	    /**
-	     * Process log message.
-	     *
-	     * @param logLevel - Logged message level.
-	     * @param location - Call site from which a log message has been sent.
-	     * @param messageFactory - Lazy message factory function or string for a text log message.
-	     *
-	     * @internal
-	     */
-	    log(logLevel, location, messageFactory) {
-	        // Check whether a log message should be handled at all or not.
-	        if (logLevel < this.minLogLevel || this.loggers.length === 0)
-	            return;
-	        const level = LogLevel[logLevel].toLowerCase();
-	        const message = Object.assign({ timestamp: new Date(), pubNubId: this.pubNubId, level: logLevel, minimumLevel: this.minLogLevel, location }, (typeof messageFactory === 'function' ? messageFactory() : { messageType: 'text', message: messageFactory }));
-	        this.loggers.forEach((logger) => logger[level](message));
-	    }
-	}
 
 	/**
 	 * PubNub package utilities module.
@@ -4670,9 +4248,16 @@
 	                        else if (typeof raw === 'object') {
 	                            const isArray = Array.isArray(raw);
 	                            const isEmptyArray = isArray && raw.length === 0;
+	                            const isEmptyObject = !isArray && !(raw instanceof String) && Object.keys(raw).length === 0;
 	                            const hasToString = !isArray && typeof raw.toString === 'function' && raw.toString().indexOf('[object') !== 0;
-	                            const entry = maxIndentReached ? '...' : isEmptyArray ? '[]' : stringify(raw, level + 1, hasToString);
-	                            lines.push(`${indent}${paddedKey}:${maxIndentReached || hasToString || isEmptyArray ? ' ' : '\n'}${entry}`);
+	                            const entry = maxIndentReached
+	                                ? '...'
+	                                : isEmptyArray
+	                                    ? '[]'
+	                                    : isEmptyObject
+	                                        ? '{}'
+	                                        : stringify(raw, level + 1, hasToString);
+	                            lines.push(`${indent}${paddedKey}:${maxIndentReached || hasToString || isEmptyArray || isEmptyObject ? ' ' : '\n'}${entry}`);
 	                        }
 	                        else
 	                            lines.push(`${indent}${paddedKey}: ${raw}`);
@@ -4730,7 +4315,7 @@
 	        if (typeof body === 'string') {
 	            stringifiedBody = `    ${body}`;
 	        }
-	        else if (body instanceof ArrayBuffer) {
+	        else if (body instanceof ArrayBuffer || Object.prototype.toString.call(body) === '[object ArrayBuffer]') {
 	            if (contentType && (contentType.indexOf('javascript') !== -1 || contentType.indexOf('json') !== -1))
 	                stringifiedBody = `    ${ConsoleLogger.decoder.decode(body)}`;
 	            else
@@ -4801,6 +4386,426 @@
 	 * Binary data decoder.
 	 */
 	ConsoleLogger.decoder = new TextDecoder();
+
+	// --------------------------------------------------------
+	// ------------------------ Types -------------------------
+	// --------------------------------------------------------
+	// region Types
+	/**
+	 * List of known endpoint groups (by context).
+	 */
+	var Endpoint;
+	(function (Endpoint) {
+	    /**
+	     * Unknown endpoint.
+	     *
+	     * @internal
+	     */
+	    Endpoint["Unknown"] = "UnknownEndpoint";
+	    /**
+	     * The endpoints to send messages.
+	     *
+	     * This is related to the following functionality:
+	     * - `publish`
+	     * - `signal`
+	     * - `publish file`
+	     * - `fire`
+	     */
+	    Endpoint["MessageSend"] = "MessageSendEndpoint";
+	    /**
+	     * The endpoint for real-time update retrieval.
+	     *
+	     * This is related to the following functionality:
+	     * - `subscribe`
+	     */
+	    Endpoint["Subscribe"] = "SubscribeEndpoint";
+	    /**
+	     * The endpoint to access and manage `user_id` presence and fetch channel presence information.
+	     *
+	     * This is related to the following functionality:
+	     * - `get presence state`
+	     * - `set presence state`
+	     * - `here now`
+	     * - `where now`
+	     * - `heartbeat`
+	     */
+	    Endpoint["Presence"] = "PresenceEndpoint";
+	    /**
+	     * The endpoint to access and manage files in channel-specific storage.
+	     *
+	     * This is related to the following functionality:
+	     * - `send file`
+	     * - `download file`
+	     * - `list files`
+	     * - `delete file`
+	     */
+	    Endpoint["Files"] = "FilesEndpoint";
+	    /**
+	     * The endpoint to access and manage messages for a specific channel(s) in the persistent storage.
+	     *
+	     * This is related to the following functionality:
+	     * - `fetch messages / message actions`
+	     * - `delete messages`
+	     * - `messages count`
+	     */
+	    Endpoint["MessageStorage"] = "MessageStorageEndpoint";
+	    /**
+	     * The endpoint to access and manage channel groups.
+	     *
+	     * This is related to the following functionality:
+	     * - `add channels to group`
+	     * - `list channels in group`
+	     * - `remove channels from group`
+	     * - `list channel groups`
+	     */
+	    Endpoint["ChannelGroups"] = "ChannelGroupsEndpoint";
+	    /**
+	     * The endpoint to access and manage device registration for channel push notifications.
+	     *
+	     * This is related to the following functionality:
+	     * - `enable channels for push notifications`
+	     * - `list push notification enabled channels`
+	     * - `disable push notifications for channels`
+	     * - `disable push notifications for all channels`
+	     */
+	    Endpoint["DevicePushNotifications"] = "DevicePushNotificationsEndpoint";
+	    /**
+	     * The endpoint to access and manage App Context objects.
+	     *
+	     * This is related to the following functionality:
+	     * - `set UUID metadata`
+	     * - `get UUID metadata`
+	     * - `remove UUID metadata`
+	     * - `get all UUID metadata`
+	     * - `set Channel metadata`
+	     * - `get Channel metadata`
+	     * - `remove Channel metadata`
+	     * - `get all Channel metadata`
+	     * - `manage members`
+	     * - `list members`
+	     * - `manage memberships`
+	     * - `list memberships`
+	     */
+	    Endpoint["AppContext"] = "AppContextEndpoint";
+	    /**
+	     * The endpoint to access and manage reactions for a specific message.
+	     *
+	     * This is related to the following functionality:
+	     * - `add message action`
+	     * - `get message actions`
+	     * - `remove message action`
+	     */
+	    Endpoint["MessageReactions"] = "MessageReactionsEndpoint";
+	})(Endpoint || (Endpoint = {}));
+	// endregion
+	/**
+	 * Failed request retry policy.
+	 */
+	class RetryPolicy {
+	    static None() {
+	        return {
+	            shouldRetry(_request, _response, _errorCategory, _attempt) {
+	                return false;
+	            },
+	            getDelay(_attempt, _response) {
+	                return -1;
+	            },
+	            validate() {
+	                return true;
+	            },
+	        };
+	    }
+	    static LinearRetryPolicy(configuration) {
+	        var _a;
+	        return {
+	            delay: configuration.delay,
+	            maximumRetry: configuration.maximumRetry,
+	            excluded: (_a = configuration.excluded) !== null && _a !== void 0 ? _a : [],
+	            shouldRetry(request, response, error, attempt) {
+	                return isRetriableRequest(request, response, error, attempt !== null && attempt !== void 0 ? attempt : 0, this.maximumRetry, this.excluded);
+	            },
+	            getDelay(_, response) {
+	                let delay = -1;
+	                if (response && response.headers['retry-after'] !== undefined)
+	                    delay = parseInt(response.headers['retry-after'], 10);
+	                if (delay === -1)
+	                    delay = this.delay;
+	                return (delay + Math.random()) * 1000;
+	            },
+	            validate() {
+	                if (this.delay < 2)
+	                    throw new Error('Delay can not be set less than 2 seconds for retry');
+	                if (this.maximumRetry > 10)
+	                    throw new Error('Maximum retry for linear retry policy can not be more than 10');
+	            },
+	        };
+	    }
+	    static ExponentialRetryPolicy(configuration) {
+	        var _a;
+	        return {
+	            minimumDelay: configuration.minimumDelay,
+	            maximumDelay: configuration.maximumDelay,
+	            maximumRetry: configuration.maximumRetry,
+	            excluded: (_a = configuration.excluded) !== null && _a !== void 0 ? _a : [],
+	            shouldRetry(request, response, error, attempt) {
+	                return isRetriableRequest(request, response, error, attempt !== null && attempt !== void 0 ? attempt : 0, this.maximumRetry, this.excluded);
+	            },
+	            getDelay(attempt, response) {
+	                let delay = -1;
+	                if (response && response.headers['retry-after'] !== undefined)
+	                    delay = parseInt(response.headers['retry-after'], 10);
+	                if (delay === -1)
+	                    delay = Math.min(Math.pow(2, attempt), this.maximumDelay);
+	                return (delay + Math.random()) * 1000;
+	            },
+	            validate() {
+	                if (this.minimumDelay < 2)
+	                    throw new Error('Minimum delay can not be set less than 2 seconds for retry');
+	                else if (this.maximumDelay > 150)
+	                    throw new Error('Maximum delay can not be set more than 150 seconds for' + ' retry');
+	                else if (this.maximumRetry > 6)
+	                    throw new Error('Maximum retry for exponential retry policy can not be more than 6');
+	            },
+	        };
+	    }
+	}
+	/**
+	 * Check whether request can be retried or not.
+	 *
+	 * @param req - Request for which retry ability is checked.
+	 * @param res - Service response which should be taken into consideration.
+	 * @param errorCategory - Request processing error category.
+	 * @param retryAttempt - Current retry attempt.
+	 * @param maximumRetry - Maximum retry attempts count according to the retry policy.
+	 * @param excluded - List of endpoints for which retry policy won't be applied.
+	 *
+	 * @return `true` if request can be retried.
+	 *
+	 * @internal
+	 */
+	const isRetriableRequest = (req, res, errorCategory, retryAttempt, maximumRetry, excluded) => {
+	    if (errorCategory) {
+	        if (errorCategory === StatusCategory$1.PNCancelledCategory ||
+	            errorCategory === StatusCategory$1.PNBadRequestCategory ||
+	            errorCategory === StatusCategory$1.PNAccessDeniedCategory)
+	            return false;
+	    }
+	    if (isExcludedRequest(req, excluded))
+	        return false;
+	    else if (retryAttempt > maximumRetry)
+	        return false;
+	    return res ? res.status === 429 || res.status >= 500 : true;
+	};
+	/**
+	 * Check whether the provided request is in the list of endpoints for which retry is not allowed or not.
+	 *
+	 * @param req - Request which will be tested.
+	 * @param excluded - List of excluded endpoints configured for retry policy.
+	 *
+	 * @returns `true` if request has been excluded and shouldn't be retried.
+	 *
+	 * @internal
+	 */
+	const isExcludedRequest = (req, excluded) => excluded && excluded.length > 0 ? excluded.includes(endpointFromRequest(req)) : false;
+	/**
+	 * Identify API group from transport request.
+	 *
+	 * @param req - Request for which `path` will be analyzed to identify REST API group.
+	 *
+	 * @returns Endpoint group to which request belongs.
+	 *
+	 * @internal
+	 */
+	const endpointFromRequest = (req) => {
+	    let endpoint = Endpoint.Unknown;
+	    if (req.path.startsWith('/v2/subscribe'))
+	        endpoint = Endpoint.Subscribe;
+	    else if (req.path.startsWith('/publish/') || req.path.startsWith('/signal/'))
+	        endpoint = Endpoint.MessageSend;
+	    else if (req.path.startsWith('/v2/presence'))
+	        endpoint = Endpoint.Presence;
+	    else if (req.path.startsWith('/v2/history') || req.path.startsWith('/v3/history'))
+	        endpoint = Endpoint.MessageStorage;
+	    else if (req.path.startsWith('/v1/message-actions/'))
+	        endpoint = Endpoint.MessageReactions;
+	    else if (req.path.startsWith('/v1/channel-registration/'))
+	        endpoint = Endpoint.ChannelGroups;
+	    else if (req.path.startsWith('/v2/objects/'))
+	        endpoint = Endpoint.ChannelGroups;
+	    else if (req.path.startsWith('/v1/push/') || req.path.startsWith('/v2/push/'))
+	        endpoint = Endpoint.DevicePushNotifications;
+	    else if (req.path.startsWith('/v1/files/'))
+	        endpoint = Endpoint.Files;
+	    return endpoint;
+	};
+
+	/**
+	 * Logging module manager.
+	 *
+	 * Manager responsible for log requests handling and forwarding to the registered {@link Logger logger} implementations.
+	 */
+	class LoggerManager {
+	    /**
+	     * Create and configure loggers' manager.
+	     *
+	     * @param pubNubId - Unique identifier of PubNub instance which will use this logger.
+	     * @param minLogLevel - Minimum messages log level to be logged.
+	     * @param loggers - List of additional loggers which should be used along with user-provided custom loggers.
+	     *
+	     * @internal
+	     */
+	    constructor(pubNubId, minLogLevel, loggers) {
+	        this.pubNubId = pubNubId;
+	        this.minLogLevel = minLogLevel;
+	        this.loggers = loggers;
+	    }
+	    /**
+	     * Get current log level.
+	     *
+	     * @returns Current log level.
+	     *
+	     * @internal
+	     */
+	    get logLevel() {
+	        return this.minLogLevel;
+	    }
+	    /**
+	     * Process a `trace` level message.
+	     *
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    trace(location, messageFactory) {
+	        this.log(LogLevel.Trace, location, messageFactory);
+	    }
+	    /**
+	     * Process a `debug` level message.
+	     *
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    debug(location, messageFactory) {
+	        this.log(LogLevel.Debug, location, messageFactory);
+	    }
+	    /**
+	     * Process an `info` level message.
+	     *
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    info(location, messageFactory) {
+	        this.log(LogLevel.Info, location, messageFactory);
+	    }
+	    /**
+	     * Process a `warn` level message.
+	     *
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    warn(location, messageFactory) {
+	        this.log(LogLevel.Warn, location, messageFactory);
+	    }
+	    /**
+	     * Process an `error` level message.
+	     *
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    error(location, messageFactory) {
+	        this.log(LogLevel.Error, location, messageFactory);
+	    }
+	    /**
+	     * Process log message.
+	     *
+	     * @param logLevel - Logged message level.
+	     * @param location - Call site from which a log message has been sent.
+	     * @param messageFactory - Lazy message factory function or string for a text log message.
+	     *
+	     * @internal
+	     */
+	    log(logLevel, location, messageFactory) {
+	        // Check whether a log message should be handled at all or not.
+	        if (logLevel < this.minLogLevel || this.loggers.length === 0)
+	            return;
+	        const level = LogLevel[logLevel].toLowerCase();
+	        const message = Object.assign({ timestamp: new Date(), pubNubId: this.pubNubId, level: logLevel, minimumLevel: this.minLogLevel, location }, (typeof messageFactory === 'function' ? messageFactory() : { messageType: 'text', message: messageFactory }));
+	        this.loggers.forEach((logger) => logger[level](message));
+	    }
+	}
+
+	var uuid = {exports: {}};
+
+	/*! lil-uuid - v0.1 - MIT License - https://github.com/lil-js/uuid */
+	uuid.exports;
+
+	(function (module, exports) {
+		(function (root, factory) {
+		  {
+		    factory(exports);
+		    if (module !== null) {
+		      module.exports = exports.uuid;
+		    }
+		  }
+		}(commonjsGlobal, function (exports) {
+		  var VERSION = '0.1.0';
+		  var uuidRegex = {
+		    '3': /^[0-9A-F]{8}-[0-9A-F]{4}-3[0-9A-F]{3}-[0-9A-F]{4}-[0-9A-F]{12}$/i,
+		    '4': /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+		    '5': /^[0-9A-F]{8}-[0-9A-F]{4}-5[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+		    all: /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i
+		  };
+
+		  function uuid() {
+		    var uuid = '', i, random;
+		    for (i = 0; i < 32; i++) {
+		      random = Math.random() * 16 | 0;
+		      if (i === 8 || i === 12 || i === 16 || i === 20) uuid += '-';
+		      uuid += (i === 12 ? 4 : (i === 16 ? (random & 3 | 8) : random)).toString(16);
+		    }
+		    return uuid
+		  }
+
+		  function isUUID(str, version) {
+		    var pattern = uuidRegex[version || 'all'];
+		    return pattern && pattern.test(str) || false
+		  }
+
+		  uuid.isUUID = isUUID;
+		  uuid.VERSION = VERSION;
+
+		  exports.uuid = uuid;
+		  exports.isUUID = isUUID;
+		})); 
+	} (uuid, uuid.exports));
+
+	var uuidExports = uuid.exports;
+	var uuidGenerator$1 = /*@__PURE__*/getDefaultExportFromCjs(uuidExports);
+
+	/**
+	 * Random identifier generator helper module.
+	 *
+	 * @internal
+	 */
+	/** @internal */
+	var uuidGenerator = {
+	    createUUID() {
+	        if (uuidGenerator$1.uuid) {
+	            return uuidGenerator$1.uuid();
+	        }
+	        // @ts-expect-error Depending on module type it may be callable.
+	        return uuidGenerator$1();
+	    },
+	};
 
 	/**
 	 * {@link PubNub} client configuration module.
@@ -5231,7 +5236,7 @@
 	            if (payload)
 	                signatureInput += payload;
 	        }
-	        this.logger.trace(this.constructor.name, () => ({
+	        this.logger.trace('RequestSignature', () => ({
 	            messageType: 'text',
 	            message: `Request signature input:\n${signatureInput}`,
 	        }));
@@ -5319,7 +5324,7 @@
 	                            delay = retryPolicy.getDelay(attempt, res);
 	                        if (delay > 0) {
 	                            attempt++;
-	                            this.logger.warn(this.constructor.name, `HTTP request retry #${attempt} in ${delay}ms.`);
+	                            this.logger.warn('PubNubMiddleware', `HTTP request retry #${attempt} in ${delay}ms.`);
 	                            retryTimeout = setTimeout(() => trySendRequest(), delay);
 	                        }
 	                        else {
@@ -5427,9 +5432,9 @@
 	    constructor(logger, transport = 'fetch') {
 	        this.logger = logger;
 	        this.transport = transport;
-	        logger.debug(this.constructor.name, `Create with configuration:\n  - transport: ${transport}`);
+	        logger.debug('WebTransport', `Create with configuration:\n  - transport: ${transport}`);
 	        if (transport === 'fetch' && (!window || !window.fetch)) {
-	            logger.warn(this.constructor.name, `'${transport}' not supported in this browser. Fallback to the 'xhr' transport.`);
+	            logger.warn('WebTransport', `'${transport}' not supported in this browser. Fallback to the 'xhr' transport.`);
 	            this.transport = 'xhr';
 	        }
 	        if (this.transport !== 'fetch')
@@ -5439,12 +5444,12 @@
 	        // Check whether `fetch` has been monkey patched or not.
 	        if (this.isFetchMonkeyPatched()) {
 	            WebTransport.originalFetch = WebTransport.getOriginalFetch();
-	            logger.warn(this.constructor.name, "Native Web Fetch API 'fetch' function monkey patched.");
+	            logger.warn('WebTransport', "Native Web Fetch API 'fetch' function monkey patched.");
 	            if (!this.isFetchMonkeyPatched(WebTransport.originalFetch)) {
-	                logger.info(this.constructor.name, "Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
+	                logger.info('WebTransport', "Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
 	            }
 	            else {
-	                logger.warn(this.constructor.name, 'Unable receive native Web Fetch API. There can be issues with subscribe long-poll  cancellation');
+	                logger.warn('WebTransport', 'Unable receive native Web Fetch API. There can be issues with subscribe long-poll  cancellation');
 	            }
 	        }
 	    }
@@ -5454,14 +5459,14 @@
 	            abortController,
 	            abort: (reason) => {
 	                if (!abortController.signal.aborted) {
-	                    this.logger.trace(this.constructor.name, `On-demand request aborting: ${reason}`);
+	                    this.logger.trace('WebTransport', `On-demand request aborting: ${reason}`);
 	                    abortController.abort(reason);
 	                }
 	            },
 	        };
 	        return [
 	            this.webTransportRequestFromTransportRequest(req).then((request) => {
-	                this.logger.debug(this.constructor.name, () => ({ messageType: 'network-request', message: req }));
+	                this.logger.debug('WebTransport', () => ({ messageType: 'network-request', message: req }));
 	                return this.sendRequest(request, cancellation)
 	                    .then((response) => response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]))
 	                    .then((response) => {
@@ -5471,7 +5476,7 @@
 	                    // Copy Headers object content into plain Record.
 	                    requestHeaders.forEach((value, key) => (headers[key] = value.toLowerCase()));
 	                    const transportResponse = { status, url: request.url, headers, body };
-	                    this.logger.debug(this.constructor.name, () => ({
+	                    this.logger.debug('WebTransport', () => ({
 	                        messageType: 'network-response',
 	                        message: transportResponse,
 	                    }));
@@ -5483,7 +5488,7 @@
 	                    const errorMessage = (typeof error === 'string' ? error : error.message).toLowerCase();
 	                    let fetchError = typeof error === 'string' ? new Error(error) : error;
 	                    if (errorMessage.includes('timeout')) {
-	                        this.logger.warn(this.constructor.name, () => ({
+	                        this.logger.warn('WebTransport', () => ({
 	                            messageType: 'network-request',
 	                            message: req,
 	                            details: 'Timeout',
@@ -5491,7 +5496,7 @@
 	                        }));
 	                    }
 	                    else if (errorMessage.includes('cancel') || errorMessage.includes('abort')) {
-	                        this.logger.debug(this.constructor.name, () => ({
+	                        this.logger.debug('WebTransport', () => ({
 	                            messageType: 'network-request',
 	                            message: req,
 	                            details: 'Aborted',
@@ -5501,7 +5506,7 @@
 	                        fetchError.name = 'AbortError';
 	                    }
 	                    else if (errorMessage.includes('network')) {
-	                        this.logger.warn(this.constructor.name, () => ({
+	                        this.logger.warn('WebTransport', () => ({
 	                            messageType: 'network-request',
 	                            message: req,
 	                            details: 'Network error',
@@ -5509,7 +5514,7 @@
 	                        }));
 	                    }
 	                    else {
-	                        this.logger.warn(this.constructor.name, () => ({
+	                        this.logger.warn('WebTransport', () => ({
 	                            messageType: 'network-request',
 	                            message: req,
 	                            details: PubNubAPIError.create(fetchError).message,
@@ -5664,14 +5669,14 @@
 	                    formData.append('file', new Blob([fileData], { type: 'application/octet-stream' }), file.name);
 	                }
 	                catch (toBufferError) {
-	                    this.logger.warn(this.constructor.name, () => ({ messageType: 'error', message: toBufferError }));
+	                    this.logger.warn('WebTransport', () => ({ messageType: 'error', message: toBufferError }));
 	                    try {
 	                        const fileData = yield file.toFileUri();
 	                        // @ts-expect-error React Native File Uri support.
 	                        formData.append('file', fileData, file.name);
 	                    }
 	                    catch (toFileURLError) {
-	                        this.logger.error(this.constructor.name, () => ({ messageType: 'error', message: toFileURLError }));
+	                        this.logger.error('WebTransport', () => ({ messageType: 'error', message: toFileURLError }));
 	                    }
 	                }
 	                body = formData;
@@ -5689,7 +5694,7 @@
 	                        },
 	                    });
 	                    body = yield new Response(bodyStream.pipeThrough(new CompressionStream('deflate'))).arrayBuffer();
-	                    this.logger.trace(this.constructor.name, () => {
+	                    this.logger.trace('WebTransport', () => {
 	                        const compressedSize = body.byteLength;
 	                        const ratio = (compressedSize / initialBodySize).toFixed(2);
 	                        return {
@@ -6818,7 +6823,7 @@
 	     */
 	    constructor(config) {
 	        this.config = config;
-	        config.logger().debug(this.constructor.name, () => ({
+	        config.logger().debug('DedupingManager', () => ({
 	            messageType: 'object',
 	            message: { maximumCacheSize: config.maximumCacheSize },
 	            details: 'Create with configuration:',
@@ -6899,7 +6904,7 @@
 	        this.subscribeCall = subscribeCall;
 	        this.heartbeatCall = heartbeatCall;
 	        this.leaveCall = leaveCall;
-	        configuration.logger().trace(this.constructor.name, 'Create manager.');
+	        configuration.logger().trace('SubscriptionManager', 'Create manager.');
 	        this.reconnectionManager = new ReconnectionManager(time);
 	        this.dedupingManager = new DedupingManager(this.configuration);
 	        this.heartbeatChannelGroups = {};
@@ -7181,7 +7186,7 @@
 	                timetoken: this.currentTimetoken,
 	                region: this.region ? this.region : undefined,
 	            };
-	            this.configuration.logger().debug(this.constructor.name, () => {
+	            this.configuration.logger().debug('SubscriptionManager', () => {
 	                const hashedEvents = messages.map((event) => {
 	                    const pn_mfp = event.type === PubNubEventType.Message || event.type === PubNubEventType.Signal
 	                        ? messageFingerprint(event.data.message)
@@ -7193,7 +7198,7 @@
 	            messages.forEach((message) => {
 	                if (dedupeOnSubscribe && 'message' in message.data && 'timetoken' in message.data) {
 	                    if (this.dedupingManager.isDuplicate(message.data)) {
-	                        this.configuration.logger().warn(this.constructor.name, () => ({
+	                        this.configuration.logger().warn('SubscriptionManager', () => ({
 	                            messageType: 'object',
 	                            message: message.data,
 	                            details: 'Duplicate message detected (skipped):',
@@ -8027,11 +8032,11 @@
 	    }
 	    transition(event) {
 	        if (!this._currentState) {
-	            this.logger.error(this.constructor.name, 'Finite state machine is not started');
+	            this.logger.error('Engine', 'Finite state machine is not started');
 	            throw new Error('Start the engine first');
 	        }
 	        if (this._inTransition) {
-	            this.logger.trace(this.constructor.name, () => ({
+	            this.logger.trace('Engine', () => ({
 	                messageType: 'object',
 	                message: event,
 	                details: 'Event engine in transition. Enqueue received event:',
@@ -8041,7 +8046,7 @@
 	        }
 	        else
 	            this._inTransition = true;
-	        this.logger.trace(this.constructor.name, () => ({
+	        this.logger.trace('Engine', () => ({
 	            messageType: 'object',
 	            message: event,
 	            details: 'Event engine received event:',
@@ -8053,14 +8058,14 @@
 	        const transition = this._currentState.transition(this._currentContext, event);
 	        if (transition) {
 	            const [newState, newContext, effects] = transition;
-	            this.logger.trace(this.constructor.name, `Exiting state: ${this._currentState.label}`);
+	            this.logger.trace('Engine', `Exiting state: ${this._currentState.label}`);
 	            for (const effect of this._currentState.exitEffects) {
 	                this.notify({
 	                    type: 'invocationDispatched',
 	                    invocation: effect(this._currentContext),
 	                });
 	            }
-	            this.logger.trace(this.constructor.name, () => ({
+	            this.logger.trace('Engine', () => ({
 	                messageType: 'object',
 	                details: `Entering '${newState.label}' state with context:`,
 	                message: newContext,
@@ -8089,22 +8094,22 @@
 	                    invocation: effect(this._currentContext),
 	                });
 	            }
-	            this._inTransition = false;
-	            // Check whether a pending task should be dequeued.
-	            if (this._pendingEvents.length > 0) {
-	                const nextEvent = this._pendingEvents.shift();
-	                if (nextEvent) {
-	                    this.logger.trace(this.constructor.name, () => ({
-	                        messageType: 'object',
-	                        message: nextEvent,
-	                        details: 'De-queueing pending event:',
-	                    }));
-	                    this.transition(nextEvent);
-	                }
-	            }
 	        }
 	        else
-	            this.logger.warn(this.constructor.name, `No transition from '${this._currentState.label}' found for event: ${event.type}`);
+	            this.logger.warn('Engine', `No transition from '${this._currentState.label}' found for event: ${event.type}`);
+	        this._inTransition = false;
+	        // Check whether a pending task should be dequeued.
+	        if (this._pendingEvents.length > 0) {
+	            const nextEvent = this._pendingEvents.shift();
+	            if (nextEvent) {
+	                this.logger.trace('Engine', () => ({
+	                    messageType: 'object',
+	                    message: nextEvent,
+	                    details: 'De-queueing pending event:',
+	                }));
+	                this.transition(nextEvent);
+	            }
+	        }
 	    }
 	}
 
@@ -8131,7 +8136,7 @@
 	        this.handlers.set(type, handlerCreator);
 	    }
 	    dispatch(invocation) {
-	        this.logger.trace(this.constructor.name, `Process invocation: ${invocation.type}`);
+	        this.logger.trace('Dispatcher', `Process invocation: ${invocation.type}`);
 	        if (invocation.type === 'CANCEL') {
 	            if (this.instances.has(invocation.payload)) {
 	                const instance = this.instances.get(invocation.payload);
@@ -8142,11 +8147,11 @@
 	        }
 	        const handlerCreator = this.handlers.get(invocation.type);
 	        if (!handlerCreator) {
-	            this.logger.error(this.constructor.name, `Unhandled invocation '${invocation.type}'`);
+	            this.logger.error('Dispatcher', `Unhandled invocation '${invocation.type}'`);
 	            throw new Error(`Unhandled invocation '${invocation.type}'`);
 	        }
 	        const instance = handlerCreator(invocation.payload, this.dependencies);
-	        this.logger.trace(this.constructor.name, () => ({
+	        this.logger.trace('Dispatcher', () => ({
 	            messageType: 'object',
 	            details: 'Call invocation handler with parameters:',
 	            message: invocation.payload,
@@ -8280,7 +8285,6 @@
 	    }
 	    start() {
 	        this.asyncFunction(this.payload, this.abortSignal, this.dependencies).catch((error) => {
-	            // console.log('Unhandled error:', error);
 	            // swallow the error
 	        });
 	    }
@@ -8438,9 +8442,10 @@
 	class PresenceEventEngineDispatcher extends Dispatcher {
 	    constructor(engine, dependencies) {
 	        super(dependencies, dependencies.config.logger());
-	        this.on(heartbeat.type, asyncHandler((payload_1, _1, _a) => __awaiter(this, [payload_1, _1, _a], void 0, function* (payload, _, { heartbeat, presenceState, config }) {
+	        this.on(heartbeat.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { heartbeat, presenceState, config }) {
+	            abortSignal.throwIfAborted();
 	            try {
-	                const result = yield heartbeat(Object.assign(Object.assign({ channels: payload.channels, channelGroups: payload.groups }, (config.maintainPresenceState && { state: presenceState })), { heartbeat: config.presenceTimeout }));
+	                const result = yield heartbeat(Object.assign(Object.assign({ abortSignal: abortSignal, channels: payload.channels, channelGroups: payload.groups }, (config.maintainPresenceState && { state: presenceState })), { heartbeat: config.presenceTimeout }));
 	                engine.transition(heartbeatSuccess(200));
 	            }
 	            catch (e) {
@@ -8494,8 +8499,8 @@
 	 */
 	const HeartbeatStoppedState = new State('HEARTBEAT_STOPPED');
 	HeartbeatStoppedState.on(joined.type, (context, event) => HeartbeatStoppedState.with({
-	    channels: [...context.channels, ...event.payload.channels],
-	    groups: [...context.groups, ...event.payload.groups],
+	    channels: [...context.channels, ...event.payload.channels.filter((channel) => !context.channels.includes(channel))],
+	    groups: [...context.groups, ...event.payload.groups.filter((group) => !context.groups.includes(group))],
 	}));
 	HeartbeatStoppedState.on(left.type, (context, event) => HeartbeatStoppedState.with({
 	    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
@@ -8527,8 +8532,8 @@
 	    groups: context.groups,
 	}));
 	HeartbeatCooldownState.on(joined.type, (context, event) => HeartbeatingState.with({
-	    channels: [...context.channels, ...event.payload.channels],
-	    groups: [...context.groups, ...event.payload.groups],
+	    channels: [...context.channels, ...event.payload.channels.filter((channel) => !context.channels.includes(channel))],
+	    groups: [...context.groups, ...event.payload.groups.filter((group) => !context.groups.includes(group))],
 	}));
 	HeartbeatCooldownState.on(left.type, (context, event) => HeartbeatingState.with({
 	    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
@@ -8556,8 +8561,8 @@
 	 */
 	const HeartbeatFailedState = new State('HEARTBEAT_FAILED');
 	HeartbeatFailedState.on(joined.type, (context, event) => HeartbeatingState.with({
-	    channels: [...context.channels, ...event.payload.channels],
-	    groups: [...context.groups, ...event.payload.groups],
+	    channels: [...context.channels, ...event.payload.channels.filter((channel) => !context.channels.includes(channel))],
+	    groups: [...context.groups, ...event.payload.groups.filter((group) => !context.groups.includes(group))],
 	}));
 	HeartbeatFailedState.on(left.type, (context, event) => HeartbeatingState.with({
 	    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
@@ -8593,8 +8598,8 @@
 	    emitStatus$1(Object.assign({}, event.payload)),
 	]));
 	HeartbeatingState.on(joined.type, (context, event) => HeartbeatingState.with({
-	    channels: [...context.channels, ...event.payload.channels],
-	    groups: [...context.groups, ...event.payload.groups],
+	    channels: [...context.channels, ...event.payload.channels.filter((channel) => !context.channels.includes(channel))],
+	    groups: [...context.groups, ...event.payload.groups.filter((group) => !context.groups.includes(group))],
 	}));
 	HeartbeatingState.on(left.type, (context, event) => {
 	    return HeartbeatingState.with({
@@ -8650,7 +8655,7 @@
 	        this.groups = [];
 	        this.engine = new Engine(dependencies.config.logger());
 	        this.dispatcher = new PresenceEventEngineDispatcher(this.engine, dependencies);
-	        dependencies.config.logger().debug(this.constructor.name, 'Create presence event engine.');
+	        dependencies.config.logger().debug('PresenceEventEngine', 'Create presence event engine.');
 	        this._unsubscribeEngine = this.engine.subscribe((change) => {
 	            if (change.type === 'invocationDispatched') {
 	                this.dispatcher.dispatch(change.invocation);
@@ -8659,8 +8664,11 @@
 	        this.engine.start(HeartbeatInactiveState, undefined);
 	    }
 	    join({ channels, groups }) {
-	        this.channels = [...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])];
-	        this.groups = [...this.groups, ...(groups !== null && groups !== void 0 ? groups : [])];
+	        this.channels = [...this.channels, ...(channels !== null && channels !== void 0 ? channels : []).filter((channel) => !this.channels.includes(channel))];
+	        this.groups = [...this.groups, ...(groups !== null && groups !== void 0 ? groups : []).filter((group) => !this.groups.includes(group))];
+	        // Don't make any transitions if there is no channels and groups.
+	        if (this.channels.length === 0 && this.groups.length === 0)
+	            return;
 	        this.engine.transition(joined(this.channels.slice(0), this.groups.slice(0)));
 	    }
 	    leave({ channels, groups }) {
@@ -9245,7 +9253,7 @@
 	        this.dependencies = dependencies;
 	        this.engine = new Engine(dependencies.config.logger());
 	        this.dispatcher = new EventEngineDispatcher(this.engine, dependencies);
-	        dependencies.config.logger().debug(this.constructor.name, 'Create subscribe event engine.');
+	        dependencies.config.logger().debug('EventEngine', 'Create subscribe event engine.');
 	        this._unsubscribeEngine = this.engine.subscribe((change) => {
 	            if (change.type === 'invocationDispatched') {
 	                this.dispatcher.dispatch(change.invocation);
@@ -9581,6 +9589,1305 @@
 	        if (state && Object.keys(state).length > 0)
 	            query['state'] = JSON.stringify(state);
 	        return query;
+	    }
+	}
+
+	/**
+	 * SubscriptionCapable entity type.
+	 *
+	 * @internal
+	 */
+	var SubscriptionType;
+	(function (SubscriptionType) {
+	    /**
+	     * Channel identifier, which is part of the URI path.
+	     */
+	    SubscriptionType[SubscriptionType["Channel"] = 0] = "Channel";
+	    /**
+	     * Channel group identifiers, which is part of the query parameters.
+	     */
+	    SubscriptionType[SubscriptionType["ChannelGroup"] = 1] = "ChannelGroup";
+	})(SubscriptionType || (SubscriptionType = {}));
+
+	/**
+	 * User-provided channels and groups for subscription.
+	 *
+	 * Object contains information about channels and groups for which real-time updates should be retrieved from the
+	 * PubNub network.
+	 *
+	 * @internal
+	 */
+	class SubscriptionInput {
+	    /**
+	     * Create a subscription input object.
+	     *
+	     * @param channels - List of channels which will be used with subscribe REST API to receive real-time updates.
+	     * @param channelGroups - List of channel groups which will be used with subscribe REST API to receive real-time
+	     * updates.
+	     */
+	    constructor({ channels, channelGroups }) {
+	        /**
+	         * Whether the user input is empty or not.
+	         */
+	        this.isEmpty = true;
+	        this._channelGroups = new Set((channelGroups !== null && channelGroups !== void 0 ? channelGroups : []).filter((value) => value.length > 0));
+	        this._channels = new Set((channels !== null && channels !== void 0 ? channels : []).filter((value) => value.length > 0));
+	        this.isEmpty = this._channels.size === 0 && this._channelGroups.size === 0;
+	    }
+	    /**
+	     * Retrieve total length of subscription input.
+	     *
+	     * @returns Number of channels and groups in subscription input.
+	     */
+	    get length() {
+	        if (this.isEmpty)
+	            return 0;
+	        return this._channels.size + this._channelGroups.size;
+	    }
+	    /**
+	     * Retrieve a list of user-provided channel names.
+	     *
+	     * @returns List of user-provided channel names.
+	     */
+	    get channels() {
+	        if (this.isEmpty)
+	            return [];
+	        return Array.from(this._channels);
+	    }
+	    /**
+	     * Retrieve a list of user-provided channel group names.
+	     *
+	     * @returns List of user-provided channel group names.
+	     */
+	    get channelGroups() {
+	        if (this.isEmpty)
+	            return [];
+	        return Array.from(this._channelGroups);
+	    }
+	    /**
+	     * Check if the given name is contained in the channel or channel group.
+	     *
+	     * @param name - Containing the name to be checked.
+	     *
+	     * @returns `true` if the name is found in the channel or channel group, `false` otherwise.
+	     */
+	    contains(name) {
+	        if (this.isEmpty)
+	            return false;
+	        return this._channels.has(name) || this._channelGroups.has(name);
+	    }
+	    /**
+	     * Create a new subscription input which will contain all channels and channel groups from both inputs.
+	     *
+	     * @param input - Another subscription input that should be used to aggregate data in new instance.
+	     *
+	     * @returns New subscription input instance with combined channels and channel groups.
+	     */
+	    with(input) {
+	        return new SubscriptionInput({
+	            channels: [...this._channels, ...input._channels],
+	            channelGroups: [...this._channelGroups, ...input._channelGroups],
+	        });
+	    }
+	    /**
+	     * Create a new subscription input which will contain only channels and groups which not present in the input.
+	     *
+	     * @param input - Another subscription input which should be used to filter data in new instance.
+	     *
+	     * @returns New subscription input instance with filtered channels and channel groups.
+	     */
+	    without(input) {
+	        return new SubscriptionInput({
+	            channels: [...this._channels].filter((value) => !input._channels.has(value)),
+	            channelGroups: [...this._channelGroups].filter((value) => !input._channelGroups.has(value)),
+	        });
+	    }
+	    /**
+	     * Add data from another subscription input to the receiver.
+	     *
+	     * @param input - Another subscription input whose data should be added to the receiver.
+	     *
+	     * @returns Receiver instance with updated channels and channel groups.
+	     */
+	    add(input) {
+	        if (input._channelGroups.size > 0)
+	            this._channelGroups = new Set([...this._channelGroups, ...input._channelGroups]);
+	        if (input._channels.size > 0)
+	            this._channels = new Set([...this._channels, ...input._channels]);
+	        this.isEmpty = this._channels.size === 0 && this._channelGroups.size === 0;
+	        return this;
+	    }
+	    /**
+	     * Remove data from another subscription input from the receiver.
+	     *
+	     * @param input - Another subscription input whose data should be removed from the receiver.
+	     *
+	     * @returns Receiver instance with updated channels and channel groups.
+	     */
+	    remove(input) {
+	        if (input._channelGroups.size > 0)
+	            this._channelGroups = new Set([...this._channelGroups].filter((value) => !input._channelGroups.has(value)));
+	        if (input._channels.size > 0)
+	            this._channels = new Set([...this._channels].filter((value) => !input._channels.has(value)));
+	        return this;
+	    }
+	    /**
+	     * Remove all data from subscription input.
+	     *
+	     * @returns Receiver instance with updated channels and channel groups.
+	     */
+	    removeAll() {
+	        this._channels.clear();
+	        this._channelGroups.clear();
+	        this.isEmpty = true;
+	        return this;
+	    }
+	    /**
+	     * Serialize a subscription input to string.
+	     *
+	     * @returns Printable string representation of a subscription input.
+	     */
+	    toString() {
+	        return `SubscriptionInput { channels: [${this.channels.join(', ')}], channelGroups: [${this.channelGroups.join(', ')}], is empty: ${this.isEmpty ? 'true' : 'false'}} }`;
+	    }
+	}
+	// endregion
+
+	/**
+	 * Subscription state object.
+	 *
+	 * State object used across multiple subscription object clones.
+	 *
+	 * @internal
+	 */
+	class SubscriptionBaseState {
+	    /**
+	     * Create a base subscription state object.
+	     *
+	     * @param client - PubNub client which will work with a subscription object.
+	     * @param subscriptionInput - User's input to be used with subscribe REST API.
+	     * @param options - Subscription behavior options.
+	     * @param referenceTimetoken - High-precision timetoken of the moment when subscription was created for entity.
+	     */
+	    constructor(client, subscriptionInput, options, referenceTimetoken) {
+	        /**
+	         * Whether a subscribable object subscribed or not.
+	         */
+	        this._isSubscribed = false;
+	        /**
+	         * The list of references to all {@link SubscriptionBase} clones created for this reference.
+	         */
+	        this.clones = {};
+	        /**
+	         * List of a parent subscription state objects list.
+	         *
+	         * List is used to track usage of a subscription object in other subscription object sets.
+	         *
+	         * **Important:** Tracking is required to prevent unexpected unsubscriptions if an object still has a parent.
+	         */
+	        this.parents = [];
+	        /**
+	         * Unique subscription object identifier.
+	         */
+	        this._id = uuidGenerator.createUUID();
+	        this.referenceTimetoken = referenceTimetoken;
+	        this.subscriptionInput = subscriptionInput;
+	        this.options = options;
+	        this.client = client;
+	    }
+	    /**
+	     * Get unique subscription object identifier.
+	     *
+	     * @returns Unique subscription object identifier.
+	     */
+	    get id() {
+	        return this._id;
+	    }
+	    /**
+	     * Check whether a subscription object is the last clone or not.
+	     *
+	     * @returns `true` if a subscription object is the last clone.
+	     */
+	    get isLastClone() {
+	        return Object.keys(this.clones).length === 1;
+	    }
+	    /**
+	     * Get whether a subscribable object subscribed or not.
+	     *
+	     * **Warning:** This method shouldn't be overridden by {@link SubscriptionSet}.
+	     *
+	     * @returns Whether a subscribable object subscribed or not.
+	     */
+	    get isSubscribed() {
+	        if (this._isSubscribed)
+	            return true;
+	        // Checking whether any of "parents" is subscribed.
+	        return this.parents.length > 0 && this.parents.some((state) => state.isSubscribed);
+	    }
+	    /**
+	     * Update active subscription state.
+	     *
+	     * @param value - New subscription state.
+	     */
+	    set isSubscribed(value) {
+	        if (this.isSubscribed === value)
+	            return;
+	        this._isSubscribed = value;
+	    }
+	    /**
+	     * Add a parent subscription state object to mark the linkage.
+	     *
+	     * @param parent - Parent subscription state object.
+	     *
+	     * @internal
+	     */
+	    addParentState(parent) {
+	        if (!this.parents.includes(parent))
+	            this.parents.push(parent);
+	    }
+	    /**
+	     * Remove a parent subscription state object.
+	     *
+	     * @param parent - Parent object for which linkage should be broken.
+	     *
+	     * @internal
+	     */
+	    removeParentState(parent) {
+	        const parentStateIndex = this.parents.indexOf(parent);
+	        if (parentStateIndex !== -1)
+	            this.parents.splice(parentStateIndex, 1);
+	    }
+	    /**
+	     * Store a clone of a {@link SubscriptionBase} instance with a given instance ID.
+	     *
+	     * @param id - The instance ID to associate with clone.
+	     * @param instance - Reference to the subscription instance to store as a clone.
+	     */
+	    storeClone(id, instance) {
+	        if (!this.clones[id])
+	            this.clones[id] = instance;
+	    }
+	}
+	/**
+	 * Base subscribe object.
+	 *
+	 * Implementation of base functionality used by {@link SubscriptionObject Subscription} and {@link SubscriptionSet}.
+	 */
+	class SubscriptionBase {
+	    /**
+	     * Create a subscription object from the state.
+	     *
+	     * @param state - Subscription state object.
+	     *
+	     * @internal
+	     */
+	    constructor(state) {
+	        /**
+	         * Unique subscription object identifier.
+	         *
+	         * @internal
+	         */
+	        this.id = uuidGenerator.createUUID();
+	        /**
+	         * Event emitter, which will notify listeners about updates received for channels / groups.
+	         *
+	         * @internal
+	         */
+	        this.eventDispatcher = new EventDispatcher();
+	        this._state = state;
+	    }
+	    /**
+	     * Retrieve subscription type.
+	     *
+	     * There is two types:
+	     * - Subscription
+	     * - SubscriptionSet
+	     *
+	     * @returns One of subscription types.
+	     *
+	     * @internal
+	     */
+	    get subscriptionType() {
+	        return 'Subscription';
+	    }
+	    /**
+	     * Subscription state.
+	     *
+	     * @returns Subscription state object.
+	     *
+	     * @internal
+	     */
+	    get state() {
+	        return this._state;
+	    }
+	    /**
+	     * Get a list of channels which is used for subscription.
+	     *
+	     * @returns List of channel names.
+	     */
+	    get channels() {
+	        return this.state.subscriptionInput.channels.slice(0);
+	    }
+	    /**
+	     * Get a list of channel groups which is used for subscription.
+	     *
+	     * @returns List of channel group names.
+	     */
+	    get channelGroups() {
+	        return this.state.subscriptionInput.channelGroups.slice(0);
+	    }
+	    // --------------------------------------------------------
+	    // -------------------- Event emitter ---------------------
+	    // --------------------------------------------------------
+	    // region Event emitter
+	    /**
+	     * Set a new message handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new message
+	     * is received from the real-time network.
+	     */
+	    set onMessage(listener) {
+	        this.eventDispatcher.onMessage = listener;
+	    }
+	    /**
+	     * Set a new presence events handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new
+	     * presence event is received from the real-time network.
+	     */
+	    set onPresence(listener) {
+	        this.eventDispatcher.onPresence = listener;
+	    }
+	    /**
+	     * Set a new signal handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new signal
+	     * is received from the real-time network.
+	     */
+	    set onSignal(listener) {
+	        this.eventDispatcher.onSignal = listener;
+	    }
+	    /**
+	     * Set a new app context event handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new
+	     * app context event is received from the real-time network.
+	     */
+	    set onObjects(listener) {
+	        this.eventDispatcher.onObjects = listener;
+	    }
+	    /**
+	     * Set a new message reaction event handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a
+	     * new message reaction event is received from the real-time network.
+	     */
+	    set onMessageAction(listener) {
+	        this.eventDispatcher.onMessageAction = listener;
+	    }
+	    /**
+	     * Set a new file handler.
+	     *
+	     * @param listener - Listener function, which will be called each time when a new file
+	     * is received from the real-time network.
+	     */
+	    set onFile(listener) {
+	        this.eventDispatcher.onFile = listener;
+	    }
+	    /**
+	     * Set events handler.
+	     *
+	     * @param listener - Events listener configuration object, which lets specify handlers for multiple
+	     * types of events.
+	     */
+	    addListener(listener) {
+	        this.eventDispatcher.addListener(listener);
+	    }
+	    /**
+	     * Remove events handler.
+	     *
+	     * @param listener - Event listener configuration, which should be removed from the list of notified
+	     * listeners. **Important:** Should be the same object which has been passed to the {@link addListener}.
+	     */
+	    removeListener(listener) {
+	        this.eventDispatcher.removeListener(listener);
+	    }
+	    /**
+	     * Remove all events listeners.
+	     */
+	    removeAllListeners() {
+	        this.eventDispatcher.removeAllListeners();
+	    }
+	    /**
+	     * Dispatch received a real-time update.
+	     *
+	     * @param cursor - A time cursor for the next portion of events.
+	     * @param event - A real-time event from multiplexed subscription.
+	     *
+	     * @return `true` if receiver has consumed event.
+	     *
+	     * @internal
+	     */
+	    handleEvent(cursor, event) {
+	        var _a;
+	        if (!this.state.cursor || cursor > this.state.cursor)
+	            this.state.cursor = cursor;
+	        // Check whether this is an old `old` event and it should be ignored or not.
+	        if (this.state.referenceTimetoken && event.data.timetoken < this.state.referenceTimetoken) {
+	            this.state.client.logger.trace(this.subscriptionType, () => ({
+	                messageType: 'text',
+	                message: `Event timetoken (${event.data.timetoken}) is older than reference timetoken (${this.state.referenceTimetoken}) for ${this.id} subscription object. Ignoring event.`,
+	            }));
+	            return;
+	        }
+	        // Don't pass events which are filtered out by the user-provided function.
+	        if (((_a = this.state.options) === null || _a === void 0 ? void 0 : _a.filter) && !this.state.options.filter(event)) {
+	            this.state.client.logger.trace(this.subscriptionType, `Event filtered out by filter function for ${this.id} subscription object. Ignoring event.`);
+	            return;
+	        }
+	        const clones = Object.values(this.state.clones);
+	        if (clones.length > 0) {
+	            this.state.client.logger.trace(this.subscriptionType, `Notify ${this.id} subscription object clones (count: ${clones.length}) about received event.`);
+	        }
+	        clones.forEach((subscription) => subscription.eventDispatcher.handleEvent(event));
+	    }
+	    /**
+	     * Graceful object destruction.
+	     *
+	     * This is an instance destructor, which will properly deinitialize it:
+	     * - remove and unset all listeners,
+	     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
+	     *
+	     * **Important:** {@link SubscriptionBase#dispose dispose} won't have any effect if a subscription object is part of
+	     * set. To gracefully dispose an object, it should be removed from the set using
+	     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
+	     * {@link SubscriptionBase#dispose dispose} not required.
+	     *
+	     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
+	     */
+	    dispose() {
+	        const keys = Object.keys(this.state.clones);
+	        if (keys.length > 1) {
+	            this.state.client.logger.debug(this.subscriptionType, `Remove subscription object clone on dispose: ${this.id}`);
+	            delete this.state.clones[this.id];
+	        }
+	        else if (keys.length === 1 && this.state.clones[this.id]) {
+	            this.state.client.logger.debug(this.subscriptionType, `Unsubscribe subscription object on dispose: ${this.id}`);
+	            this.unsubscribe();
+	        }
+	    }
+	    /**
+	     * Invalidate subscription object.
+	     *
+	     * Clean up resources used by a subscription object.
+	     *
+	     * **Note:** An invalidated instance won't call the dispatcher to deliver updates to the listeners.
+	     *
+	     * @param forDestroy - Whether subscription object invalidated as part of PubNub client destroy process or not.
+	     *
+	     * @internal
+	     */
+	    invalidate(forDestroy = false) {
+	        this.state._isSubscribed = false;
+	        if (forDestroy) {
+	            delete this.state.clones[this.id];
+	            if (Object.keys(this.state.clones).length === 0) {
+	                this.state.client.logger.trace(this.subscriptionType, 'Last clone removed. Reset shared subscription state.');
+	                this.state.subscriptionInput.removeAll();
+	                this.state.parents = [];
+	            }
+	        }
+	    }
+	    /**
+	     * Start receiving real-time updates.
+	     *
+	     * @param parameters - Additional subscription configuration options which should be used
+	     * for request.
+	     */
+	    subscribe(parameters) {
+	        if (this.state.isSubscribed) {
+	            this.state.client.logger.trace(this.subscriptionType, 'Already subscribed. Ignoring subscribe request.');
+	            return;
+	        }
+	        this.state.client.logger.debug(this.subscriptionType, () => {
+	            if (!parameters)
+	                return { messageType: 'text', message: 'Subscribe' };
+	            return { messageType: 'object', message: parameters, details: 'Subscribe with parameters:' };
+	        });
+	        this.state.isSubscribed = true;
+	        this.updateSubscription({ subscribing: true, timetoken: parameters === null || parameters === void 0 ? void 0 : parameters.timetoken });
+	    }
+	    /**
+	     * Stop real-time events processing.
+	     *
+	     * **Important:** {@link SubscriptionBase#unsubscribe unsubscribe} won't have any effect if a subscription object
+	     * is part of active (subscribed) set. To unsubscribe an object, it should be removed from the set using
+	     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
+	     * {@link SubscriptionBase#unsubscribe unsubscribe} not required.
+	     *
+	     * **Note:** Unsubscribed instance won't call the dispatcher to deliver updates to the listeners.
+	     */
+	    unsubscribe() {
+	        // Check whether an instance-level subscription flag not set or parent has active subscription.
+	        if (!this.state._isSubscribed || this.state.isSubscribed) {
+	            // Warn if a user tries to unsubscribe using specific subscription which subscribed as part of a subscription set.
+	            if (!this.state._isSubscribed && this.state.parents.length > 0 && this.state.isSubscribed) {
+	                this.state.client.logger.warn(this.subscriptionType, () => ({
+	                    messageType: 'object',
+	                    details: 'Subscription is subscribed as part of a subscription set. Remove from active sets to unsubscribe:',
+	                    message: this.state.parents.filter((subscriptionSet) => subscriptionSet.isSubscribed),
+	                }));
+	                return;
+	            }
+	            else if (!this.state._isSubscribed) {
+	                this.state.client.logger.trace(this.subscriptionType, 'Not subscribed. Ignoring unsubscribe request.');
+	                return;
+	            }
+	        }
+	        this.state.client.logger.debug(this.subscriptionType, 'Unsubscribe');
+	        this.state.isSubscribed = false;
+	        delete this.state.cursor;
+	        this.updateSubscription({ subscribing: false });
+	    }
+	    /**
+	     * Update channels and groups used by subscription loop.
+	     *
+	     * @param parameters - Subscription loop update parameters.
+	     * @param parameters.subscribing - Whether subscription updates as part of subscription or unsubscription.
+	     * @param [parameters.timetoken] - Subscription catch-up timetoken.
+	     * @param [parameters.subscriptions] - List of subscriptions which should be used to modify a subscription loop
+	     * object.
+	     *
+	     * @internal
+	     */
+	    updateSubscription(parameters) {
+	        var _a, _b;
+	        if (parameters === null || parameters === void 0 ? void 0 : parameters.timetoken) {
+	            if (((_a = this.state.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) && ((_b = this.state.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) !== '0') {
+	                if (parameters.timetoken !== '0' && parameters.timetoken > this.state.cursor.timetoken)
+	                    this.state.cursor.timetoken = parameters.timetoken;
+	            }
+	            else
+	                this.state.cursor = { timetoken: parameters.timetoken };
+	        }
+	        const subscriptions = parameters.subscriptions && parameters.subscriptions.length > 0 ? parameters.subscriptions : undefined;
+	        if (parameters.subscribing) {
+	            this.register(Object.assign(Object.assign({}, (parameters.timetoken ? { cursor: this.state.cursor } : {})), (subscriptions ? { subscriptions } : {})));
+	        }
+	        else
+	            this.unregister(subscriptions);
+	    }
+	}
+
+	/**
+	 * {@link SubscriptionSet} state object.
+	 *
+	 * State object used across multiple {@link SubscriptionSet} object clones.
+	 *
+	 * @internal
+	 */
+	class SubscriptionSetState extends SubscriptionBaseState {
+	    /**
+	     * Create a subscription state object.
+	     *
+	     * @param parameters - State configuration options
+	     * @param parameters.client - PubNub client which will work with a subscription object.
+	     * @param parameters.subscriptions - List of subscriptions managed by set.
+	     * @param [parameters.options] - Subscription behavior options.
+	     */
+	    constructor(parameters) {
+	        const subscriptionInput = new SubscriptionInput({});
+	        parameters.subscriptions.forEach((subscription) => subscriptionInput.add(subscription.state.subscriptionInput));
+	        super(parameters.client, subscriptionInput, parameters.options, parameters.client.subscriptionTimetoken);
+	        this.subscriptions = parameters.subscriptions;
+	    }
+	    /**
+	     * Retrieve subscription type.
+	     *
+	     * There is two types:
+	     * - Subscription
+	     * - SubscriptionSet
+	     *
+	     * @returns One of subscription types.
+	     *
+	     * @internal
+	     */
+	    get subscriptionType() {
+	        return 'SubscriptionSet';
+	    }
+	    /**
+	     * Add a single subscription object to the set.
+	     *
+	     * @param subscription - Another entity's subscription object, which should be added.
+	     */
+	    addSubscription(subscription) {
+	        if (this.subscriptions.includes(subscription))
+	            return;
+	        subscription.state.addParentState(this);
+	        this.subscriptions.push(subscription);
+	        // Update subscription input.
+	        this.subscriptionInput.add(subscription.state.subscriptionInput);
+	    }
+	    /**
+	     * Remove a single subscription object from the set.
+	     *
+	     * @param subscription - Another entity's subscription object, which should be removed.
+	     * @param clone - Whether a target subscription is a clone.
+	     */
+	    removeSubscription(subscription, clone) {
+	        const index = this.subscriptions.indexOf(subscription);
+	        if (index === -1)
+	            return;
+	        this.subscriptions.splice(index, 1);
+	        if (!clone)
+	            subscription.state.removeParentState(this);
+	        // Update subscription input.
+	        this.subscriptionInput.remove(subscription.state.subscriptionInput);
+	    }
+	    /**
+	     * Remove any registered subscription object.
+	     */
+	    removeAllSubscriptions() {
+	        this.subscriptions.forEach((subscription) => subscription.state.removeParentState(this));
+	        this.subscriptions.splice(0, this.subscriptions.length);
+	        this.subscriptionInput.removeAll();
+	    }
+	}
+	/**
+	 * Multiple entities subscription set object which can be used to receive and handle real-time
+	 * updates.
+	 *
+	 * Subscription set object represents a collection of per-entity subscription objects and allows
+	 * processing them at once for subscription loop and events handling.
+	 */
+	class SubscriptionSet extends SubscriptionBase {
+	    /**
+	     * Create entities' subscription set object.
+	     *
+	     * Subscription set object represents a collection of per-entity subscription objects and allows
+	     * processing them at once for subscription loop and events handling.
+	     *
+	     * @param parameters - Subscription set object configuration.
+	     *
+	     * @returns Ready to use entities' subscription set object.
+	     *
+	     * @internal
+	     */
+	    constructor(parameters) {
+	        let state;
+	        if ('client' in parameters) {
+	            let subscriptions = [];
+	            if (!parameters.subscriptions && parameters.entities) {
+	                parameters.entities.forEach((entity) => subscriptions.push(entity.subscription(parameters.options)));
+	            }
+	            else if (parameters.subscriptions)
+	                subscriptions = parameters.subscriptions;
+	            state = new SubscriptionSetState({ client: parameters.client, subscriptions, options: parameters.options });
+	            subscriptions.forEach((subscription) => subscription.state.addParentState(state));
+	            state.client.logger.debug('SubscriptionSet', () => ({
+	                messageType: 'object',
+	                details: 'Create subscription set with parameters:',
+	                message: Object.assign({ subscriptions: state.subscriptions }, (parameters.options ? parameters.options : {})),
+	            }));
+	        }
+	        else {
+	            state = parameters.state;
+	            state.client.logger.debug('SubscriptionSet', 'Create subscription set clone');
+	        }
+	        super(state);
+	        this.state.storeClone(this.id, this);
+	        // Update a parent sets list for original set subscriptions.
+	        state.subscriptions.forEach((subscription) => subscription.addParentSet(this));
+	    }
+	    /**
+	     * Get a {@link SubscriptionSet} object state.
+	     *
+	     * @returns: {@link SubscriptionSet} object state.
+	     *
+	     * @internal
+	     */
+	    get state() {
+	        return super.state;
+	    }
+	    /**
+	     * Get a list of entities' subscription objects registered in a subscription set.
+	     *
+	     * @returns Entities' subscription objects list.
+	     */
+	    get subscriptions() {
+	        return this.state.subscriptions.slice(0);
+	    }
+	    // --------------------------------------------------------
+	    // -------------------- Event handler ---------------------
+	    // --------------------------------------------------------
+	    // region Event handler
+	    /**
+	     * Dispatch received a real-time update.
+	     *
+	     * @param cursor - A time cursor for the next portion of events.
+	     * @param event - A real-time event from multiplexed subscription.
+	     *
+	     * @return `true` if receiver has consumed event.
+	     *
+	     * @internal
+	     */
+	    handleEvent(cursor, event) {
+	        var _a;
+	        // Check whether an event is not designated for this subscription set.
+	        if (!this.state.subscriptionInput.contains((_a = event.data.subscription) !== null && _a !== void 0 ? _a : event.data.channel))
+	            return;
+	        // Check whether `event` can be processed or not.
+	        if (!this.state._isSubscribed) {
+	            this.state.client.logger.trace(this.subscriptionType, `Subscription set ${this.id} is not subscribed. Ignoring event.`);
+	            return;
+	        }
+	        super.handleEvent(cursor, event);
+	        if (this.state.subscriptions.length > 0) {
+	            this.state.client.logger.trace(this.subscriptionType, `Notify ${this.id} subscription set subscriptions (count: ${this.state.subscriptions.length}) about received event.`);
+	        }
+	        this.state.subscriptions.forEach((subscription) => subscription.handleEvent(cursor, event));
+	    }
+	    // endregion
+	    /**
+	     User-provided subscription input associated with this {@link SubscriptionSet} object.
+	     *
+	     * @param forUnsubscribe - Whether list subscription input created for unsubscription (means entity should be free).
+	     *
+	     * @returns Subscription input object.
+	     *
+	     * @internal
+	     */
+	    subscriptionInput(forUnsubscribe = false) {
+	        let subscriptionInput = this.state.subscriptionInput;
+	        this.state.subscriptions.forEach((subscription) => {
+	            if (forUnsubscribe && subscription.state.entity.subscriptionsCount > 0)
+	                subscriptionInput = subscriptionInput.without(subscription.state.subscriptionInput);
+	        });
+	        return subscriptionInput;
+	    }
+	    /**
+	     * Make a bare copy of the {@link SubscriptionSet} object.
+	     *
+	     * Copy won't have any type-specific listeners or added listener objects but will have the same internal state as
+	     * the source object.
+	     *
+	     * @returns Bare copy of a {@link SubscriptionSet} object.
+	     */
+	    cloneEmpty() {
+	        return new SubscriptionSet({ state: this.state });
+	    }
+	    /**
+	     * Graceful {@link SubscriptionSet} destruction.
+	     *
+	     * This is an instance destructor, which will properly deinitialize it:
+	     * - remove and unset all listeners,
+	     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
+	     *
+	     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
+	     */
+	    dispose() {
+	        const isLastClone = this.state.isLastClone;
+	        this.state.subscriptions.forEach((subscription) => {
+	            subscription.removeParentSet(this);
+	            if (isLastClone)
+	                subscription.state.removeParentState(this.state);
+	        });
+	        super.dispose();
+	    }
+	    /**
+	     * Invalidate {@link SubscriptionSet} object.
+	     *
+	     * Clean up resources used by a subscription object. All {@link SubscriptionObject subscription} objects will be
+	     * removed.
+	     *
+	     * **Important:** This method is used only when a global subscription set is used (backward compatibility).
+	     *
+	     * **Note:** An invalidated instance won't call the dispatcher to deliver updates to the listeners.
+	     *
+	     * @param forDestroy - Whether subscription object invalidated as part of PubNub client destroy process or not.
+	     *
+	     * @internal
+	     */
+	    invalidate(forDestroy = false) {
+	        const subscriptions = forDestroy ? this.state.subscriptions.slice(0) : this.state.subscriptions;
+	        subscriptions.forEach((subscription) => {
+	            if (forDestroy) {
+	                subscription.state.entity.decreaseSubscriptionCount(this.state.id);
+	                subscription.removeParentSet(this);
+	            }
+	            subscription.invalidate(forDestroy);
+	        });
+	        if (forDestroy)
+	            this.state.removeAllSubscriptions();
+	        super.invalidate();
+	    }
+	    /**
+	     * Add an entity's subscription to the subscription set.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscription - Another entity's subscription object, which should be added.
+	     */
+	    addSubscription(subscription) {
+	        this.addSubscriptions([subscription]);
+	    }
+	    /**
+	     * Add an entity's subscriptions to the subscription set.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscriptions - List of entity's subscription objects, which should be added.
+	     */
+	    addSubscriptions(subscriptions) {
+	        const inactiveSubscriptions = [];
+	        const activeSubscriptions = [];
+	        this.state.client.logger.debug(this.subscriptionType, () => {
+	            const ignoredSubscriptions = [];
+	            const subscriptionsToAdd = [];
+	            subscriptions.forEach((subscription) => {
+	                if (!this.state.subscriptions.includes(subscription))
+	                    subscriptionsToAdd.push(subscription);
+	                else
+	                    ignoredSubscriptions.push(subscription);
+	            });
+	            return {
+	                messageType: 'object',
+	                details: `Add subscriptions to ${this.id} (subscriptions count: ${this.state.subscriptions.length + subscriptionsToAdd.length}):`,
+	                message: { addedSubscriptions: subscriptionsToAdd, ignoredSubscriptions },
+	            };
+	        });
+	        subscriptions
+	            .filter((subscription) => !this.state.subscriptions.includes(subscription))
+	            .forEach((subscription) => {
+	            if (subscription.state.isSubscribed)
+	                activeSubscriptions.push(subscription);
+	            else
+	                inactiveSubscriptions.push(subscription);
+	            subscription.addParentSet(this);
+	            this.state.addSubscription(subscription);
+	        });
+	        // Check whether there are any subscriptions for which the subscription loop should be changed or not.
+	        if ((activeSubscriptions.length === 0 && inactiveSubscriptions.length === 0) || !this.state.isSubscribed)
+	            return;
+	        activeSubscriptions.forEach(({ state }) => state.entity.increaseSubscriptionCount(this.state.id));
+	        if (inactiveSubscriptions.length > 0)
+	            this.updateSubscription({ subscribing: true, subscriptions: inactiveSubscriptions });
+	    }
+	    /**
+	     * Remove an entity's subscription object from the set.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscription - Another entity's subscription object, which should be removed.
+	     */
+	    removeSubscription(subscription) {
+	        this.removeSubscriptions([subscription]);
+	    }
+	    /**
+	     * Remove an entity's subscription objects from the set.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscriptions - List entity's subscription objects, which should be removed.
+	     */
+	    removeSubscriptions(subscriptions) {
+	        const activeSubscriptions = [];
+	        this.state.client.logger.debug(this.subscriptionType, () => {
+	            const ignoredSubscriptions = [];
+	            const subscriptionsToRemove = [];
+	            subscriptions.forEach((subscription) => {
+	                if (this.state.subscriptions.includes(subscription))
+	                    subscriptionsToRemove.push(subscription);
+	                else
+	                    ignoredSubscriptions.push(subscription);
+	            });
+	            return {
+	                messageType: 'object',
+	                details: `Remove subscriptions from ${this.id} (subscriptions count: ${this.state.subscriptions.length}):`,
+	                message: { removedSubscriptions: subscriptionsToRemove, ignoredSubscriptions },
+	            };
+	        });
+	        subscriptions
+	            .filter((subscription) => this.state.subscriptions.includes(subscription))
+	            .forEach((subscription) => {
+	            if (subscription.state.isSubscribed)
+	                activeSubscriptions.push(subscription);
+	            subscription.removeParentSet(this);
+	            this.state.removeSubscription(subscription, subscription.parentSetsCount > 1);
+	        });
+	        // Check whether there are any subscriptions for which the subscription loop should be changed or not.
+	        if (activeSubscriptions.length === 0 || !this.state.isSubscribed)
+	            return;
+	        this.updateSubscription({ subscribing: false, subscriptions: activeSubscriptions });
+	    }
+	    /**
+	     * Merge with another {@link SubscriptionSet} object.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscriptionSet - Other entities' subscription set, which should be joined.
+	     */
+	    addSubscriptionSet(subscriptionSet) {
+	        this.addSubscriptions(subscriptionSet.subscriptions);
+	    }
+	    /**
+	     * Subtract another {@link SubscriptionSet} object.
+	     *
+	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
+	     *
+	     * @param subscriptionSet - Other entities' subscription set, which should be subtracted.
+	     */
+	    removeSubscriptionSet(subscriptionSet) {
+	        this.removeSubscriptions(subscriptionSet.subscriptions);
+	    }
+	    /**
+	     * Register {@link SubscriptionSet} object for real-time events' retrieval.
+	     *
+	     * @param parameters - Object registration parameters.
+	     * @param [parameters.cursor] - Subscription real-time events catch-up cursor.
+	     * @param [parameters.subscriptions] - List of subscription objects which should be registered (in case of partial
+	     * modification).
+	     *
+	     * @internal
+	     */
+	    register(parameters) {
+	        var _a;
+	        const subscriptions = ((_a = parameters.subscriptions) !== null && _a !== void 0 ? _a : this.state.subscriptions);
+	        subscriptions.forEach(({ state }) => state.entity.increaseSubscriptionCount(this.state.id));
+	        this.state.client.logger.trace(this.subscriptionType, () => ({
+	            messageType: 'text',
+	            message: `Register subscription for real-time events: ${this}`,
+	        }));
+	        this.state.client.registerEventHandleCapable(this, parameters.cursor, subscriptions);
+	    }
+	    /**
+	     * Unregister {@link SubscriptionSet} object from real-time events' retrieval.
+	     *
+	     * @param [subscriptions] - List of subscription objects which should be unregistered (in case of partial
+	     * modification).
+	     *
+	     * @internal
+	     */
+	    unregister(subscriptions) {
+	        const activeSubscriptions = (subscriptions !== null && subscriptions !== void 0 ? subscriptions : this.state.subscriptions);
+	        activeSubscriptions.forEach(({ state }) => state.entity.decreaseSubscriptionCount(this.state.id));
+	        this.state.client.logger.trace(this.subscriptionType, () => ({
+	            messageType: 'text',
+	            message: `Unregister subscription from real-time events: ${this}`,
+	        }));
+	        this.state.client.unregisterEventHandleCapable(this, activeSubscriptions);
+	    }
+	    /**
+	     * Stringify subscription object.
+	     *
+	     * @returns Serialized subscription object.
+	     */
+	    toString() {
+	        const state = this.state;
+	        return `${this.subscriptionType} { id: ${this.id}, stateId: ${state.id}, clonesCount: ${Object.keys(this.state.clones).length}, isSubscribed: ${state.isSubscribed}, subscriptions: [${state.subscriptions
+            .map((sub) => sub.toString())
+            .join(', ')}] }`;
+	    }
+	}
+
+	/**
+	 * {@link Subscription} state object.
+	 *
+	 * State object used across multiple {@link Subscription} object clones.
+	 *
+	 * @internal
+	 */
+	class SubscriptionState extends SubscriptionBaseState {
+	    /**
+	     * Create a subscription state object.
+	     *
+	     * @param parameters - State configuration options
+	     * @param parameters.client - PubNub client which will work with a subscription object.
+	     * @param parameters.entity - Entity for which a subscription object has been created.
+	     * @param [parameters.options] - Subscription behavior options.
+	     */
+	    constructor(parameters) {
+	        var _a, _b;
+	        const names = parameters.entity.subscriptionNames((_b = (_a = parameters.options) === null || _a === void 0 ? void 0 : _a.receivePresenceEvents) !== null && _b !== void 0 ? _b : false);
+	        const subscriptionInput = new SubscriptionInput({
+	            [parameters.entity.subscriptionType == SubscriptionType.Channel ? 'channels' : 'channelGroups']: names,
+	        });
+	        super(parameters.client, subscriptionInput, parameters.options, parameters.client.subscriptionTimetoken);
+	        this.entity = parameters.entity;
+	    }
+	}
+	/**
+	 * Single-entity subscription object which can be used to receive and handle real-time updates.
+	 */
+	class Subscription extends SubscriptionBase {
+	    /**
+	     * Create a subscribing capable object for entity.
+	     *
+	     * @param parameters - Subscription object configuration.
+	     *
+	     * @internal
+	     */
+	    constructor(parameters) {
+	        if ('client' in parameters) {
+	            parameters.client.logger.debug('Subscription', () => ({
+	                messageType: 'object',
+	                details: 'Create subscription with parameters:',
+	                message: Object.assign({ entity: parameters.entity }, (parameters.options ? parameters.options : {})),
+	            }));
+	        }
+	        else
+	            parameters.state.client.logger.debug('Subscription', 'Create subscription clone');
+	        super('state' in parameters ? parameters.state : new SubscriptionState(parameters));
+	        /**
+	         * List of subscription {@link SubscriptionSet sets} which contains {@link Subscription subscription}.
+	         *
+	         * List if used to track usage of a specific {@link Subscription subscription} in other subscription
+	         * {@link SubscriptionSet sets}.
+	         *
+	         * **Important:** Tracking is required to prevent cloned instance dispose if there are sets that still use it.
+	         *
+	         * @internal
+	         */
+	        this.parents = [];
+	        /**
+	         * List of fingerprints from updates which has been handled already.
+	         *
+	         * **Important:** Tracking is required to avoid repetitive call of the subscription object's listener when the object
+	         * is part of multiple subscribed sets. Handler will be called once, and then the fingerprint will be stored in this
+	         * list to avoid another listener call for it.
+	         *
+	         * @internal
+	         */
+	        this.handledUpdates = [];
+	        this.state.storeClone(this.id, this);
+	    }
+	    /**
+	     * Get a {@link Subscription} object state.
+	     *
+	     * @returns: {@link Subscription} object state.
+	     *
+	     * @internal
+	     */
+	    get state() {
+	        return super.state;
+	    }
+	    /**
+	     * Get number of {@link SubscriptionSet} which use this subscription object.
+	     *
+	     * @returns Number of {@link SubscriptionSet} which use this subscription object.
+	     *
+	     * @internal
+	     */
+	    get parentSetsCount() {
+	        return this.parents.length;
+	    }
+	    // --------------------------------------------------------
+	    // -------------------- Event handler ---------------------
+	    // --------------------------------------------------------
+	    // region Event handler
+	    /**
+	     * Dispatch received a real-time update.
+	     *
+	     * @param cursor - A time cursor for the next portion of events.
+	     * @param event - A real-time event from multiplexed subscription.
+	     *
+	     * @return `true` if receiver has consumed event.
+	     *
+	     * @internal
+	     */
+	    handleEvent(cursor, event) {
+	        var _a;
+	        if (!this.state.isSubscribed)
+	            return;
+	        if (this.parentSetsCount > 0) {
+	            // Creating from whole payload (not only for published messages).
+	            const fingerprint = messageFingerprint(event.data);
+	            if (this.handledUpdates.includes(fingerprint)) {
+	                this.state.client.logger.trace(this.subscriptionType, `Message (${fingerprint}) already handled. Ignoring.`);
+	                return;
+	            }
+	            // Update a list of tracked messages and shrink it if too big.
+	            this.handledUpdates.push(fingerprint);
+	            if (this.handledUpdates.length > 10)
+	                this.handledUpdates.shift();
+	        }
+	        // Check whether an event is not designated for this subscription set.
+	        if (!this.state.subscriptionInput.contains((_a = event.data.subscription) !== null && _a !== void 0 ? _a : event.data.channel))
+	            return;
+	        super.handleEvent(cursor, event);
+	    }
+	    // endregion
+	    /**
+	     * User-provided subscription input associated with this {@link Subscription} object.
+	     *
+	     * @param forUnsubscribe - Whether list subscription input created for unsubscription (means entity should be free).
+	     *
+	     * @returns Subscription input object.
+	     *
+	     * @internal
+	     */
+	    subscriptionInput(forUnsubscribe = false) {
+	        if (forUnsubscribe && this.state.entity.subscriptionsCount > 0)
+	            return new SubscriptionInput({});
+	        return this.state.subscriptionInput;
+	    }
+	    /**
+	     * Make a bare copy of the {@link Subscription} object.
+	     *
+	     * Copy won't have any type-specific listeners or added listener objects but will have the same internal state as
+	     * the source object.
+	     *
+	     * @returns Bare copy of a {@link Subscription} object.
+	     */
+	    cloneEmpty() {
+	        return new Subscription({ state: this.state });
+	    }
+	    /**
+	     * Graceful {@link Subscription} object destruction.
+	     *
+	     * This is an instance destructor, which will properly deinitialize it:
+	     * - remove and unset all listeners,
+	     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
+	     *
+	     * **Important:** {@link Subscription#dispose dispose} won't have any effect if a subscription object is part of
+	     * {@link SubscriptionSet set}. To gracefully dispose an object, it should be removed from the set using
+	     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
+	     * {@link Subscription#dispose dispose} not required).
+	     *
+	     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
+	     */
+	    dispose() {
+	        if (this.parentSetsCount > 0) {
+	            this.state.client.logger.debug(this.subscriptionType, () => ({
+	                messageType: 'text',
+	                message: `'${this.state.entity.subscriptionNames()}' subscription still in use. Ignore dispose request.`,
+	            }));
+	            return;
+	        }
+	        this.handledUpdates.splice(0, this.handledUpdates.length);
+	        super.dispose();
+	    }
+	    /**
+	     * Invalidate subscription object.
+	     *
+	     * Clean up resources used by a subscription object.
+	     *
+	     * **Note:** An invalidated instance won't call the dispatcher to deliver updates to the listeners.
+	     *
+	     * @param forDestroy - Whether subscription object invalidated as part of PubNub client destroy process or not.
+	     *
+	     * @internal
+	     */
+	    invalidate(forDestroy = false) {
+	        if (forDestroy)
+	            this.state.entity.decreaseSubscriptionCount(this.state.id);
+	        this.handledUpdates.splice(0, this.handledUpdates.length);
+	        super.invalidate(forDestroy);
+	    }
+	    /**
+	     * Add another {@link SubscriptionSet} into which subscription has been added.
+	     *
+	     * @param parent - {@link SubscriptionSet} which has been modified.
+	     *
+	     * @internal
+	     */
+	    addParentSet(parent) {
+	        if (!this.parents.includes(parent)) {
+	            this.parents.push(parent);
+	            this.state.client.logger.trace(this.subscriptionType, `Add parent subscription set for ${this.id}: ${parent.id}. Parent subscription set count: ${this.parentSetsCount}`);
+	        }
+	    }
+	    /**
+	     * Remove {@link SubscriptionSet} upon subscription removal from it.
+	     *
+	     * @param parent - {@link SubscriptionSet} which has been modified.
+	     *
+	     * @internal
+	     */
+	    removeParentSet(parent) {
+	        const parentIndex = this.parents.indexOf(parent);
+	        if (parentIndex !== -1) {
+	            this.parents.splice(parentIndex, 1);
+	            this.state.client.logger.trace(this.subscriptionType, `Remove parent subscription set from ${this.id}: ${parent.id}. Parent subscription set count: ${this.parentSetsCount}`);
+	        }
+	        if (this.parentSetsCount === 0)
+	            this.handledUpdates.splice(0, this.handledUpdates.length);
+	    }
+	    /**
+	     * Merge entities' subscription objects into {@link SubscriptionSet}.
+	     *
+	     * @param subscription - Another entity's subscription object to be merged with receiver.
+	     *
+	     * @return {@link SubscriptionSet} which contains both receiver and other entities' subscription objects.
+	     */
+	    addSubscription(subscription) {
+	        this.state.client.logger.debug(this.subscriptionType, () => ({
+	            messageType: 'text',
+	            message: `Create set with subscription: ${subscription}`,
+	        }));
+	        const subscriptionSet = new SubscriptionSet({
+	            client: this.state.client,
+	            subscriptions: [this, subscription],
+	            options: this.state.options,
+	        });
+	        // Check whether a source subscription is already subscribed or not.
+	        if (!this.state.isSubscribed && !subscription.state.isSubscribed)
+	            return subscriptionSet;
+	        this.state.client.logger.trace(this.subscriptionType, 'Subscribe resulting set because the receiver is already subscribed.');
+	        // Subscribing resulting subscription set because source subscription was subscribed.
+	        subscriptionSet.subscribe();
+	        return subscriptionSet;
+	    }
+	    /**
+	     * Register {@link Subscription} object for real-time events' retrieval.
+	     *
+	     * **Note:** Superclass calls this method only in response to a {@link Subscription.subscribe subscribe} method call.
+	     *
+	     * @param parameters - Object registration parameters.
+	     * @param [parameters.cursor] - Subscription real-time events catch-up cursor.
+	     * @param [parameters.subscriptions] - List of subscription objects which should be registered (in case of partial
+	     * modification).
+	     *
+	     * @internal
+	     */
+	    register(parameters) {
+	        this.state.entity.increaseSubscriptionCount(this.state.id);
+	        this.state.client.logger.trace(this.subscriptionType, () => ({
+	            messageType: 'text',
+	            message: `Register subscription for real-time events: ${this}`,
+	        }));
+	        this.state.client.registerEventHandleCapable(this, parameters.cursor);
+	    }
+	    /**
+	     * Unregister {@link Subscription} object from real-time events' retrieval.
+	     *
+	     * **Note:** Superclass calls this method only in response to a {@link Subscription.unsubscribe unsubscribe} method
+	     * call.
+	     *
+	     * @param [_subscriptions] - List of subscription objects which should be unregistered (in case of partial
+	     * modification).
+	     *
+	     * @internal
+	     */
+	    unregister(_subscriptions) {
+	        this.state.entity.decreaseSubscriptionCount(this.state.id);
+	        this.state.client.logger.trace(this.subscriptionType, () => ({
+	            messageType: 'text',
+	            message: `Unregister subscription from real-time events: ${this}`,
+	        }));
+	        this.handledUpdates.splice(0, this.handledUpdates.length);
+	        this.state.client.unregisterEventHandleCapable(this);
+	    }
+	    /**
+	     * Stringify subscription object.
+	     *
+	     * @returns Serialized subscription object.
+	     */
+	    toString() {
+	        const state = this.state;
+	        return `${this.subscriptionType} { id: ${this.id}, stateId: ${state.id}, entity: ${state.entity
+            .subscriptionNames(false)
+            .pop()}, clonesCount: ${Object.keys(state.clones).length}, isSubscribed: ${state.isSubscribed}, parentSetsCount: ${this.parentSetsCount}, cursor: ${state.cursor ? state.cursor.timetoken : 'not set'}, referenceTimetoken: ${state.referenceTimetoken ? state.referenceTimetoken : 'not set'} }`;
 	    }
 	}
 
@@ -10909,1267 +12216,6 @@
 	}
 
 	/**
-	 * SubscriptionCapable entity type.
-	 *
-	 * @internal
-	 */
-	var SubscriptionType;
-	(function (SubscriptionType) {
-	    /**
-	     * Channel identifier, which is part of the URI path.
-	     */
-	    SubscriptionType[SubscriptionType["Channel"] = 0] = "Channel";
-	    /**
-	     * Channel group identifiers, which is part of the query parameters.
-	     */
-	    SubscriptionType[SubscriptionType["ChannelGroup"] = 1] = "ChannelGroup";
-	})(SubscriptionType || (SubscriptionType = {}));
-
-	/**
-	 * User-provided channels and groups for subscription.
-	 *
-	 * Object contains information about channels and groups for which real-time updates should be retrieved from the
-	 * PubNub network.
-	 *
-	 * @internal
-	 */
-	class SubscriptionInput {
-	    /**
-	     * Create a subscription input object.
-	     *
-	     * @param channels - List of channels which will be used with subscribe REST API to receive real-time updates.
-	     * @param channelGroups - List of channel groups which will be used with subscribe REST API to receive real-time
-	     * updates.
-	     */
-	    constructor({ channels, channelGroups }) {
-	        /**
-	         * Whether the user input is empty or not.
-	         */
-	        this.isEmpty = true;
-	        this._channelGroups = new Set((channelGroups !== null && channelGroups !== void 0 ? channelGroups : []).filter((value) => value.length > 0));
-	        this._channels = new Set((channels !== null && channels !== void 0 ? channels : []).filter((value) => value.length > 0));
-	        this.isEmpty = this._channels.size === 0 && this._channelGroups.size === 0;
-	    }
-	    /**
-	     * Retrieve a list of user-provided channel names.
-	     *
-	     * @returns List of user-provided channel names.
-	     */
-	    get channels() {
-	        if (this.isEmpty)
-	            return [];
-	        return Array.from(this._channels);
-	    }
-	    /**
-	     * Retrieve a list of user-provided channel group names.
-	     *
-	     * @returns List of user-provided channel group names.
-	     */
-	    get channelGroups() {
-	        if (this.isEmpty)
-	            return [];
-	        return Array.from(this._channelGroups);
-	    }
-	    /**
-	     * Check if the given name is contained in the channel or channel group.
-	     *
-	     * @param name - Containing the name to be checked.
-	     *
-	     * @returns `true` if the name is found in the channel or channel group, `false` otherwise.
-	     */
-	    contains(name) {
-	        if (this.isEmpty)
-	            return false;
-	        return this._channels.has(name) || this._channelGroups.has(name);
-	    }
-	    /**
-	     * Create a new subscription input which will contain all channels and channel groups from both inputs.
-	     *
-	     * @param input - Another subscription input that should be used to aggregate data in new instance.
-	     *
-	     * @returns New subscription input instance with combined channels and channel groups.
-	     */
-	    with(input) {
-	        return new SubscriptionInput({
-	            channels: [...this._channels, ...input._channels],
-	            channelGroups: [...this._channelGroups, ...input._channelGroups],
-	        });
-	    }
-	    /**
-	     * Create a new subscription input which will contain only channels and groups which not present in the input.
-	     *
-	     * @param input - Another subscription input which should be used to filter data in new instance.
-	     *
-	     * @returns New subscription input instance with filtered channels and channel groups.
-	     */
-	    without(input) {
-	        return new SubscriptionInput({
-	            channels: [...this._channels].filter((value) => !input._channels.has(value)),
-	            channelGroups: [...this._channelGroups].filter((value) => !input._channelGroups.has(value)),
-	        });
-	    }
-	    /**
-	     * Add data from another subscription input to the receiver.
-	     *
-	     * @param input - Another subscription input whose data should be added to the receiver.
-	     *
-	     * @returns Receiver instance with updated channels and channel groups.
-	     */
-	    add(input) {
-	        if (input._channelGroups.size > 0)
-	            this._channelGroups = new Set([...this._channelGroups, ...input._channelGroups]);
-	        if (input._channels.size > 0)
-	            this._channels = new Set([...this._channels, ...input._channels]);
-	        this.isEmpty = this._channels.size === 0 && this._channelGroups.size === 0;
-	        return this;
-	    }
-	    /**
-	     * Remove data from another subscription input from the receiver.
-	     *
-	     * @param input - Another subscription input whose data should be removed from the receiver.
-	     *
-	     * @returns Receiver instance with updated channels and channel groups.
-	     */
-	    remove(input) {
-	        if (input._channelGroups.size > 0)
-	            this._channelGroups = new Set([...this._channelGroups].filter((value) => !input._channelGroups.has(value)));
-	        if (input._channels.size > 0)
-	            this._channels = new Set([...this._channels].filter((value) => !input._channels.has(value)));
-	        return this;
-	    }
-	    /**
-	     * Remove all data from subscription input.
-	     *
-	     * @returns Receiver instance with updated channels and channel groups.
-	     */
-	    removeAll() {
-	        this._channels.clear();
-	        this._channelGroups.clear();
-	        this.isEmpty = true;
-	        return this;
-	    }
-	    /**
-	     * Serialize a subscription input to string.
-	     *
-	     * @returns Printable string representation of a subscription input.
-	     */
-	    toString() {
-	        return `SubscriptionInput { channels: [${this.channels.join(', ')}], channelGroups: [${this.channelGroups.join(', ')}], is empty: ${this.isEmpty ? 'true' : 'false'}} }`;
-	    }
-	}
-	// endregion
-
-	/**
-	 * Subscription state object.
-	 *
-	 * State object used across multiple subscription object clones.
-	 *
-	 * @internal
-	 */
-	class SubscriptionBaseState {
-	    /**
-	     * Create a base subscription state object.
-	     *
-	     * @param client - PubNub client which will work with a subscription object.
-	     * @param subscriptionInput - User's input to be used with subscribe REST API.
-	     * @param options - Subscription behavior options.
-	     * @param referenceTimetoken - High-precision timetoken of the moment when subscription was created for entity.
-	     */
-	    constructor(client, subscriptionInput, options, referenceTimetoken) {
-	        /**
-	         * Whether a subscribable object subscribed or not.
-	         */
-	        this._isSubscribed = false;
-	        /**
-	         * The list of references to all {@link SubscriptionBase} clones created for this reference.
-	         */
-	        this.clones = {};
-	        /**
-	         * List of a parent subscription state objects list.
-	         *
-	         * List is used to track usage of a subscription object in other subscription object sets.
-	         *
-	         * **Important:** Tracking is required to prevent unexpected unsubscriptions if an object still has a parent.
-	         */
-	        this.parents = [];
-	        /**
-	         * Unique subscription object identifier.
-	         */
-	        this._id = uuidGenerator.createUUID();
-	        this.referenceTimetoken = referenceTimetoken;
-	        this.subscriptionInput = subscriptionInput;
-	        this.options = options;
-	        this.client = client;
-	    }
-	    /**
-	     * Get unique subscription object identifier.
-	     *
-	     * @returns Unique subscription object identifier.
-	     */
-	    get id() {
-	        return this._id;
-	    }
-	    /**
-	     * Check whether a subscription object is the last clone or not.
-	     *
-	     * @returns `true` if a subscription object is the last clone.
-	     */
-	    get isLastClone() {
-	        return Object.keys(this.clones).length === 1;
-	    }
-	    /**
-	     * Get whether a subscribable object subscribed or not.
-	     *
-	     * **Warning:** This method shouldn't be overridden by {@link SubscriptionSet}.
-	     *
-	     * @returns Whether a subscribable object subscribed or not.
-	     */
-	    get isSubscribed() {
-	        if (this._isSubscribed)
-	            return true;
-	        // Checking whether any of "parents" is subscribed.
-	        return this.parents.length > 0 && this.parents.some((state) => state.isSubscribed);
-	    }
-	    /**
-	     * Update active subscription state.
-	     *
-	     * @param value - New subscription state.
-	     */
-	    set isSubscribed(value) {
-	        if (this.isSubscribed === value)
-	            return;
-	        this._isSubscribed = value;
-	    }
-	    /**
-	     * Add a parent subscription state object to mark the linkage.
-	     *
-	     * @param parent - Parent subscription state object.
-	     *
-	     * @internal
-	     */
-	    addParentState(parent) {
-	        if (!this.parents.includes(parent))
-	            this.parents.push(parent);
-	    }
-	    /**
-	     * Remove a parent subscription state object.
-	     *
-	     * @param parent - Parent object for which linkage should be broken.
-	     *
-	     * @internal
-	     */
-	    removeParentState(parent) {
-	        const parentStateIndex = this.parents.indexOf(parent);
-	        if (parentStateIndex !== -1)
-	            this.parents.splice(parentStateIndex, 1);
-	    }
-	    /**
-	     * Store a clone of a {@link SubscriptionBase} instance with a given instance ID.
-	     *
-	     * @param id - The instance ID to associate with clone.
-	     * @param instance - Reference to the subscription instance to store as a clone.
-	     */
-	    storeClone(id, instance) {
-	        if (!this.clones[id])
-	            this.clones[id] = instance;
-	    }
-	}
-	/**
-	 * Base subscribe object.
-	 *
-	 * Implementation of base functionality used by {@link SubscriptionObject Subscription} and {@link SubscriptionSet}.
-	 */
-	class SubscriptionBase {
-	    /**
-	     * Create a subscription object from the state.
-	     *
-	     * @param state - Subscription state object.
-	     *
-	     * @internal
-	     */
-	    constructor(state) {
-	        /**
-	         * Unique subscription object identifier.
-	         *
-	         * @internal
-	         */
-	        this.id = uuidGenerator.createUUID();
-	        /**
-	         * Event emitter, which will notify listeners about updates received for channels / groups.
-	         *
-	         * @internal
-	         */
-	        this.eventDispatcher = new EventDispatcher();
-	        this._state = state;
-	    }
-	    /**
-	     * Subscription state.
-	     *
-	     * @returns Subscription state object.
-	     *
-	     * @internal
-	     */
-	    get state() {
-	        return this._state;
-	    }
-	    /**
-	     * Get a list of channels which is used for subscription.
-	     *
-	     * @returns List of channel names.
-	     */
-	    get channels() {
-	        return this.state.subscriptionInput.channels.slice(0);
-	    }
-	    /**
-	     * Get a list of channel groups which is used for subscription.
-	     *
-	     * @returns List of channel group names.
-	     */
-	    get channelGroups() {
-	        return this.state.subscriptionInput.channelGroups.slice(0);
-	    }
-	    // --------------------------------------------------------
-	    // -------------------- Event emitter ---------------------
-	    // --------------------------------------------------------
-	    // region Event emitter
-	    /**
-	     * Set a new message handler.
-	     *
-	     * @param listener - Listener function, which will be called each time when a new message
-	     * is received from the real-time network.
-	     */
-	    set onMessage(listener) {
-	        this.eventDispatcher.onMessage = listener;
-	    }
-	    /**
-	     * Set a new presence events handler.
-	     *
-	     * @param listener - Listener function, which will be called each time when a new
-	     * presence event is received from the real-time network.
-	     */
-	    set onPresence(listener) {
-	        this.eventDispatcher.onPresence = listener;
-	    }
-	    /**
-	     * Set a new signal handler.
-	     *
-	     * @param listener - Listener function, which will be called each time when a new signal
-	     * is received from the real-time network.
-	     */
-	    set onSignal(listener) {
-	        this.eventDispatcher.onSignal = listener;
-	    }
-	    /**
-	     * Set a new app context event handler.
-	     *
-	     * @param listener - Listener function, which will be called each time when a new
-	     * app context event is received from the real-time network.
-	     */
-	    set onObjects(listener) {
-	        this.eventDispatcher.onObjects = listener;
-	    }
-	    /**
-	     * Set a new message reaction event handler.
-	     *
-	     * @param listener - Listener function, which will be called each time when a
-	     * new message reaction event is received from the real-time network.
-	     */
-	    set onMessageAction(listener) {
-	        this.eventDispatcher.onMessageAction = listener;
-	    }
-	    /**
-	     * Set a new file handler.
-	     *
-	     * @param listener - Listener function, which will be called each time when a new file
-	     * is received from the real-time network.
-	     */
-	    set onFile(listener) {
-	        this.eventDispatcher.onFile = listener;
-	    }
-	    /**
-	     * Set events handler.
-	     *
-	     * @param listener - Events listener configuration object, which lets specify handlers for multiple
-	     * types of events.
-	     */
-	    addListener(listener) {
-	        this.eventDispatcher.addListener(listener);
-	    }
-	    /**
-	     * Remove events handler.
-	     *
-	     * @param listener - Event listener configuration, which should be removed from the list of notified
-	     * listeners. **Important:** Should be the same object which has been passed to the {@link addListener}.
-	     */
-	    removeListener(listener) {
-	        this.eventDispatcher.removeListener(listener);
-	    }
-	    /**
-	     * Remove all events listeners.
-	     */
-	    removeAllListeners() {
-	        this.eventDispatcher.removeAllListeners();
-	    }
-	    /**
-	     * Dispatch received a real-time update.
-	     *
-	     * @param cursor - A time cursor for the next portion of events.
-	     * @param event - A real-time event from multiplexed subscription.
-	     *
-	     * @return `true` if receiver has consumed event.
-	     *
-	     * @internal
-	     */
-	    handleEvent(cursor, event) {
-	        var _a;
-	        if (!this.state.cursor || cursor > this.state.cursor)
-	            this.state.cursor = cursor;
-	        // Check whether this is an old `old` event and it should be ignored or not.
-	        if (this.state.referenceTimetoken && event.data.timetoken < this.state.referenceTimetoken) {
-	            this.state.client.logger.trace(this.constructor.name, () => ({
-	                messageType: 'text',
-	                message: `Event timetoken (${event.data.timetoken}) is older than reference timetoken (${this.state.referenceTimetoken}) for ${this.id} subscription object. Ignoring event.`,
-	            }));
-	            return;
-	        }
-	        // Don't pass events which are filtered out by the user-provided function.
-	        if (((_a = this.state.options) === null || _a === void 0 ? void 0 : _a.filter) && !this.state.options.filter(event)) {
-	            this.state.client.logger.trace(this.constructor.name, `Event filtered out by filter function for ${this.id} subscription object. Ignoring event.`);
-	            return;
-	        }
-	        const clones = Object.values(this.state.clones);
-	        if (clones.length > 0) {
-	            this.state.client.logger.trace(this.constructor.name, `Notify ${this.id} subscription object clones (count: ${clones.length}) about received event.`);
-	        }
-	        clones.forEach((subscription) => subscription.eventDispatcher.handleEvent(event));
-	    }
-	    /**
-	     * Graceful object destruction.
-	     *
-	     * This is an instance destructor, which will properly deinitialize it:
-	     * - remove and unset all listeners,
-	     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
-	     *
-	     * **Important:** {@link SubscriptionBase#dispose dispose} won't have any effect if a subscription object is part of
-	     * set. To gracefully dispose an object, it should be removed from the set using
-	     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
-	     * {@link SubscriptionBase#dispose dispose} not required.
-	     *
-	     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
-	     */
-	    dispose() {
-	        const keys = Object.keys(this.state.clones);
-	        if (keys.length > 1) {
-	            this.state.client.logger.debug(this.constructor.name, `Remove subscription object clone on dispose: ${this.id}`);
-	            delete this.state.clones[this.id];
-	        }
-	        else if (keys.length === 1 && this.state.clones[this.id]) {
-	            this.state.client.logger.debug(this.constructor.name, `Unsubscribe subscription object on dispose: ${this.id}`);
-	            this.unsubscribe();
-	        }
-	    }
-	    /**
-	     * Invalidate subscription object.
-	     *
-	     * Clean up resources used by a subscription object.
-	     *
-	     * **Note:** An invalidated instance won't call the dispatcher to deliver updates to the listeners.
-	     *
-	     * @param forDestroy - Whether subscription object invalidated as part of PubNub client destroy process or not.
-	     *
-	     * @internal
-	     */
-	    invalidate(forDestroy = false) {
-	        this.state._isSubscribed = false;
-	        if (forDestroy) {
-	            delete this.state.clones[this.id];
-	            if (Object.keys(this.state.clones).length === 0) {
-	                this.state.client.logger.trace(this.constructor.name, 'Last clone removed. Reset shared subscription state.');
-	                this.state.subscriptionInput.removeAll();
-	                this.state.parents = [];
-	            }
-	        }
-	    }
-	    /**
-	     * Start receiving real-time updates.
-	     *
-	     * @param parameters - Additional subscription configuration options which should be used
-	     * for request.
-	     */
-	    subscribe(parameters) {
-	        if (this.state.isSubscribed) {
-	            this.state.client.logger.trace(this.constructor.name, 'Already subscribed. Ignoring subscribe request.');
-	            return;
-	        }
-	        this.state.client.logger.debug(this.constructor.name, () => {
-	            if (!parameters)
-	                return { messageType: 'text', message: 'Subscribe' };
-	            return { messageType: 'object', message: parameters, details: 'Subscribe with parameters:' };
-	        });
-	        this.state.isSubscribed = true;
-	        this.updateSubscription({ subscribing: true, timetoken: parameters === null || parameters === void 0 ? void 0 : parameters.timetoken });
-	    }
-	    /**
-	     * Stop real-time events processing.
-	     *
-	     * **Important:** {@link SubscriptionBase#unsubscribe unsubscribe} won't have any effect if a subscription object
-	     * is part of active (subscribed) set. To unsubscribe an object, it should be removed from the set using
-	     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
-	     * {@link SubscriptionBase#unsubscribe unsubscribe} not required.
-	     *
-	     * **Note:** Unsubscribed instance won't call the dispatcher to deliver updates to the listeners.
-	     */
-	    unsubscribe() {
-	        // Check whether an instance-level subscription flag not set or parent has active subscription.
-	        if (!this.state._isSubscribed || this.state.isSubscribed) {
-	            // Warn if a user tries to unsubscribe using specific subscription which subscribed as part of a subscription set.
-	            if (!this.state._isSubscribed && this.state.parents.length > 0 && this.state.isSubscribed) {
-	                this.state.client.logger.warn(this.constructor.name, () => ({
-	                    messageType: 'object',
-	                    details: 'Subscription is subscribed as part of a subscription set. Remove from active sets to unsubscribe:',
-	                    message: this.state.parents.filter((subscriptionSet) => subscriptionSet.isSubscribed),
-	                }));
-	                return;
-	            }
-	            else if (!this.state._isSubscribed) {
-	                this.state.client.logger.trace(this.constructor.name, 'Not subscribed. Ignoring unsubscribe request.');
-	                return;
-	            }
-	        }
-	        this.state.client.logger.debug(this.constructor.name, 'Unsubscribe');
-	        this.state.isSubscribed = true;
-	        delete this.state.cursor;
-	        this.updateSubscription({ subscribing: false });
-	    }
-	    /**
-	     * Update channels and groups used by subscription loop.
-	     *
-	     * @param parameters - Subscription loop update parameters.
-	     * @param parameters.subscribing - Whether subscription updates as part of subscription or unsubscription.
-	     * @param [parameters.timetoken] - Subscription catch-up timetoken.
-	     * @param [parameters.subscriptions] - List of subscriptions which should be used to modify a subscription loop
-	     * object.
-	     *
-	     * @internal
-	     */
-	    updateSubscription(parameters) {
-	        var _a, _b;
-	        if (parameters === null || parameters === void 0 ? void 0 : parameters.timetoken) {
-	            if (((_a = this.state.cursor) === null || _a === void 0 ? void 0 : _a.timetoken) && ((_b = this.state.cursor) === null || _b === void 0 ? void 0 : _b.timetoken) !== '0') {
-	                if (parameters.timetoken !== '0' && parameters.timetoken > this.state.cursor.timetoken)
-	                    this.state.cursor.timetoken = parameters.timetoken;
-	            }
-	            else
-	                this.state.cursor = { timetoken: parameters.timetoken };
-	        }
-	        const subscriptions = parameters.subscriptions && parameters.subscriptions.length > 0 ? parameters.subscriptions : undefined;
-	        if (parameters.subscribing) {
-	            this.register(Object.assign(Object.assign({}, (parameters.timetoken ? { cursor: this.state.cursor } : {})), (subscriptions ? { subscriptions } : {})));
-	        }
-	        else
-	            this.unregister(subscriptions);
-	    }
-	}
-
-	/**
-	 * {@link SubscriptionSet} state object.
-	 *
-	 * State object used across multiple {@link SubscriptionSet} object clones.
-	 *
-	 * @internal
-	 */
-	class SubscriptionSetState extends SubscriptionBaseState {
-	    /**
-	     * Create a subscription state object.
-	     *
-	     * @param parameters - State configuration options
-	     * @param parameters.client - PubNub client which will work with a subscription object.
-	     * @param parameters.subscriptions - List of subscriptions managed by set.
-	     * @param [parameters.options] - Subscription behavior options.
-	     */
-	    constructor(parameters) {
-	        const subscriptionInput = new SubscriptionInput({});
-	        parameters.subscriptions.forEach((subscription) => subscriptionInput.add(subscription.state.subscriptionInput));
-	        super(parameters.client, subscriptionInput, parameters.options, parameters.client.subscriptionTimetoken);
-	        this.subscriptions = parameters.subscriptions;
-	    }
-	    /**
-	     * Add a single subscription object to the set.
-	     *
-	     * @param subscription - Another entity's subscription object, which should be added.
-	     */
-	    addSubscription(subscription) {
-	        if (this.subscriptions.includes(subscription))
-	            return;
-	        subscription.state.addParentState(this);
-	        this.subscriptions.push(subscription);
-	        // Update subscription input.
-	        this.subscriptionInput.add(subscription.state.subscriptionInput);
-	    }
-	    /**
-	     * Remove a single subscription object from the set.
-	     *
-	     * @param subscription - Another entity's subscription object, which should be removed.
-	     * @param clone - Whether a target subscription is a clone.
-	     */
-	    removeSubscription(subscription, clone) {
-	        const index = this.subscriptions.indexOf(subscription);
-	        if (index === -1)
-	            return;
-	        this.subscriptions.splice(index, 1);
-	        if (!clone)
-	            subscription.state.removeParentState(this);
-	        // Update subscription input.
-	        this.subscriptionInput.remove(subscription.state.subscriptionInput);
-	    }
-	    /**
-	     * Remove any registered subscription object.
-	     */
-	    removeAllSubscriptions() {
-	        this.subscriptions.forEach((subscription) => subscription.state.removeParentState(this));
-	        this.subscriptions.splice(0, this.subscriptions.length);
-	        this.subscriptionInput.removeAll();
-	    }
-	}
-	/**
-	 * Multiple entities subscription set object which can be used to receive and handle real-time
-	 * updates.
-	 *
-	 * Subscription set object represents a collection of per-entity subscription objects and allows
-	 * processing them at once for subscription loop and events handling.
-	 */
-	class SubscriptionSet extends SubscriptionBase {
-	    /**
-	     * Create entities' subscription set object.
-	     *
-	     * Subscription set object represents a collection of per-entity subscription objects and allows
-	     * processing them at once for subscription loop and events handling.
-	     *
-	     * @param parameters - Subscription set object configuration.
-	     *
-	     * @returns Ready to use entities' subscription set object.
-	     *
-	     * @internal
-	     */
-	    constructor(parameters) {
-	        let state;
-	        if ('client' in parameters) {
-	            let subscriptions = [];
-	            if (!parameters.subscriptions && parameters.entities) {
-	                parameters.entities.forEach((entity) => subscriptions.push(entity.subscription(parameters.options)));
-	            }
-	            else if (parameters.subscriptions)
-	                subscriptions = parameters.subscriptions;
-	            state = new SubscriptionSetState({ client: parameters.client, subscriptions, options: parameters.options });
-	            subscriptions.forEach((subscription) => subscription.state.addParentState(state));
-	            state.client.logger.debug('SubscriptionSet', () => ({
-	                messageType: 'object',
-	                details: 'Create subscription set with parameters:',
-	                message: Object.assign({ subscriptions: state.subscriptions }, (parameters.options ? parameters.options : {})),
-	            }));
-	        }
-	        else {
-	            state = parameters.state;
-	            state.client.logger.debug('SubscriptionSet', 'Create subscription set clone');
-	        }
-	        super(state);
-	        this.state.storeClone(this.id, this);
-	        // Update a parent sets list for original set subscriptions.
-	        state.subscriptions.forEach((subscription) => subscription.addParentSet(this));
-	    }
-	    /**
-	     * Get a {@link SubscriptionSet} object state.
-	     *
-	     * @returns: {@link SubscriptionSet} object state.
-	     *
-	     * @internal
-	     */
-	    get state() {
-	        return super.state;
-	    }
-	    /**
-	     * Get a list of entities' subscription objects registered in a subscription set.
-	     *
-	     * @returns Entities' subscription objects list.
-	     */
-	    get subscriptions() {
-	        return this.state.subscriptions.slice(0);
-	    }
-	    // --------------------------------------------------------
-	    // -------------------- Event handler ---------------------
-	    // --------------------------------------------------------
-	    // region Event handler
-	    /**
-	     * Dispatch received a real-time update.
-	     *
-	     * @param cursor - A time cursor for the next portion of events.
-	     * @param event - A real-time event from multiplexed subscription.
-	     *
-	     * @return `true` if receiver has consumed event.
-	     *
-	     * @internal
-	     */
-	    handleEvent(cursor, event) {
-	        var _a;
-	        // Check whether an event is not designated for this subscription set.
-	        if (!this.state.subscriptionInput.contains((_a = event.data.subscription) !== null && _a !== void 0 ? _a : event.data.channel))
-	            return;
-	        // Check whether `event` can be processed or not.
-	        if (!this.state._isSubscribed) {
-	            this.state.client.logger.trace(this.constructor.name, `Subscription set ${this.id} is not subscribed. Ignoring event.`);
-	            return;
-	        }
-	        super.handleEvent(cursor, event);
-	        if (this.state.subscriptions.length > 0) {
-	            this.state.client.logger.trace(this.constructor.name, `Notify ${this.id} subscription set subscriptions (count: ${this.state.subscriptions.length}) about received event.`);
-	        }
-	        this.state.subscriptions.forEach((subscription) => subscription.handleEvent(cursor, event));
-	    }
-	    // endregion
-	    /**
-	     User-provided subscription input associated with this {@link SubscriptionSet} object.
-	     *
-	     * @param forUnsubscribe - Whether list subscription input created for unsubscription (means entity should be free).
-	     *
-	     * @returns Subscription input object.
-	     *
-	     * @internal
-	     */
-	    subscriptionInput(forUnsubscribe = false) {
-	        let subscriptionInput = this.state.subscriptionInput;
-	        this.state.subscriptions.forEach((subscription) => {
-	            if (forUnsubscribe && subscription.state.entity.subscriptionsCount > 0)
-	                subscriptionInput = subscriptionInput.without(subscription.state.subscriptionInput);
-	        });
-	        return subscriptionInput;
-	    }
-	    /**
-	     * Make a bare copy of the {@link SubscriptionSet} object.
-	     *
-	     * Copy won't have any type-specific listeners or added listener objects but will have the same internal state as
-	     * the source object.
-	     *
-	     * @returns Bare copy of a {@link SubscriptionSet} object.
-	     */
-	    cloneEmpty() {
-	        return new SubscriptionSet({ state: this.state });
-	    }
-	    /**
-	     * Graceful {@link SubscriptionSet} destruction.
-	     *
-	     * This is an instance destructor, which will properly deinitialize it:
-	     * - remove and unset all listeners,
-	     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
-	     *
-	     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
-	     */
-	    dispose() {
-	        const isLastClone = this.state.isLastClone;
-	        this.state.subscriptions.forEach((subscription) => {
-	            subscription.removeParentSet(this);
-	            if (isLastClone)
-	                subscription.state.removeParentState(this.state);
-	        });
-	        super.dispose();
-	    }
-	    /**
-	     * Invalidate {@link SubscriptionSet} object.
-	     *
-	     * Clean up resources used by a subscription object. All {@link SubscriptionObject subscription} objects will be
-	     * removed.
-	     *
-	     * **Important:** This method is used only when a global subscription set is used (backward compatibility).
-	     *
-	     * **Note:** An invalidated instance won't call the dispatcher to deliver updates to the listeners.
-	     *
-	     * @param forDestroy - Whether subscription object invalidated as part of PubNub client destroy process or not.
-	     *
-	     * @internal
-	     */
-	    invalidate(forDestroy = false) {
-	        const subscriptions = forDestroy ? this.state.subscriptions.slice(0) : this.state.subscriptions;
-	        subscriptions.forEach((subscription) => {
-	            if (forDestroy) {
-	                subscription.state.entity.decreaseSubscriptionCount(this.state.id);
-	                subscription.removeParentSet(this);
-	            }
-	            subscription.invalidate(forDestroy);
-	        });
-	        if (forDestroy)
-	            this.state.removeAllSubscriptions();
-	        super.invalidate();
-	    }
-	    /**
-	     * Add an entity's subscription to the subscription set.
-	     *
-	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
-	     *
-	     * @param subscription - Another entity's subscription object, which should be added.
-	     */
-	    addSubscription(subscription) {
-	        this.addSubscriptions([subscription]);
-	    }
-	    /**
-	     * Add an entity's subscriptions to the subscription set.
-	     *
-	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
-	     *
-	     * @param subscriptions - List of entity's subscription objects, which should be added.
-	     */
-	    addSubscriptions(subscriptions) {
-	        const inactiveSubscriptions = [];
-	        const activeSubscriptions = [];
-	        this.state.client.logger.debug(this.constructor.name, () => {
-	            const ignoredSubscriptions = [];
-	            const subscriptionsToAdd = [];
-	            subscriptions.forEach((subscription) => {
-	                if (!this.state.subscriptions.includes(subscription))
-	                    subscriptionsToAdd.push(subscription);
-	                else
-	                    ignoredSubscriptions.push(subscription);
-	            });
-	            return {
-	                messageType: 'object',
-	                details: `Add subscriptions to ${this.id} (subscriptions count: ${this.state.subscriptions.length + subscriptionsToAdd.length}):`,
-	                message: { addedSubscriptions: subscriptionsToAdd, ignoredSubscriptions },
-	            };
-	        });
-	        subscriptions
-	            .filter((subscription) => !this.state.subscriptions.includes(subscription))
-	            .forEach((subscription) => {
-	            if (subscription.state.isSubscribed)
-	                activeSubscriptions.push(subscription);
-	            else
-	                inactiveSubscriptions.push(subscription);
-	            subscription.addParentSet(this);
-	            this.state.addSubscription(subscription);
-	        });
-	        // Check whether there are any subscriptions for which the subscription loop should be changed or not.
-	        if ((activeSubscriptions.length === 0 && inactiveSubscriptions.length === 0) || !this.state.isSubscribed)
-	            return;
-	        activeSubscriptions.forEach(({ state }) => state.entity.increaseSubscriptionCount(this.state.id));
-	        if (inactiveSubscriptions.length > 0)
-	            this.updateSubscription({ subscribing: true, subscriptions: inactiveSubscriptions });
-	    }
-	    /**
-	     * Remove an entity's subscription object from the set.
-	     *
-	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
-	     *
-	     * @param subscription - Another entity's subscription object, which should be removed.
-	     */
-	    removeSubscription(subscription) {
-	        this.removeSubscriptions([subscription]);
-	    }
-	    /**
-	     * Remove an entity's subscription objects from the set.
-	     *
-	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
-	     *
-	     * @param subscriptions - List entity's subscription objects, which should be removed.
-	     */
-	    removeSubscriptions(subscriptions) {
-	        const activeSubscriptions = [];
-	        this.state.client.logger.debug(this.constructor.name, () => {
-	            const ignoredSubscriptions = [];
-	            const subscriptionsToRemove = [];
-	            subscriptions.forEach((subscription) => {
-	                if (this.state.subscriptions.includes(subscription))
-	                    subscriptionsToRemove.push(subscription);
-	                else
-	                    ignoredSubscriptions.push(subscription);
-	            });
-	            return {
-	                messageType: 'object',
-	                details: `Remove subscriptions from ${this.id} (subscriptions count: ${this.state.subscriptions.length}):`,
-	                message: { removedSubscriptions: subscriptionsToRemove, ignoredSubscriptions },
-	            };
-	        });
-	        subscriptions
-	            .filter((subscription) => this.state.subscriptions.includes(subscription))
-	            .forEach((subscription) => {
-	            if (subscription.state.isSubscribed)
-	                activeSubscriptions.push(subscription);
-	            subscription.removeParentSet(this);
-	            this.state.removeSubscription(subscription, subscription.parentSetsCount > 1);
-	        });
-	        // Check whether there are any subscriptions for which the subscription loop should be changed or not.
-	        if (activeSubscriptions.length === 0 || !this.state.isSubscribed)
-	            return;
-	        this.updateSubscription({ subscribing: false, subscriptions: activeSubscriptions });
-	    }
-	    /**
-	     * Merge with another {@link SubscriptionSet} object.
-	     *
-	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
-	     *
-	     * @param subscriptionSet - Other entities' subscription set, which should be joined.
-	     */
-	    addSubscriptionSet(subscriptionSet) {
-	        this.addSubscriptions(subscriptionSet.subscriptions);
-	    }
-	    /**
-	     * Subtract another {@link SubscriptionSet} object.
-	     *
-	     * **Important:** Changes will be effective immediately if {@link SubscriptionSet} already subscribed.
-	     *
-	     * @param subscriptionSet - Other entities' subscription set, which should be subtracted.
-	     */
-	    removeSubscriptionSet(subscriptionSet) {
-	        this.removeSubscriptions(subscriptionSet.subscriptions);
-	    }
-	    /**
-	     * Register {@link SubscriptionSet} object for real-time events' retrieval.
-	     *
-	     * @param parameters - Object registration parameters.
-	     * @param [parameters.cursor] - Subscription real-time events catch-up cursor.
-	     * @param [parameters.subscriptions] - List of subscription objects which should be registered (in case of partial
-	     * modification).
-	     *
-	     * @internal
-	     */
-	    register(parameters) {
-	        var _a;
-	        const subscriptions = ((_a = parameters.subscriptions) !== null && _a !== void 0 ? _a : this.state.subscriptions);
-	        subscriptions.forEach(({ state }) => state.entity.increaseSubscriptionCount(this.state.id));
-	        this.state.client.logger.trace(this.constructor.name, () => ({
-	            messageType: 'text',
-	            message: `Register subscription for real-time events: ${this}`,
-	        }));
-	        this.state.client.registerEventHandleCapable(this, parameters.cursor, subscriptions);
-	    }
-	    /**
-	     * Unregister {@link SubscriptionSet} object from real-time events' retrieval.
-	     *
-	     * @param [subscriptions] - List of subscription objects which should be unregistered (in case of partial
-	     * modification).
-	     *
-	     * @internal
-	     */
-	    unregister(subscriptions) {
-	        const activeSubscriptions = (subscriptions !== null && subscriptions !== void 0 ? subscriptions : this.state.subscriptions);
-	        activeSubscriptions.forEach(({ state }) => state.entity.decreaseSubscriptionCount(this.state.id));
-	        this.state.client.logger.trace(this.constructor.name, () => ({
-	            messageType: 'text',
-	            message: `Unregister subscription from real-time events: ${this}`,
-	        }));
-	        this.state.client.unregisterEventHandleCapable(this, activeSubscriptions);
-	    }
-	    /**
-	     * Stringify subscription object.
-	     *
-	     * @returns Serialized subscription object.
-	     */
-	    toString() {
-	        const state = this.state;
-	        return `${this.constructor.name} { id: ${this.id}, stateId: ${state.id}, clonesCount: ${Object.keys(this.state.clones).length}, isSubscribed: ${state.isSubscribed}, subscriptions: [${state.subscriptions
-            .map((sub) => sub.toString())
-            .join(', ')}] }`;
-	    }
-	}
-
-	/**
-	 * {@link Subscription} state object.
-	 *
-	 * State object used across multiple {@link Subscription} object clones.
-	 *
-	 * @internal
-	 */
-	class SubscriptionState extends SubscriptionBaseState {
-	    /**
-	     * Create a subscription state object.
-	     *
-	     * @param parameters - State configuration options
-	     * @param parameters.client - PubNub client which will work with a subscription object.
-	     * @param parameters.entity - Entity for which a subscription object has been created.
-	     * @param [parameters.options] - Subscription behavior options.
-	     */
-	    constructor(parameters) {
-	        var _a, _b;
-	        const names = parameters.entity.subscriptionNames((_b = (_a = parameters.options) === null || _a === void 0 ? void 0 : _a.receivePresenceEvents) !== null && _b !== void 0 ? _b : false);
-	        const subscriptionInput = new SubscriptionInput({
-	            [parameters.entity.subscriptionType == SubscriptionType.Channel ? 'channels' : 'channelGroups']: names,
-	        });
-	        super(parameters.client, subscriptionInput, parameters.options, parameters.client.subscriptionTimetoken);
-	        this.entity = parameters.entity;
-	    }
-	}
-	/**
-	 * Single-entity subscription object which can be used to receive and handle real-time updates.
-	 */
-	class Subscription extends SubscriptionBase {
-	    /**
-	     * Create a subscribing capable object for entity.
-	     *
-	     * @param parameters - Subscription object configuration.
-	     *
-	     * @internal
-	     */
-	    constructor(parameters) {
-	        if ('client' in parameters) {
-	            parameters.client.logger.debug('Subscription', () => ({
-	                messageType: 'object',
-	                details: 'Create subscription with parameters:',
-	                message: Object.assign({ entity: parameters.entity }, (parameters.options ? parameters.options : {})),
-	            }));
-	        }
-	        else
-	            parameters.state.client.logger.debug('Subscription', 'Create subscription clone');
-	        super('state' in parameters ? parameters.state : new SubscriptionState(parameters));
-	        /**
-	         * List of subscription {@link SubscriptionSet sets} which contains {@link Subscription subscription}.
-	         *
-	         * List if used to track usage of a specific {@link Subscription subscription} in other subscription
-	         * {@link SubscriptionSet sets}.
-	         *
-	         * **Important:** Tracking is required to prevent cloned instance dispose if there are sets that still use it.
-	         *
-	         * @internal
-	         */
-	        this.parents = [];
-	        /**
-	         * List of fingerprints from updates which has been handled already.
-	         *
-	         * **Important:** Tracking is required to avoid repetitive call of the subscription object's listener when the object
-	         * is part of multiple subscribed sets. Handler will be called once, and then the fingerprint will be stored in this
-	         * list to avoid another listener call for it.
-	         *
-	         * @internal
-	         */
-	        this.handledUpdates = [];
-	        this.state.storeClone(this.id, this);
-	    }
-	    /**
-	     * Get a {@link Subscription} object state.
-	     *
-	     * @returns: {@link Subscription} object state.
-	     *
-	     * @internal
-	     */
-	    get state() {
-	        return super.state;
-	    }
-	    /**
-	     * Get number of {@link SubscriptionSet} which use this subscription object.
-	     *
-	     * @returns Number of {@link SubscriptionSet} which use this subscription object.
-	     *
-	     * @internal
-	     */
-	    get parentSetsCount() {
-	        return this.parents.length;
-	    }
-	    // --------------------------------------------------------
-	    // -------------------- Event handler ---------------------
-	    // --------------------------------------------------------
-	    // region Event handler
-	    /**
-	     * Dispatch received a real-time update.
-	     *
-	     * @param cursor - A time cursor for the next portion of events.
-	     * @param event - A real-time event from multiplexed subscription.
-	     *
-	     * @return `true` if receiver has consumed event.
-	     *
-	     * @internal
-	     */
-	    handleEvent(cursor, event) {
-	        var _a;
-	        if (!this.state.isSubscribed)
-	            return;
-	        if (this.parentSetsCount > 0) {
-	            // Creating from whole payload (not only for published messages).
-	            const fingerprint = messageFingerprint(event.data);
-	            if (this.handledUpdates.includes(fingerprint)) {
-	                this.state.client.logger.trace(this.constructor.name, `Message (${fingerprint}) already handled. Ignoring.`);
-	                return;
-	            }
-	            // Update a list of tracked messages and shrink it if too big.
-	            this.handledUpdates.push(fingerprint);
-	            if (this.handledUpdates.length > 10)
-	                this.handledUpdates.shift();
-	        }
-	        // Check whether an event is not designated for this subscription set.
-	        if (!this.state.subscriptionInput.contains((_a = event.data.subscription) !== null && _a !== void 0 ? _a : event.data.channel))
-	            return;
-	        super.handleEvent(cursor, event);
-	    }
-	    // endregion
-	    /**
-	     * User-provided subscription input associated with this {@link Subscription} object.
-	     *
-	     * @param forUnsubscribe - Whether list subscription input created for unsubscription (means entity should be free).
-	     *
-	     * @returns Subscription input object.
-	     *
-	     * @internal
-	     */
-	    subscriptionInput(forUnsubscribe = false) {
-	        if (forUnsubscribe && this.state.entity.subscriptionsCount > 0)
-	            return new SubscriptionInput({});
-	        return this.state.subscriptionInput;
-	    }
-	    /**
-	     * Make a bare copy of the {@link Subscription} object.
-	     *
-	     * Copy won't have any type-specific listeners or added listener objects but will have the same internal state as
-	     * the source object.
-	     *
-	     * @returns Bare copy of a {@link Subscription} object.
-	     */
-	    cloneEmpty() {
-	        return new Subscription({ state: this.state });
-	    }
-	    /**
-	     * Graceful {@link Subscription} object destruction.
-	     *
-	     * This is an instance destructor, which will properly deinitialize it:
-	     * - remove and unset all listeners,
-	     * - try to unsubscribe (if subscribed and there are no more instances interested in the same data stream).
-	     *
-	     * **Important:** {@link Subscription#dispose dispose} won't have any effect if a subscription object is part of
-	     * {@link SubscriptionSet set}. To gracefully dispose an object, it should be removed from the set using
-	     * {@link SubscriptionSet#removeSubscription removeSubscription} (in this case call of
-	     * {@link Subscription#dispose dispose} not required).
-	     *
-	     * **Note:** Disposed instance won't call the dispatcher to deliver updates to the listeners.
-	     */
-	    dispose() {
-	        if (this.parentSetsCount > 0) {
-	            this.state.client.logger.debug(this.constructor.name, () => ({
-	                messageType: 'text',
-	                message: `'${this.state.entity.subscriptionNames()}' subscription still in use. Ignore dispose request.`,
-	            }));
-	            return;
-	        }
-	        this.handledUpdates.splice(0, this.handledUpdates.length);
-	        super.dispose();
-	    }
-	    /**
-	     * Invalidate subscription object.
-	     *
-	     * Clean up resources used by a subscription object.
-	     *
-	     * **Note:** An invalidated instance won't call the dispatcher to deliver updates to the listeners.
-	     *
-	     * @param forDestroy - Whether subscription object invalidated as part of PubNub client destroy process or not.
-	     *
-	     * @internal
-	     */
-	    invalidate(forDestroy = false) {
-	        if (forDestroy)
-	            this.state.entity.decreaseSubscriptionCount(this.state.id);
-	        this.handledUpdates.splice(0, this.handledUpdates.length);
-	        super.invalidate(forDestroy);
-	    }
-	    /**
-	     * Add another {@link SubscriptionSet} into which subscription has been added.
-	     *
-	     * @param parent - {@link SubscriptionSet} which has been modified.
-	     *
-	     * @internal
-	     */
-	    addParentSet(parent) {
-	        if (!this.parents.includes(parent)) {
-	            this.parents.push(parent);
-	            this.state.client.logger.trace(this.constructor.name, `Add parent subscription set for ${this.id}: ${parent.id}. Parent subscription set count: ${this.parentSetsCount}`);
-	        }
-	    }
-	    /**
-	     * Remove {@link SubscriptionSet} upon subscription removal from it.
-	     *
-	     * @param parent - {@link SubscriptionSet} which has been modified.
-	     *
-	     * @internal
-	     */
-	    removeParentSet(parent) {
-	        const parentIndex = this.parents.indexOf(parent);
-	        if (parentIndex !== -1) {
-	            this.parents.splice(parentIndex, 1);
-	            this.state.client.logger.trace(this.constructor.name, `Remove parent subscription set from ${this.id}: ${parent.id}. Parent subscription set count: ${this.parentSetsCount}`);
-	        }
-	        if (this.parentSetsCount === 0)
-	            this.handledUpdates.splice(0, this.handledUpdates.length);
-	    }
-	    /**
-	     * Merge entities' subscription objects into {@link SubscriptionSet}.
-	     *
-	     * @param subscription - Another entity's subscription object to be merged with receiver.
-	     *
-	     * @return {@link SubscriptionSet} which contains both receiver and other entities' subscription objects.
-	     */
-	    addSubscription(subscription) {
-	        this.state.client.logger.debug(this.constructor.name, () => ({
-	            messageType: 'text',
-	            message: `Create set with subscription: ${subscription}`,
-	        }));
-	        const subscriptionSet = new SubscriptionSet({
-	            client: this.state.client,
-	            subscriptions: [this, subscription],
-	            options: this.state.options,
-	        });
-	        // Check whether a source subscription is already subscribed or not.
-	        if (!this.state.isSubscribed && !subscription.state.isSubscribed)
-	            return subscriptionSet;
-	        this.state.client.logger.trace(this.constructor.name, 'Subscribe resulting set because the receiver is already subscribed.');
-	        // Subscribing resulting subscription set because source subscription was subscribed.
-	        subscriptionSet.subscribe();
-	        return subscriptionSet;
-	    }
-	    /**
-	     * Register {@link Subscription} object for real-time events' retrieval.
-	     *
-	     * **Note:** Superclass calls this method only in response to a {@link Subscription.subscribe subscribe} method call.
-	     *
-	     * @param parameters - Object registration parameters.
-	     * @param [parameters.cursor] - Subscription real-time events catch-up cursor.
-	     * @param [parameters.subscriptions] - List of subscription objects which should be registered (in case of partial
-	     * modification).
-	     *
-	     * @internal
-	     */
-	    register(parameters) {
-	        this.state.entity.increaseSubscriptionCount(this.state.id);
-	        this.state.client.logger.trace(this.constructor.name, () => ({
-	            messageType: 'text',
-	            message: `Register subscription for real-time events: ${this}`,
-	        }));
-	        this.state.client.registerEventHandleCapable(this, parameters.cursor);
-	    }
-	    /**
-	     * Unregister {@link Subscription} object from real-time events' retrieval.
-	     *
-	     * **Note:** Superclass calls this method only in response to a {@link Subscription.unsubscribe unsubscribe} method
-	     * call.
-	     *
-	     * @param [_subscriptions] - List of subscription objects which should be unregistered (in case of partial
-	     * modification).
-	     *
-	     * @internal
-	     */
-	    unregister(_subscriptions) {
-	        this.state.entity.decreaseSubscriptionCount(this.state.id);
-	        this.state.client.logger.trace(this.constructor.name, () => ({
-	            messageType: 'text',
-	            message: `Unregister subscription from real-time events: ${this}`,
-	        }));
-	        this.handledUpdates.splice(0, this.handledUpdates.length);
-	        this.state.client.unregisterEventHandleCapable(this);
-	    }
-	    /**
-	     * Stringify subscription object.
-	     *
-	     * @returns Serialized subscription object.
-	     */
-	    toString() {
-	        const state = this.state;
-	        return `${this.constructor.name} { id: ${this.id}, stateId: ${state.id}, entity: ${state.entity
-            .subscriptionNames(false)
-            .pop()}, clonesCount: ${Object.keys(state.clones).length}, isSubscribed: ${state.isSubscribed}, parentSetsCount: ${this.parentSetsCount}, cursor: ${state.cursor ? state.cursor.timetoken : 'not set'}, referenceTimetoken: ${state.referenceTimetoken ? state.referenceTimetoken : 'not set'} }`;
-	    }
-	}
-
-	/**
 	 * Common entity interface.
 	 */
 	class Entity {
@@ -12190,6 +12236,22 @@
 	        this.subscriptionStateIds = [];
 	        this.client = client;
 	        this._nameOrId = nameOrId;
+	    }
+	    /**
+	     * Retrieve entity type.
+	     *
+	     * There is four types:
+	     * - Channel
+	     * - ChannelGroups
+	     * - ChannelMetadata
+	     * - UserMetadata
+	     *
+	     * @return One of known entity types.
+	     *
+	     * @internal
+	     */
+	    get entityType() {
+	        return 'Channel';
 	    }
 	    /**
 	     * Type of subscription entity.
@@ -12285,7 +12347,7 @@
 	     * @returns Serialized entity object.
 	     */
 	    toString() {
-	        return `${this.constructor.name} { nameOrId: ${this._nameOrId}, subscriptionsCount: ${this.subscriptionsCount} }`;
+	        return `${this.entityType} { nameOrId: ${this._nameOrId}, subscriptionsCount: ${this.subscriptionsCount} }`;
 	    }
 	}
 
@@ -12293,6 +12355,22 @@
 	 * First-class objects which provides access to the channel app context object-specific APIs.
 	 */
 	class ChannelMetadata extends Entity {
+	    /**
+	     * Retrieve entity type.
+	     *
+	     * There is four types:
+	     * - Channel
+	     * - ChannelGroups
+	     * - ChannelMetadata
+	     * - UserMetadata
+	     *
+	     * @return One of known entity types.
+	     *
+	     * @internal
+	     */
+	    get entityType() {
+	        return 'ChannelMetadata';
+	    }
 	    /**
 	     * Get unique channel metadata object identifier.
 	     *
@@ -12323,6 +12401,22 @@
 	 */
 	class ChannelGroup extends Entity {
 	    /**
+	     * Retrieve entity type.
+	     *
+	     * There is four types:
+	     * - Channel
+	     * - ChannelGroups
+	     * - ChannelMetadata
+	     * - UserMetadata
+	     *
+	     * @return One of known entity types.
+	     *
+	     * @internal
+	     */
+	    get entityType() {
+	        return 'ChannelGroups';
+	    }
+	    /**
 	     * Get a unique channel group name.
 	     *
 	     * @returns Channel group name.
@@ -12348,6 +12442,22 @@
 	 * First-class objects which provides access to the user app context object-specific APIs.
 	 */
 	class UserMetadata extends Entity {
+	    /**
+	     * Retrieve entity type.
+	     *
+	     * There is four types:
+	     * - Channel
+	     * - ChannelGroups
+	     * - ChannelMetadata
+	     * - UserMetadata
+	     *
+	     * @return One of known entity types.
+	     *
+	     * @internal
+	     */
+	    get entityType() {
+	        return 'UserMetadata';
+	    }
 	    /**
 	     * Get unique user metadata object identifier.
 	     *
@@ -12377,6 +12487,22 @@
 	 * First-class objects which provides access to the channel-specific APIs.
 	 */
 	class Channel extends Entity {
+	    /**
+	     * Retrieve entity type.
+	     *
+	     * There is four types:
+	     * - Channel
+	     * - ChannelGroups
+	     * - ChannelMetadata
+	     * - UserMetadata
+	     *
+	     * @return One of known entity types.
+	     *
+	     * @internal
+	     */
+	    get entityType() {
+	        return 'Channel';
+	    }
 	    /**
 	     * Get a unique channel name.
 	     *
@@ -13557,6 +13683,13 @@
 	            return 'Channel cannot be empty';
 	        if (!this.parameters.data)
 	            return 'Data cannot be empty';
+	    }
+	    get headers() {
+	        var _a;
+	        let headers = (_a = super.headers) !== null && _a !== void 0 ? _a : {};
+	        if (this.parameters.ifMatchesEtag)
+	            headers = Object.assign(Object.assign({}, headers), { 'If-Match': this.parameters.ifMatchesEtag });
+	        return Object.assign(Object.assign({}, headers), { 'Content-Type': 'application/json' });
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, } = this.parameters;
@@ -14972,19 +15105,29 @@
 	                        },
 	                        delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
 	                        join: (parameters) => {
+	                            var _a, _b;
 	                            this.logger.trace('EventEngine', () => ({
 	                                messageType: 'object',
 	                                message: Object.assign({}, parameters),
 	                                details: 'Join with parameters:',
 	                            }));
+	                            if (parameters && ((_a = parameters.channels) !== null && _a !== void 0 ? _a : []).length === 0 && ((_b = parameters.groups) !== null && _b !== void 0 ? _b : []).length === 0) {
+	                                this.logger.trace('EventEngine', "Ignoring 'join' announcement request.");
+	                                return;
+	                            }
 	                            this.join(parameters);
 	                        },
 	                        leave: (parameters) => {
+	                            var _a, _b;
 	                            this.logger.trace('EventEngine', () => ({
 	                                messageType: 'object',
 	                                message: Object.assign({}, parameters),
 	                                details: 'Leave with parameters:',
 	                            }));
+	                            if (parameters && ((_a = parameters.channels) !== null && _a !== void 0 ? _a : []).length === 0 && ((_b = parameters.groups) !== null && _b !== void 0 ? _b : []).length === 0) {
+	                                this.logger.trace('EventEngine', "Ignoring 'leave' announcement request.");
+	                                return;
+	                            }
 	                            this.leave(parameters);
 	                        },
 	                        leaveAll: (parameters) => {
@@ -15788,6 +15931,44 @@
 	            }
 	            if (subscriptionInput.isEmpty)
 	                return;
+	            else {
+	                const _channelGroupsInUse = [];
+	                const _channelsInUse = [];
+	                Object.values(this.eventHandleCapable).forEach((_subscription) => {
+	                    const _subscriptionInput = _subscription.subscriptionInput(false);
+	                    const _subscriptionChannelGroups = _subscriptionInput.channelGroups;
+	                    const _subscriptionChannels = _subscriptionInput.channels;
+	                    _channelGroupsInUse.push(...subscriptionInput.channelGroups.filter((channel) => _subscriptionChannelGroups.includes(channel)));
+	                    _channelsInUse.push(...subscriptionInput.channels.filter((channel) => _subscriptionChannels.includes(channel)));
+	                });
+	                if (_channelsInUse.length > 0 || _channelGroupsInUse.length > 0) {
+	                    this.logger.trace('PubNub', () => {
+	                        const _entitiesInUse = [];
+	                        const addEntityIfInUse = (entity) => {
+	                            const namesOrIds = entity.subscriptionNames(true);
+	                            const checkList = entity.subscriptionType === SubscriptionType.Channel ? _channelsInUse : _channelGroupsInUse;
+	                            if (namesOrIds.some((id) => checkList.includes(id)))
+	                                _entitiesInUse.push(entity);
+	                        };
+	                        Object.values(this.eventHandleCapable).forEach((_subscription) => {
+	                            if (_subscription instanceof SubscriptionSet) {
+	                                _subscription.subscriptions.forEach((_subscriptionInSet) => {
+	                                    addEntityIfInUse(_subscriptionInSet.state.entity);
+	                                });
+	                            }
+	                            else if (_subscription instanceof Subscription)
+	                                addEntityIfInUse(_subscription.state.entity);
+	                        });
+	                        let details = 'Some entities still in use:';
+	                        if (_channelsInUse.length + _channelGroupsInUse.length === subscriptionInput.length)
+	                            details = "Can't unregister event handle capable because entities still in use:";
+	                        return { messageType: 'object', message: { entities: _entitiesInUse }, details };
+	                    });
+	                    subscriptionInput.remove(new SubscriptionInput({ channels: _channelsInUse, channelGroups: _channelGroupsInUse }));
+	                    if (subscriptionInput.isEmpty)
+	                        return;
+	                }
+	            }
 	            const parameters = {};
 	            parameters.channels = subscriptionInput.channels;
 	            parameters.channelGroups = subscriptionInput.channelGroups;
@@ -16463,6 +16644,7 @@
 	     */
 	    heartbeat(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
+	            var _a;
 	            {
 	                this.logger.trace('PubNub', () => ({
 	                    messageType: 'object',
@@ -16498,13 +16680,20 @@
 	                        return;
 	                    this.logger.trace('PubNub', 'Heartbeat success.');
 	                };
+	                const abortUnsubscribe = (_a = parameters.abortSignal) === null || _a === void 0 ? void 0 : _a.subscribe((err) => {
+	                    request.abort('Cancel long-poll subscribe request');
+	                });
 	                if (callback)
 	                    return this.sendRequest(request, (status, response) => {
 	                        logResponse(response);
+	                        if (abortUnsubscribe)
+	                            abortUnsubscribe();
 	                        callback(status, response);
 	                    });
 	                return this.sendRequest(request).then((response) => {
 	                    logResponse(response);
+	                    if (abortUnsubscribe)
+	                        abortUnsubscribe();
 	                    return response;
 	                });
 	            }
@@ -16520,12 +16709,17 @@
 	     * @param parameters - List of channels and groups where `join` event should be sent.
 	     */
 	    join(parameters) {
+	        var _a, _b;
 	        {
 	            this.logger.trace('PubNub', () => ({
 	                messageType: 'object',
 	                message: Object.assign({}, parameters),
 	                details: 'Join with parameters:',
 	            }));
+	            if (parameters && ((_a = parameters.channels) !== null && _a !== void 0 ? _a : []).length === 0 && ((_b = parameters.groups) !== null && _b !== void 0 ? _b : []).length === 0) {
+	                this.logger.trace('PubNub', "Ignoring 'join' announcement request.");
+	                return;
+	            }
 	            if (this.presenceEventEngine)
 	                this.presenceEventEngine.join(parameters);
 	            else {
@@ -16566,15 +16760,19 @@
 	     * @param parameters - List of channels and groups where `leave` event should be sent.
 	     */
 	    leave(parameters) {
-	        var _a;
+	        var _a, _b, _c;
 	        {
 	            this.logger.trace('PubNub', () => ({
 	                messageType: 'object',
 	                message: Object.assign({}, parameters),
 	                details: 'Leave with parameters:',
 	            }));
+	            if (parameters && ((_a = parameters.channels) !== null && _a !== void 0 ? _a : []).length === 0 && ((_b = parameters.groups) !== null && _b !== void 0 ? _b : []).length === 0) {
+	                this.logger.trace('PubNub', "Ignoring 'leave' announcement request.");
+	                return;
+	            }
 	            if (this.presenceEventEngine)
-	                (_a = this.presenceEventEngine) === null || _a === void 0 ? void 0 : _a.leave(parameters);
+	                (_c = this.presenceEventEngine) === null || _c === void 0 ? void 0 : _c.leave(parameters);
 	            else
 	                this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => { });
 	        }

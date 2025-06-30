@@ -46,7 +46,7 @@ export class ReactNativeTransport implements Transport {
     private readonly logger: LoggerManager,
     private keepAlive: boolean = false,
   ) {
-    logger.debug(this.constructor.name, `Create with configuration:\n  - keep-alive: ${keepAlive}`);
+    logger.debug('ReactNativeTransport', `Create with configuration:\n  - keep-alive: ${keepAlive}`);
   }
 
   makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
@@ -56,7 +56,7 @@ export class ReactNativeTransport implements Transport {
       abortController,
       abort: (reason) => {
         if (!abortController.signal.aborted) {
-          this.logger.trace(this.constructor.name, `On-demand request aborting: ${reason}`);
+          this.logger.trace('ReactNativeTransport', `On-demand request aborting: ${reason}`);
           abortController.abort(reason);
         }
       },
@@ -64,7 +64,7 @@ export class ReactNativeTransport implements Transport {
 
     return [
       this.requestFromTransportRequest(req).then((request) => {
-        this.logger.debug(this.constructor.name, () => ({ messageType: 'network-request', message: req }));
+        this.logger.debug('ReactNativeTransport', () => ({ messageType: 'network-request', message: req }));
 
         /**
          * Setup request timeout promise.
@@ -112,7 +112,7 @@ export class ReactNativeTransport implements Transport {
               body: responseBody,
             };
 
-            this.logger.debug(this.constructor.name, () => ({
+            this.logger.debug('ReactNativeTransport', () => ({
               messageType: 'network-response',
               message: transportResponse,
             }));
@@ -126,14 +126,14 @@ export class ReactNativeTransport implements Transport {
             let fetchError = typeof error === 'string' ? new Error(error) : (error as Error);
 
             if (errorMessage.includes('timeout')) {
-              this.logger.warn(this.constructor.name, () => ({
+              this.logger.warn('ReactNativeTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: 'Timeout',
                 canceled: true,
               }));
             } else if (errorMessage.includes('cancel') || errorMessage.includes('abort')) {
-              this.logger.debug(this.constructor.name, () => ({
+              this.logger.debug('ReactNativeTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: 'Aborted',
@@ -143,14 +143,14 @@ export class ReactNativeTransport implements Transport {
               fetchError = new Error('Aborted');
               fetchError.name = 'AbortError';
             } else if (errorMessage.includes('network')) {
-              this.logger.warn(this.constructor.name, () => ({
+              this.logger.warn('ReactNativeTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: 'Network error',
                 failed: true,
               }));
             } else {
-              this.logger.warn(this.constructor.name, () => ({
+              this.logger.warn('ReactNativeTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: PubNubAPIError.create(fetchError).message,
@@ -210,7 +210,7 @@ export class ReactNativeTransport implements Transport {
           typeof req.body === 'string' ? ReactNativeTransport.encoder.encode(req.body) : new Uint8Array(req.body);
         const initialBodySize = bodyArrayBuffer.byteLength;
         body = gzipSync(bodyArrayBuffer);
-        this.logger.trace(this.constructor.name, () => {
+        this.logger.trace('ReactNativeTransport', () => {
           const compressedSize = (body! as ArrayBuffer).byteLength;
           const ratio = (compressedSize / initialBodySize).toFixed(2);
 
