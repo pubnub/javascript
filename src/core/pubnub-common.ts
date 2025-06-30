@@ -1493,7 +1493,12 @@ export class PubNubCore<
         details: `Unregister event handle capable:`,
       }));
 
-      if (!subscriptions || subscriptions.length === 0) delete this.eventHandleCapable[subscription.state.id];
+      if (
+        !subscriptions ||
+        subscriptions.length === 0 ||
+        (subscriptions && subscription instanceof SubscriptionSet && subscriptions === subscriptions)
+      )
+        delete this.eventHandleCapable[subscription.state.id];
 
       let subscriptionInput: SubscriptionInput;
       if (!subscriptions || subscriptions.length === 0) {

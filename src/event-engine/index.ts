@@ -149,7 +149,7 @@ export class EventEngine {
   }
 
   unsubscribeAll(isOffline: boolean = false): void {
-    const channelGroups = this.getSubscribedChannels();
+    const channelGroups = this.getSubscribedChannelGroups();
     const channels = this.getSubscribedChannels();
 
     this.channels = [];
