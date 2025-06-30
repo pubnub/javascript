@@ -1,3 +1,10 @@
+## v9.6.2
+June 30 2025
+
+#### Modified
+- Removed deprecation warning from deleteMessages method.
+- Added code snippets for docs.
+
 ## v9.6.1
 June 18 2025
 
