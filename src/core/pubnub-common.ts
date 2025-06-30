@@ -2068,7 +2068,6 @@ export class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated
    */
   public deleteMessages(
     parameters: History.DeleteMessagesParameters,
@@ -2082,7 +2081,6 @@ export class PubNubCore<
    *
    * @returns Asynchronous delete messages response.
    *
-   * @deprecated
    */
   public async deleteMessages(parameters: History.DeleteMessagesParameters): Promise<History.DeleteMessagesResponse>;
 
@@ -2094,7 +2092,6 @@ export class PubNubCore<
    *
    * @returns Asynchronous delete messages response or `void` in case if `callback` provided.
    *
-   * @deprecated
    */
   async deleteMessages(
     parameters: History.DeleteMessagesParameters,

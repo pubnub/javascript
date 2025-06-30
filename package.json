@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "9.6.1",
+  "version": "9.6.2",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "scripts": {
@@ -13,6 +13,7 @@
     "test:node": "TS_NODE_PROJECT='./tsconfig.json' mocha --project tsconfig.mocha.json",
     "clean": "rimraf lib dist upload",
     "lint": "eslint \"src/**/*\" --config .eslintrc.cjs",
+    "test:snippets": "tsc --project docs-snippets/tsconfig.json --noEmit",
     "ci": "npm run clean && npm run build && npm run lint && npm run test",
     "ci:web": "npm run clean && npm run build:web && npm run lint && npm run test:web",
     "ci:node": "npm run clean && npm run build:node && npm run lint && npm run test:node",

@@ -510,7 +510,6 @@ declare class PubNubCore<
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated
    */
   deleteMessages(
     parameters: PubNub.History.DeleteMessagesParameters,
@@ -523,7 +522,6 @@ declare class PubNubCore<
    *
    * @returns Asynchronous delete messages response.
    *
-   * @deprecated
    */
   deleteMessages(parameters: PubNub.History.DeleteMessagesParameters): Promise<PubNub.History.DeleteMessagesResponse>;
   /**
