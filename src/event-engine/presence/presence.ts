@@ -29,7 +29,7 @@ export class PresenceEventEngine {
     this.engine = new Engine(dependencies.config.logger());
     this.dispatcher = new PresenceEventEngineDispatcher(this.engine, dependencies);
 
-    dependencies.config.logger().debug(this.constructor.name, 'Create presence event engine.');
+    dependencies.config.logger().debug('PresenceEventEngine', 'Create presence event engine.');
 
     this._unsubscribeEngine = this.engine.subscribe((change) => {
       if (change.type === 'invocationDispatched') {
@@ -43,8 +43,11 @@ export class PresenceEventEngine {
   groups: string[] = [];
 
   join({ channels, groups }: { channels?: string[]; groups?: string[] }) {
-    this.channels = [...this.channels, ...(channels ?? [])];
-    this.groups = [...this.groups, ...(groups ?? [])];
+    this.channels = [...this.channels, ...(channels ?? []).filter((channel) => !this.channels.includes(channel))];
+    this.groups = [...this.groups, ...(groups ?? []).filter((group) => !this.groups.includes(group))];
+
+    // Don't make any transitions if there is no channels and groups.
+    if (this.channels.length === 0 && this.groups.length === 0) return;
 
     this.engine.transition(events.joined(this.channels.slice(0), this.groups.slice(0)));
   }

@@ -42,8 +42,8 @@ HeartbeatCooldownState.on(timesUp.type, (context, _) =>
 
 HeartbeatCooldownState.on(joined.type, (context, event) =>
   HeartbeatingState.with({
-    channels: [...context.channels, ...event.payload.channels],
-    groups: [...context.groups, ...event.payload.groups],
+    channels: [...context.channels, ...event.payload.channels.filter((channel) => !context.channels.includes(channel))],
+    groups: [...context.groups, ...event.payload.groups.filter((group) => !context.groups.includes(group))],
   }),
 );
 

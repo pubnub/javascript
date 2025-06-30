@@ -111,6 +111,6 @@ export default class LegacyCryptor implements ILegacyCryptor {
       acc.push(`${key}: ${typeof value === 'function' ? '<function>' : value}`);
       return acc;
     }, [] as string[]);
-    return `${this.constructor.name} { ${configurationEntries.join(', ')} }`;
+    return `LegacyCryptor { ${configurationEntries.join(', ')} }`;
   }
 }

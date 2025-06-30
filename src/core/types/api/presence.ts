@@ -1,3 +1,4 @@
+import { AbortSignal } from '../../components/abort_signal';
 import { Payload } from './index';
 
 // region Get Presence State
@@ -93,6 +94,18 @@ export type SetPresenceStateResponse = {
 // endregion
 
 // region Heartbeat announce
+/**
+ * Cancelable heartbeat request parameters.
+ *
+ * @internal
+ */
+export type CancelablePresenceHeartbeatParameters = PresenceHeartbeatParameters & {
+  /**
+   * Request termination signal.
+   */
+  abortSignal?: AbortSignal;
+};
+
 /**
  * Announce heartbeat parameters.
  */

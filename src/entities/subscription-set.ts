@@ -40,6 +40,21 @@ class SubscriptionSetState extends SubscriptionBaseState {
   }
 
   /**
+   * Retrieve subscription type.
+   *
+   * There is two types:
+   * - Subscription
+   * - SubscriptionSet
+   *
+   * @returns One of subscription types.
+   *
+   * @internal
+   */
+  get subscriptionType(): 'Subscription' | 'SubscriptionSet' {
+    return 'SubscriptionSet';
+  }
+
+  /**
    * Add a single subscription object to the set.
    *
    * @param subscription - Another entity's subscription object, which should be added.
@@ -188,7 +203,7 @@ export class SubscriptionSet extends SubscriptionBase {
     // Check whether `event` can be processed or not.
     if (!this.state._isSubscribed) {
       this.state.client.logger.trace(
-        this.constructor.name,
+        this.subscriptionType,
         `Subscription set ${this.id} is not subscribed. Ignoring event.`,
       );
       return;
@@ -197,7 +212,7 @@ export class SubscriptionSet extends SubscriptionBase {
 
     if (this.state.subscriptions.length > 0) {
       this.state.client.logger.trace(
-        this.constructor.name,
+        this.subscriptionType,
         `Notify ${this.id} subscription set subscriptions (count: ${
           this.state.subscriptions.length
         }) about received event.`,
@@ -312,7 +327,7 @@ export class SubscriptionSet extends SubscriptionBase {
     const inactiveSubscriptions: SubscriptionObject[] = [];
     const activeSubscriptions: SubscriptionObject[] = [];
 
-    this.state.client.logger.debug(this.constructor.name, () => {
+    this.state.client.logger.debug(this.subscriptionType, () => {
       const ignoredSubscriptions: SubscriptionObject[] = [];
       const subscriptionsToAdd: SubscriptionObject[] = [];
 
@@ -369,7 +384,7 @@ export class SubscriptionSet extends SubscriptionBase {
   removeSubscriptions(subscriptions: SubscriptionObject[]) {
     const activeSubscriptions: SubscriptionObject[] = [];
 
-    this.state.client.logger.debug(this.constructor.name, () => {
+    this.state.client.logger.debug(this.subscriptionType, () => {
       const ignoredSubscriptions: SubscriptionObject[] = [];
       const subscriptionsToRemove: SubscriptionObject[] = [];
 
@@ -437,7 +452,7 @@ export class SubscriptionSet extends SubscriptionBase {
       this.state.subscriptions) as SubscriptionObject[];
     subscriptions.forEach(({ state }) => state.entity.increaseSubscriptionCount(this.state.id));
 
-    this.state.client.logger.trace(this.constructor.name, () => ({
+    this.state.client.logger.trace(this.subscriptionType, () => ({
       messageType: 'text',
       message: `Register subscription for real-time events: ${this}`,
     }));
@@ -458,7 +473,7 @@ export class SubscriptionSet extends SubscriptionBase {
       this.state.subscriptions) as SubscriptionObject[];
     activeSubscriptions.forEach(({ state }) => state.entity.decreaseSubscriptionCount(this.state.id));
 
-    this.state.client.logger.trace(this.constructor.name, () => ({
+    this.state.client.logger.trace(this.subscriptionType, () => ({
       messageType: 'text',
       message: `Unregister subscription from real-time events: ${this}`,
     }));
@@ -474,7 +489,7 @@ export class SubscriptionSet extends SubscriptionBase {
   toString(): string {
     const state = this.state;
 
-    return `${this.constructor.name} { id: ${this.id}, stateId: ${state.id}, clonesCount: ${
+    return `${this.subscriptionType} { id: ${this.id}, stateId: ${state.id}, clonesCount: ${
       Object.keys(this.state.clones).length
     }, isSubscribed: ${state.isSubscribed}, subscriptions: [${state.subscriptions
       .map((sub) => sub.toString())

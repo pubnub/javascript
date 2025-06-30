@@ -91,7 +91,11 @@ import { AuditRequest } from './endpoints/access_manager/audit';
 import * as PAM from './types/api/access-manager';
 // endregion
 // region Entities
-import { SubscriptionCapable, SubscriptionOptions } from '../entities/interfaces/subscription-capable';
+import {
+  SubscriptionCapable,
+  SubscriptionOptions,
+  SubscriptionType,
+} from '../entities/interfaces/subscription-capable';
 import { EventEmitCapable } from '../entities/interfaces/event-emit-capable';
 import { EntityInterface } from '../entities/interfaces/entity-interface';
 import { SubscriptionBase } from '../entities/subscription-base';
@@ -487,6 +491,11 @@ export class PubNubCore<
                 details: 'Join with parameters:',
               }));
 
+              if (parameters && (parameters.channels ?? []).length === 0 && (parameters.groups ?? []).length === 0) {
+                this.logger.trace('EventEngine', "Ignoring 'join' announcement request.");
+                return;
+              }
+
               this.join(parameters);
             },
             leave: (parameters) => {
@@ -495,6 +504,11 @@ export class PubNubCore<
                 message: { ...parameters },
                 details: 'Leave with parameters:',
               }));
+
+              if (parameters && (parameters.channels ?? []).length === 0 && (parameters.groups ?? []).length === 0) {
+                this.logger.trace('EventEngine', "Ignoring 'leave' announcement request.");
+                return;
+              }
 
               this.leave(parameters);
             },
@@ -1479,7 +1493,12 @@ export class PubNubCore<
         details: `Unregister event handle capable:`,
       }));
 
-      if (!subscriptions || subscriptions.length === 0) delete this.eventHandleCapable[subscription.state.id];
+      if (
+        !subscriptions ||
+        subscriptions.length === 0 ||
+        (subscriptions && subscription instanceof SubscriptionSet && subscriptions === subscriptions)
+      )
+        delete this.eventHandleCapable[subscription.state.id];
 
       let subscriptionInput: SubscriptionInput;
       if (!subscriptions || subscriptions.length === 0) {
@@ -1515,6 +1534,55 @@ export class PubNubCore<
       }
 
       if (subscriptionInput.isEmpty) return;
+      else {
+        const _channelGroupsInUse: string[] = [];
+        const _channelsInUse: string[] = [];
+
+        Object.values(this.eventHandleCapable).forEach((_subscription) => {
+          const _subscriptionInput = _subscription.subscriptionInput(false);
+          const _subscriptionChannelGroups = _subscriptionInput.channelGroups;
+          const _subscriptionChannels = _subscriptionInput.channels;
+          _channelGroupsInUse.push(
+            ...subscriptionInput.channelGroups.filter((channel) => _subscriptionChannelGroups.includes(channel)),
+          );
+          _channelsInUse.push(
+            ...subscriptionInput.channels.filter((channel) => _subscriptionChannels.includes(channel)),
+          );
+        });
+
+        if (_channelsInUse.length > 0 || _channelGroupsInUse.length > 0) {
+          this.logger.trace('PubNub', () => {
+            const _entitiesInUse: Entity[] = [];
+            const addEntityIfInUse = (entity: Entity) => {
+              const namesOrIds = entity.subscriptionNames(true);
+              const checkList =
+                entity.subscriptionType === SubscriptionType.Channel ? _channelsInUse : _channelGroupsInUse;
+              if (namesOrIds.some((id) => checkList.includes(id))) _entitiesInUse.push(entity);
+            };
+
+            Object.values(this.eventHandleCapable).forEach((_subscription) => {
+              if (_subscription instanceof SubscriptionSet) {
+                _subscription.subscriptions.forEach((_subscriptionInSet) => {
+                  addEntityIfInUse(_subscriptionInSet.state.entity as Entity);
+                });
+              } else if (_subscription instanceof SubscriptionObject)
+                addEntityIfInUse(_subscription.state.entity as Entity);
+            });
+
+            let details = 'Some entities still in use:';
+            if (_channelsInUse.length + _channelGroupsInUse.length === subscriptionInput.length)
+              details = "Can't unregister event handle capable because entities still in use:";
+
+            return { messageType: 'object', message: { entities: _entitiesInUse }, details };
+          });
+
+          subscriptionInput.remove(
+            new SubscriptionInput({ channels: _channelsInUse, channelGroups: _channelGroupsInUse }),
+          );
+
+          if (subscriptionInput.isEmpty) return;
+        }
+      }
 
       const parameters: Presence.PresenceLeaveParameters = {};
       parameters.channels = subscriptionInput.channels;
@@ -2586,7 +2654,7 @@ export class PubNubCore<
    * @param callback - Request completion handler callback.
    */
   private async heartbeat(
-    parameters: Presence.PresenceHeartbeatParameters,
+    parameters: Presence.CancelablePresenceHeartbeatParameters,
     callback?: ResultCallback<Presence.PresenceHeartbeatResponse>,
   ) {
     if (process.env.PRESENCE_MODULE !== 'disabled') {
@@ -2626,20 +2694,27 @@ export class PubNubCore<
         channelGroups,
         keySet: this._configuration.keySet,
       });
+
       const logResponse = (response: Presence.PresenceHeartbeatResponse | null) => {
         if (!response) return;
 
         this.logger.trace('PubNub', 'Heartbeat success.');
       };
 
+      const abortUnsubscribe = parameters.abortSignal?.subscribe((err) => {
+        request.abort('Cancel long-poll subscribe request');
+      });
+
       if (callback)
         return this.sendRequest(request, (status, response) => {
           logResponse(response);
+          if (abortUnsubscribe) abortUnsubscribe();
           callback(status, response);
         });
 
       return this.sendRequest(request).then((response) => {
         logResponse(response);
+        if (abortUnsubscribe) abortUnsubscribe();
         return response;
       });
     } else throw new Error('Announce UUID Presence error: presence module disabled');
@@ -2661,6 +2736,11 @@ export class PubNubCore<
         message: { ...parameters },
         details: 'Join with parameters:',
       }));
+
+      if (parameters && (parameters.channels ?? []).length === 0 && (parameters.groups ?? []).length === 0) {
+        this.logger.trace('PubNub', "Ignoring 'join' announcement request.");
+        return;
+      }
 
       if (this.presenceEventEngine) this.presenceEventEngine.join(parameters);
       else {
@@ -2725,6 +2805,11 @@ export class PubNubCore<
         message: { ...parameters },
         details: 'Leave with parameters:',
       }));
+
+      if (parameters && (parameters.channels ?? []).length === 0 && (parameters.groups ?? []).length === 0) {
+        this.logger.trace('PubNub', "Ignoring 'leave' announcement request.");
+        return;
+      }
 
       if (this.presenceEventEngine) this.presenceEventEngine?.leave(parameters);
       else this.makeUnsubscribe({ channels: parameters.channels, channelGroups: parameters.groups }, () => {});

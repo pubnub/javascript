@@ -95,13 +95,10 @@ export class WebTransport implements Transport {
     private readonly logger: LoggerManager,
     private readonly transport: 'fetch' | 'xhr' = 'fetch',
   ) {
-    logger.debug(this.constructor.name, `Create with configuration:\n  - transport: ${transport}`);
+    logger.debug('WebTransport', `Create with configuration:\n  - transport: ${transport}`);
 
     if (transport === 'fetch' && (!window || !window.fetch)) {
-      logger.warn(
-        this.constructor.name,
-        `'${transport}' not supported in this browser. Fallback to the 'xhr' transport.`,
-      );
+      logger.warn('WebTransport', `'${transport}' not supported in this browser. Fallback to the 'xhr' transport.`);
 
       this.transport = 'xhr';
     }
@@ -115,16 +112,13 @@ export class WebTransport implements Transport {
     if (this.isFetchMonkeyPatched()) {
       WebTransport.originalFetch = WebTransport.getOriginalFetch();
 
-      logger.warn(this.constructor.name, "Native Web Fetch API 'fetch' function monkey patched.");
+      logger.warn('WebTransport', "Native Web Fetch API 'fetch' function monkey patched.");
 
       if (!this.isFetchMonkeyPatched(WebTransport.originalFetch)) {
-        logger.info(
-          this.constructor.name,
-          "Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.",
-        );
+        logger.info('WebTransport', "Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
       } else {
         logger.warn(
-          this.constructor.name,
+          'WebTransport',
           'Unable receive native Web Fetch API. There can be issues with subscribe long-poll  cancellation',
         );
       }
@@ -137,7 +131,7 @@ export class WebTransport implements Transport {
       abortController,
       abort: (reason) => {
         if (!abortController.signal.aborted) {
-          this.logger.trace(this.constructor.name, `On-demand request aborting: ${reason}`);
+          this.logger.trace('WebTransport', `On-demand request aborting: ${reason}`);
           abortController.abort(reason);
         }
       },
@@ -145,7 +139,7 @@ export class WebTransport implements Transport {
 
     return [
       this.webTransportRequestFromTransportRequest(req).then((request) => {
-        this.logger.debug(this.constructor.name, () => ({ messageType: 'network-request', message: req }));
+        this.logger.debug('WebTransport', () => ({ messageType: 'network-request', message: req }));
 
         return this.sendRequest(request, cancellation)
           .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer] =>
@@ -161,7 +155,7 @@ export class WebTransport implements Transport {
 
             const transportResponse: TransportResponse = { status, url: request.url, headers, body };
 
-            this.logger.debug(this.constructor.name, () => ({
+            this.logger.debug('WebTransport', () => ({
               messageType: 'network-response',
               message: transportResponse,
             }));
@@ -175,14 +169,14 @@ export class WebTransport implements Transport {
             let fetchError = typeof error === 'string' ? new Error(error) : (error as Error);
 
             if (errorMessage.includes('timeout')) {
-              this.logger.warn(this.constructor.name, () => ({
+              this.logger.warn('WebTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: 'Timeout',
                 canceled: true,
               }));
             } else if (errorMessage.includes('cancel') || errorMessage.includes('abort')) {
-              this.logger.debug(this.constructor.name, () => ({
+              this.logger.debug('WebTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: 'Aborted',
@@ -192,14 +186,14 @@ export class WebTransport implements Transport {
               fetchError = new Error('Aborted');
               fetchError.name = 'AbortError';
             } else if (errorMessage.includes('network')) {
-              this.logger.warn(this.constructor.name, () => ({
+              this.logger.warn('WebTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: 'Network error',
                 failed: true,
               }));
             } else {
-              this.logger.warn(this.constructor.name, () => ({
+              this.logger.warn('WebTransport', () => ({
                 messageType: 'network-request',
                 message: req,
                 details: PubNubAPIError.create(fetchError).message,
@@ -359,14 +353,14 @@ export class WebTransport implements Transport {
         const fileData = await file.toArrayBuffer();
         formData.append('file', new Blob([fileData], { type: 'application/octet-stream' }), file.name);
       } catch (toBufferError) {
-        this.logger.warn(this.constructor.name, () => ({ messageType: 'error', message: toBufferError }));
+        this.logger.warn('WebTransport', () => ({ messageType: 'error', message: toBufferError }));
 
         try {
           const fileData = await file.toFileUri();
           // @ts-expect-error React Native File Uri support.
           formData.append('file', fileData, file.name);
         } catch (toFileURLError) {
-          this.logger.error(this.constructor.name, () => ({ messageType: 'error', message: toFileURLError }));
+          this.logger.error('WebTransport', () => ({ messageType: 'error', message: toFileURLError }));
         }
       }
 
@@ -386,7 +380,7 @@ export class WebTransport implements Transport {
         });
 
         body = await new Response(bodyStream.pipeThrough(new CompressionStream('deflate'))).arrayBuffer();
-        this.logger.trace(this.constructor.name, () => {
+        this.logger.trace('WebTransport', () => {
           const compressedSize = (body! as ArrayBuffer).byteLength;
           const ratio = (compressedSize / initialBodySize).toFixed(2);
 

@@ -21,7 +21,7 @@ import * as events from './events';
  */
 export type Dependencies = {
   heartbeat: (
-    parameters: Presence.PresenceHeartbeatParameters,
+    parameters: Presence.CancelablePresenceHeartbeatParameters,
     callback?: ResultCallback<Presence.PresenceHeartbeatResponse>,
   ) => Promise<Presence.PresenceHeartbeatResponse | void>;
   leave: (parameters: Presence.PresenceLeaveParameters) => void;
@@ -47,9 +47,12 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
 
     this.on(
       effects.heartbeat.type,
-      asyncHandler(async (payload, _, { heartbeat, presenceState, config }) => {
+      asyncHandler(async (payload, abortSignal, { heartbeat, presenceState, config }) => {
+        abortSignal.throwIfAborted();
+
         try {
           const result = await heartbeat({
+            abortSignal: abortSignal,
             channels: payload.channels,
             channelGroups: payload.groups,
             ...(config.maintainPresenceState && { state: presenceState }),

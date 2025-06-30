@@ -82,6 +82,16 @@ export class SubscriptionInput {
   }
 
   /**
+   * Retrieve total length of subscription input.
+   *
+   * @returns Number of channels and groups in subscription input.
+   */
+  get length(): number {
+    if (this.isEmpty) return 0;
+    return this._channels.size + this._channelGroups.size;
+  }
+
+  /**
    * Retrieve a list of user-provided channel names.
    *
    * @returns List of user-provided channel names.

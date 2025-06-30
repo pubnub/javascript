@@ -150,7 +150,7 @@ export class SubscriptionManager {
     private readonly leaveCall: (parameters: Presence.PresenceLeaveParameters, callback: StatusCallback) => void,
     time: typeof PubNubCore.prototype.time,
   ) {
-    configuration.logger().trace(this.constructor.name, 'Create manager.');
+    configuration.logger().trace('SubscriptionManager', 'Create manager.');
 
     this.reconnectionManager = new ReconnectionManager(time);
     this.dedupingManager = new DedupingManager(this.configuration);
@@ -500,7 +500,7 @@ export class SubscriptionManager {
         region: this.region ? this.region : undefined,
       };
 
-      this.configuration.logger().debug(this.constructor.name, () => {
+      this.configuration.logger().debug('SubscriptionManager', () => {
         const hashedEvents = messages.map((event) => {
           const pn_mfp =
             event.type === PubNubEventType.Message || event.type === PubNubEventType.Signal
@@ -514,7 +514,7 @@ export class SubscriptionManager {
       messages.forEach((message) => {
         if (dedupeOnSubscribe && 'message' in message.data && 'timetoken' in message.data) {
           if (this.dedupingManager.isDuplicate(message.data)) {
-            this.configuration.logger().warn(this.constructor.name, () => ({
+            this.configuration.logger().warn('SubscriptionManager', () => ({
               messageType: 'object',
               message: message.data,
               details: 'Duplicate message detected (skipped):',

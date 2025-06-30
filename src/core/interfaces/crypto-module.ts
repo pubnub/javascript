@@ -280,7 +280,7 @@ export abstract class AbstractCryptoModule<C> implements ICryptoModule {
    * @returns Serialized crypto module information.
    */
   toString() {
-    return `${this.constructor.name} { default: ${(
+    return `AbstractCryptoModule { default: ${(
       this.defaultCryptor as object
     ).toString()}, cryptors: [${this.cryptors.map((c) => (c as object).toString()).join(', ')}]}`;
   }

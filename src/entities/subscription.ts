@@ -145,7 +145,7 @@ export class Subscription extends SubscriptionBase {
       // Creating from whole payload (not only for published messages).
       const fingerprint = messageFingerprint(event.data);
       if (this.handledUpdates.includes(fingerprint)) {
-        this.state.client.logger.trace(this.constructor.name, `Message (${fingerprint}) already handled. Ignoring.`);
+        this.state.client.logger.trace(this.subscriptionType, `Message (${fingerprint}) already handled. Ignoring.`);
         return;
       }
 
@@ -204,7 +204,7 @@ export class Subscription extends SubscriptionBase {
    */
   dispose(): void {
     if (this.parentSetsCount > 0) {
-      this.state.client.logger.debug(this.constructor.name, () => ({
+      this.state.client.logger.debug(this.subscriptionType, () => ({
         messageType: 'text',
         message: `'${this.state.entity.subscriptionNames()}' subscription still in use. Ignore dispose request.`,
       }));
@@ -245,7 +245,7 @@ export class Subscription extends SubscriptionBase {
       this.parents.push(parent);
 
       this.state.client.logger.trace(
-        this.constructor.name,
+        this.subscriptionType,
         `Add parent subscription set for ${this.id}: ${parent.id}. Parent subscription set count: ${
           this.parentSetsCount
         }`,
@@ -266,7 +266,7 @@ export class Subscription extends SubscriptionBase {
       this.parents.splice(parentIndex, 1);
 
       this.state.client.logger.trace(
-        this.constructor.name,
+        this.subscriptionType,
         `Remove parent subscription set from ${this.id}: ${parent.id}. Parent subscription set count: ${
           this.parentSetsCount
         }`,
@@ -284,7 +284,7 @@ export class Subscription extends SubscriptionBase {
    * @return {@link SubscriptionSet} which contains both receiver and other entities' subscription objects.
    */
   addSubscription(subscription: Subscription): SubscriptionSet {
-    this.state.client.logger.debug(this.constructor.name, () => ({
+    this.state.client.logger.debug(this.subscriptionType, () => ({
       messageType: 'text',
       message: `Create set with subscription: ${subscription}`,
     }));
@@ -299,7 +299,7 @@ export class Subscription extends SubscriptionBase {
     if (!this.state.isSubscribed && !subscription.state.isSubscribed) return subscriptionSet;
 
     this.state.client.logger.trace(
-      this.constructor.name,
+      this.subscriptionType,
       'Subscribe resulting set because the receiver is already subscribed.',
     );
 
@@ -324,7 +324,7 @@ export class Subscription extends SubscriptionBase {
   protected register(parameters: { cursor?: SubscriptionCursor; subscriptions?: EventHandleCapable[] }): void {
     this.state.entity.increaseSubscriptionCount(this.state.id);
 
-    this.state.client.logger.trace(this.constructor.name, () => ({
+    this.state.client.logger.trace(this.subscriptionType, () => ({
       messageType: 'text',
       message: `Register subscription for real-time events: ${this}`,
     }));
@@ -346,7 +346,7 @@ export class Subscription extends SubscriptionBase {
   protected unregister(_subscriptions?: Subscription[]) {
     this.state.entity.decreaseSubscriptionCount(this.state.id);
 
-    this.state.client.logger.trace(this.constructor.name, () => ({
+    this.state.client.logger.trace(this.subscriptionType, () => ({
       messageType: 'text',
       message: `Unregister subscription from real-time events: ${this}`,
     }));
@@ -363,7 +363,7 @@ export class Subscription extends SubscriptionBase {
   toString(): string {
     const state = this.state;
 
-    return `${this.constructor.name} { id: ${this.id}, stateId: ${state.id}, entity: ${state.entity
+    return `${this.subscriptionType} { id: ${this.id}, stateId: ${state.id}, entity: ${state.entity
       .subscriptionNames(false)
       .pop()}, clonesCount: ${
       Object.keys(state.clones).length

@@ -34,7 +34,7 @@ export class DedupingManager {
    * @param config - PubNub client configuration object.
    */
   constructor(private readonly config: PrivateClientConfiguration) {
-    config.logger().debug(this.constructor.name, () => ({
+    config.logger().debug('DedupingManager', () => ({
       messageType: 'object',
       message: { maximumCacheSize: config.maximumCacheSize },
       details: 'Create with configuration:',

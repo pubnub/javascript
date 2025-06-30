@@ -13,4 +13,19 @@ export interface EntityInterface extends SubscriptionCapable {
    * @internal
    */
   client: PubNub<unknown, unknown>;
+
+  /**
+   * Retrieve entity type.
+   *
+   * There is four types:
+   * - Channel
+   * - ChannelGroups
+   * - ChannelMetadata
+   * - UserMetadata
+   *
+   * @return One of known entity types.
+   *
+   * @internal
+   */
+  entityType: 'Channel' | 'ChannelGroups' | 'ChannelMetadata' | 'UserMetadata';
 }

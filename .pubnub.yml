@@ -1,6 +1,19 @@
 ---
 changelog:
   - date: 2025-06-30
+    version: v9.7.0
+    changes:
+      - type: feature
+        text: "Launch a backup heartbeat timer per registered PubNub instance in SharedWorker context to protect  against browsers throttling of background (hidden) tabs."
+      - type: bug
+        text: "Fix issue because of which in new flow `heartbeat` request not cancelled properly when issued in  burst."
+      - type: bug
+        text: "Fix issue because resource names, which consist only of integers, have been decoded as Unicode characters."
+      - type: bug
+        text: "Fix issue because the entity that has been created with `-pnpres` suffix has been removed  from subscription loop during unsubscribe from entity with presence listening capability."
+      - type: improvement
+        text: "Use string names of classes for locations instead of dynamic access to constructor names because it affect how logs looks like after minification."
+  - date: 2025-06-30
     version: v9.6.2
     changes:
       - type: improvement
@@ -1263,7 +1276,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.6.2'
+version: '9.7.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1279,7 +1292,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.6.2.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.7.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1950,7 +1963,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.6.2/pubnub.9.6.2.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.7.0/pubnub.9.7.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

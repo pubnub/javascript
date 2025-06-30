@@ -1,3 +1,17 @@
+## v9.7.0
+June 30 2025
+
+#### Added
+- Launch a backup heartbeat timer per registered PubNub instance in SharedWorker context to protect  against browsers throttling of background (hidden) tabs.
+
+#### Fixed
+- Fix issue because of which in new flow `heartbeat` request not cancelled properly when issued in  burst.
+- Fix issue because resource names, which consist only of integers, have been decoded as Unicode characters.
+- Fix issue because the entity that has been created with `-pnpres` suffix has been removed  from subscription loop during unsubscribe from entity with presence listening capability.
+
+#### Modified
+- Use string names of classes for locations instead of dynamic access to constructor names because it affect how logs looks like after minification.
+
 ## v9.6.2
 June 30 2025
 

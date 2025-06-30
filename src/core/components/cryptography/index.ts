@@ -157,7 +157,7 @@ export default class {
   public encrypt(data: string | Payload, customCipherKey?: string, options?: CryptoConfiguration) {
     if (this.configuration.customEncrypt) {
       if (this.logger)
-        this.logger.warn(this.constructor.name, "'customEncrypt' is deprecated. Consult docs for better alternative.");
+        this.logger.warn('Crypto', "'customEncrypt' is deprecated. Consult docs for better alternative.");
 
       return this.configuration.customEncrypt(data);
     }
@@ -177,7 +177,7 @@ export default class {
   public decrypt(data: string, customCipherKey?: string, options?: CryptoConfiguration) {
     if (this.configuration.customDecrypt) {
       if (this.logger)
-        this.logger.warn(this.constructor.name, "'customDecrypt' is deprecated. Consult docs for better alternative.");
+        this.logger.warn('Crypto', "'customDecrypt' is deprecated. Consult docs for better alternative.");
 
       return this.configuration.customDecrypt(data);
     }
@@ -199,7 +199,7 @@ export default class {
     if (!decidedCipherKey) return data;
 
     if (this.logger) {
-      this.logger.debug(this.constructor.name, () => ({
+      this.logger.debug('Crypto', () => ({
         messageType: 'object',
         message: { data, cipherKey: decidedCipherKey, ...(options ?? {}) },
         details: 'Encrypt with parameters:',
@@ -242,7 +242,7 @@ export default class {
     if (!decidedCipherKey) return data;
 
     if (this.logger) {
-      this.logger.debug(this.constructor.name, () => ({
+      this.logger.debug('Crypto', () => ({
         messageType: 'object',
         message: { data, cipherKey: decidedCipherKey, ...(options ?? {}) },
         details: 'Decrypt with parameters:',
@@ -267,7 +267,7 @@ export default class {
         );
         return JSON.parse(plainJSON);
       } catch (e) {
-        if (this.logger) this.logger.error(this.constructor.name, () => ({ messageType: 'error', message: e }));
+        if (this.logger) this.logger.error('Crypto', () => ({ messageType: 'error', message: e }));
 
         return null;
       }
@@ -280,7 +280,7 @@ export default class {
         const plainJSON = CryptoJS.AES.decrypt({ ciphertext }, cipherKey, { iv, mode }).toString(CryptoJS.enc.Utf8);
         return JSON.parse(plainJSON);
       } catch (e) {
-        if (this.logger) this.logger.error(this.constructor.name, () => ({ messageType: 'error', message: e }));
+        if (this.logger) this.logger.error('Crypto', () => ({ messageType: 'error', message: e }));
 
         return null;
       }

@@ -465,6 +465,11 @@
                 if (hbRequestsBySubscriptionKey[heartbeatRequestKey] &&
                     hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier === client.clientIdentifier)
                     delete hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier;
+                if (heartbeat.timer) {
+                    clearInterval(heartbeat.timer);
+                    delete heartbeat.heartbeatEvent;
+                    delete heartbeat.timer;
+                }
             }
         }
         if (!request) {
@@ -1242,6 +1247,7 @@
      * Use information from request to populate list of channels and other useful information.
      *
      * @param event - Send request.
+     * @returns `true` if channels / groups list has been changed. May return `undefined` because `client` is missing.
      */
     const updateClientSubscribeStateIfRequired = (event) => {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
@@ -1249,6 +1255,7 @@
         const query = event.request.queryParameters;
         const { clientIdentifier } = event;
         const client = pubNubClients[clientIdentifier];
+        let changed = false;
         // This should never happen.
         if (!client)
             return;
@@ -1256,6 +1263,7 @@
         const state = ((_b = query.state) !== null && _b !== void 0 ? _b : '');
         let subscription = client.subscription;
         if (!subscription) {
+            changed = true;
             subscription = {
                 path: '',
                 channelGroupQuery: '',
@@ -1294,11 +1302,17 @@
         }
         if (subscription.path !== event.request.path) {
             subscription.path = event.request.path;
-            subscription.channels = channelsFromRequest(event.request);
+            const _channelsFromRequest = channelsFromRequest(event.request);
+            if (!changed)
+                changed = includesStrings(subscription.channels, _channelsFromRequest);
+            subscription.channels = _channelsFromRequest;
         }
         if (subscription.channelGroupQuery !== channelGroupQuery) {
             subscription.channelGroupQuery = channelGroupQuery;
-            subscription.channelGroups = channelGroupsFromRequest(event.request);
+            const _channelGroupsFromRequest = channelGroupsFromRequest(event.request);
+            if (!changed)
+                changed = includesStrings(subscription.channelGroups, _channelGroupsFromRequest);
+            subscription.channelGroups = _channelGroupsFromRequest;
         }
         let { authKey } = client;
         const { userId } = client;
@@ -1326,7 +1340,8 @@
      */
     const updateClientHeartbeatState = (event) => {
         var _a, _b;
-        const client = pubNubClients[event.clientIdentifier];
+        const { clientIdentifier } = event;
+        const client = pubNubClients[clientIdentifier];
         const { request } = event;
         // This should never happen.
         if (!client)
@@ -1335,6 +1350,16 @@
             channels: [],
             channelGroups: [],
         }));
+        _clientHeartbeat.heartbeatEvent = Object.assign({}, event);
+        if (!_clientHeartbeat.timer) {
+            _clientHeartbeat.timer = setInterval(() => {
+                const client = pubNubClients[clientIdentifier];
+                // This should never happen.
+                if (!client || !client.heartbeat || !client.heartbeat.heartbeatEvent)
+                    return;
+                handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent);
+            }, client.heartbeatInterval * 1000);
+        }
         // Update presence heartbeat information about client.
         _clientHeartbeat.channelGroups = channelGroupsFromRequest(request).filter((group) => !group.endsWith('-pnpres'));
         _clientHeartbeat.channels = channelsFromRequest(request).filter((channel) => !channel.endsWith('-pnpres'));
@@ -1396,6 +1421,9 @@
                 if (serviceRequestId)
                     cancelRequest(serviceRequestId);
             }
+            // Make sure to stop heartbeat timer.
+            if (invalidatedClient.heartbeat && invalidatedClient.heartbeat.timer)
+                clearInterval(invalidatedClient.heartbeat.timer);
             if (serviceHeartbeatRequests[subscriptionKey]) {
                 const hbRequestsBySubscriptionKey = ((_a = serviceHeartbeatRequests[subscriptionKey]) !== null && _a !== void 0 ? _a : (serviceHeartbeatRequests[subscriptionKey] = {}));
                 const heartbeatRequestKey = `${invalidatedClient.userId}_${(_b = clientAggregateAuthKey(invalidatedClient)) !== null && _b !== void 0 ? _b : ''}`;

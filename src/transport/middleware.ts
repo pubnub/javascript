@@ -79,7 +79,7 @@ class RequestSignature {
       if (payload) signatureInput += payload;
     }
 
-    this.logger.trace(this.constructor.name, () => ({
+    this.logger.trace('RequestSignature', () => ({
       messageType: 'text',
       message: `Request signature input:\n${signatureInput}`,
     }));
@@ -185,7 +185,7 @@ export class PubNubMiddleware implements Transport {
 
             if (delay > 0) {
               attempt++;
-              this.logger.warn(this.constructor.name, `HTTP request retry #${attempt} in ${delay}ms.`);
+              this.logger.warn('PubNubMiddleware', `HTTP request retry #${attempt} in ${delay}ms.`);
               retryTimeout = setTimeout(() => trySendRequest(), delay);
             } else {
               if (res) resolve(res);

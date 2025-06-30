@@ -45,7 +45,7 @@ export class Dispatcher<
   }
 
   dispatch(invocation: Invocation): void {
-    this.logger.trace(this.constructor.name, `Process invocation: ${invocation.type}`);
+    this.logger.trace('Dispatcher', `Process invocation: ${invocation.type}`);
 
     if (invocation.type === 'CANCEL') {
       if (this.instances.has(invocation.payload)) {
@@ -62,13 +62,13 @@ export class Dispatcher<
     const handlerCreator = this.handlers.get(invocation.type);
 
     if (!handlerCreator) {
-      this.logger.error(this.constructor.name, `Unhandled invocation '${invocation.type}'`);
+      this.logger.error('Dispatcher', `Unhandled invocation '${invocation.type}'`);
       throw new Error(`Unhandled invocation '${invocation.type}'`);
     }
 
     const instance = handlerCreator(invocation.payload, this.dependencies);
 
-    this.logger.trace(this.constructor.name, () => ({
+    this.logger.trace('Dispatcher', () => ({
       messageType: 'object',
       details: 'Call invocation handler with parameters:',
       message: invocation.payload,
