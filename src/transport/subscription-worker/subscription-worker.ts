@@ -11,6 +11,7 @@
 import { TransportMethod, TransportRequest } from '../../core/types/transport-request';
 import uuidGenerator from '../../core/components/uuid';
 import { Payload, Query } from '../../core/types/api';
+import { TransportResponse } from '../../core/types/transport-response';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -73,6 +74,23 @@ export type RegisterEvent = BasicEvent & {
 };
 
 /**
+ * PubNub client update event.
+ */
+export type UpdateEvent = BasicEvent & {
+  type: 'client-update';
+
+  /**
+   * Access token which is used to access provided list of channels and channel groups.
+   */
+  accessToken?: string;
+
+  /**
+   * Pre-processed access token (If set).
+   */
+  preProcessedToken?: PubNubClientState['accessToken'];
+};
+
+/**
  * Send HTTP request event.
  *
  * Request from Web Worker to schedule {@link Request} using provided {@link SendRequestSignal#request|request} data.
@@ -88,7 +106,7 @@ export type SendRequestEvent = BasicEvent & {
   /**
    * Pre-processed access token (If set).
    */
-  token?: PubNubClientState['accessToken'];
+  preProcessedToken?: PubNubClientState['accessToken'];
 };
 
 /**
@@ -122,7 +140,13 @@ export type UnRegisterEvent = BasicEvent & {
 /**
  * List of known events from the PubNub Core.
  */
-export type ClientEvent = RegisterEvent | PongEvent | SendRequestEvent | CancelRequestEvent | UnRegisterEvent;
+export type ClientEvent =
+  | RegisterEvent
+  | UpdateEvent
+  | PongEvent
+  | SendRequestEvent
+  | CancelRequestEvent
+  | UnRegisterEvent;
 // endregion
 
 // region Subscription Worker
@@ -250,7 +274,7 @@ export type SharedWorkerConsoleLog = {
   /**
    * Message which should be printed into the console.
    */
-  message: string;
+  message: Payload;
 };
 /**
  * Send message to debug console.
@@ -556,11 +580,7 @@ const serviceHeartbeatRequests: {
  * scheduled subscription request.
  */
 const presenceState: {
-  [subscriptionKey: string]:
-    | {
-        [userId: string]: Record<string, Payload | undefined> | undefined;
-      }
-    | undefined;
+  [subscriptionKey: string]: { [userId: string]: Record<string, Payload | undefined> | undefined } | undefined;
 } = {};
 
 /**
@@ -647,11 +667,12 @@ self.onconnect = (event) => {
         registerClientIfRequired(data);
 
         consoleLog(`Client '${data.clientIdentifier}' registered with '${sharedWorkerIdentifier}' shared worker`);
-      } else if (data.type === 'client-unregister') unRegisterClient(data);
+      } else if (data.type === 'client-update') updateClientInformation(data);
+      else if (data.type === 'client-unregister') unRegisterClient(data);
       else if (data.type === 'client-pong') handleClientPong(data);
       else if (data.type === 'send-request') {
         if (data.request.path.startsWith('/v2/subscribe')) {
-          updateClientSubscribeStateIfRequired(data);
+          const changedSubscription = updateClientSubscribeStateIfRequired(data);
 
           const client = pubNubClients[data.clientIdentifier];
           if (client) {
@@ -662,6 +683,12 @@ self.onconnect = (event) => {
 
             if (aggregationTimers.has(timerIdentifier)) enqueuedClients = aggregationTimers.get(timerIdentifier)![0];
             enqueuedClients.push([client, data]);
+
+            // Clear existing aggregation timer if subscription list changed.
+            if (aggregationTimers.has(timerIdentifier) && changedSubscription) {
+              clearTimeout(aggregationTimers.get(timerIdentifier)![1]);
+              aggregationTimers.delete(timerIdentifier);
+            }
 
             // Check whether we need to start new aggregation timer or not.
             if (!aggregationTimers.has(timerIdentifier)) {
@@ -754,6 +781,7 @@ const handleSendSubscribeRequestForClient = (
 
       publishClientEvent(client, result);
     }
+
     return;
   }
 
@@ -764,16 +792,16 @@ const handleSendSubscribeRequestForClient = (
   sendRequest(
     requestOrId,
     () => clientsForRequest(requestOrId.identifier),
-    (clients, response) => {
+    (clients, fetchRequest, response) => {
       // Notify each PubNub client which awaited for response.
-      notifyRequestProcessingResult(clients, response, event.request);
+      notifyRequestProcessingResult(clients, fetchRequest, response, event.request);
 
       // Clean up scheduled request and client references to it.
       markRequestCompleted(clients, requestOrId.identifier);
     },
-    (clients, error) => {
+    (clients, fetchRequest, error) => {
       // Notify each PubNub client which awaited for response.
-      notifyRequestProcessingResult(clients, null, event.request, requestProcessingError(error));
+      notifyRequestProcessingResult(clients, fetchRequest, null, event.request, requestProcessingError(error));
 
       // Clean up scheduled request and client references to it.
       markRequestCompleted(clients, requestOrId.identifier);
@@ -841,10 +869,11 @@ const patchInitialSubscribeResponse = (
  * Handle client heartbeat request.
  *
  * @param event - Heartbeat event details.
+ * @param [updateTimestamp] - Whether timestamp of last sent heartbeat should be updated or not.
  */
-const handleHeartbeatRequestEvent = (event: SendRequestEvent) => {
+const handleHeartbeatRequestEvent = (event: SendRequestEvent, updateTimestamp: boolean = true) => {
   const client = pubNubClients[event.clientIdentifier];
-  const request = heartbeatTransportRequestFromEvent(event);
+  const request = heartbeatTransportRequestFromEvent(event, updateTimestamp);
 
   if (!client) return;
   const heartbeatRequestKey = `${client.userId}_${clientAggregateAuthKey(client) ?? ''}`;
@@ -885,15 +914,15 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent) => {
   sendRequest(
     request,
     () => [client],
-    (clients, response) => {
+    (clients, fetchRequest, response) => {
       if (hbRequests) hbRequests.response = response;
 
       // Notify each PubNub client which awaited for response.
-      notifyRequestProcessingResult(clients, response, event.request);
+      notifyRequestProcessingResult(clients, fetchRequest, response, event.request);
     },
-    (clients, error) => {
+    (clients, fetchRequest, error) => {
       // Notify each PubNub client which awaited for response.
-      notifyRequestProcessingResult(clients, null, event.request, requestProcessingError(error));
+      notifyRequestProcessingResult(clients, fetchRequest, null, event.request, requestProcessingError(error));
     },
   );
 
@@ -969,13 +998,13 @@ const handleSendLeaveRequestEvent = (
   sendRequest(
     request,
     () => [client],
-    (clients, response) => {
+    (clients, fetchRequest, response) => {
       // Notify each PubNub client which awaited for response.
-      notifyRequestProcessingResult(clients, response, data.request);
+      notifyRequestProcessingResult(clients, fetchRequest, response, data.request);
     },
-    (clients, error) => {
+    (clients, fetchRequest, error) => {
       // Notify each PubNub client which awaited for response.
-      notifyRequestProcessingResult(clients, null, data.request, requestProcessingError(error));
+      notifyRequestProcessingResult(clients, fetchRequest, null, data.request, requestProcessingError(error));
     },
   );
 
@@ -1072,13 +1101,23 @@ const restartSubscribeRequestForClients = (clients: PubNubClientState[]) => {
 const sendRequest = (
   request: TransportRequest,
   getClients: () => PubNubClientState[],
-  success: (clients: PubNubClientState[], response: [Response, ArrayBuffer]) => void,
-  failure: (clients: PubNubClientState[], error: unknown) => void,
+  success: (clients: PubNubClientState[], fetchRequest: Request, response: [Response, ArrayBuffer]) => void,
+  failure: (clients: PubNubClientState[], fetchRequest: Request, error: unknown) => void,
   responsePreProcess?: (response: [Response, ArrayBuffer]) => [Response, ArrayBuffer],
 ) => {
   (async () => {
+    const fetchRequest = requestFromTransportRequest(request);
+
+    // Notify about request processing start.
+    console.log(`~~~~~> TRYING`);
+    console.dir(getClients());
+    for (const client of getClients()) {
+      console.dir(`~~~~~> SENDING CONSOLE ABOUT START TO THE CLIENT`);
+      consoleLog({ messageType: 'network-request', message: request as unknown as Payload }, client);
+    }
+
     Promise.race([
-      fetch(requestFromTransportRequest(request), {
+      fetch(fetchRequest, {
         signal: abortControllers.get(request.identifier)?.signal,
         keepalive: true,
       }),
@@ -1092,7 +1131,7 @@ const sendRequest = (
         const clients = getClients();
         if (clients.length === 0) return;
 
-        success(clients, response);
+        success(clients, fetchRequest, response);
       })
       .catch((error) => {
         const clients = getClients();
@@ -1107,7 +1146,7 @@ const sendRequest = (
           if (!errorMessage.includes('timeout') && errorMessage.includes('cancel')) fetchError.name = 'AbortError';
         }
 
-        failure(clients, fetchError);
+        failure(clients, fetchRequest, fetchError);
       });
   })();
 };
@@ -1363,11 +1402,15 @@ const subscribeTransportRequestFromEvent = (event: SendRequestEvent): TransportR
  * Update transport request to aggregate channels and groups if possible.
  *
  * @param event - Client's send heartbeat event request.
+ * @param [updateTimestamp] - Whether timestamp of last sent heartbeat should be updated or not.
  *
  * @returns Final transport request or identifier from active request which will provide response to required
  * channels and groups.
  */
-const heartbeatTransportRequestFromEvent = (event: SendRequestEvent): TransportRequest | undefined => {
+const heartbeatTransportRequestFromEvent = (
+  event: SendRequestEvent,
+  updateTimestamp: boolean,
+): TransportRequest | undefined => {
   const client = pubNubClients[event.clientIdentifier];
   const clients = clientsForSendHeartbeatRequestEvent(event);
   const request = { ...event.request };
@@ -1418,7 +1461,12 @@ const heartbeatTransportRequestFromEvent = (event: SendRequestEvent): TransportR
     // Check whether it is too soon to send request or not.
     // Request should be sent if a previous attempt failed.
     const leeway = minimumHeartbeatInterval * 0.05 * 1000;
-    if (!failedPreviousRequest && currentTimestamp < expectedTimestamp && expectedTimestamp - currentTimestamp > leeway)
+    if (
+      updateTimestamp &&
+      !failedPreviousRequest &&
+      currentTimestamp < expectedTimestamp &&
+      expectedTimestamp - currentTimestamp > leeway
+    )
       return undefined;
   }
 
@@ -1441,7 +1489,7 @@ const heartbeatTransportRequestFromEvent = (event: SendRequestEvent): TransportR
 
   hbRequestsBySubscriptionKey[heartbeatRequestKey].channels = channelsForAnnouncement;
   hbRequestsBySubscriptionKey[heartbeatRequestKey].channelGroups = channelGroupsForAnnouncement;
-  hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp = Date.now();
+  if (updateTimestamp) hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp = Date.now();
 
   // Remove presence state for objects which is not part of heartbeat.
   for (const objectName in Object.keys(aggregatedState)) {
@@ -1499,9 +1547,30 @@ const leaveTransportRequestFromEvent = (
   // Remove channels / groups from active client's subscription.
   if (client && client.subscription) {
     const { subscription } = client;
-    if (channels.length) subscription.channels = subscription.channels.filter((channel) => !channels.includes(channel));
-    if (channelGroups.length)
+    if (channels.length) {
+      subscription.channels = subscription.channels.filter((channel) => !channels.includes(channel));
+
+      // Modify cached request path.
+      const pathComponents = subscription.path.split('/');
+
+      if (pathComponents[4] !== ',') {
+        const pathChannels = pathComponents[4].split(',').filter((channel) => !channels.includes(channel));
+        pathComponents[4] = pathChannels.length ? pathChannels.join(',') : ',';
+        subscription.path = pathComponents.join('/');
+      }
+    }
+    if (channelGroups.length) {
       subscription.channelGroups = subscription.channelGroups.filter((group) => !channelGroups.includes(group));
+
+      // Modify cached request path.
+      if (subscription.channelGroupQuery.length > 0) {
+        const queryChannelGroups = subscription.channelGroupQuery
+          .split(',')
+          .filter((group) => !channelGroups.includes(group));
+
+        subscription.channelGroupQuery = queryChannelGroups.length ? queryChannelGroups.join(',') : '';
+      }
+    }
   }
 
   // Remove channels / groups from client's presence heartbeat state.
@@ -1526,6 +1595,7 @@ const leaveTransportRequestFromEvent = (
   }
 
   // Clean up from presence channels and groups
+  const channelsAndGroupsCount = channels.length + channelGroups.length;
   if (channels.length) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
   if (channelGroups.length) channelGroups = channelGroups.filter((group) => !group.endsWith('-pnpres'));
 
@@ -1538,10 +1608,17 @@ const leaveTransportRequestFromEvent = (
         }, [])
         .join(', ');
 
-      consoleLog(
-        `Specified channels and groups still in use by other clients: ${clientIds}. Ignoring leave request.`,
-        client,
-      );
+      if (channelsAndGroupsCount > 0) {
+        consoleLog(
+          `Leaving only presence channels which doesn't require presence leave. Ignoring leave request.`,
+          client,
+        );
+      } else {
+        consoleLog(
+          `Specified channels and groups still in use by other clients: ${clientIds}. Ignoring leave request.`,
+          client,
+        );
+      }
     }
 
     return undefined;
@@ -1606,14 +1683,16 @@ const publishClientEvent = (client: PubNubClientState, event: SubscriptionWorker
  * Send request processing result event.
  *
  * @param clients - List of PubNub clients which should be notified about request result.
- * @param [response] - PubNub service response.
- * @param [request] - Processed request information.
+ * @param fetchRequest - Actual request which has been used with `fetch` API.
+ * @param response - PubNub service response.
+ * @param request - Processed request information.
  * @param [result] - Explicit request processing result which should be notified.
  */
 const notifyRequestProcessingResult = (
   clients: PubNubClientState[],
+  fetchRequest: Request,
   response: [Response, ArrayBuffer] | null,
-  request?: TransportRequest,
+  request: TransportRequest,
   result?: RequestSendingResult,
 ) => {
   if (clients.length === 0) return;
@@ -1621,7 +1700,7 @@ const notifyRequestProcessingResult = (
 
   const workerLogVerbosity = clients.some((client) => client && client.workerLogVerbosity);
   const clientIds = sharedWorkerClients[clients[0].subscriptionKey] ?? {};
-  const isSubscribeRequest = request && request.path.startsWith('/v2/subscribe');
+  const isSubscribeRequest = request.path.startsWith('/v2/subscribe');
 
   if (!result && response) {
     result =
@@ -1630,6 +1709,21 @@ const notifyRequestProcessingResult = (
           requestProcessingError(undefined, response)
         : requestProcessingSuccess(response);
   }
+
+  const headers: Record<string, string> = {};
+  let body: ArrayBuffer | undefined;
+  let status = 200;
+
+  // Compose request response object.
+  if (response) {
+    body = response[1].byteLength > 0 ? response[1] : undefined;
+    const { headers: requestHeaders } = response[0];
+    status = response[0].status;
+
+    // Copy Headers object content into plain Record.
+    requestHeaders.forEach((value, key) => (headers[key] = value.toLowerCase()));
+  }
+  const transportResponse: TransportResponse = { status, url: fetchRequest.url, headers, body };
 
   // Notify about subscribe and leave requests completion.
   if (workerLogVerbosity && request && !request.path.endsWith('/heartbeat')) {
@@ -1668,6 +1762,23 @@ const notifyRequestProcessingResult = (
         identifier: decidedRequest.identifier,
         url: `${decidedRequest.origin}${decidedRequest.path}`,
       };
+
+      if (result!.type === 'request-process-success')
+        consoleLog({ messageType: 'network-response', message: transportResponse as unknown as Payload }, client);
+      else {
+        const canceled = result!.error!.type === 'TIMEOUT' || result!.error!.type === 'ABORTED';
+
+        consoleLog(
+          {
+            messageType: 'network-request',
+            message: request as unknown as Payload,
+            details: result!.error!.message,
+            canceled,
+            failed: !canceled,
+          },
+          client,
+        );
+      }
 
       publishClientEvent(client, payload);
     } else if (!serviceWorkerClientId && workerLogVerbosity) {
@@ -1824,6 +1935,27 @@ const registerClientIfRequired = (event: RegisterEvent) => {
 };
 
 /**
+ * Update configuration of previously registered PubNub client.
+ *
+ * @param event - Object with up-to-date client settings, which should be reflected in SharedWorker's state for the
+ * registered client.
+ */
+const updateClientInformation = (event: UpdateEvent) => {
+  const { clientIdentifier, accessToken: authKey, preProcessedToken: token } = event;
+  const client = pubNubClients[clientIdentifier];
+
+  // This should never happen.
+  if (!client) return;
+
+  consoleDir({ authKey, token } as Payload, `Update client configuration:`, client);
+
+  // Updating PAM access key.
+  client.accessToken = token;
+
+  updateCachedRequestAuthKeys(client, authKey ?? '');
+};
+
+/**
  * Unregister client if it uses Service Worker before.
  *
  * During registration removal client information will be removed from the Shared Worker and
@@ -1901,14 +2033,14 @@ const updateClientSubscribeStateIfRequired = (event: SendRequestEvent): boolean 
   if (subscription.path !== event.request.path) {
     subscription.path = event.request.path;
     const _channelsFromRequest = channelsFromRequest(event.request);
-    if (!changed) changed = includesStrings(subscription.channels, _channelsFromRequest);
+    if (!changed) changed = !includesStrings(subscription.channels, _channelsFromRequest);
     subscription.channels = _channelsFromRequest;
   }
 
   if (subscription.channelGroupQuery !== channelGroupQuery) {
     subscription.channelGroupQuery = channelGroupQuery;
     const _channelGroupsFromRequest = channelGroupsFromRequest(event.request);
-    if (!changed) changed = includesStrings(subscription.channelGroups, _channelGroupsFromRequest);
+    if (!changed) changed = !includesStrings(subscription.channelGroups, _channelGroupsFromRequest);
     subscription.channelGroups = _channelGroupsFromRequest;
   }
 
@@ -1922,12 +2054,15 @@ const updateClientSubscribeStateIfRequired = (event: SendRequestEvent): boolean 
   client.origin = event.request.origin;
   client.userId = query.uuid as string;
   client.pnsdk = query.pnsdk as string;
-  client.accessToken = event.token;
+  client.accessToken = event.preProcessedToken;
 
   if (client.newlyRegistered && !authKey && client.authKey) authKey = client.authKey;
   client.newlyRegistered = false;
 
   handleClientIdentityChangeIfRequired(client, userId, authKey);
+  updateCachedRequestAuthKeys(client, authKey);
+
+  return changed;
 };
 
 /**
@@ -1941,6 +2076,7 @@ const updateClientHeartbeatState = (event: SendRequestEvent) => {
   const { clientIdentifier } = event;
   const client = pubNubClients[clientIdentifier];
   const { request } = event;
+  const query = request.queryParameters ?? {};
 
   // This should never happen.
   if (!client) return;
@@ -1965,7 +2101,7 @@ const updateClientHeartbeatState = (event: SendRequestEvent) => {
   _clientHeartbeat.channelGroups = channelGroupsFromRequest(request).filter((group) => !group.endsWith('-pnpres'));
   _clientHeartbeat.channels = channelsFromRequest(request).filter((channel) => !channel.endsWith('-pnpres'));
 
-  const state = (request.queryParameters!.state ?? '') as string;
+  const state = (query.state ?? '') as string;
   if (state.length > 0) {
     const userPresenceState = JSON.parse(state) as Record<string, Payload>;
     for (const objectName of Object.keys(userPresenceState))
@@ -1973,6 +2109,10 @@ const updateClientHeartbeatState = (event: SendRequestEvent) => {
         delete userPresenceState[objectName];
     _clientHeartbeat.presenceState = userPresenceState;
   }
+
+  client.accessToken = event.preProcessedToken;
+
+  updateCachedRequestAuthKeys(client, (query.auth ?? '') as string);
 };
 
 /**
@@ -2126,6 +2266,37 @@ const unsubscribeClient = (client: PubNubClientState, invalidatedClientServiceRe
   };
 
   handleSendLeaveRequestEvent(request, client, invalidatedClientServiceRequestId);
+};
+
+/**
+ * Refresh authentication key stored in cached `subscribe` and `heartbeat` requests.
+ *
+ * @param client - Client state for which cached requests should be updated.
+ * @param [authKey] - Authentication key which should be used.
+ */
+const updateCachedRequestAuthKeys = (client: PubNubClientState, authKey?: string) => {
+  const { subscription, heartbeat } = client;
+
+  // Updating PAM access key.
+  client.authKey = authKey;
+
+  // Update `auth` query for cached subscribe request (if required).
+  if (subscription && subscription.request && subscription.request.queryParameters) {
+    const query = subscription.request.queryParameters;
+    if (authKey && authKey.length > 0) query.auth = authKey;
+    else if (query.auth) delete query.auth;
+  }
+
+  // Update `auth` query for cached heartbeat request (if required).
+  if (
+    heartbeat?.heartbeatEvent &&
+    heartbeat.heartbeatEvent.request &&
+    heartbeat.heartbeatEvent.request.queryParameters
+  ) {
+    const query = heartbeat.heartbeatEvent.request.queryParameters;
+    if (authKey && authKey.length > 0) query.auth = authKey;
+    else if (query.auth) delete query.auth;
+  }
 };
 
 /**
@@ -2416,7 +2587,7 @@ const aggregateTimerId = (client: PubNubClientState) => {
  * @param message - Message which should be printed.
  * @param [client] - Target client to which log message should be sent.
  */
-const consoleLog = (message: string, client?: PubNubClientState): void => {
+const consoleLog = (message: Payload, client?: PubNubClientState): void => {
   const clients = (client ? [client] : Object.values(pubNubClients)).filter(
     (client) => client && client.workerLogVerbosity,
   );

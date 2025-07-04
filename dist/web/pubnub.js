@@ -3300,6 +3300,20 @@
 	        this.callbacks = new Map();
 	        this.setupSubscriptionWorker();
 	    }
+	    onTokenChange(token) {
+	        const updateEvent = {
+	            type: 'client-update',
+	            clientIdentifier: this.configuration.clientIdentifier,
+	            subscriptionKey: this.configuration.subscriptionKey,
+	        };
+	        // Trigger request processing by Service Worker.
+	        this.parsedAccessToken(token)
+	            .then((accessToken) => {
+	            updateEvent.preProcessedToken = accessToken;
+	            updateEvent.accessToken = token;
+	        })
+	            .then(() => this.scheduleEventPost(updateEvent));
+	    }
 	    /**
 	     * Terminate all ongoing long-poll requests.
 	     */
@@ -3343,7 +3357,7 @@
 	                this.callbacks.set(req.identifier, { resolve, reject });
 	                // Trigger request processing by Service Worker.
 	                this.parsedAccessTokenForRequest(req)
-	                    .then((accessToken) => (sendRequestEvent.token = accessToken))
+	                    .then((accessToken) => (sendRequestEvent.preProcessedToken = accessToken))
 	                    .then(() => this.scheduleEventPost(sendRequestEvent));
 	            }),
 	            controller,
@@ -3454,7 +3468,15 @@
 	            this.flushScheduledEvents();
 	        }
 	        else if (data.type === 'shared-worker-console-log') {
-	            this.configuration.logger.debug('SharedWorker', data.message);
+	            this.configuration.logger.debug('SharedWorker', () => {
+	                if (typeof data.message === 'string' || typeof data.message === 'number' || typeof data.message === 'boolean') {
+	                    return {
+	                        messageType: 'text',
+	                        message: data.message,
+	                    };
+	                }
+	                return data.message;
+	            });
 	        }
 	        else if (data.type === 'shared-worker-console-dir') {
 	            this.configuration.logger.debug('SharedWorker', () => {
@@ -3506,7 +3528,7 @@
 	        }
 	    }
 	    /**
-	     * Get parsed access token object.
+	     * Get parsed access token object from request.
 	     *
 	     * @param req - Transport request which may contain access token for processing.
 	     *
@@ -3515,7 +3537,18 @@
 	    parsedAccessTokenForRequest(req) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
-	            const accessToken = req.queryParameters ? ((_a = req.queryParameters.auth) !== null && _a !== void 0 ? _a : '') : undefined;
+	            return this.parsedAccessToken(req.queryParameters ? ((_a = req.queryParameters.auth) !== null && _a !== void 0 ? _a : '') : undefined);
+	        });
+	    }
+	    /**
+	     * Get parsed access token object.
+	     *
+	     * @param accessToken - Access token for processing.
+	     *
+	     * @returns Object with stringified access token information and expiration date information.
+	     */
+	    parsedAccessToken(accessToken) {
+	        return __awaiter(this, void 0, void 0, function* () {
 	            if (!accessToken)
 	                return undefined;
 	            else if (this.accessTokensMap[accessToken])
@@ -15275,6 +15308,8 @@
 	     */
 	    setAuthKey(authKey) {
 	        this.logger.debug('PubNub', `Set auth key: ${authKey}`);
+	        if (this.onAuthenticationChange)
+	            this.onAuthenticationChange(authKey);
 	        this._configuration.setAuthKey(authKey);
 	    }
 	    /**
@@ -16870,6 +16905,8 @@
 	     * @param token - New access token which should be used with next REST API endpoint calls.
 	     */
 	    set token(token) {
+	        if (this.onAuthenticationChange)
+	            this.onAuthenticationChange(token);
 	        if (this.tokenManager)
 	            this.tokenManager.setToken(token);
 	    }
@@ -17963,6 +18000,7 @@
 	                });
 	            }
 	        }
+	        let authenticationChangeHandler = () => { };
 	        let cryptography;
 	        cryptography = new WebCryptography();
 	        // Setup transport provider.
@@ -17984,6 +18022,7 @@
 	                    transport,
 	                    logger: clientConfiguration.logger(),
 	                });
+	                authenticationChangeHandler = (auth) => middleware.onTokenChange(auth);
 	                transport = middleware;
 	                window.onpagehide = (event) => {
 	                    if (!event.persisted)
@@ -18008,6 +18047,7 @@
 	            tokenManager,
 	            crypto,
 	        });
+	        this.onAuthenticationChange = authenticationChangeHandler;
 	        if ((_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : true) {
 	            window.addEventListener('offline', () => {
 	                this.networkDownDetected();

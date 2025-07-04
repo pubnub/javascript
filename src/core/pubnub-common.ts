@@ -200,6 +200,13 @@ export class PubNubCore<
   protected readonly transport: Transport;
 
   /**
+   * `authKey` or `token` change handler.
+   *
+   * @internal
+   */
+  protected onAuthenticationChange?: (auth?: string) => void;
+
+  /**
    * REST API endpoints access tokens manager.
    *
    * @internal
@@ -675,6 +682,7 @@ export class PubNubCore<
    */
   setAuthKey(authKey: string): void {
     this.logger.debug('PubNub', `Set auth key: ${authKey}`);
+    if (this.onAuthenticationChange) this.onAuthenticationChange(authKey);
     this._configuration.setAuthKey(authKey);
   }
 
@@ -3015,6 +3023,8 @@ export class PubNubCore<
    * @param token - New access token which should be used with next REST API endpoint calls.
    */
   public set token(token: string | undefined) {
+    if (this.onAuthenticationChange) this.onAuthenticationChange(token);
+
     if (this.tokenManager) this.tokenManager.setToken(token);
   }
 
@@ -3269,7 +3279,7 @@ export class PubNubCore<
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata getUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata|getUUIDMetadata} method instead.
    */
   public fetchUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.GetUUIDMetadataParameters,

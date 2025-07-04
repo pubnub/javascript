@@ -16,6 +16,7 @@ import { PubNubAPIError } from '../../errors/pubnub-api-error';
 import StatusCategory from '../../core/constants/categories';
 import { Transport } from '../../core/interfaces/transport';
 import * as PAM from '../../core/types/api/access-manager';
+import { LogMessage } from '../../core/interfaces/logger';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -134,6 +135,22 @@ export class SubscriptionWorkerMiddleware implements Transport {
     this.setupSubscriptionWorker();
   }
 
+  onTokenChange(token: string | undefined) {
+    const updateEvent: PubNubSubscriptionWorker.UpdateEvent = {
+      type: 'client-update',
+      clientIdentifier: this.configuration.clientIdentifier,
+      subscriptionKey: this.configuration.subscriptionKey,
+    };
+
+    // Trigger request processing by Service Worker.
+    this.parsedAccessToken(token)
+      .then((accessToken) => {
+        updateEvent.preProcessedToken = accessToken;
+        updateEvent.accessToken = token;
+      })
+      .then(() => this.scheduleEventPost(updateEvent));
+  }
+
   /**
    * Terminate all ongoing long-poll requests.
    */
@@ -184,7 +201,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
 
         // Trigger request processing by Service Worker.
         this.parsedAccessTokenForRequest(req)
-          .then((accessToken) => (sendRequestEvent.token = accessToken))
+          .then((accessToken) => (sendRequestEvent.preProcessedToken = accessToken))
           .then(() => this.scheduleEventPost(sendRequestEvent));
       }),
       controller,
@@ -312,7 +329,16 @@ export class SubscriptionWorkerMiddleware implements Transport {
       this.subscriptionWorkerReady = true;
       this.flushScheduledEvents();
     } else if (data.type === 'shared-worker-console-log') {
-      this.configuration.logger.debug('SharedWorker', data.message);
+      this.configuration.logger.debug('SharedWorker', () => {
+        if (typeof data.message === 'string' || typeof data.message === 'number' || typeof data.message === 'boolean') {
+          return {
+            messageType: 'text',
+            message: data.message,
+          };
+        }
+
+        return data.message as Pick<LogMessage, 'messageType' | 'message'>;
+      });
     } else if (data.type === 'shared-worker-console-dir') {
       this.configuration.logger.debug('SharedWorker', () => {
         return {
@@ -367,14 +393,24 @@ export class SubscriptionWorkerMiddleware implements Transport {
   }
 
   /**
-   * Get parsed access token object.
+   * Get parsed access token object from request.
    *
    * @param req - Transport request which may contain access token for processing.
    *
    * @returns Object with stringified access token information and expiration date information.
    */
   private async parsedAccessTokenForRequest(req: TransportRequest) {
-    const accessToken = req.queryParameters ? ((req.queryParameters.auth as string) ?? '') : undefined;
+    return this.parsedAccessToken(req.queryParameters ? ((req.queryParameters.auth as string) ?? '') : undefined);
+  }
+
+  /**
+   * Get parsed access token object.
+   *
+   * @param accessToken - Access token for processing.
+   *
+   * @returns Object with stringified access token information and expiration date information.
+   */
+  private async parsedAccessToken(accessToken: string | undefined) {
     if (!accessToken) return undefined;
     else if (this.accessTokensMap[accessToken]) return this.accessTokensMap[accessToken];
 

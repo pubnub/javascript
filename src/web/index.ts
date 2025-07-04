@@ -100,6 +100,8 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
       }
     }
 
+    let authenticationChangeHandler: (auth?: string) => void = () => {};
+
     let cryptography: Cryptography<ArrayBuffer | string> | undefined;
     if (process.env.CRYPTO_MODULE !== 'disabled') cryptography = new WebCryptography();
 
@@ -123,6 +125,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
           transport,
           logger: clientConfiguration.logger(),
         });
+        authenticationChangeHandler = (auth?: string) => middleware.onTokenChange(auth);
         transport = middleware;
 
         window.onpagehide = (event: PageTransitionEvent) => {
@@ -148,6 +151,8 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
       tokenManager,
       crypto,
     });
+
+    this.onAuthenticationChange = authenticationChangeHandler;
 
     if (configuration.listenToBrowserNetworkEvents ?? true) {
       window.addEventListener('offline', () => {
