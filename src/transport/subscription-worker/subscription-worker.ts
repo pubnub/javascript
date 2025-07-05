@@ -9,9 +9,9 @@
  */
 
 import { TransportMethod, TransportRequest } from '../../core/types/transport-request';
+import { TransportResponse } from '../../core/types/transport-response';
 import uuidGenerator from '../../core/components/uuid';
 import { Payload, Query } from '../../core/types/api';
-import { TransportResponse } from '../../core/types/transport-response';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -80,12 +80,28 @@ export type UpdateEvent = BasicEvent & {
   type: 'client-update';
 
   /**
+   * `userId` currently used by the client.
+   */
+  userId: string;
+
+  /**
+   * How often the client will announce itself to server. The value is in seconds.
+   *
+   * @default `not set`
+   */
+  heartbeatInterval?: number;
+
+  /**
    * Access token which is used to access provided list of channels and channel groups.
+   *
+   * **Note:** Value can be missing, but it shouldn't reset it in the state.
    */
   accessToken?: string;
 
   /**
    * Pre-processed access token (If set).
+   *
+   * **Note:** Value can be missing, but it shouldn't reset it in the state.
    */
   preProcessedToken?: PubNubClientState['accessToken'];
 };
@@ -496,12 +512,31 @@ type PubNubClientState = {
     presenceState?: Record<string, Payload | undefined>;
 
     /**
-     * Heartbeat timer.
-     *
-     * Timer which is started with first heartbeat request and repeat inside of SharedWorker to bypass browser's
-     * timers throttling.
+     * Backup presence heartbeat loop managed by the `SharedWorker`.
      */
-    timer?: ReturnType<typeof setInterval>;
+    loop?: {
+      /**
+       * Heartbeat timer.
+       *
+       * Timer which is started with first heartbeat request and repeat inside SharedWorker to bypass browser's
+       * timers throttling.
+       *
+       * **Note:** Timer will be restarted each time when core client request to send a request (still "alive").
+       */
+      timer: ReturnType<typeof setTimeout>;
+
+      /**
+       * Interval which has been used for the timer.
+       */
+      heartbeatInterval: number;
+
+      /**
+       * Timestamp when time has been started.
+       *
+       * **Note:** Information needed to compute active timer restart with new interval value.
+       */
+      startTimestamp: number;
+    };
   };
 };
 // endregion
@@ -564,6 +599,7 @@ const serviceHeartbeatRequests: {
     | {
         [userId: string]:
           | {
+              createdByActualRequest: boolean;
               channels: string[];
               channelGroups: string[];
               timestamp: number;
@@ -869,11 +905,13 @@ const patchInitialSubscribeResponse = (
  * Handle client heartbeat request.
  *
  * @param event - Heartbeat event details.
- * @param [updateTimestamp] - Whether timestamp of last sent heartbeat should be updated or not.
+ * @param [actualRequest] - Whether handling actual request from the core-part of the client and not backup heartbeat in
+ * the `SharedWorker`.
+ * @param [outOfOrder] - Whether handling request which is sent on irregular basis (setting update).
  */
-const handleHeartbeatRequestEvent = (event: SendRequestEvent, updateTimestamp: boolean = true) => {
+const handleHeartbeatRequestEvent = (event: SendRequestEvent, actualRequest = true, outOfOrder = false) => {
   const client = pubNubClients[event.clientIdentifier];
-  const request = heartbeatTransportRequestFromEvent(event, updateTimestamp);
+  const request = heartbeatTransportRequestFromEvent(event, actualRequest, outOfOrder);
 
   if (!client) return;
   const heartbeatRequestKey = `${client.userId}_${clientAggregateAuthKey(client) ?? ''}`;
@@ -919,6 +957,9 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent, updateTimestamp: b
 
       // Notify each PubNub client which awaited for response.
       notifyRequestProcessingResult(clients, fetchRequest, response, event.request);
+
+      // Stop heartbeat timer on client error status codes.
+      if (response[0].status >= 400 && response[0].status < 500) stopHeartbeatTimer(client);
     },
     (clients, fetchRequest, error) => {
       // Notify each PubNub client which awaited for response.
@@ -927,6 +968,9 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent, updateTimestamp: b
   );
 
   consoleLog(`Started heartbeat request.`, client);
+
+  // Start "backup" heartbeat timer.
+  if (!outOfOrder) startHeartbeatTimer(client);
 };
 
 /**
@@ -971,11 +1015,8 @@ const handleSendLeaveRequestEvent = (
       )
         delete hbRequestsBySubscriptionKey[heartbeatRequestKey]!.clientIdentifier;
 
-      if (heartbeat.timer) {
-        clearInterval(heartbeat.timer);
-        delete heartbeat.heartbeatEvent;
-        delete heartbeat.timer;
-      }
+      delete heartbeat.heartbeatEvent;
+      stopHeartbeatTimer(client);
     }
   }
 
@@ -1109,12 +1150,8 @@ const sendRequest = (
     const fetchRequest = requestFromTransportRequest(request);
 
     // Notify about request processing start.
-    console.log(`~~~~~> TRYING`);
-    console.dir(getClients());
-    for (const client of getClients()) {
-      console.dir(`~~~~~> SENDING CONSOLE ABOUT START TO THE CLIENT`);
+    for (const client of getClients())
       consoleLog({ messageType: 'network-request', message: request as unknown as Payload }, client);
-    }
 
     Promise.race([
       fetch(fetchRequest, {
@@ -1402,14 +1439,17 @@ const subscribeTransportRequestFromEvent = (event: SendRequestEvent): TransportR
  * Update transport request to aggregate channels and groups if possible.
  *
  * @param event - Client's send heartbeat event request.
- * @param [updateTimestamp] - Whether timestamp of last sent heartbeat should be updated or not.
+ * @param [actualRequest] - Whether handling actual request from the core-part of the client and not backup heartbeat in
+ * the `SharedWorker`.
+ * @param [outOfOrder] - Whether handling request which is sent on irregular basis (setting update).
  *
  * @returns Final transport request or identifier from active request which will provide response to required
  * channels and groups.
  */
 const heartbeatTransportRequestFromEvent = (
   event: SendRequestEvent,
-  updateTimestamp: boolean,
+  actualRequest: boolean,
+  outOfOrder: boolean,
 ): TransportRequest | undefined => {
   const client = pubNubClients[event.clientIdentifier];
   const clients = clientsForSendHeartbeatRequestEvent(event);
@@ -1427,6 +1467,7 @@ const heartbeatTransportRequestFromEvent = (
 
   if (!hbRequestsBySubscriptionKey[heartbeatRequestKey]) {
     hbRequestsBySubscriptionKey[heartbeatRequestKey] = {
+      createdByActualRequest: actualRequest,
       channels: channelsForAnnouncement,
       channelGroups: channelGroupsForAnnouncement,
       clientIdentifier: client.clientIdentifier,
@@ -1435,7 +1476,16 @@ const heartbeatTransportRequestFromEvent = (
     aggregatedState = client.heartbeat.presenceState ?? {};
     aggregated = false;
   } else {
-    const { channels, channelGroups, response } = hbRequestsBySubscriptionKey[heartbeatRequestKey];
+    const { createdByActualRequest, channels, channelGroups, response } =
+      hbRequestsBySubscriptionKey[heartbeatRequestKey];
+
+    // Allow out-of-order call from the client for heartbeat initiated by the `SharedWorker`.
+    if (!createdByActualRequest && actualRequest) {
+      hbRequestsBySubscriptionKey[heartbeatRequestKey].createdByActualRequest = true;
+      hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp = Date.now();
+      outOfOrder = true;
+    }
+
     aggregatedState = client.heartbeat.presenceState ?? {};
     aggregated =
       includesStrings(channels, channelsForAnnouncement) &&
@@ -1462,7 +1512,7 @@ const heartbeatTransportRequestFromEvent = (
     // Request should be sent if a previous attempt failed.
     const leeway = minimumHeartbeatInterval * 0.05 * 1000;
     if (
-      updateTimestamp &&
+      !outOfOrder &&
       !failedPreviousRequest &&
       currentTimestamp < expectedTimestamp &&
       expectedTimestamp - currentTimestamp > leeway
@@ -1489,7 +1539,7 @@ const heartbeatTransportRequestFromEvent = (
 
   hbRequestsBySubscriptionKey[heartbeatRequestKey].channels = channelsForAnnouncement;
   hbRequestsBySubscriptionKey[heartbeatRequestKey].channelGroups = channelGroupsForAnnouncement;
-  if (updateTimestamp) hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp = Date.now();
+  if (!outOfOrder) hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp = Date.now();
 
   // Remove presence state for objects which is not part of heartbeat.
   for (const objectName in Object.keys(aggregatedState)) {
@@ -1763,16 +1813,43 @@ const notifyRequestProcessingResult = (
         url: `${decidedRequest.origin}${decidedRequest.path}`,
       };
 
-      if (result!.type === 'request-process-success')
+      if (result!.type === 'request-process-success' && client.workerLogVerbosity)
         consoleLog({ messageType: 'network-response', message: transportResponse as unknown as Payload }, client);
-      else {
-        const canceled = result!.error!.type === 'TIMEOUT' || result!.error!.type === 'ABORTED';
+      else if (result!.type === 'request-process-error' && client.workerLogVerbosity) {
+        const canceled = result!.error ? result!.error!.type === 'TIMEOUT' || result!.error!.type === 'ABORTED' : false;
+        let details = result!.error ? result!.error!.message : 'Unknown';
+        if (payload.response) {
+          const contentType = payload.response.headers['content-type'];
+
+          if (
+            payload.response.body &&
+            contentType &&
+            (contentType.indexOf('javascript') !== -1 || contentType.indexOf('json') !== -1)
+          ) {
+            try {
+              const serviceResponse = JSON.parse(new TextDecoder().decode(payload.response.body));
+              if ('message' in serviceResponse) details = serviceResponse.message;
+              else if ('error' in serviceResponse) {
+                if (typeof serviceResponse.error === 'string') details = serviceResponse.error;
+                else if (typeof serviceResponse.error === 'object' && 'message' in serviceResponse.error)
+                  details = serviceResponse.error.message;
+              }
+            } catch (_) {}
+          }
+
+          if (details === 'Unknown') {
+            if (payload.response.status >= 500) details = 'Internal Server Error';
+            else if (payload.response.status == 400) details = 'Bad request';
+            else if (payload.response.status == 403) details = 'Access denied';
+            else details = `${payload.response.status}`;
+          }
+        }
 
         consoleLog(
           {
             messageType: 'network-request',
             message: request as unknown as Payload,
-            details: result!.error!.message,
+            details,
             canceled,
             failed: !canceled,
           },
@@ -1941,18 +2018,36 @@ const registerClientIfRequired = (event: RegisterEvent) => {
  * registered client.
  */
 const updateClientInformation = (event: UpdateEvent) => {
-  const { clientIdentifier, accessToken: authKey, preProcessedToken: token } = event;
+  const { clientIdentifier, userId, heartbeatInterval, accessToken: authKey, preProcessedToken: token } = event;
   const client = pubNubClients[clientIdentifier];
 
   // This should never happen.
   if (!client) return;
 
-  consoleDir({ authKey, token } as Payload, `Update client configuration:`, client);
+  consoleDir({ userId, heartbeatInterval, authKey, token } as Payload, `Update client configuration:`, client);
 
-  // Updating PAM access key.
-  client.accessToken = token;
+  // Check whether identity changed as part of configuration update or not.
+  if (userId !== client.userId || (authKey && authKey !== (client.authKey ?? ''))) {
+    const _heartbeatRequests = serviceHeartbeatRequests[client.subscriptionKey] ?? {};
+    const heartbeatRequestKey = `${userId}_${clientAggregateAuthKey(client) ?? ''}`;
+    // Clean up previous heartbeat aggregation data.
+    if (_heartbeatRequests[heartbeatRequestKey] !== undefined) delete _heartbeatRequests[heartbeatRequestKey];
+  }
 
-  updateCachedRequestAuthKeys(client, authKey ?? '');
+  const intervalChanged = client.heartbeatInterval !== heartbeatInterval;
+
+  // Updating client configuration.
+  client.userId = userId;
+  client.heartbeatInterval = heartbeatInterval;
+  if (authKey) client.authKey = authKey;
+  if (token) client.accessToken = token;
+
+  if (intervalChanged) startHeartbeatTimer(client, true);
+  updateCachedRequestAuthKeys(client);
+
+  // Make immediate heartbeat call (if possible).
+  if (!client.heartbeat || !client.heartbeat.heartbeatEvent) return;
+  handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent, false, true);
 };
 
 /**
@@ -2059,9 +2154,6 @@ const updateClientSubscribeStateIfRequired = (event: SendRequestEvent): boolean 
   if (client.newlyRegistered && !authKey && client.authKey) authKey = client.authKey;
   client.newlyRegistered = false;
 
-  handleClientIdentityChangeIfRequired(client, userId, authKey);
-  updateCachedRequestAuthKeys(client, authKey);
-
   return changed;
 };
 
@@ -2085,17 +2177,7 @@ const updateClientHeartbeatState = (event: SendRequestEvent) => {
     channels: [],
     channelGroups: [],
   });
-
   _clientHeartbeat.heartbeatEvent = { ...event };
-  if (!_clientHeartbeat.timer) {
-    _clientHeartbeat.timer = setInterval(() => {
-      const client = pubNubClients[clientIdentifier];
-      // This should never happen.
-      if (!client || !client.heartbeat || !client.heartbeat.heartbeatEvent) return;
-
-      handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent);
-    }, client.heartbeatInterval! * 1000);
-  }
 
   // Update presence heartbeat information about client.
   _clientHeartbeat.channelGroups = channelGroupsFromRequest(request).filter((group) => !group.endsWith('-pnpres'));
@@ -2111,24 +2193,6 @@ const updateClientHeartbeatState = (event: SendRequestEvent) => {
   }
 
   client.accessToken = event.preProcessedToken;
-
-  updateCachedRequestAuthKeys(client, (query.auth ?? '') as string);
-};
-
-/**
- * Check whether PubNub client identity has been changed between state refresh or not.
- *
- * @param client - PubNub client state which will be checked.
- * @param userId - `userId` which has been used by `PubNub` client before state refresh.
- * @param authKey - `authKey` which has been used by `PubNub` client before state refresh.
- */
-const handleClientIdentityChangeIfRequired = (client: PubNubClientState, userId: string, authKey?: string) => {
-  if (!client || (userId === client.userId && (authKey ?? '') === (client.authKey ?? ''))) return;
-
-  const _heartbeatRequests = serviceHeartbeatRequests[client.subscriptionKey] ?? {};
-
-  const heartbeatRequestKey = `${userId}_${clientAggregateAuthKey(client) ?? ''}`;
-  if (_heartbeatRequests[heartbeatRequestKey] !== undefined) delete _heartbeatRequests[heartbeatRequestKey];
 };
 
 /**
@@ -2167,8 +2231,7 @@ const invalidateClient = (subscriptionKey: string, clientId: string) => {
     }
 
     // Make sure to stop heartbeat timer.
-    if (invalidatedClient.heartbeat && invalidatedClient.heartbeat.timer)
-      clearInterval(invalidatedClient.heartbeat.timer);
+    stopHeartbeatTimer(invalidatedClient);
 
     if (serviceHeartbeatRequests[subscriptionKey]) {
       const hbRequestsBySubscriptionKey = (serviceHeartbeatRequests[subscriptionKey] ??= {});
@@ -2269,32 +2332,93 @@ const unsubscribeClient = (client: PubNubClientState, invalidatedClientServiceRe
 };
 
 /**
+ * Start presence heartbeat timer for periodic `heartbeat` API calls.
+ *
+ * @param client - Client state with information for heartbeat.
+ * @param [adjust] - Whether timer fire timer should be re-adjusted or not.
+ */
+const startHeartbeatTimer = (client: PubNubClientState, adjust: boolean = false) => {
+  const { heartbeat, heartbeatInterval } = client;
+  if (heartbeat === undefined || !heartbeat.heartbeatEvent) return;
+
+  // Check whether there is a need to run "backup" heartbeat timer or not.
+  if (!heartbeatInterval || heartbeatInterval === 0) {
+    stopHeartbeatTimer(client);
+    return;
+  }
+
+  // Check whether there is active timer which should be re-adjusted or not.
+  if (adjust && !heartbeat.loop) return;
+
+  let targetInterval = heartbeatInterval;
+  if (adjust && heartbeat.loop && targetInterval !== heartbeat.loop.heartbeatInterval) {
+    const activeTime = (Date.now() - heartbeat.loop.startTimestamp) / 1000;
+    if (activeTime < targetInterval) targetInterval -= activeTime;
+  }
+
+  stopHeartbeatTimer(client);
+  if (targetInterval <= 0) return;
+
+  heartbeat.loop = {
+    timer: setTimeout(() => {
+      stopHeartbeatTimer(client);
+      if (!client.heartbeat || !client.heartbeat.heartbeatEvent) return;
+
+      // Generate new request ID
+      const { request } = client.heartbeat.heartbeatEvent;
+      request.identifier = uuidGenerator.createUUID();
+      request.queryParameters!.requestid = request.identifier;
+
+      handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent, false);
+    }, targetInterval * 1000),
+    heartbeatInterval,
+    startTimestamp: Date.now(),
+  };
+};
+
+/**
+ * Stop presence heartbeat timer before it will fire.
+ *
+ * @param client - Client state for which presence heartbeat timer should be stopped.
+ */
+const stopHeartbeatTimer = (client: PubNubClientState) => {
+  const { heartbeat } = client;
+  if (heartbeat === undefined || !heartbeat.loop) return;
+
+  clearTimeout(heartbeat.loop.timer);
+  delete heartbeat.loop;
+};
+
+/**
  * Refresh authentication key stored in cached `subscribe` and `heartbeat` requests.
  *
  * @param client - Client state for which cached requests should be updated.
- * @param [authKey] - Authentication key which should be used.
  */
-const updateCachedRequestAuthKeys = (client: PubNubClientState, authKey?: string) => {
+const updateCachedRequestAuthKeys = (client: PubNubClientState) => {
   const { subscription, heartbeat } = client;
-
-  // Updating PAM access key.
-  client.authKey = authKey;
 
   // Update `auth` query for cached subscribe request (if required).
   if (subscription && subscription.request && subscription.request.queryParameters) {
     const query = subscription.request.queryParameters;
-    if (authKey && authKey.length > 0) query.auth = authKey;
+    if (client.authKey && client.authKey.length > 0) query.auth = client.authKey;
     else if (query.auth) delete query.auth;
   }
 
   // Update `auth` query for cached heartbeat request (if required).
-  if (
-    heartbeat?.heartbeatEvent &&
-    heartbeat.heartbeatEvent.request &&
-    heartbeat.heartbeatEvent.request.queryParameters
-  ) {
-    const query = heartbeat.heartbeatEvent.request.queryParameters;
-    if (authKey && authKey.length > 0) query.auth = authKey;
+  if (heartbeat?.heartbeatEvent && heartbeat.heartbeatEvent.request) {
+    if (client.accessToken) heartbeat.heartbeatEvent.preProcessedToken = client.accessToken;
+
+    const hbRequestsBySubscriptionKey = (serviceHeartbeatRequests[client.subscriptionKey] ??= {});
+    const heartbeatRequestKey = `${client.userId}_${clientAggregateAuthKey(client) ?? ''}`;
+    if (hbRequestsBySubscriptionKey[heartbeatRequestKey] && hbRequestsBySubscriptionKey[heartbeatRequestKey].response)
+      delete hbRequestsBySubscriptionKey[heartbeatRequestKey].response;
+
+    // Generate new request ID
+    heartbeat.heartbeatEvent.request.identifier = uuidGenerator.createUUID();
+
+    const query = heartbeat.heartbeatEvent.request.queryParameters!;
+    query.requestid = heartbeat.heartbeatEvent.request.identifier;
+    if (client.authKey && client.authKey.length > 0) query.auth = client.authKey;
     else if (query.auth) delete query.auth;
   }
 };

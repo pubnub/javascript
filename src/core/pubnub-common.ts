@@ -200,6 +200,20 @@ export class PubNubCore<
   protected readonly transport: Transport;
 
   /**
+   * `userId` change handler.
+   *
+   * @internal
+   */
+  protected onUserIdChange?: (userId: string) => void;
+
+  /**
+   * Heartbeat interval change handler.
+   *
+   * @internal
+   */
+  protected onHeartbeatIntervalChange?: (interval: number) => void;
+
+  /**
    * `authKey` or `token` change handler.
    *
    * @internal
@@ -682,8 +696,9 @@ export class PubNubCore<
    */
   setAuthKey(authKey: string): void {
     this.logger.debug('PubNub', `Set auth key: ${authKey}`);
-    if (this.onAuthenticationChange) this.onAuthenticationChange(authKey);
     this._configuration.setAuthKey(authKey);
+
+    if (this.onAuthenticationChange) this.onAuthenticationChange(authKey);
   }
 
   /**
@@ -714,6 +729,8 @@ export class PubNubCore<
 
     this.logger.debug('PubNub', `Set user ID: ${value}`);
     this._configuration.userId = value;
+
+    if (this.onUserIdChange) this.onUserIdChange(this._configuration.userId);
   }
 
   /**
@@ -735,15 +752,7 @@ export class PubNubCore<
    * @throws Error empty user identifier has been provided.
    */
   setUserId(value: string): void {
-    if (!value || typeof value !== 'string' || value.trim().length === 0) {
-      const error = new Error('Missing or invalid userId parameter. Provide a valid string userId');
-      this.logger.error('PubNub', () => ({ messageType: 'error', message: error }));
-
-      throw error;
-    }
-
-    this.logger.debug('PubNub', `Set user ID: ${value}`);
-    this._configuration.userId = value;
+    this.userId = value;
   }
 
   /**
@@ -820,6 +829,8 @@ export class PubNubCore<
   set heartbeatInterval(interval: number) {
     this.logger.debug('PubNub', `Set heartbeat interval: ${interval}`);
     this._configuration.setHeartbeatInterval(interval);
+
+    if (this.onHeartbeatIntervalChange) this.onHeartbeatIntervalChange(this._configuration.getHeartbeatInterval() ?? 0);
   }
 
   /**
@@ -828,7 +839,6 @@ export class PubNubCore<
    * @param interval - New presence request heartbeat intervals.
    */
   setHeartbeatInterval(interval: number): void {
-    this.logger.debug('PubNub', `Set heartbeat interval: ${interval}`);
     this.heartbeatInterval = interval;
   }
 
@@ -3023,9 +3033,8 @@ export class PubNubCore<
    * @param token - New access token which should be used with next REST API endpoint calls.
    */
   public set token(token: string | undefined) {
-    if (this.onAuthenticationChange) this.onAuthenticationChange(token);
-
     if (this.tokenManager) this.tokenManager.setToken(token);
+    if (this.onAuthenticationChange) this.onAuthenticationChange(token);
   }
 
   /**
