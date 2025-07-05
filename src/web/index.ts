@@ -100,6 +100,11 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
       }
     }
 
+    // Settings change handlers
+    let heartbeatIntervalChangeHandler: (interval: number) => void = () => {};
+    let authenticationChangeHandler: (auth?: string) => void = () => {};
+    let userIdChangeHandler: (userId: string) => void = () => {};
+
     let cryptography: Cryptography<ArrayBuffer | string> | undefined;
     if (process.env.CRYPTO_MODULE !== 'disabled') cryptography = new WebCryptography();
 
@@ -108,26 +113,38 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
 
     if (process.env.SHARED_WORKER !== 'disabled') {
       if (configurationCopy.subscriptionWorkerUrl) {
-        // Inject subscription worker into the transport provider stack.
-        const middleware = new SubscriptionWorkerMiddleware({
-          clientIdentifier: clientConfiguration._instanceId,
-          subscriptionKey: clientConfiguration.subscribeKey,
-          userId: clientConfiguration.getUserId(),
-          workerUrl: configurationCopy.subscriptionWorkerUrl,
-          sdkVersion: clientConfiguration.getVersion(),
-          heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
-          workerOfflineClientsCheckInterval: platformConfiguration.subscriptionWorkerOfflineClientsCheckInterval!,
-          workerUnsubscribeOfflineClients: platformConfiguration.subscriptionWorkerUnsubscribeOfflineClients!,
-          workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity!,
-          tokenManager,
-          transport,
-          logger: clientConfiguration.logger(),
-        });
-        transport = middleware;
+        try {
+          // Inject subscription worker into the transport provider stack.
+          const middleware = new SubscriptionWorkerMiddleware({
+            clientIdentifier: clientConfiguration._instanceId,
+            subscriptionKey: clientConfiguration.subscribeKey,
+            userId: clientConfiguration.getUserId(),
+            workerUrl: configurationCopy.subscriptionWorkerUrl,
+            sdkVersion: clientConfiguration.getVersion(),
+            heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
+            announceSuccessfulHeartbeats: clientConfiguration.announceSuccessfulHeartbeats,
+            announceFailedHeartbeats: clientConfiguration.announceFailedHeartbeats,
+            workerOfflineClientsCheckInterval: platformConfiguration.subscriptionWorkerOfflineClientsCheckInterval!,
+            workerUnsubscribeOfflineClients: platformConfiguration.subscriptionWorkerUnsubscribeOfflineClients!,
+            workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity!,
+            tokenManager,
+            transport,
+            logger: clientConfiguration.logger(),
+          });
+          heartbeatIntervalChangeHandler = (interval: number) => middleware.onHeartbeatIntervalChange(interval);
+          authenticationChangeHandler = (auth?: string) => middleware.onTokenChange(auth);
+          userIdChangeHandler = (userId: string) => middleware.onUserIdChange(userId);
+          transport = middleware;
 
-        window.onpagehide = (event: PageTransitionEvent) => {
-          if (!event.persisted) middleware.terminate();
-        };
+          window.onpagehide = (event: PageTransitionEvent) => {
+            if (!event.persisted) middleware.terminate();
+          };
+        } catch (e) {
+          clientConfiguration.logger().error('PubNub', () => ({
+            messageType: 'error',
+            message: e,
+          }));
+        }
       } else if (sharedWorkerRequested) {
         clientConfiguration
           .logger()
@@ -148,6 +165,14 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
       tokenManager,
       crypto,
     });
+
+    this.onHeartbeatIntervalChange = heartbeatIntervalChangeHandler;
+    this.onAuthenticationChange = authenticationChangeHandler;
+    this.onUserIdChange = userIdChangeHandler;
+
+    if (process.env.SHARED_WORKER !== 'disabled') {
+      if (transport instanceof SubscriptionWorkerMiddleware) transport.emitStatus = this.emitStatus.bind(this);
+    }
 
     if (configuration.listenToBrowserNetworkEvents ?? true) {
       window.addEventListener('offline', () => {

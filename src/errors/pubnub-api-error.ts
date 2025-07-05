@@ -108,6 +108,9 @@ export class PubNubAPIError extends Error {
     } else if (status === 403) {
       category = StatusCategory.PNAccessDeniedCategory;
       message = 'Access denied';
+    } else if (status >= 500) {
+      category = StatusCategory.PNServerErrorCategory;
+      message = 'Internal server error';
     }
 
     if (typeof response === 'object' && Object.keys(response).length === 0) {
