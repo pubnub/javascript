@@ -9988,10 +9988,12 @@
 	     * Create a subscription object from the state.
 	     *
 	     * @param state - Subscription state object.
+	     * @param subscriptionType - Actual subscription object type.
 	     *
 	     * @internal
 	     */
-	    constructor(state) {
+	    constructor(state, subscriptionType = 'Subscription') {
+	        this.subscriptionType = subscriptionType;
 	        /**
 	         * Unique subscription object identifier.
 	         *
@@ -10005,20 +10007,6 @@
 	         */
 	        this.eventDispatcher = new EventDispatcher();
 	        this._state = state;
-	    }
-	    /**
-	     * Retrieve subscription type.
-	     *
-	     * There is two types:
-	     * - Subscription
-	     * - SubscriptionSet
-	     *
-	     * @returns One of subscription types.
-	     *
-	     * @internal
-	     */
-	    get subscriptionType() {
-	        return 'Subscription';
 	    }
 	    /**
 	     * Subscription state.
@@ -10312,20 +10300,6 @@
 	        this.subscriptions = parameters.subscriptions;
 	    }
 	    /**
-	     * Retrieve subscription type.
-	     *
-	     * There is two types:
-	     * - Subscription
-	     * - SubscriptionSet
-	     *
-	     * @returns One of subscription types.
-	     *
-	     * @internal
-	     */
-	    get subscriptionType() {
-	        return 'SubscriptionSet';
-	    }
-	    /**
 	     * Add a single subscription object to the set.
 	     *
 	     * @param subscription - Another entity's subscription object, which should be added.
@@ -10404,7 +10378,7 @@
 	            state = parameters.state;
 	            state.client.logger.debug('SubscriptionSet', 'Create subscription set clone');
 	        }
-	        super(state);
+	        super(state, 'SubscriptionSet');
 	        this.state.storeClone(this.id, this);
 	        // Update a parent sets list for original set subscriptions.
 	        state.subscriptions.forEach((subscription) => subscription.addParentSet(this));
@@ -10681,10 +10655,24 @@
 	    unregister(subscriptions) {
 	        const activeSubscriptions = (subscriptions !== null && subscriptions !== void 0 ? subscriptions : this.state.subscriptions);
 	        activeSubscriptions.forEach(({ state }) => state.entity.decreaseSubscriptionCount(this.state.id));
-	        this.state.client.logger.trace(this.subscriptionType, () => ({
-	            messageType: 'text',
-	            message: `Unregister subscription from real-time events: ${this}`,
-	        }));
+	        this.state.client.logger.trace(this.subscriptionType, () => {
+	            if (!subscriptions) {
+	                return {
+	                    messageType: 'text',
+	                    message: `Unregister subscription from real-time events: ${this}`,
+	                };
+	            }
+	            else {
+	                return {
+	                    messageType: 'object',
+	                    message: {
+	                        subscription: this,
+	                        subscriptions,
+	                    },
+	                    details: 'Unregister subscriptions of subscription set from real-time events:',
+	                };
+	            }
+	        });
 	        this.state.client.unregisterEventHandleCapable(this, activeSubscriptions);
 	    }
 	    /**
@@ -16006,9 +15994,14 @@
 	                message: { subscription: subscription, subscriptions },
 	                details: `Unregister event handle capable:`,
 	            }));
-	            if (!subscriptions ||
-	                subscriptions.length === 0 ||
-	                (subscriptions && subscription instanceof SubscriptionSet && subscriptions === subscriptions))
+	            // Check whether only subscription object has been passed to be unregistered.
+	            let shouldDeleteEventHandler = !subscriptions || subscriptions.length === 0;
+	            // Check whether subscription set is unregistering with all managed Subscription objects,
+	            if (!shouldDeleteEventHandler &&
+	                subscription instanceof SubscriptionSet &&
+	                subscription.subscriptions.length === (subscriptions === null || subscriptions === void 0 ? void 0 : subscriptions.length))
+	                shouldDeleteEventHandler = subscription.subscriptions.every((sub) => subscriptions.includes(sub));
+	            if (shouldDeleteEventHandler)
 	                delete this.eventHandleCapable[subscription.state.id];
 	            let subscriptionInput;
 	            if (!subscriptions || subscriptions.length === 0) {
@@ -18093,9 +18086,7 @@
 	                        userId: clientConfiguration.getUserId(),
 	                        workerUrl: configurationCopy.subscriptionWorkerUrl,
 	                        sdkVersion: clientConfiguration.getVersion(),
-	                        // TODO: USE NEXT LINE INSTEAD
-	                        // heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
-	                        heartbeatInterval: 10,
+	                        heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
 	                        announceSuccessfulHeartbeats: clientConfiguration.announceSuccessfulHeartbeats,
 	                        announceFailedHeartbeats: clientConfiguration.announceFailedHeartbeats,
 	                        workerOfflineClientsCheckInterval: platformConfiguration.subscriptionWorkerOfflineClientsCheckInterval,

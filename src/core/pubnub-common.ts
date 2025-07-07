@@ -1511,12 +1511,18 @@ export class PubNubCore<
         details: `Unregister event handle capable:`,
       }));
 
+      // Check whether only subscription object has been passed to be unregistered.
+      let shouldDeleteEventHandler = !subscriptions || subscriptions.length === 0;
+
+      // Check whether subscription set is unregistering with all managed Subscription objects,
       if (
-        !subscriptions ||
-        subscriptions.length === 0 ||
-        (subscriptions && subscription instanceof SubscriptionSet && subscriptions === subscriptions)
+        !shouldDeleteEventHandler &&
+        subscription instanceof SubscriptionSet &&
+        subscription.subscriptions.length === subscriptions?.length
       )
-        delete this.eventHandleCapable[subscription.state.id];
+        shouldDeleteEventHandler = subscription.subscriptions.every((sub) => subscriptions.includes(sub));
+
+      if (shouldDeleteEventHandler) delete this.eventHandleCapable[subscription.state.id];
 
       let subscriptionInput: SubscriptionInput;
       if (!subscriptions || subscriptions.length === 0) {

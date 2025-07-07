@@ -435,7 +435,8 @@
                 hbRequests.response = response;
             // Notify each PubNub client which awaited for response.
             notifyRequestProcessingResult(clients, fetchRequest, response, event.request);
-            if (response[0].status >= 400)
+            // Stop heartbeat timer on client error status codes.
+            if (response[0].status >= 400 && response[0].status < 500)
                 stopHeartbeatTimer(client);
         }, (clients, fetchRequest, error) => {
             // Notify each PubNub client which awaited for response.

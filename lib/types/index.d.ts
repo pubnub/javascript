@@ -817,7 +817,7 @@ declare class PubNubCore<
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata getUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata|getUUIDMetadata} method instead.
    */
   fetchUser<Custom extends PubNub.AppContext.CustomData = PubNub.AppContext.CustomData>(
     parameters: PubNub.AppContext.GetUUIDMetadataParameters,
@@ -2143,6 +2143,14 @@ declare namespace PubNub {
      * - Wi-Fi hotspot authorization page.
      */
     PNMalformedResponseCategory = 'PNMalformedResponseCategory',
+    /**
+     * Server can't process request.
+     *
+     * There can be few sources of unexpected return with success code:
+     * - potentially an ongoing incident;
+     * - proxy server / VPN.
+     */
+    PNServerErrorCategory = 'PNServerErrorCategory',
     /**
      * Something strange happened; please check the logs.
      */
@@ -4577,6 +4585,7 @@ declare namespace PubNub {
    * Implementation of base functionality used by {@link SubscriptionObject Subscription} and {@link SubscriptionSet}.
    */
   export abstract class SubscriptionBase implements EventEmitCapable, EventHandleCapable {
+    protected readonly subscriptionType: 'Subscription' | 'SubscriptionSet';
     /**
      * Get a list of channels which is used for subscription.
      *

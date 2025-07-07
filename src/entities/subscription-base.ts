@@ -194,26 +194,15 @@ export abstract class SubscriptionBase implements EventEmitCapable, EventHandleC
    * Create a subscription object from the state.
    *
    * @param state - Subscription state object.
+   * @param subscriptionType - Actual subscription object type.
    *
    * @internal
    */
-  protected constructor(state: SubscriptionBaseState) {
+  protected constructor(
+    state: SubscriptionBaseState,
+    protected readonly subscriptionType: 'Subscription' | 'SubscriptionSet' = 'Subscription',
+  ) {
     this._state = state;
-  }
-
-  /**
-   * Retrieve subscription type.
-   *
-   * There is two types:
-   * - Subscription
-   * - SubscriptionSet
-   *
-   * @returns One of subscription types.
-   *
-   * @internal
-   */
-  get subscriptionType(): 'Subscription' | 'SubscriptionSet' {
-    return 'Subscription';
   }
 
   /**
