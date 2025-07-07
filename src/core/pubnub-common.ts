@@ -1512,9 +1512,9 @@ export class PubNubCore<
       }));
 
       if (
-        (!subscriptions ||
-        subscriptions.length === 0 )&&
-        (subscriptions && subscription instanceof SubscriptionSet && subscriptions === subscriptions)
+        (!subscriptions || subscriptions.length === 0) &&
+        subscription instanceof SubscriptionSet &&
+        subscriptions === subscriptions
       )
         delete this.eventHandleCapable[subscription.state.id];
 
