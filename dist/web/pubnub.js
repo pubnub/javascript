@@ -16006,8 +16006,8 @@
 	                message: { subscription: subscription, subscriptions },
 	                details: `Unregister event handle capable:`,
 	            }));
-	            if (!subscriptions ||
-	                subscriptions.length === 0 ||
+	            if ((!subscriptions ||
+	                subscriptions.length === 0) &&
 	                (subscriptions && subscription instanceof SubscriptionSet && subscriptions === subscriptions))
 	                delete this.eventHandleCapable[subscription.state.id];
 	            let subscriptionInput;
@@ -18093,9 +18093,7 @@
 	                        userId: clientConfiguration.getUserId(),
 	                        workerUrl: configurationCopy.subscriptionWorkerUrl,
 	                        sdkVersion: clientConfiguration.getVersion(),
-	                        // TODO: USE NEXT LINE INSTEAD
-	                        // heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
-	                        heartbeatInterval: 10,
+	                        heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
 	                        announceSuccessfulHeartbeats: clientConfiguration.announceSuccessfulHeartbeats,
 	                        announceFailedHeartbeats: clientConfiguration.announceFailedHeartbeats,
 	                        workerOfflineClientsCheckInterval: platformConfiguration.subscriptionWorkerOfflineClientsCheckInterval,
