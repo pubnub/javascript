@@ -79,11 +79,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
             }
           } else if (statusEvent.category === PubNub.CATEGORIES.PNNetworkIssuesCategory && !errorReceived) {
             errorReceived = true;
-            console.error('Network/Worker Error:', {
-              category: statusEvent.category,
-              error: statusEvent.error,
-              operation: statusEvent.operation,
-            });
             done(new Error(`Shared worker failed to initialize: ${statusEvent.error || 'Unknown error'}`));
           } else if (statusEvent.error && !connectionEstablished && !errorReceived) {
             errorReceived = true;
@@ -116,7 +111,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
             statusEvent.category === PubNub.CATEGORIES.PNSubscriptionChangedCategory
           ) {
             statusEventCount++;
-            console.log(`Status event ${statusEventCount}: ${statusEvent.category}`);
 
             // Wait for both subscription status events to ensure both channels are properly subscribed
             if (statusEventCount === 1) {
@@ -128,7 +122,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
             // After both subscriptions are ready, test message delivery to verify they actually work
             if (firstSubscriptionReady && secondSubscriptionReady) {
               const currentChannels = pubnubWithWorker.getSubscribedChannels();
-              console.log(`All connected channels: ${currentChannels.join(',')}`);
 
               try {
                 expect(currentChannels.length).to.be.greaterThan(0);
@@ -141,7 +134,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
                     pubnubWithWorker.publish({ channel: channel1, message: testMessage1 }),
                     pubnubWithWorker.publish({ channel: channel2, message: testMessage2 }),
                   ]).catch((error) => {
-                    console.log('Publish failed (expected with demo keys):', error);
                     // Even if publish fails with demo keys, if we got this far, subscriptions are working
                     done();
                   });
@@ -287,7 +279,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
             statusEvent.category === PubNub.CATEGORIES.PNSubscriptionChangedCategory
           ) {
             statusEventCount++;
-            console.log(`Unsubscribe/resubscribe test - Status event ${statusEventCount}: ${statusEvent.category}`);
 
             // Wait for first two subscriptions to be established
             if (statusEventCount >= 2 && !firstTwoChannelsReady) {
@@ -296,7 +287,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
               setTimeout(() => {
                 // Verify we have both initial channels
                 const currentChannels = pubnubWithWorker.getSubscribedChannels();
-                console.log(`Channels before unsubscribe/resubscribe: ${currentChannels.join(',')}`);
 
                 try {
                   expect(currentChannels).to.include(channel1);
@@ -321,7 +311,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
 
               setTimeout(() => {
                 const finalChannels = pubnubWithWorker.getSubscribedChannels();
-                console.log(`Final channels after resubscribe: ${finalChannels.join(',')}`);
 
                 try {
                   // Verify final state: should have channel1 and channel3, but not channel2
@@ -339,17 +328,14 @@ describe('PubNub Shared Worker Integration Tests', () => {
                         message: testMessage,
                       })
                       .then(() => {
-                        console.log('Test message published to channel3');
                         // If we don't receive the message within timeout, the test will complete anyway
                         // since we've verified the subscription state
                         setTimeout(() => {
-                          console.log('Test completing - subscription state verified');
                           done();
                         }, 2000);
                       })
                       .catch((error) => {
                         // Even if publish fails due to demo keys, subscription state verification passed
-                        console.log('Publish failed (expected with demo keys):', error);
                         done();
                       });
                   }
@@ -368,7 +354,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
             try {
               expect(messageEvent.message).to.deep.equal(testMessage);
               expect(messageEvent.channel).to.equal(channel3);
-              console.log('Received message on channel3 - subscription working correctly');
               done();
             } catch (error) {
               done(error);
@@ -934,7 +919,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
             statusEvent.category === PubNub.CATEGORIES.PNSubscriptionChangedCategory
           ) {
             statusEventCount++;
-            console.log(`Auth test status event ${statusEventCount}: ${statusEvent.category}`);
 
             if (!subscriptionEstablished) {
               subscriptionEstablished = true;
@@ -981,13 +965,11 @@ describe('PubNub Shared Worker Integration Tests', () => {
                   })
                   .then(() => {
                     // If publish succeeds, the token update was successful
-                    console.log('Publish succeeded - token update working');
                     // Wait a bit to see if we receive the message, otherwise complete the test
                     setTimeout(() => done(), 1000);
                   })
                   .catch((error) => {
                     // Even if publish fails due to demo keys, the token update mechanism worked
-                    console.log('Publish failed (expected with demo keys):', error);
                     done();
                   });
               }, 500);
@@ -1007,7 +989,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
           ) {
             try {
               expect(messageEvent.message).to.deep.equal(testMessage);
-              console.log('Received message - subscription working with new token');
               done();
             } catch (error) {
               done(error);
