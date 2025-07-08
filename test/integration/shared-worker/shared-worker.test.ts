@@ -100,16 +100,16 @@ describe('PubNub Shared Worker Integration Tests', () => {
       const channel1 = testChannels[0];
       const channel2 = testChannels[1];
       let subscriptionCompleted = false;
-      
+
       pubnubWithWorker.addListener({
         status: (statusEvent) => {
           if (statusEvent.category === PubNub.CATEGORIES.PNConnectedCategory && !subscriptionCompleted) {
             subscriptionCompleted = true;
-            
+
             // Check if we have the channels we expect
             const currentChannels = pubnubWithWorker.getSubscribedChannels();
             console.log(`Connected channels: ${currentChannels.join(',')}`);
-            
+
             try {
               // Verify we're connected to at least one channel
               expect(currentChannels.length).to.be.greaterThan(0);
@@ -126,7 +126,7 @@ describe('PubNub Shared Worker Integration Tests', () => {
       // Subscribe to both channels at once to test aggregation
       const subscription1 = pubnubWithWorker.channel(channel1).subscription();
       const subscription2 = pubnubWithWorker.channel(channel2).subscription();
-      
+
       subscription1.subscribe();
       // Subscribe to second channel after a short delay
       setTimeout(() => {
@@ -275,7 +275,7 @@ describe('PubNub Shared Worker Integration Tests', () => {
         status: (statusEvent) => {
           if (statusEvent.category === PubNub.CATEGORIES.PNConnectedCategory && !subscriptionReady) {
             subscriptionReady = true;
-            
+
             // Wait for subscription to be fully established, then publish
             setTimeout(() => {
               pubnubWithWorker
@@ -304,7 +304,7 @@ describe('PubNub Shared Worker Integration Tests', () => {
       // Subscribe to both channels at once since shared worker will aggregate them
       const subscription1 = pubnubWithWorker.channel(channel1).subscription();
       const subscription2 = pubnubWithWorker.channel(channel2).subscription();
-      
+
       subscription1.subscribe();
       subscription2.subscribe();
     }).timeout(15000);
@@ -415,24 +415,14 @@ describe('PubNub Shared Worker Integration Tests', () => {
     }).timeout(20000);
   });
 
-  describe('Heartbeat Functionality', () => {
+  describe('heartbeat Functionality', () => {
     it('should handle heartbeat requests with shared worker', (done) => {
       const channel = testChannels[0];
-      let heartbeatReceived = false;
 
       pubnubWithWorker.addListener({
-        status: (statusEvent) => {
-          // Just ensure we get a successful connection
-          if (statusEvent.category === PubNub.CATEGORIES.PNConnectedCategory && !heartbeatReceived) {
-            heartbeatReceived = true;
-            // For heartbeat test, we just need to verify the connection works
-            // The actual heartbeat is handled internally by the shared worker
-            done();
-          }
-        },
+        status: (statusEvent) => {},
         presence: (presenceEvent) => {
-          if (presenceEvent.channel === channel && !heartbeatReceived) {
-            heartbeatReceived = true;
+          if (presenceEvent.channel === channel) {
             try {
               expect(presenceEvent.action).to.exist;
               expect(presenceEvent.action).to.equal('join');
@@ -443,11 +433,308 @@ describe('PubNub Shared Worker Integration Tests', () => {
           }
         },
       });
-      
+
       const subscription = pubnubWithWorker.channel(channel).subscription({
         receivePresenceEvents: true,
       });
       subscription.subscribe();
     }).timeout(10000);
+  });
+
+  describe('Shared Worker Message Aggregation', () => {
+    it('should handle multiple instances subscribing to same channel efficiently', (done) => {
+      const testId = `test-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const sharedChannel = `shared-channel-${testId}`;
+      const testMessage = {
+        text: `Shared worker test message ${Date.now()}`,
+        sender: 'test-sender',
+      };
+
+      // Create two PubNub instances with shared worker
+      const pubnub1 = new PubNub({
+        publishKey: 'demo',
+        subscribeKey: 'demo',
+        userId: `user1-${testId}`,
+        enableEventEngine: true,
+        subscriptionWorkerUrl: getWorkerUrl(),
+        autoNetworkDetection: false,
+      });
+
+      const pubnub2 = new PubNub({
+        publishKey: 'demo',
+        subscribeKey: 'demo',
+        userId: `user2-${testId}`,
+        enableEventEngine: true,
+        subscriptionWorkerUrl: getWorkerUrl(),
+        autoNetworkDetection: false,
+      });
+
+      let instance1Connected = false;
+      let instance2Connected = false;
+      let instance1ReceivedMessage = false;
+      let instance2ReceivedMessage = false;
+
+      // Setup listeners for both instances
+      pubnub1.addListener({
+        status: (statusEvent) => {
+          if (statusEvent.category === PubNub.CATEGORIES.PNConnectedCategory && !instance1Connected) {
+            instance1Connected = true;
+            checkReadyToPublish();
+          }
+        },
+        message: (messageEvent) => {
+          if (messageEvent.channel === sharedChannel && !instance1ReceivedMessage) {
+            instance1ReceivedMessage = true;
+            try {
+              expect(messageEvent.message).to.deep.equal(testMessage);
+              expect(messageEvent.channel).to.equal(sharedChannel);
+              checkTestCompletion();
+            } catch (error) {
+              cleanup();
+              done(error);
+            }
+          }
+        },
+      });
+
+      pubnub2.addListener({
+        status: (statusEvent) => {
+          if (statusEvent.category === PubNub.CATEGORIES.PNConnectedCategory && !instance2Connected) {
+            instance2Connected = true;
+            checkReadyToPublish();
+          }
+        },
+        message: (messageEvent) => {
+          if (messageEvent.channel === sharedChannel && !instance2ReceivedMessage) {
+            instance2ReceivedMessage = true;
+            try {
+              expect(messageEvent.message).to.deep.equal(testMessage);
+              expect(messageEvent.channel).to.equal(sharedChannel);
+              checkTestCompletion();
+            } catch (error) {
+              cleanup();
+              done(error);
+            }
+          }
+        },
+      });
+
+      function checkReadyToPublish() {
+        if (instance1Connected && instance2Connected) {
+          // Wait for subscriptions to be fully established
+          setTimeout(() => {
+            // Use a third instance to publish to avoid self-message issues
+            const publisher = new PubNub({
+              publishKey: 'demo',
+              subscribeKey: 'demo',
+              userId: `publisher-${testId}`,
+            });
+
+            publisher
+              .publish({
+                channel: sharedChannel,
+                message: testMessage,
+              })
+              .then(() => {
+                publisher.destroy(true);
+              })
+              .catch((error) => {
+                publisher.destroy(true);
+                cleanup();
+                done(error);
+              });
+          }, 1000);
+        }
+      }
+
+      function checkTestCompletion() {
+        if (instance1ReceivedMessage && instance2ReceivedMessage) {
+          cleanup();
+          done();
+        }
+      }
+
+      function cleanup() {
+        pubnub1.removeAllListeners();
+        pubnub1.unsubscribeAll();
+        pubnub1.destroy(true);
+
+        pubnub2.removeAllListeners();
+        pubnub2.unsubscribeAll();
+        pubnub2.destroy(true);
+      }
+
+      // Both instances subscribe to the same channel
+      // The shared worker should efficiently manage this single subscription
+      const subscription1 = pubnub1.channel(sharedChannel).subscription();
+      const subscription2 = pubnub2.channel(sharedChannel).subscription();
+
+      subscription1.subscribe();
+      subscription2.subscribe();
+    }).timeout(15000);
+
+    it('should maintain channel isolation between instances with shared worker', (done) => {
+      const testId = `test-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const c1 = `c1-${testId}-${Math.floor(Math.random() * 1000)}`;
+      const c2 = `c2-${testId}-${Math.floor(Math.random() * 1000)}`;
+      const messageForC1 = {
+        text: `Message for channel c1 ${Date.now()}`,
+        target: 'instance1',
+      };
+      const messageForC2 = {
+        text: `Message for channel c2 ${Date.now()}`,
+        target: 'instance2',
+      };
+
+      // Create two PubNub instances with shared worker
+      const instance1 = new PubNub({
+        publishKey: 'demo',
+        subscribeKey: 'demo',
+        userId: `instance1-${testId}`,
+        enableEventEngine: true,
+        subscriptionWorkerUrl: getWorkerUrl(),
+        autoNetworkDetection: false,
+      });
+
+      const instance2 = new PubNub({
+        publishKey: 'demo',
+        subscribeKey: 'demo',
+        userId: `instance2-${testId}`,
+        enableEventEngine: true,
+        subscriptionWorkerUrl: getWorkerUrl(),
+        autoNetworkDetection: false,
+      });
+
+      let instance1Connected = false;
+      let instance2Connected = false;
+      let instance1ReceivedC1Message = false;
+      let instance1ReceivedC2Message = false;
+      let instance2ReceivedC1Message = false;
+      let instance2ReceivedC2Message = false;
+      let messagesPublished = false;
+
+      // Setup listeners for instance1
+      instance1.addListener({
+        status: (statusEvent) => {
+          if (statusEvent.category === PubNub.CATEGORIES.PNConnectedCategory && !instance1Connected) {
+            instance1Connected = true;
+            checkReadyToPublish();
+          }
+        },
+        message: (messageEvent) => {
+          if (messageEvent.channel === c1) {
+            instance1ReceivedC1Message = true;
+            try {
+              expect(messageEvent.message).to.deep.equal(messageForC1);
+              expect(messageEvent.channel).to.equal(c1);
+              checkTestCompletion();
+            } catch (error) {
+              cleanup();
+              done(error);
+            }
+          } else if (messageEvent.channel === c2) {
+            instance1ReceivedC2Message = true;
+            cleanup();
+            done(new Error('Instance1 should not receive messages from c2'));
+          }
+        },
+      });
+
+      // Setup listeners for instance2
+      instance2.addListener({
+        status: (statusEvent) => {
+          if (statusEvent.category === PubNub.CATEGORIES.PNConnectedCategory && !instance2Connected) {
+            instance2Connected = true;
+            checkReadyToPublish();
+          }
+        },
+        message: (messageEvent) => {
+          if (messageEvent.channel === c2) {
+            instance2ReceivedC2Message = true;
+            try {
+              expect(messageEvent.message).to.deep.equal(messageForC2);
+              expect(messageEvent.channel).to.equal(c2);
+              checkTestCompletion();
+            } catch (error) {
+              cleanup();
+              done(error);
+            }
+          } else if (messageEvent.channel === c1) {
+            instance2ReceivedC1Message = true;
+            cleanup();
+            done(new Error('Instance2 should not receive messages from c1'));
+          }
+        },
+      });
+
+      function checkReadyToPublish() {
+        if (instance1Connected && instance2Connected && !messagesPublished) {
+          messagesPublished = true;
+          // Wait for subscriptions to be fully established
+          setTimeout(() => {
+            // Create a publisher instance to send messages
+            const publisher = new PubNub({
+              publishKey: 'demo',
+              subscribeKey: 'demo',
+              userId: `publisher-${testId}`,
+            });
+
+            // Publish to both channels
+            Promise.all([
+              publisher.publish({
+                channel: c1,
+                message: messageForC1,
+              }),
+              publisher.publish({
+                channel: c2,
+                message: messageForC2,
+              }),
+            ])
+              .then(() => {
+                publisher.destroy(true);
+              })
+              .catch((error) => {
+                publisher.destroy(true);
+                cleanup();
+                done(error);
+              });
+          }, 1000);
+        }
+      }
+
+      function checkTestCompletion() {
+        if (instance1ReceivedC1Message && instance2ReceivedC2Message) {
+          // Wait a bit to ensure no cross-channel messages are received
+          setTimeout(() => {
+            try {
+              expect(instance1ReceivedC2Message).to.be.false;
+              expect(instance2ReceivedC1Message).to.be.false;
+              cleanup();
+              done();
+            } catch (error) {
+              cleanup();
+              done(error);
+            }
+          }, 1000);
+        }
+      }
+
+      function cleanup() {
+        instance1.removeAllListeners();
+        instance1.unsubscribeAll();
+        instance1.destroy(true);
+
+        instance2.removeAllListeners();
+        instance2.unsubscribeAll();
+        instance2.destroy(true);
+      }
+
+      // Instance1 subscribes to c1, Instance2 subscribes to c2
+      const subscription1 = instance1.channel(c1).subscription();
+      const subscription2 = instance2.channel(c2).subscription();
+
+      subscription1.subscribe();
+      subscription2.subscribe();
+    }).timeout(15000);
   });
 });
