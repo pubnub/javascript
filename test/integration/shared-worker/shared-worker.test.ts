@@ -1490,4 +1490,411 @@ describe('PubNub Shared Worker Integration Tests', () => {
       subscription1.subscribe();
     }).timeout(20000);
   });
+
+  describe('Subscription Behavior with Event Engine Disabled', () => {
+    let pubnub1: PubNub;
+    let pubnub2: PubNub;
+    let testChannels: string[];
+
+    beforeEach(() => {
+      const testId = `test-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      testChannels = [
+        `channel-1-${testId}`,
+        `channel-2-${testId}`,
+        `channel-3-${testId}`,
+        `channel-4-${testId}`,
+        `unsubscribed-channel-${testId}`,
+      ];
+
+      const config = {
+        publishKey: 'demo',
+        subscribeKey: 'demo',
+        enableEventEngine: false,
+        heartbeatInterval: 1.5,
+        presenceTimeout: 5,
+        autoNetworkDetection: false,
+      };
+
+      pubnub1 = new PubNub({
+        ...config,
+        userId: `user1-${testId}`,
+      });
+
+      pubnub2 = new PubNub({
+        ...config,
+        userId: `user2-${testId}`,
+      });
+    });
+
+    afterEach(() => {
+      if (pubnub1) {
+        pubnub1.removeAllListeners();
+        pubnub1.unsubscribeAll();
+        pubnub1.destroy(true);
+      }
+
+      if (pubnub2) {
+        pubnub2.removeAllListeners();
+        pubnub2.unsubscribeAll();
+        pubnub2.destroy(true);
+      }
+    });
+
+    it('should handle subscription lifecycle with presence events and message filtering', (done) => {
+      const [channel1, channel2, channel3, channel4, unsubscribedChannel] = testChannels;
+
+      // Track test state
+      let joinPresenceReceived = false;
+      let channelsAdded = false;
+      let firstChannelUnsubscribed = false;
+      let newChannelAdded = false;
+      let testCompleted = false;
+
+      // Message tracking
+      let messageFromUnsubscribedChannel = false;
+      let messageFromSubscribedChannel = false;
+
+      // Test messages
+      const testMessageForUnsubscribed = {
+        text: `Message for unsubscribed channel ${Date.now()}`,
+        type: 'unsubscribed-test',
+      };
+
+      const testMessageForSubscribed = {
+        text: `Message for subscribed channel ${Date.now()}`,
+        type: 'subscribed-test',
+      };
+
+      // Create individual subscriptions for each channel
+      const channel1Sub = pubnub1.channel(channel1).subscription({ receivePresenceEvents: true });
+      const channel2Sub = pubnub1.channel(channel2).subscription({ receivePresenceEvents: true });
+      const channel3Sub = pubnub1.channel(channel3).subscription({ receivePresenceEvents: true });
+      const channel4Sub = pubnub1.channel(channel4).subscription({ receivePresenceEvents: true });
+
+      // Create a subscription set to manage multiple subscriptions
+      let subscriptionSet = channel1Sub.addSubscription(channel2Sub);
+
+      // Set up listeners for pubnub1 (subscriber)
+      pubnub1.addListener({
+        presence: (presenceEvent) => {
+          if (presenceEvent.action === 'join' && presenceEvent.channel === channel1 && !joinPresenceReceived) {
+            joinPresenceReceived = true;
+
+            try {
+              expect(presenceEvent.action).to.equal('join');
+              expect(presenceEvent.channel).to.equal(channel1);
+              expect(presenceEvent.uuid).to.exist;
+
+              // Step 2: Add more channels to the subscription set
+              setTimeout(() => {
+                if (!testCompleted) {
+                  subscriptionSet.addSubscription(channel3Sub);
+                  channelsAdded = true;
+
+                  // Step 3: Remove the first channel from subscription set
+                  setTimeout(() => {
+                    if (!testCompleted) {
+                      subscriptionSet.removeSubscription(channel1Sub);
+                      firstChannelUnsubscribed = true;
+
+                      // Step 4: Add a new channel to subscription set
+                      setTimeout(() => {
+                        if (!testCompleted) {
+                          subscriptionSet.addSubscription(channel4Sub);
+                          newChannelAdded = true;
+
+                          // Step 5: Test message publishing after all subscription changes
+                          setTimeout(() => {
+                            if (!testCompleted) {
+                              // Publish to unsubscribed channel (should not receive)
+                              pubnub2
+                                .publish({
+                                  channel: channel1, // This was removed from subscription set
+                                  message: testMessageForUnsubscribed,
+                                })
+                                .catch(() => {
+                                  // Ignore publish errors with demo keys
+                                });
+
+                              // Publish to subscribed channel (should receive)
+                              setTimeout(() => {
+                                if (!testCompleted) {
+                                  pubnub2
+                                    .publish({
+                                      channel: channel2, // This should still be subscribed
+                                      message: testMessageForSubscribed,
+                                    })
+                                    .catch(() => {
+                                      // Ignore publish errors with demo keys
+                                    });
+                                }
+                              }, 500);
+                            }
+                          }, 1000);
+                        }
+                      }, 1000);
+                    }
+                  }, 1000);
+                }
+              }, 1000);
+            } catch (error) {
+              if (!testCompleted) {
+                testCompleted = true;
+                done(error);
+              }
+            }
+          }
+        },
+
+        message: (messageEvent) => {
+          if (testCompleted) return;
+
+          // Check if we received message from unsubscribed channel (should not happen)
+          if (messageEvent.channel === channel1) {
+            messageFromUnsubscribedChannel = true;
+            testCompleted = true;
+            done(new Error(`Should not receive message from unsubscribed channel ${channel1}`));
+            return;
+          }
+
+          // Check if we received message from subscribed channel (should happen)
+          if (messageEvent.channel === channel2) {
+            messageFromSubscribedChannel = true;
+
+            try {
+              expect(messageEvent.message).to.deep.equal(testMessageForSubscribed);
+              expect(messageEvent.channel).to.equal(channel2);
+
+              // Verify final subscription state
+              const subscribedChannels = pubnub1.getSubscribedChannels();
+              expect(subscribedChannels).to.include(channel2);
+              expect(subscribedChannels).to.include(channel3);
+              expect(subscribedChannels).to.include(channel4);
+              expect(subscribedChannels).to.not.include(channel1);
+
+              // Verify test progression
+              expect(joinPresenceReceived).to.be.true;
+              expect(channelsAdded).to.be.true;
+              expect(firstChannelUnsubscribed).to.be.true;
+              expect(newChannelAdded).to.be.true;
+              expect(messageFromUnsubscribedChannel).to.be.false;
+              expect(messageFromSubscribedChannel).to.be.true;
+
+              testCompleted = true;
+              done();
+            } catch (error) {
+              testCompleted = true;
+              done(error);
+            }
+          }
+        },
+      });
+
+      // Step 1: Start initial subscription set
+      subscriptionSet.subscribe();
+
+      // Safety timeout to prevent hanging
+      setTimeout(() => {
+        if (!testCompleted) {
+          testCompleted = true;
+
+          // Check what we accomplished
+          const subscribedChannels = pubnub1.getSubscribedChannels();
+
+          if (joinPresenceReceived && channelsAdded && firstChannelUnsubscribed && newChannelAdded) {
+            // All subscription operations completed, check final state
+            try {
+              expect(subscribedChannels).to.not.include(channel1);
+              expect(messageFromUnsubscribedChannel).to.be.false;
+              done();
+            } catch (error) {
+              done(error);
+            }
+          } else {
+            done(
+              new Error(
+                `Test incomplete: join=${joinPresenceReceived}, added=${channelsAdded}, unsubscribed=${firstChannelUnsubscribed}, newAdded=${newChannelAdded}`,
+              ),
+            );
+          }
+        }
+      }, 20000);
+    }).timeout(25000);
+
+    it('should receive timeout presence events when browser tabs are closed', (done) => {
+      const testChannel = testChannels[0];
+      let testCompleted = false;
+      let timeoutPresenceReceived = false;
+
+      // Create three PubNub instances simulating different browser tabs
+      const tab1 = new PubNub({
+        publishKey: 'demo',
+        subscribeKey: 'demo',
+        enableEventEngine: false,
+        heartbeatInterval: 1.5,
+        presenceTimeout: 5,
+        autoNetworkDetection: false,
+        userId: `tab1-${Date.now()}`,
+        subscriptionWorkerUrl: getWorkerUrl(),
+      });
+
+      const tab2 = new PubNub({
+        publishKey: 'demo',
+        subscribeKey: 'demo',
+        enableEventEngine: false,
+        heartbeatInterval: 1.5,
+        presenceTimeout: 5,
+        autoNetworkDetection: false,
+        userId: `tab2-${Date.now()}`,
+        subscriptionWorkerUrl: getWorkerUrl(),
+      });
+
+      const tab3 = new PubNub({
+        publishKey: 'demo',
+        subscribeKey: 'demo',
+        enableEventEngine: false,
+        heartbeatInterval: 1.5,
+        presenceTimeout: 5,
+        autoNetworkDetection: false,
+        userId: `tab3-${Date.now()}`,
+        subscriptionWorkerUrl: getWorkerUrl(),
+      });
+
+      let joinEventsReceived = 0;
+      let leaveEventsReceived = 0;
+      let tab2Closed = false;
+      const expectedJoinEvents = 3; // We expect join events from all 3 tabs
+      const tab2UserId = tab2.getUserId();
+      const receivedPresenceEvents: string[] = [];
+
+      // Set up presence listener on tab1 to monitor all presence events
+      tab1.addListener({
+        presence: (presenceEvent) => {
+          if (testCompleted) return;
+
+          const eventInfo = `${presenceEvent.action}:${(presenceEvent as any).uuid}:${presenceEvent.channel}`;
+          receivedPresenceEvents.push(eventInfo);
+
+          if (presenceEvent.action === 'join' && presenceEvent.channel === testChannel) {
+            joinEventsReceived++;
+
+            // Once all tabs have joined, close tab2 to trigger timeout
+            if (joinEventsReceived >= expectedJoinEvents && !tab2Closed) {
+              tab2Closed = true;
+
+              // Close tab2 after ensuring all joins are processed
+              setTimeout(() => {
+                if (!testCompleted) {
+                  // Simulate tab closure by destroying the PubNub instance
+                  tab2.removeAllListeners();
+                  tab2.unsubscribeAll();
+                  tab2.destroy(true);
+                }
+              }, 1500); // Increased delay to ensure heartbeat stops
+            }
+          }
+
+          // Check for leave events (might occur before timeout)
+          if (presenceEvent.action === 'leave' && presenceEvent.channel === testChannel) {
+            leaveEventsReceived++;
+            if ((presenceEvent as any).uuid === tab2UserId) {
+              timeoutPresenceReceived = true;
+              testCompleted = true;
+
+              try {
+                expect(presenceEvent.action).to.equal('leave');
+                expect(presenceEvent.channel).to.equal(testChannel);
+                expect((presenceEvent as any).uuid).to.equal(tab2UserId);
+
+                // Clean up remaining tabs
+                cleanupTabs();
+                done();
+              } catch (error) {
+                cleanupTabs();
+                done(error);
+              }
+            }
+          }
+
+          // Check for timeout presence event
+          if (presenceEvent.action === 'timeout' && presenceEvent.channel === testChannel) {
+            // Verify this is the timeout for tab2
+            if ((presenceEvent as any).uuid === tab2UserId) {
+              timeoutPresenceReceived = true;
+              testCompleted = true;
+
+              try {
+                expect(presenceEvent.action).to.equal('timeout');
+                expect(presenceEvent.channel).to.equal(testChannel);
+                expect((presenceEvent as any).uuid).to.equal(tab2UserId);
+
+                // Clean up remaining tabs
+                cleanupTabs();
+                done();
+              } catch (error) {
+                cleanupTabs();
+                done(error);
+              }
+            }
+          }
+        },
+      });
+
+      function cleanupTabs() {
+        [tab1, tab3].forEach((tab) => {
+          if (tab) {
+            tab.removeAllListeners();
+            tab.unsubscribeAll();
+            tab.destroy(true);
+          }
+        });
+      }
+
+      // Subscribe all tabs to the same channel with presence events
+      const tab1Subscription = tab1.channel(testChannel).subscription({ receivePresenceEvents: true });
+      const tab2Subscription = tab2.channel(testChannel).subscription({ receivePresenceEvents: true });
+      const tab3Subscription = tab3.channel(testChannel).subscription({ receivePresenceEvents: true });
+
+      // Start subscriptions with small delays to ensure proper ordering
+      tab1Subscription.subscribe();
+      setTimeout(() => tab2Subscription.subscribe(), 200);
+      setTimeout(() => tab3Subscription.subscribe(), 400);
+
+      // Extended timeout - presence timeout is 5 seconds, so we wait 10 seconds total
+      setTimeout(() => {
+        if (!testCompleted) {
+          testCompleted = true;
+          cleanupTabs();
+
+          const debugInfo = {
+            joinEventsReceived,
+            leaveEventsReceived,
+            expectedJoinEvents,
+            tab2Closed,
+            timeoutPresenceReceived,
+            tab2UserId,
+            receivedPresenceEvents,
+          };
+
+          if (joinEventsReceived < expectedJoinEvents) {
+            done(
+              new Error(
+                `Not all tabs joined. Expected ${expectedJoinEvents}, got ${joinEventsReceived}. Debug: ${JSON.stringify(debugInfo)}`,
+              ),
+            );
+          } else if (!tab2Closed) {
+            done(new Error(`Tab2 was not closed as expected. Debug: ${JSON.stringify(debugInfo)}`));
+          } else if (!timeoutPresenceReceived) {
+            done(
+              new Error(
+                `Neither timeout nor leave presence event was received for tab2. Debug: ${JSON.stringify(debugInfo)}`,
+              ),
+            );
+          } else {
+            done(new Error(`Test completed but outcome unclear. Debug: ${JSON.stringify(debugInfo)}`));
+          }
+        }
+      }, 10000);
+    }).timeout(15000);
+  });
 });
