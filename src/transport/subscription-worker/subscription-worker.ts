@@ -1973,16 +1973,17 @@ const heartbeatTransportRequestFromEvent = (
       hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp + minimumHeartbeatInterval * 1000;
     const currentTimestamp = Date.now();
 
-    // Check whether it is too soon to send request or not.
     // Request should be sent if a previous attempt failed.
-    const leeway = minimumHeartbeatInterval * 0.05 * 1000;
-    if (
-      !outOfOrder &&
-      !failedPreviousRequest &&
-      currentTimestamp < expectedTimestamp &&
-      expectedTimestamp - currentTimestamp > leeway
-    )
-      return undefined;
+    if (!outOfOrder && !failedPreviousRequest && currentTimestamp < expectedTimestamp) {
+      // Check whether it is too soon to send request or not.
+      const leeway = minimumHeartbeatInterval * 0.05 * 1000;
+
+      if (minimumHeartbeatInterval - leeway <= 3) {
+        // Leeway can't be applied if actual interval between heartbeat requests is smaller
+        // than 3 seconds which derived from the server's threshold.
+        return undefined;
+      } else if (expectedTimestamp - currentTimestamp > leeway) return undefined;
+    }
   }
 
   delete hbRequestsBySubscriptionKey[heartbeatRequestKey]!.response;

@@ -426,6 +426,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
     } else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
       if (this.callbacks!.has(data.identifier)) {
         const { resolve, reject } = this.callbacks!.get(data.identifier)!;
+        this.callbacks!.delete(data.identifier);
 
         if (data.type === 'request-process-success') {
           resolve({
