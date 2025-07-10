@@ -827,6 +827,10 @@ const handleSendSubscribeRequestForClient = (
 
   consoleLog(`'${Object.keys(serviceRequests).length}' subscription request currently active.`);
 
+  // Notify about request processing start.
+  for (const client of clientsForRequest(requestOrId.identifier))
+    consoleLog({ messageType: 'network-request', message: requestOrId as unknown as Payload }, client);
+
   sendRequest(
     requestOrId,
     () => clientsForRequest(requestOrId.identifier),
@@ -919,10 +923,12 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent, actualRequest = tr
   const hbRequests = (hbRequestsBySubscriptionKey ?? {})[heartbeatRequestKey];
 
   if (!request) {
-    consoleLog(
-      `Previous heartbeat request has been sent less than ${client.heartbeatInterval} seconds ago. Skipping...`,
-      client,
-    );
+    let message = `Previous heartbeat request has been sent less than ${
+      client.heartbeatInterval
+    } seconds ago. Skipping...`;
+    if (!client.heartbeat || (client.heartbeat.channels.length === 0 && client.heartbeat.channelGroups.length === 0))
+      message = `${client.clientIdentifier} doesn't have subscriptions to non-presence channels. Skipping...`;
+    consoleLog(message, client);
 
     let response: Response | undefined;
     let body: ArrayBuffer | undefined;
@@ -950,6 +956,10 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent, actualRequest = tr
   }
 
   consoleLog(`Started heartbeat request.`, client);
+
+  // Notify about request processing start.
+  for (const client of clientsForSendHeartbeatRequestEvent(event))
+    consoleLog({ messageType: 'network-request', message: request as unknown as Payload }, client);
 
   sendRequest(
     request,
@@ -1037,6 +1047,10 @@ const handleSendLeaveRequestEvent = (
   }
 
   consoleLog(`Started leave request.`, client);
+
+  // Notify about request processing start.
+  for (const client of clientsForSendLeaveRequestEvent(data, invalidatedClient))
+    consoleLog({ messageType: 'network-request', message: request as unknown as Payload }, client);
 
   sendRequest(
     request,
@@ -1148,10 +1162,6 @@ const sendRequest = (
 ) => {
   (async () => {
     const fetchRequest = requestFromTransportRequest(request);
-
-    // Notify about request processing start.
-    for (const client of getClients())
-      consoleLog({ messageType: 'network-request', message: request as unknown as Payload }, client);
 
     Promise.race([
       fetch(fetchRequest, {
@@ -2339,10 +2349,15 @@ const unsubscribeClient = (client: PubNubClientState, invalidatedClientServiceRe
  */
 const startHeartbeatTimer = (client: PubNubClientState, adjust: boolean = false) => {
   const { heartbeat, heartbeatInterval } = client;
-  if (heartbeat === undefined || !heartbeat.heartbeatEvent) return;
 
   // Check whether there is a need to run "backup" heartbeat timer or not.
-  if (!heartbeatInterval || heartbeatInterval === 0) {
+  const shouldStart =
+    heartbeatInterval &&
+    heartbeatInterval > 0 &&
+    heartbeat !== undefined &&
+    heartbeat.heartbeatEvent &&
+    (heartbeat.channels.length > 0 || heartbeat.channelGroups.length > 0);
+  if (!shouldStart) {
     stopHeartbeatTimer(client);
     return;
   }

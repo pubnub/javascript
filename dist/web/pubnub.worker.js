@@ -334,6 +334,10 @@
             abortControllers.set(requestOrId.identifier, new AbortController());
         const scheduledRequest = serviceRequests[requestOrId.identifier];
         const { timetokenOverride, regionOverride } = scheduledRequest;
+        consoleLog(`'${Object.keys(serviceRequests).length}' subscription request currently active.`);
+        // Notify about request processing start.
+        for (const client of clientsForRequest(requestOrId.identifier))
+            consoleLog({ messageType: 'network-request', message: requestOrId }, client);
         sendRequest(requestOrId, () => clientsForRequest(requestOrId.identifier), (clients, fetchRequest, response) => {
             // Notify each PubNub client which awaited for response.
             notifyRequestProcessingResult(clients, fetchRequest, response, event.request);
@@ -351,7 +355,6 @@
             }
             return serverResponse;
         });
-        consoleLog(`'${Object.keys(serviceRequests).length}' subscription request currently active.`);
     };
     const patchInitialSubscribeResponse = (serverResponse, timetoken, region) => {
         if (timetoken === undefined || timetoken === '0' || serverResponse[0].status >= 400) {
@@ -409,7 +412,10 @@
         const hbRequestsBySubscriptionKey = serviceHeartbeatRequests[client.subscriptionKey];
         const hbRequests = (hbRequestsBySubscriptionKey !== null && hbRequestsBySubscriptionKey !== void 0 ? hbRequestsBySubscriptionKey : {})[heartbeatRequestKey];
         if (!request) {
-            consoleLog(`Previous heartbeat request has been sent less than ${client.heartbeatInterval} seconds ago. Skipping...`, client);
+            let message = `Previous heartbeat request has been sent less than ${client.heartbeatInterval} seconds ago. Skipping...`;
+            if (!client.heartbeat || (client.heartbeat.channels.length === 0 && client.heartbeat.channelGroups.length === 0))
+                message = `${client.clientIdentifier} doesn't have subscriptions to non-presence channels. Skipping...`;
+            consoleLog(message, client);
             let response;
             let body;
             // Pulling out previous response.
@@ -430,6 +436,10 @@
             publishClientEvent(client, result);
             return;
         }
+        consoleLog(`Started heartbeat request.`, client);
+        // Notify about request processing start.
+        for (const client of clientsForSendHeartbeatRequestEvent(event))
+            consoleLog({ messageType: 'network-request', message: request }, client);
         sendRequest(request, () => [client], (clients, fetchRequest, response) => {
             if (hbRequests)
                 hbRequests.response = response;
@@ -442,7 +452,6 @@
             // Notify each PubNub client which awaited for response.
             notifyRequestProcessingResult(clients, fetchRequest, null, event.request, requestProcessingError(error));
         });
-        consoleLog(`Started heartbeat request.`, client);
         // Start "backup" heartbeat timer.
         if (!outOfOrder)
             startHeartbeatTimer(client);
@@ -499,6 +508,10 @@
             publishClientEvent(client, result);
             return;
         }
+        consoleLog(`Started leave request.`, client);
+        // Notify about request processing start.
+        for (const client of clientsForSendLeaveRequestEvent(data, invalidatedClient))
+            consoleLog({ messageType: 'network-request', message: request }, client);
         sendRequest(request, () => [client], (clients, fetchRequest, response) => {
             // Notify each PubNub client which awaited for response.
             notifyRequestProcessingResult(clients, fetchRequest, response, data.request);
@@ -506,7 +519,6 @@
             // Notify each PubNub client which awaited for response.
             notifyRequestProcessingResult(clients, fetchRequest, null, data.request, requestProcessingError(error));
         });
-        consoleLog(`Started leave request.`, client);
         // Check whether there were active subscription with channels from this client or not.
         if (serviceRequestId === undefined)
             return;
@@ -592,9 +604,6 @@
         (() => __awaiter(void 0, void 0, void 0, function* () {
             var _a;
             const fetchRequest = requestFromTransportRequest(request);
-            // Notify about request processing start.
-            for (const client of getClients())
-                consoleLog({ messageType: 'network-request', message: request }, client);
             Promise.race([
                 fetch(fetchRequest, {
                     signal: (_a = abortControllers.get(request.identifier)) === null || _a === void 0 ? void 0 : _a.signal,
@@ -1637,10 +1646,13 @@
      */
     const startHeartbeatTimer = (client, adjust = false) => {
         const { heartbeat, heartbeatInterval } = client;
-        if (heartbeat === undefined || !heartbeat.heartbeatEvent)
-            return;
         // Check whether there is a need to run "backup" heartbeat timer or not.
-        if (!heartbeatInterval || heartbeatInterval === 0) {
+        const shouldStart = heartbeatInterval &&
+            heartbeatInterval > 0 &&
+            heartbeat !== undefined &&
+            heartbeat.heartbeatEvent &&
+            (heartbeat.channels.length > 0 || heartbeat.channelGroups.length > 0);
+        if (!shouldStart) {
             stopHeartbeatTimer(client);
             return;
         }
