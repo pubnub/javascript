@@ -14,6 +14,218 @@ import uuidGenerator from '../../core/components/uuid';
 import { Payload, Query } from '../../core/types/api';
 
 // --------------------------------------------------------
+// -------------------- Network Metrics -------------------
+// --------------------------------------------------------
+
+interface NetworkMetrics {
+  requestId: string;
+  requestType: 'subscribe' | 'heartbeat' | 'leave' | 'other';
+  url: string;
+  method: string;
+  queuedAt: number;
+  fetchStartedAt?: number;
+  fetchCompletedAt?: number;
+  responseSize?: number;
+  status?: number;
+  error?: string;
+  queueDepthAtStart?: number;
+  concurrentRequestsAtStart?: number;
+  clientIdentifier?: string;
+  channels?: string[];
+  channelGroups?: string[];
+  timerToFetchDelay?: number; // Time from timer fire to actual fetch call
+}
+
+interface HeartbeatMetrics {
+  scheduledAt: number;
+  expectedFireAt: number;
+  actualFiredAt?: number;
+  fetchStartedAt?: number;
+  fetchCompletedAt?: number;
+  completedAt?: number;
+  skipped?: boolean;
+  skipReason?: string;
+  delayFromExpected?: number;
+  queueDepthAtFire?: number;
+  error?: string;
+}
+
+// Global metrics storage
+const networkMetrics: Map<string, NetworkMetrics> = new Map();
+const heartbeatMetrics: Map<string, HeartbeatMetrics> = new Map();
+const pendingRequests: Map<string, NetworkMetrics> = new Map();
+let metricsSequenceNumber = 0;
+
+// Track metrics-only clients (network-metrics dashboard)
+const metricsClients: Map<string, MessagePort> = new Map();
+
+// Connection tracking
+const activeConnections = new Map<string, { startTime: number; requestId: string }>();
+const connectionMetrics = {
+  maxConcurrent: 0,
+  totalConnections: 0,
+  connectionReuse: 0,
+  newConnections: 0
+};
+
+// Request queue tracking
+const requestQueue: { requestId: string; type: string; queuedAt: number; order: number }[] = [];
+let requestOrder = 0;
+const requestQueueMetrics = {
+  maxQueueDepth: 0,
+  totalQueued: 0,
+  heartbeatDelays: [] as number[],
+  requestOrdering: new Map<string, { queueOrder: number; executionOrder: number }>()
+};
+
+// Metrics helper functions
+const getRequestType = (request: TransportRequest): NetworkMetrics['requestType'] => {
+  if (request.path.endsWith('/subscribe')) return 'subscribe';
+  if (request.path.endsWith('/heartbeat')) return 'heartbeat';
+  if (request.path.includes('/leave')) return 'leave';
+  return 'other';
+};
+
+// Periodic metrics summary
+let metricsInterval: ReturnType<typeof setInterval> | undefined;
+const startMetricsSummary = () => {
+  if (metricsInterval) return;
+  
+  metricsInterval = setInterval(() => {
+    // Get detailed request information
+    const now = Date.now();
+    const activeRequests = Array.from(activeConnections.entries()).map(([id, conn]) => {
+      const metrics = networkMetrics.get(id);
+      return {
+        id,
+        url: metrics?.url || 'unknown',
+        type: metrics?.requestType || 'unknown',
+        channels: metrics?.channels || [],
+        duration: now - conn.startTime,
+        startTime: conn.startTime
+      };
+    }).sort((a, b) => b.startTime - a.startTime); // Most recent first
+    
+    const queuedRequests = requestQueue.map(req => {
+      const metrics = networkMetrics.get(req.requestId);
+      return {
+        id: req.requestId,
+        url: metrics?.url || 'unknown',
+        type: req.type,
+        channels: metrics?.channels || [],
+        queueTime: now - req.queuedAt,
+        queuedAt: req.queuedAt,
+        order: req.order
+      };
+    }).sort((a, b) => a.order - b.order); // Order by queue position
+    
+    const summary = {
+      timestamp: new Date().toISOString(),
+      network: {
+        pendingRequests: pendingRequests.size,
+        activeConnections: activeConnections.size,
+        maxConcurrent: connectionMetrics.maxConcurrent,
+        totalRequests: networkMetrics.size,
+        browserQueueEstimate: Math.max(0, activeConnections.size - 6) // Estimated browser queue
+      },
+      queue: {
+        currentDepth: requestQueue.length,
+        maxDepth: requestQueueMetrics.maxQueueDepth,
+        totalQueued: requestQueueMetrics.totalQueued,
+        avgHeartbeatDelay: requestQueueMetrics.heartbeatDelays.length > 0 
+          ? requestQueueMetrics.heartbeatDelays.reduce((a, b) => a + b, 0) / requestQueueMetrics.heartbeatDelays.length
+          : 0
+      },
+      heartbeats: {
+        scheduled: heartbeatMetrics.size,
+        completed: Array.from(heartbeatMetrics.values()).filter(hb => hb.completedAt && !hb.skipped).length,
+        skipped: Array.from(heartbeatMetrics.values()).filter(hb => hb.skipped).length
+      },
+      requestTypes: {
+        heartbeat: Array.from(networkMetrics.values()).filter(m => m.requestType === 'heartbeat').length,
+        subscribe: Array.from(networkMetrics.values()).filter(m => m.requestType === 'subscribe').length,
+        leave: Array.from(networkMetrics.values()).filter(m => m.requestType === 'leave').length,
+        other: Array.from(networkMetrics.values()).filter(m => m.requestType === 'other').length
+      },
+      activeRequests: activeRequests.slice(0, 20), // Limit to 20 most recent
+      queuedRequests: queuedRequests.slice(0, 20) // Limit to 20 oldest in queue
+    };
+    
+    console.log('[MetricsSummary]', summary);
+    
+    // Broadcast summary to all clients
+    broadcastMetrics('MetricsSummary', summary);
+    
+    // Clean up old metrics (older than 5 minutes)
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    for (const [id, metric] of networkMetrics.entries()) {
+      if (metric.queuedAt < fiveMinutesAgo) {
+        networkMetrics.delete(id);
+      }
+    }
+    for (const [id, metric] of heartbeatMetrics.entries()) {
+      if (metric.scheduledAt < fiveMinutesAgo) {
+        heartbeatMetrics.delete(id);
+      }
+    }
+  }, 1000); // Every 1 second
+};
+
+// Start metrics summary when first client connects
+startMetricsSummary();
+
+const logNetworkMetrics = (metrics: NetworkMetrics) => {
+  const duration = (metrics.fetchCompletedAt || Date.now()) - metrics.queuedAt;
+  const fetchDuration = metrics.fetchStartedAt && metrics.fetchCompletedAt ? 
+    metrics.fetchCompletedAt - metrics.fetchStartedAt : undefined;
+  
+  const metricsData = {
+    totalDuration: duration,
+    fetchDuration,
+    queueTime: metrics.fetchStartedAt ? metrics.fetchStartedAt - metrics.queuedAt : undefined,
+    timerToFetchDelay: metrics.timerToFetchDelay,
+    status: metrics.status,
+    error: metrics.error,
+    queueDepth: metrics.queueDepthAtStart,
+    concurrent: metrics.concurrentRequestsAtStart,
+    url: metrics.url,
+    channels: metrics.channels,
+    sequence: metricsSequenceNumber++
+  };
+  
+  console.log(`[NetworkMetrics] ${metrics.requestType} request ${metrics.requestId}:`, metricsData);
+  
+  // Send metrics to all connected clients
+  broadcastMetrics('network-metrics', {
+    type: metrics.requestType,
+    requestId: metrics.requestId,
+    metrics: metricsData
+  });
+};
+
+// Helper to broadcast metrics to all connected clients
+const broadcastMetrics = (eventType: string, data: any) => {
+  // Only broadcast to registered metrics clients (network-metrics dashboard)
+  for (const [clientId, port] of metricsClients.entries()) {
+    try {
+      port.postMessage({
+        type: 'metrics-broadcast',
+        eventType: eventType,
+        metrics: data,
+        timestamp: new Date().toISOString()
+      });
+    } catch (e) {
+      // Remove dead ports
+      console.error(`Failed to send metrics to ${clientId}, removing`);
+      metricsClients.delete(clientId);
+    }
+  }
+  
+  // Also log to console for debugging (but not to PubNub clients)
+  console.log(`[${eventType}]`, data);
+};
+
+// --------------------------------------------------------
 // ------------------------ Types -------------------------
 // --------------------------------------------------------
 // region Types
@@ -691,7 +903,21 @@ self.onconnect = (event) => {
   event.ports.forEach((receiver) => {
     receiver.start();
 
-    receiver.onmessage = (event: MessageEvent<ClientEvent>) => {
+    receiver.onmessage = (event: MessageEvent<any>) => {
+      // Handle metrics-only client registration
+      if (event.data && typeof event.data === 'object' && event.data.type === 'metrics-client-register') {
+        const clientId = event.data.clientId;
+        metricsClients.set(clientId, receiver);
+        console.log(`Metrics client registered: ${clientId}`);
+        
+        // Send acknowledgment
+        receiver.postMessage({
+          type: 'metrics-client-registered',
+          clientId: clientId
+        });
+        return;
+      }
+      
       // Ignoring unknown event payloads.
       if (!validateEventPayload(event)) return;
 
@@ -738,7 +964,19 @@ self.onconnect = (event) => {
           }
         } else if (data.request.path.endsWith('/heartbeat')) {
           updateClientHeartbeatState(data);
-          handleHeartbeatRequestEvent(data);
+          
+          // Create heartbeat metrics for direct client requests
+          const scheduledAt = Date.now();
+          const hbMetricsId = `hb-direct-${data.clientIdentifier}-${scheduledAt}`;
+          const hbMetrics: HeartbeatMetrics = {
+            scheduledAt,
+            expectedFireAt: scheduledAt, // Direct request, no delay expected
+            actualFiredAt: scheduledAt,
+            queueDepthAtFire: pendingRequests.size
+          };
+          heartbeatMetrics.set(hbMetricsId, hbMetrics);
+          
+          handleHeartbeatRequestEvent(data, true, false, hbMetrics);
         } else handleSendLeaveRequestEvent(data);
       } else if (data.type === 'cancel-request') handleCancelRequestEvent(data);
     };
@@ -912,12 +1150,26 @@ const patchInitialSubscribeResponse = (
  * @param [actualRequest] - Whether handling actual request from the core-part of the client and not backup heartbeat in
  * the `SharedWorker`.
  * @param [outOfOrder] - Whether handling request which is sent on irregular basis (setting update).
+ * @param [hbMetrics] - Heartbeat metrics object to update when heartbeat is skipped.
  */
-const handleHeartbeatRequestEvent = (event: SendRequestEvent, actualRequest = true, outOfOrder = false) => {
+const handleHeartbeatRequestEvent = (event: SendRequestEvent, actualRequest = true, outOfOrder = false, hbMetrics?: HeartbeatMetrics) => {
+  const heartbeatStartTime = Date.now();
+  
+  console.log(`[HeartbeatRequest] Processing heartbeat event:`, {
+    clientId: event.clientIdentifier,
+    actualRequest,
+    outOfOrder,
+    pendingRequests: pendingRequests.size,
+    timestamp: new Date(heartbeatStartTime).toISOString()
+  });
+
   const client = pubNubClients[event.clientIdentifier];
   const request = heartbeatTransportRequestFromEvent(event, actualRequest, outOfOrder);
 
-  if (!client) return;
+  if (!client) {
+    console.warn(`[HeartbeatRequest] No client found for ${event.clientIdentifier}`);
+    return;
+  }
   const heartbeatRequestKey = `${client.userId}_${clientAggregateAuthKey(client) ?? ''}`;
   const hbRequestsBySubscriptionKey = serviceHeartbeatRequests[client.subscriptionKey];
   const hbRequests = (hbRequestsBySubscriptionKey ?? {})[heartbeatRequestKey];
@@ -926,9 +1178,33 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent, actualRequest = tr
     let message = `Previous heartbeat request has been sent less than ${
       client.heartbeatInterval
     } seconds ago. Skipping...`;
-    if (!client.heartbeat || (client.heartbeat.channels.length === 0 && client.heartbeat.channelGroups.length === 0))
+    let skipReason = 'too_frequent';
+    
+    if (!client.heartbeat || (client.heartbeat.channels.length === 0 && client.heartbeat.channelGroups.length === 0)) {
       message = `${client.clientIdentifier} doesn't have subscriptions to non-presence channels. Skipping...`;
+      skipReason = 'no_channels';
+    }
+    
     consoleLog(message, client);
+    
+    // Update heartbeat metrics if provided
+    if (hbMetrics) {
+      hbMetrics.skipped = true;
+      hbMetrics.skipReason = skipReason;
+      hbMetrics.completedAt = Date.now();
+      
+      // Log the skip for metrics tracking
+      const skipData = {
+        clientId: client.clientIdentifier,
+        reason: skipReason,
+        metricsId: Object.entries(heartbeatMetrics).find(([_, m]) => m === hbMetrics)?.[0],
+        timestamp: new Date().toISOString()
+      };
+      console.log(`[HeartbeatMetrics] Heartbeat skipped:`, skipData);
+      
+      // Broadcast the skip event
+      broadcastMetrics('HeartbeatSkipped', skipData);
+    }
 
     let response: Response | undefined;
     let body: ArrayBuffer | undefined;
@@ -967,6 +1243,12 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent, actualRequest = tr
     (clients, fetchRequest, response) => {
       if (hbRequests) hbRequests.response = response;
 
+      // Mark heartbeat as completed if metrics were provided
+      if (hbMetrics && !hbMetrics.completedAt) {
+        hbMetrics.completedAt = Date.now();
+        hbMetrics.fetchCompletedAt = Date.now();
+      }
+
       // Notify each PubNub client which awaited for response.
       notifyRequestProcessingResult(clients, fetchRequest, response, event.request);
 
@@ -974,6 +1256,12 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent, actualRequest = tr
       if (response[0].status >= 400 && response[0].status < 500) stopHeartbeatTimer(client);
     },
     (clients, fetchRequest, error) => {
+      // Mark heartbeat as completed with error if metrics were provided
+      if (hbMetrics && !hbMetrics.completedAt) {
+        hbMetrics.completedAt = Date.now();
+        hbMetrics.error = error instanceof Error ? error.message : String(error);
+      }
+
       // Notify each PubNub client which awaited for response.
       notifyRequestProcessingResult(clients, fetchRequest, null, event.request, requestProcessingError(error));
     },
@@ -1160,8 +1448,112 @@ const sendRequest = (
   failure: (clients: PubNubClientState[], fetchRequest: Request, error: unknown) => void,
   responsePreProcess?: (response: [Response, ArrayBuffer]) => [Response, ArrayBuffer],
 ) => {
+  // Initialize network metrics for this request
+  const metrics: NetworkMetrics = {
+    requestId: request.identifier,
+    requestType: getRequestType(request),
+    url: `${request.origin || ''}${request.path}`,
+    method: request.method,
+    queuedAt: Date.now(),
+    queueDepthAtStart: pendingRequests.size,
+    concurrentRequestsAtStart: pendingRequests.size,
+  };
+
+  // Extract channels/channel groups from request
+  if (request.queryParameters) {
+    const query = request.queryParameters;
+    if (query['channel-group']) {
+      metrics.channelGroups = (query['channel-group'] as string).split(',');
+    }
+    if (request.path.includes('/v2/subscribe/')) {
+      // Extract channels from path for subscribe requests
+      const pathParts = request.path.split('/');
+      const channelsIndex = pathParts.indexOf('subscribe') + 2;
+      if (channelsIndex < pathParts.length) {
+        metrics.channels = decodeURIComponent(pathParts[channelsIndex]).split(',');
+      }
+    }
+  }
+
+  // Add to pending requests
+  pendingRequests.set(request.identifier, metrics);
+  networkMetrics.set(request.identifier, metrics);
+
+  // Add to request queue for order tracking
+  const queueOrder = requestOrder++;
+  requestQueue.push({
+    requestId: request.identifier,
+    type: metrics.requestType,
+    queuedAt: metrics.queuedAt,
+    order: queueOrder
+  });
+  requestQueueMetrics.totalQueued++;
+  requestQueueMetrics.maxQueueDepth = Math.max(requestQueueMetrics.maxQueueDepth, requestQueue.length);
+  requestQueueMetrics.requestOrdering.set(request.identifier, { queueOrder, executionOrder: -1 });
+
+  // Log initial metrics
+  if (metrics.requestType === 'heartbeat') {
+    console.log(`[NetworkTiming] Heartbeat request ${request.identifier} queued:`, {
+      queueDepth: metrics.queueDepthAtStart,
+      concurrent: metrics.concurrentRequestsAtStart,
+      queuePosition: queueOrder,
+      url: metrics.url,
+      channels: metrics.channels?.length || 0,
+      channelGroups: metrics.channelGroups?.length || 0
+    });
+  }
+
   (async () => {
     const fetchRequest = requestFromTransportRequest(request);
+    
+    // Mark fetch start time
+    metrics.fetchStartedAt = Date.now();
+    const queueDelay = metrics.fetchStartedAt - metrics.queuedAt;
+    
+    // Track execution order
+    const orderInfo = requestQueueMetrics.requestOrdering.get(request.identifier);
+    if (orderInfo) {
+      orderInfo.executionOrder = requestOrder++;
+      const outOfOrderBy = orderInfo.executionOrder - orderInfo.queueOrder;
+      
+      if (metrics.requestType === 'heartbeat' && outOfOrderBy > 5) {
+        console.warn(`[RequestQueue] Heartbeat executed out of order by ${outOfOrderBy} positions`, {
+          requestId: request.identifier,
+          queueOrder: orderInfo.queueOrder,
+          executionOrder: orderInfo.executionOrder
+        });
+      }
+    }
+    
+    // Remove from queue
+    const queueIndex = requestQueue.findIndex(r => r.requestId === request.identifier);
+    if (queueIndex !== -1) {
+      requestQueue.splice(queueIndex, 1);
+    }
+    
+    if (metrics.requestType === 'heartbeat' && queueDelay > 100) {
+      console.warn(`[NetworkTiming] Heartbeat delayed in queue: ${queueDelay}ms`, {
+        requestId: request.identifier,
+        queueDepth: pendingRequests.size,
+        queueDelay,
+        remainingInQueue: requestQueue.length
+      });
+      requestQueueMetrics.heartbeatDelays.push(queueDelay);
+    }
+
+    // Track connection
+    const connectionKey = request.origin ? new URL(request.origin).hostname : 'unknown';
+    activeConnections.set(request.identifier, { startTime: Date.now(), requestId: request.identifier });
+    connectionMetrics.totalConnections++;
+    connectionMetrics.maxConcurrent = Math.max(connectionMetrics.maxConcurrent, activeConnections.size);
+    
+    if (activeConnections.size > 6) {
+      console.warn(`[ConnectionPool] High concurrent connections: ${activeConnections.size}`, {
+        requestType: metrics.requestType,
+        requestId: request.identifier,
+        activeRequests: Array.from(activeConnections.keys())
+      });
+    }
 
     Promise.race([
       fetch(fetchRequest, {
@@ -1171,16 +1563,37 @@ const sendRequest = (
       requestTimeoutTimer(request.identifier, request.timeout),
     ])
       .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer] =>
-        response.arrayBuffer().then((buffer) => [response, buffer]),
+        response.arrayBuffer().then((buffer) => {
+          metrics.responseSize = buffer.byteLength;
+          metrics.status = response.status;
+          return [response, buffer];
+        }),
       )
       .then((response) => (responsePreProcess ? responsePreProcess(response) : response))
       .then((response) => {
+        // Mark completion
+        metrics.fetchCompletedAt = Date.now();
+        pendingRequests.delete(request.identifier);
+        activeConnections.delete(request.identifier);
+        
+        // Log completion metrics
+        logNetworkMetrics(metrics);
+        
         const clients = getClients();
         if (clients.length === 0) return;
 
         success(clients, fetchRequest, response);
       })
       .catch((error) => {
+        // Mark failure
+        metrics.fetchCompletedAt = Date.now();
+        metrics.error = error instanceof Error ? error.message : String(error);
+        pendingRequests.delete(request.identifier);
+        activeConnections.delete(request.identifier);
+        
+        // Log failure metrics
+        logNetworkMetrics(metrics);
+        
         const clients = getClients();
         if (clients.length === 0) return;
 
@@ -1191,6 +1604,48 @@ const sendRequest = (
           fetchError = new Error(error);
 
           if (!errorMessage.includes('timeout') && errorMessage.includes('cancel')) fetchError.name = 'AbortError';
+        }
+        
+        // Special logging for timeouts
+        if (metrics.error && metrics.error.toLowerCase().includes('timeout')) {
+          const timeoutData = {
+            requestType: metrics.requestType,
+            requestId: request.identifier,
+            totalDuration: metrics.fetchCompletedAt! - metrics.queuedAt,
+            queueTime: metrics.fetchStartedAt ? metrics.fetchStartedAt - metrics.queuedAt : 'unknown',
+            networkTime: metrics.fetchStartedAt ? metrics.fetchCompletedAt! - metrics.fetchStartedAt : 'unknown',
+            concurrentRequests: metrics.concurrentRequestsAtStart,
+            activeConnectionsNow: activeConnections.size,
+            channels: metrics.channels,
+            channelGroups: metrics.channelGroups,
+            url: metrics.url
+          };
+          
+          console.error(`[NetworkTimeout] Request timed out after ${metrics.fetchCompletedAt! - metrics.queuedAt}ms:`, timeoutData);
+          broadcastMetrics('NetworkTimeout', timeoutData);
+          
+          // Log state of all pending requests when timeout occurs
+          if (metrics.requestType === 'heartbeat') {
+            const systemState = {
+              pendingRequests: Array.from(pendingRequests.entries()).map(([id, m]) => ({
+                id,
+                type: m.requestType,
+                queuedFor: Date.now() - m.queuedAt,
+                started: !!m.fetchStartedAt
+              })),
+              activeConnections: activeConnections.size,
+              requestQueue: requestQueue.map(r => ({
+                type: r.type,
+                waitingFor: Date.now() - r.queuedAt
+              }))
+            };
+            
+            console.error(`[NetworkTimeout] Current system state at heartbeat timeout:`, systemState);
+            broadcastMetrics('NetworkTimeout', { 
+              event: 'heartbeat-timeout-state',
+              ...systemState 
+            });
+          }
         }
 
         failure(clients, fetchRequest, fetchError);
@@ -2057,7 +2512,7 @@ const updateClientInformation = (event: UpdateEvent) => {
 
   // Make immediate heartbeat call (if possible).
   if (!client.heartbeat || !client.heartbeat.heartbeatEvent) return;
-  handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent, false, true);
+  handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent, false, true, undefined);
 };
 
 /**
@@ -2374,20 +2829,72 @@ const startHeartbeatTimer = (client: PubNubClientState, adjust: boolean = false)
   stopHeartbeatTimer(client);
   if (targetInterval <= 0) return;
 
+  const scheduledAt = Date.now();
+  const expectedFireAt = scheduledAt + (targetInterval * 1000);
+  
+  // Create heartbeat metrics entry
+  const hbMetricsId = `hb-${client.clientIdentifier}-${scheduledAt}`;
+  const hbMetrics: HeartbeatMetrics = {
+    scheduledAt,
+    expectedFireAt,
+    queueDepthAtFire: pendingRequests.size
+  };
+  heartbeatMetrics.set(hbMetricsId, hbMetrics);
+
+  const scheduleData = {
+    targetInterval,
+    expectedFireAt: new Date(expectedFireAt).toISOString(),
+    currentPendingRequests: pendingRequests.size,
+    channels: heartbeat.channels.length,
+    channelGroups: heartbeat.channelGroups.length
+  };
+  
+  console.log(`[HeartbeatTimer] Scheduling heartbeat for client ${client.clientIdentifier}:`, scheduleData);
+  broadcastMetrics('HeartbeatTimer', { 
+    event: 'scheduled',
+    clientId: client.clientIdentifier,
+    ...scheduleData
+  });
+
   heartbeat.loop = {
     timer: setTimeout(() => {
+      const actualFiredAt = Date.now();
+      hbMetrics.actualFiredAt = actualFiredAt;
+      hbMetrics.delayFromExpected = actualFiredAt - expectedFireAt;
+      hbMetrics.queueDepthAtFire = pendingRequests.size;
+      
+      if (Math.abs(hbMetrics.delayFromExpected) > 100) {
+        console.warn(`[HeartbeatTimer] Heartbeat timer fired ${hbMetrics.delayFromExpected}ms off schedule:`, {
+          clientId: client.clientIdentifier,
+          expected: new Date(expectedFireAt).toISOString(),
+          actual: new Date(actualFiredAt).toISOString(),
+          delay: hbMetrics.delayFromExpected,
+          pendingRequests: pendingRequests.size
+        });
+      }
+
       stopHeartbeatTimer(client);
-      if (!client.heartbeat || !client.heartbeat.heartbeatEvent) return;
+      if (!client.heartbeat || !client.heartbeat.heartbeatEvent) {
+        hbMetrics.skipped = true;
+        hbMetrics.skipReason = 'No heartbeat event available';
+        return;
+      }
 
       // Generate new request ID
       const { request } = client.heartbeat.heartbeatEvent;
       request.identifier = uuidGenerator.createUUID();
       request.queryParameters!.requestid = request.identifier;
+      
+      // Link heartbeat metrics to network request
+      const networkMetricsForHB = networkMetrics.get(request.identifier);
+      if (networkMetricsForHB) {
+        networkMetricsForHB.timerToFetchDelay = Date.now() - actualFiredAt;
+      }
 
-      handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent, false);
+      handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent, false, false, hbMetrics);
     }, targetInterval * 1000),
     heartbeatInterval,
-    startTimestamp: Date.now(),
+    startTimestamp: scheduledAt,
   };
 };
 
@@ -2727,17 +3234,19 @@ const aggregateTimerId = (client: PubNubClientState) => {
  * @param [client] - Target client to which log message should be sent.
  */
 const consoleLog = (message: Payload, client?: PubNubClientState): void => {
-  const clients = (client ? [client] : Object.values(pubNubClients)).filter(
-    (client) => client && client.workerLogVerbosity,
-  );
-  const payload: SharedWorkerConsoleLog = {
-    type: 'shared-worker-console-log',
-    message,
-  };
+  // TODO: cleanup this afterwards
+  // const clients = (client ? [client] : Object.values(pubNubClients)).filter(
+  //   (client) => client && client.workerLogVerbosity,
+  // );
+  // const payload: SharedWorkerConsoleLog = {
+  //   type: 'shared-worker-console-log',
+  //   message,
+  // };
 
-  clients.forEach((client) => {
-    if (client) publishClientEvent(client, payload);
-  });
+  // clients.forEach((client) => {
+  //   if (client) publishClientEvent(client, payload);
+  // });
+  console.log(message);
 };
 
 /**

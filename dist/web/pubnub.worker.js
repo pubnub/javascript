@@ -145,6 +145,167 @@
      *
      * @internal
      */
+    // Global metrics storage
+    const networkMetrics = new Map();
+    const heartbeatMetrics = new Map();
+    const pendingRequests = new Map();
+    let metricsSequenceNumber = 0;
+    // Track metrics-only clients (network-metrics dashboard)
+    const metricsClients = new Map();
+    // Connection tracking
+    const activeConnections = new Map();
+    const connectionMetrics = {
+        maxConcurrent: 0,
+        totalConnections: 0,
+        connectionReuse: 0,
+        newConnections: 0
+    };
+    // Request queue tracking
+    const requestQueue = [];
+    let requestOrder = 0;
+    const requestQueueMetrics = {
+        maxQueueDepth: 0,
+        totalQueued: 0,
+        heartbeatDelays: [],
+        requestOrdering: new Map()
+    };
+    // Metrics helper functions
+    const getRequestType = (request) => {
+        if (request.path.endsWith('/subscribe'))
+            return 'subscribe';
+        if (request.path.endsWith('/heartbeat'))
+            return 'heartbeat';
+        if (request.path.includes('/leave'))
+            return 'leave';
+        return 'other';
+    };
+    // Periodic metrics summary
+    let metricsInterval;
+    const startMetricsSummary = () => {
+        if (metricsInterval)
+            return;
+        metricsInterval = setInterval(() => {
+            // Get detailed request information
+            const now = Date.now();
+            const activeRequests = Array.from(activeConnections.entries()).map(([id, conn]) => {
+                const metrics = networkMetrics.get(id);
+                return {
+                    id,
+                    url: (metrics === null || metrics === void 0 ? void 0 : metrics.url) || 'unknown',
+                    type: (metrics === null || metrics === void 0 ? void 0 : metrics.requestType) || 'unknown',
+                    channels: (metrics === null || metrics === void 0 ? void 0 : metrics.channels) || [],
+                    duration: now - conn.startTime,
+                    startTime: conn.startTime
+                };
+            }).sort((a, b) => b.startTime - a.startTime); // Most recent first
+            const queuedRequests = requestQueue.map(req => {
+                const metrics = networkMetrics.get(req.requestId);
+                return {
+                    id: req.requestId,
+                    url: (metrics === null || metrics === void 0 ? void 0 : metrics.url) || 'unknown',
+                    type: req.type,
+                    channels: (metrics === null || metrics === void 0 ? void 0 : metrics.channels) || [],
+                    queueTime: now - req.queuedAt,
+                    queuedAt: req.queuedAt,
+                    order: req.order
+                };
+            }).sort((a, b) => a.order - b.order); // Order by queue position
+            const summary = {
+                timestamp: new Date().toISOString(),
+                network: {
+                    pendingRequests: pendingRequests.size,
+                    activeConnections: activeConnections.size,
+                    maxConcurrent: connectionMetrics.maxConcurrent,
+                    totalRequests: networkMetrics.size,
+                    browserQueueEstimate: Math.max(0, activeConnections.size - 6) // Estimated browser queue
+                },
+                queue: {
+                    currentDepth: requestQueue.length,
+                    maxDepth: requestQueueMetrics.maxQueueDepth,
+                    totalQueued: requestQueueMetrics.totalQueued,
+                    avgHeartbeatDelay: requestQueueMetrics.heartbeatDelays.length > 0
+                        ? requestQueueMetrics.heartbeatDelays.reduce((a, b) => a + b, 0) / requestQueueMetrics.heartbeatDelays.length
+                        : 0
+                },
+                heartbeats: {
+                    scheduled: heartbeatMetrics.size,
+                    completed: Array.from(heartbeatMetrics.values()).filter(hb => hb.completedAt && !hb.skipped).length,
+                    skipped: Array.from(heartbeatMetrics.values()).filter(hb => hb.skipped).length
+                },
+                requestTypes: {
+                    heartbeat: Array.from(networkMetrics.values()).filter(m => m.requestType === 'heartbeat').length,
+                    subscribe: Array.from(networkMetrics.values()).filter(m => m.requestType === 'subscribe').length,
+                    leave: Array.from(networkMetrics.values()).filter(m => m.requestType === 'leave').length,
+                    other: Array.from(networkMetrics.values()).filter(m => m.requestType === 'other').length
+                },
+                activeRequests: activeRequests.slice(0, 20), // Limit to 20 most recent
+                queuedRequests: queuedRequests.slice(0, 20) // Limit to 20 oldest in queue
+            };
+            console.log('[MetricsSummary]', summary);
+            // Broadcast summary to all clients
+            broadcastMetrics('MetricsSummary', summary);
+            // Clean up old metrics (older than 5 minutes)
+            const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+            for (const [id, metric] of networkMetrics.entries()) {
+                if (metric.queuedAt < fiveMinutesAgo) {
+                    networkMetrics.delete(id);
+                }
+            }
+            for (const [id, metric] of heartbeatMetrics.entries()) {
+                if (metric.scheduledAt < fiveMinutesAgo) {
+                    heartbeatMetrics.delete(id);
+                }
+            }
+        }, 1000); // Every 1 second
+    };
+    // Start metrics summary when first client connects
+    startMetricsSummary();
+    const logNetworkMetrics = (metrics) => {
+        const duration = (metrics.fetchCompletedAt || Date.now()) - metrics.queuedAt;
+        const fetchDuration = metrics.fetchStartedAt && metrics.fetchCompletedAt ?
+            metrics.fetchCompletedAt - metrics.fetchStartedAt : undefined;
+        const metricsData = {
+            totalDuration: duration,
+            fetchDuration,
+            queueTime: metrics.fetchStartedAt ? metrics.fetchStartedAt - metrics.queuedAt : undefined,
+            timerToFetchDelay: metrics.timerToFetchDelay,
+            status: metrics.status,
+            error: metrics.error,
+            queueDepth: metrics.queueDepthAtStart,
+            concurrent: metrics.concurrentRequestsAtStart,
+            url: metrics.url,
+            channels: metrics.channels,
+            sequence: metricsSequenceNumber++
+        };
+        console.log(`[NetworkMetrics] ${metrics.requestType} request ${metrics.requestId}:`, metricsData);
+        // Send metrics to all connected clients
+        broadcastMetrics('network-metrics', {
+            type: metrics.requestType,
+            requestId: metrics.requestId,
+            metrics: metricsData
+        });
+    };
+    // Helper to broadcast metrics to all connected clients
+    const broadcastMetrics = (eventType, data) => {
+        // Only broadcast to registered metrics clients (network-metrics dashboard)
+        for (const [clientId, port] of metricsClients.entries()) {
+            try {
+                port.postMessage({
+                    type: 'metrics-broadcast',
+                    eventType: eventType,
+                    metrics: data,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            catch (e) {
+                // Remove dead ports
+                console.error(`Failed to send metrics to ${clientId}, removing`);
+                metricsClients.delete(clientId);
+            }
+        }
+        // Also log to console for debugging (but not to PubNub clients)
+        console.log(`[${eventType}]`, data);
+    };
     /**
      * Aggregation timer timeout.
      *
@@ -218,6 +379,18 @@
         event.ports.forEach((receiver) => {
             receiver.start();
             receiver.onmessage = (event) => {
+                // Handle metrics-only client registration
+                if (event.data && typeof event.data === 'object' && event.data.type === 'metrics-client-register') {
+                    const clientId = event.data.clientId;
+                    metricsClients.set(clientId, receiver);
+                    console.log(`Metrics client registered: ${clientId}`);
+                    // Send acknowledgment
+                    receiver.postMessage({
+                        type: 'metrics-client-registered',
+                        clientId: clientId
+                    });
+                    return;
+                }
                 // Ignoring unknown event payloads.
                 if (!validateEventPayload(event))
                     return;
@@ -263,7 +436,17 @@
                     }
                     else if (data.request.path.endsWith('/heartbeat')) {
                         updateClientHeartbeatState(data);
-                        handleHeartbeatRequestEvent(data);
+                        // Create heartbeat metrics for direct client requests
+                        const scheduledAt = Date.now();
+                        const hbMetricsId = `hb-direct-${data.clientIdentifier}-${scheduledAt}`;
+                        const hbMetrics = {
+                            scheduledAt,
+                            expectedFireAt: scheduledAt, // Direct request, no delay expected
+                            actualFiredAt: scheduledAt,
+                            queueDepthAtFire: pendingRequests.size
+                        };
+                        heartbeatMetrics.set(hbMetricsId, hbMetrics);
+                        handleHeartbeatRequestEvent(data, true, false, hbMetrics);
                     }
                     else
                         handleSendLeaveRequestEvent(data);
@@ -337,7 +520,7 @@
         consoleLog(`'${Object.keys(serviceRequests).length}' subscription request currently active.`);
         // Notify about request processing start.
         for (const client of clientsForRequest(requestOrId.identifier))
-            consoleLog({ messageType: 'network-request', message: requestOrId }, client);
+            consoleLog({ messageType: 'network-request', message: requestOrId });
         sendRequest(requestOrId, () => clientsForRequest(requestOrId.identifier), (clients, fetchRequest, response) => {
             // Notify each PubNub client which awaited for response.
             notifyRequestProcessingResult(clients, fetchRequest, response, event.request);
@@ -401,21 +584,51 @@
      * @param [actualRequest] - Whether handling actual request from the core-part of the client and not backup heartbeat in
      * the `SharedWorker`.
      * @param [outOfOrder] - Whether handling request which is sent on irregular basis (setting update).
+     * @param [hbMetrics] - Heartbeat metrics object to update when heartbeat is skipped.
      */
-    const handleHeartbeatRequestEvent = (event, actualRequest = true, outOfOrder = false) => {
-        var _a;
+    const handleHeartbeatRequestEvent = (event, actualRequest = true, outOfOrder = false, hbMetrics) => {
+        var _a, _b;
+        const heartbeatStartTime = Date.now();
+        console.log(`[HeartbeatRequest] Processing heartbeat event:`, {
+            clientId: event.clientIdentifier,
+            actualRequest,
+            outOfOrder,
+            pendingRequests: pendingRequests.size,
+            timestamp: new Date(heartbeatStartTime).toISOString()
+        });
         const client = pubNubClients[event.clientIdentifier];
         const request = heartbeatTransportRequestFromEvent(event, actualRequest, outOfOrder);
-        if (!client)
+        if (!client) {
+            console.warn(`[HeartbeatRequest] No client found for ${event.clientIdentifier}`);
             return;
+        }
         const heartbeatRequestKey = `${client.userId}_${(_a = clientAggregateAuthKey(client)) !== null && _a !== void 0 ? _a : ''}`;
         const hbRequestsBySubscriptionKey = serviceHeartbeatRequests[client.subscriptionKey];
         const hbRequests = (hbRequestsBySubscriptionKey !== null && hbRequestsBySubscriptionKey !== void 0 ? hbRequestsBySubscriptionKey : {})[heartbeatRequestKey];
         if (!request) {
             let message = `Previous heartbeat request has been sent less than ${client.heartbeatInterval} seconds ago. Skipping...`;
-            if (!client.heartbeat || (client.heartbeat.channels.length === 0 && client.heartbeat.channelGroups.length === 0))
+            let skipReason = 'too_frequent';
+            if (!client.heartbeat || (client.heartbeat.channels.length === 0 && client.heartbeat.channelGroups.length === 0)) {
                 message = `${client.clientIdentifier} doesn't have subscriptions to non-presence channels. Skipping...`;
-            consoleLog(message, client);
+                skipReason = 'no_channels';
+            }
+            consoleLog(message);
+            // Update heartbeat metrics if provided
+            if (hbMetrics) {
+                hbMetrics.skipped = true;
+                hbMetrics.skipReason = skipReason;
+                hbMetrics.completedAt = Date.now();
+                // Log the skip for metrics tracking
+                const skipData = {
+                    clientId: client.clientIdentifier,
+                    reason: skipReason,
+                    metricsId: (_b = Object.entries(heartbeatMetrics).find(([_, m]) => m === hbMetrics)) === null || _b === void 0 ? void 0 : _b[0],
+                    timestamp: new Date().toISOString()
+                };
+                console.log(`[HeartbeatMetrics] Heartbeat skipped:`, skipData);
+                // Broadcast the skip event
+                broadcastMetrics('HeartbeatSkipped', skipData);
+            }
             let response;
             let body;
             // Pulling out previous response.
@@ -436,19 +649,29 @@
             publishClientEvent(client, result);
             return;
         }
-        consoleLog(`Started heartbeat request.`, client);
+        consoleLog(`Started heartbeat request.`);
         // Notify about request processing start.
         for (const client of clientsForSendHeartbeatRequestEvent(event))
-            consoleLog({ messageType: 'network-request', message: request }, client);
+            consoleLog({ messageType: 'network-request', message: request });
         sendRequest(request, () => [client], (clients, fetchRequest, response) => {
             if (hbRequests)
                 hbRequests.response = response;
+            // Mark heartbeat as completed if metrics were provided
+            if (hbMetrics && !hbMetrics.completedAt) {
+                hbMetrics.completedAt = Date.now();
+                hbMetrics.fetchCompletedAt = Date.now();
+            }
             // Notify each PubNub client which awaited for response.
             notifyRequestProcessingResult(clients, fetchRequest, response, event.request);
             // Stop heartbeat timer on client error status codes.
             if (response[0].status >= 400 && response[0].status < 500)
                 stopHeartbeatTimer(client);
         }, (clients, fetchRequest, error) => {
+            // Mark heartbeat as completed with error if metrics were provided
+            if (hbMetrics && !hbMetrics.completedAt) {
+                hbMetrics.completedAt = Date.now();
+                hbMetrics.error = error instanceof Error ? error.message : String(error);
+            }
             // Notify each PubNub client which awaited for response.
             notifyRequestProcessingResult(clients, fetchRequest, null, event.request, requestProcessingError(error));
         });
@@ -508,10 +731,10 @@
             publishClientEvent(client, result);
             return;
         }
-        consoleLog(`Started leave request.`, client);
+        consoleLog(`Started leave request.`);
         // Notify about request processing start.
         for (const client of clientsForSendLeaveRequestEvent(data, invalidatedClient))
-            consoleLog({ messageType: 'network-request', message: request }, client);
+            consoleLog({ messageType: 'network-request', message: request });
         sendRequest(request, () => [client], (clients, fetchRequest, response) => {
             // Notify each PubNub client which awaited for response.
             notifyRequestProcessingResult(clients, fetchRequest, response, data.request);
@@ -601,9 +824,102 @@
      * @param responsePreProcess - Raw response pre-processing function which is used before calling handling callbacks.
      */
     const sendRequest = (request, getClients, success, failure, responsePreProcess) => {
+        var _a, _b;
+        // Initialize network metrics for this request
+        const metrics = {
+            requestId: request.identifier,
+            requestType: getRequestType(request),
+            url: `${request.origin || ''}${request.path}`,
+            method: request.method,
+            queuedAt: Date.now(),
+            queueDepthAtStart: pendingRequests.size,
+            concurrentRequestsAtStart: pendingRequests.size,
+        };
+        // Extract channels/channel groups from request
+        if (request.queryParameters) {
+            const query = request.queryParameters;
+            if (query['channel-group']) {
+                metrics.channelGroups = query['channel-group'].split(',');
+            }
+            if (request.path.includes('/v2/subscribe/')) {
+                // Extract channels from path for subscribe requests
+                const pathParts = request.path.split('/');
+                const channelsIndex = pathParts.indexOf('subscribe') + 2;
+                if (channelsIndex < pathParts.length) {
+                    metrics.channels = decodeURIComponent(pathParts[channelsIndex]).split(',');
+                }
+            }
+        }
+        // Add to pending requests
+        pendingRequests.set(request.identifier, metrics);
+        networkMetrics.set(request.identifier, metrics);
+        // Add to request queue for order tracking
+        const queueOrder = requestOrder++;
+        requestQueue.push({
+            requestId: request.identifier,
+            type: metrics.requestType,
+            queuedAt: metrics.queuedAt,
+            order: queueOrder
+        });
+        requestQueueMetrics.totalQueued++;
+        requestQueueMetrics.maxQueueDepth = Math.max(requestQueueMetrics.maxQueueDepth, requestQueue.length);
+        requestQueueMetrics.requestOrdering.set(request.identifier, { queueOrder, executionOrder: -1 });
+        // Log initial metrics
+        if (metrics.requestType === 'heartbeat') {
+            console.log(`[NetworkTiming] Heartbeat request ${request.identifier} queued:`, {
+                queueDepth: metrics.queueDepthAtStart,
+                concurrent: metrics.concurrentRequestsAtStart,
+                queuePosition: queueOrder,
+                url: metrics.url,
+                channels: ((_a = metrics.channels) === null || _a === void 0 ? void 0 : _a.length) || 0,
+                channelGroups: ((_b = metrics.channelGroups) === null || _b === void 0 ? void 0 : _b.length) || 0
+            });
+        }
         (() => __awaiter(void 0, void 0, void 0, function* () {
             var _a;
             const fetchRequest = requestFromTransportRequest(request);
+            // Mark fetch start time
+            metrics.fetchStartedAt = Date.now();
+            const queueDelay = metrics.fetchStartedAt - metrics.queuedAt;
+            // Track execution order
+            const orderInfo = requestQueueMetrics.requestOrdering.get(request.identifier);
+            if (orderInfo) {
+                orderInfo.executionOrder = requestOrder++;
+                const outOfOrderBy = orderInfo.executionOrder - orderInfo.queueOrder;
+                if (metrics.requestType === 'heartbeat' && outOfOrderBy > 5) {
+                    console.warn(`[RequestQueue] Heartbeat executed out of order by ${outOfOrderBy} positions`, {
+                        requestId: request.identifier,
+                        queueOrder: orderInfo.queueOrder,
+                        executionOrder: orderInfo.executionOrder
+                    });
+                }
+            }
+            // Remove from queue
+            const queueIndex = requestQueue.findIndex(r => r.requestId === request.identifier);
+            if (queueIndex !== -1) {
+                requestQueue.splice(queueIndex, 1);
+            }
+            if (metrics.requestType === 'heartbeat' && queueDelay > 100) {
+                console.warn(`[NetworkTiming] Heartbeat delayed in queue: ${queueDelay}ms`, {
+                    requestId: request.identifier,
+                    queueDepth: pendingRequests.size,
+                    queueDelay,
+                    remainingInQueue: requestQueue.length
+                });
+                requestQueueMetrics.heartbeatDelays.push(queueDelay);
+            }
+            // Track connection
+            request.origin ? new URL(request.origin).hostname : 'unknown';
+            activeConnections.set(request.identifier, { startTime: Date.now(), requestId: request.identifier });
+            connectionMetrics.totalConnections++;
+            connectionMetrics.maxConcurrent = Math.max(connectionMetrics.maxConcurrent, activeConnections.size);
+            if (activeConnections.size > 6) {
+                console.warn(`[ConnectionPool] High concurrent connections: ${activeConnections.size}`, {
+                    requestType: metrics.requestType,
+                    requestId: request.identifier,
+                    activeRequests: Array.from(activeConnections.keys())
+                });
+            }
             Promise.race([
                 fetch(fetchRequest, {
                     signal: (_a = abortControllers.get(request.identifier)) === null || _a === void 0 ? void 0 : _a.signal,
@@ -611,15 +927,32 @@
                 }),
                 requestTimeoutTimer(request.identifier, request.timeout),
             ])
-                .then((response) => response.arrayBuffer().then((buffer) => [response, buffer]))
+                .then((response) => response.arrayBuffer().then((buffer) => {
+                metrics.responseSize = buffer.byteLength;
+                metrics.status = response.status;
+                return [response, buffer];
+            }))
                 .then((response) => (responsePreProcess ? responsePreProcess(response) : response))
                 .then((response) => {
+                // Mark completion
+                metrics.fetchCompletedAt = Date.now();
+                pendingRequests.delete(request.identifier);
+                activeConnections.delete(request.identifier);
+                // Log completion metrics
+                logNetworkMetrics(metrics);
                 const clients = getClients();
                 if (clients.length === 0)
                     return;
                 success(clients, fetchRequest, response);
             })
                 .catch((error) => {
+                // Mark failure
+                metrics.fetchCompletedAt = Date.now();
+                metrics.error = error instanceof Error ? error.message : String(error);
+                pendingRequests.delete(request.identifier);
+                activeConnections.delete(request.identifier);
+                // Log failure metrics
+                logNetworkMetrics(metrics);
                 const clients = getClients();
                 if (clients.length === 0)
                     return;
@@ -629,6 +962,41 @@
                     fetchError = new Error(error);
                     if (!errorMessage.includes('timeout') && errorMessage.includes('cancel'))
                         fetchError.name = 'AbortError';
+                }
+                // Special logging for timeouts
+                if (metrics.error && metrics.error.toLowerCase().includes('timeout')) {
+                    const timeoutData = {
+                        requestType: metrics.requestType,
+                        requestId: request.identifier,
+                        totalDuration: metrics.fetchCompletedAt - metrics.queuedAt,
+                        queueTime: metrics.fetchStartedAt ? metrics.fetchStartedAt - metrics.queuedAt : 'unknown',
+                        networkTime: metrics.fetchStartedAt ? metrics.fetchCompletedAt - metrics.fetchStartedAt : 'unknown',
+                        concurrentRequests: metrics.concurrentRequestsAtStart,
+                        activeConnectionsNow: activeConnections.size,
+                        channels: metrics.channels,
+                        channelGroups: metrics.channelGroups,
+                        url: metrics.url
+                    };
+                    console.error(`[NetworkTimeout] Request timed out after ${metrics.fetchCompletedAt - metrics.queuedAt}ms:`, timeoutData);
+                    broadcastMetrics('NetworkTimeout', timeoutData);
+                    // Log state of all pending requests when timeout occurs
+                    if (metrics.requestType === 'heartbeat') {
+                        const systemState = {
+                            pendingRequests: Array.from(pendingRequests.entries()).map(([id, m]) => ({
+                                id,
+                                type: m.requestType,
+                                queuedFor: Date.now() - m.queuedAt,
+                                started: !!m.fetchStartedAt
+                            })),
+                            activeConnections: activeConnections.size,
+                            requestQueue: requestQueue.map(r => ({
+                                type: r.type,
+                                waitingFor: Date.now() - r.queuedAt
+                            }))
+                        };
+                        console.error(`[NetworkTimeout] Current system state at heartbeat timeout:`, systemState);
+                        broadcastMetrics('NetworkTimeout', Object.assign({ event: 'heartbeat-timeout-state' }, systemState));
+                    }
                 }
                 failure(clients, fetchRequest, fetchError);
             });
@@ -1045,10 +1413,10 @@
                 }, [])
                     .join(', ');
                 if (channelsAndGroupsCount > 0) {
-                    consoleLog(`Leaving only presence channels which doesn't require presence leave. Ignoring leave request.`, client);
+                    consoleLog(`Leaving only presence channels which doesn't require presence leave. Ignoring leave request.`);
                 }
                 else {
-                    consoleLog(`Specified channels and groups still in use by other clients: ${clientIds}. Ignoring leave request.`, client);
+                    consoleLog(`Specified channels and groups still in use by other clients: ${clientIds}. Ignoring leave request.`);
                 }
             }
             return undefined;
@@ -1153,7 +1521,7 @@
             const endpoint = isSubscribeRequest ? 'subscribe' : 'leave';
             const message = `Notify clients about ${endpoint} request completion: ${notifiedClientIds}`;
             for (const client of clients)
-                consoleLog(message, client);
+                consoleLog(message);
         }
         for (const client of clients) {
             if (isSubscribeRequest && !client.subscription) {
@@ -1161,7 +1529,7 @@
                 if (workerLogVerbosity) {
                     const message = `${client.clientIdentifier} doesn't have active subscription. Don't notify about completion.`;
                     for (const nClient of clients)
-                        consoleLog(message, nClient);
+                        consoleLog(message);
                 }
                 continue;
             }
@@ -1173,7 +1541,7 @@
             if (serviceWorkerClientId && decidedRequest) {
                 const payload = Object.assign(Object.assign({}, result), { clientIdentifier: client.clientIdentifier, identifier: decidedRequest.identifier, url: `${decidedRequest.origin}${decidedRequest.path}` });
                 if (result.type === 'request-process-success' && client.workerLogVerbosity)
-                    consoleLog({ messageType: 'network-response', message: transportResponse }, client);
+                    consoleLog({ messageType: 'network-response', message: transportResponse });
                 else if (result.type === 'request-process-error' && client.workerLogVerbosity) {
                     const canceled = result.error ? result.error.type === 'TIMEOUT' || result.error.type === 'ABORTED' : false;
                     let details = result.error ? result.error.message : 'Unknown';
@@ -1212,7 +1580,7 @@
                         details,
                         canceled,
                         failed: !canceled,
-                    }, client);
+                    });
                 }
                 publishClientEvent(client, payload);
             }
@@ -1221,7 +1589,7 @@
                 const message = `${client.clientIdentifier} doesn't have Shared Worker's communication channel. Don't notify about completion.`;
                 for (const nClient of clients) {
                     if (nClient.clientIdentifier !== client.clientIdentifier)
-                        consoleLog(message, nClient);
+                        consoleLog(message);
                 }
             }
         }
@@ -1337,13 +1705,13 @@
         const message = `Registered PubNub client with '${clientIdentifier}' identifier. ` +
             `'${clientsBySubscriptionKey.length}' clients currently active.`;
         for (const _client of clientsBySubscriptionKey)
-            consoleLog(message, _client);
+            consoleLog(message);
         if (!pingTimeouts[event.subscriptionKey] &&
             ((_c = pubNubClientsBySubscriptionKey[event.subscriptionKey]) !== null && _c !== void 0 ? _c : []).length > 0) {
             const { subscriptionKey } = event;
             const interval = event.workerOfflineClientsCheckInterval;
             for (const _client of clientsBySubscriptionKey)
-                consoleLog(`Setup PubNub client ping event ${interval} seconds`, _client);
+                consoleLog(`Setup PubNub client ping event ${interval} seconds`);
             pingTimeouts[subscriptionKey] = setTimeout(() => pingClients(subscriptionKey), interval * 500 - 1);
         }
     };
@@ -1383,7 +1751,7 @@
         // Make immediate heartbeat call (if possible).
         if (!client.heartbeat || !client.heartbeat.heartbeatEvent)
             return;
-        handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent, false, true);
+        handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent, false, true, undefined);
     };
     /**
      * Unregister client if it uses Service Worker before.
@@ -1594,7 +1962,7 @@
             consoleLog(message);
         else
             for (const _client of clients)
-                consoleLog(message, _client);
+                consoleLog(message);
     };
     /**
      * Unsubscribe offline / invalidated PubNub client.
@@ -1668,19 +2036,59 @@
         stopHeartbeatTimer(client);
         if (targetInterval <= 0)
             return;
+        const scheduledAt = Date.now();
+        const expectedFireAt = scheduledAt + (targetInterval * 1000);
+        // Create heartbeat metrics entry
+        const hbMetricsId = `hb-${client.clientIdentifier}-${scheduledAt}`;
+        const hbMetrics = {
+            scheduledAt,
+            expectedFireAt,
+            queueDepthAtFire: pendingRequests.size
+        };
+        heartbeatMetrics.set(hbMetricsId, hbMetrics);
+        const scheduleData = {
+            targetInterval,
+            expectedFireAt: new Date(expectedFireAt).toISOString(),
+            currentPendingRequests: pendingRequests.size,
+            channels: heartbeat.channels.length,
+            channelGroups: heartbeat.channelGroups.length
+        };
+        console.log(`[HeartbeatTimer] Scheduling heartbeat for client ${client.clientIdentifier}:`, scheduleData);
+        broadcastMetrics('HeartbeatTimer', Object.assign({ event: 'scheduled', clientId: client.clientIdentifier }, scheduleData));
         heartbeat.loop = {
             timer: setTimeout(() => {
+                const actualFiredAt = Date.now();
+                hbMetrics.actualFiredAt = actualFiredAt;
+                hbMetrics.delayFromExpected = actualFiredAt - expectedFireAt;
+                hbMetrics.queueDepthAtFire = pendingRequests.size;
+                if (Math.abs(hbMetrics.delayFromExpected) > 100) {
+                    console.warn(`[HeartbeatTimer] Heartbeat timer fired ${hbMetrics.delayFromExpected}ms off schedule:`, {
+                        clientId: client.clientIdentifier,
+                        expected: new Date(expectedFireAt).toISOString(),
+                        actual: new Date(actualFiredAt).toISOString(),
+                        delay: hbMetrics.delayFromExpected,
+                        pendingRequests: pendingRequests.size
+                    });
+                }
                 stopHeartbeatTimer(client);
-                if (!client.heartbeat || !client.heartbeat.heartbeatEvent)
+                if (!client.heartbeat || !client.heartbeat.heartbeatEvent) {
+                    hbMetrics.skipped = true;
+                    hbMetrics.skipReason = 'No heartbeat event available';
                     return;
+                }
                 // Generate new request ID
                 const { request } = client.heartbeat.heartbeatEvent;
                 request.identifier = uuidGenerator.createUUID();
                 request.queryParameters.requestid = request.identifier;
-                handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent, false);
+                // Link heartbeat metrics to network request
+                const networkMetricsForHB = networkMetrics.get(request.identifier);
+                if (networkMetricsForHB) {
+                    networkMetricsForHB.timerToFetchDelay = Date.now() - actualFiredAt;
+                }
+                handleHeartbeatRequestEvent(client.heartbeat.heartbeatEvent, false, false, hbMetrics);
             }, targetInterval * 1000),
             heartbeatInterval,
-            startTimestamp: Date.now(),
+            startTimestamp: scheduledAt,
         };
     };
     /**
@@ -1764,7 +2172,7 @@
             const requestId = subscription.serviceRequestId;
             if (subscription.path === requestPath && subscription.channelGroupQuery === channelGroupQuery) {
                 consoleLog(`Found identical request started by '${client.clientIdentifier}' client. 
-Waiting for existing '${requestId}' request completion.`, sourceClient);
+Waiting for existing '${requestId}' request completion.`);
                 return subscription.serviceRequestId;
             }
             else {
@@ -1907,7 +2315,7 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
                 if (!client.lastPongEvent || Math.abs(client.lastPongEvent - client.lastPingRequest) > interval * 0.5) {
                     clientInvalidated = true;
                     for (const _client of _pubNubClients)
-                        consoleLog(`'${client.clientIdentifier}' client is inactive. Invalidating...`, _client);
+                        consoleLog(`'${client.clientIdentifier}' client is inactive. Invalidating...`);
                     invalidateClient(client.subscriptionKey, client.clientIdentifier);
                 }
             }
@@ -1970,15 +2378,18 @@ which has started by '${client.clientIdentifier}' client. Waiting for existing '
      * @param [client] - Target client to which log message should be sent.
      */
     const consoleLog = (message, client) => {
-        const clients = (client ? [client] : Object.values(pubNubClients)).filter((client) => client && client.workerLogVerbosity);
-        const payload = {
-            type: 'shared-worker-console-log',
-            message,
-        };
-        clients.forEach((client) => {
-            if (client)
-                publishClientEvent(client, payload);
-        });
+        // TODO: cleanup this afterwards
+        // const clients = (client ? [client] : Object.values(pubNubClients)).filter(
+        //   (client) => client && client.workerLogVerbosity,
+        // );
+        // const payload: SharedWorkerConsoleLog = {
+        //   type: 'shared-worker-console-log',
+        //   message,
+        // };
+        // clients.forEach((client) => {
+        //   if (client) publishClientEvent(client, payload);
+        // });
+        console.log(message);
     };
     /**
      * Print message on the worker's clients console.
