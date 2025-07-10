@@ -825,6 +825,8 @@ const handleSendSubscribeRequestForClient = (
   const scheduledRequest = serviceRequests[requestOrId.identifier];
   const { timetokenOverride, regionOverride } = scheduledRequest;
 
+  consoleLog(`'${Object.keys(serviceRequests).length}' subscription request currently active.`);
+
   sendRequest(
     requestOrId,
     () => clientsForRequest(requestOrId.identifier),
@@ -851,8 +853,6 @@ const handleSendSubscribeRequestForClient = (
       return serverResponse;
     },
   );
-
-  consoleLog(`'${Object.keys(serviceRequests).length}' subscription request currently active.`);
 };
 
 const patchInitialSubscribeResponse = (
@@ -949,6 +949,8 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent, actualRequest = tr
     return;
   }
 
+  consoleLog(`Started heartbeat request.`, client);
+
   sendRequest(
     request,
     () => [client],
@@ -966,8 +968,6 @@ const handleHeartbeatRequestEvent = (event: SendRequestEvent, actualRequest = tr
       notifyRequestProcessingResult(clients, fetchRequest, null, event.request, requestProcessingError(error));
     },
   );
-
-  consoleLog(`Started heartbeat request.`, client);
 
   // Start "backup" heartbeat timer.
   if (!outOfOrder) startHeartbeatTimer(client);
@@ -1036,6 +1036,8 @@ const handleSendLeaveRequestEvent = (
     return;
   }
 
+  consoleLog(`Started leave request.`, client);
+
   sendRequest(
     request,
     () => [client],
@@ -1048,8 +1050,6 @@ const handleSendLeaveRequestEvent = (
       notifyRequestProcessingResult(clients, fetchRequest, null, data.request, requestProcessingError(error));
     },
   );
-
-  consoleLog(`Started leave request.`, client);
 
   // Check whether there were active subscription with channels from this client or not.
   if (serviceRequestId === undefined) return;
