@@ -49,6 +49,15 @@ enum StatusCategory {
   PNMalformedResponseCategory = 'PNMalformedResponseCategory',
 
   /**
+   * Server can't process request.
+   *
+   * There can be few sources of unexpected return with success code:
+   * - potentially an ongoing incident;
+   * - proxy server / VPN.
+   */
+  PNServerErrorCategory = 'PNServerErrorCategory',
+
+  /**
    * Something strange happened; please check the logs.
    */
   PNUnknownCategory = 'PNUnknownCategory',

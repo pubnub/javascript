@@ -200,6 +200,27 @@ export class PubNubCore<
   protected readonly transport: Transport;
 
   /**
+   * `userId` change handler.
+   *
+   * @internal
+   */
+  protected onUserIdChange?: (userId: string) => void;
+
+  /**
+   * Heartbeat interval change handler.
+   *
+   * @internal
+   */
+  protected onHeartbeatIntervalChange?: (interval: number) => void;
+
+  /**
+   * `authKey` or `token` change handler.
+   *
+   * @internal
+   */
+  protected onAuthenticationChange?: (auth?: string) => void;
+
+  /**
    * REST API endpoints access tokens manager.
    *
    * @internal
@@ -676,6 +697,8 @@ export class PubNubCore<
   setAuthKey(authKey: string): void {
     this.logger.debug('PubNub', `Set auth key: ${authKey}`);
     this._configuration.setAuthKey(authKey);
+
+    if (this.onAuthenticationChange) this.onAuthenticationChange(authKey);
   }
 
   /**
@@ -706,6 +729,8 @@ export class PubNubCore<
 
     this.logger.debug('PubNub', `Set user ID: ${value}`);
     this._configuration.userId = value;
+
+    if (this.onUserIdChange) this.onUserIdChange(this._configuration.userId);
   }
 
   /**
@@ -727,15 +752,7 @@ export class PubNubCore<
    * @throws Error empty user identifier has been provided.
    */
   setUserId(value: string): void {
-    if (!value || typeof value !== 'string' || value.trim().length === 0) {
-      const error = new Error('Missing or invalid userId parameter. Provide a valid string userId');
-      this.logger.error('PubNub', () => ({ messageType: 'error', message: error }));
-
-      throw error;
-    }
-
-    this.logger.debug('PubNub', `Set user ID: ${value}`);
-    this._configuration.userId = value;
+    this.userId = value;
   }
 
   /**
@@ -812,6 +829,8 @@ export class PubNubCore<
   set heartbeatInterval(interval: number) {
     this.logger.debug('PubNub', `Set heartbeat interval: ${interval}`);
     this._configuration.setHeartbeatInterval(interval);
+
+    if (this.onHeartbeatIntervalChange) this.onHeartbeatIntervalChange(this._configuration.getHeartbeatInterval() ?? 0);
   }
 
   /**
@@ -820,7 +839,6 @@ export class PubNubCore<
    * @param interval - New presence request heartbeat intervals.
    */
   setHeartbeatInterval(interval: number): void {
-    this.logger.debug('PubNub', `Set heartbeat interval: ${interval}`);
     this.heartbeatInterval = interval;
   }
 
@@ -1493,12 +1511,18 @@ export class PubNubCore<
         details: `Unregister event handle capable:`,
       }));
 
+      // Check whether only subscription object has been passed to be unregistered.
+      let shouldDeleteEventHandler = !subscriptions || subscriptions.length === 0;
+
+      // Check whether subscription set is unregistering with all managed Subscription objects,
       if (
-        !subscriptions ||
-        subscriptions.length === 0 ||
-        (subscriptions && subscription instanceof SubscriptionSet && subscriptions === subscriptions)
+        !shouldDeleteEventHandler &&
+        subscription instanceof SubscriptionSet &&
+        subscription.subscriptions.length === subscriptions?.length
       )
-        delete this.eventHandleCapable[subscription.state.id];
+        shouldDeleteEventHandler = subscription.subscriptions.every((sub) => subscriptions.includes(sub));
+
+      if (shouldDeleteEventHandler) delete this.eventHandleCapable[subscription.state.id];
 
       let subscriptionInput: SubscriptionInput;
       if (!subscriptions || subscriptions.length === 0) {
@@ -3016,6 +3040,7 @@ export class PubNubCore<
    */
   public set token(token: string | undefined) {
     if (this.tokenManager) this.tokenManager.setToken(token);
+    if (this.onAuthenticationChange) this.onAuthenticationChange(token);
   }
 
   /**
@@ -3269,7 +3294,7 @@ export class PubNubCore<
    * configured PubNub client `uuid` if not set.
    * @param callback - Request completion handler callback.
    *
-   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata getUUIDMetadata} method instead.
+   * @deprecated Use {@link PubNubCore#objects.getUUIDMetadata|getUUIDMetadata} method instead.
    */
   public fetchUser<Custom extends AppContext.CustomData = AppContext.CustomData>(
     parameters: AppContext.GetUUIDMetadataParameters,

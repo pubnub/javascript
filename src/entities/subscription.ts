@@ -145,9 +145,12 @@ export class Subscription extends SubscriptionBase {
       // Creating from whole payload (not only for published messages).
       const fingerprint = messageFingerprint(event.data);
       if (this.handledUpdates.includes(fingerprint)) {
-        this.state.client.logger.trace(this.subscriptionType, `Message (${fingerprint}) already handled. Ignoring.`);
+        this.state.client.logger.trace(
+          this.subscriptionType,
+          `Message (${fingerprint}) already handled by ${this.id}. Ignoring.`,
+        );
         return;
-      }
+      } else console.log(`${this.id} handled (${fingerprint})`);
 
       // Update a list of tracked messages and shrink it if too big.
       this.handledUpdates.push(fingerprint);

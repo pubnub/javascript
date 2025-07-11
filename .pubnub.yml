@@ -1,5 +1,20 @@
 ---
 changelog:
+  - date: 2025-07-11
+    version: v9.8.0
+    changes:
+      - type: feature
+        text: "Depending on client configuration, it will emit `status` for heartbeat, which has been started by the `SharedWorker` backup heartbeat timer mechanism."
+      - type: feature
+        text: "Stop heartbeats until the auth key / access token is changed. On change, `SharedWorker` will send an immediate heartbeat request."
+      - type: bug
+        text: "Fix the issue with the global subscription set (used for legacy interface support) because of which `unsubscribe` with the legacy interface wasn't able to complete the unsubscribe process."
+      - type: bug
+        text: "Fix the issue because of which rapid subscription (from other PubNub clients in response to received subscribe response) throttling causes delayed channel list change."
+      - type: improvement
+        text: "Restart the timer of the backup heartbeat if an explicit heartbeat request has been received from the main PubNub client."
+      - type: improvement
+        text: "Modify the `log` payload for `SharedWorker` to make it possible to log sent / received requests information to the main browser window (not to the `SharedWorker` console)."
   - date: 2025-06-30
     version: v9.7.0
     changes:
@@ -1276,7 +1291,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.7.0'
+version: '9.8.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1292,7 +1307,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.7.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.8.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1963,7 +1978,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.7.0/pubnub.9.7.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.8.0/pubnub.9.8.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

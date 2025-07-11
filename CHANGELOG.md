@@ -1,3 +1,18 @@
+## v9.8.0
+July 11 2025
+
+#### Added
+- Depending on client configuration, it will emit `status` for heartbeat, which has been started by the `SharedWorker` backup heartbeat timer mechanism.
+- Stop heartbeats until the auth key / access token is changed. On change, `SharedWorker` will send an immediate heartbeat request.
+
+#### Fixed
+- Fix the issue with the global subscription set (used for legacy interface support) because of which `unsubscribe` with the legacy interface wasn't able to complete the unsubscribe process.
+- Fix the issue because of which rapid subscription (from other PubNub clients in response to received subscribe response) throttling causes delayed channel list change.
+
+#### Modified
+- Restart the timer of the backup heartbeat if an explicit heartbeat request has been received from the main PubNub client.
+- Modify the `log` payload for `SharedWorker` to make it possible to log sent / received requests information to the main browser window (not to the `SharedWorker` console).
+
 ## v9.7.0
 June 30 2025
 

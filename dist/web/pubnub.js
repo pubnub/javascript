@@ -863,6 +863,14 @@
 	     */
 	    StatusCategory["PNMalformedResponseCategory"] = "PNMalformedResponseCategory";
 	    /**
+	     * Server can't process request.
+	     *
+	     * There can be few sources of unexpected return with success code:
+	     * - potentially an ongoing incident;
+	     * - proxy server / VPN.
+	     */
+	    StatusCategory["PNServerErrorCategory"] = "PNServerErrorCategory";
+	    /**
 	     * Something strange happened; please check the logs.
 	     */
 	    StatusCategory["PNUnknownCategory"] = "PNUnknownCategory";
@@ -3111,6 +3119,10 @@
 	            category = StatusCategory$1.PNAccessDeniedCategory;
 	            message = 'Access denied';
 	        }
+	        else if (status >= 500) {
+	            category = StatusCategory$1.PNServerErrorCategory;
+	            message = 'Internal server error';
+	        }
 	        if (typeof response === 'object' && Object.keys(response).length === 0) {
 	            category = StatusCategory$1.PNMalformedResponseCategory;
 	            message = 'Malformed response (network issues)';
@@ -3274,6 +3286,258 @@
 	}
 
 	/**
+	 * Endpoint API operation types.
+	 */
+	var RequestOperation;
+	(function (RequestOperation) {
+	    // --------------------------------------------------------
+	    // ---------------------- Publish API ---------------------
+	    // --------------------------------------------------------
+	    /**
+	     * Data publish REST API operation.
+	     */
+	    RequestOperation["PNPublishOperation"] = "PNPublishOperation";
+	    /**
+	     * Signal sending REST API operation.
+	     */
+	    RequestOperation["PNSignalOperation"] = "PNSignalOperation";
+	    // --------------------------------------------------------
+	    // --------------------- Subscribe API --------------------
+	    // --------------------------------------------------------
+	    /**
+	     * Subscribe for real-time updates REST API operation.
+	     *
+	     * User's presence change on specified entities will trigger `join` event.
+	     */
+	    RequestOperation["PNSubscribeOperation"] = "PNSubscribeOperation";
+	    /**
+	     * Unsubscribe from real-time updates REST API operation.
+	     *
+	     * User's presence change on specified entities will trigger `leave` event.
+	     */
+	    RequestOperation["PNUnsubscribeOperation"] = "PNUnsubscribeOperation";
+	    // --------------------------------------------------------
+	    // --------------------- Presence API ---------------------
+	    // --------------------------------------------------------
+	    /**
+	     * Fetch user's presence information REST API operation.
+	     */
+	    RequestOperation["PNWhereNowOperation"] = "PNWhereNowOperation";
+	    /**
+	     * Fetch channel's presence information REST API operation.
+	     */
+	    RequestOperation["PNHereNowOperation"] = "PNHereNowOperation";
+	    /**
+	     * Fetch global presence information REST API operation.
+	     */
+	    RequestOperation["PNGlobalHereNowOperation"] = "PNGlobalHereNowOperation";
+	    /**
+	     * Update user's information associated with specified channel REST API operation.
+	     */
+	    RequestOperation["PNSetStateOperation"] = "PNSetStateOperation";
+	    /**
+	     * Fetch user's information associated with the specified channel REST API operation.
+	     */
+	    RequestOperation["PNGetStateOperation"] = "PNGetStateOperation";
+	    /**
+	     * Announce presence on managed channels REST API operation.
+	     */
+	    RequestOperation["PNHeartbeatOperation"] = "PNHeartbeatOperation";
+	    // --------------------------------------------------------
+	    // ----------------- Message Reaction API -----------------
+	    // --------------------------------------------------------
+	    /**
+	     * Add a reaction to the specified message REST API operation.
+	     */
+	    RequestOperation["PNAddMessageActionOperation"] = "PNAddActionOperation";
+	    /**
+	     * Remove reaction from the specified message REST API operation.
+	     */
+	    RequestOperation["PNRemoveMessageActionOperation"] = "PNRemoveMessageActionOperation";
+	    /**
+	     * Fetch reactions for specific message REST API operation.
+	     */
+	    RequestOperation["PNGetMessageActionsOperation"] = "PNGetMessageActionsOperation";
+	    RequestOperation["PNTimeOperation"] = "PNTimeOperation";
+	    // --------------------------------------------------------
+	    // ---------------------- Storage API ---------------------
+	    // --------------------------------------------------------
+	    /**
+	     * Channel history REST API operation.
+	     */
+	    RequestOperation["PNHistoryOperation"] = "PNHistoryOperation";
+	    /**
+	     * Delete messages from channel history REST API operation.
+	     */
+	    RequestOperation["PNDeleteMessagesOperation"] = "PNDeleteMessagesOperation";
+	    /**
+	     * History for channels REST API operation.
+	     */
+	    RequestOperation["PNFetchMessagesOperation"] = "PNFetchMessagesOperation";
+	    /**
+	     * Number of messages for channels in specified time frame REST API operation.
+	     */
+	    RequestOperation["PNMessageCounts"] = "PNMessageCountsOperation";
+	    // --------------------------------------------------------
+	    // -------------------- App Context API -------------------
+	    // --------------------------------------------------------
+	    /**
+	     * Fetch users metadata REST API operation.
+	     */
+	    RequestOperation["PNGetAllUUIDMetadataOperation"] = "PNGetAllUUIDMetadataOperation";
+	    /**
+	     * Fetch user metadata REST API operation.
+	     */
+	    RequestOperation["PNGetUUIDMetadataOperation"] = "PNGetUUIDMetadataOperation";
+	    /**
+	     * Set user metadata REST API operation.
+	     */
+	    RequestOperation["PNSetUUIDMetadataOperation"] = "PNSetUUIDMetadataOperation";
+	    /**
+	     * Remove user metadata REST API operation.
+	     */
+	    RequestOperation["PNRemoveUUIDMetadataOperation"] = "PNRemoveUUIDMetadataOperation";
+	    /**
+	     * Fetch channels metadata REST API operation.
+	     */
+	    RequestOperation["PNGetAllChannelMetadataOperation"] = "PNGetAllChannelMetadataOperation";
+	    /**
+	     * Fetch channel metadata REST API operation.
+	     */
+	    RequestOperation["PNGetChannelMetadataOperation"] = "PNGetChannelMetadataOperation";
+	    /**
+	     * Set channel metadata REST API operation.
+	     */
+	    RequestOperation["PNSetChannelMetadataOperation"] = "PNSetChannelMetadataOperation";
+	    /**
+	     * Remove channel metadata REST API operation.
+	     */
+	    RequestOperation["PNRemoveChannelMetadataOperation"] = "PNRemoveChannelMetadataOperation";
+	    /**
+	     * Fetch channel members REST API operation.
+	     */
+	    RequestOperation["PNGetMembersOperation"] = "PNGetMembersOperation";
+	    /**
+	     * Update channel members REST API operation.
+	     */
+	    RequestOperation["PNSetMembersOperation"] = "PNSetMembersOperation";
+	    /**
+	     * Fetch channel memberships REST API operation.
+	     */
+	    RequestOperation["PNGetMembershipsOperation"] = "PNGetMembershipsOperation";
+	    /**
+	     * Update channel memberships REST API operation.
+	     */
+	    RequestOperation["PNSetMembershipsOperation"] = "PNSetMembershipsOperation";
+	    // --------------------------------------------------------
+	    // -------------------- File Upload API -------------------
+	    // --------------------------------------------------------
+	    /**
+	     * Fetch list of files sent to the channel REST API operation.
+	     */
+	    RequestOperation["PNListFilesOperation"] = "PNListFilesOperation";
+	    /**
+	     * Retrieve file upload URL REST API operation.
+	     */
+	    RequestOperation["PNGenerateUploadUrlOperation"] = "PNGenerateUploadUrlOperation";
+	    /**
+	     * Upload file to the channel REST API operation.
+	     */
+	    RequestOperation["PNPublishFileOperation"] = "PNPublishFileOperation";
+	    /**
+	     * Publish File Message to the channel REST API operation.
+	     */
+	    RequestOperation["PNPublishFileMessageOperation"] = "PNPublishFileMessageOperation";
+	    /**
+	     * Retrieve file download URL REST API operation.
+	     */
+	    RequestOperation["PNGetFileUrlOperation"] = "PNGetFileUrlOperation";
+	    /**
+	     * Download file from the channel REST API operation.
+	     */
+	    RequestOperation["PNDownloadFileOperation"] = "PNDownloadFileOperation";
+	    /**
+	     * Delete file sent to the channel REST API operation.
+	     */
+	    RequestOperation["PNDeleteFileOperation"] = "PNDeleteFileOperation";
+	    // --------------------------------------------------------
+	    // -------------------- Mobile Push API -------------------
+	    // --------------------------------------------------------
+	    /**
+	     * Register channels with device push notifications REST API operation.
+	     */
+	    RequestOperation["PNAddPushNotificationEnabledChannelsOperation"] = "PNAddPushNotificationEnabledChannelsOperation";
+	    /**
+	     * Unregister channels with device push notifications REST API operation.
+	     */
+	    RequestOperation["PNRemovePushNotificationEnabledChannelsOperation"] = "PNRemovePushNotificationEnabledChannelsOperation";
+	    /**
+	     * Fetch list of channels with enabled push notifications for device REST API operation.
+	     */
+	    RequestOperation["PNPushNotificationEnabledChannelsOperation"] = "PNPushNotificationEnabledChannelsOperation";
+	    /**
+	     * Disable push notifications for device REST API operation.
+	     */
+	    RequestOperation["PNRemoveAllPushNotificationsOperation"] = "PNRemoveAllPushNotificationsOperation";
+	    // --------------------------------------------------------
+	    // ------------------ Channel Groups API ------------------
+	    // --------------------------------------------------------
+	    /**
+	     * Fetch channels groups list REST API operation.
+	     */
+	    RequestOperation["PNChannelGroupsOperation"] = "PNChannelGroupsOperation";
+	    /**
+	     * Remove specified channel group REST API operation.
+	     */
+	    RequestOperation["PNRemoveGroupOperation"] = "PNRemoveGroupOperation";
+	    /**
+	     * Fetch list of channels for the specified channel group REST API operation.
+	     */
+	    RequestOperation["PNChannelsForGroupOperation"] = "PNChannelsForGroupOperation";
+	    /**
+	     * Add list of channels to the specified channel group REST API operation.
+	     */
+	    RequestOperation["PNAddChannelsToGroupOperation"] = "PNAddChannelsToGroupOperation";
+	    /**
+	     * Remove list of channels from the specified channel group REST API operation.
+	     */
+	    RequestOperation["PNRemoveChannelsFromGroupOperation"] = "PNRemoveChannelsFromGroupOperation";
+	    // --------------------------------------------------------
+	    // ----------------------- PAM API ------------------------
+	    // --------------------------------------------------------
+	    /**
+	     * Generate authorized token REST API operation.
+	     */
+	    RequestOperation["PNAccessManagerGrant"] = "PNAccessManagerGrant";
+	    /**
+	     * Generate authorized token REST API operation.
+	     */
+	    RequestOperation["PNAccessManagerGrantToken"] = "PNAccessManagerGrantToken";
+	    RequestOperation["PNAccessManagerAudit"] = "PNAccessManagerAudit";
+	    /**
+	     * Revoke authorized token REST API operation.
+	     */
+	    RequestOperation["PNAccessManagerRevokeToken"] = "PNAccessManagerRevokeToken";
+	    //
+	    // --------------------------------------------------------
+	    // ---------------- Subscription Utility ------------------
+	    // --------------------------------------------------------
+	    /**
+	     * Initial event engine subscription handshake operation.
+	     *
+	     * @internal
+	     */
+	    RequestOperation["PNHandshakeOperation"] = "PNHandshakeOperation";
+	    /**
+	     * Event engine subscription loop operation.
+	     *
+	     * @internal
+	     */
+	    RequestOperation["PNReceiveMessagesOperation"] = "PNReceiveMessagesOperation";
+	})(RequestOperation || (RequestOperation = {}));
+	var RequestOperation$1 = RequestOperation;
+
+	/**
 	 * Subscription Worker transport middleware module.
 	 *
 	 * Middleware optimize subscription feature requests utilizing `Subscription Worker` if available and not disabled
@@ -3299,6 +3563,65 @@
 	        this.workerEventsQueue = [];
 	        this.callbacks = new Map();
 	        this.setupSubscriptionWorker();
+	    }
+	    /**
+	     * Set status emitter from the PubNub client.
+	     *
+	     * @param emitter - Function which should be used to emit events.
+	     */
+	    set emitStatus(emitter) {
+	        this._emitStatus = emitter;
+	    }
+	    /**
+	     * Update client's `userId`.
+	     *
+	     * @param userId - User ID which will be used by the PubNub client further.
+	     */
+	    onUserIdChange(userId) {
+	        this.configuration.userId = userId;
+	        this.scheduleEventPost({
+	            type: 'client-update',
+	            heartbeatInterval: this.configuration.heartbeatInterval,
+	            clientIdentifier: this.configuration.clientIdentifier,
+	            subscriptionKey: this.configuration.subscriptionKey,
+	            userId: this.configuration.userId,
+	        });
+	    }
+	    /**
+	     * Update client's heartbeat interval change.
+	     *
+	     * @param interval - Interval which should be used by timers for _backup_ heartbeat calls created in `SharedWorker`.
+	     */
+	    onHeartbeatIntervalChange(interval) {
+	        this.configuration.heartbeatInterval = interval;
+	        this.scheduleEventPost({
+	            type: 'client-update',
+	            heartbeatInterval: this.configuration.heartbeatInterval,
+	            clientIdentifier: this.configuration.clientIdentifier,
+	            subscriptionKey: this.configuration.subscriptionKey,
+	            userId: this.configuration.userId,
+	        });
+	    }
+	    /**
+	     * Handle authorization key / token change.
+	     *
+	     * @param [token] - Authorization token which should be used.
+	     */
+	    onTokenChange(token) {
+	        const updateEvent = {
+	            type: 'client-update',
+	            heartbeatInterval: this.configuration.heartbeatInterval,
+	            clientIdentifier: this.configuration.clientIdentifier,
+	            subscriptionKey: this.configuration.subscriptionKey,
+	            userId: this.configuration.userId,
+	        };
+	        // Trigger request processing by Service Worker.
+	        this.parsedAccessToken(token)
+	            .then((accessToken) => {
+	            updateEvent.preProcessedToken = accessToken;
+	            updateEvent.accessToken = token;
+	        })
+	            .then(() => this.scheduleEventPost(updateEvent));
 	    }
 	    /**
 	     * Terminate all ongoing long-poll requests.
@@ -3343,7 +3666,7 @@
 	                this.callbacks.set(req.identifier, { resolve, reject });
 	                // Trigger request processing by Service Worker.
 	                this.parsedAccessTokenForRequest(req)
-	                    .then((accessToken) => (sendRequestEvent.token = accessToken))
+	                    .then((accessToken) => (sendRequestEvent.preProcessedToken = accessToken))
 	                    .then(() => this.scheduleEventPost(sendRequestEvent));
 	            }),
 	            controller,
@@ -3454,7 +3777,15 @@
 	            this.flushScheduledEvents();
 	        }
 	        else if (data.type === 'shared-worker-console-log') {
-	            this.configuration.logger.debug('SharedWorker', data.message);
+	            this.configuration.logger.debug('SharedWorker', () => {
+	                if (typeof data.message === 'string' || typeof data.message === 'number' || typeof data.message === 'boolean') {
+	                    return {
+	                        messageType: 'text',
+	                        message: data.message,
+	                    };
+	                }
+	                return data.message;
+	            });
 	        }
 	        else if (data.type === 'shared-worker-console-dir') {
 	            this.configuration.logger.debug('SharedWorker', () => {
@@ -3470,43 +3801,37 @@
 	            this.scheduleEventPost({ type: 'client-pong', subscriptionKey, clientIdentifier });
 	        }
 	        else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
-	            const { resolve, reject } = this.callbacks.get(data.identifier);
-	            if (data.type === 'request-process-success') {
-	                resolve({
-	                    status: data.response.status,
-	                    url: data.url,
-	                    headers: data.response.headers,
-	                    body: data.response.body,
-	                });
-	            }
-	            else {
-	                let category = StatusCategory$1.PNUnknownCategory;
-	                let message = 'Unknown error';
-	                // Handle client-side issues (if any).
-	                if (data.error) {
-	                    if (data.error.type === 'NETWORK_ISSUE')
-	                        category = StatusCategory$1.PNNetworkIssuesCategory;
-	                    else if (data.error.type === 'TIMEOUT')
-	                        category = StatusCategory$1.PNTimeoutCategory;
-	                    else if (data.error.type === 'ABORTED')
-	                        category = StatusCategory$1.PNCancelledCategory;
-	                    message = `${data.error.message} (${data.identifier})`;
-	                }
-	                // Handle service error response.
-	                else if (data.response) {
-	                    return reject(PubNubAPIError.create({
+	            if (this.callbacks.has(data.identifier)) {
+	                const { resolve, reject } = this.callbacks.get(data.identifier);
+	                this.callbacks.delete(data.identifier);
+	                if (data.type === 'request-process-success') {
+	                    resolve({
+	                        status: data.response.status,
 	                        url: data.url,
 	                        headers: data.response.headers,
 	                        body: data.response.body,
-	                        status: data.response.status,
-	                    }, data.response.body));
+	                    });
 	                }
-	                reject(new PubNubAPIError(message, category, 0, new Error(message)));
+	                else
+	                    reject(this.errorFromRequestSendingError(data));
+	            }
+	            // Handling "backup" heartbeat which doesn't have registered callbacks.
+	            else if (this._emitStatus && data.url.indexOf('/v2/presence') >= 0 && data.url.indexOf('/heartbeat') >= 0) {
+	                if (data.type === 'request-process-success' && this.configuration.announceSuccessfulHeartbeats) {
+	                    this._emitStatus({
+	                        statusCode: data.response.status,
+	                        error: false,
+	                        operation: RequestOperation$1.PNHeartbeatOperation,
+	                        category: StatusCategory$1.PNAcknowledgmentCategory,
+	                    });
+	                }
+	                else if (data.type === 'request-process-error' && this.configuration.announceFailedHeartbeats)
+	                    this._emitStatus(this.errorFromRequestSendingError(data).toStatus(RequestOperation$1.PNHeartbeatOperation));
 	            }
 	        }
 	    }
 	    /**
-	     * Get parsed access token object.
+	     * Get parsed access token object from request.
 	     *
 	     * @param req - Transport request which may contain access token for processing.
 	     *
@@ -3515,7 +3840,18 @@
 	    parsedAccessTokenForRequest(req) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            var _a;
-	            const accessToken = req.queryParameters ? ((_a = req.queryParameters.auth) !== null && _a !== void 0 ? _a : '') : undefined;
+	            return this.parsedAccessToken(req.queryParameters ? ((_a = req.queryParameters.auth) !== null && _a !== void 0 ? _a : '') : undefined);
+	        });
+	    }
+	    /**
+	     * Get parsed access token object.
+	     *
+	     * @param accessToken - Access token for processing.
+	     *
+	     * @returns Object with stringified access token information and expiration date information.
+	     */
+	    parsedAccessToken(accessToken) {
+	        return __awaiter(this, void 0, void 0, function* () {
 	            if (!accessToken)
 	                return undefined;
 	            else if (this.accessTokensMap[accessToken])
@@ -3569,6 +3905,33 @@
 	            }
 	            return [token, typeof btoa !== 'undefined' ? btoa(accessToken) : accessToken];
 	        });
+	    }
+	    /**
+	     * Create error from failure received from the `SharedWorker`.
+	     *
+	     * @param sendingError - Request sending error received from the `SharedWorker`.
+	     *
+	     * @returns `PubNubAPIError` instance with request processing failure information.
+	     */
+	    errorFromRequestSendingError(sendingError) {
+	        let category = StatusCategory$1.PNUnknownCategory;
+	        let message = 'Unknown error';
+	        // Handle client-side issues (if any).
+	        if (sendingError.error) {
+	            if (sendingError.error.type === 'NETWORK_ISSUE')
+	                category = StatusCategory$1.PNNetworkIssuesCategory;
+	            else if (sendingError.error.type === 'TIMEOUT')
+	                category = StatusCategory$1.PNTimeoutCategory;
+	            else if (sendingError.error.type === 'ABORTED')
+	                category = StatusCategory$1.PNCancelledCategory;
+	            message = `${sendingError.error.message} (${sendingError.identifier})`;
+	        }
+	        // Handle service error response.
+	        else if (sendingError.response) {
+	            const { url, response } = sendingError;
+	            return PubNubAPIError.create({ url, headers: response.headers, body: response.body, status: response.status }, response.body);
+	        }
+	        return new PubNubAPIError(message, category, 0, new Error(message));
 	    }
 	}
 
@@ -4962,7 +5325,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.7.0';
+	            return '9.8.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -5955,258 +6318,6 @@
 	 * Service `ArrayBuffer` response decoder.
 	 */
 	AbstractRequest.decoder = new TextDecoder();
-
-	/**
-	 * Endpoint API operation types.
-	 */
-	var RequestOperation;
-	(function (RequestOperation) {
-	    // --------------------------------------------------------
-	    // ---------------------- Publish API ---------------------
-	    // --------------------------------------------------------
-	    /**
-	     * Data publish REST API operation.
-	     */
-	    RequestOperation["PNPublishOperation"] = "PNPublishOperation";
-	    /**
-	     * Signal sending REST API operation.
-	     */
-	    RequestOperation["PNSignalOperation"] = "PNSignalOperation";
-	    // --------------------------------------------------------
-	    // --------------------- Subscribe API --------------------
-	    // --------------------------------------------------------
-	    /**
-	     * Subscribe for real-time updates REST API operation.
-	     *
-	     * User's presence change on specified entities will trigger `join` event.
-	     */
-	    RequestOperation["PNSubscribeOperation"] = "PNSubscribeOperation";
-	    /**
-	     * Unsubscribe from real-time updates REST API operation.
-	     *
-	     * User's presence change on specified entities will trigger `leave` event.
-	     */
-	    RequestOperation["PNUnsubscribeOperation"] = "PNUnsubscribeOperation";
-	    // --------------------------------------------------------
-	    // --------------------- Presence API ---------------------
-	    // --------------------------------------------------------
-	    /**
-	     * Fetch user's presence information REST API operation.
-	     */
-	    RequestOperation["PNWhereNowOperation"] = "PNWhereNowOperation";
-	    /**
-	     * Fetch channel's presence information REST API operation.
-	     */
-	    RequestOperation["PNHereNowOperation"] = "PNHereNowOperation";
-	    /**
-	     * Fetch global presence information REST API operation.
-	     */
-	    RequestOperation["PNGlobalHereNowOperation"] = "PNGlobalHereNowOperation";
-	    /**
-	     * Update user's information associated with specified channel REST API operation.
-	     */
-	    RequestOperation["PNSetStateOperation"] = "PNSetStateOperation";
-	    /**
-	     * Fetch user's information associated with the specified channel REST API operation.
-	     */
-	    RequestOperation["PNGetStateOperation"] = "PNGetStateOperation";
-	    /**
-	     * Announce presence on managed channels REST API operation.
-	     */
-	    RequestOperation["PNHeartbeatOperation"] = "PNHeartbeatOperation";
-	    // --------------------------------------------------------
-	    // ----------------- Message Reaction API -----------------
-	    // --------------------------------------------------------
-	    /**
-	     * Add a reaction to the specified message REST API operation.
-	     */
-	    RequestOperation["PNAddMessageActionOperation"] = "PNAddActionOperation";
-	    /**
-	     * Remove reaction from the specified message REST API operation.
-	     */
-	    RequestOperation["PNRemoveMessageActionOperation"] = "PNRemoveMessageActionOperation";
-	    /**
-	     * Fetch reactions for specific message REST API operation.
-	     */
-	    RequestOperation["PNGetMessageActionsOperation"] = "PNGetMessageActionsOperation";
-	    RequestOperation["PNTimeOperation"] = "PNTimeOperation";
-	    // --------------------------------------------------------
-	    // ---------------------- Storage API ---------------------
-	    // --------------------------------------------------------
-	    /**
-	     * Channel history REST API operation.
-	     */
-	    RequestOperation["PNHistoryOperation"] = "PNHistoryOperation";
-	    /**
-	     * Delete messages from channel history REST API operation.
-	     */
-	    RequestOperation["PNDeleteMessagesOperation"] = "PNDeleteMessagesOperation";
-	    /**
-	     * History for channels REST API operation.
-	     */
-	    RequestOperation["PNFetchMessagesOperation"] = "PNFetchMessagesOperation";
-	    /**
-	     * Number of messages for channels in specified time frame REST API operation.
-	     */
-	    RequestOperation["PNMessageCounts"] = "PNMessageCountsOperation";
-	    // --------------------------------------------------------
-	    // -------------------- App Context API -------------------
-	    // --------------------------------------------------------
-	    /**
-	     * Fetch users metadata REST API operation.
-	     */
-	    RequestOperation["PNGetAllUUIDMetadataOperation"] = "PNGetAllUUIDMetadataOperation";
-	    /**
-	     * Fetch user metadata REST API operation.
-	     */
-	    RequestOperation["PNGetUUIDMetadataOperation"] = "PNGetUUIDMetadataOperation";
-	    /**
-	     * Set user metadata REST API operation.
-	     */
-	    RequestOperation["PNSetUUIDMetadataOperation"] = "PNSetUUIDMetadataOperation";
-	    /**
-	     * Remove user metadata REST API operation.
-	     */
-	    RequestOperation["PNRemoveUUIDMetadataOperation"] = "PNRemoveUUIDMetadataOperation";
-	    /**
-	     * Fetch channels metadata REST API operation.
-	     */
-	    RequestOperation["PNGetAllChannelMetadataOperation"] = "PNGetAllChannelMetadataOperation";
-	    /**
-	     * Fetch channel metadata REST API operation.
-	     */
-	    RequestOperation["PNGetChannelMetadataOperation"] = "PNGetChannelMetadataOperation";
-	    /**
-	     * Set channel metadata REST API operation.
-	     */
-	    RequestOperation["PNSetChannelMetadataOperation"] = "PNSetChannelMetadataOperation";
-	    /**
-	     * Remove channel metadata REST API operation.
-	     */
-	    RequestOperation["PNRemoveChannelMetadataOperation"] = "PNRemoveChannelMetadataOperation";
-	    /**
-	     * Fetch channel members REST API operation.
-	     */
-	    RequestOperation["PNGetMembersOperation"] = "PNGetMembersOperation";
-	    /**
-	     * Update channel members REST API operation.
-	     */
-	    RequestOperation["PNSetMembersOperation"] = "PNSetMembersOperation";
-	    /**
-	     * Fetch channel memberships REST API operation.
-	     */
-	    RequestOperation["PNGetMembershipsOperation"] = "PNGetMembershipsOperation";
-	    /**
-	     * Update channel memberships REST API operation.
-	     */
-	    RequestOperation["PNSetMembershipsOperation"] = "PNSetMembershipsOperation";
-	    // --------------------------------------------------------
-	    // -------------------- File Upload API -------------------
-	    // --------------------------------------------------------
-	    /**
-	     * Fetch list of files sent to the channel REST API operation.
-	     */
-	    RequestOperation["PNListFilesOperation"] = "PNListFilesOperation";
-	    /**
-	     * Retrieve file upload URL REST API operation.
-	     */
-	    RequestOperation["PNGenerateUploadUrlOperation"] = "PNGenerateUploadUrlOperation";
-	    /**
-	     * Upload file to the channel REST API operation.
-	     */
-	    RequestOperation["PNPublishFileOperation"] = "PNPublishFileOperation";
-	    /**
-	     * Publish File Message to the channel REST API operation.
-	     */
-	    RequestOperation["PNPublishFileMessageOperation"] = "PNPublishFileMessageOperation";
-	    /**
-	     * Retrieve file download URL REST API operation.
-	     */
-	    RequestOperation["PNGetFileUrlOperation"] = "PNGetFileUrlOperation";
-	    /**
-	     * Download file from the channel REST API operation.
-	     */
-	    RequestOperation["PNDownloadFileOperation"] = "PNDownloadFileOperation";
-	    /**
-	     * Delete file sent to the channel REST API operation.
-	     */
-	    RequestOperation["PNDeleteFileOperation"] = "PNDeleteFileOperation";
-	    // --------------------------------------------------------
-	    // -------------------- Mobile Push API -------------------
-	    // --------------------------------------------------------
-	    /**
-	     * Register channels with device push notifications REST API operation.
-	     */
-	    RequestOperation["PNAddPushNotificationEnabledChannelsOperation"] = "PNAddPushNotificationEnabledChannelsOperation";
-	    /**
-	     * Unregister channels with device push notifications REST API operation.
-	     */
-	    RequestOperation["PNRemovePushNotificationEnabledChannelsOperation"] = "PNRemovePushNotificationEnabledChannelsOperation";
-	    /**
-	     * Fetch list of channels with enabled push notifications for device REST API operation.
-	     */
-	    RequestOperation["PNPushNotificationEnabledChannelsOperation"] = "PNPushNotificationEnabledChannelsOperation";
-	    /**
-	     * Disable push notifications for device REST API operation.
-	     */
-	    RequestOperation["PNRemoveAllPushNotificationsOperation"] = "PNRemoveAllPushNotificationsOperation";
-	    // --------------------------------------------------------
-	    // ------------------ Channel Groups API ------------------
-	    // --------------------------------------------------------
-	    /**
-	     * Fetch channels groups list REST API operation.
-	     */
-	    RequestOperation["PNChannelGroupsOperation"] = "PNChannelGroupsOperation";
-	    /**
-	     * Remove specified channel group REST API operation.
-	     */
-	    RequestOperation["PNRemoveGroupOperation"] = "PNRemoveGroupOperation";
-	    /**
-	     * Fetch list of channels for the specified channel group REST API operation.
-	     */
-	    RequestOperation["PNChannelsForGroupOperation"] = "PNChannelsForGroupOperation";
-	    /**
-	     * Add list of channels to the specified channel group REST API operation.
-	     */
-	    RequestOperation["PNAddChannelsToGroupOperation"] = "PNAddChannelsToGroupOperation";
-	    /**
-	     * Remove list of channels from the specified channel group REST API operation.
-	     */
-	    RequestOperation["PNRemoveChannelsFromGroupOperation"] = "PNRemoveChannelsFromGroupOperation";
-	    // --------------------------------------------------------
-	    // ----------------------- PAM API ------------------------
-	    // --------------------------------------------------------
-	    /**
-	     * Generate authorized token REST API operation.
-	     */
-	    RequestOperation["PNAccessManagerGrant"] = "PNAccessManagerGrant";
-	    /**
-	     * Generate authorized token REST API operation.
-	     */
-	    RequestOperation["PNAccessManagerGrantToken"] = "PNAccessManagerGrantToken";
-	    RequestOperation["PNAccessManagerAudit"] = "PNAccessManagerAudit";
-	    /**
-	     * Revoke authorized token REST API operation.
-	     */
-	    RequestOperation["PNAccessManagerRevokeToken"] = "PNAccessManagerRevokeToken";
-	    //
-	    // --------------------------------------------------------
-	    // ---------------- Subscription Utility ------------------
-	    // --------------------------------------------------------
-	    /**
-	     * Initial event engine subscription handshake operation.
-	     *
-	     * @internal
-	     */
-	    RequestOperation["PNHandshakeOperation"] = "PNHandshakeOperation";
-	    /**
-	     * Event engine subscription loop operation.
-	     *
-	     * @internal
-	     */
-	    RequestOperation["PNReceiveMessagesOperation"] = "PNReceiveMessagesOperation";
-	})(RequestOperation || (RequestOperation = {}));
-	var RequestOperation$1 = RequestOperation;
 
 	/**
 	 * Subscription REST API module.
@@ -9878,10 +9989,12 @@
 	     * Create a subscription object from the state.
 	     *
 	     * @param state - Subscription state object.
+	     * @param subscriptionType - Actual subscription object type.
 	     *
 	     * @internal
 	     */
-	    constructor(state) {
+	    constructor(state, subscriptionType = 'Subscription') {
+	        this.subscriptionType = subscriptionType;
 	        /**
 	         * Unique subscription object identifier.
 	         *
@@ -9895,20 +10008,6 @@
 	         */
 	        this.eventDispatcher = new EventDispatcher();
 	        this._state = state;
-	    }
-	    /**
-	     * Retrieve subscription type.
-	     *
-	     * There is two types:
-	     * - Subscription
-	     * - SubscriptionSet
-	     *
-	     * @returns One of subscription types.
-	     *
-	     * @internal
-	     */
-	    get subscriptionType() {
-	        return 'Subscription';
 	    }
 	    /**
 	     * Subscription state.
@@ -10202,20 +10301,6 @@
 	        this.subscriptions = parameters.subscriptions;
 	    }
 	    /**
-	     * Retrieve subscription type.
-	     *
-	     * There is two types:
-	     * - Subscription
-	     * - SubscriptionSet
-	     *
-	     * @returns One of subscription types.
-	     *
-	     * @internal
-	     */
-	    get subscriptionType() {
-	        return 'SubscriptionSet';
-	    }
-	    /**
 	     * Add a single subscription object to the set.
 	     *
 	     * @param subscription - Another entity's subscription object, which should be added.
@@ -10294,7 +10379,7 @@
 	            state = parameters.state;
 	            state.client.logger.debug('SubscriptionSet', 'Create subscription set clone');
 	        }
-	        super(state);
+	        super(state, 'SubscriptionSet');
 	        this.state.storeClone(this.id, this);
 	        // Update a parent sets list for original set subscriptions.
 	        state.subscriptions.forEach((subscription) => subscription.addParentSet(this));
@@ -10571,10 +10656,24 @@
 	    unregister(subscriptions) {
 	        const activeSubscriptions = (subscriptions !== null && subscriptions !== void 0 ? subscriptions : this.state.subscriptions);
 	        activeSubscriptions.forEach(({ state }) => state.entity.decreaseSubscriptionCount(this.state.id));
-	        this.state.client.logger.trace(this.subscriptionType, () => ({
-	            messageType: 'text',
-	            message: `Unregister subscription from real-time events: ${this}`,
-	        }));
+	        this.state.client.logger.trace(this.subscriptionType, () => {
+	            if (!subscriptions) {
+	                return {
+	                    messageType: 'text',
+	                    message: `Unregister subscription from real-time events: ${this}`,
+	                };
+	            }
+	            else {
+	                return {
+	                    messageType: 'object',
+	                    message: {
+	                        subscription: this,
+	                        subscriptions,
+	                    },
+	                    details: 'Unregister subscriptions of subscription set from real-time events:',
+	                };
+	            }
+	        });
 	        this.state.client.unregisterEventHandleCapable(this, activeSubscriptions);
 	    }
 	    /**
@@ -10703,9 +10802,11 @@
 	            // Creating from whole payload (not only for published messages).
 	            const fingerprint = messageFingerprint(event.data);
 	            if (this.handledUpdates.includes(fingerprint)) {
-	                this.state.client.logger.trace(this.subscriptionType, `Message (${fingerprint}) already handled. Ignoring.`);
+	                this.state.client.logger.trace(this.subscriptionType, `Message (${fingerprint}) already handled by ${this.id}. Ignoring.`);
 	                return;
 	            }
+	            else
+	                console.log(`${this.id} handled (${fingerprint})`);
 	            // Update a list of tracked messages and shrink it if too big.
 	            this.handledUpdates.push(fingerprint);
 	            if (this.handledUpdates.length > 10)
@@ -15276,6 +15377,8 @@
 	    setAuthKey(authKey) {
 	        this.logger.debug('PubNub', `Set auth key: ${authKey}`);
 	        this._configuration.setAuthKey(authKey);
+	        if (this.onAuthenticationChange)
+	            this.onAuthenticationChange(authKey);
 	    }
 	    /**
 	     * Get a PubNub client user identifier.
@@ -15302,6 +15405,8 @@
 	        }
 	        this.logger.debug('PubNub', `Set user ID: ${value}`);
 	        this._configuration.userId = value;
+	        if (this.onUserIdChange)
+	            this.onUserIdChange(this._configuration.userId);
 	    }
 	    /**
 	     * Get a PubNub client user identifier.
@@ -15321,13 +15426,7 @@
 	     * @throws Error empty user identifier has been provided.
 	     */
 	    setUserId(value) {
-	        if (!value || typeof value !== 'string' || value.trim().length === 0) {
-	            const error = new Error('Missing or invalid userId parameter. Provide a valid string userId');
-	            this.logger.error('PubNub', () => ({ messageType: 'error', message: error }));
-	            throw error;
-	        }
-	        this.logger.debug('PubNub', `Set user ID: ${value}`);
-	        this._configuration.userId = value;
+	        this.userId = value;
 	    }
 	    /**
 	     * Real-time updates filtering expression.
@@ -15395,8 +15494,11 @@
 	     * @param interval - New presence request heartbeat intervals.
 	     */
 	    set heartbeatInterval(interval) {
+	        var _a;
 	        this.logger.debug('PubNub', `Set heartbeat interval: ${interval}`);
 	        this._configuration.setHeartbeatInterval(interval);
+	        if (this.onHeartbeatIntervalChange)
+	            this.onHeartbeatIntervalChange((_a = this._configuration.getHeartbeatInterval()) !== null && _a !== void 0 ? _a : 0);
 	    }
 	    /**
 	     * Change a heartbeat requests interval.
@@ -15404,7 +15506,6 @@
 	     * @param interval - New presence request heartbeat intervals.
 	     */
 	    setHeartbeatInterval(interval) {
-	        this.logger.debug('PubNub', `Set heartbeat interval: ${interval}`);
 	        this.heartbeatInterval = interval;
 	    }
 	    /**
@@ -15896,9 +15997,14 @@
 	                message: { subscription: subscription, subscriptions },
 	                details: `Unregister event handle capable:`,
 	            }));
-	            if (!subscriptions ||
-	                subscriptions.length === 0 ||
-	                (subscriptions && subscription instanceof SubscriptionSet && subscriptions === subscriptions))
+	            // Check whether only subscription object has been passed to be unregistered.
+	            let shouldDeleteEventHandler = !subscriptions || subscriptions.length === 0;
+	            // Check whether subscription set is unregistering with all managed Subscription objects,
+	            if (!shouldDeleteEventHandler &&
+	                subscription instanceof SubscriptionSet &&
+	                subscription.subscriptions.length === (subscriptions === null || subscriptions === void 0 ? void 0 : subscriptions.length))
+	                shouldDeleteEventHandler = subscription.subscriptions.every((sub) => subscriptions.includes(sub));
+	            if (shouldDeleteEventHandler)
 	                delete this.eventHandleCapable[subscription.state.id];
 	            let subscriptionInput;
 	            if (!subscriptions || subscriptions.length === 0) {
@@ -16872,6 +16978,8 @@
 	    set token(token) {
 	        if (this.tokenManager)
 	            this.tokenManager.setToken(token);
+	        if (this.onAuthenticationChange)
+	            this.onAuthenticationChange(token);
 	    }
 	    /**
 	     * Set current access token.
@@ -17963,32 +18071,49 @@
 	                });
 	            }
 	        }
+	        // Settings change handlers
+	        let heartbeatIntervalChangeHandler = () => { };
+	        let authenticationChangeHandler = () => { };
+	        let userIdChangeHandler = () => { };
 	        let cryptography;
 	        cryptography = new WebCryptography();
 	        // Setup transport provider.
 	        let transport = new WebTransport(clientConfiguration.logger(), platformConfiguration.transport);
 	        {
 	            if (configurationCopy.subscriptionWorkerUrl) {
-	                // Inject subscription worker into the transport provider stack.
-	                const middleware = new SubscriptionWorkerMiddleware({
-	                    clientIdentifier: clientConfiguration._instanceId,
-	                    subscriptionKey: clientConfiguration.subscribeKey,
-	                    userId: clientConfiguration.getUserId(),
-	                    workerUrl: configurationCopy.subscriptionWorkerUrl,
-	                    sdkVersion: clientConfiguration.getVersion(),
-	                    heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
-	                    workerOfflineClientsCheckInterval: platformConfiguration.subscriptionWorkerOfflineClientsCheckInterval,
-	                    workerUnsubscribeOfflineClients: platformConfiguration.subscriptionWorkerUnsubscribeOfflineClients,
-	                    workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
-	                    tokenManager,
-	                    transport,
-	                    logger: clientConfiguration.logger(),
-	                });
-	                transport = middleware;
-	                window.onpagehide = (event) => {
-	                    if (!event.persisted)
-	                        middleware.terminate();
-	                };
+	                try {
+	                    // Inject subscription worker into the transport provider stack.
+	                    const middleware = new SubscriptionWorkerMiddleware({
+	                        clientIdentifier: clientConfiguration._instanceId,
+	                        subscriptionKey: clientConfiguration.subscribeKey,
+	                        userId: clientConfiguration.getUserId(),
+	                        workerUrl: configurationCopy.subscriptionWorkerUrl,
+	                        sdkVersion: clientConfiguration.getVersion(),
+	                        heartbeatInterval: clientConfiguration.getHeartbeatInterval(),
+	                        announceSuccessfulHeartbeats: clientConfiguration.announceSuccessfulHeartbeats,
+	                        announceFailedHeartbeats: clientConfiguration.announceFailedHeartbeats,
+	                        workerOfflineClientsCheckInterval: platformConfiguration.subscriptionWorkerOfflineClientsCheckInterval,
+	                        workerUnsubscribeOfflineClients: platformConfiguration.subscriptionWorkerUnsubscribeOfflineClients,
+	                        workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
+	                        tokenManager,
+	                        transport,
+	                        logger: clientConfiguration.logger(),
+	                    });
+	                    heartbeatIntervalChangeHandler = (interval) => middleware.onHeartbeatIntervalChange(interval);
+	                    authenticationChangeHandler = (auth) => middleware.onTokenChange(auth);
+	                    userIdChangeHandler = (userId) => middleware.onUserIdChange(userId);
+	                    transport = middleware;
+	                    window.onpagehide = (event) => {
+	                        if (!event.persisted)
+	                            middleware.terminate();
+	                    };
+	                }
+	                catch (e) {
+	                    clientConfiguration.logger().error('PubNub', () => ({
+	                        messageType: 'error',
+	                        message: e,
+	                    }));
+	                }
 	            }
 	            else if (sharedWorkerRequested) {
 	                clientConfiguration
@@ -18008,6 +18133,13 @@
 	            tokenManager,
 	            crypto,
 	        });
+	        this.onHeartbeatIntervalChange = heartbeatIntervalChangeHandler;
+	        this.onAuthenticationChange = authenticationChangeHandler;
+	        this.onUserIdChange = userIdChangeHandler;
+	        {
+	            if (transport instanceof SubscriptionWorkerMiddleware)
+	                transport.emitStatus = this.emitStatus.bind(this);
+	        }
 	        if ((_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : true) {
 	            window.addEventListener('offline', () => {
 	                this.networkDownDetected();

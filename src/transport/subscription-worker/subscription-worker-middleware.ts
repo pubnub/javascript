@@ -16,6 +16,10 @@ import { PubNubAPIError } from '../../errors/pubnub-api-error';
 import StatusCategory from '../../core/constants/categories';
 import { Transport } from '../../core/interfaces/transport';
 import * as PAM from '../../core/types/api/access-manager';
+import { LogMessage } from '../../core/interfaces/logger';
+import { Status, StatusEvent } from '../../core/types/api';
+import PNOperations from '../../core/constants/operations';
+import { RequestSendingError } from './subscription-worker';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -64,6 +68,20 @@ type PubNubMiddlewareConfiguration = {
   workerLogVerbosity: boolean;
 
   /**
+   * Whether heartbeat request success should be announced or not.
+   *
+   * @default `false`
+   */
+  announceSuccessfulHeartbeats: boolean;
+
+  /**
+   * Whether heartbeat request failure should be announced or not.
+   *
+   * @default `true`
+   */
+  announceFailedHeartbeats: boolean;
+
+  /**
    * How often the client will announce itself to server. The value is in seconds.
    *
    * @default `not set`
@@ -95,31 +113,31 @@ export class SubscriptionWorkerMiddleware implements Transport {
   /**
    * Scheduled requests result handling callback.
    */
-  callbacks?: Map<string, { resolve: (value: TransportResponse) => void; reject: (value: Error) => void }>;
+  private callbacks?: Map<string, { resolve: (value: TransportResponse) => void; reject: (value: Error) => void }>;
 
   /**
    * Subscription shared worker.
    *
    * **Note:** Browser PubNub SDK Transport provider adjustment for explicit subscription / leave features support.
    */
-  subscriptionWorker?: SharedWorker;
+  private subscriptionWorker?: SharedWorker;
 
   /**
    * Queue of events for service worker.
    *
    * Keep list of events which should be sent to the worker after its activation.
    */
-  workerEventsQueue: PubNubSubscriptionWorker.ClientEvent[];
+  private workerEventsQueue: PubNubSubscriptionWorker.ClientEvent[];
 
   /**
    * Whether subscription worker has been initialized and ready to handle events.
    */
-  subscriptionWorkerReady: boolean = false;
+  private subscriptionWorkerReady: boolean = false;
 
   /**
    * Map of base64-encoded access tokens to their parsed representations.
    */
-  accessTokensMap: Record<
+  private accessTokensMap: Record<
     string,
     {
       token: string;
@@ -127,11 +145,82 @@ export class SubscriptionWorkerMiddleware implements Transport {
     }
   > = {};
 
+  /**
+   * Function which is used to emit PubNub client-related status changes.
+   */
+  private _emitStatus?: (status: Status | StatusEvent) => void;
+
   constructor(private readonly configuration: PubNubMiddlewareConfiguration) {
     this.workerEventsQueue = [];
     this.callbacks = new Map();
 
     this.setupSubscriptionWorker();
+  }
+
+  /**
+   * Set status emitter from the PubNub client.
+   *
+   * @param emitter - Function which should be used to emit events.
+   */
+  set emitStatus(emitter: (status: Status | StatusEvent) => void) {
+    this._emitStatus = emitter;
+  }
+
+  /**
+   * Update client's `userId`.
+   *
+   * @param userId - User ID which will be used by the PubNub client further.
+   */
+  onUserIdChange(userId: string) {
+    this.configuration.userId = userId;
+
+    this.scheduleEventPost({
+      type: 'client-update',
+      heartbeatInterval: this.configuration.heartbeatInterval,
+      clientIdentifier: this.configuration.clientIdentifier,
+      subscriptionKey: this.configuration.subscriptionKey,
+      userId: this.configuration.userId,
+    });
+  }
+
+  /**
+   * Update client's heartbeat interval change.
+   *
+   * @param interval - Interval which should be used by timers for _backup_ heartbeat calls created in `SharedWorker`.
+   */
+  onHeartbeatIntervalChange(interval: number) {
+    this.configuration.heartbeatInterval = interval;
+
+    this.scheduleEventPost({
+      type: 'client-update',
+      heartbeatInterval: this.configuration.heartbeatInterval,
+      clientIdentifier: this.configuration.clientIdentifier,
+      subscriptionKey: this.configuration.subscriptionKey,
+      userId: this.configuration.userId,
+    });
+  }
+
+  /**
+   * Handle authorization key / token change.
+   *
+   * @param [token] - Authorization token which should be used.
+   */
+  onTokenChange(token: string | undefined) {
+    const updateEvent: PubNubSubscriptionWorker.UpdateEvent = {
+      type: 'client-update',
+      heartbeatInterval: this.configuration.heartbeatInterval,
+      clientIdentifier: this.configuration.clientIdentifier,
+      subscriptionKey: this.configuration.subscriptionKey,
+      userId: this.configuration.userId,
+    };
+
+    // Trigger request processing by Service Worker.
+    this.parsedAccessToken(token)
+      .then((accessToken) => {
+        updateEvent.preProcessedToken = accessToken;
+        updateEvent.accessToken = token;
+      })
+      .then(() => this.scheduleEventPost(updateEvent));
   }
 
   /**
@@ -184,7 +273,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
 
         // Trigger request processing by Service Worker.
         this.parsedAccessTokenForRequest(req)
-          .then((accessToken) => (sendRequestEvent.token = accessToken))
+          .then((accessToken) => (sendRequestEvent.preProcessedToken = accessToken))
           .then(() => this.scheduleEventPost(sendRequestEvent));
       }),
       controller,
@@ -312,7 +401,16 @@ export class SubscriptionWorkerMiddleware implements Transport {
       this.subscriptionWorkerReady = true;
       this.flushScheduledEvents();
     } else if (data.type === 'shared-worker-console-log') {
-      this.configuration.logger.debug('SharedWorker', data.message);
+      this.configuration.logger.debug('SharedWorker', () => {
+        if (typeof data.message === 'string' || typeof data.message === 'number' || typeof data.message === 'boolean') {
+          return {
+            messageType: 'text',
+            message: data.message,
+          };
+        }
+
+        return data.message as Pick<LogMessage, 'messageType' | 'message'>;
+      });
     } else if (data.type === 'shared-worker-console-dir') {
       this.configuration.logger.debug('SharedWorker', () => {
         return {
@@ -326,55 +424,53 @@ export class SubscriptionWorkerMiddleware implements Transport {
 
       this.scheduleEventPost({ type: 'client-pong', subscriptionKey, clientIdentifier });
     } else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
-      const { resolve, reject } = this.callbacks!.get(data.identifier)!;
+      if (this.callbacks!.has(data.identifier)) {
+        const { resolve, reject } = this.callbacks!.get(data.identifier)!;
+        this.callbacks!.delete(data.identifier);
 
-      if (data.type === 'request-process-success') {
-        resolve({
-          status: data.response.status,
-          url: data.url,
-          headers: data.response.headers,
-          body: data.response.body,
-        });
-      } else {
-        let category: StatusCategory = StatusCategory.PNUnknownCategory;
-        let message = 'Unknown error';
-
-        // Handle client-side issues (if any).
-        if (data.error) {
-          if (data.error.type === 'NETWORK_ISSUE') category = StatusCategory.PNNetworkIssuesCategory;
-          else if (data.error.type === 'TIMEOUT') category = StatusCategory.PNTimeoutCategory;
-          else if (data.error.type === 'ABORTED') category = StatusCategory.PNCancelledCategory;
-          message = `${data.error.message} (${data.identifier})`;
-        }
-        // Handle service error response.
-        else if (data.response) {
-          return reject(
-            PubNubAPIError.create(
-              {
-                url: data.url,
-                headers: data.response.headers,
-                body: data.response.body,
-                status: data.response.status,
-              },
-              data.response.body,
-            ),
-          );
-        }
-
-        reject(new PubNubAPIError(message, category, 0, new Error(message)));
+        if (data.type === 'request-process-success') {
+          resolve({
+            status: data.response.status,
+            url: data.url,
+            headers: data.response.headers,
+            body: data.response.body,
+          });
+        } else reject(this.errorFromRequestSendingError(data));
+      }
+      // Handling "backup" heartbeat which doesn't have registered callbacks.
+      else if (this._emitStatus && data.url.indexOf('/v2/presence') >= 0 && data.url.indexOf('/heartbeat') >= 0) {
+        if (data.type === 'request-process-success' && this.configuration.announceSuccessfulHeartbeats) {
+          this._emitStatus({
+            statusCode: data.response.status,
+            error: false,
+            operation: PNOperations.PNHeartbeatOperation,
+            category: StatusCategory.PNAcknowledgmentCategory,
+          });
+        } else if (data.type === 'request-process-error' && this.configuration.announceFailedHeartbeats)
+          this._emitStatus(this.errorFromRequestSendingError(data).toStatus(PNOperations.PNHeartbeatOperation));
       }
     }
   }
 
   /**
-   * Get parsed access token object.
+   * Get parsed access token object from request.
    *
    * @param req - Transport request which may contain access token for processing.
    *
    * @returns Object with stringified access token information and expiration date information.
    */
   private async parsedAccessTokenForRequest(req: TransportRequest) {
-    const accessToken = req.queryParameters ? ((req.queryParameters.auth as string) ?? '') : undefined;
+    return this.parsedAccessToken(req.queryParameters ? ((req.queryParameters.auth as string) ?? '') : undefined);
+  }
+
+  /**
+   * Get parsed access token object.
+   *
+   * @param accessToken - Access token for processing.
+   *
+   * @returns Object with stringified access token information and expiration date information.
+   */
+  private async parsedAccessToken(accessToken: string | undefined) {
     if (!accessToken) return undefined;
     else if (this.accessTokensMap[accessToken]) return this.accessTokensMap[accessToken];
 
@@ -432,5 +528,36 @@ export class SubscriptionWorkerMiddleware implements Transport {
     }
 
     return [token, typeof btoa !== 'undefined' ? btoa(accessToken) : accessToken];
+  }
+
+  /**
+   * Create error from failure received from the `SharedWorker`.
+   *
+   * @param sendingError - Request sending error received from the `SharedWorker`.
+   *
+   * @returns `PubNubAPIError` instance with request processing failure information.
+   */
+  private errorFromRequestSendingError(sendingError: RequestSendingError): PubNubAPIError {
+    let category: StatusCategory = StatusCategory.PNUnknownCategory;
+    let message = 'Unknown error';
+
+    // Handle client-side issues (if any).
+    if (sendingError.error) {
+      if (sendingError.error.type === 'NETWORK_ISSUE') category = StatusCategory.PNNetworkIssuesCategory;
+      else if (sendingError.error.type === 'TIMEOUT') category = StatusCategory.PNTimeoutCategory;
+      else if (sendingError.error.type === 'ABORTED') category = StatusCategory.PNCancelledCategory;
+      message = `${sendingError.error.message} (${sendingError.identifier})`;
+    }
+    // Handle service error response.
+    else if (sendingError.response) {
+      const { url, response } = sendingError;
+
+      return PubNubAPIError.create(
+        { url, headers: response.headers, body: response.body, status: response.status },
+        response.body,
+      );
+    }
+
+    return new PubNubAPIError(message, category, 0, new Error(message));
   }
 }

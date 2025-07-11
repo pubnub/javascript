@@ -40,21 +40,6 @@ class SubscriptionSetState extends SubscriptionBaseState {
   }
 
   /**
-   * Retrieve subscription type.
-   *
-   * There is two types:
-   * - Subscription
-   * - SubscriptionSet
-   *
-   * @returns One of subscription types.
-   *
-   * @internal
-   */
-  get subscriptionType(): 'Subscription' | 'SubscriptionSet' {
-    return 'SubscriptionSet';
-  }
-
-  /**
    * Add a single subscription object to the set.
    *
    * @param subscription - Another entity's subscription object, which should be added.
@@ -150,7 +135,7 @@ export class SubscriptionSet extends SubscriptionBase {
       state.client.logger.debug('SubscriptionSet', 'Create subscription set clone');
     }
 
-    super(state);
+    super(state, 'SubscriptionSet');
 
     this.state.storeClone(this.id, this);
 
@@ -473,10 +458,23 @@ export class SubscriptionSet extends SubscriptionBase {
       this.state.subscriptions) as SubscriptionObject[];
     activeSubscriptions.forEach(({ state }) => state.entity.decreaseSubscriptionCount(this.state.id));
 
-    this.state.client.logger.trace(this.subscriptionType, () => ({
-      messageType: 'text',
-      message: `Unregister subscription from real-time events: ${this}`,
-    }));
+    this.state.client.logger.trace(this.subscriptionType, () => {
+      if (!subscriptions) {
+        return {
+          messageType: 'text',
+          message: `Unregister subscription from real-time events: ${this}`,
+        };
+      } else {
+        return {
+          messageType: 'object',
+          message: {
+            subscription: this,
+            subscriptions,
+          },
+          details: 'Unregister subscriptions of subscription set from real-time events:',
+        };
+      }
+    });
 
     this.state.client.unregisterEventHandleCapable(this, activeSubscriptions);
   }
