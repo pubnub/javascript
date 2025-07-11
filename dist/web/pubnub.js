@@ -3803,6 +3803,7 @@
 	        else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
 	            if (this.callbacks.has(data.identifier)) {
 	                const { resolve, reject } = this.callbacks.get(data.identifier);
+	                this.callbacks.delete(data.identifier);
 	                if (data.type === 'request-process-success') {
 	                    resolve({
 	                        status: data.response.status,
@@ -10799,11 +10800,14 @@
 	            return;
 	        if (this.parentSetsCount > 0) {
 	            // Creating from whole payload (not only for published messages).
+	            console.dir(event.data);
 	            const fingerprint = messageFingerprint(event.data);
 	            if (this.handledUpdates.includes(fingerprint)) {
-	                this.state.client.logger.trace(this.subscriptionType, `Message (${fingerprint}) already handled. Ignoring.`);
+	                this.state.client.logger.trace(this.subscriptionType, `Message (${fingerprint}) already handled by ${this.id}. Ignoring.`);
 	                return;
 	            }
+	            else
+	                console.log(`${this.id} handled (${fingerprint})`);
 	            // Update a list of tracked messages and shrink it if too big.
 	            this.handledUpdates.push(fingerprint);
 	            if (this.handledUpdates.length > 10)

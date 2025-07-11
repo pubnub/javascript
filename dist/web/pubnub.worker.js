@@ -310,6 +310,7 @@
             if (client) {
                 if (client.subscription) {
                     // Updating client timetoken information.
+                    client.subscription.refreshTimestamp = Date.now();
                     client.subscription.timetoken = scheduledRequest.timetoken;
                     client.subscription.region = scheduledRequest.region;
                     client.subscription.serviceRequestId = requestOrId;
@@ -334,6 +335,7 @@
             abortControllers.set(requestOrId.identifier, new AbortController());
         const scheduledRequest = serviceRequests[requestOrId.identifier];
         const { timetokenOverride, regionOverride } = scheduledRequest;
+        const expectingInitialSubscribeResponse = scheduledRequest.timetoken === '0';
         consoleLog(`'${Object.keys(serviceRequests).length}' subscription request currently active.`);
         // Notify about request processing start.
         for (const client of clientsForRequest(requestOrId.identifier))
@@ -350,9 +352,8 @@
             markRequestCompleted(clients, requestOrId.identifier);
         }, (response) => {
             let serverResponse = response;
-            if (isInitialSubscribe && timetokenOverride && timetokenOverride !== '0') {
+            if (expectingInitialSubscribeResponse && timetokenOverride && timetokenOverride !== '0')
                 serverResponse = patchInitialSubscribeResponse(serverResponse, timetokenOverride, regionOverride);
-            }
             return serverResponse;
         });
     };
@@ -478,6 +479,7 @@
             subscription.channelGroupQuery = '';
             subscription.path = '';
             subscription.previousTimetoken = '0';
+            subscription.refreshTimestamp = Date.now();
             subscription.timetoken = '0';
             delete subscription.region;
             delete subscription.serviceRequestId;
@@ -737,6 +739,7 @@
         const clients = clientsForSendSubscribeRequestEvent(subscription.timetoken, event);
         const serviceRequestId = uuidGenerator.createUUID();
         const request = Object.assign({}, event.request);
+        let previousSubscribeTimetokenRefreshTimestamp;
         let previousSubscribeTimetoken;
         let previousSubscribeRegion;
         if (clients.length > 1) {
@@ -767,9 +770,19 @@
                 if (!_subscription)
                     continue;
                 // Keep track of timetoken from previous call to use it for catchup after initial subscribe.
-                if ((clients.length === 1 || _client.clientIdentifier !== client.clientIdentifier) && _subscription.timetoken) {
-                    previousSubscribeTimetoken = _subscription.timetoken;
-                    previousSubscribeRegion = _subscription.region;
+                if (_subscription.timetoken) {
+                    let shouldSetPreviousTimetoken = !previousSubscribeTimetoken;
+                    if (!shouldSetPreviousTimetoken && _subscription.timetoken !== '0') {
+                        if (previousSubscribeTimetoken === '0')
+                            shouldSetPreviousTimetoken = true;
+                        else if (_subscription.timetoken < previousSubscribeTimetoken)
+                            shouldSetPreviousTimetoken = _subscription.refreshTimestamp > previousSubscribeTimetokenRefreshTimestamp;
+                    }
+                    if (shouldSetPreviousTimetoken) {
+                        previousSubscribeTimetokenRefreshTimestamp = _subscription.refreshTimestamp;
+                        previousSubscribeTimetoken = _subscription.timetoken;
+                        previousSubscribeRegion = _subscription.region;
+                    }
                 }
                 _subscription.channelGroups.forEach(channelGroups.add, channelGroups);
                 _subscription.channels.forEach(channels.add, channels);
@@ -829,8 +842,13 @@
                 request.queryParameters.tr !== undefined) {
                 serviceRequests[serviceRequestId].region = request.queryParameters.tr;
             }
-            serviceRequests[serviceRequestId].timetokenOverride = previousSubscribeTimetoken;
-            serviceRequests[serviceRequestId].regionOverride = previousSubscribeRegion;
+            if (!serviceRequests[serviceRequestId].timetokenOverride ||
+                (serviceRequests[serviceRequestId].timetokenOverride !== '0' &&
+                    previousSubscribeTimetoken &&
+                    previousSubscribeTimetoken !== '0')) {
+                serviceRequests[serviceRequestId].timetokenOverride = previousSubscribeTimetoken;
+                serviceRequests[serviceRequestId].regionOverride = previousSubscribeRegion;
+            }
         }
         subscription.serviceRequestId = serviceRequestId;
         request.identifier = serviceRequestId;
@@ -912,14 +930,18 @@
         if (aggregated && hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier) {
             const expectedTimestamp = hbRequestsBySubscriptionKey[heartbeatRequestKey].timestamp + minimumHeartbeatInterval * 1000;
             const currentTimestamp = Date.now();
-            // Check whether it is too soon to send request or not.
             // Request should be sent if a previous attempt failed.
-            const leeway = minimumHeartbeatInterval * 0.05 * 1000;
-            if (!outOfOrder &&
-                !failedPreviousRequest &&
-                currentTimestamp < expectedTimestamp &&
-                expectedTimestamp - currentTimestamp > leeway)
-                return undefined;
+            if (!outOfOrder && !failedPreviousRequest && currentTimestamp < expectedTimestamp) {
+                // Check whether it is too soon to send request or not.
+                const leeway = minimumHeartbeatInterval * 0.05 * 1000;
+                if (minimumHeartbeatInterval - leeway <= 3) {
+                    // Leeway can't be applied if actual interval between heartbeat requests is smaller
+                    // than 3 seconds which derived from the server's threshold.
+                    return undefined;
+                }
+                else if (expectedTimestamp - currentTimestamp > leeway)
+                    return undefined;
+            }
         }
         delete hbRequestsBySubscriptionKey[heartbeatRequestKey].response;
         hbRequestsBySubscriptionKey[heartbeatRequestKey].clientIdentifier = client.clientIdentifier;
@@ -1420,6 +1442,7 @@
         if (!subscription) {
             changed = true;
             subscription = {
+                refreshTimestamp: 0,
                 path: '',
                 channelGroupQuery: '',
                 channels: [],
@@ -1470,6 +1493,7 @@
             subscription.channelGroups = _channelGroupsFromRequest;
         }
         let { authKey } = client;
+        subscription.refreshTimestamp = Date.now();
         subscription.request = event.request;
         subscription.filterExpression = ((_j = query['filter-expr']) !== null && _j !== void 0 ? _j : '');
         subscription.timetoken = ((_k = query.tt) !== null && _k !== void 0 ? _k : '0');
