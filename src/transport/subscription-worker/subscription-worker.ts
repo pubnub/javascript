@@ -78,10 +78,50 @@ const requestQueueMetrics = {
   requestOrdering: new Map<string, { queueOrder: number; executionOrder: number }>()
 };
 
+// Track executed requests (circular buffer)
+const executedRequestsBuffer: Array<{
+  id: string;
+  url: string;
+  type: string;
+  duration: number;
+  status: number | string;
+  datetime: string;
+  error?: string;
+}> = [];
+const MAX_EXECUTED_REQUESTS = 50;
+
+// Executed requests statistics
+const executedRequestsStats = {
+  total: 0,
+  success: 0,
+  failed: 0,
+  byType: {
+    heartbeat: { total: 0, success: 0, failed: 0 },
+    subscribe: { total: 0, success: 0, failed: 0 },
+    leave: { total: 0, success: 0, failed: 0 },
+    other: { total: 0, success: 0, failed: 0 }
+  }
+};
+
 // Metrics helper functions
 const getRequestType = (request: TransportRequest): NetworkMetrics['requestType'] => {
-  if (request.path.endsWith('/subscribe')) return 'subscribe';
-  if (request.path.endsWith('/heartbeat')) return 'heartbeat';
+  // PubNub API URL patterns:
+  // Subscribe: /v2/subscribe/{sub_key}/{channels}/0 OR /subscribe/{sub_key}/{channels}/0
+  // Heartbeat: /v2/presence/sub-key/{sub_key}/channel/{channels}/heartbeat
+  // Leave: /v2/presence/sub-key/{sub_key}/channel/{channels}/leave
+  
+  // Debug logging for unrecognized paths
+  const isRecognized = request.path.includes('/subscribe/') || 
+                      request.path.includes('/heartbeat') || 
+                      request.path.includes('/leave');
+  
+  if (!isRecognized) {
+    console.log('[getRequestType] Unrecognized request path:', request.path);
+  }
+  
+  // Check for subscribe (with or without /v2/ prefix)
+  if (request.path.includes('/subscribe/')) return 'subscribe';
+  if (request.path.includes('/heartbeat')) return 'heartbeat';
   if (request.path.includes('/leave')) return 'leave';
   return 'other';
 };
@@ -126,7 +166,16 @@ const startMetricsSummary = () => {
         activeConnections: activeConnections.size,
         maxConcurrent: connectionMetrics.maxConcurrent,
         totalRequests: networkMetrics.size,
-        browserQueueEstimate: Math.max(0, activeConnections.size - 6) // Estimated browser queue
+        browserQueueEstimate: Math.max(0, activeConnections.size - 6), // Estimated browser queue
+        executedRequests: {
+          total: executedRequestsStats.total,
+          success: executedRequestsStats.success,
+          failed: executedRequestsStats.failed,
+          successRate: executedRequestsStats.total > 0 
+            ? Math.round((executedRequestsStats.success / executedRequestsStats.total) * 100) 
+            : 0,
+          byType: executedRequestsStats.byType
+        }
       },
       queue: {
         currentDepth: requestQueue.length,
@@ -137,9 +186,33 @@ const startMetricsSummary = () => {
           : 0
       },
       heartbeats: {
-        scheduled: heartbeatMetrics.size,
-        completed: Array.from(heartbeatMetrics.values()).filter(hb => hb.completedAt && !hb.skipped).length,
-        skipped: Array.from(heartbeatMetrics.values()).filter(hb => hb.skipped).length
+        // New clearer metrics
+        pendingTimers: Array.from(heartbeatMetrics.values()).filter(hb => !hb.completedAt && !hb.skipped).length,
+        activeRequests: Array.from(heartbeatMetrics.values()).filter(hb => 
+          hb.actualFiredAt && !hb.completedAt && !hb.skipped
+        ).length,
+        queuedTimers: Array.from(heartbeatMetrics.values()).filter(hb => 
+          hb.scheduledAt && !hb.actualFiredAt && !hb.skipped
+        ).length,
+        // Keep existing for backwards compatibility
+        scheduled: Array.from(heartbeatMetrics.values()).filter(hb => !hb.completedAt && !hb.skipped).length,
+        completed: Array.from(heartbeatMetrics.values()).filter(hb => 
+          hb.completedAt && !hb.skipped && (now - hb.completedAt < 5000)
+        ).length,
+        skipped: Array.from(heartbeatMetrics.values()).filter(hb => 
+          hb.skipped && hb.completedAt && (now - hb.completedAt < 5000)
+        ).length,
+        totalTracked: heartbeatMetrics.size,
+        breakdown: {
+          pending: Array.from(heartbeatMetrics.values()).filter(hb => !hb.completedAt && !hb.skipped).length,
+          completedWithinMinute: Array.from(heartbeatMetrics.values()).filter(hb => 
+            hb.completedAt && !hb.skipped && (now - hb.completedAt < 60000)
+          ).length,
+          completedOlderThanMinute: Array.from(heartbeatMetrics.values()).filter(hb => 
+            hb.completedAt && !hb.skipped && (now - hb.completedAt >= 60000)
+          ).length,
+          skippedTotal: Array.from(heartbeatMetrics.values()).filter(hb => hb.skipped).length
+        }
       },
       requestTypes: {
         heartbeat: Array.from(networkMetrics.values()).filter(m => m.requestType === 'heartbeat').length,
@@ -148,10 +221,20 @@ const startMetricsSummary = () => {
         other: Array.from(networkMetrics.values()).filter(m => m.requestType === 'other').length
       },
       activeRequests: activeRequests.slice(0, 20), // Limit to 20 most recent
-      queuedRequests: queuedRequests.slice(0, 20) // Limit to 20 oldest in queue
+      queuedRequests: queuedRequests.slice(0, 20), // Limit to 20 oldest in queue
+      executedRequests: executedRequestsBuffer.slice(-50) // Last 50 executed requests
     };
     
-    console.log('[MetricsSummary]', summary);
+    // Debug log queue metrics every 10 seconds
+    if (Date.now() % 10000 < 1000) {
+      console.log('[QueueMetrics] Current state:', {
+        currentDepth: requestQueue.length,
+        maxDepth: requestQueueMetrics.maxQueueDepth,
+        totalQueued: requestQueueMetrics.totalQueued,
+        avgHeartbeatDelay: summary.queue.avgHeartbeatDelay,
+        recentDelays: requestQueueMetrics.heartbeatDelays.slice(-5)
+      });
+    }
     
     // Broadcast summary to all clients
     broadcastMetrics('MetricsSummary', summary);
@@ -1490,6 +1573,15 @@ const sendRequest = (
   requestQueueMetrics.totalQueued++;
   requestQueueMetrics.maxQueueDepth = Math.max(requestQueueMetrics.maxQueueDepth, requestQueue.length);
   requestQueueMetrics.requestOrdering.set(request.identifier, { queueOrder, executionOrder: -1 });
+  
+  // Debug logging for queue metrics
+  if (requestQueue.length > 1) {
+    console.log(`[QueueMetrics] Request queued: ${metrics.requestType}`, {
+      currentDepth: requestQueue.length,
+      maxDepth: requestQueueMetrics.maxQueueDepth,
+      totalQueued: requestQueueMetrics.totalQueued
+    });
+  }
 
   // Log initial metrics
   if (metrics.requestType === 'heartbeat') {
@@ -1531,14 +1623,23 @@ const sendRequest = (
       requestQueue.splice(queueIndex, 1);
     }
     
-    if (metrics.requestType === 'heartbeat' && queueDelay > 100) {
-      console.warn(`[NetworkTiming] Heartbeat delayed in queue: ${queueDelay}ms`, {
-        requestId: request.identifier,
-        queueDepth: pendingRequests.size,
-        queueDelay,
-        remainingInQueue: requestQueue.length
-      });
+    // Track all heartbeat queue delays for better metrics
+    if (metrics.requestType === 'heartbeat') {
       requestQueueMetrics.heartbeatDelays.push(queueDelay);
+      
+      // Keep only the last 100 heartbeat delays to avoid memory growth
+      if (requestQueueMetrics.heartbeatDelays.length > 100) {
+        requestQueueMetrics.heartbeatDelays.shift();
+      }
+      
+      if (queueDelay > 100) {
+        console.warn(`[NetworkTiming] Heartbeat delayed in queue: ${queueDelay}ms`, {
+          requestId: request.identifier,
+          queueDepth: pendingRequests.size,
+          queueDelay,
+          remainingInQueue: requestQueue.length
+        });
+      }
     }
 
     // Track connection
@@ -1576,6 +1677,28 @@ const sendRequest = (
         pendingRequests.delete(request.identifier);
         activeConnections.delete(request.identifier);
         
+        // Track executed request
+        executedRequestsStats.total++;
+        executedRequestsStats.success++;
+        const requestType = metrics.requestType || 'other';
+        executedRequestsStats.byType[requestType].total++;
+        executedRequestsStats.byType[requestType].success++;
+
+        // Add to buffer
+        executedRequestsBuffer.push({
+          id: request.identifier,
+          url: metrics.url,
+          type: metrics.requestType,
+          duration: metrics.fetchCompletedAt! - metrics.queuedAt,
+          status: metrics.status || 200,
+          datetime: new Date().toISOString(),
+          error: metrics.error
+        });
+
+        if (executedRequestsBuffer.length > MAX_EXECUTED_REQUESTS) {
+          executedRequestsBuffer.shift();
+        }
+        
         // Log completion metrics
         logNetworkMetrics(metrics);
         
@@ -1590,6 +1713,28 @@ const sendRequest = (
         metrics.error = error instanceof Error ? error.message : String(error);
         pendingRequests.delete(request.identifier);
         activeConnections.delete(request.identifier);
+        
+        // Track executed request (failure)
+        executedRequestsStats.total++;
+        executedRequestsStats.failed++;
+        const requestType = metrics.requestType || 'other';
+        executedRequestsStats.byType[requestType].total++;
+        executedRequestsStats.byType[requestType].failed++;
+
+        // Add to buffer
+        executedRequestsBuffer.push({
+          id: request.identifier,
+          url: metrics.url,
+          type: metrics.requestType,
+          duration: Date.now() - metrics.queuedAt,
+          status: 'error',
+          datetime: new Date().toISOString(),
+          error: metrics.error || 'Unknown error'
+        });
+
+        if (executedRequestsBuffer.length > MAX_EXECUTED_REQUESTS) {
+          executedRequestsBuffer.shift();
+        }
         
         // Log failure metrics
         logNetworkMetrics(metrics);
