@@ -143,7 +143,6 @@ export class Subscription extends SubscriptionBase {
 
     if (this.parentSetsCount > 0) {
       // Creating from whole payload (not only for published messages).
-      console.dir(event.data);
       const fingerprint = messageFingerprint(event.data);
       if (this.handledUpdates.includes(fingerprint)) {
         this.state.client.logger.trace(

@@ -934,13 +934,12 @@
             if (!outOfOrder && !failedPreviousRequest && currentTimestamp < expectedTimestamp) {
                 // Check whether it is too soon to send request or not.
                 const leeway = minimumHeartbeatInterval * 0.05 * 1000;
-                if (minimumHeartbeatInterval - leeway <= 3) {
-                    // Leeway can't be applied if actual interval between heartbeat requests is smaller
-                    // than 3 seconds which derived from the server's threshold.
+                // Leeway can't be applied if actual interval between heartbeat requests is smaller
+                // than 3 seconds which derived from the server's threshold.
+                if (minimumHeartbeatInterval - leeway <= 3 || expectedTimestamp - currentTimestamp > leeway) {
+                    startHeartbeatTimer(client, true);
                     return undefined;
                 }
-                else if (expectedTimestamp - currentTimestamp > leeway)
-                    return undefined;
             }
         }
         delete hbRequestsBySubscriptionKey[heartbeatRequestKey].response;
@@ -1684,10 +1683,12 @@
         if (adjust && !heartbeat.loop)
             return;
         let targetInterval = heartbeatInterval;
-        if (adjust && heartbeat.loop && targetInterval !== heartbeat.loop.heartbeatInterval) {
+        if (adjust && heartbeat.loop) {
             const activeTime = (Date.now() - heartbeat.loop.startTimestamp) / 1000;
             if (activeTime < targetInterval)
                 targetInterval -= activeTime;
+            if (targetInterval === heartbeat.loop.heartbeatInterval)
+                targetInterval += 0.05;
         }
         stopHeartbeatTimer(client);
         if (targetInterval <= 0)
