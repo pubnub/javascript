@@ -68,6 +68,15 @@ const connectionMetrics = {
   newConnections: 0
 };
 
+// Connection alerts tracking
+const connectionAlerts: Array<{
+  timestamp: number;
+  type: 'high_connections' | 'browser_queue';
+  message: string;
+  activeCount: number;
+  details: any;
+}> = [];
+
 // Request queue tracking
 const requestQueue: { requestId: string; type: string; queuedAt: number; order: number }[] = [];
 let requestOrder = 0;
@@ -222,7 +231,8 @@ const startMetricsSummary = () => {
       },
       activeRequests: activeRequests.slice(0, 20), // Limit to 20 most recent
       queuedRequests: queuedRequests.slice(0, 20), // Limit to 20 oldest in queue
-      executedRequests: executedRequestsBuffer.slice(-50) // Last 50 executed requests
+      executedRequests: executedRequestsBuffer.slice(-50), // Last 50 executed requests
+      connectionAlerts: connectionAlerts // Connection alerts history
     };
     
     // Debug log queue metrics every 10 seconds
@@ -1656,11 +1666,27 @@ const sendRequest = (
     connectionMetrics.maxConcurrent = Math.max(connectionMetrics.maxConcurrent, activeConnections.size);
     
     if (activeConnections.size > 6) {
-      console.warn(`[ConnectionPool] High concurrent connections: ${activeConnections.size}`, {
+      const alertDetails = {
         requestType: metrics.requestType,
         requestId: request.identifier,
         activeRequests: Array.from(activeConnections.keys())
+      };
+      
+      console.warn(`[ConnectionPool] High concurrent connections: ${activeConnections.size}`, alertDetails);
+      
+      // Track alert
+      connectionAlerts.push({
+        timestamp: Date.now(),
+        type: activeConnections.size > 6 ? 'browser_queue' : 'high_connections',
+        message: `High concurrent connections detected: ${activeConnections.size} active (browser limit: 6)`,
+        activeCount: activeConnections.size,
+        details: alertDetails
       });
+      
+      // Keep only last 50 alerts
+      if (connectionAlerts.length > 50) {
+        connectionAlerts.shift();
+      }
     }
 
     Promise.race([
