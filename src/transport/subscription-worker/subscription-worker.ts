@@ -717,6 +717,11 @@ type PubNubClientState = {
    */
   subscription?: {
     /**
+     * Date time when subscription object has been updated.
+     */
+    refreshTimestamp: number;
+
+    /**
      * Subscription REST API uri path.
      *
      * **Note:** Keeping it for faster check whether client state should be updated or not.
@@ -1116,6 +1121,7 @@ const handleSendSubscribeRequestForClient = (
     if (client) {
       if (client.subscription) {
         // Updating client timetoken information.
+        client.subscription.refreshTimestamp = Date.now();
         client.subscription.timetoken = scheduledRequest.timetoken;
         client.subscription.region = scheduledRequest.region;
         client.subscription.serviceRequestId = requestOrId;
@@ -1145,6 +1151,7 @@ const handleSendSubscribeRequestForClient = (
   if (event.request.cancellable) abortControllers.set(requestOrId.identifier, new AbortController());
   const scheduledRequest = serviceRequests[requestOrId.identifier];
   const { timetokenOverride, regionOverride } = scheduledRequest;
+  const expectingInitialSubscribeResponse = scheduledRequest.timetoken === '0';
 
   consoleLog(`'${Object.keys(serviceRequests).length}' subscription request currently active.`);
 
@@ -1171,9 +1178,8 @@ const handleSendSubscribeRequestForClient = (
     },
     (response) => {
       let serverResponse = response;
-      if (isInitialSubscribe && timetokenOverride && timetokenOverride !== '0') {
+      if (expectingInitialSubscribeResponse && timetokenOverride && timetokenOverride !== '0')
         serverResponse = patchInitialSubscribeResponse(serverResponse, timetokenOverride, regionOverride);
-      }
 
       return serverResponse;
     },
@@ -1379,6 +1385,7 @@ const handleSendLeaveRequestEvent = (
     subscription.channelGroupQuery = '';
     subscription.path = '';
     subscription.previousTimetoken = '0';
+    subscription.refreshTimestamp = Date.now();
     subscription.timetoken = '0';
     delete subscription.region;
     delete subscription.serviceRequestId;
@@ -1914,6 +1921,7 @@ const subscribeTransportRequestFromEvent = (event: SendRequestEvent): TransportR
   const clients = clientsForSendSubscribeRequestEvent(subscription.timetoken, event);
   const serviceRequestId = uuidGenerator.createUUID();
   const request = { ...event.request };
+  let previousSubscribeTimetokenRefreshTimestamp: number | undefined;
   let previousSubscribeTimetoken: string | undefined;
   let previousSubscribeRegion: string | undefined;
 
@@ -1950,9 +1958,19 @@ const subscribeTransportRequestFromEvent = (event: SendRequestEvent): TransportR
       if (!_subscription) continue;
 
       // Keep track of timetoken from previous call to use it for catchup after initial subscribe.
-      if ((clients.length === 1 || _client.clientIdentifier !== client.clientIdentifier) && _subscription.timetoken) {
-        previousSubscribeTimetoken = _subscription.timetoken;
-        previousSubscribeRegion = _subscription.region;
+      if (_subscription.timetoken) {
+        let shouldSetPreviousTimetoken = !previousSubscribeTimetoken;
+        if (!shouldSetPreviousTimetoken && _subscription.timetoken !== '0') {
+          if (previousSubscribeTimetoken === '0') shouldSetPreviousTimetoken = true;
+          else if (_subscription.timetoken < previousSubscribeTimetoken!)
+            shouldSetPreviousTimetoken = _subscription.refreshTimestamp > previousSubscribeTimetokenRefreshTimestamp!;
+        }
+
+        if (shouldSetPreviousTimetoken) {
+          previousSubscribeTimetokenRefreshTimestamp = _subscription.refreshTimestamp;
+          previousSubscribeTimetoken = _subscription.timetoken;
+          previousSubscribeRegion = _subscription.region;
+        }
       }
 
       _subscription.channelGroups.forEach(channelGroups.add, channelGroups);
@@ -2021,8 +2039,15 @@ const subscribeTransportRequestFromEvent = (event: SendRequestEvent): TransportR
     ) {
       serviceRequests[serviceRequestId].region = request.queryParameters.tr as string;
     }
-    serviceRequests[serviceRequestId].timetokenOverride = previousSubscribeTimetoken;
-    serviceRequests[serviceRequestId].regionOverride = previousSubscribeRegion;
+    if (
+      !serviceRequests[serviceRequestId].timetokenOverride ||
+      (serviceRequests[serviceRequestId].timetokenOverride !== '0' &&
+        previousSubscribeTimetoken &&
+        previousSubscribeTimetoken !== '0')
+    ) {
+      serviceRequests[serviceRequestId].timetokenOverride = previousSubscribeTimetoken;
+      serviceRequests[serviceRequestId].regionOverride = previousSubscribeRegion;
+    }
   }
 
   subscription.serviceRequestId = serviceRequestId;
@@ -2697,6 +2722,7 @@ const updateClientSubscribeStateIfRequired = (event: SendRequestEvent): boolean 
   if (!subscription) {
     changed = true;
     subscription = {
+      refreshTimestamp: 0,
       path: '',
       channelGroupQuery: '',
       channels: [],
@@ -2752,6 +2778,7 @@ const updateClientSubscribeStateIfRequired = (event: SendRequestEvent): boolean 
 
   let { authKey } = client;
   const { userId } = client;
+  subscription.refreshTimestamp = Date.now();
   subscription.request = event.request;
   subscription.filterExpression = (query['filter-expr'] ?? '') as string;
   subscription.timetoken = (query.tt ?? '0') as string;
