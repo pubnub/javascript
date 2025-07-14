@@ -39,6 +39,11 @@ describe('timetoken utilities', () => {
       expect(result).to.equal('17457898689039206');
     });
 
+    it('borrows one second on underflow when ticks > 0', () => {
+      const result = adjustedTimetokenBy('17525257097772389', '17525257156893384', false);
+      expect(result).to.equal('-59120995');
+    });
+
     it('produces negative ticks when underflow and no seconds to borrow', () => {
       const result = adjustedTimetokenBy('17457898706275755', '17457898706279755', false);
       expect(result).to.equal('-4000');
@@ -75,6 +80,14 @@ describe('timetoken utilities', () => {
       expect(result).to.equal(`${Date.now() - serviceCatchUpDiff}0000`);
     });
 
+    it('returns adjusted service timetoken when newer catchup timetoken with difference in seconds', () => {
+      Date.now = () => 1752529590684;
+      // Difference between service recent response and catchup timetoken (from the future).
+      const serviceCatchUpDiff = -59_120_995;
+      const result = referenceSubscribeTimetoken('17525257097772389', '17525257156893384');
+      expect(result).to.equal('17525295965960995');
+    });
+
     it('returns existing reference when catchUp is absent but reference provided', () => {
       const existing = '17457898992039206';
       const result = referenceSubscribeTimetoken('17457898692039206', undefined, existing);
@@ -91,7 +104,7 @@ describe('timetoken utilities', () => {
 
     it('returns adjusted reference when newer catchup timetoken', () => {
       const existing = '17457898722039206';
-      // Difference between service recent response and catchup timetoken (from the past).
+      // Difference between service recent response and catchup timetoken (from the future).
       const serviceCatchUpDiff = -20000;
       const result = referenceSubscribeTimetoken('17457898692039206', '17457898692059206', existing);
       expect(result).to.equal('17457898722059206');

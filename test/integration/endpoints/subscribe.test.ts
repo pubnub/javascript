@@ -42,7 +42,7 @@ describe('subscribe endpoints', () => {
       // @ts-expect-error Force override default value.
       useRequestId: false,
       enableEventEngine: true,
-      logLevel: PubNub.LogLevel.Trace,
+      // logLevel: PubNub.LogLevel.Trace,
       // logVerbosity: true,
     });
   });
@@ -396,8 +396,6 @@ describe('subscribe endpoints', () => {
 
     const connectionPromise = new Promise<void>((resolve) => {
       pubnubWithEE.onStatus = (status) => {
-        console.log(`~~~~> STATUS:`);
-        console.dir(status, { depth: 10 });
         if (status.category === PubNub.CATEGORIES.PNConnectedCategory) {
           pubnubWithEE.onStatus = undefined;
           resolve();
@@ -412,8 +410,6 @@ describe('subscribe endpoints', () => {
 
     const disconnectionPromise = new Promise<void>((resolve) => {
       pubnubWithEE.onStatus = (status) => {
-        console.log(`~~~~> STATUS:`);
-        console.dir(status, { depth: 10 });
         if (status.category === PubNub.CATEGORIES.PNDisconnectedCategory) {
           pubnubWithEE.onStatus = undefined;
           resolve();

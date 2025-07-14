@@ -144,6 +144,10 @@ export const referenceSubscribeTimetoken = (
  */
 export const adjustedTimetokenBy = (timetoken: string, value: string, increment: boolean): string => {
   // Normalize value to the PubNub's high-precision time format.
+  if (value.startsWith('-')) {
+    value = value.replace('-', '');
+    increment = false;
+  }
   value = value.padStart(17, '0');
 
   const secA = timetoken.slice(0, 10);
@@ -164,6 +168,9 @@ export const adjustedTimetokenBy = (timetoken: string, value: string, increment:
       seconds -= 1;
       ticks += 10_000_000;
     } else if (seconds < 0) ticks *= -1;
+  } else if (seconds < 0 && ticks > 0) {
+    seconds += 1;
+    ticks = 10_000_000 - ticks;
   }
 
   return seconds !== 0 ? `${seconds}${`${ticks}`.padStart(7, '0')}` : `${ticks}`;
