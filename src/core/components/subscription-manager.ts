@@ -455,7 +455,6 @@ export class SubscriptionManager {
 
       return;
     }
-
     this.referenceTimetoken = referenceSubscribeTimetoken(result!.cursor.timetoken, this.storedTimetoken);
     if (this.storedTimetoken) {
       this.currentTimetoken = this.storedTimetoken;

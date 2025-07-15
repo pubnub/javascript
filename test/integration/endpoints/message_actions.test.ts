@@ -339,6 +339,10 @@ describe('message actions endpoints', () => {
             try {
               assert.equal(status.error, false);
               assert(response !== null);
+              if (undefined === response.data.uuid) {
+                console.log(`Received unexpected response:`);
+                console.dir(response, { depth: 20 });
+              }
               assert.equal(response.data.type, messageAction.type);
               assert.equal(response.data.value, messageAction.value);
               assert.equal(response.data.uuid, pubnub.getUUID());

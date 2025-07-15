@@ -139,7 +139,11 @@ export class Subscription extends SubscriptionBase {
    * @internal
    */
   override handleEvent(cursor: SubscriptionCursor, event: SubscriptionResponse['messages'][0]): void {
-    if (!this.state.isSubscribed) return;
+    if (
+      !this.state.isSubscribed ||
+      !this.state.subscriptionInput.contains(event.data.subscription ?? event.data.channel)
+    )
+      return;
 
     if (this.parentSetsCount > 0) {
       // Creating from whole payload (not only for published messages).
@@ -147,10 +151,10 @@ export class Subscription extends SubscriptionBase {
       if (this.handledUpdates.includes(fingerprint)) {
         this.state.client.logger.trace(
           this.subscriptionType,
-          `Message (${fingerprint}) already handled by ${this.id}. Ignoring.`,
+          `Event (${fingerprint}) already handled by ${this.id}. Ignoring.`,
         );
         return;
-      } else console.log(`${this.id} handled (${fingerprint})`);
+      }
 
       // Update a list of tracked messages and shrink it if too big.
       this.handledUpdates.push(fingerprint);

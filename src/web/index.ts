@@ -136,9 +136,15 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
           userIdChangeHandler = (userId: string) => middleware.onUserIdChange(userId);
           transport = middleware;
 
-          window.onpagehide = (event: PageTransitionEvent) => {
-            if (!event.persisted) middleware.terminate();
-          };
+          if (configurationCopy.subscriptionWorkerUnsubscribeOfflineClients) {
+            window.addEventListener(
+              'pagehide',
+              (event) => {
+                if (!event.persisted) middleware.terminate();
+              },
+              { once: true },
+            );
+          }
         } catch (e) {
           clientConfiguration.logger().error('PubNub', () => ({
             messageType: 'error',

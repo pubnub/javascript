@@ -399,6 +399,86 @@ describe('#listeners', () => {
     expect(JSON.stringify(messages[0].message)).to.equal('{"ch2":"My new message!"}');
   });
 
+  /// `17525257097772389` and `17525257156893384` used on purpose because this combination
+  /// was the root of the issue (when catch up timetoken is larger than the one provided by service response).
+  it('subscribe and deliver messages when server returns old timetoken', async () => {
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1'] }, { channels: ['ch1'] }, { channels: ['ch1', 'ch2'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [{ channels: ['ch1'], messages: [], initialTimetokenOverride: '17525257097772389' }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1'], messages: [], initialTimetokenOverride: '17525257097772389' },
+        {
+          channels: ['ch1', 'ch2'],
+          messages: [{ channel: 'ch2', message: { ch2: 'My expected message!' } }],
+          timetoken: '17525257156893384',
+        },
+        { channels: ['ch1', 'ch2'], messages: [], replyDelay: 500 },
+      ],
+    });
+
+    const messages: Subscription.Message[] = [];
+    const subscriptionCh1 = pubnub.channel('ch1').subscription();
+    subscriptionCh1.onMessage = () => {};
+
+    const connectionPromise = new Promise<void>((resolve) => {
+      pubnub.onStatus = (status) => {
+        if (status.category === PubNub.CATEGORIES.PNConnectedCategory) resolve();
+      };
+    });
+
+    // Wait for connection.
+    subscriptionCh1.subscribe();
+    await connectionPromise;
+
+    const disconnectionPromise = new Promise<void>((resolve) => {
+      pubnub.onStatus = (status) => {
+        // This is simulation which possible to reproduce only this way.
+        if (status.category === PubNub.CATEGORIES.PNDisconnectedUnexpectedlyCategory) resolve();
+      };
+    });
+
+    // Wait for disconnection.
+    pubnub.disconnect(true);
+    await disconnectionPromise;
+
+    const reconnectionPromise = new Promise<void>((resolve) => {
+      pubnub.onStatus = (status) => {
+        if (status.category === PubNub.CATEGORIES.PNConnectedCategory) resolve();
+      };
+    });
+
+    // Wait for reconnection.
+    pubnub.reconnect({ timetoken: '17525257156893384' });
+    await reconnectionPromise;
+
+    const subscriptionCh2 = pubnub.channel('ch2').subscription();
+    const messagePromise = new Promise<void>((resolveMessage) => {
+      subscriptionCh2.onMessage = (message) => messages.push(message);
+      setTimeout(() => resolveMessage(), 500);
+    });
+
+    // Wait for messages.
+    subscriptionCh2.subscribe();
+    await messagePromise;
+
+    expect(messages.length).to.equal(1);
+    expect(JSON.stringify(messages[0].message)).to.equal('{"ch2":"My expected message!"}');
+  });
+
   it('subscribe and deliver notifications targeted by subscription object', async () => {
     utils.createPresenceMockScopes({
       subKey: 'mySubKey',

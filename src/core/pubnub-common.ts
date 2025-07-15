@@ -1786,7 +1786,7 @@ export class PubNubCore<
    */
   public disconnect(isOffline: boolean = false): void {
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
-      this.logger.debug('PubNub', `Disconnect (while offline? ${!!isOffline ? 'yes' : 'no'}`);
+      this.logger.debug('PubNub', `Disconnect (while offline? ${!!isOffline ? 'yes' : 'no'})`);
 
       if (this.subscriptionManager) this.subscriptionManager.disconnect();
       else if (this.eventEngine) this.eventEngine.disconnect(isOffline);
@@ -4612,7 +4612,7 @@ export class PubNubCore<
       this.eventDispatcher?.handleEvent(event);
 
       Object.values(this.eventHandleCapable).forEach((eventHandleCapable) => {
-        eventHandleCapable.handleEvent(cursor, event);
+        if (eventHandleCapable !== this._globalSubscriptionSet) eventHandleCapable.handleEvent(cursor, event);
       });
     }
   }

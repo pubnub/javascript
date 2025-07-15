@@ -4394,6 +4394,10 @@
 	 */
 	const adjustedTimetokenBy = (timetoken, value, increment) => {
 	    // Normalize value to the PubNub's high-precision time format.
+	    if (value.startsWith('-')) {
+	        value = value.replace('-', '');
+	        increment = false;
+	    }
 	    value = value.padStart(17, '0');
 	    const secA = timetoken.slice(0, 10);
 	    const tickA = timetoken.slice(10, 17);
@@ -4414,6 +4418,10 @@
 	        }
 	        else if (seconds < 0)
 	            ticks *= -1;
+	    }
+	    else if (seconds < 0 && ticks > 0) {
+	        seconds += 1;
+	        ticks = 10000000 - ticks;
 	    }
 	    return seconds !== 0 ? `${seconds}${`${ticks}`.padStart(7, '0')}` : `${ticks}`;
 	};
@@ -5325,7 +5333,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.8.0';
+	            return '9.8.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -10795,25 +10803,24 @@
 	     * @internal
 	     */
 	    handleEvent(cursor, event) {
-	        var _a;
-	        if (!this.state.isSubscribed)
+	        var _a, _b;
+	        if (!this.state.isSubscribed ||
+	            !this.state.subscriptionInput.contains((_a = event.data.subscription) !== null && _a !== void 0 ? _a : event.data.channel))
 	            return;
 	        if (this.parentSetsCount > 0) {
 	            // Creating from whole payload (not only for published messages).
 	            const fingerprint = messageFingerprint(event.data);
 	            if (this.handledUpdates.includes(fingerprint)) {
-	                this.state.client.logger.trace(this.subscriptionType, `Message (${fingerprint}) already handled by ${this.id}. Ignoring.`);
+	                this.state.client.logger.trace(this.subscriptionType, `Event (${fingerprint}) already handled by ${this.id}. Ignoring.`);
 	                return;
 	            }
-	            else
-	                console.log(`${this.id} handled (${fingerprint})`);
 	            // Update a list of tracked messages and shrink it if too big.
 	            this.handledUpdates.push(fingerprint);
 	            if (this.handledUpdates.length > 10)
 	                this.handledUpdates.shift();
 	        }
 	        // Check whether an event is not designated for this subscription set.
-	        if (!this.state.subscriptionInput.contains((_a = event.data.subscription) !== null && _a !== void 0 ? _a : event.data.channel))
+	        if (!this.state.subscriptionInput.contains((_b = event.data.subscription) !== null && _b !== void 0 ? _b : event.data.channel))
 	            return;
 	        super.handleEvent(cursor, event);
 	    }
@@ -16233,7 +16240,7 @@
 	     */
 	    disconnect(isOffline = false) {
 	        {
-	            this.logger.debug('PubNub', `Disconnect (while offline? ${!!isOffline ? 'yes' : 'no'}`);
+	            this.logger.debug('PubNub', `Disconnect (while offline? ${!!isOffline ? 'yes' : 'no'})`);
 	            if (this.subscriptionManager)
 	                this.subscriptionManager.disconnect();
 	            else if (this.eventEngine)
@@ -17694,7 +17701,8 @@
 	                this._globalSubscriptionSet.handleEvent(cursor, event);
 	            (_a = this.eventDispatcher) === null || _a === void 0 ? void 0 : _a.handleEvent(event);
 	            Object.values(this.eventHandleCapable).forEach((eventHandleCapable) => {
-	                eventHandleCapable.handleEvent(cursor, event);
+	                if (eventHandleCapable !== this._globalSubscriptionSet)
+	                    eventHandleCapable.handleEvent(cursor, event);
 	            });
 	        }
 	    }
@@ -18103,10 +18111,12 @@
 	                    authenticationChangeHandler = (auth) => middleware.onTokenChange(auth);
 	                    userIdChangeHandler = (userId) => middleware.onUserIdChange(userId);
 	                    transport = middleware;
-	                    window.onpagehide = (event) => {
-	                        if (!event.persisted)
-	                            middleware.terminate();
-	                    };
+	                    if (configurationCopy.subscriptionWorkerUnsubscribeOfflineClients) {
+	                        window.addEventListener('pagehide', (event) => {
+	                            if (!event.persisted)
+	                                middleware.terminate();
+	                        }, { once: true });
+	                    }
 	                }
 	                catch (e) {
 	                    clientConfiguration.logger().error('PubNub', () => ({

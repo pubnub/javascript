@@ -78,12 +78,13 @@ export default {
         presenceOccupancy?: number;
         timetokenAdjust?: string;
       }[];
+      initialTimetokenOverride?: string;
       timetoken?: string;
       replyDelay?: number;
     }[];
   }) {
     const replyDelay = 180;
-    const initialTimetoken = `${Date.now()}0000`;
+    let initialTimetoken = `${Date.now()}0000`;
     let initialResponseCreated = false;
     const mockScopes: nock.Scope[] = [];
     let previousTimetoken = '0';
@@ -91,6 +92,7 @@ export default {
     const timetokens: string[] = [];
 
     parameters.requests.forEach((request) => {
+      if (request.initialTimetokenOverride) initialTimetoken = request.initialTimetokenOverride;
       const channels = request.channels ? request.channels.join(',') : ',';
       const groups = request.groups ? request.groups.join(',') : undefined;
       const url = `/v2/subscribe/${parameters.subKey}/${channels}/0`;
