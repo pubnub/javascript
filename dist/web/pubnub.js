@@ -18112,10 +18112,10 @@
 	                    userIdChangeHandler = (userId) => middleware.onUserIdChange(userId);
 	                    transport = middleware;
 	                    if (configurationCopy.subscriptionWorkerUnsubscribeOfflineClients) {
-	                        window.onpagehide = (event) => {
+	                        window.addEventListener('pagehide', (event) => {
 	                            if (!event.persisted)
 	                                middleware.terminate();
-	                        };
+	                        }, { once: true });
 	                    }
 	                }
 	                catch (e) {

@@ -137,9 +137,13 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
           transport = middleware;
 
           if (configurationCopy.subscriptionWorkerUnsubscribeOfflineClients) {
-            window.onpagehide = (event: PageTransitionEvent) => {
-              if (!event.persisted) middleware.terminate();
-            };
+            window.addEventListener(
+              'pagehide',
+              (event) => {
+                if (!event.persisted) middleware.terminate();
+              },
+              { once: true },
+            );
           }
         } catch (e) {
           clientConfiguration.logger().error('PubNub', () => ({
