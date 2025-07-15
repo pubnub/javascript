@@ -1,3 +1,10 @@
+## v9.8.1
+July 15 2025
+
+#### Fixed
+- Fix incorrect subscription reference timetoken (used by listeners to filter old messages) caused by the server returning timetoken older than the previous one because of MX.
+- Fix the issue because of which all subscriptions of the subscription set have been requested to handle the received event.
+
 ## v9.8.0
 July 11 2025
 
