@@ -5333,7 +5333,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.8.0';
+	            return '9.8.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -18112,10 +18112,10 @@
 	                    userIdChangeHandler = (userId) => middleware.onUserIdChange(userId);
 	                    transport = middleware;
 	                    if (configurationCopy.subscriptionWorkerUnsubscribeOfflineClients) {
-	                        window.onpagehide = (event) => {
+	                        window.addEventListener('pagehide', (event) => {
 	                            if (!event.persisted)
 	                                middleware.terminate();
-	                        };
+	                        }, { once: true });
 	                    }
 	                }
 	                catch (e) {
