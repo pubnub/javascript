@@ -38,6 +38,12 @@ jobs:
         with:
           # This should be the same as the one specified for on.pull_request.branches
           ref: master
+      - name: Setup AWS CLI credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActionsSession
+          aws-region: us-east-1
       - name: Checkout actions
         uses: actions/checkout@v4
         with:
@@ -49,9 +55,7 @@ jobs:
         uses: ./.github/.release/actions/actions/services/aws
         with:
           token: ${{ secrets.GH_TOKEN }}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          auth-method: access-key
+          auth-method: role
           content-type: application/javascript
           content-encoding: gzip
           acl: public-read
