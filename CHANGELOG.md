@@ -1,3 +1,9 @@
+## v9.8.3
+July 28 2025
+
+#### Modified
+- Update workflow with `id-token: write` permission for AWS CLI configuration.
+
 ## v9.8.2
 July 28 2025
 
