@@ -1,3 +1,9 @@
+## v9.8.2
+July 28 2025
+
+#### Modified
+- Upgraded `form-data` dependency to version 4.0.4 to address potential vulnerability issue.
+
 ## v9.8.1
 July 15 2025
 
