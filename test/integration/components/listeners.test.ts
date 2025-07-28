@@ -614,4 +614,122 @@ describe('#listeners', () => {
     expect(actual.uuid).to.be.equal('bob');
     expect(actual.timetoken).to.not.be.equal(undefined);
   });
+  it('should route messages correctly between subscription sets and individual subscriptions', (done) => {
+    utils.createPresenceMockScopes({
+      subKey: 'mySubKey',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['a', 'b', 'c', 'd'] }],
+    });
+
+    utils.createSubscribeMockScopes({
+      subKey: 'mySubKey',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'myUUID',
+      eventEngine: true,
+      requests: [
+        {
+          channels: ['a', 'b', 'c', 'd'],
+          messages: [
+            { channel: 'a', message: { id: 'msg-channel-a', content: 'Message for channel A' } },
+            { channel: 'b', message: { id: 'msg-channel-b', content: 'Message for channel B' } },
+            { channel: 'c', message: { id: 'msg-channel-c', content: 'Message for channel C' } },
+            // Intentionally NO message for channel 'd' - this tests message isolation
+          ],
+        },
+        // Final empty response to end subscription loop
+        { channels: ['a', 'b', 'c', 'd'], messages: [], replyDelay: 500 },
+      ],
+    });
+
+    // Message tracking arrays for individual subscriptions (as requested)
+    const channelASubscriptionMessagesReceived: Subscription.Message[] = [];
+    const channelBSubscriptionMessagesReceived: Subscription.Message[] = [];
+    const channelCSubscriptionMessagesReceived: Subscription.Message[] = [];
+    const subDReceivedMessages: Subscription.Message[] = []; // Array for subD as requested
+    const subscriptionSet1MessagesReceived: Subscription.Message[] = [];
+
+    // Create individual subscriptions (subA, subB, subD)
+    const subA = pubnub.channel('a').subscription();
+    const subB = pubnub.channel('b').subscription();
+    const subD = pubnub.channel('d').subscription(); // Added subD for channel 'd'
+    const subscriptionC = pubnub.channel('c').subscription(); // Individual subscription for channel 'c'
+
+    // Add message listeners to individual subscriptions to maintain received message arrays
+    subA.onMessage = (message) => channelASubscriptionMessagesReceived.push(message);
+    subB.onMessage = (message) => channelBSubscriptionMessagesReceived.push(message);
+    subD.onMessage = (message) => subDReceivedMessages.push(message); // subD listener as requested
+    subscriptionC.onMessage = (message) => channelCSubscriptionMessagesReceived.push(message);
+
+    // Create subscriptionSet1 by adding individual subscriptions (subA + subB + subD + subscriptionC)
+    // This creates a subscription set covering channels 'a', 'b', 'c', 'd'
+    const subscriptionSet1 = subA.addSubscription(subB);
+    subscriptionSet1.addSubscription(subD); // Add subD to subscriptionSet as requested
+    subscriptionSet1.addSubscription(subscriptionC);
+    subscriptionSet1.onMessage = (message) => subscriptionSet1MessagesReceived.push(message);
+
+    // Track when we've received enough messages to verify the test
+    let messageCount = 0;
+    let testCompleted = false;
+
+    const checkCompletion = () => {
+      messageCount++;
+      // We expect messages for channels a, b, c - both to individual subscriptions and subscription set
+      // subD should receive NO messages since no message is sent to channel 'd'
+      if (messageCount >= 6 && !testCompleted) {
+        // 3 for set + 3 for individual subscriptions (a,b,c only)
+        testCompleted = true;
+
+        try {
+          // Verify that each individual subscription receives messages for its respective channel
+          expect(channelASubscriptionMessagesReceived.length).to.equal(1);
+          expect((channelASubscriptionMessagesReceived[0].message as any).id).to.equal('msg-channel-a');
+          expect(channelASubscriptionMessagesReceived[0].channel).to.equal('a');
+
+          expect(channelBSubscriptionMessagesReceived.length).to.equal(1);
+          expect((channelBSubscriptionMessagesReceived[0].message as any).id).to.equal('msg-channel-b');
+          expect(channelBSubscriptionMessagesReceived[0].channel).to.equal('b');
+
+          expect(channelCSubscriptionMessagesReceived.length).to.equal(1);
+          expect((channelCSubscriptionMessagesReceived[0].message as any).id).to.equal('msg-channel-c');
+          expect(channelCSubscriptionMessagesReceived[0].channel).to.equal('c');
+
+          // subD should NOT receive any messages since no message was sent to channel 'd'
+          // This confirms that messages are not routed to wrong subscription listeners
+          expect(subDReceivedMessages.length).to.equal(0, 'subD should not receive messages for channels a,b,c');
+
+          // Verify that subscriptionSet1 receives messages for channels a, b, c (but not d since no message sent)
+          expect(subscriptionSet1MessagesReceived.length).to.equal(3);
+          const set1MessageIds = subscriptionSet1MessagesReceived.map((m) => (m.message as any).id).sort();
+          expect(set1MessageIds).to.deep.equal(['msg-channel-a', 'msg-channel-b', 'msg-channel-c']);
+
+          // Verify correct channel routing for each message in the subscription set
+          const channelAMsg = subscriptionSet1MessagesReceived.find((m) => (m.message as any).id === 'msg-channel-a');
+          const channelBMsg = subscriptionSet1MessagesReceived.find((m) => (m.message as any).id === 'msg-channel-b');
+          const channelCMsg = subscriptionSet1MessagesReceived.find((m) => (m.message as any).id === 'msg-channel-c');
+
+          expect(channelAMsg?.channel).to.equal('a');
+          expect(channelBMsg?.channel).to.equal('b');
+          expect(channelCMsg?.channel).to.equal('c');
+
+          // Verify that no message for channel 'd' exists in the subscription set
+          const channelDMsg = subscriptionSet1MessagesReceived.find((m) => m.channel === 'd');
+          expect(channelDMsg).to.be.undefined;
+
+          done();
+        } catch (error) {
+          done(error);
+        }
+      }
+    };
+
+    // Add listeners to test completion check
+    subscriptionSet1.addListener({ message: checkCompletion });
+    subA.addListener({ message: checkCompletion });
+    subB.addListener({ message: checkCompletion });
+    subD.addListener({ message: checkCompletion });
+    subscriptionC.addListener({ message: checkCompletion });
+
+    // Subscribe the subscription set (which includes a, b, c, d through individual subscriptions)
+    subscriptionSet1.subscribe();
+  });
 });
