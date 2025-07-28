@@ -224,9 +224,9 @@ pubnub.unsubscribe({
 // create a subscription set with multiple channels
 const subscriptionSet1 = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'] });
 
-// create a subscription set with multiple channel groups and options
+// create a subscription set with multiple channels and options
 const subscriptionSet2 = pubnub.subscriptionSet({
-  channels: ['ch1', 'ch2'],
+  channels: ['ch3', 'ch4'],
   subscriptionOptions: { receivePresenceEvents: true },
 });
 
