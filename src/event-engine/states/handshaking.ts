@@ -34,6 +34,7 @@ export type HandshakingStateContext = {
   channels: string[];
   groups: string[];
   cursor?: Subscription.SubscriptionCursor;
+  onDemand?: boolean;
 };
 
 /**
@@ -46,13 +47,18 @@ export type HandshakingStateContext = {
  */
 export const HandshakingState = new State<HandshakingStateContext, Events, Effects>('HANDSHAKING');
 
-HandshakingState.onEnter((context) => handshake(context.channels, context.groups));
+HandshakingState.onEnter((context) => handshake(context.channels, context.groups, context.onDemand ?? false));
 HandshakingState.onExit(() => handshake.cancel);
 
 HandshakingState.on(subscriptionChange.type, (context, { payload }) => {
   if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
 
-  return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+  return HandshakingState.with({
+    channels: payload.channels,
+    groups: payload.groups,
+    cursor: context.cursor,
+    onDemand: true,
+  });
 });
 
 HandshakingState.on(handshakeSuccess.type, (context, { payload }) =>
@@ -106,6 +112,7 @@ HandshakingState.on(restore.type, (context, { payload }) => {
     channels: payload.channels,
     groups: payload.groups,
     cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context?.cursor?.region || 0 },
+    onDemand: true,
   });
 });
 

@@ -35,6 +35,16 @@ export class LoggerManager {
   private readonly loggers: Logger[];
 
   /**
+   * Keeping track of previous entry timestamp.
+   *
+   * This information will be used to make sure that multiple sequential entries doesn't have same timestamp. Adjustment
+   * on .001 will be done to make it possible to properly stort entries.
+   *
+   * @internal
+   */
+  private previousEntryTimestamp: number = 0;
+
+  /**
    * Create and configure loggers' manager.
    *
    * @param pubNubId - Unique identifier of PubNub instance which will use this logger.
@@ -133,9 +143,15 @@ export class LoggerManager {
     // Check whether a log message should be handled at all or not.
     if (logLevel < this.minLogLevel || this.loggers.length === 0) return;
 
+    const date = new Date();
+    if (date.getTime() <= this.previousEntryTimestamp) {
+      this.previousEntryTimestamp++;
+      date.setTime(this.previousEntryTimestamp);
+    } else this.previousEntryTimestamp = date.getTime();
+
     const level = LogLevel[logLevel].toLowerCase() as LogLevelString;
     const message: BaseLogMessage = {
-      timestamp: new Date(),
+      timestamp: date,
       pubNubId: this.pubNubId,
       level: logLevel,
       minimumLevel: this.minLogLevel,

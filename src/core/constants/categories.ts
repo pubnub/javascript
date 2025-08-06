@@ -117,6 +117,15 @@ enum StatusCategory {
    * PubNub client unexpectedly disconnected from the real-time updates streams.
    */
   PNDisconnectedUnexpectedlyCategory = 'PNDisconnectedUnexpectedlyCategory',
+
+  // --------------------------------------------------------
+  // ------------------ Shared worker events ----------------
+  // --------------------------------------------------------
+
+  /**
+   * SDK will announce when newer shared worker will be 'noticed'.
+   */
+  PNSharedWorkerUpdatedCategory = 'PNSharedWorkerUpdatedCategory',
 }
 
 export default StatusCategory;

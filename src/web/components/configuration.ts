@@ -4,6 +4,7 @@ import {
   setDefaults as setBaseDefaults,
 } from '../../core/interfaces/configuration';
 import { ICryptoModule } from '../../core/interfaces/crypto-module';
+import { LogLevel } from '../../core/interfaces/logger';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -92,8 +93,15 @@ export type PubNubConfiguration = UserConfiguration & {
    * Whether verbose logging should be enabled for `Subscription` worker should print debug messages or not.
    *
    * @default `false`
+   *
+   * @deprecated Use {@link PubNubConfiguration.subscriptionWorkerLogLevel|subscriptionWorkerLogLevel} instead.
    */
   subscriptionWorkerLogVerbosity?: boolean;
+
+  /**
+   * Minimum messages log level which should be passed to the `Subscription` worker logger.
+   */
+  subscriptionWorkerLogLevel?: LogLevel;
 
   /**
    * API which should be used to make network requests.

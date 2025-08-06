@@ -56,6 +56,7 @@ ReceiveStoppedState.on(reconnect.type, (context, { payload }) =>
       timetoken: !!payload.cursor.timetoken ? payload.cursor?.timetoken : context.cursor.timetoken,
       region: payload.cursor.region || context.cursor.region,
     },
+    onDemand: true,
   }),
 );
 

@@ -43,13 +43,19 @@ ReceiveFailedState.on(reconnect.type, (context, { payload }) =>
       timetoken: !!payload.cursor.timetoken ? payload.cursor?.timetoken : context.cursor.timetoken,
       region: payload.cursor.region || context.cursor.region,
     },
+    onDemand: true,
   }),
 );
 
 ReceiveFailedState.on(subscriptionChange.type, (context, { payload }) => {
   if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);
 
-  return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+  return HandshakingState.with({
+    channels: payload.channels,
+    groups: payload.groups,
+    cursor: context.cursor,
+    onDemand: true,
+  });
 });
 
 ReceiveFailedState.on(restore.type, (context, { payload }) => {
@@ -59,6 +65,7 @@ ReceiveFailedState.on(restore.type, (context, { payload }) => {
     channels: payload.channels,
     groups: payload.groups,
     cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
+    onDemand: true,
   });
 });
 

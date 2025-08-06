@@ -137,6 +137,9 @@ declare class PubNubCore<
    * Change the current PubNub client user identifier.
    *
    * **Important:** Change won't affect ongoing REST API calls.
+   * **Warning:** Because ongoing REST API calls won't be canceled there could happen unexpected events like implicit
+   * `join` event for the previous `userId` after a long-poll subscribe request will receive a response. To avoid this
+   * it is advised to unsubscribe from all/disconnect before changing `userId`.
    *
    * @param value - New PubNub client user identifier.
    *
@@ -2194,6 +2197,10 @@ declare namespace PubNub {
      * PubNub client unexpectedly disconnected from the real-time updates streams.
      */
     PNDisconnectedUnexpectedlyCategory = 'PNDisconnectedUnexpectedlyCategory',
+    /**
+     * SDK will announce when newer shared worker will be 'noticed'.
+     */
+    PNSharedWorkerUpdatedCategory = 'PNSharedWorkerUpdatedCategory',
   }
 
   /**

@@ -116,6 +116,14 @@ export class SubscriptionManager {
   private isOnline: boolean;
 
   /**
+   * Whether user code in event handlers requested disconnection or not.
+   *
+   * Won't continue subscription loop if user requested disconnection/unsubscribe from all in response to received
+   * event.
+   */
+  private disconnectedWhileHandledEvent: boolean = false;
+
+  /**
    * Active subscription request abort method.
    *
    * **Note:** Reference updated with each subscribe call.
@@ -140,7 +148,9 @@ export class SubscriptionManager {
     ) => void,
     private readonly emitStatus: (status: Status | StatusEvent) => void,
     private readonly subscribeCall: (
-      parameters: Omit<SubscribeRequestParameters, 'crypto' | 'timeout' | 'keySet' | 'getFileUrl'>,
+      parameters: Omit<SubscribeRequestParameters, 'crypto' | 'timeout' | 'keySet' | 'getFileUrl'> & {
+        onDemand: boolean;
+      },
       callback: ResultCallback<Subscription.SubscriptionResponse>,
     ) => void,
     private readonly heartbeatCall: (
@@ -204,6 +214,10 @@ export class SubscriptionManager {
   // region Subscription
 
   public disconnect() {
+    // Potentially called during received events handling.
+    // Mark to prevent subscription loop continuation in subscribe response handler.
+    this.disconnectedWhileHandledEvent = true;
+
     this.stopSubscribeLoop();
     this.stopHeartbeatTimer();
     this.reconnectionManager.stopPolling();
@@ -347,6 +361,8 @@ export class SubscriptionManager {
   }
 
   public unsubscribeAll(isOffline: boolean = false) {
+    this.disconnectedWhileHandledEvent = true;
+
     this.unsubscribe(
       {
         channels: this.subscribedChannels,
@@ -365,6 +381,7 @@ export class SubscriptionManager {
    * @internal
    */
   private startSubscribeLoop(restartOnUnsubscribe: boolean = false) {
+    this.disconnectedWhileHandledEvent = false;
     this.stopSubscribeLoop();
 
     const channelGroups = [...Object.keys(this.channelGroups)];
@@ -385,6 +402,7 @@ export class SubscriptionManager {
         timetoken: this.currentTimetoken,
         ...(this.region !== null ? { region: this.region } : {}),
         ...(this.configuration.filterExpression ? { filterExpression: this.configuration.filterExpression } : {}),
+        onDemand: !this.subscriptionStatusAnnounced || restartOnUnsubscribe,
       },
       (status, result) => {
         this.processSubscribeResponse(status, result);
@@ -537,7 +555,8 @@ export class SubscriptionManager {
     }
 
     this.region = result!.cursor.region;
-    this.startSubscribeLoop();
+    if (!this.disconnectedWhileHandledEvent) this.startSubscribeLoop();
+    else this.disconnectedWhileHandledEvent = false;
   }
   // endregion
 
