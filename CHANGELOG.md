@@ -1,3 +1,9 @@
+## v9.8.4
+August 07 2025
+
+#### Fixed
+- Resolved an issue that prevented access to static fields of the PubNub class when using the SDK in React Native target builds.
+
 ## v9.8.3
 July 28 2025
 
