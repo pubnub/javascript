@@ -3,7 +3,7 @@ import {
   RequestSuccessEvent,
   PubNubSharedWorkerRequestEvents,
 } from './custom-events/request-processing-event';
-import { HeartbeatStateHeartbeatEvent } from './custom-events/heartbeat-state-event';
+import { HeartbeatStateHeartbeatEvent, HeartbeatStateInvalidateEvent } from './custom-events/heartbeat-state-event';
 import { RequestSendingSuccess } from '../subscription-worker-types';
 import { HeartbeatRequest } from './heartbeat-request';
 import { Payload } from '../../../core/types/api';
@@ -72,6 +72,21 @@ export class HeartbeatState extends EventTarget {
   // endregion
 
   // --------------------------------------------------------
+  // --------------------- Constructor ----------------------
+  // --------------------------------------------------------
+  // region Constructor
+
+  /**
+   * Create heartbeat state management object.
+   *
+   * @param identifier -  Similar {@link SubscribeRequest|subscribe} requests aggregation identifier.
+   */
+  constructor(public readonly identifier: string) {
+    super();
+  }
+  // endregion
+
+  // --------------------------------------------------------
   // --------------------- Properties -----------------------
   // --------------------------------------------------------
   // region Properties
@@ -97,7 +112,7 @@ export class HeartbeatState extends EventTarget {
    *
    * @param value - New access token for heartbeat requests.
    */
-  set accessToken(value: AccessToken) {
+  set accessToken(value: AccessToken | undefined) {
     if (!value) {
       this._accessToken = value;
       return;
@@ -192,7 +207,10 @@ export class HeartbeatState extends EventTarget {
     delete this.requests[client.identifier];
 
     // Stop backup timer if there is no more channels and groups left.
-    if (Object.keys(this.clientsState).length === 0) this.stopTimer();
+    if (!Object.keys(this.clientsState).length) {
+      this.stopTimer();
+      this.dispatchEvent(new HeartbeatStateInvalidateEvent());
+    }
   }
 
   removeFromClientState(client: PubNubClient, channels: string[], channelGroups: string[]) {

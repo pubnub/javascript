@@ -2,6 +2,8 @@ import {
   PubNubClientEvent,
   PubNubClientSendLeaveEvent,
   PubNubClientSendSubscribeEvent,
+  PubNubClientCancelSubscribeEvent,
+  PubNubClientIdentityChangeEvent,
 } from './custom-events/client-event';
 import {
   PubNubClientsManagerEvent,
@@ -9,24 +11,28 @@ import {
   PubNubClientManagerUnregisterEvent,
 } from './custom-events/client-manager-event';
 import { SubscriptionStateChangeEvent, SubscriptionStateEvent } from './custom-events/subscription-state-event';
-import { TransportMethod, TransportRequest } from '../../../core/types/transport-request';
+import { SubscriptionState, SubscriptionStateChange } from './subscription-state';
 import { PubNubClientsManager } from './pubnub-clients-manager';
-import uuidGenerator from '../../../core/components/uuid';
-import { SubscriptionState } from './subscription-state';
 import { SubscribeRequest } from './subscribe-request';
 import { RequestsManager } from './requests-manager';
-import { Query } from '../../../core/types/api';
 import { PubNubClient } from './pubnub-client';
 import { LeaveRequest } from './leave-request';
+import { leaveRequest } from './helpers';
+import { requests } from 'sinon';
 
 /**
  * Aggregation timer timeout.
  *
- * Timeout used by the timer to postpone enqueued `subscribe` requests processing and let other clients for
- * same subscribe key send next subscribe loop request (to make aggregation more efficient).
+ * Timeout used by the timer to postpone enqueued `subscribe` requests processing and let other clients for the same
+ * subscribe key send next subscribe loop request (to make aggregation more efficient).
  */
 const aggregationTimeout = 50;
 
+/**
+ * Sent {@link SubscribeRequest|subscribe} requests manager.
+ *
+ * Manager responsible for requests enqueue for batch processing and aggregated `service`-provided requests scheduling.
+ */
 export class SubscribeRequestsManager extends RequestsManager {
   // --------------------------------------------------------
   // ---------------------- Information ---------------------
@@ -44,24 +50,24 @@ export class SubscribeRequestsManager extends RequestsManager {
   private static textEncoder = new TextEncoder();
 
   /**
-   * Map of aggregation identifiers to the requests which should be processed at once.
+   * Map of change aggregation identifiers to the requests which should be processed at once.
    *
-   * `requests` key contains map of PubNub client identifier to requests created by it (usually there is only one at a
-   * time).
+   * `requests` key contains a map of {@link PubNubClient|PubNub} client identifiers to requests created by it (usually
+   * there is only one at a time).
    */
-  private delayedAggregationQueue: {
-    [key: string]: { timeout: ReturnType<typeof setTimeout>; requests: Record<string, SubscribeRequest[]> };
+  private requestsChangeAggregationQueue: {
+    [key: string]: { timeout: ReturnType<typeof setTimeout>; changes: Set<SubscriptionStateChange> };
   } = {};
 
   /**
-   * Map of client identifiers to `AbortController` instances which is used to detach added listeners when PubNub client
-   * unregister.
+   * Map of client identifiers to {@link AbortController} instances which is used to detach added listeners when
+   * {@link PubNubClient|PubNub} client unregisters.
    */
   private readonly clientAbortControllers: Record<string, AbortController> = {};
 
   /**
    * Map of unique user identifier (composed from multiple request object properties) to the aggregated subscription
-   * state.
+   * {@link SubscriptionState|state}.
    */
   private readonly subscriptionStates: Record<string, SubscriptionState> = {};
   // endregion
@@ -71,224 +77,252 @@ export class SubscribeRequestsManager extends RequestsManager {
   // --------------------------------------------------------
   // region Constructors
 
+  /**
+   * Create a {@link SubscribeRequest|subscribe} requests manager.
+   *
+   * @param clientsManager - Reference to the {@link PubNubClient|PubNub} clients manager as an events source for new
+   * clients for which {@link SubscribeRequest|subscribe} request sending events should be listened.
+   */
   constructor(private readonly clientsManager: PubNubClientsManager) {
     super();
-    this.subscribeOnClientEvents(clientsManager);
+    this.addEventListenersForClientsManager(clientsManager);
   }
   // endregion
 
   // --------------------------------------------------------
-  // --------------------- Aggregation ----------------------
+  // ----------------- Changes aggregation ------------------
   // --------------------------------------------------------
-  // region Aggregation
+  // region Changes aggregation
 
   /**
-   * Retrieve subscription state with which specific client is working.
+   * Retrieve {@link SubscribeRequest|requests} changes aggregation queue for specific {@link PubNubClient|PubNub}
+   * client.
    *
-   * @param client - Reference to the PubNub client for which subscription state should be found.
-   * @returns Reference to the subscription state if client has ongoing requests.
+   * @param client - Reference to {@link PubNubClient|PubNub} client for which {@link SubscribeRequest|subscribe}
+   * requests queue should be retrieved.
+   * @returns Tuple with aggregation key and aggregated changes of client's {@link SubscribeRequest|subscribe} requests
+   * that are enqueued for aggregation/removal.
    */
-  private subscriptionStateForClient(client: PubNubClient) {
-    let state: SubscriptionState | undefined;
-
-    // Search where `client` previously stored its requests.
-    for (const identifier of Object.keys(this.delayedAggregationQueue)) {
-      if (this.delayedAggregationQueue[identifier].requests[client.identifier]) {
-        state = this.subscriptionStates[identifier];
-        break;
-      }
+  private requestsChangeAggregationQueueForClient(
+    client: PubNubClient,
+  ): [string | undefined, Set<SubscriptionStateChange>] {
+    for (const aggregationKey of Object.keys(this.requestsChangeAggregationQueue)) {
+      const { changes } = this.requestsChangeAggregationQueue[aggregationKey];
+      if (Array.from(changes).some((change) => change.clientIdentifier === client.identifier))
+        return [aggregationKey, changes];
     }
 
-    // Search in persistent states.
-    if (!state) {
-      Object.values(this.subscriptionStates).forEach(
-        (subscriptionState) =>
-          !state && (state = subscriptionState.requestsForClient(client).length ? subscriptionState : undefined),
-      );
-    }
-
-    return state;
+    return [undefined, new Set<SubscriptionStateChange>()];
   }
 
   /**
-   * Move client between subscription states.
+   * Move {@link PubNubClient|PubNub} client to new subscription set.
    *
-   * This function used when PubNub client changed its identity (`userId`) and can't be aggregated with previous
-   * requests.
+   * This function used when PubNub client changed its identity (`userId`) or auth (`access token`) and can't be
+   * aggregated with previous requests.
    *
-   * @param client - Reference to the PubNub client which should be moved to new state.
+   * **Note:** Previous `service`-provided `subscribe` request won't be canceled.
+   *
+   * @param client - Reference to the  {@link PubNubClient|PubNub} client which should be moved to new state.
    */
   private moveClient(client: PubNubClient) {
-    let requests = this.aggregateQueueForClient(client);
+    // Retrieve a list of client's requests that have been enqueued for further aggregation.
+    const [queueIdentifier, enqueuedChanges] = this.requestsChangeAggregationQueueForClient(client);
+    // Retrieve list of client's requests from active subscription state.
+    let state = this.subscriptionStateForClient(client);
+    const request = state?.requestForClient(client);
 
-    // Check whether there is new requests from the client or requests in subscription state should be used instead.
-    if (!requests.length) {
-      Object.values(this.subscriptionStates).forEach(
-        (subscriptionState) => requests.length === 0 && (requests = subscriptionState.requestsForClient(client)),
-      );
+    // Check whether PubNub client has any activity prior removal or not.
+    if (!state && !enqueuedChanges.size) return;
+
+    // Make sure that client will be removed from its previous subscription state.
+    if (state) state.invalidateClient(client);
+
+    // Requests aggregation identifier.
+    let identifier = request?.asIdentifier;
+    if (!identifier && enqueuedChanges.size) {
+      const [change] = enqueuedChanges;
+      identifier = change.request.asIdentifier;
     }
 
-    // Provided client doesn't have enqueued for subscription state change or has any data in state itself.
-    if (!requests.length) return;
+    if (!identifier) return;
 
-    this.removeClient(client, false);
-    this.enqueueForAggregation(client, requests);
+    //
+    if (request) {
+      // Unset `service`-provided request because we can't receive a response with new `userId`.
+      request.serviceRequest = undefined;
+
+      state!.processChanges([new SubscriptionStateChange(client.identifier, request, true, false, true)]);
+
+      state = this.subscriptionStateForIdentifier(identifier);
+      // Force state refresh (because we are putting into new subscription set).
+      request.resetToInitialRequest();
+      state!.processChanges([new SubscriptionStateChange(client.identifier, request, false, false)]);
+    }
+
+    // Check whether there is enqueued request changes which should be removed from previous queue and added to the new
+    // one.
+    if (!enqueuedChanges.size || !this.requestsChangeAggregationQueue[queueIdentifier!]) return;
+
+    // Start the changes aggregation timer if required (this also prepares the queue for `identifier`).
+    this.startAggregationTimer(identifier);
+
+    // Remove from previous aggregation queue.
+    const oldChangesQueue = this.requestsChangeAggregationQueue[queueIdentifier!].changes;
+    SubscriptionStateChange.squashedChanges([...enqueuedChanges])
+      .filter((change) => change.clientIdentifier !== client.identifier || change.remove)
+      .forEach(oldChangesQueue.delete, oldChangesQueue);
+
+    // Add previously scheduled for aggregation requests to the new subscription set target.
+    const { changes } = this.requestsChangeAggregationQueue[identifier];
+    SubscriptionStateChange.squashedChanges([...enqueuedChanges])
+      .filter(
+        (change) =>
+          change.clientIdentifier === client.identifier &&
+          !change.request.completed &&
+          change.request.canceled &&
+          !change.remove,
+      )
+      .forEach(changes.add, changes);
   }
 
   /**
-   * Remove unregistered / disconnected PubNub client from manager's state.
+   * Remove unregistered/disconnected {@link PubNubClient|PubNub} client from manager's {@link SubscriptionState|state}.
    *
-   * @param client - Reference to the PubNub client which should be removed from state.
-   * @param sendLeave - Whether client should send presence `leave` request for _free_ channels and groups or not.
+   * @param client - Reference to the {@link PubNubClient|PubNub} client which should be removed from
+   * {@link SubscriptionState|state}.
+   * @param useChangeAggregation - Whether {@link PubNubClient|client} removal should be processed using an aggregation
+   * queue or change should be done on-the-fly by removing from both the aggregation queue and subscription state.
+   * @param sendLeave - Whether the {@link PubNubClient|client} should send a presence `leave` request for _free_
+   * channels and groups or not.
+   * @param [invalidated=false] - Whether the {@link PubNubClient|PubNub} client and its request were removed as part of
+   * client invalidation (unregister) or not.
    */
-  private removeClient(client: PubNubClient, sendLeave: boolean) {
-    this.removeFromAggregationQueue(client);
+  private removeClient(client: PubNubClient, useChangeAggregation: boolean, sendLeave: boolean, invalidated = false) {
+    // Retrieve a list of client's requests that have been enqueued for further aggregation.
+    const [queueIdentifier, enqueuedChanges] = this.requestsChangeAggregationQueueForClient(client);
+    // Retrieve list of client's requests from active subscription state.
+    const state = this.subscriptionStateForClient(client);
+    const request = state?.requestForClient(client, invalidated);
 
-    const subscriptionState = this.subscriptionStateForClient(client);
-    if (!subscriptionState) return;
+    // Check whether PubNub client has any activity prior removal or not.
+    if (!state && !enqueuedChanges.size) return;
 
-    const clientSubscriptionState = subscriptionState.stateForClient(client);
-    const clientStateForLeave = subscriptionState.uniqueStateForClient(
-      client,
-      clientSubscriptionState.channels,
-      clientSubscriptionState.channelGroups,
-    );
+    const identifier = (state && state.identifier) ?? queueIdentifier!;
 
-    // Clean up client's data in subscription state.
-    subscriptionState.beginChanges();
-    subscriptionState.removeClient(client);
-    subscriptionState.commitChanges();
+    // Remove the client's subscription requests from the active aggregation queue.
+    if (enqueuedChanges.size && this.requestsChangeAggregationQueue[identifier]) {
+      const { changes } = this.requestsChangeAggregationQueue[identifier];
+      enqueuedChanges.forEach(changes.delete, changes);
 
-    // Check whether there is any need to send `leave` request or not.
-    if (!sendLeave || (!clientStateForLeave.channels.length && !clientStateForLeave.channelGroups.length)) return;
+      this.stopAggregationTimerIfEmptyQueue(identifier);
+    }
 
-    const request = this.leaveRequest(client, clientStateForLeave.channels, clientStateForLeave.channelGroups);
     if (!request) return;
 
-    this.sendRequest(
-      request,
-      (fetchRequest, response) => request.handleProcessingSuccess(fetchRequest, response),
-      (fetchRequest, errorResponse) => request.handleProcessingError(fetchRequest, errorResponse),
-    );
+    // Detach `client`-provided request to avoid unexpected response processing.
+    request.serviceRequest = undefined;
+
+    if (useChangeAggregation) {
+      // Start the changes aggregation timer if required (this also prepares the queue for `identifier`).
+      this.startAggregationTimer(identifier);
+
+      // Enqueue requests into the aggregated state change queue (delayed).
+      this.enqueueForAggregation(client, request, true, sendLeave, invalidated);
+    } else if (state)
+      state.processChanges([new SubscriptionStateChange(client.identifier, request, true, sendLeave, invalidated)]);
   }
 
   /**
-   * Retrieve aggregation queue for specific PubNub client.
+   * Enqueue {@link SubscribeRequest|subscribe} requests for aggregation after small delay.
    *
-   * @param client - Reference to PubNub client for which subscribe requests queue should be retrieved.
-   * @returns List of client's subscribe requests which is enqueued for aggregation.
+   * @param client - Reference to the {@link PubNubClient|PubNub} client which created
+   * {@link SubscribeRequest|subscribe} request.
+   * @param enqueuedRequest - {@link SubscribeRequest|Subscribe} request which should be placed into the queue.
+   * @param removing - Whether requests enqueued for removal or not.
+   * @param sendLeave - Whether on remove it should leave "free" channels and groups or not.
+   * @param [clientInvalidate=false] - Whether the `subscription` state change was caused by the
+   * {@link PubNubClient|PubNub} client invalidation (unregister) or not.
    */
-  private aggregateQueueForClient(client: PubNubClient) {
-    let queue: { timeout: ReturnType<typeof setTimeout>; requests: Record<string, SubscribeRequest[]> } | undefined;
+  private enqueueForAggregation(
+    client: PubNubClient,
+    enqueuedRequest: SubscribeRequest,
+    removing: boolean,
+    sendLeave: boolean,
+    clientInvalidate = false,
+  ) {
+    const identifier = enqueuedRequest.asIdentifier;
+    // Start the changes aggregation timer if required (this also prepares the queue for `identifier`).
+    this.startAggregationTimer(identifier);
 
-    for (const identifier of Object.keys(this.delayedAggregationQueue)) {
-      if (this.delayedAggregationQueue[identifier].requests[client.identifier]) {
-        queue = this.delayedAggregationQueue[identifier];
-        break;
-      }
-    }
-
-    return queue ? queue.requests[client.identifier] : [];
+    // Enqueue requests into the aggregated state change queue.
+    const { changes } = this.requestsChangeAggregationQueue[identifier];
+    changes.add(new SubscriptionStateChange(client.identifier, enqueuedRequest, removing, sendLeave, clientInvalidate));
   }
 
   /**
-   * Enqueue subscribe requests for aggregation after small delay.
+   * Start requests change aggregation timer.
    *
-   * @param client - Reference to the PubNub client which created subscribe request.
-   * @param enqueuedRequests - List of subscribe requests which should be placed into the queue.
+   * @param identifier - Similar {@link SubscribeRequest|subscribe} requests aggregation identifier.
    */
-  private enqueueForAggregation(client: PubNubClient, enqueuedRequests: SubscribeRequest[]) {
-    const identifier = enqueuedRequests[0].asIdentifier;
+  private startAggregationTimer(identifier: string) {
+    if (this.requestsChangeAggregationQueue[identifier]) return;
 
-    if (!this.delayedAggregationQueue[identifier]) {
-      this.delayedAggregationQueue[identifier] = {
-        timeout: setTimeout(() => this.handleDelayedAggregation(identifier), aggregationTimeout),
-        requests: { [client.identifier]: enqueuedRequests },
-      };
-    } else {
-      const requests = this.delayedAggregationQueue[identifier].requests;
-      if (!requests[client.identifier]) requests[client.identifier] = enqueuedRequests;
-      else
-        enqueuedRequests.forEach(
-          (request) => !requests[client.identifier].includes(request) && requests[client.identifier].push(request),
-        );
-    }
+    this.requestsChangeAggregationQueue[identifier] = {
+      timeout: setTimeout(() => this.handleDelayedAggregation(identifier), aggregationTimeout),
+      changes: new Set<SubscriptionStateChange>(),
+    };
   }
 
   /**
-   * Remove specific or all `client` requests from delayed aggregation queue.
+   * Stop request changes aggregation timer if there is no changes left in queue.
    *
-   * @param client - Reference to the PubNub client which created subscribe request.
-   * @param [request] - Subscribe request which should be removed from the queue.
-   * @returns List of removed requests.
+   * @param identifier - Similar {@link SubscribeRequest|subscribe} requests aggregation identifier.
    */
-  private removeFromAggregationQueue(client: PubNubClient, request?: SubscribeRequest) {
-    let queue: { timeout: ReturnType<typeof setTimeout>; requests: Record<string, SubscribeRequest[]> } | undefined;
-    let removedRequests: SubscribeRequest[] = [];
-    let queueIdentifier: string | undefined;
+  private stopAggregationTimerIfEmptyQueue(identifier: string) {
+    const queue = this.requestsChangeAggregationQueue[identifier];
+    if (!queue) return;
 
-    if (request) {
-      queueIdentifier = request.asIdentifier;
-      queue = this.delayedAggregationQueue[queueIdentifier];
-    } else {
-      // Search where `client` previously stored its requests.
-      for (const identifier of Object.keys(this.delayedAggregationQueue)) {
-        if (this.delayedAggregationQueue[identifier].requests[client.identifier]) {
-          queue = this.delayedAggregationQueue[identifier];
-          queueIdentifier = identifier;
-          break;
-        }
-      }
+    if (queue.changes.size === 0) {
+      if (queue.timeout) clearTimeout(queue.timeout);
+      delete this.requestsChangeAggregationQueue[identifier];
     }
-
-    if (!queueIdentifier || !queue) return removedRequests;
-
-    if (!queue || !queue.requests[client.identifier]) return [];
-
-    if (request) {
-      const requestIdx = queue.requests[client.identifier].indexOf(request);
-      if (requestIdx >= 0) {
-        queue.requests[client.identifier].splice(requestIdx, 1);
-        if (queue.requests[client.identifier].length === 0) delete queue.requests[client.identifier];
-
-        removedRequests = [request];
-      }
-    } else {
-      removedRequests = [...queue.requests[client.identifier]];
-      delete queue.requests[client.identifier];
-    }
-
-    if (Object.keys(queue.requests).length === 0 && queue.timeout) {
-      clearTimeout(queue.timeout);
-      delete this.delayedAggregationQueue[queueIdentifier];
-    }
-
-    return removedRequests;
   }
 
   /**
-   * Handle delayed subscribe requests aggregation.
+   * Handle delayed {@link SubscribeRequest|subscribe} requests aggregation.
    *
-   * @param identifier - Similar subscribe requests aggregation identifier.
+   * @param identifier - Similar {@link SubscribeRequest|subscribe} requests aggregation identifier.
    */
   private handleDelayedAggregation(identifier: string) {
-    if (!this.delayedAggregationQueue[identifier]) return;
+    if (!this.requestsChangeAggregationQueue[identifier]) return;
 
+    const state = this.subscriptionStateForIdentifier(identifier);
+
+    // Squash self-excluding change entries.
+    const changes = [...this.requestsChangeAggregationQueue[identifier].changes];
+    delete this.requestsChangeAggregationQueue[identifier];
+
+    // Apply final changes to the subscription state.
+    state.processChanges(changes);
+  }
+
+  /**
+   * Retrieve existing or create new `subscription` {@link SubscriptionState|state} object for id.
+   *
+   * @param identifier - Similar {@link SubscribeRequest|subscribe} requests aggregation identifier.
+   * @returns Existing or create new `subscription` {@link SubscriptionState|state} object for id.
+   */
+  private subscriptionStateForIdentifier(identifier: string) {
     let state = this.subscriptionStates[identifier];
+
     if (!state) {
-      state = this.subscriptionStates[identifier] = new SubscriptionState();
+      state = this.subscriptionStates[identifier] = new SubscriptionState(identifier);
       // Make sure to receive updates from subscription state.
       this.addListenerForSubscriptionStateEvents(state);
     }
 
-    const requests = Object.values(this.delayedAggregationQueue[identifier].requests)
-      .map((requests) => Object.values(requests))
-      .flat();
-    delete this.delayedAggregationQueue[identifier];
-
-    state.beginChanges();
-    requests.forEach((request) => state.addClientRequests(request.client, [request]));
-    state.commitChanges();
+    return state;
   }
   // endregion
 
@@ -298,11 +332,13 @@ export class SubscribeRequestsManager extends RequestsManager {
   // region Event handlers
 
   /**
-   * Listen for PubNub clients manager events which affects aggregated subscribe / heartbeat requests.
+   * Listen for {@link PubNubClient|PubNub} clients {@link PubNubClientsManager|manager} events that affect aggregated
+   * subscribe/heartbeat requests.
    *
-   * @param clientsManager - Clients manager for which change in clients should be tracked.
+   * @param clientsManager - Clients {@link PubNubClientsManager|manager} for which change in
+   * {@link PubNubClient|clients} should be tracked.
    */
-  private subscribeOnClientEvents(clientsManager: PubNubClientsManager) {
+  private addEventListenersForClientsManager(clientsManager: PubNubClientsManager) {
     clientsManager.addEventListener(PubNubClientsManagerEvent.Registered, (evt) => {
       const { client } = evt as PubNubClientManagerRegisterEvent;
 
@@ -310,24 +346,32 @@ export class SubscribeRequestsManager extends RequestsManager {
       const abortController = new AbortController();
       this.clientAbortControllers[client.identifier] = abortController;
 
-      client.addEventListener(PubNubClientEvent.Disconnect, () => this.removeClient(client, true), {
+      client.addEventListener(PubNubClientEvent.IdentityChange, () => this.moveClient(client), {
         signal: abortController.signal,
       });
-      client.addEventListener(PubNubClientEvent.IdentityChange, () => this.moveClient(client), {
+      client.addEventListener(PubNubClientEvent.AuthChange, () => this.moveClient(client), {
         signal: abortController.signal,
       });
       client.addEventListener(
         PubNubClientEvent.SendSubscribeRequest,
-        (evt) => {
-          const event = evt as PubNubClientSendSubscribeEvent;
-          this.enqueueForAggregation(event.client, [event.request]);
+        (event) => {
+          if (!(event instanceof PubNubClientSendSubscribeEvent)) return;
+          this.enqueueForAggregation(event.client, event.request, false, false);
+        },
+        { signal: abortController.signal },
+      );
+      client.addEventListener(
+        PubNubClientEvent.CancelSubscribeRequest,
+        (event) => {
+          if (!(event instanceof PubNubClientCancelSubscribeEvent)) return;
+          this.enqueueForAggregation(event.client, event.request, true, false);
         },
         { signal: abortController.signal },
       );
       client.addEventListener(
         PubNubClientEvent.SendLeaveRequest,
-        (evt) => {
-          const event = evt as PubNubClientSendLeaveEvent;
+        (event) => {
+          if (!(event instanceof PubNubClientSendLeaveEvent)) return;
           const request = this.patchedLeaveRequest(event.request);
           if (!request) return;
 
@@ -340,8 +384,8 @@ export class SubscribeRequestsManager extends RequestsManager {
         { signal: abortController.signal },
       );
     });
-    clientsManager.addEventListener(PubNubClientsManagerEvent.Unregistered, (evt) => {
-      const { client, withLeave } = evt as PubNubClientManagerUnregisterEvent;
+    clientsManager.addEventListener(PubNubClientsManagerEvent.Unregistered, (event) => {
+      const { client, withLeave } = event as PubNubClientManagerUnregisterEvent;
 
       // Remove all listeners added for the client.
       const abortController = this.clientAbortControllers[client.identifier];
@@ -349,35 +393,71 @@ export class SubscribeRequestsManager extends RequestsManager {
       if (abortController) abortController.abort();
 
       // Update manager's state.
-      this.removeClient(client, withLeave);
+      this.removeClient(client, false, withLeave, true);
     });
   }
 
   /**
-   * Listen for subscription state events.
+   * Listen for subscription {@link SubscriptionState|state} events.
    *
    * @param state - Reference to the subscription object for which listeners should be added.
    */
   private addListenerForSubscriptionStateEvents(state: SubscriptionState) {
-    state.addEventListener(SubscriptionStateEvent.Changed, (evt) => {
-      const event = evt as SubscriptionStateChangeEvent;
+    const abortController = new AbortController();
 
-      // Cancel outdated ongoing service requests.
-      event.canceledRequests.forEach((request) => this.cancelRequest(request));
+    state.addEventListener(
+      SubscriptionStateEvent.Changed,
+      (event) => {
+        const { requestsWithInitialResponse, canceledRequests, newRequests, leaveRequest } =
+          event as SubscriptionStateChangeEvent;
 
-      // Schedule new service requests processing.
-      event.newRequests.forEach((request) => {
-        this.sendRequest(
-          request,
-          (fetchRequest, response) => request.handleProcessingSuccess(fetchRequest, response),
-          (fetchRequest, error) => request.handleProcessingError(fetchRequest, error),
-          request.isInitialSubscribe && request.timetokenOverride !== '0'
-            ? (response) =>
-                this.patchInitialSubscribeResponse(response, request.timetokenOverride, request.timetokenRegionOverride)
-            : undefined,
-        );
-      });
-    });
+        // Cancel outdated ongoing `service`-provided subscribe requests.
+        canceledRequests.forEach((request) => request.cancel('Cancel request'));
+
+        // Schedule new `service`-provided subscribe requests processing.
+        newRequests.forEach((request) => {
+          this.sendRequest(
+            request,
+            (fetchRequest, response) => request.handleProcessingSuccess(fetchRequest, response),
+            (fetchRequest, error) => request.handleProcessingError(fetchRequest, error),
+            request.isInitialSubscribe && request.timetokenOverride !== '0'
+              ? (response) =>
+                  this.patchInitialSubscribeResponse(
+                    response,
+                    request.timetokenOverride,
+                    request.timetokenRegionOverride,
+                  )
+              : undefined,
+          );
+        });
+
+        requestsWithInitialResponse.forEach((response) => {
+          const { request, timetoken, region } = response;
+          request.handleProcessingStarted();
+          this.makeResponseOnHandshakeRequest(request, timetoken, region);
+        });
+
+        if (leaveRequest) {
+          this.sendRequest(
+            leaveRequest,
+            (fetchRequest, response) => leaveRequest.handleProcessingSuccess(fetchRequest, response),
+            (fetchRequest, error) => leaveRequest.handleProcessingError(fetchRequest, error),
+          );
+        }
+      },
+      { signal: abortController.signal },
+    );
+    state.addEventListener(
+      SubscriptionStateEvent.Invalidated,
+      () => {
+        delete this.subscriptionStates[state.identifier];
+        abortController.abort();
+      },
+      {
+        signal: abortController.signal,
+        once: true,
+      },
+    );
   }
   // endregion
 
@@ -387,15 +467,28 @@ export class SubscribeRequestsManager extends RequestsManager {
   // region Helpers
 
   /**
-   * Create service `leave` request from client-provided request with channels and groups for removal.
+   * Retrieve subscription {@link SubscriptionState|state} with which specific client is working.
    *
-   * @param request - Original client-provided `leave` request.
-   * @returns Service `leave` request.
+   * @param client - Reference to the {@link PubNubClient|PubNub} client for which subscription
+   * {@link SubscriptionState|state} should be found.
+   * @returns Reference to the subscription {@link SubscriptionState|state} if the client has ongoing
+   * {@link SubscribeRequest|requests}.
+   */
+  private subscriptionStateForClient(client: PubNubClient) {
+    return Object.values(this.subscriptionStates).find((state) => state.hasStateForClient(client));
+  }
+
+  /**
+   * Create `service`-provided `leave` request from a `client`-provided {@link LeaveRequest|request} with channels and
+   * groups for removal.
+   *
+   * @param request - Original `client`-provided `leave` {@link LeaveRequest|request}.
+   * @returns `service`-provided `leave` request.
    */
   private patchedLeaveRequest(request: LeaveRequest) {
     const subscriptionState = this.subscriptionStateForClient(request.client);
+    // Something is wrong. Client doesn't have any active subscriptions.
     if (!subscriptionState) {
-      // Something is wrong. Client doesn't have any active subscriptions.
       request.cancel();
       return;
     }
@@ -407,63 +500,43 @@ export class SubscribeRequestsManager extends RequestsManager {
       request.channelGroups,
     );
 
-    const serviceRequest = this.leaveRequest(
+    const serviceRequest = leaveRequest(
       request.client,
       clientStateForLeave.channels,
       clientStateForLeave.channelGroups,
     );
     if (serviceRequest) request.serviceRequest = serviceRequest;
+
     return serviceRequest;
   }
 
   /**
-   * Create service `leave` request for specific PubNub client with channels and groups for removal.
+   * Return "response" from PubNub service with initial timetoken data.
    *
-   * @param client - Reference to the PubNub client whose credentials should be used for new request.
-   * @param channels - List of channels which not used by any other clients and can be left.
-   * @param channelGroups - List of channel groups which no used by any other clients and can be left.
-   * @returns Service `leave` request.
+   * @param request - Client-provided handshake/initial request for which response should be provided.
+   * @param timetoken - Timetoken from currently active service request.
+   * @param region - Region from currently active service request.
    */
-  private leaveRequest(client: PubNubClient, channels: string[], channelGroups: string[]) {
-    channels = channels
-      .filter((channel) => !channel.endsWith('-pnpres'))
-      .map((channel) => this.encodeString(channel))
-      .sort();
-    channelGroups = channelGroups
-      .filter((channelGroup) => !channelGroup.endsWith('-pnpres'))
-      .map((channelGroup) => this.encodeString(channelGroup))
-      .sort();
+  private makeResponseOnHandshakeRequest(request: SubscribeRequest, timetoken: string, region: string) {
+    const body = new TextEncoder().encode(`{"t":{"t":"${timetoken}","r":${region ?? '0'}},"m":[]}`);
 
-    if (channels.length === 0 && channelGroups.length === 0) return undefined;
-
-    const channelGroupsString: string | undefined = channelGroups.length > 0 ? channelGroups.join(',') : undefined;
-    const channelsString = channels.length === 0 ? ',' : channels.join(',');
-
-    const query: Query = {
-      instanceid: client.identifier,
-      uuid: client.userId,
-      requestid: uuidGenerator.createUUID(),
-      ...(client.accessToken ? { auth: client.accessToken.toString() } : {}),
-      ...(channelGroupsString ? { 'channel-group': channelGroupsString } : {}),
-    };
-
-    const transportRequest: TransportRequest = {
-      origin: client.origin,
-      path: `/v2/presence/sub-key/${client.subKey}/channel/${channelsString}/leave`,
-      queryParameters: query,
-      method: TransportMethod.GET,
-      headers: {},
-      timeout: 10,
-      cancellable: false,
-      compressible: false,
-      identifier: query.requestid as string,
-    };
-
-    return LeaveRequest.fromTransportRequest(transportRequest, client.subKey, client.accessToken);
+    request.handleProcessingSuccess(request.asFetchRequest, {
+      type: 'request-process-success',
+      clientIdentifier: '',
+      identifier: '',
+      url: '',
+      response: {
+        contentType: 'text/javascript; charset="UTF-8"',
+        contentLength: body.length,
+        headers: { 'content-type': 'text/javascript; charset="UTF-8"', 'content-length': `${body.length}` },
+        status: 200,
+        body,
+      },
+    });
   }
 
   /**
-   * Patch subscribe service response with new timetoken and region.
+   * Patch `service`-provided subscribe response with new timetoken and region.
    *
    * @param serverResponse - Original service response for patching.
    * @param timetoken - Original timetoken override value.
@@ -514,6 +587,5 @@ export class SubscribeRequestsManager extends RequestsManager {
 
     return body.byteLength > 0 ? [decidedResponse, body] : serverResponse;
   }
-
   // endregion
 }

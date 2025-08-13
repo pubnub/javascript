@@ -4,6 +4,7 @@ import {
   PubNubClientAuthChangeEvent,
   PubNubClientSendHeartbeatEvent,
   PubNubClientHeartbeatIntervalChangeEvent,
+  PubNubClientIdentityChangeEvent,
 } from './custom-events/client-event';
 import {
   PubNubClientsManagerEvent,
@@ -77,7 +78,7 @@ export class HeartbeatRequestsManager extends RequestsManager {
    */
   private heartbeatStateForClient(client: PubNubClient) {
     for (const heartbeatState of Object.values(this.heartbeatStates))
-      if (heartbeatState.stateForClient(client)) return heartbeatState;
+      if (!!heartbeatState.stateForClient(client)) return heartbeatState;
 
     return undefined;
   }
@@ -85,10 +86,10 @@ export class HeartbeatRequestsManager extends RequestsManager {
   /**
    * Move client between heartbeat states.
    *
-   * This function used when PubNub client changed its identity (`userId`) and can't be aggregated with previous
-   * requests.
+   * This function used when PubNub client changed its identity (`userId`) or auth (`access token`) and can't be
+   * aggregated with previous requests.
    *
-   * @param client - Reference to the PubNub client which should be moved to new state.
+   * @param client - Reference to the  {@link PubNubClient|PubNub} client which should be moved to new state.
    */
   private moveClient(client: PubNubClient) {
     const state = this.heartbeatStateForClient(client);
@@ -110,7 +111,7 @@ export class HeartbeatRequestsManager extends RequestsManager {
 
     let state = this.heartbeatStates[identifier];
     if (!state) {
-      state = this.heartbeatStates[identifier] = new HeartbeatState();
+      state = this.heartbeatStates[identifier] = new HeartbeatState(identifier);
       state.interval = client.heartbeatInterval ?? 0;
 
       // Make sure to receive updates from heartbeat state.
@@ -120,9 +121,8 @@ export class HeartbeatRequestsManager extends RequestsManager {
       state.interval > 0 &&
       client.heartbeatInterval > 0 &&
       client.heartbeatInterval < state.interval
-    ) {
+    )
       state.interval = client.heartbeatInterval;
-    }
 
     state.addClientRequest(client, request);
   }
@@ -162,16 +162,33 @@ export class HeartbeatRequestsManager extends RequestsManager {
       client.addEventListener(PubNubClientEvent.Disconnect, () => this.removeClient(client), {
         signal: abortController.signal,
       });
-      client.addEventListener(PubNubClientEvent.IdentityChange, () => this.moveClient(client), {
-        signal: abortController.signal,
-      });
+      client.addEventListener(
+        PubNubClientEvent.IdentityChange,
+        (event) => {
+          if (!(event instanceof PubNubClientIdentityChangeEvent)) return;
+          const state = this.heartbeatStateForClient(client);
+          const request = state ? state.requestForClient(client) : undefined;
+          if (request) request.userId = event.newUserId;
+
+          this.moveClient(client);
+        },
+        {
+          signal: abortController.signal,
+        },
+      );
       client.addEventListener(
         PubNubClientEvent.AuthChange,
-        (evt) => {
+        (event) => {
+          if (!(event instanceof PubNubClientAuthChangeEvent)) return;
           const state = this.heartbeatStateForClient(client);
-          if (state) state.accessToken = (evt as PubNubClientAuthChangeEvent).newAuth;
+          const request = state ? state.requestForClient(client) : undefined;
+          if (request) request.accessToken = event.newAuth;
+
+          this.moveClient(client);
         },
-        { signal: abortController.signal },
+        {
+          signal: abortController.signal,
+        },
       );
       client.addEventListener(
         PubNubClientEvent.HeartbeatIntervalChange,
@@ -218,15 +235,29 @@ export class HeartbeatRequestsManager extends RequestsManager {
    * @param state - Reference to the subscription object for which listeners should be added.
    */
   private addListenerForHeartbeatStateEvents(state: HeartbeatState) {
-    state.addEventListener(HeartbeatStateEvent.Heartbeat, (evt) => {
-      const { request } = evt as HeartbeatStateHeartbeatEvent;
+    const abortController = new AbortController();
 
-      this.sendRequest(
-        request,
-        (fetchRequest, response) => request.handleProcessingSuccess(fetchRequest, response),
-        (fetchRequest, error) => request.handleProcessingError(fetchRequest, error),
-      );
-    });
+    state.addEventListener(
+      HeartbeatStateEvent.Heartbeat,
+      (evt) => {
+        const { request } = evt as HeartbeatStateHeartbeatEvent;
+
+        this.sendRequest(
+          request,
+          (fetchRequest, response) => request.handleProcessingSuccess(fetchRequest, response),
+          (fetchRequest, error) => request.handleProcessingError(fetchRequest, error),
+        );
+      },
+      { signal: abortController.signal },
+    );
+    state.addEventListener(
+      HeartbeatStateEvent.Invalidated,
+      () => {
+        delete this.heartbeatStates[state.identifier];
+        abortController.abort();
+      },
+      { signal: abortController.signal, once: true },
+    );
   }
   // endregion
 }

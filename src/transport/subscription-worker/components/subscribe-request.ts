@@ -1,25 +1,32 @@
 import { TransportRequest } from '../../../core/types/transport-request';
 import uuidGenerator from '../../../core/components/uuid';
-import { PubNubSharedWorkerRequest } from './request';
 import { Payload } from '../../../core/types/api';
+import { BasePubNubRequest } from './request';
 import { AccessToken } from './access-token';
 
-export class SubscribeRequest extends PubNubSharedWorkerRequest {
+export class SubscribeRequest extends BasePubNubRequest {
   // --------------------------------------------------------
   // ---------------------- Information ---------------------
   // --------------------------------------------------------
   // region Information
 
   /**
-   * Presence state associated with `userID` on {@link PubNubSharedWorkerRequest.channels|channels} and
-   * {@link PubNubSharedWorkerRequest.channelGroups|channelGroups}.
+   * Global subscription request creation date tracking.
+   *
+   * Tracking is required to handle about rapid requests receive and need to know which of them were earlier.
+   */
+  private static lastCreationDate = 0;
+
+  /**
+   * Presence state associated with `userID` on {@link SubscribeRequest.channels|channels} and
+   * {@link SubscribeRequest.channelGroups|channelGroups}.
    */
   readonly state: Record<string, Payload> | undefined;
 
   /**
    * Request creation timestamp.
    */
-  readonly creationDate = Date.now();
+  private readonly _creationDate = Date.now();
 
   /**
    * Timetoken region which should be used to patch timetoken origin in initial response.
@@ -34,17 +41,17 @@ export class SubscribeRequest extends PubNubSharedWorkerRequest {
   /**
    * Subscription loop timetoken.
    */
-  readonly timetoken: string;
+  private _timetoken: string;
 
   /**
    * Subscription loop timetoken's region.
    */
-  readonly region?: string;
+  private _region?: string;
 
   /**
    * Whether request requires client's cached subscription state reset or not.
    */
-  readonly requireCachedStateReset: boolean;
+  private _requireCachedStateReset: boolean;
 
   /**
    * Real-time events filtering expression.
@@ -63,8 +70,7 @@ export class SubscribeRequest extends PubNubSharedWorkerRequest {
    * @param request - Object with subscribe transport request.
    * @param subscriptionKey - Subscribe REST API access key.
    * @param [accessToken] - Access token with read permissions on
-   * {@link PubNubSharedWorkerRequest.channels|channels} and
-   * {@link PubNubSharedWorkerRequest.channelGroups|channelGroups}.
+   * {@link SubscribeRequest.channels|channels} and {@link SubscribeRequest.channelGroups|channelGroups}.
    * @returns Initialized and ready to use subscribe request.
    */
   static fromTransportRequest(request: TransportRequest, subscriptionKey: string, accessToken?: AccessToken) {
@@ -96,8 +102,8 @@ export class SubscribeRequest extends PubNubSharedWorkerRequest {
       request,
       subscriptionKey,
       accessToken,
-      cachedChannels,
       cachedChannelGroups,
+      cachedChannels,
       cachedState,
     );
   }
@@ -107,8 +113,7 @@ export class SubscribeRequest extends PubNubSharedWorkerRequest {
    *
    * @param requests - List of subscribe requests for same the user.
    * @param [accessToken] - Access token with permissions to announce presence on
-   * {@link PubNubSharedWorkerRequest.channels|channels} and
-   * {@link PubNubSharedWorkerRequest.channelGroups|channelGroups}.
+   * {@link SubscribeRequest.channels|channels} and {@link SubscribeRequest.channelGroups|channelGroups}.
    * @param timetokenOverride - Timetoken which should be used to patch timetoken in initial response.
    * @param timetokenRegionOverride - Timetoken origin which should be used to patch timetoken origin in initial
    * response.
@@ -166,9 +171,8 @@ export class SubscribeRequest extends PubNubSharedWorkerRequest {
    *
    * @param request - Object with subscribe transport request.
    * @param subscriptionKey - Subscribe REST API access key.
-   * @param [accessToken] - Access token with read permissions on
-   * {@link PubNubSharedWorkerRequest.channels|channels} and
-   * {@link PubNubSharedWorkerRequest.channelGroups|channelGroups}.
+   * @param [accessToken] - Access token with read permissions on {@link SubscribeRequest.channels|channels} and
+   * {@link SubscribeRequest.channelGroups|channelGroups}.
    * @param [cachedChannels] - Previously cached list of channels for subscription.
    * @param [cachedChannelGroups] - Previously cached list of channel groups for subscription.
    * @param [cachedState] - Previously cached user's presence state for channels and groups.
@@ -183,23 +187,29 @@ export class SubscribeRequest extends PubNubSharedWorkerRequest {
   ) {
     // Retrieve information about request's origin (who initiated it).
     const requireCachedStateReset = !!request.queryParameters && 'on-demand' in request.queryParameters;
-    if (requireCachedStateReset) delete request.queryParameters!['on-demand'];
+    delete request.queryParameters!['on-demand'];
 
     super(
       request,
       subscriptionKey,
-      cachedChannelGroups ?? SubscribeRequest.channelGroupsFromRequest(request),
-      cachedChannels ?? SubscribeRequest.channelsFromRequest(request),
       request.queryParameters!.uuid as string,
+      cachedChannels ?? SubscribeRequest.channelsFromRequest(request),
+      cachedChannelGroups ?? SubscribeRequest.channelGroupsFromRequest(request),
       accessToken,
     );
 
-    this.requireCachedStateReset = requireCachedStateReset;
+    // Shift on millisecond creation timestamp for two sequential requests.
+    if (this._creationDate <= SubscribeRequest.lastCreationDate) {
+      SubscribeRequest.lastCreationDate++;
+      this._creationDate = SubscribeRequest.lastCreationDate;
+    } else SubscribeRequest.lastCreationDate = this._creationDate;
+
+    this._requireCachedStateReset = requireCachedStateReset;
 
     if (request.queryParameters!['filter-expr'])
       this.filterExpression = request.queryParameters!['filter-expr'] as string;
-    this.timetoken = (request.queryParameters!.tt ?? '0') as string;
-    if (request.queryParameters!.tr) this.region = request.queryParameters!.tr as string;
+    this._timetoken = (request.queryParameters!.tt ?? '0') as string;
+    if (request.queryParameters!.tr) this._region = request.queryParameters!.tr as string;
     if (cachedState) this.state = cachedState;
 
     // Clean up `state` from objects which is not used with request (if needed).
@@ -220,6 +230,15 @@ export class SubscribeRequest extends PubNubSharedWorkerRequest {
   // region Properties
 
   /**
+   * Retrieve `subscribe` request creation timestamp.
+   *
+   * @returns `Subscribe` request creation timestamp.
+   */
+  get creationDate() {
+    return this._creationDate;
+  }
+
+  /**
    * Represent subscribe request as identifier.
    *
    * Generated identifier will be identical for requests created for the same user.
@@ -236,7 +255,59 @@ export class SubscribeRequest extends PubNubSharedWorkerRequest {
    * @returns `true` if subscribe REST API called with missing or `tt=0` query parameter.
    */
   get isInitialSubscribe() {
-    return this.timetoken === '0';
+    return this._timetoken === '0';
+  }
+
+  /**
+   * Retrieve subscription loop timetoken.
+   *
+   * @returns Subscription loop timetoken.
+   */
+  get timetoken() {
+    return this._timetoken;
+  }
+
+  /**
+   * Update subscription loop timetoken.
+   *
+   * @param value - New timetoken that should be used in PubNub REST API calls.
+   */
+  set timetoken(value: string) {
+    this._timetoken = value;
+
+    // Update value for transport request object.
+    this.request.queryParameters!.tt = value;
+  }
+
+  /**
+   * Retrieve subscription loop timetoken's region.
+   *
+   * @returns Subscription loop timetoken's region.
+   */
+  get region() {
+    return this._region;
+  }
+
+  /**
+   * Update subscription loop timetoken's region.
+   *
+   * @param value - New timetoken's region that should be used in PubNub REST API calls.
+   */
+  set region(value: string | undefined) {
+    this._region = value;
+
+    // Update value for transport request object.
+    if (value) this.request.queryParameters!.tr = value;
+    else delete this.request.queryParameters!.tr;
+  }
+
+  /**
+   * Retrieve whether the request requires the client's cached subscription state reset or not.
+   *
+   * @returns `true` if a subscribe request has been created on user request (`subscribe()` call) or not.
+   */
+  get requireCachedStateReset() {
+    return this._requireCachedStateReset;
   }
   // endregion
 
@@ -252,20 +323,64 @@ export class SubscribeRequest extends PubNubSharedWorkerRequest {
    * @returns `true` if request created not by user (subscription loop).
    */
   static useCachedState(request: TransportRequest) {
-    return !!request.queryParameters && 'on-demand' in request.queryParameters;
+    return !!request.queryParameters && !('on-demand' in request.queryParameters);
   }
 
   /**
-   * Check whether received is subset of another `subscribe` request.
+   * Reset the inner state of the `subscribe` request object to the one that `initial` requests.
+   */
+  resetToInitialRequest() {
+    this._requireCachedStateReset = true;
+    this._timetoken = '0';
+    this._region = undefined;
+
+    delete this.request.queryParameters!.tt;
+  }
+
+  /**
+   * Check whether received is a subset of another `subscribe` request.
    *
-   * @param request - Request which should be checked to be superset for received.
-   * @retuns `true` in case if receiver is subset of another `subscribe` request.
+   * If the receiver is a subset of another means:
+   * - list of channels of another `subscribe` request includes all channels from the receiver,
+   * - list of channel groups of another `subscribe` request includes all channel groups from the receiver,
+   * - receiver's timetoken equal to `0` or another request `timetoken`.
+   *
+   * @param request - Request that should be checked to be a superset of received.
+   * @retuns `true` in case if the receiver is a subset of another `subscribe` request.
    */
   isSubsetOf(request: SubscribeRequest): boolean {
-    if (request.channelGroups.length && !this.includesStrings(this.channelGroups, request.channelGroups)) return false;
-    if (request.channels.length && !this.includesStrings(this.channels, request.channels)) return false;
+    if (request.channelGroups.length && !this.includesStrings(request.channelGroups, this.channelGroups)) return false;
+    if (request.channels.length && !this.includesStrings(request.channels, this.channels)) return false;
 
-    return this.filterExpression === request.filterExpression;
+    return this.timetoken === '0' || this.timetoken === request.timetoken || request.timetoken === '0';
+  }
+
+  /**
+   * Serialize request for easier representation in logs.
+   *
+   * @returns Stringified `subscribe` request.
+   */
+  toString() {
+    return `SubscribeRequest { clientIdentifier: ${
+      this.client ? this.client.identifier : 'service request'
+    }, requestIdentifier: ${this.identifier}, serviceRequestIdentified: ${
+      this.client ? (this.serviceRequest ? this.serviceRequest.identifier : "'not set'") : "'is service request"
+    }, channels: [${
+      this.channels.length ? this.channels.map((channel) => `'${channel}'`).join(', ') : ''
+    }], channelGroups: [${
+      this.channelGroups.length ? this.channelGroups.map((group) => `'${group}'`).join(', ') : ''
+    }], timetoken: ${this.timetoken}, region: ${this.region}, reset: ${
+      this._requireCachedStateReset ? "'reset'" : "'do not reset'"
+    } }`;
+  }
+
+  /**
+   * Serialize request to "typed" JSON string.
+   *
+   * @returns "Typed" JSON string.
+   */
+  toJSON() {
+    return this.toString();
   }
 
   /**

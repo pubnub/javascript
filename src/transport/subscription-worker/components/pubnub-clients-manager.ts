@@ -2,10 +2,15 @@ import {
   PubNubClientManagerRegisterEvent,
   PubNubClientManagerUnregisterEvent,
 } from './custom-events/client-manager-event';
-import { PubNubClientEvent } from './custom-events/client-event';
+import { PubNubClientEvent, PubNubClientUnregisterEvent } from './custom-events/client-event';
 import { RegisterEvent } from '../subscription-worker-types';
 import { PubNubClient } from './pubnub-client';
 
+/**
+ * Registered {@link PubNubClient|PubNub} client instances manager.
+ *
+ * Manager responsible for keeping track and interaction with registered {@link PubNubClient|PubNub}.
+ */
 export class PubNubClientsManager extends EventTarget {
   // --------------------------------------------------------
   // ---------------------- Information ---------------------
@@ -13,19 +18,19 @@ export class PubNubClientsManager extends EventTarget {
   // region Information
 
   /**
-   * Map of started `PING` timeouts per-subscription key.
+   * Map of started `PING` timeouts per subscription key.
    */
   private timeouts: {
     [subKey: string]: { timeout?: ReturnType<typeof setTimeout>; interval: number; unsubscribeOffline: boolean };
   } = {};
 
   /**
-   * Map of previously created PubNub clients.
+   * Map of previously created {@link PubNubClient|PubNub} clients.
    */
   private clients: Record<string, { client: PubNubClient; abortController: AbortController }> = {};
 
   /**
-   * Map of previously created PubNub clients to the corresponding subscription key.
+   * Map of previously created {@link PubNubClient|PubNub} clients to the corresponding subscription key.
    */
   private clientBySubscribeKey: Record<string, PubNubClient[]> = {};
   // endregion
@@ -36,9 +41,9 @@ export class PubNubClientsManager extends EventTarget {
   // region Constructors
 
   /**
-   * Create PubNub clients manager.
+   * Create {@link PubNubClient|PubNub} clients manager.
    *
-   * @param sharedWorkerIdentifier - Unique `Subscription` worker identifier which will work with clients.
+   * @param sharedWorkerIdentifier - Unique `Subscription` worker identifier that will work with clients.
    */
   constructor(private readonly sharedWorkerIdentifier: string) {
     super();
@@ -51,13 +56,13 @@ export class PubNubClientsManager extends EventTarget {
   // region Client registration
 
   /**
-   * Create PubNub client.
+   * Create {@link PubNubClient|PubNub} client.
    *
-   * Function called in response to the `client-register` from the core PubNub client module.
+   * Function called in response to the `client-register` from the core {@link PubNubClient|PubNub} client module.
    *
-   * @param event - Registration event with base PubNub client information.
-   * @param port - Message port for two-way communication with core PunNub client module.
-   * @returns New PubNub client or existing from the cache.
+   * @param event - Registration event with base {@link PubNubClient|PubNub} client information.
+   * @param port - Message port for two-way communication with core {@link PubNubClient|PubNub} client module.
+   * @returns New {@link PubNubClient|PubNub} client or existing one from the cache.
    */
   createClient(event: RegisterEvent, port: MessagePort) {
     if (this.clients[event.clientIdentifier]) return this.clients[event.clientIdentifier];
@@ -86,9 +91,9 @@ export class PubNubClientsManager extends EventTarget {
   }
 
   /**
-   * Store PubNub client in manager's internal state.
+   * Store {@link PubNubClient|PubNub} client in manager's internal state.
    *
-   * @param client - Freshly created PubNub client which should be registered.
+   * @param client - Freshly created {@link PubNubClient|PubNub} client which should be registered.
    */
   private registerClient(client: PubNubClient) {
     this.clients[client.identifier] = { client, abortController: new AbortController() };
@@ -106,22 +111,20 @@ export class PubNubClientsManager extends EventTarget {
     );
 
     this.subscribeOnClientEvents(client);
-
-    // Notify other components that new client is registered and ready for usage.
     this.dispatchEvent(new PubNubClientManagerRegisterEvent(client));
   }
 
   /**
-   * Remove PubNub client from manager's internal state.
+   * Remove {@link PubNubClient|PubNub} client from manager's internal state.
    *
-   * @param client - Previously created PubNub client which should be removed.
+   * @param client - Previously created {@link PubNubClient|PubNub} client which should be removed.
    * @param withLeave - Whether `leave` request should be sent or not.
    */
   private unregisterClient(client: PubNubClient, withLeave = false) {
     if (!this.clients[client.identifier]) return;
 
     // Make sure to detach all listeners for this `client`.
-    this.clients[client.identifier].abortController.abort();
+    if (this.clients[client.identifier].abortController) this.clients[client.identifier].abortController.abort();
     delete this.clients[client.identifier];
 
     const clientsBySubscribeKey = this.clientBySubscribeKey[client.subKey];
@@ -143,7 +146,6 @@ export class PubNubClientsManager extends EventTarget {
       ),
     );
 
-    // Notify other components that client is unregistered and non-operational anymore.
     this.dispatchEvent(new PubNubClientManagerUnregisterEvent(client, withLeave));
   }
   // endregion
@@ -154,12 +156,12 @@ export class PubNubClientsManager extends EventTarget {
   // region Availability check
 
   /**
-   * Start timer for _timeout_ PubNub client checks.
+   * Start timer for _timeout_ {@link PubNubClient|PubNub} client checks.
    *
-   * @param subKey - Subscription key to get list of PubNub clients which should be checked.
+   * @param subKey - Subscription key to get list of {@link PubNubClient|PubNub} clients that should be checked.
    * @param interval - Interval at which _timeout_ check should be done.
-   * @param unsubscribeOffline - Whether _timeout_ (or _offline_) PubNub clients should send `leave` request before
-   * invalidation or not.
+   * @param unsubscribeOffline - Whether _timeout_ (or _offline_) {@link PubNubClient|PubNub} clients should send
+   * `leave` request before invalidation or not.
    */
   private startClientTimeoutCheck(subKey: string, interval: number, unsubscribeOffline: boolean) {
     if (this.timeouts[subKey]) return;
@@ -176,11 +178,12 @@ export class PubNubClientsManager extends EventTarget {
   }
 
   /**
-   * Stop _timeout_ (or _offline_) PubNub clients pinging.
+   * Stop _timeout_ (or _offline_) {@link PubNubClient|PubNub} clients pinging.
    *
-   * **Note:** This method used only when all clients for specific subscription key has been unregistered.
+   * **Note:** This method is used only when all clients for a specific subscription key have been unregistered.
    *
-   * @param client - PubNub client with which last client related by subscription key has been removed.
+   * @param client - {@link PubNubClient|PubNub} client with which the last client related by subscription key has been
+   * removed.
    */
   private stopClientTimeoutCheck(client: PubNubClient) {
     if (!this.timeouts[client.subKey]) return;
@@ -190,9 +193,9 @@ export class PubNubClientsManager extends EventTarget {
   }
 
   /**
-   * Handle periodic PubNub client timeout check.
+   * Handle periodic {@link PubNubClient|PubNub} client timeout checks.
    *
-   * @param subKey - Subscription key to get list of PubNub clients which should be checked.
+   * @param subKey - Subscription key to get list of {@link PubNubClient|PubNub} clients that should be checked.
    */
   private handleTimeoutCheck(subKey: string) {
     if (!this.timeouts[subKey]) return;
@@ -230,9 +233,9 @@ export class PubNubClientsManager extends EventTarget {
   // region Event handlers
 
   /**
-   * Listen for PubNub client events which affects aggregated subscribe / heartbeat requests.
+   * Listen for {@link PubNubClient|PubNub} client events that affect aggregated subscribe/heartbeat requests.
    *
-   * @param client - PubNub client for which event should be listened.
+   * @param client - {@link PubNubClient|PubNub} client for which event should be listened.
    */
   private subscribeOnClientEvents(client: PubNubClient) {
     client.addEventListener(
@@ -253,10 +256,10 @@ export class PubNubClientsManager extends EventTarget {
   // region Helpers
 
   /**
-   * Call callback function for all PubNub clients which has similar `subscribeKey`.
+   * Call callback function for all {@link PubNubClient|PubNub} clients that have similar `subscribeKey`.
    *
    * @param subKey - Subscription key for which list of clients should be retrieved.
-   * @param callback - Function which will be called for each clients list entry.
+   * @param callback - Function that will be called for each client list entry.
    */
   private forEachClient(subKey: string, callback: (client: PubNubClient) => void) {
     if (!this.clientBySubscribeKey[subKey]) return;

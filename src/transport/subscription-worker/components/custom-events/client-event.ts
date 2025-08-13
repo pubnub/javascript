@@ -25,8 +25,6 @@ export enum PubNubClientEvent {
    *
    * On identity change for proper further operation expected following actions:
    * - send immediate heartbeat with new `user ID` (if has been sent before)
-   * - start subscribe long-poll request with new `user ID` (if has been sent before). If it required, cancel previous
-   * long-poll request.
    */
   IdentityChange = 'identityChange',
 
@@ -34,7 +32,6 @@ export enum PubNubClientEvent {
    * Authentication token change event.
    *
    * On authentication token change for proper further operation expected following actions:
-   * - cached `subscribe` request query parameter updated
    * - cached `heartbeat` request query parameter updated
    */
   AuthChange = 'authChange',
@@ -51,6 +48,11 @@ export enum PubNubClientEvent {
    * Core PubNub client module request to send `subscribe` request.
    */
   SendSubscribeRequest = 'sendSubscribeRequest',
+
+  /**
+   * Core PubNub client module request to _cancel_ specific `subscribe` request.
+   */
+  CancelSubscribeRequest = 'cancelSubscribeRequest',
 
   /**
    * Core PubNub client module request to send `heartbeat` request.
@@ -91,9 +93,9 @@ export class PubNubClientUnregisterEvent extends BasePubNubClientEvent {
   }
 
   /**
-   * Create clone of unregister event to make it possible to forward event upstream.
+   * Create a clone of `unregister` event to make it possible to forward event upstream.
    *
-   * @returns Client unregister event.
+   * @returns Clone of `unregister` event.
    */
   clone() {
     return new PubNubClientUnregisterEvent(this.client);
@@ -114,9 +116,9 @@ export class PubNubClientDisconnectEvent extends BasePubNubClientEvent {
   }
 
   /**
-   * Create clone of disconnect event to make it possible to forward event upstream.
+   * Create a clone of `disconnect` event to make it possible to forward event upstream.
    *
-   * @returns Client disconnect event.
+   * @returns Clone of `disconnect` event.
    */
   clone() {
     return new PubNubClientDisconnectEvent(this.client);
@@ -160,9 +162,9 @@ export class PubNubClientIdentityChangeEvent extends BasePubNubClientEvent<{
   }
 
   /**
-   * Create clone of identity change event to make it possible to forward event upstream.
+   * Create a clone of `identity` _change_ event to make it possible to forward event upstream.
    *
-   * @returns Client identity change event.
+   * @returns Clone of `identity` _change_ event.
    */
   clone() {
     return new PubNubClientIdentityChangeEvent(this.client, this.oldUserId, this.newUserId);
@@ -174,16 +176,16 @@ export class PubNubClientIdentityChangeEvent extends BasePubNubClientEvent<{
  */
 export class PubNubClientAuthChangeEvent extends BasePubNubClientEvent<{
   oldAuth?: AccessToken;
-  newAuth: AccessToken;
+  newAuth?: AccessToken;
 }> {
   /**
    * Create PubNub client authentication change event.
    *
    * @param client - Reference to the PubNub client which changed authentication.
-   * @param newAuth - Authentication which will used by the `client`.
+   * @param [newAuth] - Authentication which will used by the `client`.
    * @param [oldAuth] - Authentication which has been previously used by the `client`.
    */
-  constructor(client: PubNubClient, newAuth: AccessToken, oldAuth?: AccessToken) {
+  constructor(client: PubNubClient, newAuth?: AccessToken, oldAuth?: AccessToken) {
     super(PubNubClientEvent.AuthChange, { detail: { client, oldAuth, newAuth } });
   }
 
@@ -206,9 +208,9 @@ export class PubNubClientAuthChangeEvent extends BasePubNubClientEvent<{
   }
 
   /**
-   * Create clone of authentication change event to make it possible to forward event upstream.
+   * Create a clone of `authentication` _change_ event to make it possible to forward event upstream.
    *
-   * @returns Client authentication change event.
+   * @returns Clone `authentication` _change_ event.
    */
   clone() {
     return new PubNubClientAuthChangeEvent(this.client, this.newAuth, this.oldAuth);
@@ -252,9 +254,9 @@ export class PubNubClientHeartbeatIntervalChangeEvent extends BasePubNubClientEv
   }
 
   /**
-   * Create clone of heartbeat interval change event to make it possible to forward event upstream.
+   * Create a clone of the `heartbeat interval` _change_ event to make it possible to forward the event upstream.
    *
-   * @returns Client heartbeat interval change event.
+   * @returns Clone of `heartbeat interval` _change_ event.
    */
   clone() {
     return new PubNubClientHeartbeatIntervalChangeEvent(this.client, this.newInterval, this.oldInterval);
@@ -262,7 +264,7 @@ export class PubNubClientHeartbeatIntervalChangeEvent extends BasePubNubClientEv
 }
 
 /**
- * Dispatched when core PubNub client module requested to send subscribe request.
+ * Dispatched when the core PubNub client module requested to _send_ a `subscribe` request.
  */
 export class PubNubClientSendSubscribeEvent extends BasePubNubClientEvent<{
   request: SubscribeRequest;
@@ -287,9 +289,9 @@ export class PubNubClientSendSubscribeEvent extends BasePubNubClientEvent<{
   }
 
   /**
-   * Create clone of send subscribe request event to make it possible to forward event upstream.
+   * Create clone of _send_ `subscribe` request event to make it possible to forward event upstream.
    *
-   * @returns Client send subscribe request event.
+   * @returns Clone of _send_ `subscribe` request event.
    */
   clone() {
     return new PubNubClientSendSubscribeEvent(this.client, this.request);
@@ -297,13 +299,48 @@ export class PubNubClientSendSubscribeEvent extends BasePubNubClientEvent<{
 }
 
 /**
- * Dispatched when core PubNub client module requested to send heartbeat request.
+ * Dispatched when the core PubNub client module requested to _cancel_ `subscribe` request.
+ */
+export class PubNubClientCancelSubscribeEvent extends BasePubNubClientEvent<{
+  request: SubscribeRequest;
+}> {
+  /**
+   * Create `subscribe` request _cancel_ event.
+   *
+   * @param client - Reference to the PubNub client which requested to _send_ request.
+   * @param request - Subscription request object.
+   */
+  constructor(client: PubNubClient, request: SubscribeRequest) {
+    super(PubNubClientEvent.CancelSubscribeRequest, { detail: { client, request } });
+  }
+
+  /**
+   * Retrieve subscription request object.
+   *
+   * @returns Subscription request object.
+   */
+  get request() {
+    return this.detail.request;
+  }
+
+  /**
+   * Create clone of _cancel_ `subscribe` request event to make it possible to forward event upstream.
+   *
+   * @returns Clone of _cancel_ `subscribe` request event.
+   */
+  clone() {
+    return new PubNubClientCancelSubscribeEvent(this.client, this.request);
+  }
+}
+
+/**
+ * Dispatched when the core PubNub client module requested to _send_ `heartbeat` request.
  */
 export class PubNubClientSendHeartbeatEvent extends BasePubNubClientEvent<{
   request: HeartbeatRequest;
 }> {
   /**
-   * Create heartbeat request send event.
+   * Create `heartbeat` request _send_ event.
    *
    * @param client - Reference to the PubNub client which requested to send request.
    * @param request - Heartbeat request object.
@@ -322,9 +359,9 @@ export class PubNubClientSendHeartbeatEvent extends BasePubNubClientEvent<{
   }
 
   /**
-   * Create clone of send heartbeat request event to make it possible to forward event upstream.
+   * Create clone of _send_ `heartbeat` request event to make it possible to forward event upstream.
    *
-   * @returns Client send heartbeat request event.
+   * @returns Clone of _send_ `heartbeat` request event.
    */
   clone() {
     return new PubNubClientSendHeartbeatEvent(this.client, this.request);
@@ -332,13 +369,13 @@ export class PubNubClientSendHeartbeatEvent extends BasePubNubClientEvent<{
 }
 
 /**
- * Dispatched when core PubNub client module requested to send leave request.
+ * Dispatched when the core PubNub client module requested to _send_ `leave` request.
  */
 export class PubNubClientSendLeaveEvent extends BasePubNubClientEvent<{
   request: LeaveRequest;
 }> {
   /**
-   * Create leave request send event.
+   * Create `leave` request _send_ event.
    *
    * @param client - Reference to the PubNub client which requested to send request.
    * @param request - Leave request object.
@@ -357,9 +394,9 @@ export class PubNubClientSendLeaveEvent extends BasePubNubClientEvent<{
   }
 
   /**
-   * Create clone of send leave request event to make it possible to forward event upstream.
+   * Create clone of _send_ `leave` request event to make it possible to forward event upstream.
    *
-   * @returns Client send leave request event.
+   * @returns Clone of _send_ `leave` request event.
    */
   clone() {
     return new PubNubClientSendLeaveEvent(this.client, this.request);

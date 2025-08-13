@@ -1,6 +1,5 @@
 import { RequestSendingError, RequestSendingSuccess } from '../subscription-worker-types';
-import { TransportRequest } from '../../../core/types/transport-request';
-import { PubNubSharedWorkerRequest } from './request';
+import { BasePubNubRequest } from './request';
 
 /**
  * SharedWorker's requests manager.
@@ -9,17 +8,6 @@ import { PubNubSharedWorkerRequest } from './request';
  * is actually sent to the PubNub service.
  */
 export class RequestsManager extends EventTarget {
-  // --------------------------------------------------------
-  // ---------------------- Information ---------------------
-  // --------------------------------------------------------
-  // region Information
-
-  /**
-   * Map of service-request identifiers to their cancellation controllers.
-   */
-  private readonly abortControllers: Record<string, AbortController> = {};
-  // endregion
-
   // --------------------------------------------------------
   // ------------------ Request processing ------------------
   // --------------------------------------------------------
@@ -34,20 +22,23 @@ export class RequestsManager extends EventTarget {
    * @param responsePreprocess - Raw response pre-processing function which is used before calling handling callbacks.
    */
   sendRequest(
-    request: PubNubSharedWorkerRequest,
+    request: BasePubNubRequest,
     success: (fetchRequest: Request, response: RequestSendingSuccess) => void,
     failure: (fetchRequest: Request, errorResponse: RequestSendingError) => void,
     responsePreprocess?: (response: [Response, ArrayBuffer]) => [Response, ArrayBuffer],
   ) {
     request.handleProcessingStarted();
 
-    if (request.cancellable) this.abortControllers[request.request.identifier] = new AbortController();
+    if (request.cancellable) request.fetchAbortController = new AbortController();
     const fetchRequest = request.asFetchRequest;
 
     (async () => {
       Promise.race([
-        fetch(fetchRequest, { signal: this.abortControllers[request.request.identifier]?.signal, keepalive: true }),
-        this.requestTimeoutTimer(request.request),
+        fetch(fetchRequest, {
+          ...(request.fetchAbortController ? { signal: request.fetchAbortController.signal } : {}),
+          keepalive: true,
+        }),
+        request.requestTimeoutTimer(),
       ])
         .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer] =>
           response.arrayBuffer().then((buffer) => [response, buffer]),
@@ -67,21 +58,10 @@ export class RequestsManager extends EventTarget {
             if (!errorMessage.includes('timeout') && errorMessage.includes('cancel')) fetchError.name = 'AbortError';
           }
 
+          request.stopRequestTimeoutTimer();
           failure(fetchRequest, this.requestProcessingError(fetchError));
         });
     })();
-  }
-
-  /**
-   * Cancel active request processing.
-   *
-   * @param request - Reference to the service request which should be canceled.
-   */
-  cancelRequest(request: PubNubSharedWorkerRequest) {
-    const abortController = this.abortControllers[request.request.identifier];
-    delete this.abortControllers[request.request.identifier];
-
-    if (abortController) abortController.abort('Cancel request');
   }
   // endregion
 
@@ -157,27 +137,6 @@ export class RequestsManager extends EventTarget {
       url: '',
       error: { name, type, message },
     };
-  }
-
-  /**
-   * Create request timeout timer.
-   *
-   * **Note:** Native Fetch API doesn't support `timeout` out-of-box and {@link Promise} used to emulate it.
-   *
-   * @param request - Transport request which will time out after {@link TransportRequest.timeout|timeout} seconds.
-   * @returns Promise which rejects after time out will fire.
-   */
-  private requestTimeoutTimer(request: TransportRequest) {
-    return new Promise<Response>((_, reject) => {
-      const timeoutId = setTimeout(() => {
-        // Clean up.
-
-        delete this.abortControllers[request.identifier];
-        clearTimeout(timeoutId);
-
-        reject(new Error('Request timeout'));
-      }, request.timeout * 1000);
-    });
   }
 
   /**

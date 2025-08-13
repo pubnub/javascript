@@ -7251,6 +7251,22 @@
 	        // There is no need to unsubscribe to empty list of data sources.
 	        if (actualChannels.size === 0 && actualChannelGroups.size === 0)
 	            return;
+	        const lastTimetoken = this.lastTimetoken;
+	        const currentTimetoken = this.currentTimetoken;
+	        if (Object.keys(this.channels).length === 0 &&
+	            Object.keys(this.presenceChannels).length === 0 &&
+	            Object.keys(this.channelGroups).length === 0 &&
+	            Object.keys(this.presenceChannelGroups).length === 0) {
+	            this.lastTimetoken = '0';
+	            this.currentTimetoken = '0';
+	            this.referenceTimetoken = null;
+	            this.storedTimetoken = null;
+	            this.region = null;
+	            this.reconnectionManager.stopPolling();
+	        }
+	        this.reconnect(true);
+	        // Send leave request after long-poll connection closed and loop restarted (the same way as it happens in new
+	        // subscription flow).
 	        if (this.configuration.suppressLeaveEvents === false && !isOffline) {
 	            channelGroups = Array.from(actualChannelGroups);
 	            channels = Array.from(actualChannels);
@@ -7266,21 +7282,10 @@
 	                    else if ('message' in status && typeof status.message === 'string')
 	                        errorMessage = status.message;
 	                }
-	                this.emitStatus(Object.assign(Object.assign({}, restOfStatus), { error: errorMessage !== null && errorMessage !== void 0 ? errorMessage : false, affectedChannels: channels, affectedChannelGroups: channelGroups, currentTimetoken: this.currentTimetoken, lastTimetoken: this.lastTimetoken }));
+	                this.emitStatus(Object.assign(Object.assign({}, restOfStatus), { error: errorMessage !== null && errorMessage !== void 0 ? errorMessage : false, affectedChannels: channels, affectedChannelGroups: channelGroups, currentTimetoken,
+	                    lastTimetoken }));
 	            });
 	        }
-	        if (Object.keys(this.channels).length === 0 &&
-	            Object.keys(this.presenceChannels).length === 0 &&
-	            Object.keys(this.channelGroups).length === 0 &&
-	            Object.keys(this.presenceChannelGroups).length === 0) {
-	            this.lastTimetoken = '0';
-	            this.currentTimetoken = '0';
-	            this.referenceTimetoken = null;
-	            this.storedTimetoken = null;
-	            this.region = null;
-	            this.reconnectionManager.stopPolling();
-	        }
-	        this.reconnect(true);
 	    }
 	    unsubscribeAll(isOffline = false) {
 	        this.disconnectedWhileHandledEvent = true;

@@ -1,4 +1,5 @@
 import { HeartbeatRequest } from '../heartbeat-request';
+import { SubscriptionStateInvalidateEvent } from './subscription-state-event';
 
 /**
  * Type with events which is dispatched by heartbeat state in response to client-provided requests and PubNub
@@ -9,6 +10,11 @@ export enum HeartbeatStateEvent {
    * Heartbeat state ready to send another heartbeat.
    */
   Heartbeat = 'heartbeat',
+
+  /**
+   * Heartbeat state has been invalidated after all clients' state was removed from it.
+   */
+  Invalidated = 'invalidated',
 }
 
 /**
@@ -40,5 +46,26 @@ export class HeartbeatStateHeartbeatEvent extends CustomEvent<HeartbeatRequest> 
    */
   clone() {
     return new HeartbeatStateHeartbeatEvent(this.request);
+  }
+}
+
+/**
+ * Dispatched by heartbeat state when it has been invalidated.
+ */
+export class HeartbeatStateInvalidateEvent extends CustomEvent<object> {
+  /**
+   * Create heartbeat state invalidation event.
+   */
+  constructor() {
+    super(HeartbeatStateEvent.Invalidated);
+  }
+
+  /**
+   * Create clone of invalidate event to make it possible to forward event upstream.
+   *
+   * @returns Client invalidate event.
+   */
+  clone() {
+    return new HeartbeatStateInvalidateEvent();
   }
 }

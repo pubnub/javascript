@@ -1,10 +1,10 @@
 import { TransportRequest } from '../../../core/types/transport-request';
 import uuidGenerator from '../../../core/components/uuid';
-import { PubNubSharedWorkerRequest } from './request';
+import { BasePubNubRequest } from './request';
 import { Payload } from '../../../core/types/api';
 import { AccessToken } from './access-token';
 
-export class HeartbeatRequest extends PubNubSharedWorkerRequest {
+export class HeartbeatRequest extends BasePubNubRequest {
   // --------------------------------------------------------
   // ---------------------- Information ---------------------
   // --------------------------------------------------------
@@ -94,7 +94,7 @@ export class HeartbeatRequest extends PubNubSharedWorkerRequest {
     );
     const channels = HeartbeatRequest.channelsFromRequest(request).filter((channel) => !channel.endsWith('-pnpres'));
 
-    super(request, subscriptionKey, channelGroups, channels, request.queryParameters!.uuid as string, accessToken);
+    super(request, subscriptionKey, request.queryParameters!.uuid as string, channels, channelGroups, accessToken);
 
     // Clean up `state` from objects which is not used with request (if needed).
     if (!request.queryParameters!.state || (request.queryParameters!.state as string).length === 0) return;
@@ -127,6 +127,28 @@ export class HeartbeatRequest extends PubNubSharedWorkerRequest {
   // ----------------------- Helpers ------------------------
   // --------------------------------------------------------
   // region Helpers
+
+  /**
+   * Serialize request for easier representation in logs.
+   *
+   * @returns Stringified `heartbeat` request.
+   */
+  toString() {
+    return `HeartbeatRequest { channels: [${
+      this.channels.length ? this.channels.map((channel) => `'${channel}'`).join(', ') : ''
+    }], channelGroups: [${
+      this.channelGroups.length ? this.channelGroups.map((group) => `'${group}'`).join(', ') : ''
+    }] }`;
+  }
+
+  /**
+   * Serialize request to "typed" JSON string.
+   *
+   * @returns "Typed" JSON string.
+   */
+  toJSON() {
+    return this.toString();
+  }
 
   /**
    * Extract list of channels for presence announcement from request URI path.

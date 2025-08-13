@@ -1,10 +1,166 @@
-import { PubNubSharedWorkerRequestEvents, RequestCancelEvent } from './custom-events/request-processing-event';
-import { SubscriptionStateChangeEvent } from './custom-events/subscription-state-event';
+import { PubNubSharedWorkerRequestEvents } from './custom-events/request-processing-event';
+import {
+  SubscriptionStateChangeEvent,
+  SubscriptionStateInvalidateEvent,
+} from './custom-events/subscription-state-event';
 import { SubscribeRequest } from './subscribe-request';
 import { Payload } from '../../../core/types/api';
 import { PubNubClient } from './pubnub-client';
+import { LeaveRequest } from './leave-request';
 import { AccessToken } from './access-token';
+import { leaveRequest } from './helpers';
 
+export class SubscriptionStateChange {
+  // --------------------------------------------------------
+  // ---------------------- Information ---------------------
+  // --------------------------------------------------------
+  // region Information
+
+  /**
+   * Timestamp when batched changes has been modified before.
+   */
+  private static previousChangeTimestamp = 0;
+
+  /**
+   * Timestamp when subscription change has been enqueued.
+   */
+  private readonly _timestamp: number;
+  // endregion
+
+  // --------------------------------------------------------
+  // --------------------- Constructor ----------------------
+  // --------------------------------------------------------
+  // region Constructor
+
+  /**
+   * Squash changes to exclude repetitive removal and addition of the same requests in a single change transaction.
+   *
+   * @param changes - List of changes that should be analyzed and squashed if possible.
+   * @returns List of changes that doesn't have self-excluding change requests.
+   */
+  static squashedChanges(changes: SubscriptionStateChange[]) {
+    if (!changes.length || changes.length === 1) return changes;
+
+    // Sort changes in order in which they have been created (original `changes` is Set).
+    const sortedChanges = changes.sort((lhc, rhc) => lhc.timestamp - rhc.timestamp);
+
+    // Remove changes which first add and then remove same request (removes both addition and removal change entry).
+    const requestAddChange = sortedChanges.filter((change) => !change.remove);
+    requestAddChange.forEach((addChange) => {
+      for (let idx = 0; idx < requestAddChange.length; idx++) {
+        const change = requestAddChange[idx];
+        if (!change.remove || change.request.identifier !== addChange.request.identifier) continue;
+        sortedChanges.splice(idx, 1);
+        sortedChanges.splice(sortedChanges.indexOf(addChange), 1);
+        break;
+      }
+    });
+
+    // Filter out old `add` change entries for the same client.
+    const addChangePerClient: Record<string, SubscriptionStateChange> = {};
+    requestAddChange.forEach((change) => {
+      if (addChangePerClient[change.clientIdentifier]) {
+        const changeIdx = sortedChanges.indexOf(change);
+        if (changeIdx >= 0) sortedChanges.splice(changeIdx, 1);
+      }
+      addChangePerClient[change.clientIdentifier] = change;
+    });
+
+    return sortedChanges;
+  }
+
+  /**
+   * Create subscription state batched change entry.
+   *
+   * @param clientIdentifier - Identifier of the {@link PubNubClient|PubNub} client that provided data for subscription
+   * state change.
+   * @param request - Request that should be used during batched subscription state modification.
+   * @param remove - Whether provided {@link request} should be removed from `subscription` state or not.
+   * @param sendLeave - Whether the {@link PubNubClient|client} should send a presence `leave` request for _free_
+   * channels and groups or not.
+   * @param [clientInvalidate=false] - Whether the `subscription` state change was caused by the
+   * {@link PubNubClient|PubNub} client invalidation (unregister) or not.
+   */
+  constructor(
+    public readonly clientIdentifier: string,
+    public readonly request: SubscribeRequest,
+    public readonly remove: boolean,
+    public readonly sendLeave: boolean,
+    public readonly clientInvalidate = false,
+  ) {
+    this._timestamp = this.timestampForChange();
+  }
+  // endregion
+
+  // --------------------------------------------------------
+  // --------------------- Properties -----------------------
+  // --------------------------------------------------------
+  // region Properties
+
+  /**
+   * Retrieve subscription change enqueue timestamp.
+   *
+   * @returns Subscription change enqueue timestamp.
+   */
+  get timestamp() {
+    return this._timestamp;
+  }
+  // endregion
+
+  // --------------------------------------------------------
+  // ----------------------- Helpers ------------------------
+  // --------------------------------------------------------
+  // region Helpers
+
+  /**
+   * Serialize object for easier representation in logs.
+   *
+   * @returns Stringified `subscription` state object.
+   */
+  toString() {
+    return `SubscriptionStateChange { timestamp: ${this.timestamp}, client: ${
+      this.clientIdentifier
+    }, request: ${this.request.toString()}, remove: ${this.remove ? "'remove'" : "'do not remove'"}, sendLeave: ${
+      this.sendLeave ? "'send'" : "'do not send'"
+    } }`;
+  }
+
+  /**
+   * Serialize the object to a "typed" JSON string.
+   *
+   * @returns "Typed" JSON string.
+   */
+  toJSON() {
+    return this.toString();
+  }
+
+  /**
+   * Retrieve timestamp when change has been added to the batch.
+   *
+   * Non-repetitive timestamp required for proper changes sorting and identification of requests which has been removed
+   * and added during single batch.
+   *
+   * @returns Non-repetitive timestamp even for burst changes.
+   */
+  private timestampForChange() {
+    const timestamp = Date.now();
+
+    if (timestamp <= SubscriptionStateChange.previousChangeTimestamp) {
+      SubscriptionStateChange.previousChangeTimestamp++;
+    } else SubscriptionStateChange.previousChangeTimestamp = timestamp;
+
+    return SubscriptionStateChange.previousChangeTimestamp;
+  }
+  // endregion
+}
+
+/**
+ * Aggregated subscription state.
+ *
+ * State object responsible for keeping in sync and optimization of `client`-provided {@link SubscribeRequest|requests}
+ * by attaching them to already existing or new aggregated `service`-provided {@link SubscribeRequest|requests} to
+ * reduce number of concurrent connections.
+ */
 export class SubscriptionState extends EventTarget {
   // --------------------------------------------------------
   // ---------------------- Information ---------------------
@@ -12,19 +168,15 @@ export class SubscriptionState extends EventTarget {
   // region Information
 
   /**
-   * Map of client requests which is added and removed in batch (for efficient aggregation and cancellation).
-   */
-  private changesBatch?: Record<string, { add?: SubscribeRequest[]; remove?: SubscribeRequest[] }>;
-
-  /**
-   * Map of client-provided request identifiers to the subscription state listener abort controller.
+   * Map of `client`-provided request identifiers to the subscription state listener abort controller.
    */
   private requestListenersAbort: Record<string, AbortController> = {};
 
   /**
-   * Map of client identifiers to their portion of data which affects subscription state.
+   * Map of {@link PubNubClient|client} identifiers to their portion of data which affects subscription state.
    *
-   * **Note:** This information removed only with {@link SubscriptionState.removeClient|removeClient} function call.
+   * **Note:** This information is removed only with the {@link SubscriptionState.removeClient|removeClient} function
+   * call.
    */
   private clientsState: Record<
     string,
@@ -32,27 +184,46 @@ export class SubscriptionState extends EventTarget {
   > = {};
 
   /**
-   * Map of client to its requests which is pending for service request processing results.
+   * Map of {@link PubNubClient|client} to its {@link SubscribeRequest|request} that already received response/error
+   * or has been canceled.
    */
-  private requests: Record<string, SubscribeRequest[]> = {};
+  private lastCompletedRequest: Record<string, SubscribeRequest> = {};
 
   /**
-   * Aggregated/modified subscribe request which is used to call PubNub REST API.
+   * List of identifiers of the {@link PubNubClient|PubNub} clients that should be invalidated when it will be
+   * possible.
+   */
+  private clientsForInvalidation: string[] = [];
+
+  /**
+   * Map of {@link PubNubClient|client} to its {@link SubscribeRequest|request} which is pending for
+   * `service`-provided {@link SubscribeRequest|request} processing results.
+   */
+  private requests: Record<string, SubscribeRequest> = {};
+
+  /**
+   * Aggregated/modified {@link SubscribeRequest|subscribe} requests which is used to call PubNub REST API.
+   *
+   * **Note:** There could be multiple requests to handle the situation when similar {@link PubNubClient|PubNub} clients
+   * have subscriptions but with different timetokens (if requests have intersecting lists of channels and groups they
+   * can be merged in the future if a response on a similar channel will be received and the same `timetoken` will be
+   * used for continuation).
    */
   private serviceRequests: SubscribeRequest[] = [];
 
   /**
    * Cached list of channel groups used with recent aggregation service requests.
+   *
+   * **Note:** Set required to have the ability to identify which channel groups have been added/removed with recent
+   * {@link SubscriptionStateChange|changes} list processing.
    */
   private channelGroups: Set<string> = new Set();
 
   /**
-   * Cached presence state associated with user for channels and groups used with recent aggregated service request.
-   */
-  private state: Record<string, Payload> = {};
-
-  /**
    * Cached list of channels used with recent aggregation service requests.
+   *
+   * **Note:** Set required to have the ability to identify which channels have been added/removed with recent
+   * {@link SubscriptionStateChange|changes} list processing.
    */
   private channels: Set<string> = new Set();
 
@@ -64,38 +235,46 @@ export class SubscriptionState extends EventTarget {
   // endregion
 
   // --------------------------------------------------------
+  // --------------------- Constructor ----------------------
+  // --------------------------------------------------------
+  // region Constructor
+
+  /**
+   * Create subscription state management object.
+   *
+   * @param identifier -  Similar {@link SubscribeRequest|subscribe} requests aggregation identifier.
+   */
+  constructor(public readonly identifier: string) {
+    super();
+  }
+  // endregion
+
+  // --------------------------------------------------------
   // ---------------------- Accessors -----------------------
   // --------------------------------------------------------
   // region Accessors
 
   /**
-   * Retrieve portion of subscription state which is related to the specific client.
+   * Check whether subscription state contain state for specific {@link PubNubClient|PubNub} client.
    *
-   * @param client - Reference to the PubNub client for which state should be retrieved.
-   * @returns PubNub client's state in subscription.
+   * @param client - Reference to the {@link PubNubClient|PubNub} client for which state should be checked.
+   * @returns `true` if there is state related to the {@link PubNubClient|client}.
    */
-  stateForClient(client: PubNubClient): {
-    channels: string[];
-    channelGroups: string[];
-    state?: Record<string, Payload>;
-  } {
-    const clientState = this.clientsState[client.identifier];
-
-    return clientState
-      ? { channels: [...clientState.channels], channelGroups: [...clientState.channelGroups], state: clientState.state }
-      : { channels: [], channelGroups: [] };
+  hasStateForClient(client: PubNubClient) {
+    return !!this.clientsState[client.identifier];
   }
 
   /**
-   * Retrieve portion of subscription state which is unique for the client.
+   * Retrieve portion of subscription state which is unique for the {@link PubNubClient|client}.
    *
    * Function will return list of channels and groups which has been introduced by the client into the state (no other
    * clients have them).
    *
-   * @param client - Reference to the PubNub client for which unique elements should be retrieved from the state.
+   * @param client - Reference to the {@link PubNubClient|PubNub} client for which unique elements should be retrieved
+   * from the state.
    * @param channels - List of client's channels from subscription state.
    * @param channelGroups - List of client's channel groups from subscription state.
-   * @returns State with channels and channel groups unique for the client.
+   * @returns State with channels and channel groups unique for the {@link PubNubClient|client}.
    */
   uniqueStateForClient(
     client: PubNubClient,
@@ -118,13 +297,16 @@ export class SubscriptionState extends EventTarget {
   }
 
   /**
-   * Retrieve list of ongoing subscribe requests for the client.
+   * Retrieve ongoing `client`-provided {@link SubscribeRequest|subscribe} request for the {@link PubNubClient|client}.
    *
-   * @param client - Reference to the client for which requests should be retrieved.
-   * @returns List of client's ongoing requests.
+   * @param client - Reference to the {@link PubNubClient|PubNub} client for which requests should be retrieved.
+   * @param [invalidated=false] - Whether receiving request for invalidated (unregistered) {@link PubNubClient|PubNub}
+   * client.
+   * @returns A `client`-provided {@link SubscribeRequest|subscribe} request if it has been sent by
+   * {@link PubNubClient|client}.
    */
-  requestsForClient(client: PubNubClient) {
-    return [...(this.requests[client.identifier] ?? [])];
+  requestForClient(client: PubNubClient, invalidated = false): SubscribeRequest | undefined {
+    return this.requests[client.identifier] ?? (invalidated ? this.lastCompletedRequest[client.identifier] : undefined);
   }
   // endregion
 
@@ -134,235 +316,192 @@ export class SubscriptionState extends EventTarget {
   // region Aggregation
 
   /**
-   * Mark subscription state update start.
-   */
-  beginChanges() {
-    if (this.changesBatch) {
-      console.error(
-        `Looks like there is incomplete change transaction. 'commitChanges()' should be called before 'beginChanges()'`,
-      );
-      return;
-    }
-
-    this.changesBatch = {};
-  }
-
-  /**
-   * Add new client's request to the batched state update.
+   * Mark specific client as suitable for state invalidation when it will be appropriate.
    *
-   * @param client - Reference to PubNub client which is adding new requests for processing.
-   * @param requests - List of new client-provided subscribe requests for processing.
+   * @param client - Reference to the {@link PubNubClient|PubNub} client which should be invalidated when will be
+   * possible.
    */
-  addClientRequests(client: PubNubClient, requests: SubscribeRequest[]) {
-    if (!this.changesBatch) {
-      console.error(`'beginChanges()' should be called before 'addClientRequests(...)'`);
-      return;
-    }
-
-    if (!this.changesBatch[client.identifier]) this.changesBatch[client.identifier] = { add: requests };
-    else if (!this.changesBatch[client.identifier].add) this.changesBatch[client.identifier].add = requests;
-    else this.changesBatch[client.identifier].add!.push(...requests);
+  invalidateClient(client: PubNubClient) {
+    if (this.clientsForInvalidation.includes(client.identifier)) return;
+    this.clientsForInvalidation.push(client.identifier);
   }
 
   /**
-   * Add removed client's requests to the batched state update.
+   * Process batched subscription state change.
    *
-   * @param client - Reference to PubNub client which is removing existing requests for processing.
-   * @param requests - List of previous client-provided subscribe requests for removal.
+   * @param changes - List of {@link SubscriptionStateChange|changes} made from requests received from the core
+   * {@link PubNubClient|PubNub} client modules.
    */
-  removeClientRequests(client: PubNubClient, requests: SubscribeRequest[]) {
-    if (!this.changesBatch) {
-      console.error(`'beginChanges()' should be called before 'removeClientRequests(...)'`);
-      return;
-    }
+  processChanges(changes: SubscriptionStateChange[]) {
+    if (changes.length) changes = SubscriptionStateChange.squashedChanges(changes);
 
-    if (!this.changesBatch[client.identifier]) this.changesBatch[client.identifier] = { remove: requests };
-    else if (!this.changesBatch[client.identifier].remove) this.changesBatch[client.identifier].remove = requests;
-    else this.changesBatch[client.identifier].remove!.push(...requests);
-  }
-
-  /**
-   * Add all requests associated with removed client to the batched state update.
-   * @param client
-   */
-  removeClient(client: PubNubClient) {
-    if (!this.changesBatch) {
-      console.error(`'beginChanges()' should be called before 'removeClient(...)'`);
-      return;
-    }
-
-    delete this.clientsState[client.identifier];
-
-    if (!this.requests[client.identifier] || this.requests[client.identifier].length === 0) return;
-
-    const requests = this.requests[client.identifier];
-    if (!this.changesBatch[client.identifier]) this.changesBatch[client.identifier] = { remove: requests };
-    else if (!this.changesBatch[client.identifier].remove) this.changesBatch[client.identifier].remove = requests;
-    else this.changesBatch[client.identifier].remove!.push(...requests);
-  }
-
-  /**
-   * Process batched state update.
-   */
-  commitChanges():
-    | {
-        channelGroups?: { removed?: string[]; added?: string[] };
-        channels?: { removed?: string[]; added?: string[] };
-      }
-    | undefined {
-    if (!this.changesBatch) {
-      console.error(`'beginChanges()' should be called before 'commitChanges()'`);
-      return undefined;
-    } else if (Object.keys(this.changesBatch).length === 0) return undefined;
+    if (!changes.length) return;
 
     let stateRefreshRequired = this.channelGroups.size === 0 && this.channels.size === 0;
-    let changes: ReturnType<typeof this.subscriptionStateChanges>;
-
-    // Identify whether state refresh maybe required because of some new PubNub client requests require it or has been
-    // removed before completion or not.
-    if (!stateRefreshRequired) {
-      stateRefreshRequired = Object.values(this.changesBatch).some(
-        (state) =>
-          (state.remove && state.remove.length) ||
-          (state.add && state.add.some((request) => request.requireCachedStateReset)),
-      );
-    }
+    if (!stateRefreshRequired)
+      stateRefreshRequired = changes.some((change) => change.remove || change.request.requireCachedStateReset);
 
     // Update list of PubNub client requests.
-    const appliedRequests = this.applyBatchedRequestChanges();
+    const appliedRequests = this.applyChanges(changes);
 
-    if (stateRefreshRequired) {
-      const channelGroups = new Set<string>();
-      const channels = new Set<string>();
-      this.state = {};
-
-      // Aggregate channels and groups from active requests.
-      Object.entries(this.requests).forEach(([clientIdentifier, requests]) => {
-        const clientState = (this.clientsState[clientIdentifier] ??= { channels: new Set(), channelGroups: new Set() });
-
-        requests.forEach((request) => {
-          if (request.state) {
-            if (!clientState.state) clientState.state = {};
-            clientState.state = { ...clientState.state, ...request.state };
-            this.state = { ...this.state, ...request.state };
-          }
-
-          request.channelGroups.forEach(clientState.channelGroups.add, clientState.channelGroups);
-          request.channels.forEach(clientState.channels.add, clientState.channels);
-
-          request.channelGroups.forEach(channelGroups.add, channelGroups);
-          request.channels.forEach(channels.add, channels);
-        });
-      });
-
-      changes = this.subscriptionStateChanges(channels, channelGroups);
-
-      // Update state information.
-      this.channelGroups = channelGroups;
-      this.channels = channels;
-
-      // Identify most suitable access token.
-      const sortedTokens = Object.values(this.requests)
-        .flat()
-        .filter((request) => !!request.accessToken)
-        .map((request) => request.accessToken!)
-        .sort(AccessToken.compare);
-      if (sortedTokens && sortedTokens.length > 0) this.accessToken = sortedTokens.pop();
-    }
-
-    // Reset changes batch.
-    this.changesBatch = undefined;
+    let stateChanges: ReturnType<typeof this.subscriptionStateChanges>;
+    if (stateRefreshRequired) stateChanges = this.refreshInternalState();
 
     // Identify and dispatch subscription state change event with service requests for cancellation and start.
     this.handleSubscriptionStateChange(
       changes,
+      stateChanges,
       appliedRequests.initial,
       appliedRequests.continuation,
       appliedRequests.removed,
     );
 
-    return changes;
+    // Check whether subscription state for all registered clients has been removed or not.
+    if (!Object.keys(this.clientsState).length) this.dispatchEvent(new SubscriptionStateInvalidateEvent());
+  }
+
+  /**
+   * Make changes to the internal state.
+   *
+   * Categorize changes by grouping requests (into `initial`, `continuation`, and `removed` groups) and update internal
+   * state to reflect those changes (add/remove `client`-provided requests).
+   *
+   * @param changes - Final subscription state changes list.
+   * @returns Subscribe request separated by different subscription loop stages.
+   */
+  private applyChanges(changes: SubscriptionStateChange[]): {
+    initial: SubscribeRequest[];
+    continuation: SubscribeRequest[];
+    removed: SubscribeRequest[];
+  } {
+    const continuationRequests: SubscribeRequest[] = [];
+    const initialRequests: SubscribeRequest[] = [];
+    const removedRequests: SubscribeRequest[] = [];
+
+    changes.forEach((change) => {
+      const { remove, request, clientIdentifier, clientInvalidate } = change;
+
+      if (!remove) {
+        if (request.isInitialSubscribe) initialRequests.push(request);
+        else continuationRequests.push(request);
+
+        this.requests[clientIdentifier] = request;
+        this.addListenersForRequestEvents(request);
+      }
+
+      if (
+        remove &&
+        (!!this.requests[clientIdentifier] || (clientInvalidate && !!this.lastCompletedRequest[clientIdentifier]))
+      ) {
+        if (clientInvalidate) {
+          delete this.lastCompletedRequest[clientIdentifier];
+          delete this.clientsState[clientIdentifier];
+        }
+        delete this.requests[clientIdentifier];
+        removedRequests.push(request);
+      }
+    });
+
+    return { initial: initialRequests, continuation: continuationRequests, removed: removedRequests };
   }
 
   /**
    * Process changes in subscription state.
    *
-   * @param [changes] - Changes to the subscribed channels and groups in aggregated requests.
-   * @param initialRequests - List of client-provided handshake subscribe requests.
-   * @param continuationRequests - List of client-provided subscription loop continuation subscribe requests.
-   * @param removedRequests - List of client-provided subscribe requests which should be removed from the state.
+   * @param changes - Final subscription state changes list.
+   * @param stateChanges - Changes to the subscribed channels and groups in aggregated requests.
+   * @param initialRequests - List of `client`-provided handshake {@link SubscribeRequest|subscribe} requests.
+   * @param continuationRequests - List of `client`-provided subscription loop continuation
+   * {@link SubscribeRequest|subscribe} requests.
+   * @param removedRequests - List of `client`-provided {@link SubscribeRequest|subscribe} requests that should be
+   * removed from the state.
    */
   private handleSubscriptionStateChange(
-    changes: ReturnType<typeof this.subscriptionStateChanges>,
+    changes: SubscriptionStateChange[],
+    stateChanges: ReturnType<typeof this.subscriptionStateChanges>,
     initialRequests: SubscribeRequest[],
     continuationRequests: SubscribeRequest[],
     removedRequests: SubscribeRequest[],
   ) {
-    // If `changes` is undefine it mean that there were no changes in subscription channels/groups list and no need to
-    // cancel ongoing long-poll request.
-    const serviceRequests = this.serviceRequests.filter((request) => !request.completed);
+    // Retrieve list of active (not completed or canceled) `service`-provided requests.
+    const serviceRequests = this.serviceRequests.filter((request) => !request.completed && !request.canceled);
+    const requestsWithInitialResponse: { request: SubscribeRequest; timetoken: string; region: string }[] = [];
+    const newContinuationServiceRequests: SubscribeRequest[] = [];
+    const newInitialServiceRequests: SubscribeRequest[] = [];
     const cancelledServiceRequests: SubscribeRequest[] = [];
-    const newServiceRequests: SubscribeRequest[] = [];
+    let serviceLeaveRequest: LeaveRequest | undefined;
+
+    const originalContinuationRequests = [...continuationRequests];
+    const originalInitialRequests = [...initialRequests];
 
     // Identify token override for initial requests.
     let timetokenOverrideRefreshTimestamp: number | undefined;
-    let timetokenOverride: string | undefined;
-    let timetokenRegionOverride: string | undefined;
+    let decidedTimetokenRegionOverride: string | undefined;
+    let decidedTimetokenOverride: string | undefined;
+
+    const cancelServiceRequest = (serviceRequest: SubscribeRequest) => {
+      cancelledServiceRequests.push(serviceRequest);
+
+      const rest = serviceRequest
+        .dependentRequests<SubscribeRequest>()
+        .filter((dependantRequest) => !removedRequests.includes(dependantRequest));
+
+      if (rest.length === 0) return;
+
+      rest.forEach((dependantRequest) => (dependantRequest.serviceRequest = undefined));
+      (serviceRequest.isInitialSubscribe ? initialRequests : continuationRequests).push(...rest);
+    };
+
+    // --------------------------------------------------
+    // Identify ongoing `service`-provided requests which should be canceled because channels/channel groups has been
+    // added/removed.
+    //
+
+    if (stateChanges) {
+      if (stateChanges.channels.added || stateChanges.channelGroups.added) {
+        for (const serviceRequest of serviceRequests) cancelServiceRequest(serviceRequest);
+        serviceRequests.length = 0;
+      } else if (stateChanges.channels.removed || stateChanges.channelGroups.removed) {
+        const channelGroups = stateChanges.channelGroups.removed ?? [];
+        const channels = stateChanges.channels.removed ?? [];
+
+        for (let serviceRequestIdx = serviceRequests.length - 1; serviceRequestIdx >= 0; serviceRequestIdx--) {
+          const serviceRequest = serviceRequests[serviceRequestIdx];
+          if (!serviceRequest.hasAnyChannelsOrGroups(channels, channelGroups)) continue;
+
+          cancelServiceRequest(serviceRequest);
+          serviceRequests.splice(serviceRequestIdx, 1);
+        }
+      }
+    }
+
+    continuationRequests = this.squashSameClientRequests(continuationRequests);
+    initialRequests = this.squashSameClientRequests(initialRequests);
+
+    // --------------------------------------------------
+    // Searching for optimal timetoken, which should be used for `service`-provided request (will override response with
+    // new timetoken to make it possible to aggregate on next subscription loop with already ongoing `service`-provided
+    // long-poll request).
+    //
 
     (initialRequests.length ? continuationRequests : []).forEach((request) => {
-      let shouldSetPreviousTimetoken = !timetokenOverride;
+      let shouldSetPreviousTimetoken = !decidedTimetokenOverride;
       if (!shouldSetPreviousTimetoken && request.timetoken !== '0') {
-        if (timetokenOverride === '0') shouldSetPreviousTimetoken = true;
-        else if (request.timetoken < timetokenOverride!)
+        if (decidedTimetokenOverride === '0') shouldSetPreviousTimetoken = true;
+        else if (request.timetoken < decidedTimetokenOverride!)
           shouldSetPreviousTimetoken = request.creationDate > timetokenOverrideRefreshTimestamp!;
       }
 
       if (shouldSetPreviousTimetoken) {
         timetokenOverrideRefreshTimestamp = request.creationDate;
-        timetokenOverride = request.timetoken;
-        timetokenRegionOverride = request.region;
+        decidedTimetokenOverride = request.timetoken;
+        decidedTimetokenRegionOverride = request.region;
       }
     });
 
-    // New aggregated requests constructor.
-    const createAggregatedRequest = (requests: SubscribeRequest[]) => {
-      if (requests.length === 0) return;
-
-      const serviceRequest = SubscribeRequest.fromRequests(
-        requests,
-        this.accessToken,
-        timetokenOverride,
-        timetokenRegionOverride,
-      );
-      this.addListenersForRequestEvents(serviceRequest);
-
-      requests.forEach((request) => (request.serviceRequest = serviceRequest));
-      this.serviceRequests.push(serviceRequest);
-      newServiceRequests.push(serviceRequest);
-    };
-
-    // Check whether already active service requests cover list of channels/groups and there is no need for separate
-    // request.
-    if (initialRequests.length) {
-      const aggregationRequests: SubscribeRequest[] = [];
-
-      serviceRequests.forEach((serviceRequest) => {
-        for (const request of initialRequests) {
-          if (request.isSubsetOf(serviceRequest)) {
-            if (serviceRequest.isInitialSubscribe) request.serviceRequest = serviceRequest;
-            else {
-              request.handleProcessingStarted();
-              this.makeResponseOnHandshakeRequest(request, serviceRequest.timetoken, serviceRequest.region!);
-            }
-          } else aggregationRequests.push(request);
-        }
-      });
-
-      if (!serviceRequests.length && !aggregationRequests.length) aggregationRequests.push(...initialRequests);
-
-      // Create handshake service request (if possible)
-      createAggregatedRequest(aggregationRequests);
-    }
+    // --------------------------------------------------
+    // Try to attach `initial` and `continuation` `client`-provided requests to ongoing `service`-provided requests.
+    //
 
     // Separate continuation requests by next subscription loop timetoken.
     // This prevents possibility that some subscribe requests will be aggregated into one with much newer timetoken and
@@ -372,27 +511,127 @@ export class SubscriptionState extends EventTarget {
       if (!continuationByTimetoken[request.timetoken]) continuationByTimetoken[request.timetoken] = [request];
       else continuationByTimetoken[request.timetoken].push(request);
     });
-    // Create continuation service request (if possible)
-    Object.values(continuationByTimetoken).forEach((requests) => createAggregatedRequest(requests));
 
-    // Find active service requests for which removed client-provided requests was the last one who provided channels
-    // and groups for them
-    if (removedRequests.length && changes && (changes.channelGroups.removed || changes.channels.removed)) {
-      const removedChannelGroups = changes.channelGroups.removed ?? [];
-      const removedChannels = changes.channels.removed ?? [];
+    this.attachToServiceRequest(serviceRequests, initialRequests);
+    for (let initialRequestIdx = initialRequests.length - 1; initialRequestIdx >= 0; initialRequestIdx--) {
+      const request = initialRequests[initialRequestIdx];
 
-      removedRequests.forEach((request) => {
-        const { channels, channelGroups } = request.serviceRequest!;
-        if (
-          channelGroups.some((group) => removedChannelGroups.includes(group)) ||
-          channels.some((channel) => removedChannels.includes(channel))
-        )
-          cancelledServiceRequests.push(request.serviceRequest! as SubscribeRequest);
+      serviceRequests.forEach((serviceRequest) => {
+        if (!request.isSubsetOf(serviceRequest) || serviceRequest.isInitialSubscribe) return;
+
+        const { region, timetoken } = serviceRequest;
+        requestsWithInitialResponse.push({ request, timetoken, region: region! });
+        initialRequests.splice(initialRequestIdx, 1);
       });
     }
+    if (initialRequests.length) {
+      let aggregationRequests: SubscribeRequest[];
 
-    if (newServiceRequests.length || cancelledServiceRequests.length)
-      this.dispatchEvent(new SubscriptionStateChangeEvent(newServiceRequests, cancelledServiceRequests));
+      if (continuationRequests.length) {
+        decidedTimetokenOverride = Object.keys(continuationByTimetoken).sort().pop()!;
+        const requests = continuationByTimetoken[decidedTimetokenOverride];
+        decidedTimetokenRegionOverride = requests[0].region!;
+        delete continuationByTimetoken[decidedTimetokenOverride];
+
+        requests.forEach((request) => request.resetToInitialRequest());
+        aggregationRequests = [...initialRequests, ...requests];
+      } else aggregationRequests = initialRequests;
+
+      // Create handshake service request (if possible)
+      this.createAggregatedRequest(
+        aggregationRequests,
+        newInitialServiceRequests,
+        decidedTimetokenOverride,
+        decidedTimetokenRegionOverride,
+      );
+    }
+
+    // Handle case when `initial` requests are supersets of continuation requests.
+    Object.values(continuationByTimetoken).forEach((requestsByTimetoken) => {
+      // Set `initial` `service`-provided requests as service requests for those continuation `client`-provided requests
+      // that are a _subset_ of them.
+      this.attachToServiceRequest(newInitialServiceRequests, requestsByTimetoken);
+      // Set `ongoing` `service`-provided requests as service requests for those continuation `client`-provided requests
+      // that are a _subset_ of them (if any still available).
+      this.attachToServiceRequest(serviceRequests, requestsByTimetoken);
+
+      // Create continuation `service`-provided request (if possible).
+      this.createAggregatedRequest(requestsByTimetoken, newContinuationServiceRequests);
+    });
+
+    // --------------------------------------------------
+    // Identify channels and groups for which presence `leave` should be generated.
+    //
+
+    const channelGroupsForLeave = new Set<string>();
+    const channelsForLeave = new Set<string>();
+
+    if (stateChanges && (stateChanges.channels.removed || stateChanges.channelGroups.removed)) {
+      const channelGroups = stateChanges.channelGroups.removed ?? [];
+      const channels = stateChanges.channels.removed ?? [];
+      const client = removedRequests[0].client;
+
+      changes
+        .filter((change) => change.remove && change.sendLeave)
+        .forEach((change) => {
+          const { channels: requestChannels, channelGroups: requestChannelsGroups } = change.request;
+          channelGroups.forEach((group) => requestChannelsGroups.includes(group) && channelGroupsForLeave.add(group));
+          channels.forEach((channel) => requestChannels.includes(channel) && channelsForLeave.add(channel));
+        });
+      serviceLeaveRequest = leaveRequest(client, [...channelsForLeave], [...channelGroupsForLeave]);
+    }
+
+    if (
+      requestsWithInitialResponse.length ||
+      newInitialServiceRequests.length ||
+      newContinuationServiceRequests.length ||
+      cancelledServiceRequests.length ||
+      serviceLeaveRequest
+    ) {
+      this.dispatchEvent(
+        new SubscriptionStateChangeEvent(
+          requestsWithInitialResponse,
+          [...newInitialServiceRequests, ...newContinuationServiceRequests],
+          cancelledServiceRequests,
+          serviceLeaveRequest,
+        ),
+      );
+    }
+  }
+
+  /**
+   * Refresh the internal subscription's state.
+   */
+  private refreshInternalState() {
+    const channelGroups = new Set<string>();
+    const channels = new Set<string>();
+
+    // Aggregate channels and groups from active requests.
+    Object.entries(this.requests).forEach(([clientIdentifier, request]) => {
+      const clientState = (this.clientsState[clientIdentifier] ??= { channels: new Set(), channelGroups: new Set() });
+
+      request.channelGroups.forEach(clientState.channelGroups.add, clientState.channelGroups);
+      request.channels.forEach(clientState.channels.add, clientState.channels);
+
+      request.channelGroups.forEach(channelGroups.add, channelGroups);
+      request.channels.forEach(channels.add, channels);
+    });
+
+    const changes = this.subscriptionStateChanges(channels, channelGroups);
+
+    // Update state information.
+    this.channelGroups = channelGroups;
+    this.channels = channels;
+
+    // Identify most suitable access token.
+    const sortedTokens = Object.values(this.requests)
+      .flat()
+      .filter((request) => !!request.accessToken)
+      .map((request) => request.accessToken!)
+      .sort(AccessToken.compare);
+    if (sortedTokens && sortedTokens.length > 0) this.accessToken = sortedTokens.pop();
+
+    return changes;
   }
   // endregion
 
@@ -402,20 +641,31 @@ export class SubscriptionState extends EventTarget {
   // region Event handlers
 
   private addListenersForRequestEvents(request: SubscribeRequest) {
-    const abortController = (this.requestListenersAbort[request.request.identifier] = new AbortController());
+    const abortController = (this.requestListenersAbort[request.identifier] = new AbortController());
 
     const cleanUpCallback = (evt: Event) => {
       this.removeListenersFromRequestEvents(request);
+      if (!request.isServiceRequest) {
+        if (this.requests[request.client.identifier]) {
+          this.lastCompletedRequest[request.client.identifier] = request;
+          delete this.requests[request.client.identifier];
 
-      if (!request.serviceRequest) return;
+          const clientIdx = this.clientsForInvalidation.indexOf(request.client.identifier);
+          if (clientIdx > 0) {
+            this.clientsForInvalidation.splice(clientIdx, 1);
+            delete this.lastCompletedRequest[request.client.identifier];
+            delete this.clientsState[request.client.identifier];
 
-      // Canceled request should be pulled out from subscription state.
-      if (evt instanceof RequestCancelEvent) {
-        const { request } = evt as RequestCancelEvent;
-        this.beginChanges();
-        this.removeClientRequests(request.client, [request as SubscribeRequest]);
-        this.commitChanges();
+            // Check whether subscription state for all registered clients has been removed or not.
+            if (!Object.keys(this.clientsState).length) this.dispatchEvent(new SubscriptionStateInvalidateEvent());
+          }
+        }
+
+        return;
       }
+
+      const requestIdx = this.serviceRequests.indexOf(request);
+      if (requestIdx >= 0) this.serviceRequests.splice(requestIdx, 1);
     };
 
     request.addEventListener(PubNubSharedWorkerRequestEvents.Success, cleanUpCallback, {
@@ -444,85 +694,6 @@ export class SubscriptionState extends EventTarget {
   // ----------------------- Helpers ------------------------
   // --------------------------------------------------------
   // region Helpers
-
-  /**
-   * Return "response" from PubNub service with initial timetoken data.
-   *
-   * @param request - Client-provided handshake/initial request for which response should be provided.
-   * @param timetoken - Timetoken from currently active service request.
-   * @param region - Region from currently active service request.
-   */
-  private makeResponseOnHandshakeRequest(request: SubscribeRequest, timetoken: string, region: string) {
-    const body = new TextEncoder().encode(`{"t":{"t":"${timetoken}","r":${region ?? '0'}},"m":[]}`);
-
-    request.handleProcessingSuccess(request.asFetchRequest, {
-      type: 'request-process-success',
-      clientIdentifier: '',
-      identifier: '',
-      url: '',
-      response: {
-        contentType: 'text/javascript; charset="UTF-8"',
-        contentLength: body.length,
-        headers: { 'content-type': 'text/javascript; charset="UTF-8"', 'content-length': `${body.length}` },
-        status: 200,
-        body,
-      },
-    });
-  }
-
-  /**
-   * Apply batched requests change.
-   *
-   * @returns Subscribe request separated by different subscription loop stages.
-   */
-  private applyBatchedRequestChanges(): {
-    initial: SubscribeRequest[];
-    continuation: SubscribeRequest[];
-    removed: SubscribeRequest[];
-  } {
-    const continuationRequests: SubscribeRequest[] = [];
-    const initialRequests: SubscribeRequest[] = [];
-    const removedRequests: SubscribeRequest[] = [];
-    const changesBatch = this.changesBatch!;
-
-    // Handle rapid subscribe requests addition and removal (when same subscribe request instance added in both `add`
-    // and `remove` operations). Remove has higher priority.
-    Object.keys(changesBatch).forEach((clientIdentifier) => {
-      if (!changesBatch[clientIdentifier].add || !changesBatch[clientIdentifier].remove) return;
-      for (const request of changesBatch[clientIdentifier].remove!) {
-        const addRequestIdx = changesBatch[clientIdentifier].add!.indexOf(request);
-        if (addRequestIdx >= 0) changesBatch[clientIdentifier].add!.splice(addRequestIdx, 1);
-      }
-    });
-
-    Object.keys(changesBatch).forEach((clientIdentifier) => {
-      if (changesBatch[clientIdentifier].add!) {
-        if (!this.requests[clientIdentifier]) this.requests[clientIdentifier] = [];
-
-        for (const request of changesBatch[clientIdentifier].add!) {
-          if (request.isInitialSubscribe) initialRequests.push(request);
-          else continuationRequests.push(request);
-          this.requests[clientIdentifier].push(request);
-          this.addListenersForRequestEvents(request);
-        }
-      }
-
-      if (this.requests[clientIdentifier] && changesBatch[clientIdentifier].remove!) {
-        for (const request of changesBatch[clientIdentifier].remove!) {
-          const addRequestIdx = this.requests[clientIdentifier].indexOf(request);
-          if (addRequestIdx < 0) continue;
-
-          if (!request.completed && request.serviceRequest) removedRequests.push(request);
-          this.requests[clientIdentifier].splice(addRequestIdx, 1);
-          this.removeListenersFromRequestEvents(request);
-
-          if (this.requests[clientIdentifier].length === 0) delete this.requests[clientIdentifier];
-        }
-      }
-    });
-
-    return { initial: initialRequests, continuation: continuationRequests, removed: removedRequests };
-  }
 
   /**
    * Identify changes to the channels and groups.
@@ -573,6 +744,87 @@ export class SubscriptionState extends EventTarget {
     return Object.keys(changes.channelGroups).length === 0 && Object.keys(changes.channels).length === 0
       ? undefined
       : changes;
+  }
+
+  /**
+   * Squash list of provided requests to represent latest request for each client.
+   *
+   * @param requests - List with potentially repetitive or multiple {@link SubscribeRequest|subscribe} requests for the
+   * same {@link PubNubClient|PubNub} client.
+   * @returns List of latest {@link SubscribeRequest|subscribe} requests for corresponding {@link PubNubClient|PubNub}
+   * clients.
+   */
+  private squashSameClientRequests(requests: SubscribeRequest[]) {
+    if (!requests.length || requests.length === 1) return requests;
+
+    // Sort requests in order in which they have been created.
+    const sortedRequests = requests.sort((lhr, rhr) => lhr.creationDate - rhr.creationDate);
+    return Object.values(
+      sortedRequests.reduce(
+        (acc, value) => {
+          acc[value.client.identifier] = value;
+          return acc;
+        },
+        {} as Record<string, SubscribeRequest>,
+      ),
+    );
+  }
+
+  /**
+   * Attach `client`-provided requests to the compatible ongoing `service`-provided requests.
+   *
+   * @param serviceRequests - List of ongoing `service`-provided subscribe requests.
+   * @param requests - List of `client`-provided requests that should try to hook for service response using existing
+   * ongoing `service`-provided requests.
+   */
+  private attachToServiceRequest(serviceRequests: SubscribeRequest[], requests: SubscribeRequest[]) {
+    if (!serviceRequests.length || !requests.length) return;
+
+    [...requests].forEach((request) => {
+      for (const serviceRequest of serviceRequests) {
+        // Check whether continuation request is actually a subset of the `service`-provided request or not.
+        // Note: Second condition handled in the function which calls `attachToServiceRequest`.
+        if (
+          !!request.serviceRequest ||
+          !request.isSubsetOf(serviceRequest) ||
+          (request.isInitialSubscribe && !serviceRequest.isInitialSubscribe)
+        )
+          continue;
+
+        // Attach to the matching `service`-provided request.
+        request.serviceRequest = serviceRequest;
+
+        // There is no need to aggregate attached request.
+        const requestIdx = requests.indexOf(request);
+        requests.splice(requestIdx, 1);
+        break;
+      }
+    });
+  }
+
+  /**
+   * Create aggregated `service`-provided {@link SubscribeRequest|subscribe} request.
+   *
+   * @param requests - List of `client`-provided {@link SubscribeRequest|subscribe} requests which should be sent with
+   * as single `service`-provided request.
+   * @param serviceRequests - List with created `service`-provided {@link SubscribeRequest|subscribe} requests.
+   * @param timetokenOverride - Timetoken that should replace the initial response timetoken.
+   * @param regionOverride - Timetoken region that should replace the initial response timetoken region.
+   */
+  private createAggregatedRequest(
+    requests: SubscribeRequest[],
+    serviceRequests: SubscribeRequest[],
+    timetokenOverride?: string,
+    regionOverride?: string,
+  ) {
+    if (requests.length === 0) return;
+
+    const serviceRequest = SubscribeRequest.fromRequests(requests, this.accessToken, timetokenOverride, regionOverride);
+    this.addListenersForRequestEvents(serviceRequest);
+
+    requests.forEach((request) => (request.serviceRequest = serviceRequest));
+    this.serviceRequests.push(serviceRequest);
+    serviceRequests.push(serviceRequest);
   }
   // endregion
 }

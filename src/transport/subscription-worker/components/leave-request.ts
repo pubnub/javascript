@@ -1,8 +1,8 @@
 import { TransportRequest } from '../../../core/types/transport-request';
-import { PubNubSharedWorkerRequest } from './request';
+import { BasePubNubRequest } from './request';
 import { AccessToken } from './access-token';
 
-export class LeaveRequest extends PubNubSharedWorkerRequest {
+export class LeaveRequest extends BasePubNubRequest {
   // --------------------------------------------------------
   // ---------------------- Information ---------------------
   // --------------------------------------------------------
@@ -53,7 +53,7 @@ export class LeaveRequest extends PubNubSharedWorkerRequest {
     const channelGroups = allChannelGroups.filter((group) => !group.endsWith('-pnpres'));
     const channels = allChannels.filter((channel) => !channel.endsWith('-pnpres'));
 
-    super(request, subscriptionKey, channelGroups, channels, request.queryParameters!.uuid as string, accessToken);
+    super(request, subscriptionKey, request.queryParameters!.uuid as string, channels, channelGroups, accessToken);
 
     this.allChannelGroups = allChannelGroups;
     this.allChannels = allChannels;
@@ -64,6 +64,28 @@ export class LeaveRequest extends PubNubSharedWorkerRequest {
   // ----------------------- Helpers ------------------------
   // --------------------------------------------------------
   // region Helpers
+
+  /**
+   * Serialize request for easier representation in logs.
+   *
+   * @returns Stringified `leave` request.
+   */
+  toString() {
+    return `LeaveRequest { channels: [${
+      this.channels.length ? this.channels.map((channel) => `'${channel}'`).join(', ') : ''
+    }], channelGroups: [${
+      this.channelGroups.length ? this.channelGroups.map((group) => `'${group}'`).join(', ') : ''
+    }] }`;
+  }
+
+  /**
+   * Serialize request to "typed" JSON string.
+   *
+   * @returns "Typed" JSON string.
+   */
+  toJSON() {
+    return this.toString();
+  }
 
   /**
    * Extract list of channels for presence announcement from request URI path.

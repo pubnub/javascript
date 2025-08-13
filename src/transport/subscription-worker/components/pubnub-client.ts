@@ -6,6 +6,7 @@ import {
   PubNubClientSendHeartbeatEvent,
   PubNubClientSendSubscribeEvent,
   PubNubClientIdentityChangeEvent,
+  PubNubClientCancelSubscribeEvent,
   PubNubClientHeartbeatIntervalChangeEvent,
 } from './custom-events/client-event';
 import {
@@ -25,9 +26,9 @@ import {
 import { LogLevel } from '../../../core/interfaces/logger';
 import { HeartbeatRequest } from './heartbeat-request';
 import { SubscribeRequest } from './subscribe-request';
-import { PubNubSharedWorkerRequest } from './request';
 import { Payload } from '../../../core/types/api';
 import { LeaveRequest } from './leave-request';
+import { BasePubNubRequest } from './request';
 import { AccessToken } from './access-token';
 import { ClientLogger } from './logger';
 
@@ -45,7 +46,7 @@ export class PubNubClient extends EventTarget {
    *
    * Unique request identifiers mapped to the requests requested by the core PubNub client module.
    */
-  private readonly requests: Record<string, PubNubSharedWorkerRequest> = {};
+  private readonly requests: Record<string, BasePubNubRequest> = {};
 
   /**
    * Controller, which is used on PubNub client unregister event to clean up listeners.
@@ -102,6 +103,11 @@ export class PubNubClient extends EventTarget {
    * Client-specific logger that will send log entries to the core PubNub client module.
    */
   readonly logger: ClientLogger;
+
+  /**
+   * Whether {@link PubNubClient|PubNub} client has been invalidated (unregistered) or not.
+   */
+  private _invalidated = false;
   // endregion
 
   // --------------------------------------------------------
@@ -140,6 +146,7 @@ export class PubNubClient extends EventTarget {
   invalidate(dispatchEvent = false) {
     // Remove the client's listeners.
     this.listenerAbortController.abort();
+    this._invalidated = true;
 
     this.cancelRequests();
   }
@@ -175,6 +182,15 @@ export class PubNubClient extends EventTarget {
    */
   get accessToken() {
     return this._accessToken;
+  }
+
+  /**
+   * Retrieve whether the {@link PubNubClient|PubNub} client has been invalidated (unregistered) or not.
+   *
+   * @returns `true` if the client has been invalidated during unregistration.
+   */
+  get isInvalidated() {
+    return this._invalidated;
   }
 
   /**
@@ -271,18 +287,24 @@ export class PubNubClient extends EventTarget {
 
     // Check whether authentication information has been changed or not.
     // Important: If changed, this should be notified before a potential identity change event.
-    if (authKey) {
-      const accessToken = new AccessToken(authKey, (token ?? {}).token, (token ?? {}).expiration);
+    if (!!authKey || !!this.accessToken) {
+      const accessToken = authKey ? new AccessToken(authKey, (token ?? {}).token, (token ?? {}).expiration) : undefined;
 
       // Check whether the access token really changed or not.
-      if (!this.accessToken || !accessToken.equalTo(this.accessToken)) {
-        const oldValue = this.accessToken;
+      if (
+        !!accessToken !== !!this.accessToken ||
+        (!!accessToken && this.accessToken && !accessToken.equalTo(this.accessToken))
+      ) {
+        const oldValue = this._accessToken;
         this._accessToken = accessToken;
 
         // Make sure that all ongoing subscribe (usually should be only one at a time) requests use proper
         // `accessToken`.
         Object.values(this.requests)
-          .filter((request) => !request.completed && request instanceof SubscribeRequest)
+          .filter(
+            (request) =>
+              (!request.completed && request instanceof SubscribeRequest) || request instanceof HeartbeatRequest,
+          )
           .forEach((request) => (request.accessToken = accessToken));
 
         this.dispatchEvent(new PubNubClientAuthChangeEvent(this, accessToken, oldValue));
@@ -298,7 +320,10 @@ export class PubNubClient extends EventTarget {
       // **Note:** Core PubNub client module docs have a warning saying that `userId` should be changed only after
       // unsubscribe/disconnect to properly update the user's presence.
       Object.values(this.requests)
-        .filter((request) => !request.completed && request instanceof SubscribeRequest)
+        .filter(
+          (request) =>
+            (!request.completed && request instanceof SubscribeRequest) || request instanceof HeartbeatRequest,
+        )
         .forEach((request) => (request.userId = userId));
 
       this.dispatchEvent(new PubNubClientIdentityChangeEvent(this, oldValue, userId));
@@ -318,7 +343,7 @@ export class PubNubClient extends EventTarget {
    * @param data - Object with received request details.
    */
   private handleSendRequestEvent(data: SendRequestEvent) {
-    let request: PubNubSharedWorkerRequest;
+    let request: BasePubNubRequest;
 
     if (data.request.path.startsWith('/v2/subscribe')) {
       if (
@@ -346,6 +371,7 @@ export class PubNubClient extends EventTarget {
     } else if (data.request.path.endsWith('/heartbeat'))
       request = HeartbeatRequest.fromTransportRequest(data.request, this.subKey, this.accessToken);
     else request = LeaveRequest.fromTransportRequest(data.request, this.subKey, this.accessToken);
+
     request.client = this;
     this.requests[request.request.identifier] = request;
 
@@ -361,15 +387,22 @@ export class PubNubClient extends EventTarget {
   /**
    * Handle on-demand request cancellation.
    *
+   * **Note:** Cancellation will dispatch the event handled in `listenRequestCompletion` and remove target request from
+   * the PubNub client requests' list.
+   *
    * @param data - Object with canceled request information.
    */
   private handleCancelRequestEvent(data: CancelRequestEvent) {
     if (!this.requests[data.identifier]) return;
-    this.requests[data.identifier].cancel();
+    const request = this.requests[data.identifier];
+    request.cancel('Cancel request');
   }
 
   /**
    * Handle PubNub client disconnect event.
+   *
+   * **Note:** On disconnect, the core {@link PubNubClient|PubNub} client module will terminate `client`-provided
+   * subscribe requests ({@link handleCancelRequestEvent} will be called).
    *
    * During disconnection handling, the following changes will happen:
    * - reset subscription state ({@link SubscribeRequestsManager|subscription requests manager})
@@ -392,15 +425,21 @@ export class PubNubClient extends EventTarget {
    *
    * @param request - Request for which processing outcome should be observed.
    */
-  private listenRequestCompletion(request: PubNubSharedWorkerRequest) {
+  private listenRequestCompletion(request: BasePubNubRequest) {
     const ac = new AbortController();
     const callback = (evt: Event) => {
-      delete this.requests[request.request.identifier];
+      delete this.requests[request.identifier];
       ac.abort();
 
       if (evt instanceof RequestSuccessEvent) this.postEvent((evt as RequestSuccessEvent).response);
       else if (evt instanceof RequestErrorEvent) this.postEvent((evt as RequestErrorEvent).error);
-      else if (evt instanceof RequestCancelEvent) this.postEvent(this.requestCancelError(request));
+      else if (evt instanceof RequestCancelEvent) {
+        this.postEvent(this.requestCancelError(request));
+
+        // Notify specifically about the `subscribe` request cancellation.
+        if (!this._invalidated && request instanceof SubscribeRequest)
+          this.dispatchEvent(new PubNubClientCancelSubscribeEvent(request.client, request));
+      }
     };
 
     request.addEventListener(PubNubSharedWorkerRequestEvents.Success, callback, { signal: ac.signal, once: true });
@@ -415,7 +454,7 @@ export class PubNubClient extends EventTarget {
   // region Requests
 
   /**
-   * Cancel any active requests.
+   * Cancel any active `client`-provided requests.
    *
    * **Note:** Cancellation will dispatch the event handled in `listenRequestCompletion` and remove `request` from the
    * PubNub client requests' list.
@@ -435,7 +474,7 @@ export class PubNubClient extends EventTarget {
    *
    * @param request - Request which should be used to identify event type and stored in it.
    */
-  private eventWithRequest(request: PubNubSharedWorkerRequest) {
+  private eventWithRequest(request: BasePubNubRequest) {
     let event: CustomEvent;
 
     if (request instanceof SubscribeRequest) event = new PubNubClientSendSubscribeEvent(this, request);
@@ -451,7 +490,7 @@ export class PubNubClient extends EventTarget {
    * @param request - Reference on client-provided request for which payload should be prepared.
    * @returns Object which will be treated as cancel response on core PubNub client module side.
    */
-  private requestCancelError(request: PubNubSharedWorkerRequest): RequestSendingError {
+  private requestCancelError(request: BasePubNubRequest): RequestSendingError {
     return {
       type: 'request-process-error',
       clientIdentifier: this.identifier,
@@ -460,6 +499,5 @@ export class PubNubClient extends EventTarget {
       error: { name: 'AbortError', type: 'ABORTED', message: 'Request aborted' },
     };
   }
-
   // endregion
 }

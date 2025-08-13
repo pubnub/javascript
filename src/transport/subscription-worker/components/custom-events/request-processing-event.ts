@@ -1,5 +1,5 @@
 import { RequestSendingError, RequestSendingSuccess } from '../../subscription-worker-types';
-import { PubNubSharedWorkerRequest } from '../request';
+import { BasePubNubRequest } from '../request';
 
 /**
  * Type with events which is emitted by request and can be handled with callback passed to the
@@ -36,13 +36,13 @@ export enum PubNubSharedWorkerRequestEvents {
 /**
  * Base request processing event class.
  */
-class BaseRequestEvent<T = object> extends CustomEvent<{ request: PubNubSharedWorkerRequest } & T> {
+class BaseRequestEvent<T = object> extends CustomEvent<{ request: BasePubNubRequest } & T> {
   /**
    * Retrieve service (aggregated / updated) request.
    *
    * @returns Service (aggregated / updated) request.
    */
-  get request(): PubNubSharedWorkerRequest {
+  get request(): BasePubNubRequest {
     return this.detail.request;
   }
 }
@@ -56,17 +56,18 @@ export class RequestStartEvent extends BaseRequestEvent {
    *
    * @param request - Service (aggregated / updated) request.
    */
-  constructor(request: PubNubSharedWorkerRequest) {
+  constructor(request: BasePubNubRequest) {
     super(PubNubSharedWorkerRequestEvents.Started, { detail: { request } });
   }
 
   /**
    * Create clone of request processing start event to make it possible to forward event upstream.
    *
+   * @param request - Custom requests with this event should be cloned.
    * @returns Client request processing start event.
    */
-  clone() {
-    return new RequestStartEvent(this.request);
+  clone(request?: BasePubNubRequest) {
+    return new RequestStartEvent(request ?? this.request);
   }
 }
 
@@ -81,7 +82,7 @@ export class RequestSuccessEvent extends BaseRequestEvent<{ fetchRequest: Reques
    * @param fetchRequest - Actual request which has been used with {@link fetch}.
    * @param response - PubNub service response.
    */
-  constructor(request: PubNubSharedWorkerRequest, fetchRequest: Request, response: RequestSendingSuccess) {
+  constructor(request: BasePubNubRequest, fetchRequest: Request, response: RequestSendingSuccess) {
     super(PubNubSharedWorkerRequestEvents.Success, { detail: { request, fetchRequest, response } });
   }
 
@@ -106,10 +107,15 @@ export class RequestSuccessEvent extends BaseRequestEvent<{ fetchRequest: Reques
   /**
    * Create clone of request processing success event to make it possible to forward event upstream.
    *
+   * @param request - Custom requests with this event should be cloned.
    * @returns Client request processing success event.
    */
-  clone() {
-    return new RequestSuccessEvent(this.request, this.fetchRequest, this.response);
+  clone(request?: BasePubNubRequest) {
+    return new RequestSuccessEvent(
+      request ?? this.request,
+      request ? request.asFetchRequest : this.fetchRequest,
+      this.response,
+    );
   }
 }
 
@@ -124,7 +130,7 @@ export class RequestErrorEvent extends BaseRequestEvent<{ fetchRequest: Request;
    * @param fetchRequest - Actual request which has been used with {@link fetch}.
    * @param error - Request processing error information.
    */
-  constructor(request: PubNubSharedWorkerRequest, fetchRequest: Request, error: RequestSendingError) {
+  constructor(request: BasePubNubRequest, fetchRequest: Request, error: RequestSendingError) {
     super(PubNubSharedWorkerRequestEvents.Error, { detail: { request, fetchRequest, error } });
   }
 
@@ -149,10 +155,15 @@ export class RequestErrorEvent extends BaseRequestEvent<{ fetchRequest: Request;
   /**
    * Create clone of request processing failure event to make it possible to forward event upstream.
    *
+   * @param request - Custom requests with this event should be cloned.
    * @returns Client request processing failure event.
    */
-  clone() {
-    return new RequestErrorEvent(this.request, this.fetchRequest, this.error);
+  clone(request?: BasePubNubRequest) {
+    return new RequestErrorEvent(
+      request ?? this.request,
+      request ? request.asFetchRequest : this.fetchRequest,
+      this.error,
+    );
   }
 }
 
@@ -165,16 +176,17 @@ export class RequestCancelEvent extends BaseRequestEvent {
    *
    * @param request - Client-provided (original) request.
    */
-  constructor(request: PubNubSharedWorkerRequest) {
+  constructor(request: BasePubNubRequest) {
     super(PubNubSharedWorkerRequestEvents.Canceled, { detail: { request } });
   }
 
   /**
    * Create clone of request cancel event to make it possible to forward event upstream.
    *
+   * @param request - Custom requests with this event should be cloned.
    * @returns Client request cancel event.
    */
-  clone() {
-    return new RequestCancelEvent(this.request);
+  clone(request?: BasePubNubRequest) {
+    return new RequestCancelEvent(request ?? this.request);
   }
 }

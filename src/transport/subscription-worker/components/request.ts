@@ -13,41 +13,78 @@ import { AccessToken } from './access-token';
 
 /**
  * Base shared worker request implementation.
+ *
+ * In the `SharedWorker` context, this base class is used both for `client`-provided (they won't be used for actual
+ * request) and those that are created by `SharedWorker` code (`service` request, which will be used in actual
+ * requests).
+ *
+ * **Note:** The term `service` request in inline documentation will mean request created by `SharedWorker` and used to
+ * call PubNub REST API.
  */
-export class PubNubSharedWorkerRequest extends EventTarget {
+export class BasePubNubRequest extends EventTarget {
   // --------------------------------------------------------
   // ---------------------- Information ---------------------
   // --------------------------------------------------------
   // region Information
 
   /**
-   * Service request (aggregated/modified) which will actually be used to call REST API endpoint.
+   * Starter request processing timeout timer.
+   */
+  private _fetchTimeoutTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /**
+   * Map of attached to the service request `client`-provided requests by their request identifiers.
    *
-   * This used only by client-provided requests to be notified on service request (aggregated / modified) processing
+   * **Context:** `service`-provided requests only.
+   */
+  private dependents: Record<string, BasePubNubRequest> = {};
+
+  /**
+   * Controller, which is used to cancel ongoing `service`-provided request by signaling {@link fetch}.
+   */
+  private _fetchAbortController?: AbortController;
+
+  /**
+   * Service request (aggregated/modified) which will actually be used to call the REST API endpoint.
+   *
+   * This is used only by `client`-provided requests to be notified on service request (aggregated/modified) processing
    * stages.
+   *
+   * **Context:** `client`-provided requests only.
    */
-  private _serviceRequest?: PubNubSharedWorkerRequest;
+  private _serviceRequest?: BasePubNubRequest;
 
   /**
-   * Controller, which is used on request cancellation unregister event to clean up listeners.
+   * Controller, which is used to clean up any event listeners added by `client`-provided request on `service`-provided
+   * request.
+   *
+   * **Context:** `client`-provided requests only.
    */
-  private listenerAbortController?: AbortController;
+  private abortController?: AbortController;
 
   /**
-   * Whether request already received service response or an error.
+   * Whether the request already received a service response or an error.
+   *
+   * **Important:** Any interaction with completed requests except requesting properties is prohibited.
    */
   private _completed: boolean = false;
 
   /**
-   * Access token with permissions to access {@link PubNubSharedWorkerRequest.channels|channels} and
-   * {@link PubNubSharedWorkerRequest.channelGroups|channelGroups} on behalf of `userId`.
+   * Whether request has been cancelled or not.
+   *
+   * **Important:** Any interaction with canceled requests except requesting properties is prohibited.
+   */
+  private _canceled: boolean = false;
+
+  /**
+   * Access token with permissions to access provided `channels`and `channelGroups` on behalf of `userId`.
    */
   private _accessToken?: AccessToken;
 
   /**
-   * Reference to PubNub client instance which created this request.
+   * Reference to {@link PubNubClient|PubNub} client instance which created this request.
    *
-   * **Note:** Field will be empty for service requests (created by `SharedWorker`).
+   * **Context:** `client`-provided requests only.
    */
   private _client?: PubNubClient;
 
@@ -67,39 +104,24 @@ export class PubNubSharedWorkerRequest extends EventTarget {
    *
    * @param request - Transport request.
    * @param subscribeKey - Subscribe REST API access key.
-   * @param channelGroups - List of channel groups used in request.
-   * @param channels - List of channels used in request.
    * @param userId - Unique user identifier from the name of which request will be made.
-   * @param [accessToken] - Access token with permissions to access
-   * {@link PubNubSharedWorkerRequest.channels|channels} and
-   * {@link PubNubSharedWorkerRequest.channelGroups|channelGroups} on behalf of `userId`.
+   * @param channels - List of channels used in request.
+   * @param channelGroups - List of channel groups used in request.
+   * @param [accessToken] - Access token with permissions to access provided `channels` and `channelGroups` on behalf of
+   * `userId`.
    */
   constructor(
     readonly request: TransportRequest,
     readonly subscribeKey: string,
-    readonly channelGroups: string[],
-    readonly channels: string[],
     userId: string,
+    readonly channels: string[],
+    readonly channelGroups: string[],
     accessToken?: AccessToken,
   ) {
     super();
+
     this._accessToken = accessToken;
     this._userId = userId;
-  }
-
-  /**
-   * Notify listeners that ongoing request processing has been cancelled.
-   */
-  cancel() {
-    // There is no point in completed request cancellation.
-    if (this.completed) return;
-
-    // Unlink client-provided request from service request.
-    this.serviceRequest = undefined;
-
-    // There is no need to announce about cancellation of request which can't be canceled (only listeners clean up has
-    // been done).
-    if (this.request.cancellable) this.dispatchEvent(new RequestCancelEvent(this));
   }
   // endregion
 
@@ -109,16 +131,25 @@ export class PubNubSharedWorkerRequest extends EventTarget {
   // region Properties
 
   /**
-   * Retrieve origin which is used to access PubNub REST API.
+   * Get the request's unique identifier.
    *
-   * @returns Origin which is used to access PubNub REST API.
+   * @returns Request's unique identifier.
+   */
+  get identifier() {
+    return this.request.identifier;
+  }
+
+  /**
+   * Retrieve the origin that is used to access PubNub REST API.
+   *
+   * @returns Origin, which is used to access PubNub REST API.
    */
   get origin() {
     return this.request.origin;
   }
 
   /**
-   * Retrieve unique user identifier from the name of which request will be made.
+   * Retrieve the unique user identifier from the name of which request will be made.
    *
    * @returns Unique user identifier from the name of which request will be made.
    */
@@ -127,7 +158,7 @@ export class PubNubSharedWorkerRequest extends EventTarget {
   }
 
   /**
-   * Update unique user identifier from the name of which request will be made.
+   * Update the unique user identifier from the name of which request will be made.
    *
    * @param value - New unique user identifier.
    */
@@ -139,22 +170,19 @@ export class PubNubSharedWorkerRequest extends EventTarget {
   }
 
   /**
-   * Retrieve access token with permissions to access
-   * {@link PubNubSharedWorkerRequest.channels|channels} and
-   * {@link PubNubSharedWorkerRequest.channelGroups|channelGroups}.
+   * Retrieve access token with permissions to access provided `channels` and `channelGroups`.
    *
-   * @returns Access token with permissions for {@link PubNubSharedWorkerRequest#userId|userId}.
+   * @returns Access token with permissions for {@link userId} or `undefined` if not set.
    */
   get accessToken() {
     return this._accessToken;
   }
 
   /**
-   * Update access token which should be used to access
-   * {@link PubNubSharedWorkerRequest.channels|channels} and
-   * {@link PubNubSharedWorkerRequest.channelGroups|channelGroups} on behalf of `userId`.
+   * Update the access token which should be used to access provided `channels` and `channelGroups` by the user with
+   * {@link userId}.
    *
-   * @param value Access token with permissions for {@link PubNubSharedWorkerRequest#userId|userId}.
+   * @param [value] - Access token with permissions for {@link userId}.
    */
   set accessToken(value: AccessToken | undefined) {
     this._accessToken = value;
@@ -165,9 +193,11 @@ export class PubNubSharedWorkerRequest extends EventTarget {
   }
 
   /**
-   * Retrieve PubNub client associates with request.
+   * Retrieve {@link PubNubClient|PubNub} client associates with request.
    *
-   * @returns Reference to the PubNub client which is sending request.
+   * **Context:** `client`-provided requests only.
+   *
+   * @returns Reference to the {@link PubNubClient|PubNub} client that is sending the request.
    */
   get client() {
     return this._client!;
@@ -176,59 +206,105 @@ export class PubNubSharedWorkerRequest extends EventTarget {
   /**
    * Associate request with PubNub client.
    *
-   * @param value - PubNub client which created request in `SharedWorker` context.
+   * **Context:** `client`-provided requests only.
+   *
+   * @param value - {@link PubNubClient|PubNub} client that created request in `SharedWorker` context.
    */
   set client(value: PubNubClient) {
     this._client = value;
   }
 
   /**
-   * Retrieve whether request already received service response or an error.
+   * Retrieve whether the request already received a service response or an error.
    *
-   * @returns `true` if request already completed processing (not with {@link PubNubSharedWorkerRequest#cancel|cancel}).
+   * @returns `true` if request already completed processing (not with {@link cancel}).
    */
   get completed() {
     return this._completed;
   }
 
   /**
-   * Retrieve whether request can be cancelled or not.
+   * Retrieve whether the request can be cancelled or not.
    *
-   * @returns `true` if there is possibility and meaning to be able to cancel request.
+   * @returns `true` if there is a possibility and meaning to be able to cancel the request.
    */
   get cancellable() {
     return this.request.cancellable;
   }
 
   /**
-   * Represent transport request as {@link fetch} {@link Request}.
+   * Retrieve whether the request has been canceled prior to completion or not.
    *
-   * @returns Ready to use {@link Request} instance.
+   * @returns `true` if the request didn't complete processing.
    */
-  get asFetchRequest(): Request {
-    let headers: Record<string, string> | undefined = undefined;
-    const queryParameters = this.request.queryParameters;
-    let path = this.request.path;
+  get canceled() {
+    return this._canceled;
+  }
 
-    if (this.request.headers) {
-      headers = {};
-      for (const [key, value] of Object.entries(this.request.headers)) headers[key] = value;
+  /**
+   * Update controller, which is used to cancel ongoing `service`-provided requests by signaling {@link fetch}.
+   *
+   * **Context:** `service`-provided requests only.
+   *
+   * @param value - Controller that has been used to signal {@link fetch} for request cancellation.
+   */
+  set fetchAbortController(value: AbortController) {
+    // There is no point in completed request `fetch` abort controller set.
+    if (this.completed || this.canceled) return;
+
+    // Fetch abort controller can't be set for `client`-provided requests.
+    if (!this.isServiceRequest) {
+      console.error('Unexpected attempt to set fetch abort controller on client-provided request.');
+      return;
     }
 
-    if (queryParameters && Object.keys(queryParameters).length !== 0)
-      path = `${path}?${this.queryStringFromObject(queryParameters)}`;
+    if (this._fetchAbortController) {
+      console.error('Only one abort controller can be set for service-provided requests.');
+      return;
+    }
 
-    return new Request(`${this.request.origin!}${path}`, {
+    this._fetchAbortController = value;
+  }
+
+  /**
+   * Retrieve `service`-provided fetch request abort controller.
+   *
+   * **Context:** `service`-provided requests only.
+   *
+   * @returns `service`-provided fetch request abort controller.
+   */
+  get fetchAbortController() {
+    return this._fetchAbortController!;
+  }
+
+  /**
+   * Represent transport request as {@link fetch} {@link Request}.
+   *
+   * @returns Ready-to-use {@link Request} instance.
+   */
+  get asFetchRequest(): Request {
+    const queryParameters = this.request.queryParameters;
+    const headers: Record<string, string> = {};
+    let query = '';
+
+    if (this.request.headers) for (const [key, value] of Object.entries(this.request.headers)) headers[key] = value;
+
+    if (queryParameters && Object.keys(queryParameters).length !== 0)
+      query = `?${this.queryStringFromObject(queryParameters)}`;
+
+    return new Request(`${this.origin}${this.request.path}${query}`, {
       method: this.request.method,
-      headers,
+      headers: Object.keys(headers).length ? headers : undefined,
       redirect: 'follow',
     });
   }
 
   /**
-   * Retrieve service (aggregated/modified) request which will actually be used to call REST API endpoint.
+   * Retrieve the service (aggregated/modified) request, which will actually be used to call the REST API endpoint.
    *
-   * @returns Service (aggregated/modified) request which will actually be used to call REST API endpoint.
+   * **Context:** `client`-provided requests only.
+   *
+   * @returns Service (aggregated/modified) request, which will actually be used to call the REST API endpoint.
    */
   get serviceRequest() {
     return this._serviceRequest;
@@ -237,106 +313,183 @@ export class PubNubSharedWorkerRequest extends EventTarget {
   /**
    * Link request processing results to the service (aggregated/modified) request.
    *
+   * **Context:** `client`-provided requests only.
+   *
    * @param value - Service (aggregated/modified) request for which process progress should be observed.
    */
-  set serviceRequest(value: PubNubSharedWorkerRequest | undefined) {
-    if (this.listenerAbortController) {
-      // Ignore attempt to set same service request.
-      if (this._serviceRequest && value && this._serviceRequest.request.identifier === value.request.identifier) return;
-
-      if (this.listenerAbortController) {
-        this.listenerAbortController.abort();
-        this.listenerAbortController = undefined;
-      }
+  set serviceRequest(value: BasePubNubRequest | undefined) {
+    // This function shouldn't be called even unintentionally, on the `service`-provided requests.
+    if (this.isServiceRequest) {
+      console.error('Unexpected attempt to set service-provided request on service-provided request.');
+      return;
     }
+
+    const previousServiceRequest = this.serviceRequest;
     this._serviceRequest = value;
 
-    // There is no point to add listeners for request which already completed.
-    if (!value || this.completed) return;
+    // Detach from the previous service request if it has been changed (to a new one or unset).
+    if (previousServiceRequest && (!value || previousServiceRequest.identifier !== value.identifier))
+      previousServiceRequest.detachRequest(this);
 
-    this.listenerAbortController = new AbortController();
-    value.addEventListener(
-      PubNubSharedWorkerRequestEvents.Started,
-      (evt) => {
-        if (!(evt instanceof RequestStartEvent)) return;
-        const event = evt as RequestStartEvent;
+    // There is no need to set attach to service request if either of them is already completed, or canceled.
+    if (this.completed || this.canceled || (value && (value.completed || value.canceled))) {
+      this._serviceRequest = undefined;
+      return;
+    }
+    if (previousServiceRequest && value && previousServiceRequest.identifier === value.identifier) return;
 
-        // Notify about request processing start.
-        this.logRequestStart(event.request);
+    // Attach the request to the service request processing results.
+    if (value) value.attachRequest(this);
+  }
 
-        // Forward event from the name of this request (because it has been linked to the service request).
-        this.dispatchEvent(event.clone());
-      },
-      { signal: this.listenerAbortController.signal, once: true },
-    );
-    value.addEventListener(
-      PubNubSharedWorkerRequestEvents.Success,
-      (evt) => {
-        if (!(evt instanceof RequestSuccessEvent)) return;
-        const event = evt as RequestSuccessEvent;
-
-        // Clean up other listeners.
-        if (this.listenerAbortController) {
-          this.listenerAbortController.abort();
-          this.listenerAbortController = undefined;
-        }
-
-        // Append request-specific information
-        this.addRequestInformationForResult(event.request, event.fetchRequest, event.response);
-
-        // Notify about request processing successfully completed.
-        this.logRequestSuccess(event.request, event.response);
-
-        // Mark that request received successful response.
-        this._completed = true;
-
-        // Forward event from the name of this request (because it has been linked to the service request).
-        this.dispatchEvent(event.clone());
-      },
-      { signal: this.listenerAbortController.signal, once: true },
-    );
-
-    value.addEventListener(
-      PubNubSharedWorkerRequestEvents.Error,
-      (evt) => {
-        if (!(evt instanceof RequestErrorEvent)) return;
-        const event = evt as RequestErrorEvent;
-
-        // Clean up other listeners.
-        if (this.listenerAbortController) {
-          this.listenerAbortController.abort();
-          this.listenerAbortController = undefined;
-        }
-
-        // Append request-specific information
-        this.addRequestInformationForResult(event.request, event.fetchRequest, event.error);
-
-        // Notify about request processing error.
-        this.logRequestError(event.request, event.error);
-
-        // Mark that request received error.
-        this._completed = true;
-
-        // Forward event from the name of this request (because it has been linked to the service request).
-        this.dispatchEvent(event.clone());
-      },
-      { signal: this.listenerAbortController.signal, once: true },
-    );
+  /**
+   * Retrieve whether the receiver is a `service`-provided request or not.
+   *
+   * @returns `true` if the request has been created by the `SharedWorker`.
+   */
+  get isServiceRequest() {
+    return !this.client;
   }
   // endregion
 
   // --------------------------------------------------------
-  // ------------- Request processing handlers --------------
+  // ---------------------- Dependency ----------------------
   // --------------------------------------------------------
-  // region Request processing handlers
+  // region Dependency
 
   /**
-   * Handle request processing started by request manager (actual sending).
+   * Retrieve a list of `client`-provided requests that have been attached to the `service`-provided request.
    *
-   * **Important:** Function should be called only for `SharedWorker`-provided requests.
+   * **Context:** `service`-provided requests only.
+   *
+   * @returns List of attached `client`-provided requests.
+   */
+  dependentRequests<T extends BasePubNubRequest>(): T[] {
+    // Return an empty list for `client`-provided requests.
+    if (!this.isServiceRequest) return [];
+
+    return Object.values(this.dependents) as T[];
+  }
+
+  /**
+   * Attach the `client`-provided request to the receiver (`service`-provided request) to receive a response from the
+   * PubNub REST API.
+   *
+   * **Context:** `service`-provided requests only.
+   *
+   * @param request - `client`-provided request that should be attached to the receiver (`service`-provided request).
+   */
+  private attachRequest(request: BasePubNubRequest) {
+    // Request attachments works only on service requests.
+    if (!this.isServiceRequest || this.dependents[request.identifier]) {
+      if (!this.isServiceRequest) console.error('Unexpected attempt to attach requests using client-provided request.');
+
+      return;
+    }
+
+    this.dependents[request.identifier] = request;
+    this.addEventListenersForRequest(request);
+  }
+
+  /**
+   * Detach the `client`-provided request from the receiver (`service`-provided request) to ignore any response from the
+   * PubNub REST API.
+   *
+   * **Context:** `service`-provided requests only.
+   *
+   * @param request - `client`-provided request that should be attached to the receiver (`service`-provided request).
+   */
+  private detachRequest(request: BasePubNubRequest) {
+    // Request detachments works only on service requests.
+    if (!this.isServiceRequest || !this.dependents[request.identifier]) {
+      if (!this.isServiceRequest) console.error('Unexpected attempt to detach requests using client-provided request.');
+      return;
+    }
+
+    delete this.dependents[request.identifier];
+    request.removeEventListenersFromRequest();
+
+    // Because `service`-provided requests are created in response to the `client`-provided one we need to cancel the
+    // receiver if there are no more attached `client`-provided requests.
+    // This ensures that there will be no abandoned/dangling `service`-provided request in `SharedWorker` structures.
+    if (Object.keys(this.dependents).length === 0) this.cancel('Cancel request');
+  }
+  // endregion
+
+  // --------------------------------------------------------
+  // ------------------ Request processing ------------------
+  // --------------------------------------------------------
+  // region Request processing
+
+  /**
+   * Notify listeners that ongoing request processing has been cancelled.
+   *
+   * **Note:** The current implementation doesn't let {@link PubNubClient|PubNub} directly call
+   * {@link cancel}, and it can be called from `SharedWorker` code logic.
+   *
+   * **Important:** Previously attached `client`-provided requests should be re-attached to another `service`-provided
+   * request or properly cancelled with {@link PubNubClient|PubNub} notification of the core PubNub client module.
+   *
+   * @param [reason] - Reason because of which the request has been cancelled. The request manager uses this to specify
+   * whether the `service`-provided request has been cancelled on-demand or because of timeout.
+   * @param [notifyDependent] - Whether dependent requests should receive cancellation error or not.
+   * @returns List of detached `client`-provided requests.
+   */
+  cancel(reason?: string, notifyDependent: boolean = false) {
+    // There is no point in completed request cancellation.
+    if (this.completed || this.canceled) {
+      return [];
+    }
+
+    const dependentRequests = this.dependentRequests();
+    if (this.isServiceRequest) {
+      // Detach request if not interested in receiving request cancellation error (because of timeout).
+      // When switching between aggregated `service`-provided requests there is no need in handling cancellation of
+      // outdated request.
+      if (!notifyDependent) dependentRequests.forEach((request) => (request.serviceRequest = undefined));
+
+      if (this._fetchAbortController) {
+        this._fetchAbortController.abort(reason);
+        this._fetchAbortController = undefined;
+      }
+    } else this.serviceRequest = undefined;
+
+    this._canceled = true;
+    this.stopRequestTimeoutTimer();
+    this.dispatchEvent(new RequestCancelEvent(this));
+
+    return dependentRequests;
+  }
+
+  /**
+   * Create and return running request processing timeout timer.
+   *
+   * @returns Promise with timout timer resolution.
+   */
+  requestTimeoutTimer() {
+    return new Promise<Response>((_, reject) => {
+      this._fetchTimeoutTimer = setTimeout(() => {
+        reject(new Error('Request timeout'));
+        this.cancel('Cancel because of timeout', true);
+      }, this.request.timeout * 1000);
+    });
+  }
+
+  /**
+   * Stop request processing timeout timer without error.
+   */
+  stopRequestTimeoutTimer() {
+    if (!this._fetchTimeoutTimer) return;
+
+    clearTimeout(this._fetchTimeoutTimer);
+    this._fetchTimeoutTimer = undefined;
+  }
+
+  /**
+   * Handle request processing started by the request manager (actual sending).
    */
   handleProcessingStarted() {
-    // Notify about request processing start (will be made only for client-provided request).
+    // Log out request processing start (will be made only for client-provided request).
     this.logRequestStart(this);
 
     this.dispatchEvent(new RequestStartEvent(this));
@@ -345,43 +498,108 @@ export class PubNubSharedWorkerRequest extends EventTarget {
   /**
    * Handle request processing successfully completed by request manager (actual sending).
    *
-   * **Important:** Function should be called only for `SharedWorker`-provided requests.
-   *
-   * @param fetchRequest - Reference to actual request which has been used with {@link fetch}.
-   * @param response - PubNub service response.
+   * @param fetchRequest - Reference to the actual request that has been used with {@link fetch}.
+   * @param response - PubNub service response which is ready to be sent to the core PubNub client module.
    */
   handleProcessingSuccess(fetchRequest: Request, response: RequestSendingSuccess) {
-    // Append request-specific information
     this.addRequestInformationForResult(this, fetchRequest, response);
-
-    // Notify about request processing successfully completed (will be made only for client-provided request).
     this.logRequestSuccess(this, response);
-
-    // Mark that request received successful response.
     this._completed = true;
 
+    this.stopRequestTimeoutTimer();
     this.dispatchEvent(new RequestSuccessEvent(this, fetchRequest, response));
   }
 
   /**
    * Handle request processing failed by request manager (actual sending).
    *
-   * **Important:** Function should be called only for `SharedWorker`-provided requests.
-   *
-   * @param fetchRequest - Reference to actual request which has been used with {@link fetch}.
+   * @param fetchRequest - Reference to the actual request that has been used with {@link fetch}.
    * @param error - Request processing error description.
    */
   handleProcessingError(fetchRequest: Request, error: RequestSendingError) {
-    // Append request-specific information
     this.addRequestInformationForResult(this, fetchRequest, error);
-
-    // Notify about request processing error (will be made only for client-provided request).
     this.logRequestError(this, error);
-
-    // Mark that request received error.
     this._completed = true;
 
+    this.stopRequestTimeoutTimer();
     this.dispatchEvent(new RequestErrorEvent(this, fetchRequest, error));
+  }
+  // endregion
+
+  // --------------------------------------------------------
+  // ------------------- Event Handlers ---------------------
+  // --------------------------------------------------------
+  // region Event handlers
+
+  /**
+   * Add `service`-provided request processing progress listeners for `client`-provided requests.
+   *
+   * **Context:** `service`-provided requests only.
+   *
+   * @param request - `client`-provided request that would like to observe `service`-provided request progress.
+   */
+  addEventListenersForRequest(request: BasePubNubRequest) {
+    if (!this.isServiceRequest) {
+      console.error('Unexpected attempt to add listeners using a client-provided request.');
+      return;
+    }
+
+    request.abortController = new AbortController();
+
+    this.addEventListener(
+      PubNubSharedWorkerRequestEvents.Started,
+      (event) => {
+        if (!(event instanceof RequestStartEvent)) return;
+
+        request.logRequestStart(event.request);
+        request.dispatchEvent(event.clone(request));
+      },
+      { signal: request.abortController.signal, once: true },
+    );
+    this.addEventListener(
+      PubNubSharedWorkerRequestEvents.Success,
+      (event) => {
+        if (!(event instanceof RequestSuccessEvent)) return;
+
+        request.removeEventListenersFromRequest();
+        request.addRequestInformationForResult(event.request, event.fetchRequest, event.response);
+        request.logRequestSuccess(event.request, event.response);
+        request._completed = true;
+        request.dispatchEvent(event.clone(request));
+      },
+      { signal: request.abortController.signal, once: true },
+    );
+
+    this.addEventListener(
+      PubNubSharedWorkerRequestEvents.Error,
+      (event) => {
+        if (!(event instanceof RequestErrorEvent)) return;
+
+        request.removeEventListenersFromRequest();
+        request.addRequestInformationForResult(event.request, event.fetchRequest, event.error);
+        request.logRequestError(event.request, event.error);
+        request._completed = true;
+        request.dispatchEvent(event.clone(request));
+      },
+      { signal: request.abortController.signal, once: true },
+    );
+  }
+
+  /**
+   * Remove listeners added to the `service` request.
+   *
+   * **Context:** `client`-provided requests only.
+   */
+  removeEventListenersFromRequest() {
+    // Only client-provided requests add listeners.
+    if (this.isServiceRequest || !this.abortController) {
+      if (this.isServiceRequest)
+        console.error('Unexpected attempt to remove listeners using a client-provided request.');
+      return;
+    }
+
+    this.abortController.abort();
+    this.abortController = undefined;
   }
   // endregion
 
@@ -391,21 +609,36 @@ export class PubNubSharedWorkerRequest extends EventTarget {
   // region Helpers
 
   /**
+   * Check whether the request contains specified channels in the URI path and channel groups in the request query or
+   * not.
+   *
+   * @param channels - List of channels for which any entry should be checked in the request.
+   * @param channelGroups - List of channel groups for which any entry should be checked in the request.
+   * @returns `true` if receiver has at least one entry from provided `channels` or `channelGroups` in own URI.
+   */
+  hasAnyChannelsOrGroups(channels: string[], channelGroups: string[]) {
+    return (
+      this.channels.some((channel) => channels.includes(channel)) ||
+      this.channelGroups.some((channelGroup) => channelGroups.includes(channelGroup))
+    );
+  }
+
+  /**
    * Append request-specific information to the processing result.
    *
-   * @param fetchRequest - Reference to actual request which has been used with {@link fetch}.
+   * @param fetchRequest - Reference to the actual request that has been used with {@link fetch}.
    * @param request - Reference to the client- or service-provided request with information for response.
-   * @param result - Request processing result which should be modified.
+   * @param result - Request processing result that should be modified.
    */
   private addRequestInformationForResult(
-    request: PubNubSharedWorkerRequest,
+    request: BasePubNubRequest,
     fetchRequest: Request,
     result: RequestSendingResult,
   ) {
-    if (!this._client) return;
+    if (this.isServiceRequest) return;
 
-    result.clientIdentifier = this._client.identifier;
-    result.identifier = this.request.identifier;
+    result.clientIdentifier = this.client.identifier;
+    result.identifier = this.identifier;
     result.url = fetchRequest.url;
   }
 
@@ -414,9 +647,10 @@ export class PubNubSharedWorkerRequest extends EventTarget {
    *
    * @param request - Reference to the client- or service-provided request information about which should be logged.
    */
-  private logRequestStart(request: PubNubSharedWorkerRequest) {
-    if (!this._client) return;
-    this._client.logger.debug(() => ({ messageType: 'network-request', message: request.request }));
+  private logRequestStart(request: BasePubNubRequest) {
+    if (this.isServiceRequest) return;
+
+    this.client.logger.debug(() => ({ messageType: 'network-request', message: request.request }));
   }
 
   /**
@@ -425,16 +659,16 @@ export class PubNubSharedWorkerRequest extends EventTarget {
    * @param request - Reference to the client- or service-provided request information about which should be logged.
    * @param response - Reference to the PubNub service response.
    */
-  private logRequestSuccess(request: PubNubSharedWorkerRequest, response: RequestSendingSuccess) {
-    if (!this._client) return;
+  private logRequestSuccess(request: BasePubNubRequest, response: RequestSendingSuccess) {
+    if (this.isServiceRequest) return;
 
-    this._client.logger.debug(() => {
+    this.client.logger.debug(() => {
       const { status, headers, body } = response.response;
       const fetchRequest = request.asFetchRequest;
       const _headers: Record<string, string> = {};
 
       // Copy Headers object content into plain Record.
-      Object.entries(headers).forEach(([key, value]) => (_headers[key.toLowerCase()] = value.toLowerCase()));
+      Object.entries(headers).forEach(([key, value]) => (_headers[key] = value));
 
       return { messageType: 'network-response', message: { status, url: fetchRequest.url, headers, body } };
     });
@@ -446,18 +680,18 @@ export class PubNubSharedWorkerRequest extends EventTarget {
    * @param request - Reference to the client- or service-provided request information about which should be logged.
    * @param error - Request processing error information.
    */
-  private logRequestError(request: PubNubSharedWorkerRequest, error: RequestSendingError) {
-    if (!this._client) return;
+  private logRequestError(request: BasePubNubRequest, error: RequestSendingError) {
+    if (this.isServiceRequest) return;
 
     if ((error.error ? error.error.message : 'Unknown').toLowerCase().includes('timeout')) {
-      this._client.logger.debug(() => ({
+      this.client.logger.debug(() => ({
         messageType: 'network-request',
         message: request.request,
         details: 'Timeout',
         canceled: true,
       }));
     } else {
-      this._client.logger.warn(() => {
+      this.client.logger.warn(() => {
         const { details, canceled } = this.errorDetailsFromSendingError(error);
         let logDetails = details;
 
@@ -476,7 +710,7 @@ export class PubNubSharedWorkerRequest extends EventTarget {
   }
 
   /**
-   * Retrieve error details from error response object.
+   * Retrieve error details from the error response object.
    *
    * @param error - Request fetch error object.
    * @reruns Object with error details and whether it has been canceled or not.
@@ -515,10 +749,9 @@ export class PubNubSharedWorkerRequest extends EventTarget {
   }
 
   /**
-   * Stringify request query key / value pairs.
+   * Stringify request query key/value pairs.
    *
    * @param query - Request query object.
-   *
    * @returns Stringified query object.
    */
   private queryStringFromObject = (query: Query) => {
@@ -538,10 +771,9 @@ export class PubNubSharedWorkerRequest extends EventTarget {
    * **Note:** Encode content in accordance of the `PubNub` service requirements.
    *
    * @param input - Source string or number for encoding.
-   *
    * @returns Percent-encoded string.
    */
-  private encodeString(input: string | number) {
+  protected encodeString(input: string | number) {
     return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
   }
   // endregion
