@@ -4515,9 +4515,11 @@
          * Remove {@link PubNubClient|PubNub} client from manager's internal state.
          *
          * @param client - Previously created {@link PubNubClient|PubNub} client which should be removed.
-         * @param withLeave - Whether `leave` request should be sent or not.
+         * @param [withLeave=false] - Whether `leave` request should be sent or not.
+         * @param [onClientInvalidation=false] - Whether client removal caused by its invalidation (event from the
+         * {@link PubNubClient|PubNub} client) or as result of timeout check.
          */
-        unregisterClient(client, withLeave = false) {
+        unregisterClient(client, withLeave = false, onClientInvalidation = false) {
             if (!this.clients[client.identifier])
                 return;
             // Make sure to detach all listeners for this `client`.
@@ -4534,7 +4536,8 @@
                 }
             }
             this.forEachClient(client.subKey, (subKeyClient) => subKeyClient.logger.debug(`'${this.sharedWorkerIdentifier}' shared worker unregistered '${client.identifier}' client (${this.clientBySubscribeKey[client.subKey].length} active clients).`));
-            client.invalidate();
+            if (!onClientInvalidation)
+                client.invalidate();
             this.dispatchEvent(new PubNubClientManagerUnregisterEvent(client, withLeave));
         }
         // endregion
@@ -4620,7 +4623,7 @@
          * @param client - {@link PubNubClient|PubNub} client for which event should be listened.
          */
         subscribeOnClientEvents(client) {
-            client.addEventListener(PubNubClientEvent.Unregister, () => this.unregisterClient(client, this.timeouts[client.subKey] ? this.timeouts[client.subKey].unsubscribeOffline : false), { signal: this.clients[client.identifier].abortController.signal, once: true });
+            client.addEventListener(PubNubClientEvent.Unregister, () => this.unregisterClient(client, this.timeouts[client.subKey] ? this.timeouts[client.subKey].unsubscribeOffline : false, true), { signal: this.clients[client.identifier].abortController.signal, once: true });
         }
         // endregion
         // --------------------------------------------------------
