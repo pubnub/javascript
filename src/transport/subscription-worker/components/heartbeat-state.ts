@@ -267,9 +267,17 @@ export class HeartbeatState extends EventTarget {
       const current = Date.now();
 
       if (expected - current > leeway * 1000) {
-        if (request && this.previousRequestResult) {
+        if (request && !!this.previousRequestResult) {
+          const fetchRequest = request.asFetchRequest;
+          const result = {
+            ...this.previousRequestResult,
+            clientIdentifier: request.client.identifier,
+            identifier: request.identifier,
+            url: fetchRequest.url,
+          };
           request.handleProcessingStarted();
-          request.handleProcessingSuccess(request.asFetchRequest, this.previousRequestResult);
+          request.handleProcessingSuccess(fetchRequest, result);
+          return;
         } else if (!request) return;
       }
     }

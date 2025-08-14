@@ -107,6 +107,13 @@ export type SendRequestEvent = BasicEvent & {
    * Instruction to construct actual {@link Request}.
    */
   request: TransportRequest;
+
+  /**
+   * Pre-processed access token (If set).
+   *
+   * **Note:** Value can be missing, but it shouldn't reset it in the state.
+   */
+  preProcessedToken?: { token: string; expiration: number };
 };
 
 /**

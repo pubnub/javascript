@@ -290,7 +290,9 @@ export class SubscriptionWorkerMiddleware implements Transport {
         this.callbacks!.set(req.identifier, { resolve, reject });
 
         // Trigger request processing by Service Worker.
-        this.scheduleEventPost(sendRequestEvent);
+        this.parsedAccessTokenForRequest(req)
+          .then((accessToken) => (sendRequestEvent.preProcessedToken = accessToken))
+          .then(() => this.scheduleEventPost(sendRequestEvent));
       }),
       controller,
     ];

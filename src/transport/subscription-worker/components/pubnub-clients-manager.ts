@@ -146,6 +146,8 @@ export class PubNubClientsManager extends EventTarget {
       ),
     );
 
+    client.invalidate();
+
     this.dispatchEvent(new PubNubClientManagerUnregisterEvent(client, withLeave));
   }
   // endregion
@@ -202,6 +204,13 @@ export class PubNubClientsManager extends EventTarget {
 
     const interval = this.timeouts[subKey].interval;
     [...this.clientBySubscribeKey[subKey]].forEach((client) => {
+      // Handle potential SharedWorker timers throttling and early eviction of the PubNub core client.
+      // If timer fired later than specified interval - it has been throttled and shouldn't unregister client.
+      if (client.lastPingRequest && Date.now() / 1000 - client.lastPingRequest > interval * 0.5) {
+        client.logger.warn('PubNub clients timeout timer fired after throttling past due time.');
+        client.lastPingRequest = undefined;
+      }
+
       if (
         client.lastPingRequest &&
         (!client.lastPongEvent || Math.abs(client.lastPongEvent - client.lastPingRequest) > interval * 0.5)
@@ -216,7 +225,7 @@ export class PubNubClientsManager extends EventTarget {
       }
 
       if (this.clients[client.identifier]) {
-        client.lastPingRequest = new Date().getTime() / 1000;
+        client.lastPingRequest = Date.now() / 1000;
         client.postEvent({ type: 'shared-worker-ping' });
       }
     });

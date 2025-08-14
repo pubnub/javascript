@@ -2255,8 +2255,7 @@
                     this.requests[clientIdentifier] = request;
                     this.addListenersForRequestEvents(request);
                 }
-                if (remove &&
-                    (!!this.requests[clientIdentifier] || (clientInvalidate && !!this.lastCompletedRequest[clientIdentifier]))) {
+                if (remove && (!!this.requests[clientIdentifier] || !!this.lastCompletedRequest[clientIdentifier])) {
                     if (clientInvalidate) {
                         delete this.lastCompletedRequest[clientIdentifier];
                         delete this.clientsState[clientIdentifier];
@@ -2401,7 +2400,9 @@
             //
             const channelGroupsForLeave = new Set();
             const channelsForLeave = new Set();
-            if (stateChanges && (stateChanges.channels.removed || stateChanges.channelGroups.removed)) {
+            if (stateChanges &&
+                removedRequests.length &&
+                (stateChanges.channels.removed || stateChanges.channelGroups.removed)) {
                 const channelGroups = (_c = stateChanges.channelGroups.removed) !== null && _c !== void 0 ? _c : [];
                 const channels = (_d = stateChanges.channels.removed) !== null && _d !== void 0 ? _d : [];
                 const client = removedRequests[0].client;
@@ -3634,9 +3635,12 @@
                     leeway = 0;
                 const current = Date.now();
                 if (expected - current > leeway * 1000) {
-                    if (request && this.previousRequestResult) {
+                    if (request && !!this.previousRequestResult) {
+                        const fetchRequest = request.asFetchRequest;
+                        const result = Object.assign(Object.assign({}, this.previousRequestResult), { clientIdentifier: request.client.identifier, identifier: request.identifier, url: fetchRequest.url });
                         request.handleProcessingStarted();
-                        request.handleProcessingSuccess(request.asFetchRequest, this.previousRequestResult);
+                        request.handleProcessingSuccess(fetchRequest, result);
+                        return;
                     }
                     else if (!request)
                         return;
@@ -4283,7 +4287,13 @@
          * @param data - Object with received request details.
          */
         handleSendRequestEvent(data) {
+            var _a;
             let request;
+            // Setup client's authentication token from request (if it hasn't been set yet)
+            if (!this._accessToken && !!((_a = data.request.queryParameters) === null || _a === void 0 ? void 0 : _a.auth) && !!data.preProcessedToken) {
+                const auth = data.request.queryParameters.auth;
+                this._accessToken = new AccessToken(auth, data.preProcessedToken.token, data.preProcessedToken.expiration);
+            }
             if (data.request.path.startsWith('/v2/subscribe')) {
                 if (SubscribeRequest.useCachedState(data.request) &&
                     (this.cachedSubscriptionChannelGroups.length || this.cachedSubscriptionChannels.length)) {
@@ -4524,6 +4534,7 @@
                 }
             }
             this.forEachClient(client.subKey, (subKeyClient) => subKeyClient.logger.debug(`'${this.sharedWorkerIdentifier}' shared worker unregistered '${client.identifier}' client (${this.clientBySubscribeKey[client.subKey].length} active clients).`));
+            client.invalidate();
             this.dispatchEvent(new PubNubClientManagerUnregisterEvent(client, withLeave));
         }
         // endregion
@@ -4574,6 +4585,12 @@
                 return;
             const interval = this.timeouts[subKey].interval;
             [...this.clientBySubscribeKey[subKey]].forEach((client) => {
+                // Handle potential SharedWorker timers throttling and early eviction of the PubNub core client.
+                // If timer fired later than specified interval - it has been throttled and shouldn't unregister client.
+                if (client.lastPingRequest && Date.now() / 1000 - client.lastPingRequest > interval * 0.5) {
+                    client.logger.warn('PubNub clients timeout timer fired after throttling past due time.');
+                    client.lastPingRequest = undefined;
+                }
                 if (client.lastPingRequest &&
                     (!client.lastPongEvent || Math.abs(client.lastPongEvent - client.lastPingRequest) > interval * 0.5)) {
                     this.unregisterClient(client, this.timeouts[subKey].unsubscribeOffline);
@@ -4584,7 +4601,7 @@
                     });
                 }
                 if (this.clients[client.identifier]) {
-                    client.lastPingRequest = new Date().getTime() / 1000;
+                    client.lastPingRequest = Date.now() / 1000;
                     client.postEvent({ type: 'shared-worker-ping' });
                 }
             });

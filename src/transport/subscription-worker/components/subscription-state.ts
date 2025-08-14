@@ -389,14 +389,12 @@ export class SubscriptionState extends EventTarget {
         this.addListenersForRequestEvents(request);
       }
 
-      if (
-        remove &&
-        (!!this.requests[clientIdentifier] || (clientInvalidate && !!this.lastCompletedRequest[clientIdentifier]))
-      ) {
+      if (remove && (!!this.requests[clientIdentifier] || !!this.lastCompletedRequest[clientIdentifier])) {
         if (clientInvalidate) {
           delete this.lastCompletedRequest[clientIdentifier];
           delete this.clientsState[clientIdentifier];
         }
+
         delete this.requests[clientIdentifier];
         removedRequests.push(request);
       }
@@ -566,7 +564,11 @@ export class SubscriptionState extends EventTarget {
     const channelGroupsForLeave = new Set<string>();
     const channelsForLeave = new Set<string>();
 
-    if (stateChanges && (stateChanges.channels.removed || stateChanges.channelGroups.removed)) {
+    if (
+      stateChanges &&
+      removedRequests.length &&
+      (stateChanges.channels.removed || stateChanges.channelGroups.removed)
+    ) {
       const channelGroups = stateChanges.channelGroups.removed ?? [];
       const channels = stateChanges.channels.removed ?? [];
       const client = removedRequests[0].client;

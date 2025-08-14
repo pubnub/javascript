@@ -345,6 +345,12 @@ export class PubNubClient extends EventTarget {
   private handleSendRequestEvent(data: SendRequestEvent) {
     let request: BasePubNubRequest;
 
+    // Setup client's authentication token from request (if it hasn't been set yet)
+    if (!this._accessToken && !!data.request.queryParameters?.auth && !!data.preProcessedToken) {
+      const auth = data.request.queryParameters.auth as string;
+      this._accessToken = new AccessToken(auth, data.preProcessedToken.token, data.preProcessedToken.expiration);
+    }
+
     if (data.request.path.startsWith('/v2/subscribe')) {
       if (
         SubscribeRequest.useCachedState(data.request) &&
