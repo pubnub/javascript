@@ -208,14 +208,14 @@ export class PubNubClientsManager extends EventTarget {
     [...this.clientBySubscribeKey[subKey]].forEach((client) => {
       // Handle potential SharedWorker timers throttling and early eviction of the PubNub core client.
       // If timer fired later than specified interval - it has been throttled and shouldn't unregister client.
-      if (client.lastPingRequest && Date.now() / 1000 - client.lastPingRequest > interval * 0.5) {
+      if (client.lastPingRequest && Date.now() / 1000 - client.lastPingRequest - 0.2 > interval * 0.5) {
         client.logger.warn('PubNub clients timeout timer fired after throttling past due time.');
         client.lastPingRequest = undefined;
       }
 
       if (
         client.lastPingRequest &&
-        (!client.lastPongEvent || Math.abs(client.lastPongEvent - client.lastPingRequest) > interval * 0.5)
+        (!client.lastPongEvent || Math.abs(client.lastPongEvent - client.lastPingRequest) > interval)
       ) {
         this.unregisterClient(client, this.timeouts[subKey].unsubscribeOffline);
 

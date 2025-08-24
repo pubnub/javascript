@@ -316,6 +316,15 @@ export class SubscriptionState extends EventTarget {
   // region Aggregation
 
   /**
+   * Update access token for the client which should be used with next subscribe request.
+   *
+   * @param accessToken - Access token for next subscribe REST API call.
+   */
+  updateClientAccessToken(accessToken: AccessToken) {
+    if (!this.accessToken || accessToken.isNewerThan(this.accessToken)) this.accessToken = accessToken;
+  }
+
+  /**
    * Mark specific client as suitable for state invalidation when it will be appropriate.
    *
    * @param client - Reference to the {@link PubNubClient|PubNub} client which should be invalidated when will be
@@ -428,9 +437,6 @@ export class SubscriptionState extends EventTarget {
     const newInitialServiceRequests: SubscribeRequest[] = [];
     const cancelledServiceRequests: SubscribeRequest[] = [];
     let serviceLeaveRequest: LeaveRequest | undefined;
-
-    const originalContinuationRequests = [...continuationRequests];
-    const originalInitialRequests = [...initialRequests];
 
     // Identify token override for initial requests.
     let timetokenOverrideRefreshTimestamp: number | undefined;
@@ -645,7 +651,7 @@ export class SubscriptionState extends EventTarget {
   private addListenersForRequestEvents(request: SubscribeRequest) {
     const abortController = (this.requestListenersAbort[request.identifier] = new AbortController());
 
-    const cleanUpCallback = (evt: Event) => {
+    const cleanUpCallback = () => {
       this.removeListenersFromRequestEvents(request);
       if (!request.isServiceRequest) {
         if (this.requests[request.client.identifier]) {

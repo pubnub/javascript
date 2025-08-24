@@ -48,11 +48,23 @@ export class AccessToken {
   /**
    * Check whether two access token objects represent the same permissions or not.
    *
-   * @param other - Other access token which should be used in comparison.
-   * @returns `true` if received and another access token object represents the same permissions.
+   * @param other - Other access token that should be used in comparison.
+   * @param checkExpiration - Whether the token expiration date also should be compared or not.
+   * @returns `true` if received and another access token object represents the same permissions (and `expiration` if
+   * has been requested).
    */
-  equalTo(other: AccessToken): boolean {
-    return this.asIdentifier === other.asIdentifier;
+  equalTo(other: AccessToken, checkExpiration: boolean = false): boolean {
+    return this.asIdentifier === other.asIdentifier && (checkExpiration ? this.expiration === other.expiration : true);
+  }
+
+  /**
+   * Check whether the receiver is a newer auth token than another.
+   *
+   * @param other - Other access token that should be used in comparison.
+   * @returns `true` if received has a more distant expiration date than another token.
+   */
+  isNewerThan(other: AccessToken) {
+    return this.simplifiedToken ? this.expiration! > other.expiration! : false;
   }
 
   /**

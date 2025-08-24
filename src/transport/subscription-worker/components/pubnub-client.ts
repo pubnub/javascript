@@ -293,7 +293,7 @@ export class PubNubClient extends EventTarget {
       // Check whether the access token really changed or not.
       if (
         !!accessToken !== !!this.accessToken ||
-        (!!accessToken && this.accessToken && !accessToken.equalTo(this.accessToken))
+        (!!accessToken && this.accessToken && !accessToken.equalTo(this.accessToken, true))
       ) {
         const oldValue = this._accessToken;
         this._accessToken = accessToken;

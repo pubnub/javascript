@@ -1767,11 +1767,22 @@
         /**
          * Check whether two access token objects represent the same permissions or not.
          *
-         * @param other - Other access token which should be used in comparison.
-         * @returns `true` if received and another access token object represents the same permissions.
+         * @param other - Other access token that should be used in comparison.
+         * @param checkExpiration - Whether the token expiration date also should be compared or not.
+         * @returns `true` if received and another access token object represents the same permissions (and `expiration` if
+         * has been requested).
          */
-        equalTo(other) {
-            return this.asIdentifier === other.asIdentifier;
+        equalTo(other, checkExpiration = false) {
+            return this.asIdentifier === other.asIdentifier && (checkExpiration ? this.expiration === other.expiration : true);
+        }
+        /**
+         * Check whether the receiver is a newer auth token than another.
+         *
+         * @param other - Other access token that should be used in comparison.
+         * @returns `true` if received has a more distant expiration date than another token.
+         */
+        isNewerThan(other) {
+            return this.simplifiedToken ? this.expiration > other.expiration : false;
         }
         /**
          * Stringify object to actual access token / key value.
@@ -2197,6 +2208,15 @@
         // --------------------------------------------------------
         // region Aggregation
         /**
+         * Update access token for the client which should be used with next subscribe request.
+         *
+         * @param accessToken - Access token for next subscribe REST API call.
+         */
+        updateClientAccessToken(accessToken) {
+            if (!this.accessToken || accessToken.isNewerThan(this.accessToken))
+                this.accessToken = accessToken;
+        }
+        /**
          * Mark specific client as suitable for state invalidation when it will be appropriate.
          *
          * @param client - Reference to the {@link PubNubClient|PubNub} client which should be invalidated when will be
@@ -2286,8 +2306,6 @@
             const newInitialServiceRequests = [];
             const cancelledServiceRequests = [];
             let serviceLeaveRequest;
-            [...continuationRequests];
-            [...initialRequests];
             // Identify token override for initial requests.
             let timetokenOverrideRefreshTimestamp;
             let decidedTimetokenRegionOverride;
@@ -2460,7 +2478,7 @@
         // region Event handlers
         addListenersForRequestEvents(request) {
             const abortController = (this.requestListenersAbort[request.identifier] = new AbortController());
-            const cleanUpCallback = (evt) => {
+            const cleanUpCallback = () => {
                 this.removeListenersFromRequestEvents(request);
                 if (!request.isServiceRequest) {
                     if (this.requests[request.client.identifier]) {
@@ -2872,7 +2890,6 @@
             }
             if (!identifier)
                 return;
-            //
             if (request) {
                 // Unset `service`-provided request because we can't receive a response with new `userId`.
                 request.serviceRequest = undefined;
@@ -3039,10 +3056,28 @@
                 // Keep track of the client's listener abort controller.
                 const abortController = new AbortController();
                 this.clientAbortControllers[client.identifier] = abortController;
-                client.addEventListener(PubNubClientEvent.IdentityChange, () => this.moveClient(client), {
+                client.addEventListener(PubNubClientEvent.IdentityChange, (event) => {
+                    if (!(event instanceof PubNubClientIdentityChangeEvent))
+                        return;
+                    // Make changes into state only if `userId` actually changed.
+                    if (!!event.oldUserId !== !!event.newUserId ||
+                        (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId))
+                        this.moveClient(client);
+                }, {
                     signal: abortController.signal,
                 });
-                client.addEventListener(PubNubClientEvent.AuthChange, () => this.moveClient(client), {
+                client.addEventListener(PubNubClientEvent.AuthChange, (event) => {
+                    var _a;
+                    if (!(event instanceof PubNubClientAuthChangeEvent))
+                        return;
+                    // Check whether the client should be moved to another state because of a permissions change or whether the
+                    // same token with the same permissions should be used for the next requests.
+                    if (!!event.oldAuth !== !!event.newAuth ||
+                        (event.oldAuth && event.newAuth && !event.oldAuth.equalTo(event.newAuth)))
+                        this.moveClient(client);
+                    else if (event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
+                        (_a = this.subscriptionStateForClient(client)) === null || _a === void 0 ? void 0 : _a.updateClientAccessToken(event.newAuth);
+                }, {
                     signal: abortController.signal,
                 });
                 client.addEventListener(PubNubClientEvent.SendSubscribeRequest, (event) => {
@@ -3853,11 +3888,15 @@
                 client.addEventListener(PubNubClientEvent.IdentityChange, (event) => {
                     if (!(event instanceof PubNubClientIdentityChangeEvent))
                         return;
-                    const state = this.heartbeatStateForClient(client);
-                    const request = state ? state.requestForClient(client) : undefined;
-                    if (request)
-                        request.userId = event.newUserId;
-                    this.moveClient(client);
+                    // Make changes into state only if `userId` actually changed.
+                    if (!!event.oldUserId !== !!event.newUserId ||
+                        (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId)) {
+                        const state = this.heartbeatStateForClient(client);
+                        const request = state ? state.requestForClient(client) : undefined;
+                        if (request)
+                            request.userId = event.newUserId;
+                        this.moveClient(client);
+                    }
                 }, {
                     signal: abortController.signal,
                 });
@@ -3868,7 +3907,11 @@
                     const request = state ? state.requestForClient(client) : undefined;
                     if (request)
                         request.accessToken = event.newAuth;
-                    this.moveClient(client);
+                    // Check whether the client should be moved to another state because of a permissions change or whether the
+                    // same token with the same permissions should be used for the next requests.
+                    if (!!event.oldAuth !== !!event.newAuth ||
+                        (event.oldAuth && event.newAuth && !event.newAuth.equalTo(event.oldAuth)))
+                        this.moveClient(client);
                 }, {
                     signal: abortController.signal,
                 });
@@ -4252,7 +4295,7 @@
                 const accessToken = authKey ? new AccessToken(authKey, (token !== null && token !== void 0 ? token : {}).token, (token !== null && token !== void 0 ? token : {}).expiration) : undefined;
                 // Check whether the access token really changed or not.
                 if (!!accessToken !== !!this.accessToken ||
-                    (!!accessToken && this.accessToken && !accessToken.equalTo(this.accessToken))) {
+                    (!!accessToken && this.accessToken && !accessToken.equalTo(this.accessToken, true))) {
                     const oldValue = this._accessToken;
                     this._accessToken = accessToken;
                     // Make sure that all ongoing subscribe (usually should be only one at a time) requests use proper
@@ -4590,12 +4633,12 @@
             [...this.clientBySubscribeKey[subKey]].forEach((client) => {
                 // Handle potential SharedWorker timers throttling and early eviction of the PubNub core client.
                 // If timer fired later than specified interval - it has been throttled and shouldn't unregister client.
-                if (client.lastPingRequest && Date.now() / 1000 - client.lastPingRequest > interval * 0.5) {
+                if (client.lastPingRequest && Date.now() / 1000 - client.lastPingRequest - 0.2 > interval * 0.5) {
                     client.logger.warn('PubNub clients timeout timer fired after throttling past due time.');
                     client.lastPingRequest = undefined;
                 }
                 if (client.lastPingRequest &&
-                    (!client.lastPongEvent || Math.abs(client.lastPongEvent - client.lastPingRequest) > interval * 0.5)) {
+                    (!client.lastPongEvent || Math.abs(client.lastPongEvent - client.lastPingRequest) > interval)) {
                     this.unregisterClient(client, this.timeouts[subKey].unsubscribeOffline);
                     // Notify other clients with same subscription key that one of them became inactive.
                     this.forEachClient(subKey, (subKeyClient) => {

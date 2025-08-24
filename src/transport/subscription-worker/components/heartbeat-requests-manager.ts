@@ -3,8 +3,8 @@ import {
   PubNubClientSendLeaveEvent,
   PubNubClientAuthChangeEvent,
   PubNubClientSendHeartbeatEvent,
-  PubNubClientHeartbeatIntervalChangeEvent,
   PubNubClientIdentityChangeEvent,
+  PubNubClientHeartbeatIntervalChangeEvent,
 } from './custom-events/client-event';
 import {
   PubNubClientsManagerEvent,
@@ -166,11 +166,17 @@ export class HeartbeatRequestsManager extends RequestsManager {
         PubNubClientEvent.IdentityChange,
         (event) => {
           if (!(event instanceof PubNubClientIdentityChangeEvent)) return;
-          const state = this.heartbeatStateForClient(client);
-          const request = state ? state.requestForClient(client) : undefined;
-          if (request) request.userId = event.newUserId;
+          // Make changes into state only if `userId` actually changed.
+          if (
+            !!event.oldUserId !== !!event.newUserId ||
+            (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId)
+          ) {
+            const state = this.heartbeatStateForClient(client);
+            const request = state ? state.requestForClient(client) : undefined;
+            if (request) request.userId = event.newUserId;
 
-          this.moveClient(client);
+            this.moveClient(client);
+          }
         },
         {
           signal: abortController.signal,
@@ -184,7 +190,13 @@ export class HeartbeatRequestsManager extends RequestsManager {
           const request = state ? state.requestForClient(client) : undefined;
           if (request) request.accessToken = event.newAuth;
 
-          this.moveClient(client);
+          // Check whether the client should be moved to another state because of a permissions change or whether the
+          // same token with the same permissions should be used for the next requests.
+          if (
+            !!event.oldAuth !== !!event.newAuth ||
+            (event.oldAuth && event.newAuth && !event.newAuth.equalTo(event.oldAuth))
+          )
+            this.moveClient(client);
         },
         {
           signal: abortController.signal,

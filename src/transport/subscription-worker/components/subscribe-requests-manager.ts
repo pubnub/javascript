@@ -1,9 +1,10 @@
 import {
   PubNubClientEvent,
   PubNubClientSendLeaveEvent,
+  PubNubClientAuthChangeEvent,
   PubNubClientSendSubscribeEvent,
-  PubNubClientCancelSubscribeEvent,
   PubNubClientIdentityChangeEvent,
+  PubNubClientCancelSubscribeEvent,
 } from './custom-events/client-event';
 import {
   PubNubClientsManagerEvent,
@@ -18,7 +19,6 @@ import { RequestsManager } from './requests-manager';
 import { PubNubClient } from './pubnub-client';
 import { LeaveRequest } from './leave-request';
 import { leaveRequest } from './helpers';
-import { requests } from 'sinon';
 
 /**
  * Aggregation timer timeout.
@@ -147,7 +147,6 @@ export class SubscribeRequestsManager extends RequestsManager {
 
     if (!identifier) return;
 
-    //
     if (request) {
       // Unset `service`-provided request because we can't receive a response with new `userId`.
       request.serviceRequest = undefined;
@@ -346,12 +345,39 @@ export class SubscribeRequestsManager extends RequestsManager {
       const abortController = new AbortController();
       this.clientAbortControllers[client.identifier] = abortController;
 
-      client.addEventListener(PubNubClientEvent.IdentityChange, () => this.moveClient(client), {
-        signal: abortController.signal,
-      });
-      client.addEventListener(PubNubClientEvent.AuthChange, () => this.moveClient(client), {
-        signal: abortController.signal,
-      });
+      client.addEventListener(
+        PubNubClientEvent.IdentityChange,
+        (event) => {
+          if (!(event instanceof PubNubClientIdentityChangeEvent)) return;
+          // Make changes into state only if `userId` actually changed.
+          if (
+            !!event.oldUserId !== !!event.newUserId ||
+            (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId)
+          )
+            this.moveClient(client);
+        },
+        {
+          signal: abortController.signal,
+        },
+      );
+      client.addEventListener(
+        PubNubClientEvent.AuthChange,
+        (event) => {
+          if (!(event instanceof PubNubClientAuthChangeEvent)) return;
+          // Check whether the client should be moved to another state because of a permissions change or whether the
+          // same token with the same permissions should be used for the next requests.
+          if (
+            !!event.oldAuth !== !!event.newAuth ||
+            (event.oldAuth && event.newAuth && !event.oldAuth.equalTo(event.newAuth))
+          )
+            this.moveClient(client);
+          else if (event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
+            this.subscriptionStateForClient(client)?.updateClientAccessToken(event.newAuth);
+        },
+        {
+          signal: abortController.signal,
+        },
+      );
       client.addEventListener(
         PubNubClientEvent.SendSubscribeRequest,
         (event) => {
