@@ -236,7 +236,7 @@ export const makeConfiguration = (
       return base.PubNubFile;
     },
     get version(): string {
-      return '9.8.4';
+      return '9.9.0';
     },
     getVersion(): string {
       return this.version;
