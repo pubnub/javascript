@@ -1,5 +1,20 @@
 ---
 changelog:
+  - date: 2025-08-07
+    version: v9.8.4
+    changes:
+      - type: bug
+        text: "Resolved an issue that prevented access to static fields of the PubNub class when using the SDK in React Native target builds."
+  - date: 2025-07-28
+    version: v9.8.3
+    changes:
+      - type: improvement
+        text: "Update workflow with `id-token: write` permission for AWS CLI configuration."
+  - date: 2025-07-28
+    version: v9.8.2
+    changes:
+      - type: improvement
+        text: "Upgraded `form-data` dependency to version 4.0.4 to address potential vulnerability issue."
   - date: 2025-07-15
     version: v9.8.1
     changes:
@@ -1298,7 +1313,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.8.1'
+version: '9.8.4'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1314,7 +1329,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.8.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.8.4.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1985,7 +2000,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.8.1/pubnub.9.8.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.8.4/pubnub.9.8.4.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

@@ -1,3 +1,21 @@
+## v9.8.4
+August 07 2025
+
+#### Fixed
+- Resolved an issue that prevented access to static fields of the PubNub class when using the SDK in React Native target builds.
+
+## v9.8.3
+July 28 2025
+
+#### Modified
+- Update workflow with `id-token: write` permission for AWS CLI configuration.
+
+## v9.8.2
+July 28 2025
+
+#### Modified
+- Upgraded `form-data` dependency to version 4.0.4 to address potential vulnerability issue.
+
 ## v9.8.1
 July 15 2025
 

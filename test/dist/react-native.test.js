@@ -164,4 +164,196 @@ describe('#distribution test (rkt-native)', function () {
     });
     pubnub.subscribe({channels: [myChannel1]});
   });
+
+  describe('#static members', function () {
+    it('should have access to ExponentialRetryPolicy', function () {
+      expect(PubNub.ExponentialRetryPolicy).to.be.a('function');
+      
+      const retryPolicy = PubNub.ExponentialRetryPolicy({
+        minimumDelay: 2,
+        maximumDelay: 150,
+        maximumRetry: 6
+      });
+      
+      expect(retryPolicy).to.have.property('shouldRetry');
+      expect(retryPolicy).to.have.property('getDelay');
+      expect(retryPolicy).to.have.property('validate');
+      expect(retryPolicy.minimumDelay).to.equal(2);
+      expect(retryPolicy.maximumDelay).to.equal(150);
+      expect(retryPolicy.maximumRetry).to.equal(6);
+    });
+
+    it('should have access to LinearRetryPolicy', function () {
+      expect(PubNub.LinearRetryPolicy).to.be.a('function');
+      
+      const retryPolicy = PubNub.LinearRetryPolicy({
+        delay: 5,
+        maximumRetry: 10
+      });
+      
+      expect(retryPolicy).to.have.property('shouldRetry');
+      expect(retryPolicy).to.have.property('getDelay');
+      expect(retryPolicy).to.have.property('validate');
+      expect(retryPolicy.delay).to.equal(5);
+      expect(retryPolicy.maximumRetry).to.equal(10);
+    });
+
+    it('should have access to NoneRetryPolicy', function () {
+      expect(PubNub.NoneRetryPolicy).to.be.a('function');
+      
+      const retryPolicy = PubNub.NoneRetryPolicy();
+      
+      expect(retryPolicy).to.have.property('shouldRetry');
+      expect(retryPolicy).to.have.property('getDelay');
+      expect(retryPolicy).to.have.property('validate');
+      expect(retryPolicy.shouldRetry()).to.be.false;
+      expect(retryPolicy.getDelay()).to.equal(-1);
+    });
+
+
+
+    it('should have access to CATEGORIES enum', function () {
+      expect(PubNub.CATEGORIES).to.be.an('object');
+      expect(PubNub.CATEGORIES).to.have.property('PNNetworkUpCategory');
+      expect(PubNub.CATEGORIES).to.have.property('PNNetworkDownCategory');
+      expect(PubNub.CATEGORIES).to.have.property('PNReconnectedCategory');
+      expect(PubNub.CATEGORIES).to.have.property('PNConnectedCategory');
+      expect(PubNub.CATEGORIES).to.have.property('PNAccessDeniedCategory');
+      expect(PubNub.CATEGORIES).to.have.property('PNTimeoutCategory');
+    });
+
+    it('should have access to OPERATIONS enum', function () {
+      expect(PubNub.OPERATIONS).to.be.an('object');
+      expect(PubNub.OPERATIONS).to.have.property('PNSubscribeOperation');
+      expect(PubNub.OPERATIONS).to.have.property('PNUnsubscribeOperation');
+      expect(PubNub.OPERATIONS).to.have.property('PNPublishOperation');
+      expect(PubNub.OPERATIONS).to.have.property('PNHistoryOperation');
+      expect(PubNub.OPERATIONS).to.have.property('PNTimeOperation');
+    });
+
+    it('should have access to Endpoint enum', function () {
+      expect(PubNub.Endpoint).to.be.an('object');
+      expect(PubNub.Endpoint).to.have.property('MessageSend');
+      expect(PubNub.Endpoint).to.have.property('Presence');
+      expect(PubNub.Endpoint).to.have.property('Files');
+      expect(PubNub.Endpoint).to.have.property('MessageStorage');
+      expect(PubNub.Endpoint).to.have.property('ChannelGroups');
+    });
+
+    it('should have access to LogLevel enum', function () {
+      expect(PubNub.LogLevel).to.be.an('object');
+      expect(PubNub.LogLevel).to.have.property('Verbose');
+      expect(PubNub.LogLevel).to.have.property('Debug');
+      expect(PubNub.LogLevel).to.have.property('Info');
+      expect(PubNub.LogLevel).to.have.property('Warn');
+      expect(PubNub.LogLevel).to.have.property('Error');
+      expect(PubNub.LogLevel).to.have.property('Critical');
+    });
+
+    it('should have access to generateUUID static method', function () {
+      expect(PubNub.generateUUID).to.be.a('function');
+      
+      const uuid1 = PubNub.generateUUID();
+      const uuid2 = PubNub.generateUUID();
+      
+      expect(uuid1).to.be.a('string');
+      expect(uuid2).to.be.a('string');
+      expect(uuid1).to.have.length.above(0);
+      expect(uuid1).to.not.equal(uuid2); // UUIDs should be unique
+    });
+
+    it('should have access to notificationPayload static method', function () {
+      expect(PubNub.notificationPayload).to.be.a('function');
+      
+      const payload = PubNub.notificationPayload('Test Title', 'Test Body');
+      
+      expect(payload).to.be.an('object');
+      expect(payload).to.have.property('pn_apns');
+      expect(payload).to.have.property('pn_gcm');
+      expect(payload.pn_apns.aps.alert.title).to.equal('Test Title');
+      expect(payload.pn_apns.aps.alert.body).to.equal('Test Body');
+    });
+
+    it('should be able to use retry policies in configuration', function (done) {
+      // Test with ExponentialRetryPolicy
+      const exponentialPubNub = new PubNub({
+        subscribeKey: 'demo',
+        publishKey: 'demo',
+        uuid: 'testUUID',
+        retryConfiguration: PubNub.ExponentialRetryPolicy({
+          minimumDelay: 2,
+          maximumDelay: 10,
+          maximumRetry: 3,
+          excluded: [PubNub.Endpoint.MessageSend]
+        })
+      });
+      
+      expect(exponentialPubNub._configuration.retryConfiguration).to.be.an('object');
+      expect(exponentialPubNub._configuration.retryConfiguration.minimumDelay).to.equal(2);
+      exponentialPubNub.destroy();
+
+      // Test with LinearRetryPolicy
+      const linearPubNub = new PubNub({
+        subscribeKey: 'demo',
+        publishKey: 'demo',
+        uuid: 'testUUID',
+        retryConfiguration: PubNub.LinearRetryPolicy({
+          delay: 3,
+          maximumRetry: 5
+        })
+      });
+      
+      expect(linearPubNub._configuration.retryConfiguration).to.be.an('object');
+      expect(linearPubNub._configuration.retryConfiguration.delay).to.equal(3);
+      linearPubNub.destroy();
+
+      // Test with NoneRetryPolicy (disable retries)
+      const nonePubNub = new PubNub({
+        subscribeKey: 'demo',
+        publishKey: 'demo',
+        uuid: 'testUUID',
+        retryConfiguration: PubNub.NoneRetryPolicy()
+      });
+      
+      expect(nonePubNub._configuration.retryConfiguration).to.be.an('object');
+      expect(nonePubNub._configuration.retryConfiguration.shouldRetry()).to.be.false;
+      nonePubNub.destroy();
+
+      done();
+    });
+
+    it('should maintain compatibility with all static method signatures', function () {
+      // Test that all methods match expected signatures from Web/Node
+      
+      // Retry policy methods should accept configuration objects
+      expect(() => {
+        PubNub.ExponentialRetryPolicy({
+          minimumDelay: 2,
+          maximumDelay: 150,
+          maximumRetry: 6,
+          excluded: [PubNub.Endpoint.MessageSend, PubNub.Endpoint.Presence]
+        });
+      }).to.not.throw();
+
+      expect(() => {
+        PubNub.LinearRetryPolicy({
+          delay: 5,
+          maximumRetry: 10,
+          excluded: [PubNub.Endpoint.Files]
+        });
+      }).to.not.throw();
+
+      expect(() => {
+        PubNub.NoneRetryPolicy();
+      }).to.not.throw();
+
+      // generateUUID should return string
+      expect(PubNub.generateUUID()).to.be.a('string');
+
+      // notificationPayload should accept two strings
+      expect(() => {
+        PubNub.notificationPayload('title', 'body');
+      }).to.not.throw();
+    });
+  });
 });
