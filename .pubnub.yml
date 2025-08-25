@@ -12,7 +12,7 @@ changelog:
       - type: improvement
         text: "Log entry timestamp will be altered on millisecond if multiple log entries have similar timestamp (logged in fraction of nanoseconds)."
       - type: improvement
-        text: "Change the condition that is used to identify whether the `offline` detection timer has been suspended by the browser or not before trying to evict "offline" PubNub clients."
+        text: "Change the condition that is used to identify whether the `offline` detection timer has been suspended by the browser or not before trying to evict `offline` PubNub clients."
   - date: 2025-08-07
     version: v9.8.4
     changes:
