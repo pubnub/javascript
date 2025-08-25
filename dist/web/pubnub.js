@@ -919,6 +919,13 @@
 	     * PubNub client unexpectedly disconnected from the real-time updates streams.
 	     */
 	    StatusCategory["PNDisconnectedUnexpectedlyCategory"] = "PNDisconnectedUnexpectedlyCategory";
+	    // --------------------------------------------------------
+	    // ------------------ Shared worker events ----------------
+	    // --------------------------------------------------------
+	    /**
+	     * SDK will announce when newer shared worker will be 'noticed'.
+	     */
+	    StatusCategory["PNSharedWorkerUpdatedCategory"] = "PNSharedWorkerUpdatedCategory";
 	})(StatusCategory || (StatusCategory = {}));
 	var StatusCategory$1 = StatusCategory;
 
@@ -3585,6 +3592,7 @@
 	            clientIdentifier: this.configuration.clientIdentifier,
 	            subscriptionKey: this.configuration.subscriptionKey,
 	            userId: this.configuration.userId,
+	            workerLogLevel: this.configuration.workerLogLevel,
 	        });
 	    }
 	    /**
@@ -3600,6 +3608,7 @@
 	            clientIdentifier: this.configuration.clientIdentifier,
 	            subscriptionKey: this.configuration.subscriptionKey,
 	            userId: this.configuration.userId,
+	            workerLogLevel: this.configuration.workerLogLevel,
 	        });
 	    }
 	    /**
@@ -3614,6 +3623,7 @@
 	            clientIdentifier: this.configuration.clientIdentifier,
 	            subscriptionKey: this.configuration.subscriptionKey,
 	            userId: this.configuration.userId,
+	            workerLogLevel: this.configuration.workerLogLevel,
 	        };
 	        // Trigger request processing by Service Worker.
 	        this.parsedAccessToken(token)
@@ -3624,6 +3634,17 @@
 	            .then(() => this.scheduleEventPost(updateEvent));
 	    }
 	    /**
+	     * Disconnect client and terminate ongoing long-poll requests (if needed).
+	     */
+	    disconnect() {
+	        this.scheduleEventPost({
+	            type: 'client-disconnect',
+	            clientIdentifier: this.configuration.clientIdentifier,
+	            subscriptionKey: this.configuration.subscriptionKey,
+	            workerLogLevel: this.configuration.workerLogLevel,
+	        });
+	    }
+	    /**
 	     * Terminate all ongoing long-poll requests.
 	     */
 	    terminate() {
@@ -3631,6 +3652,7 @@
 	            type: 'client-unregister',
 	            clientIdentifier: this.configuration.clientIdentifier,
 	            subscriptionKey: this.configuration.subscriptionKey,
+	            workerLogLevel: this.configuration.workerLogLevel,
 	        });
 	    }
 	    makeSendable(req) {
@@ -3644,6 +3666,7 @@
 	            clientIdentifier: this.configuration.clientIdentifier,
 	            subscriptionKey: this.configuration.subscriptionKey,
 	            request: req,
+	            workerLogLevel: this.configuration.workerLogLevel,
 	        };
 	        if (req.cancellable) {
 	            controller = {
@@ -3653,6 +3676,7 @@
 	                        clientIdentifier: this.configuration.clientIdentifier,
 	                        subscriptionKey: this.configuration.subscriptionKey,
 	                        identifier: req.identifier,
+	                        workerLogLevel: this.configuration.workerLogLevel,
 	                    };
 	                    // Cancel active request with specified identifier.
 	                    this.scheduleEventPost(cancelRequest);
@@ -3758,9 +3782,17 @@
 	            heartbeatInterval: this.configuration.heartbeatInterval,
 	            workerOfflineClientsCheckInterval: this.configuration.workerOfflineClientsCheckInterval,
 	            workerUnsubscribeOfflineClients: this.configuration.workerUnsubscribeOfflineClients,
-	            workerLogVerbosity: this.configuration.workerLogVerbosity,
+	            workerLogLevel: this.configuration.workerLogLevel,
 	        }, true);
 	        this.subscriptionWorker.port.onmessage = (event) => this.handleWorkerEvent(event);
+	        if (this.shouldAnnounceNewerSharedWorkerVersionAvailability())
+	            localStorage.setItem('PNSubscriptionSharedWorkerVersion', this.configuration.sdkVersion);
+	        window.addEventListener('storage', (event) => {
+	            if (event.key !== 'PNSubscriptionSharedWorkerVersion' || !event.newValue)
+	                return;
+	            if (this._emitStatus && this.isNewerSharedWorkerVersion(event.newValue))
+	                this._emitStatus({ error: false, category: StatusCategory$1.PNSharedWorkerUpdatedCategory });
+	        });
 	    }
 	    handleWorkerEvent(event) {
 	        const { data } = event;
@@ -3798,7 +3830,12 @@
 	        }
 	        else if (data.type === 'shared-worker-ping') {
 	            const { subscriptionKey, clientIdentifier } = this.configuration;
-	            this.scheduleEventPost({ type: 'client-pong', subscriptionKey, clientIdentifier });
+	            this.scheduleEventPost({
+	                type: 'client-pong',
+	                subscriptionKey,
+	                clientIdentifier,
+	                workerLogLevel: this.configuration.workerLogLevel,
+	            });
 	        }
 	        else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
 	            if (this.callbacks.has(data.identifier)) {
@@ -3932,6 +3969,29 @@
 	            return PubNubAPIError.create({ url, headers: response.headers, body: response.body, status: response.status }, response.body);
 	        }
 	        return new PubNubAPIError(message, category, 0, new Error(message));
+	    }
+	    /**
+	     * Check whether current subscription `SharedWorker` version should be announced or not.
+	     *
+	     * @returns `true` if local storage is empty (only newer version will add value) or stored version is smaller than
+	     * current.
+	     */
+	    shouldAnnounceNewerSharedWorkerVersionAvailability() {
+	        const version = localStorage.getItem('PNSubscriptionSharedWorkerVersion');
+	        if (!version)
+	            return true;
+	        return !this.isNewerSharedWorkerVersion(version);
+	    }
+	    /**
+	     * Check whether current subscription `SharedWorker` version should be announced or not.
+	     *
+	     * @param version - Stored (received on init or event) version of subscription shared worker.
+	     * @returns `true` if provided `version` is newer than current client version.
+	     */
+	    isNewerSharedWorkerVersion(version) {
+	        const [currentMajor, currentMinor, currentPatch] = this.configuration.sdkVersion.split('.').map(Number);
+	        const [storedMajor, storedMinor, storedPatch] = version.split('.').map(Number);
+	        return storedMajor > currentMajor || storedMinor > currentMinor || storedPatch > currentPatch;
 	    }
 	}
 
@@ -4455,7 +4515,7 @@
 	 */
 	class ConsoleLogger {
 	    /**
-	     * Process a `trace` level message.
+	     * Process a `debug` level message.
 	     *
 	     * @param message - Message which should be handled by custom logger implementation.
 	     */
@@ -4463,7 +4523,7 @@
 	        this.log(message);
 	    }
 	    /**
-	     * Process a `debug` level message.
+	     * Process a `error` level message.
 	     *
 	     * @param message - Message which should be handled by custom logger implementation.
 	     */
@@ -4479,7 +4539,7 @@
 	        this.log(message);
 	    }
 	    /**
-	     * Process a `warn` level message.
+	     * Process a `trace` level message.
 	     *
 	     * @param message - Message which should be handled by custom logger implementation.
 	     */
@@ -4487,12 +4547,20 @@
 	        this.log(message);
 	    }
 	    /**
-	     * Process an `error` level message.
+	     * Process an `warn` level message.
 	     *
 	     * @param message - Message which should be handled by custom logger implementation.
 	     */
 	    warn(message) {
 	        this.log(message);
+	    }
+	    /**
+	     * Stringify logger object.
+	     *
+	     * @returns Serialized logger object.
+	     */
+	    toString() {
+	        return `ConsoleLogger {}`;
 	    }
 	    /**
 	     * Process log message object.
@@ -5026,6 +5094,15 @@
 	     * @internal
 	     */
 	    constructor(pubNubId, minLogLevel, loggers) {
+	        /**
+	         * Keeping track of previous entry timestamp.
+	         *
+	         * This information will be used to make sure that multiple sequential entries doesn't have same timestamp. Adjustment
+	         * on .001 will be done to make it possible to properly stort entries.
+	         *
+	         * @internal
+	         */
+	        this.previousEntryTimestamp = 0;
 	        this.pubNubId = pubNubId;
 	        this.minLogLevel = minLogLevel;
 	        this.loggers = loggers;
@@ -5108,8 +5185,15 @@
 	        // Check whether a log message should be handled at all or not.
 	        if (logLevel < this.minLogLevel || this.loggers.length === 0)
 	            return;
+	        const date = new Date();
+	        if (date.getTime() <= this.previousEntryTimestamp) {
+	            this.previousEntryTimestamp++;
+	            date.setTime(this.previousEntryTimestamp);
+	        }
+	        else
+	            this.previousEntryTimestamp = date.getTime();
 	        const level = LogLevel[logLevel].toLowerCase();
-	        const message = Object.assign({ timestamp: new Date(), pubNubId: this.pubNubId, level: logLevel, minimumLevel: this.minLogLevel, location }, (typeof messageFactory === 'function' ? messageFactory() : { messageType: 'text', message: messageFactory }));
+	        const message = Object.assign({ timestamp: date, pubNubId: this.pubNubId, level: logLevel, minimumLevel: this.minLogLevel, location }, (typeof messageFactory === 'function' ? messageFactory() : { messageType: 'text', message: messageFactory }));
 	        this.loggers.forEach((logger) => logger[level](message));
 	    }
 	}
@@ -5303,6 +5387,10 @@
 	        getUseRandomIVs() {
 	            return base.useRandomIVs;
 	        },
+	        isSharedWorkerEnabled() {
+	            // @ts-expect-error: Access field from web-based SDK configuration.
+	            return base.sdkFamily === 'Web' && base['subscriptionWorkerUrl'];
+	        },
 	        getKeepPresenceChannelsInPresenceRequests() {
 	            // @ts-expect-error: Access field from web-based SDK configuration.
 	            return base.sdkFamily === 'Web' && base['subscriptionWorkerUrl'];
@@ -5333,7 +5421,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.8.4';
+	            return '9.9.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -6653,8 +6741,10 @@
 	        return `/v2/subscribe/${subscribeKey}/${encodeNames((_a = channels === null || channels === void 0 ? void 0 : channels.sort()) !== null && _a !== void 0 ? _a : [], ',')}/0`;
 	    }
 	    get queryParameters() {
-	        const { channelGroups, filterExpression, heartbeat, state, timetoken, region } = this.parameters;
+	        const { channelGroups, filterExpression, heartbeat, state, timetoken, region, onDemand } = this.parameters;
 	        const query = {};
+	        if (onDemand)
+	            query['on-demand'] = 1;
 	        if (channelGroups && channelGroups.length > 0)
 	            query['channel-group'] = channelGroups.sort().join(',');
 	        if (filterExpression && filterExpression.length > 0)
@@ -7023,6 +7113,13 @@
 	        this.subscribeCall = subscribeCall;
 	        this.heartbeatCall = heartbeatCall;
 	        this.leaveCall = leaveCall;
+	        /**
+	         * Whether user code in event handlers requested disconnection or not.
+	         *
+	         * Won't continue subscription loop if user requested disconnection/unsubscribe from all in response to received
+	         * event.
+	         */
+	        this.disconnectedWhileHandledEvent = false;
 	        configuration.logger().trace('SubscriptionManager', 'Create manager.');
 	        this.reconnectionManager = new ReconnectionManager(time);
 	        this.dedupingManager = new DedupingManager(this.configuration);
@@ -7068,6 +7165,9 @@
 	    // endregion
 	    // region Subscription
 	    disconnect() {
+	        // Potentially called during received events handling.
+	        // Mark to prevent subscription loop continuation in subscribe response handler.
+	        this.disconnectedWhileHandledEvent = true;
 	        this.stopSubscribeLoop();
 	        this.stopHeartbeatTimer();
 	        this.reconnectionManager.stopPolling();
@@ -7153,6 +7253,22 @@
 	        // There is no need to unsubscribe to empty list of data sources.
 	        if (actualChannels.size === 0 && actualChannelGroups.size === 0)
 	            return;
+	        const lastTimetoken = this.lastTimetoken;
+	        const currentTimetoken = this.currentTimetoken;
+	        if (Object.keys(this.channels).length === 0 &&
+	            Object.keys(this.presenceChannels).length === 0 &&
+	            Object.keys(this.channelGroups).length === 0 &&
+	            Object.keys(this.presenceChannelGroups).length === 0) {
+	            this.lastTimetoken = '0';
+	            this.currentTimetoken = '0';
+	            this.referenceTimetoken = null;
+	            this.storedTimetoken = null;
+	            this.region = null;
+	            this.reconnectionManager.stopPolling();
+	        }
+	        this.reconnect(true);
+	        // Send leave request after long-poll connection closed and loop restarted (the same way as it happens in new
+	        // subscription flow).
 	        if (this.configuration.suppressLeaveEvents === false && !isOffline) {
 	            channelGroups = Array.from(actualChannelGroups);
 	            channels = Array.from(actualChannels);
@@ -7168,23 +7284,13 @@
 	                    else if ('message' in status && typeof status.message === 'string')
 	                        errorMessage = status.message;
 	                }
-	                this.emitStatus(Object.assign(Object.assign({}, restOfStatus), { error: errorMessage !== null && errorMessage !== void 0 ? errorMessage : false, affectedChannels: channels, affectedChannelGroups: channelGroups, currentTimetoken: this.currentTimetoken, lastTimetoken: this.lastTimetoken }));
+	                this.emitStatus(Object.assign(Object.assign({}, restOfStatus), { error: errorMessage !== null && errorMessage !== void 0 ? errorMessage : false, affectedChannels: channels, affectedChannelGroups: channelGroups, currentTimetoken,
+	                    lastTimetoken }));
 	            });
 	        }
-	        if (Object.keys(this.channels).length === 0 &&
-	            Object.keys(this.presenceChannels).length === 0 &&
-	            Object.keys(this.channelGroups).length === 0 &&
-	            Object.keys(this.presenceChannelGroups).length === 0) {
-	            this.lastTimetoken = '0';
-	            this.currentTimetoken = '0';
-	            this.referenceTimetoken = null;
-	            this.storedTimetoken = null;
-	            this.region = null;
-	            this.reconnectionManager.stopPolling();
-	        }
-	        this.reconnect(true);
 	    }
 	    unsubscribeAll(isOffline = false) {
+	        this.disconnectedWhileHandledEvent = true;
 	        this.unsubscribe({
 	            channels: this.subscribedChannels,
 	            channelGroups: this.subscribedChannelGroups,
@@ -7199,6 +7305,7 @@
 	     * @internal
 	     */
 	    startSubscribeLoop(restartOnUnsubscribe = false) {
+	        this.disconnectedWhileHandledEvent = false;
 	        this.stopSubscribeLoop();
 	        const channelGroups = [...Object.keys(this.channelGroups)];
 	        const channels = [...Object.keys(this.channels)];
@@ -7207,8 +7314,8 @@
 	        // There is no need to start subscription loop for an empty list of data sources.
 	        if (channels.length === 0 && channelGroups.length === 0)
 	            return;
-	        this.subscribeCall(Object.assign(Object.assign({ channels,
-	            channelGroups, state: this.presenceState, heartbeat: this.configuration.getPresenceTimeout(), timetoken: this.currentTimetoken }, (this.region !== null ? { region: this.region } : {})), (this.configuration.filterExpression ? { filterExpression: this.configuration.filterExpression } : {})), (status, result) => {
+	        this.subscribeCall(Object.assign(Object.assign(Object.assign({ channels,
+	            channelGroups, state: this.presenceState, heartbeat: this.configuration.getPresenceTimeout(), timetoken: this.currentTimetoken }, (this.region !== null ? { region: this.region } : {})), (this.configuration.filterExpression ? { filterExpression: this.configuration.filterExpression } : {})), { onDemand: !this.subscriptionStatusAnnounced || restartOnUnsubscribe }), (status, result) => {
 	            this.processSubscribeResponse(status, result);
 	        });
 	        if (!restartOnUnsubscribe && this.configuration.useSmartHeartbeat)
@@ -7339,7 +7446,10 @@
 	            this.emitStatus(errorStatus);
 	        }
 	        this.region = result.cursor.region;
-	        this.startSubscribeLoop();
+	        if (!this.disconnectedWhileHandledEvent)
+	            this.startSubscribeLoop();
+	        else
+	            this.disconnectedWhileHandledEvent = false;
 	    }
 	    // endregion
 	    // region Presence
@@ -8825,9 +8935,10 @@
 	 *
 	 * @internal
 	 */
-	const handshake = createManagedEffect('HANDSHAKE', (channels, groups) => ({
+	const handshake = createManagedEffect('HANDSHAKE', (channels, groups, onDemand) => ({
 	    channels,
 	    groups,
+	    onDemand,
 	}));
 	/**
 	 * Real-time updates receive effect.
@@ -8837,7 +8948,12 @@
 	 *
 	 * @internal
 	 */
-	const receiveMessages = createManagedEffect('RECEIVE_MESSAGES', (channels, groups, cursor) => ({ channels, groups, cursor }));
+	const receiveMessages = createManagedEffect('RECEIVE_MESSAGES', (channels, groups, cursor, onDemand) => ({
+	    channels,
+	    groups,
+	    cursor,
+	    onDemand,
+	}));
 	/**
 	 * Emit real-time updates effect.
 	 *
@@ -8971,7 +9087,7 @@
 	UnsubscribedState.on(subscriptionChange.type, (_, { payload }) => {
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
 	        return UnsubscribedState.with(undefined);
-	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups });
+	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, onDemand: true });
 	});
 	UnsubscribedState.on(restore.type, (_, { payload }) => {
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
@@ -8980,6 +9096,7 @@
 	        channels: payload.channels,
 	        groups: payload.groups,
 	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region },
+	        onDemand: true,
 	    });
 	});
 
@@ -9002,7 +9119,7 @@
 	        return UnsubscribedState.with(undefined);
 	    return HandshakeStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
 	});
-	HandshakeStoppedState.on(reconnect.type, (context, { payload }) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: payload.cursor || context.cursor })));
+	HandshakeStoppedState.on(reconnect.type, (context, { payload }) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: payload.cursor || context.cursor, onDemand: true })));
 	HandshakeStoppedState.on(restore.type, (context, { payload }) => {
 	    var _a;
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
@@ -9032,9 +9149,14 @@
 	HandshakeFailedState.on(subscriptionChange.type, (context, { payload }) => {
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
 	        return UnsubscribedState.with(undefined);
-	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+	    return HandshakingState.with({
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: context.cursor,
+	        onDemand: true,
+	    });
 	});
-	HandshakeFailedState.on(reconnect.type, (context, { payload }) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: payload.cursor || context.cursor })));
+	HandshakeFailedState.on(reconnect.type, (context, { payload }) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: payload.cursor || context.cursor, onDemand: true })));
 	HandshakeFailedState.on(restore.type, (context, { payload }) => {
 	    var _a, _b;
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
@@ -9046,6 +9168,7 @@
 	            timetoken: `${payload.cursor.timetoken}`,
 	            region: payload.cursor.region ? payload.cursor.region : ((_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0),
 	        },
+	        onDemand: true,
 	    });
 	});
 	HandshakeFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
@@ -9064,12 +9187,17 @@
 	 * @internal
 	 */
 	const HandshakingState = new State('HANDSHAKING');
-	HandshakingState.onEnter((context) => handshake(context.channels, context.groups));
+	HandshakingState.onEnter((context) => { var _a; return handshake(context.channels, context.groups, (_a = context.onDemand) !== null && _a !== void 0 ? _a : false); });
 	HandshakingState.onExit(() => handshake.cancel);
 	HandshakingState.on(subscriptionChange.type, (context, { payload }) => {
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
 	        return UnsubscribedState.with(undefined);
-	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+	    return HandshakingState.with({
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: context.cursor,
+	        onDemand: true,
+	    });
 	});
 	HandshakingState.on(handshakeSuccess.type, (context, { payload }) => {
 	    var _a, _b, _c, _d, _e;
@@ -9118,6 +9246,7 @@
 	        channels: payload.channels,
 	        groups: payload.groups,
 	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || ((_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0 },
+	        onDemand: true,
 	    });
 	});
 	HandshakingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
@@ -9159,6 +9288,7 @@
 	            timetoken: !!payload.cursor.timetoken ? (_a = payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
 	            region: payload.cursor.region || context.cursor.region,
 	        },
+	        onDemand: true,
 	    });
 	});
 	ReceiveStoppedState.on(unsubscribeAll.type, () => UnsubscribedState.with(undefined));
@@ -9186,12 +9316,18 @@
 	            timetoken: !!payload.cursor.timetoken ? (_a = payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
 	            region: payload.cursor.region || context.cursor.region,
 	        },
+	        onDemand: true,
 	    });
 	});
 	ReceiveFailedState.on(subscriptionChange.type, (context, { payload }) => {
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
 	        return UnsubscribedState.with(undefined);
-	    return HandshakingState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+	    return HandshakingState.with({
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: context.cursor,
+	        onDemand: true,
+	    });
 	});
 	ReceiveFailedState.on(restore.type, (context, { payload }) => {
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
@@ -9200,6 +9336,7 @@
 	        channels: payload.channels,
 	        groups: payload.groups,
 	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
+	        onDemand: true,
 	    });
 	});
 	ReceiveFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));
@@ -9217,7 +9354,7 @@
 	 * @internal
 	 */
 	const ReceivingState = new State('RECEIVING');
-	ReceivingState.onEnter((context) => receiveMessages(context.channels, context.groups, context.cursor));
+	ReceivingState.onEnter((context) => { var _a; return receiveMessages(context.channels, context.groups, context.cursor, (_a = context.onDemand) !== null && _a !== void 0 ? _a : false); });
 	ReceivingState.onExit(() => receiveMessages.cancel);
 	ReceivingState.on(receiveSuccess.type, (context, { payload }) => ReceivingState.with({
 	    channels: context.channels,
@@ -9242,6 +9379,7 @@
 	        groups: payload.groups,
 	        cursor: context.cursor,
 	        referenceTimetoken: context.referenceTimetoken,
+	        onDemand: true,
 	    }, [
 	        emitStatus({
 	            category: StatusCategory$1.PNSubscriptionChangedCategory,
@@ -9259,6 +9397,7 @@
 	        groups: payload.groups,
 	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
 	        referenceTimetoken: referenceSubscribeTimetoken(context.cursor.timetoken, `${payload.cursor.timetoken}`, context.referenceTimetoken),
+	        onDemand: true,
 	    }, [
 	        emitStatus({
 	            category: StatusCategory$1.PNSubscriptionChangedCategory,
@@ -9311,7 +9450,7 @@
 	        this.on(handshake.type, asyncHandler((payload_1, abortSignal_1, _a) => __awaiter(this, [payload_1, abortSignal_1, _a], void 0, function* (payload, abortSignal, { handshake, presenceState, config }) {
 	            abortSignal.throwIfAborted();
 	            try {
-	                const result = yield handshake(Object.assign({ abortSignal: abortSignal, channels: payload.channels, channelGroups: payload.groups, filterExpression: config.filterExpression }, (config.maintainPresenceState && { state: presenceState })));
+	                const result = yield handshake(Object.assign(Object.assign({ abortSignal: abortSignal, channels: payload.channels, channelGroups: payload.groups, filterExpression: config.filterExpression }, (config.maintainPresenceState && { state: presenceState })), { onDemand: payload.onDemand }));
 	                return engine.transition(handshakeSuccess(result));
 	            }
 	            catch (e) {
@@ -9332,6 +9471,7 @@
 	                    timetoken: payload.cursor.timetoken,
 	                    region: payload.cursor.region,
 	                    filterExpression: config.filterExpression,
+	                    onDemand: payload.onDemand,
 	                });
 	                engine.transition(receiveSuccess(result.cursor, result.messages));
 	            }
@@ -9660,8 +9800,11 @@
 	        return `/v2/subscribe/${subscribeKey}/${encodeNames(channels.sort(), ',')}/0`;
 	    }
 	    get queryParameters() {
-	        const { channelGroups, filterExpression, timetoken, region } = this.parameters;
+	        const { channelGroups, filterExpression, timetoken, region, onDemand } = this
+	            .parameters;
 	        const query = { ee: '' };
+	        if (onDemand)
+	            query['on-demand'] = 1;
 	        if (channelGroups && channelGroups.length > 0)
 	            query['channel-group'] = channelGroups.sort().join(',');
 	        if (filterExpression && filterExpression.length > 0)
@@ -9699,8 +9842,11 @@
 	        return `/v2/subscribe/${subscribeKey}/${encodeNames(channels.sort(), ',')}/0`;
 	    }
 	    get queryParameters() {
-	        const { channelGroups, filterExpression, state } = this.parameters;
+	        const { channelGroups, filterExpression, state, onDemand } = this
+	            .parameters;
 	        const query = { ee: '' };
+	        if (onDemand)
+	            query['on-demand'] = 1;
 	        if (channelGroups && channelGroups.length > 0)
 	            query['channel-group'] = channelGroups.sort().join(',');
 	        if (filterExpression && filterExpression.length > 0)
@@ -15399,6 +15545,9 @@
 	     * Change the current PubNub client user identifier.
 	     *
 	     * **Important:** Change won't affect ongoing REST API calls.
+	     * **Warning:** Because ongoing REST API calls won't be canceled there could happen unexpected events like implicit
+	     * `join` event for the previous `userId` after a long-poll subscribe request will receive a response. To avoid this
+	     * it is advised to unsubscribe from all/disconnect before changing `userId`.
 	     *
 	     * @param value - New PubNub client user identifier.
 	     *
@@ -16126,6 +16275,9 @@
 	     */
 	    makeSubscribe(parameters, callback) {
 	        {
+	            // `on-demand` query parameter not required for non-SharedWorker environment.
+	            if (!this._configuration.isSharedWorkerEnabled())
+	                parameters.onDemand = false;
 	            const request = new SubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
 	            this.sendRequest(request, (status, result) => {
 	                var _a;
@@ -16275,6 +16427,9 @@
 	    subscribeHandshake(parameters) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                // `on-demand` query parameter not required for non-SharedWorker environment.
+	                if (!this._configuration.isSharedWorkerEnabled())
+	                    parameters.onDemand = false;
 	                const request = new HandshakeSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
 	                const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
 	                    request.abort('Cancel subscribe handshake request');
@@ -16303,6 +16458,9 @@
 	    subscribeReceiveMessages(parameters) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            {
+	                // `on-demand` query parameter not required for non-SharedWorker environment.
+	                if (!this._configuration.isSharedWorkerEnabled())
+	                    parameters.onDemand = false;
 	                const request = new ReceiveMessagesSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
 	                const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
 	                    request.abort('Cancel long-poll subscribe request');
@@ -16768,12 +16926,10 @@
 	                // Filtering out presence channels and groups.
 	                let { channels, channelGroups } = parameters;
 	                // Remove `-pnpres` channels / groups if they not acceptable in the current PubNub client configuration.
-	                if (!this._configuration.getKeepPresenceChannelsInPresenceRequests()) {
-	                    if (channelGroups)
-	                        channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
-	                    if (channels)
-	                        channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
-	                }
+	                if (channelGroups)
+	                    channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
+	                if (channels)
+	                    channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
 	                // Complete immediately request only for presence channels.
 	                if ((channelGroups !== null && channelGroups !== void 0 ? channelGroups : []).length === 0 && (channels !== null && channels !== void 0 ? channels : []).length === 0) {
 	                    const responseStatus = {
@@ -18055,6 +18211,15 @@
 	                return cryptoModule;
 	            }
 	        });
+	        if (configuration.subscriptionWorkerLogVerbosity)
+	            configuration.subscriptionWorkerLogLevel = LogLevel.Debug;
+	        else if (configuration.subscriptionWorkerLogLevel === undefined)
+	            configuration.subscriptionWorkerLogLevel = LogLevel.None;
+	        if (configuration.subscriptionWorkerLogVerbosity !== undefined) {
+	            clientConfiguration
+	                .logger()
+	                .warn('Configuration', "'subscriptionWorkerLogVerbosity' is deprecated. Use 'subscriptionWorkerLogLevel' instead.");
+	        }
 	        {
 	            // Ensure that the logger has been passed to the user-provided crypto module.
 	            if (clientConfiguration.getCryptoModule())
@@ -18102,7 +18267,7 @@
 	                        announceFailedHeartbeats: clientConfiguration.announceFailedHeartbeats,
 	                        workerOfflineClientsCheckInterval: platformConfiguration.subscriptionWorkerOfflineClientsCheckInterval,
 	                        workerUnsubscribeOfflineClients: platformConfiguration.subscriptionWorkerUnsubscribeOfflineClients,
-	                        workerLogVerbosity: platformConfiguration.subscriptionWorkerLogVerbosity,
+	                        workerLogLevel: platformConfiguration.subscriptionWorkerLogLevel,
 	                        tokenManager,
 	                        transport,
 	                        logger: clientConfiguration.logger(),
@@ -18147,8 +18312,14 @@
 	        this.onAuthenticationChange = authenticationChangeHandler;
 	        this.onUserIdChange = userIdChangeHandler;
 	        {
-	            if (transport instanceof SubscriptionWorkerMiddleware)
+	            if (transport instanceof SubscriptionWorkerMiddleware) {
 	                transport.emitStatus = this.emitStatus.bind(this);
+	                const disconnect = this.disconnect.bind(this);
+	                this.disconnect = (isOffline) => {
+	                    transport.disconnect();
+	                    disconnect();
+	                };
+	            }
 	        }
 	        if ((_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : true) {
 	            window.addEventListener('offline', () => {

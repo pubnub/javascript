@@ -34,6 +34,7 @@ export type ReceivingStateContext = {
   groups: string[];
   cursor: Subscription.SubscriptionCursor;
   referenceTimetoken?: string;
+  onDemand?: boolean;
 };
 
 /**
@@ -45,7 +46,9 @@ export type ReceivingStateContext = {
  */
 export const ReceivingState = new State<ReceivingStateContext, Events, Effects>('RECEIVING');
 
-ReceivingState.onEnter((context) => receiveMessages(context.channels, context.groups, context.cursor));
+ReceivingState.onEnter((context) =>
+  receiveMessages(context.channels, context.groups, context.cursor, context.onDemand ?? false),
+);
 ReceivingState.onExit(() => receiveMessages.cancel);
 
 ReceivingState.on(receiveSuccess.type, (context, { payload }) =>
@@ -84,6 +87,7 @@ ReceivingState.on(subscriptionChange.type, (context, { payload }) => {
       groups: payload.groups,
       cursor: context.cursor,
       referenceTimetoken: context.referenceTimetoken,
+      onDemand: true,
     },
     [
       emitStatus({
@@ -110,6 +114,7 @@ ReceivingState.on(restore.type, (context, { payload }) => {
         `${payload.cursor.timetoken}`,
         context.referenceTimetoken,
       ),
+      onDemand: true,
     },
     [
       emitStatus({

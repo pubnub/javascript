@@ -490,6 +490,11 @@ export type CancelableSubscribeParameters = Omit<
   'crypto' | 'timeout' | 'keySet' | 'getFileUrl'
 > & {
   /**
+   * Whether request has been created user demand or not.
+   */
+  onDemand: boolean;
+
+  /**
    * Long-poll request termination signal.
    */
   abortSignal: AbortSignal;

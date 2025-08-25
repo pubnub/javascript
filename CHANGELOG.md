@@ -1,3 +1,15 @@
+## v9.9.0
+August 25 2025
+
+#### Fixed
+- Resolved the issue because of which requests that were too early received a response and still have been sent.
+
+#### Modified
+- Decouple and re-organize `SharedWorker` code for better maintainability.
+- Additional query parameter (removed before sending) is added for requests triggered by user and state will be updated only for these requests.
+- Log entry timestamp will be altered on millisecond if multiple log entries have similar timestamp (logged in fraction of nanoseconds).
+- Change the condition that is used to identify whether the `offline` detection timer has been suspended by the browser or not before trying to evict "offline" PubNub clients.
+
 ## v9.8.4
 August 07 2025
 

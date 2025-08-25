@@ -591,6 +591,11 @@ export type SubscribeRequestParameters = Subscription.SubscribeParameters & {
    * @param channel - Name of the channel from which file should be downloaded.
    */
   getFileUrl: (parameters: FileSharing.FileUrlParameters) => string;
+
+  /**
+   * Whether request has been created on user demand or not.
+   */
+  onDemand?: boolean;
 };
 // endregion
 
@@ -908,9 +913,10 @@ export class SubscribeRequest extends BaseSubscribeRequest {
   }
 
   protected get queryParameters(): Query {
-    const { channelGroups, filterExpression, heartbeat, state, timetoken, region } = this.parameters;
+    const { channelGroups, filterExpression, heartbeat, state, timetoken, region, onDemand } = this.parameters;
     const query: Query = {};
 
+    if (onDemand) query['on-demand'] = 1;
     if (channelGroups && channelGroups.length > 0) query['channel-group'] = channelGroups.sort().join(',');
     if (filterExpression && filterExpression.length > 0) query['filter-expr'] = filterExpression;
     if (heartbeat) query.heartbeat = heartbeat;

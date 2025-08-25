@@ -622,6 +622,13 @@ export interface PrivateClientConfiguration
   getCryptoModule(): ICryptoModule | undefined;
 
   /**
+   * Whether SDK client use `SharedWorker` or not.
+   *
+   * @returns `true` if SDK build for browser and SDK configured to use `SharedWorker`.
+   */
+  isSharedWorkerEnabled(): boolean;
+
+  /**
    * Whether `-pnpres` should not be filtered out from list of channels / groups in presence-related requests or not.
    *
    * This option required and set to `true` for Shared Worker setup to properly update client's state.

@@ -4,6 +4,7 @@
  * @internal
  */
 
+import * as Subscription from '../../types/api/subscription';
 import RequestOperation from '../../constants/operations';
 import { BaseSubscribeRequest } from '../subscribe';
 import { encodeNames } from '../../utils';
@@ -31,9 +32,11 @@ export class HandshakeSubscribeRequest extends BaseSubscribeRequest {
   }
 
   protected get queryParameters(): Query {
-    const { channelGroups, filterExpression, state } = this.parameters;
+    const { channelGroups, filterExpression, state, onDemand } = this
+      .parameters as unknown as Subscription.CancelableSubscribeParameters;
     const query: Query = { ee: '' };
 
+    if (onDemand) query['on-demand'] = 1;
     if (channelGroups && channelGroups.length > 0) query['channel-group'] = channelGroups.sort().join(',');
     if (filterExpression && filterExpression.length > 0) query['filter-expr'] = filterExpression;
     if (state && Object.keys(state).length > 0) query['state'] = JSON.stringify(state);
