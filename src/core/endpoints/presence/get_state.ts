@@ -9,7 +9,7 @@ import { AbstractRequest } from '../../components/request';
 import RequestOperation from '../../constants/operations';
 import { KeySet, Payload, Query } from '../../types/api';
 import * as Presence from '../../types/api/presence';
-import { encodeNames } from '../../utils';
+import { encodeNames, encodeString } from '../../utils';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -20,6 +20,11 @@ import { encodeNames } from '../../utils';
  * Request configuration parameters.
  */
 type RequestParameters = Presence.GetPresenceStateParameters & {
+  /**
+   * The subscriber uuid to get the current state.
+   */
+  uuid: string;
+
   /**
    * PubNub REST API access key set.
    */
@@ -103,7 +108,7 @@ export class GetPresenceStateRequest extends AbstractRequest<Presence.GetPresenc
       channels,
     } = this.parameters;
 
-    return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels ?? [], ',')}/uuid/${uuid}`;
+    return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels ?? [])}/uuid/${encodeString(uuid)}`;
   }
 
   protected get queryParameters(): Query {

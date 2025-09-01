@@ -80,7 +80,7 @@ export class WhereNowRequest extends AbstractRequest<Presence.WhereNowResponse, 
 
     if (!serviceResponse.payload) return { channels: [] };
 
-    return { channels: serviceResponse.payload.channels };
+    return { channels: serviceResponse.payload.channels || [] };
   }
 
   protected get path(): string {
