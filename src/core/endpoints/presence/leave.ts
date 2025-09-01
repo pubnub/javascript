@@ -92,7 +92,7 @@ export class PresenceLeaveRequest extends AbstractRequest<Presence.PresenceLeave
       channels,
     } = this.parameters;
 
-    return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels?.sort() ?? [])}/leave`;
+    return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels?.sort() ?? [], ',')}/leave`;
   }
 
   protected get queryParameters(): Query {

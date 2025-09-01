@@ -171,7 +171,7 @@ describe('SetPresenceStateRequest', () => {
         channelGroups: ['group1'],
       });
       const transportRequest = request.request();
-      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel//uuid/test_uuid/data`;
+      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/,/uuid/test_uuid/data`;
       assert.equal(transportRequest.path, expectedPath);
     });
 
@@ -182,7 +182,7 @@ describe('SetPresenceStateRequest', () => {
         channelGroups: ['group1'],
       });
       const transportRequest = request.request();
-      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel//uuid/test_uuid/data`;
+      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/,/uuid/test_uuid/data`;
       assert.equal(transportRequest.path, expectedPath);
     });
   });

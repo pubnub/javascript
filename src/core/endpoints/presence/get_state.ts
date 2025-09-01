@@ -108,7 +108,7 @@ export class GetPresenceStateRequest extends AbstractRequest<Presence.GetPresenc
       channels,
     } = this.parameters;
 
-    return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels ?? [])}/uuid/${encodeString(uuid)}`;
+    return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels ?? [], ',')}/uuid/${encodeString(uuid)}`;
   }
 
   protected get queryParameters(): Query {

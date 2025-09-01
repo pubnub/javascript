@@ -216,7 +216,7 @@ describe('PresenceLeaveRequest', () => {
         channelGroups: ['group1'],
       });
       const transportRequest = request.request();
-      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel//leave`;
+      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/,/leave`;
       assert.equal(transportRequest.path, expectedPath);
     });
 
@@ -227,7 +227,7 @@ describe('PresenceLeaveRequest', () => {
         channelGroups: ['group1'],
       });
       const transportRequest = request.request();
-      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel//leave`;
+      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/,/leave`;
       assert.equal(transportRequest.path, expectedPath);
     });
 
@@ -238,7 +238,7 @@ describe('PresenceLeaveRequest', () => {
         channelGroups: ['group1'],
       });
       const transportRequest = request.request();
-      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel//leave`;
+      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/,/leave`;
       assert.equal(transportRequest.path, expectedPath);
     });
   });

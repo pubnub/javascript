@@ -195,7 +195,7 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, Se
     let path = `/v2/presence/sub-key/${subscribeKey}`;
 
     if ((channels && channels.length > 0) || (channelGroups && channelGroups.length > 0))
-      path += `/channel/${encodeNames(channels ?? [])}`;
+      path += `/channel/${encodeNames(channels ?? [], ',')}`;
 
     return path;
   }

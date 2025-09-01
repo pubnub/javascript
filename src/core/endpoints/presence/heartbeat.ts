@@ -83,7 +83,7 @@ export class HeartbeatRequest extends AbstractRequest<Presence.PresenceHeartbeat
       channels,
     } = this.parameters;
 
-    return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels ?? [])}/heartbeat`;
+    return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels ?? [], ',')}/heartbeat`;
   }
 
   protected get queryParameters(): Query {

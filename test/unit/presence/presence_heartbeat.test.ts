@@ -151,7 +151,7 @@ describe('HeartbeatRequest', () => {
         channelGroups: ['group1'],
       });
       const transportRequest = request.request();
-      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel//heartbeat`;
+      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/,/heartbeat`;
       assert.equal(transportRequest.path, expectedPath);
     });
 
@@ -162,7 +162,7 @@ describe('HeartbeatRequest', () => {
         channelGroups: ['group1'],
       });
       const transportRequest = request.request();
-      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel//heartbeat`;
+      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/,/heartbeat`;
       assert.equal(transportRequest.path, expectedPath);
     });
   });

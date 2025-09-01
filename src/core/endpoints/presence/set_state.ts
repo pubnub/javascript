@@ -97,6 +97,7 @@ export class SetPresenceStateRequest extends AbstractRequest<Presence.SetPresenc
     } = this.parameters;
     return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(
       channels ?? [],
+      ',',
     )}/uuid/${encodeString(uuid)}/data`;
   }
 
