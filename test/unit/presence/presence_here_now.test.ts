@@ -146,7 +146,7 @@ describe('HereNowRequest', () => {
         channelGroups: ['group1'],
       });
       const transportRequest = request.request();
-      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/`;
+      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/,`;
       assert.equal(transportRequest.path, expectedPath);
     });
   });

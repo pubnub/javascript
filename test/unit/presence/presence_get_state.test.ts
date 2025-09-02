@@ -9,7 +9,7 @@ import { createMockResponse } from '../test-utils';
 
 describe('GetPresenceStateRequest', () => {
   let defaultKeySet: KeySet;
-  let defaultParameters: Presence.GetPresenceStateParameters & { keySet: KeySet };
+  let defaultParameters: Presence.GetPresenceStateParameters & { keySet: KeySet; uuid: string };
 
   beforeEach(() => {
     defaultKeySet = {
@@ -145,14 +145,14 @@ describe('GetPresenceStateRequest', () => {
         channels: [],
       });
       const transportRequest = request.request();
-      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel//uuid/test_uuid`;
+      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/,/uuid/test_uuid`;
       assert.equal(transportRequest.path, expectedPath);
     });
 
     it('should handle undefined UUID', () => {
       const request = new GetPresenceStateRequest({
         ...defaultParameters,
-        uuid: undefined,
+        uuid: undefined as any, // Explicit type assertion for test case
         channels: ['channel1'],
       });
       const transportRequest = request.request();
