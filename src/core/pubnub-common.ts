@@ -714,6 +714,9 @@ export class PubNubCore<
    * Change the current PubNub client user identifier.
    *
    * **Important:** Change won't affect ongoing REST API calls.
+   * **Warning:** Because ongoing REST API calls won't be canceled there could happen unexpected events like implicit
+   * `join` event for the previous `userId` after a long-poll subscribe request will receive a response. To avoid this
+   * it is advised to unsubscribe from all/disconnect before changing `userId`.
    *
    * @param value - New PubNub client user identifier.
    *
@@ -1659,6 +1662,9 @@ export class PubNubCore<
     callback: ResultCallback<Subscription.SubscriptionResponse>,
   ): void {
     if (process.env.SUBSCRIBE_MANAGER_MODULE !== 'disabled') {
+      // `on-demand` query parameter not required for non-SharedWorker environment.
+      if (!this._configuration.isSharedWorkerEnabled()) parameters.onDemand = false;
+
       const request = new SubscribeRequest({
         ...parameters,
         keySet: this._configuration.keySet,
@@ -1820,6 +1826,9 @@ export class PubNubCore<
    */
   private async subscribeHandshake(parameters: Subscription.CancelableSubscribeParameters) {
     if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      // `on-demand` query parameter not required for non-SharedWorker environment.
+      if (!this._configuration.isSharedWorkerEnabled()) parameters.onDemand = false;
+
       const request = new HandshakeSubscribeRequest({
         ...parameters,
         keySet: this._configuration.keySet,
@@ -1854,6 +1863,9 @@ export class PubNubCore<
    */
   private async subscribeReceiveMessages(parameters: Subscription.CancelableSubscribeParameters) {
     if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      // `on-demand` query parameter not required for non-SharedWorker environment.
+      if (!this._configuration.isSharedWorkerEnabled()) parameters.onDemand = false;
+
       const request = new ReceiveMessagesSubscribeRequest({
         ...parameters,
         keySet: this._configuration.keySet,
@@ -2692,10 +2704,8 @@ export class PubNubCore<
       let { channels, channelGroups } = parameters;
 
       // Remove `-pnpres` channels / groups if they not acceptable in the current PubNub client configuration.
-      if (!this._configuration.getKeepPresenceChannelsInPresenceRequests()) {
-        if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
-        if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
-      }
+      if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
+      if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
 
       // Complete immediately request only for presence channels.
       if ((channelGroups ?? []).length === 0 && (channels ?? []).length === 0) {

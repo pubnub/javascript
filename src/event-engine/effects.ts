@@ -15,10 +15,14 @@ import { StatusEvent } from '../core/types/api';
  *
  * @internal
  */
-export const handshake = createManagedEffect('HANDSHAKE', (channels: string[], groups: string[]) => ({
-  channels,
-  groups,
-}));
+export const handshake = createManagedEffect(
+  'HANDSHAKE',
+  (channels: string[], groups: string[], onDemand: boolean) => ({
+    channels,
+    groups,
+    onDemand,
+  }),
+);
 
 /**
  * Real-time updates receive effect.
@@ -30,7 +34,12 @@ export const handshake = createManagedEffect('HANDSHAKE', (channels: string[], g
  */
 export const receiveMessages = createManagedEffect(
   'RECEIVE_MESSAGES',
-  (channels: string[], groups: string[], cursor: Subscription.SubscriptionCursor) => ({ channels, groups, cursor }),
+  (channels: string[], groups: string[], cursor: Subscription.SubscriptionCursor, onDemand: boolean) => ({
+    channels,
+    groups,
+    cursor,
+    onDemand,
+  }),
 );
 
 /**

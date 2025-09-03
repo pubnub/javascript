@@ -30,7 +30,7 @@ export class ConsoleLogger implements Logger {
   private static readonly decoder = new TextDecoder();
 
   /**
-   * Process a `trace` level message.
+   * Process a `debug` level message.
    *
    * @param message - Message which should be handled by custom logger implementation.
    */
@@ -39,7 +39,7 @@ export class ConsoleLogger implements Logger {
   }
 
   /**
-   * Process a `debug` level message.
+   * Process a `error` level message.
    *
    * @param message - Message which should be handled by custom logger implementation.
    */
@@ -57,7 +57,7 @@ export class ConsoleLogger implements Logger {
   }
 
   /**
-   * Process a `warn` level message.
+   * Process a `trace` level message.
    *
    * @param message - Message which should be handled by custom logger implementation.
    */
@@ -66,12 +66,21 @@ export class ConsoleLogger implements Logger {
   }
 
   /**
-   * Process an `error` level message.
+   * Process an `warn` level message.
    *
    * @param message - Message which should be handled by custom logger implementation.
    */
   warn(message: LogMessage): void {
     this.log(message);
+  }
+
+  /**
+   * Stringify logger object.
+   *
+   * @returns Serialized logger object.
+   */
+  toString(): string {
+    return `ConsoleLogger {}`;
   }
 
   /**
