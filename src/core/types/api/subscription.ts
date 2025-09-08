@@ -270,6 +270,13 @@ export type Presence = LegacyEvent & PresenceData;
 type PresenceEvent = {
   type: PubNubEventType.Presence;
   data: Presence;
+
+  /**
+   * Received presence event fingerprint.
+   *
+   * @internal
+   */
+  pn_mfp: string;
 };
 // endregion
 
@@ -318,6 +325,13 @@ export type Message = LegacyEvent &
 type MessageEvent = {
   type: PubNubEventType.Message;
   data: Message;
+
+  /**
+   * Received message event fingerprint.
+   *
+   * @internal
+   */
+  pn_mfp: string;
 };
 
 /**
@@ -333,6 +347,13 @@ export type Signal = Event & PublishedData;
 type SignalEvent = {
   type: PubNubEventType.Signal;
   data: Signal;
+
+  /**
+   * Received signal fingerprint.
+   *
+   * @internal
+   */
+  pn_mfp: string;
 };
 // endregion
 
@@ -365,6 +386,13 @@ export type MessageAction = Event &
 type MessageActionEvent = {
   type: PubNubEventType.MessageAction;
   data: MessageAction;
+
+  /**
+   * Received message action event fingerprint.
+   *
+   * @internal
+   */
+  pn_mfp: string;
 };
 // endregion
 
@@ -432,6 +460,13 @@ export type VSPMembershipAppContextObject = Omit<Event, 'channel'> & {
 type AppContextEvent = {
   type: PubNubEventType.AppContext;
   data: AppContextObject;
+
+  /**
+   * Received app context event fingerprint.
+   *
+   * @internal
+   */
+  pn_mfp: string;
 };
 // endregion
 
@@ -471,6 +506,13 @@ export type File = Event &
 type FileEvent = {
   type: PubNubEventType.Files;
   data: File;
+
+  /**
+   * Received file event fingerprint.
+   *
+   * @internal
+   */
+  pn_mfp: string;
 };
 // endregion
 // endregion

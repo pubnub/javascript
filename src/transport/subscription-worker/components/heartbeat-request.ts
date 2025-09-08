@@ -45,8 +45,8 @@ export class HeartbeatRequest extends BasePubNubRequest {
    * @param [aggregatedChannels] - List of aggregated channels for the same user.
    * @param [aggregatedState] - State aggregated for the same user.
    * @param [accessToken] - Access token with read permissions on
-   * {@link PubNubSharedWorkerRequest.channels|channels} and
-   * {@link PubNubSharedWorkerRequest.channelGroups|channelGroups}.
+   * {@link BasePubNubRequest.channels|channels} and
+   * {@link BasePubNubRequest.channelGroups|channelGroups}.
    * @retusns Initialized and ready to use heartbeat request.
    */
   static fromCachedState(
@@ -71,7 +71,7 @@ export class HeartbeatRequest extends BasePubNubRequest {
     // Update request `state` (if required).
     if (aggregatedState && Object.keys(aggregatedState).length)
       request.queryParameters!.state = JSON.stringify(aggregatedState);
-    else delete request.queryParameters!.aggregatedState;
+    else delete request.queryParameters!.state;
 
     if (accessToken) request.queryParameters!.auth = accessToken.toString();
     request.identifier = uuidGenerator.createUUID();

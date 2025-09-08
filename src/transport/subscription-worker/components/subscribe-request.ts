@@ -117,6 +117,7 @@ export class SubscribeRequest extends BasePubNubRequest {
    * @param timetokenOverride - Timetoken which should be used to patch timetoken in initial response.
    * @param timetokenRegionOverride - Timetoken origin which should be used to patch timetoken origin in initial
    * response.
+   * @param [cachedState] - Previously cached user's presence state for channels and groups.
    * @returns Aggregated subscribe request which will be sent.
    */
   static fromRequests(
@@ -124,15 +125,17 @@ export class SubscribeRequest extends BasePubNubRequest {
     accessToken?: AccessToken,
     timetokenOverride?: string,
     timetokenRegionOverride?: string,
+    cachedState?: Record<string, Payload>,
   ) {
     const baseRequest = requests[Math.floor(Math.random() * requests.length)];
+    const isInitialSubscribe = (baseRequest.request.queryParameters!.tt ?? '0') === '0';
+    const state: Record<string, Payload> = isInitialSubscribe ? (cachedState ?? {}) : {};
     const aggregatedRequest = { ...baseRequest.request };
-    let state: Record<string, Payload> = {};
     const channelGroups = new Set<string>();
     const channels = new Set<string>();
 
     for (const request of requests) {
-      if (request.state) state = { ...state, ...request.state };
+      if (isInitialSubscribe && !cachedState && request.state) Object.assign(state, request.state);
       request.channelGroups.forEach(channelGroups.add, channelGroups);
       request.channels.forEach(channels.add, channels);
     }
@@ -155,7 +158,14 @@ export class SubscribeRequest extends BasePubNubRequest {
     aggregatedRequest.identifier = uuidGenerator.createUUID();
 
     // Create service request and link to its result other requests used in aggregation.
-    const request = new SubscribeRequest(aggregatedRequest, baseRequest.subscribeKey, accessToken);
+    const request = new SubscribeRequest(
+      aggregatedRequest,
+      baseRequest.subscribeKey,
+      accessToken,
+      [...channelGroups],
+      [...channels],
+      state,
+    );
     for (const clientRequest of requests) clientRequest.serviceRequest = request;
 
     if (request.isInitialSubscribe && timetokenOverride && timetokenOverride !== '0') {
@@ -209,11 +219,20 @@ export class SubscribeRequest extends BasePubNubRequest {
     if (request.queryParameters!['filter-expr'])
       this.filterExpression = request.queryParameters!['filter-expr'] as string;
     this._timetoken = (request.queryParameters!.tt ?? '0') as string;
+    if (this._timetoken === '0') {
+      delete request.queryParameters!.tt;
+      delete request.queryParameters!.tr;
+    }
     if (request.queryParameters!.tr) this._region = request.queryParameters!.tr as string;
     if (cachedState) this.state = cachedState;
 
     // Clean up `state` from objects which is not used with request (if needed).
-    if (this.state || !request.queryParameters!.state || (request.queryParameters!.state as string).length === 0)
+    if (
+      this.state ||
+      !request.queryParameters!.state ||
+      (request.queryParameters!.state as string).length <= 2 ||
+      this._timetoken !== '0'
+    )
       return;
 
     const state = JSON.parse(request.queryParameters!.state as string) as Record<string, Payload>;

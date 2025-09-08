@@ -7,6 +7,7 @@ import {
   PubNubClientSendSubscribeEvent,
   PubNubClientIdentityChangeEvent,
   PubNubClientCancelSubscribeEvent,
+  PubNubClientPresenceStateChangeEvent,
   PubNubClientHeartbeatIntervalChangeEvent,
 } from './custom-events/client-event';
 import {
@@ -16,6 +17,7 @@ import {
   CancelRequestEvent,
   RequestSendingError,
   SubscriptionWorkerEvent,
+  PresenceStateUpdateEvent,
 } from '../subscription-worker-types';
 import {
   RequestErrorEvent,
@@ -240,6 +242,7 @@ export class PubNubClient extends EventTarget {
       (event: MessageEvent<ClientEvent>) => {
         if (event.data.type === 'client-unregister') this.handleUnregisterEvent();
         else if (event.data.type === 'client-update') this.handleConfigurationUpdateEvent(event.data);
+        else if (event.data.type === 'client-presence-state-update') this.handlePresenceStateUpdateEvent(event.data);
         else if (event.data.type === 'send-request') this.handleSendRequestEvent(event.data);
         else if (event.data.type === 'cancel-request') this.handleCancelRequestEvent(event.data);
         else if (event.data.type === 'client-disconnect') this.handleDisconnectEvent();
@@ -335,6 +338,16 @@ export class PubNubClient extends EventTarget {
 
       this.dispatchEvent(new PubNubClientHeartbeatIntervalChangeEvent(this, heartbeatInterval, oldValue));
     }
+  }
+
+  /**
+   * Handle client's user presence state information update.
+   *
+   * @param event - Object with up-to-date `userId` presence `state`, which should be reflected in SharedWorker's state
+   * for the registered client.
+   */
+  private handlePresenceStateUpdateEvent(event: PresenceStateUpdateEvent) {
+    this.dispatchEvent(new PubNubClientPresenceStateChangeEvent(this, event.state));
   }
 
   /**

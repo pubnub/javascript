@@ -4,6 +4,7 @@ import {
   PubNubClientAuthChangeEvent,
   PubNubClientSendHeartbeatEvent,
   PubNubClientIdentityChangeEvent,
+  PubNubClientPresenceStateChangeEvent,
   PubNubClientHeartbeatIntervalChangeEvent,
 } from './custom-events/client-event';
 import {
@@ -197,6 +198,8 @@ export class HeartbeatRequestsManager extends RequestsManager {
             (event.oldAuth && event.newAuth && !event.newAuth.equalTo(event.oldAuth))
           )
             this.moveClient(client);
+          else if (state && event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
+            state.accessToken = event.newAuth;
         },
         {
           signal: abortController.signal,
@@ -208,6 +211,14 @@ export class HeartbeatRequestsManager extends RequestsManager {
           const event = evt as PubNubClientHeartbeatIntervalChangeEvent;
           const state = this.heartbeatStateForClient(client);
           if (state) state.interval = event.newInterval ?? 0;
+        },
+        { signal: abortController.signal },
+      );
+      client.addEventListener(
+        PubNubClientEvent.PresenceStateChange,
+        (event) => {
+          if (!(event instanceof PubNubClientPresenceStateChangeEvent)) return;
+          this.heartbeatStateForClient(event.client)?.updateClientPresenceState(event.client, event.state);
         },
         { signal: abortController.signal },
       );

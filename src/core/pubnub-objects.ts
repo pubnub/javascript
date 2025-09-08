@@ -361,7 +361,7 @@ export default class PubNubObjects {
 
       this.logger.debug(
         'PubNub',
-        `Set UUID metadata object success. Updated '${parameters.uuid}' UUID metadata object.'`,
+        `Set UUID metadata object success. Updated '${parameters.uuid}' UUID metadata object.`,
       );
     };
 
@@ -656,7 +656,7 @@ export default class PubNubObjects {
 
       this.logger.debug(
         'PubNub',
-        `Get Channel metadata object success. Received '${parameters.channel}' Channel metadata object.'`,
+        `Get Channel metadata object success. Received '${parameters.channel}' Channel metadata object.`,
       );
     };
 

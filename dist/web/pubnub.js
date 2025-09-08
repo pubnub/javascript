@@ -3596,6 +3596,21 @@
 	        });
 	    }
 	    /**
+	     * Update presence state associated with `userId`.
+	     *
+	     * @param state - Key-value pair of payloads (states) that should be associated with channels / groups specified as
+	     * keys.
+	     */
+	    onPresenceStateChange(state) {
+	        this.scheduleEventPost({
+	            type: 'client-presence-state-update',
+	            clientIdentifier: this.configuration.clientIdentifier,
+	            subscriptionKey: this.configuration.subscriptionKey,
+	            workerLogLevel: this.configuration.workerLogLevel,
+	            state,
+	        });
+	    }
+	    /**
 	     * Update client's heartbeat interval change.
 	     *
 	     * @param interval - Interval which should be used by timers for _backup_ heartbeat calls created in `SharedWorker`.
@@ -3897,7 +3912,7 @@
 	                if (!token || !stringifiedToken)
 	                    return undefined;
 	                return (this.accessTokensMap = {
-	                    [accessToken]: { token: stringifiedToken, expiration: token.timestamp * token.ttl * 60 },
+	                    [accessToken]: { token: stringifiedToken, expiration: token.timestamp + token.ttl * 60 },
 	                })[accessToken];
 	            });
 	        });
@@ -6519,52 +6534,61 @@
 	                let { e: eventType } = envelope;
 	                // Resolve missing event type.
 	                eventType !== null && eventType !== void 0 ? eventType : (eventType = envelope.c.endsWith('-pnpres') ? PubNubEventType.Presence : PubNubEventType.Message);
+	                const pn_mfp = messageFingerprint(envelope.d);
 	                // Check whether payload is string (potentially encrypted data).
 	                if (eventType != PubNubEventType.Signal && typeof envelope.d === 'string') {
 	                    if (eventType == PubNubEventType.Message) {
 	                        return {
 	                            type: PubNubEventType.Message,
 	                            data: this.messageFromEnvelope(envelope),
+	                            pn_mfp,
 	                        };
 	                    }
 	                    return {
 	                        type: PubNubEventType.Files,
 	                        data: this.fileFromEnvelope(envelope),
+	                        pn_mfp,
 	                    };
 	                }
 	                else if (eventType == PubNubEventType.Message) {
 	                    return {
 	                        type: PubNubEventType.Message,
 	                        data: this.messageFromEnvelope(envelope),
+	                        pn_mfp,
 	                    };
 	                }
 	                else if (eventType === PubNubEventType.Presence) {
 	                    return {
 	                        type: PubNubEventType.Presence,
 	                        data: this.presenceEventFromEnvelope(envelope),
+	                        pn_mfp,
 	                    };
 	                }
 	                else if (eventType == PubNubEventType.Signal) {
 	                    return {
 	                        type: PubNubEventType.Signal,
 	                        data: this.signalFromEnvelope(envelope),
+	                        pn_mfp,
 	                    };
 	                }
 	                else if (eventType === PubNubEventType.AppContext) {
 	                    return {
 	                        type: PubNubEventType.AppContext,
 	                        data: this.appContextFromEnvelope(envelope),
+	                        pn_mfp,
 	                    };
 	                }
 	                else if (eventType === PubNubEventType.MessageAction) {
 	                    return {
 	                        type: PubNubEventType.MessageAction,
 	                        data: this.messageActionFromEnvelope(envelope),
+	                        pn_mfp,
 	                    };
 	                }
 	                return {
 	                    type: PubNubEventType.Files,
 	                    data: this.fileFromEnvelope(envelope),
+	                    pn_mfp,
 	                };
 	            });
 	            return {
@@ -7413,12 +7437,10 @@
 	                region: this.region ? this.region : undefined,
 	            };
 	            this.configuration.logger().debug('SubscriptionManager', () => {
-	                const hashedEvents = messages.map((event) => {
-	                    const pn_mfp = event.type === PubNubEventType.Message || event.type === PubNubEventType.Signal
-	                        ? messageFingerprint(event.data.message)
-	                        : undefined;
-	                    return pn_mfp ? { type: event.type, data: Object.assign(Object.assign({}, event.data), { pn_mfp }) } : event;
-	                });
+	                const hashedEvents = messages.map((event) => ({
+	                    type: event.type,
+	                    data: Object.assign(Object.assign({}, event.data), { pn_mfp: event.pn_mfp }),
+	                }));
 	                return { messageType: 'object', message: hashedEvents, details: 'Received events:' };
 	            });
 	            messages.forEach((message) => {
@@ -13009,7 +13031,7 @@
 	            const logResponse = (response) => {
 	                if (!response)
 	                    return;
-	                this.logger.info('PubNub', `List channel group channels success. Received ${response.channels.length} channels.`);
+	                this.logger.debug('PubNub', `List channel group channels success. Received ${response.channels.length} channels.`);
 	            };
 	            if (callback)
 	                return this.sendRequest(request, (status, response) => {
@@ -13038,7 +13060,7 @@
 	            const logResponse = (response) => {
 	                if (!response)
 	                    return;
-	                this.logger.info('PubNub', `List all channel groups success. Received ${response.groups.length} groups.`);
+	                this.logger.debug('PubNub', `List all channel groups success. Received ${response.groups.length} groups.`);
 	            };
 	            if (callback)
 	                return this.sendRequest(request, (status, response) => {
@@ -13069,7 +13091,7 @@
 	            }));
 	            const request = new AddChannelGroupChannelsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            const logResponse = () => {
-	                this.logger.info('PubNub', `Add channels to the channel group success.`);
+	                this.logger.debug('PubNub', `Add channels to the channel group success.`);
 	            };
 	            if (callback)
 	                return this.sendRequest(request, (status) => {
@@ -13101,7 +13123,7 @@
 	            }));
 	            const request = new RemoveChannelGroupChannelsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            const logResponse = () => {
-	                this.logger.info('PubNub', `Remove channels from the channel group success.`);
+	                this.logger.debug('PubNub', `Remove channels from the channel group success.`);
 	            };
 	            if (callback)
 	                return this.sendRequest(request, (status) => {
@@ -13132,7 +13154,7 @@
 	            }));
 	            const request = new DeleteChannelGroupRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            const logResponse = () => {
-	                this.logger.info('PubNub', `Remove a channel group success. Removed '${parameters.channelGroup}' channel group.'`);
+	                this.logger.debug('PubNub', `Remove a channel group success. Removed '${parameters.channelGroup}' channel group.'`);
 	            };
 	            if (callback)
 	                return this.sendRequest(request, (status) => {
@@ -14516,7 +14538,7 @@
 	            const logResponse = (response) => {
 	                if (!response)
 	                    return;
-	                this.logger.debug('PubNub', `Set UUID metadata object success. Updated '${parameters.uuid}' UUID metadata object.'`);
+	                this.logger.debug('PubNub', `Set UUID metadata object success. Updated '${parameters.uuid}' UUID metadata object.`);
 	            };
 	            if (callback)
 	                return this.sendRequest(request, (status, response) => {
@@ -14673,7 +14695,7 @@
 	            const logResponse = (response) => {
 	                if (!response)
 	                    return;
-	                this.logger.debug('PubNub', `Get Channel metadata object success. Received '${parameters.channel}' Channel metadata object.'`);
+	                this.logger.debug('PubNub', `Get Channel metadata object success. Received '${parameters.channel}' Channel metadata object.`);
 	            };
 	            if (callback)
 	                return this.sendRequest(request, (status, response) => {
@@ -16858,6 +16880,8 @@
 	                    if ('channelGroups' in parameters) {
 	                        (_b = parameters.channelGroups) === null || _b === void 0 ? void 0 : _b.forEach((group) => (presenceState[group] = parameters.state));
 	                    }
+	                    if (this.onPresenceStateChange)
+	                        this.onPresenceStateChange(this.presenceState);
 	                }
 	                // Check whether the state should be set with heartbeat or not.
 	                if ('withHeartbeat' in parameters && parameters.withHeartbeat) {
@@ -16872,8 +16896,11 @@
 	                    this.logger.debug('PubNub', `Set presence state success.${request instanceof HeartbeatRequest ? ' Presence state has been set using heartbeat endpoint.' : ''}`);
 	                };
 	                // Update state used by subscription manager.
-	                if (this.subscriptionManager)
+	                if (this.subscriptionManager) {
 	                    this.subscriptionManager.setState(parameters);
+	                    if (this.onPresenceStateChange)
+	                        this.onPresenceStateChange(this.subscriptionManager.presenceState);
+	                }
 	                if (callback)
 	                    return this.sendRequest(request, (status, response) => {
 	                        logResponse(response);
@@ -16943,8 +16970,7 @@
 	                        return callback(responseStatus, {});
 	                    return Promise.resolve(responseStatus);
 	                }
-	                const request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { channels,
-	                    channelGroups, keySet: this._configuration.keySet }));
+	                const request = new HeartbeatRequest(Object.assign(Object.assign({}, parameters), { channels: [...new Set(channels)], channelGroups: [...new Set(channelGroups)], keySet: this._configuration.keySet }));
 	                const logResponse = (response) => {
 	                    if (!response)
 	                        return;
@@ -18246,6 +18272,7 @@
 	        }
 	        // Settings change handlers
 	        let heartbeatIntervalChangeHandler = () => { };
+	        let presenceStateChangeHandler = () => { };
 	        let authenticationChangeHandler = () => { };
 	        let userIdChangeHandler = () => { };
 	        let cryptography;
@@ -18272,6 +18299,7 @@
 	                        transport,
 	                        logger: clientConfiguration.logger(),
 	                    });
+	                    presenceStateChangeHandler = (state) => middleware.onPresenceStateChange(state);
 	                    heartbeatIntervalChangeHandler = (interval) => middleware.onHeartbeatIntervalChange(interval);
 	                    authenticationChangeHandler = (auth) => middleware.onTokenChange(auth);
 	                    userIdChangeHandler = (userId) => middleware.onUserIdChange(userId);
@@ -18310,6 +18338,7 @@
 	        });
 	        this.onHeartbeatIntervalChange = heartbeatIntervalChangeHandler;
 	        this.onAuthenticationChange = authenticationChangeHandler;
+	        this.onPresenceStateChange = presenceStateChangeHandler;
 	        this.onUserIdChange = userIdChangeHandler;
 	        {
 	            if (transport instanceof SubscriptionWorkerMiddleware) {

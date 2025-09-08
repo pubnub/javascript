@@ -20,6 +20,7 @@ import { Transport } from '../../core/interfaces/transport';
 import * as PAM from '../../core/types/api/access-manager';
 import { Status, StatusEvent } from '../../core/types/api';
 import PNOperations from '../../core/constants/operations';
+import { Payload } from '../../../lib/types';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -181,6 +182,22 @@ export class SubscriptionWorkerMiddleware implements Transport {
       subscriptionKey: this.configuration.subscriptionKey,
       userId: this.configuration.userId,
       workerLogLevel: this.configuration.workerLogLevel,
+    });
+  }
+
+  /**
+   * Update presence state associated with `userId`.
+   *
+   * @param state - Key-value pair of payloads (states) that should be associated with channels / groups specified as
+   * keys.
+   */
+  onPresenceStateChange(state: Record<string, Payload>) {
+    this.scheduleEventPost({
+      type: 'client-presence-state-update',
+      clientIdentifier: this.configuration.clientIdentifier,
+      subscriptionKey: this.configuration.subscriptionKey,
+      workerLogLevel: this.configuration.workerLogLevel,
+      state,
     });
   }
 
@@ -510,7 +527,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
       if (!token || !stringifiedToken) return undefined;
 
       return (this.accessTokensMap = {
-        [accessToken]: { token: stringifiedToken, expiration: token.timestamp * token.ttl * 60 },
+        [accessToken]: { token: stringifiedToken, expiration: token.timestamp + token.ttl * 60 },
       })[accessToken];
     });
   }
