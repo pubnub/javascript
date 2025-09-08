@@ -12,15 +12,14 @@ import { TransportResponse } from '../../core/types/transport-response';
 import * as PubNubSubscriptionWorker from './subscription-worker-types';
 import { LoggerManager } from '../../core/components/logger-manager';
 import { LogLevel, LogMessage } from '../../core/interfaces/logger';
+import { Status, StatusEvent, Payload } from '../../core/types/api';
 import { TokenManager } from '../../core/components/token_manager';
 import { RequestSendingError } from './subscription-worker-types';
 import { PubNubAPIError } from '../../errors/pubnub-api-error';
 import StatusCategory from '../../core/constants/categories';
 import { Transport } from '../../core/interfaces/transport';
 import * as PAM from '../../core/types/api/access-manager';
-import { Status, StatusEvent } from '../../core/types/api';
 import PNOperations from '../../core/constants/operations';
-import { Payload } from '../../../lib/types';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
