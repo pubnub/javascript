@@ -184,6 +184,16 @@ export class SubscriptionState extends EventTarget {
   > = {};
 
   /**
+   * Map of explicitly set `userId` presence state.
+   *
+   * This is the final source of truth, which is applied on the aggregated `state` object.
+   *
+   * **Note:** This information is removed only with the {@link SubscriptionState.removeClient|removeClient} function
+   * call.
+   */
+  private clientsPresenceState: Record<string, { update: number; state: Record<string, Payload> }> = {};
+
+  /**
    * Map of {@link PubNubClient|client} to its {@link SubscribeRequest|request} that already received response/error
    * or has been canceled.
    */
@@ -325,6 +335,23 @@ export class SubscriptionState extends EventTarget {
   }
 
   /**
+   * Update presence associated with `client`'s `userId` with channels and groups.
+   * @param client - Reference to the {@link PubNubClient|PubNub} client for which `userId` presence state has been
+   * changed.
+   * @param state - Payloads that are associated with `userId` at specified (as keys) channels and groups.
+   */
+  updateClientPresenceState(client: PubNubClient, state: Record<string, Payload>) {
+    const presenceState = this.clientsPresenceState[client.identifier];
+    state ??= {};
+
+    if (!presenceState) this.clientsPresenceState[client.identifier] = { update: Date.now(), state };
+    else {
+      Object.assign(presenceState.state, state);
+      presenceState.update = Date.now();
+    }
+  }
+
+  /**
    * Mark specific client as suitable for state invalidation when it will be appropriate.
    *
    * @param client - Reference to the {@link PubNubClient|PubNub} client which should be invalidated when will be
@@ -343,7 +370,6 @@ export class SubscriptionState extends EventTarget {
    */
   processChanges(changes: SubscriptionStateChange[]) {
     if (changes.length) changes = SubscriptionStateChange.squashedChanges(changes);
-
     if (!changes.length) return;
 
     let stateRefreshRequired = this.channelGroups.size === 0 && this.channels.size === 0;
@@ -400,6 +426,7 @@ export class SubscriptionState extends EventTarget {
 
       if (remove && (!!this.requests[clientIdentifier] || !!this.lastCompletedRequest[clientIdentifier])) {
         if (clientInvalidate) {
+          delete this.clientsPresenceState[clientIdentifier];
           delete this.lastCompletedRequest[clientIdentifier];
           delete this.clientsState[clientIdentifier];
         }
@@ -616,13 +643,27 @@ export class SubscriptionState extends EventTarget {
 
     // Aggregate channels and groups from active requests.
     Object.entries(this.requests).forEach(([clientIdentifier, request]) => {
+      const presenceState = this.clientsPresenceState[clientIdentifier];
+      const cachedPresenceStateKeys = presenceState ? Object.keys(presenceState.state) : [];
       const clientState = (this.clientsState[clientIdentifier] ??= { channels: new Set(), channelGroups: new Set() });
 
-      request.channelGroups.forEach(clientState.channelGroups.add, clientState.channelGroups);
-      request.channels.forEach(clientState.channels.add, clientState.channels);
+      request.channelGroups.forEach((group) => {
+        clientState.channelGroups.add(group);
+        channelGroups.add(group);
+      });
 
-      request.channelGroups.forEach(channelGroups.add, channelGroups);
-      request.channels.forEach(channels.add, channels);
+      request.channels.forEach((channel) => {
+        clientState.channels.add(channel);
+        channels.add(channel);
+      });
+
+      if (presenceState && cachedPresenceStateKeys.length) {
+        cachedPresenceStateKeys.forEach((key) => {
+          if (!request.channels.includes(key) && !request.channelGroups.includes(key)) delete presenceState.state[key];
+        });
+
+        if (Object.keys(presenceState.state).length === 0) delete this.clientsPresenceState[clientIdentifier];
+      }
     });
 
     const changes = this.subscriptionStateChanges(channels, channelGroups);
@@ -637,7 +678,11 @@ export class SubscriptionState extends EventTarget {
       .filter((request) => !!request.accessToken)
       .map((request) => request.accessToken!)
       .sort(AccessToken.compare);
-    if (sortedTokens && sortedTokens.length > 0) this.accessToken = sortedTokens.pop();
+    if (sortedTokens && sortedTokens.length > 0) {
+      const latestAccessToken = sortedTokens.pop();
+      if (!this.accessToken || (latestAccessToken && latestAccessToken.isNewerThan(this.accessToken)))
+        this.accessToken = latestAccessToken;
+    }
 
     return changes;
   }
@@ -661,6 +706,7 @@ export class SubscriptionState extends EventTarget {
           const clientIdx = this.clientsForInvalidation.indexOf(request.client.identifier);
           if (clientIdx > 0) {
             this.clientsForInvalidation.splice(clientIdx, 1);
+            delete this.clientsPresenceState[request.client.identifier];
             delete this.lastCompletedRequest[request.client.identifier];
             delete this.clientsState[request.client.identifier];
 
@@ -826,8 +872,27 @@ export class SubscriptionState extends EventTarget {
     regionOverride?: string,
   ) {
     if (requests.length === 0) return;
+    let targetState: Record<string, Payload> | undefined;
 
-    const serviceRequest = SubscribeRequest.fromRequests(requests, this.accessToken, timetokenOverride, regionOverride);
+    // Apply aggregated presence state in proper order.
+    if ((requests[0].request.queryParameters!.tt ?? '0') === '0' && Object.keys(this.clientsPresenceState).length) {
+      targetState = {};
+
+      requests.forEach(
+        (request) => Object.keys(request.state ?? {}).length && Object.assign(targetState!, request.state),
+      );
+      Object.values(this.clientsPresenceState)
+        .sort((lhs, rhs) => lhs.update - rhs.update)
+        .forEach(({ state }) => Object.assign(targetState!, state));
+    }
+
+    const serviceRequest = SubscribeRequest.fromRequests(
+      requests,
+      this.accessToken,
+      timetokenOverride,
+      regionOverride,
+      targetState,
+    );
     this.addListenersForRequestEvents(serviceRequest);
 
     requests.forEach((request) => (request.serviceRequest = serviceRequest));

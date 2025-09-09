@@ -5,6 +5,7 @@ import {
   PubNubClientSendSubscribeEvent,
   PubNubClientIdentityChangeEvent,
   PubNubClientCancelSubscribeEvent,
+  PubNubClientPresenceStateChangeEvent,
 } from './custom-events/client-event';
 import {
   PubNubClientsManagerEvent,
@@ -377,6 +378,14 @@ export class SubscribeRequestsManager extends RequestsManager {
         {
           signal: abortController.signal,
         },
+      );
+      client.addEventListener(
+        PubNubClientEvent.PresenceStateChange,
+        (event) => {
+          if (!(event instanceof PubNubClientPresenceStateChangeEvent)) return;
+          this.subscriptionStateForClient(event.client)?.updateClientPresenceState(event.client, event.state);
+        },
+        { signal: abortController.signal },
       );
       client.addEventListener(
         PubNubClientEvent.SendSubscribeRequest,

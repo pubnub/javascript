@@ -24,6 +24,7 @@ import Crypto from '../core/components/cryptography';
 import WebCryptography from '../crypto/modules/web';
 import { PubNubCore } from '../core/pubnub-common';
 import Cbor from '../cbor/common';
+import { Payload } from '../core/types/api';
 
 /**
  * PubNub client for browser platform.
@@ -116,6 +117,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
 
     // Settings change handlers
     let heartbeatIntervalChangeHandler: (interval: number) => void = () => {};
+    let presenceStateChangeHandler: (state: Record<string, Payload>) => void = () => {};
     let authenticationChangeHandler: (auth?: string) => void = () => {};
     let userIdChangeHandler: (userId: string) => void = () => {};
 
@@ -145,6 +147,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
             transport,
             logger: clientConfiguration.logger(),
           });
+          presenceStateChangeHandler = (state: Record<string, Payload>) => middleware.onPresenceStateChange(state);
           heartbeatIntervalChangeHandler = (interval: number) => middleware.onHeartbeatIntervalChange(interval);
           authenticationChangeHandler = (auth?: string) => middleware.onTokenChange(auth);
           userIdChangeHandler = (userId: string) => middleware.onUserIdChange(userId);
@@ -188,6 +191,7 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
 
     this.onHeartbeatIntervalChange = heartbeatIntervalChangeHandler;
     this.onAuthenticationChange = authenticationChangeHandler;
+    this.onPresenceStateChange = presenceStateChangeHandler;
     this.onUserIdChange = userIdChangeHandler;
 
     if (process.env.SHARED_WORKER !== 'disabled') {

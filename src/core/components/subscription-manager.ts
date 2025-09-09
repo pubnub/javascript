@@ -35,7 +35,7 @@ export class SubscriptionManager {
   /**
    * Map between channel / group name and `state` associated with `uuid` there.
    */
-  private readonly presenceState: Record<string, Payload>;
+  readonly presenceState: Record<string, Payload>;
 
   /**
    * List of channel groups for which heartbeat calls should be performed.
@@ -523,13 +523,10 @@ export class SubscriptionManager {
       };
 
       this.configuration.logger().debug('SubscriptionManager', () => {
-        const hashedEvents = messages.map((event) => {
-          const pn_mfp =
-            event.type === PubNubEventType.Message || event.type === PubNubEventType.Signal
-              ? messageFingerprint(event.data.message)
-              : undefined;
-          return pn_mfp ? { type: event.type, data: { ...event.data, pn_mfp } } : event;
-        });
+        const hashedEvents = messages.map((event) => ({
+          type: event.type,
+          data: { ...event.data, pn_mfp: event.pn_mfp },
+        }));
         return { messageType: 'object', message: hashedEvents, details: 'Received events:' };
       });
 

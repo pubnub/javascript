@@ -214,6 +214,13 @@ export class PubNubCore<
   protected onHeartbeatIntervalChange?: (interval: number) => void;
 
   /**
+   * User's associated presence data change handler.
+   *
+   * @internal
+   */
+  protected onPresenceStateChange?: (state: Record<string, Payload>) => void;
+
+  /**
    * `authKey` or `token` change handler.
    *
    * @internal
@@ -2625,6 +2632,8 @@ export class PubNubCore<
         if ('channelGroups' in parameters) {
           parameters.channelGroups?.forEach((group) => (presenceState[group] = parameters.state));
         }
+
+        if (this.onPresenceStateChange) this.onPresenceStateChange(this.presenceState);
       }
 
       // Check whether the state should be set with heartbeat or not.
@@ -2645,7 +2654,10 @@ export class PubNubCore<
       };
 
       // Update state used by subscription manager.
-      if (this.subscriptionManager) this.subscriptionManager.setState(parameters);
+      if (this.subscriptionManager) {
+        this.subscriptionManager.setState(parameters);
+        if (this.onPresenceStateChange) this.onPresenceStateChange(this.subscriptionManager.presenceState);
+      }
 
       if (callback)
         return this.sendRequest(request, (status, response) => {
@@ -2724,8 +2736,8 @@ export class PubNubCore<
 
       const request = new HeartbeatRequest({
         ...parameters,
-        channels,
-        channelGroups,
+        channels: [...new Set(channels)],
+        channelGroups: [...new Set(channelGroups)],
         keySet: this._configuration.keySet,
       });
 

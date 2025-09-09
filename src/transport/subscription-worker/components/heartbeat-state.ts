@@ -17,14 +17,24 @@ export class HeartbeatState extends EventTarget {
   // region Information
 
   /**
-   * Map of client identifiers to their portion of data which affects heartbeat state.
+   * Map of client identifiers to their portion of data (received from the explicit `heartbeat` requests), which affects
+   * heartbeat state.
    *
-   * **Note:** This information removed only with {@link HeartbeatState.removeClient|removeClient} function call.
+   * **Note:** This information is removed only with the {@link removeClient} function call.
    */
   private clientsState: Record<
     string,
     { channels: string[]; channelGroups: string[]; state?: Record<string, Payload> }
   > = {};
+
+  /**
+   * Map of explicitly set `userId` presence state.
+   *
+   * This is the final source of truth, which is applied on the aggregated `state` object.
+   *
+   * **Note:** This information is removed only with the {@link removeClient} function call.
+   */
+  private clientsPresenceState: Record<string, { update: number; state: Record<string, Payload> }> = {};
 
   /**
    * Map of client to its requests which is pending for service request processing results.
@@ -123,7 +133,9 @@ export class HeartbeatState extends EventTarget {
       .map((request) => request.accessToken!);
     accessTokens.push(value);
 
-    this._accessToken = accessTokens.sort(AccessToken.compare).pop();
+    const latestAccessToken = accessTokens.sort(AccessToken.compare).pop();
+    if (!this._accessToken || (latestAccessToken && latestAccessToken.isNewerThan(this._accessToken)))
+      this._accessToken = latestAccessToken;
 
     // Restart _backup_ heartbeat if previous call failed because of permissions error.
     if (this.isAccessDeniedError) {
@@ -186,13 +198,27 @@ export class HeartbeatState extends EventTarget {
     this.requests[client.identifier] = request;
     this.clientsState[client.identifier] = { channels: request.channels, channelGroups: request.channelGroups };
     if (request.state) this.clientsState[client.identifier].state = { ...request.state };
+    const presenceState = this.clientsPresenceState[client.identifier];
+    const cachedPresenceStateKeys = presenceState ? Object.keys(presenceState.state) : [];
+
+    if (presenceState && cachedPresenceStateKeys.length) {
+      cachedPresenceStateKeys.forEach((key) => {
+        if (!request.channels.includes(key) && !request.channelGroups.includes(key)) delete presenceState.state[key];
+      });
+
+      if (Object.keys(presenceState.state).length === 0) delete this.clientsPresenceState[client.identifier];
+    }
 
     // Update access token information (use the one which will provide permissions for longer period).
     const sortedTokens = Object.values(this.requests)
       .filter((request) => !!request.accessToken)
       .map((request) => request.accessToken!)
       .sort(AccessToken.compare);
-    if (sortedTokens && sortedTokens.length > 0) this._accessToken = sortedTokens.pop();
+    if (sortedTokens && sortedTokens.length > 0) {
+      const latestAccessToken = sortedTokens.pop();
+      if (!this._accessToken || (latestAccessToken && latestAccessToken.isNewerThan(this._accessToken)))
+        this._accessToken = latestAccessToken;
+    }
 
     this.sendAggregatedHeartbeat(request);
   }
@@ -203,6 +229,7 @@ export class HeartbeatState extends EventTarget {
    * @param client - Reference to the PubNub client which should be removed.
    */
   removeClient(client: PubNubClient) {
+    delete this.clientsPresenceState[client.identifier];
     delete this.clientsState[client.identifier];
     delete this.requests[client.identifier];
 
@@ -213,12 +240,29 @@ export class HeartbeatState extends EventTarget {
     }
   }
 
+  /**
+   * Remove channels and groups associated with specific client.
+   *
+   * @param client - Reference to the PubNub client for which internal state should be updated.
+   * @param channels - List of channels that should be removed from the client's state (won't be used for "backup"
+   * heartbeat).
+   * @param channelGroups - List of channel groups that should be removed from the client's state (won't be used for
+   * "backup" heartbeat).
+   */
   removeFromClientState(client: PubNubClient, channels: string[], channelGroups: string[]) {
+    const presenceState = this.clientsPresenceState[client.identifier];
     const clientState = this.clientsState[client.identifier];
     if (!clientState) return;
 
     clientState.channelGroups = clientState.channelGroups.filter((group) => !channelGroups.includes(group));
     clientState.channels = clientState.channels.filter((channel) => !channels.includes(channel));
+
+    if (presenceState && Object.keys(presenceState.state).length) {
+      channelGroups.forEach((group) => delete presenceState.state[group]);
+      channels.forEach((channel) => delete presenceState.state[channel]);
+
+      if (Object.keys(presenceState.state).length === 0) delete this.clientsPresenceState[client.identifier];
+    }
 
     if (clientState.channels.length === 0 && clientState.channelGroups.length === 0) {
       this.removeClient(client);
@@ -231,6 +275,23 @@ export class HeartbeatState extends EventTarget {
       if (!clientState.channels.includes(key) && !clientState.channelGroups.includes(key))
         delete clientState.state![key];
     });
+  }
+
+  /**
+   * Update presence associated with `client`'s `userId` with channels and groups.
+   * @param client - Reference to the {@link PubNubClient|PubNub} client for which `userId` presence state has been
+   * changed.
+   * @param state - Payloads that are associated with `userId` at specified (as keys) channels and groups.
+   */
+  updateClientPresenceState(client: PubNubClient, state: Record<string, Payload>) {
+    const presenceState = this.clientsPresenceState[client.identifier];
+    state ??= {};
+
+    if (!presenceState) this.clientsPresenceState[client.identifier] = { update: Date.now(), state };
+    else {
+      Object.assign(presenceState.state, state);
+      presenceState.update = Date.now();
+    }
   }
 
   /**
@@ -285,15 +346,21 @@ export class HeartbeatState extends EventTarget {
     const requests = Object.values(this.requests);
     const baseRequest = requests[Math.floor(Math.random() * requests.length)];
     const aggregatedRequest = { ...baseRequest.request };
-    let state: Record<string, Payload> = {};
+    const targetState: Record<string, Payload> = {};
     const channelGroups = new Set<string>();
     const channels = new Set<string>();
 
-    Object.values(this.clientsState).forEach((clientState) => {
-      if (clientState.state) state = { ...state, ...clientState.state };
+    Object.entries(this.clientsState).forEach(([clientIdentifier, clientState]) => {
+      if (clientState.state) Object.assign(targetState, clientState.state);
       clientState.channelGroups.forEach(channelGroups.add, channelGroups);
       clientState.channels.forEach(channels.add, channels);
     });
+
+    if (Object.keys(this.clientsPresenceState).length) {
+      Object.values(this.clientsPresenceState)
+        .sort((lhs, rhs) => lhs.update - rhs.update)
+        .forEach(({ state }) => Object.assign(targetState, state));
+    }
 
     this.lastHeartbeatTimestamp = Date.now();
     const serviceRequest = HeartbeatRequest.fromCachedState(
@@ -301,7 +368,7 @@ export class HeartbeatState extends EventTarget {
       requests[0].subscribeKey,
       [...channelGroups],
       [...channels],
-      Object.keys(state).length > 0 ? state : undefined,
+      Object.keys(targetState).length > 0 ? targetState : undefined,
       this._accessToken,
     );
 

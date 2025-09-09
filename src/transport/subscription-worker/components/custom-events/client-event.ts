@@ -3,6 +3,7 @@ import { HeartbeatRequest } from '../heartbeat-request';
 import { PubNubClient } from '../pubnub-client';
 import { LeaveRequest } from '../leave-request';
 import { AccessToken } from '../access-token';
+import { Payload } from '../../../../core/types/api';
 
 /**
  * Type with events which is emitted by PubNub client and can be handled with callback passed to the
@@ -43,6 +44,15 @@ export enum PubNubClientEvent {
    * - restart _backup_ heartbeat timer with new interval.
    */
   HeartbeatIntervalChange = 'heartbeatIntervalChange',
+
+  /**
+   * `userId` presence data change event.
+   *
+   * On presence state change for proper further operation expected following actions:
+   * - cached `subscribe` request query parameter updated
+   * - cached `heartbeat` request query parameter updated
+   */
+  PresenceStateChange = 'presenceStateChange',
 
   /**
    * Core PubNub client module request to send `subscribe` request.
@@ -172,7 +182,7 @@ export class PubNubClientIdentityChangeEvent extends BasePubNubClientEvent<{
 }
 
 /**
- * Dispatched by PubNub client when it changes authentication data (`auth` has been changed).
+ * Dispatched by PubNub client when it changes authentication data (`auth`) has been changed.
  */
 export class PubNubClientAuthChangeEvent extends BasePubNubClientEvent<{
   oldAuth?: AccessToken;
@@ -260,6 +270,39 @@ export class PubNubClientHeartbeatIntervalChangeEvent extends BasePubNubClientEv
    */
   clone() {
     return new PubNubClientHeartbeatIntervalChangeEvent(this.client, this.newInterval, this.oldInterval);
+  }
+}
+
+/**
+ * Dispatched by PubNub client when presence state for its user has been changed.
+ */
+export class PubNubClientPresenceStateChangeEvent extends BasePubNubClientEvent<{ state: Record<string, Payload> }> {
+  /**
+   * Create a PubNub client presence state change event.
+   *
+   * @param client - Reference to the PubNub client that changed presence state for `userId`.
+   * @param state - Payloads that are associated with `userId` at specified (as keys) channels and groups.
+   */
+  constructor(client: PubNubClient, state: Record<string, Payload>) {
+    super(PubNubClientEvent.PresenceStateChange, { detail: { client, state } });
+  }
+
+  /**
+   * Retrieve the presence state that has been associated with `client`'s `userId`.
+   *
+   * @returns Presence state that has been associated with `client`'s `userId
+   */
+  get state() {
+    return this.detail.state;
+  }
+
+  /**
+   * Create a clone of `presence state` _change_ event to make it possible to forward event upstream.
+   *
+   * @returns Clone `presence state` _change_ event.
+   */
+  clone() {
+    return new PubNubClientPresenceStateChangeEvent(this.client, this.state);
   }
 }
 

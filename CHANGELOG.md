@@ -1,3 +1,15 @@
+## v9.10.0
+September 09 2025
+
+#### Added
+- Send new presence `state` to the `SharedWorker` as soon as it has been set with `setState` to avoid race conditions between regular heartbeats and `backup` heartbeats.
+
+#### Fixed
+- Fix issue because of which requests aggregated from other clients were able to override previously explicitly set newer access token.
+
+#### Modified
+- Remove presence `state` from long-poll subscribe requests as part of the transition to explicit  heartbeat.
+
 ## v9.9.0
 August 25 2025
 
