@@ -5436,7 +5436,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '9.9.0';
+	            return '9.10.0';
 	        },
 	        getVersion() {
 	            return this.version;

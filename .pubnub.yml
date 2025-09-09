@@ -1,5 +1,14 @@
 ---
 changelog:
+  - date: 2025-09-09
+    version: v9.10.0
+    changes:
+      - type: feature
+        text: "Send new presence `state` to the `SharedWorker` as soon as it has been set with `setState` to avoid race conditions between regular heartbeats and `backup` heartbeats."
+      - type: bug
+        text: "Fix issue because of which requests aggregated from other clients were able to override previously explicitly set newer access token."
+      - type: improvement
+        text: "Remove presence `state` from long-poll subscribe requests as part of the transition to explicit  heartbeat."
   - date: 2025-08-25
     version: v9.9.0
     changes:
@@ -1326,7 +1335,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.9.0'
+version: '9.10.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1342,7 +1351,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.9.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.10.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2013,7 +2022,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.9.0/pubnub.9.9.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.10.0/pubnub.9.10.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
