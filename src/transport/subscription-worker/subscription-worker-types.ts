@@ -96,6 +96,18 @@ export type UpdateEvent = BasicEvent & {
 };
 
 /**
+ * PubNub client's user presence state update event.
+ */
+export type PresenceStateUpdateEvent = BasicEvent & {
+  type: 'client-presence-state-update';
+
+  /**
+   * Key-value pair of payloads (states) that should be associated with channels / groups specified as keys.
+   */
+  state: Record<string, Payload>;
+};
+
+/**
  * Send HTTP request event.
  *
  * Request from Web Worker to schedule {@link Request} using provided {@link SendRequestSignal#request|request} data.
@@ -160,6 +172,7 @@ export type ClientEvent =
   | RegisterEvent
   | UpdateEvent
   | PongEvent
+  | PresenceStateUpdateEvent
   | SendRequestEvent
   | CancelRequestEvent
   | DisconnectEvent

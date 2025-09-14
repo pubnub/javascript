@@ -40,6 +40,14 @@
          */
         PubNubClientEvent["HeartbeatIntervalChange"] = "heartbeatIntervalChange";
         /**
+         * `userId` presence data change event.
+         *
+         * On presence state change for proper further operation expected following actions:
+         * - cached `subscribe` request query parameter updated
+         * - cached `heartbeat` request query parameter updated
+         */
+        PubNubClientEvent["PresenceStateChange"] = "presenceStateChange";
+        /**
          * Core PubNub client module request to send `subscribe` request.
          */
         PubNubClientEvent["SendSubscribeRequest"] = "sendSubscribeRequest";
@@ -151,7 +159,7 @@
         }
     }
     /**
-     * Dispatched by PubNub client when it changes authentication data (`auth` has been changed).
+     * Dispatched by PubNub client when it changes authentication data (`auth`) has been changed.
      */
     class PubNubClientAuthChangeEvent extends BasePubNubClientEvent {
         /**
@@ -226,6 +234,36 @@
          */
         clone() {
             return new PubNubClientHeartbeatIntervalChangeEvent(this.client, this.newInterval, this.oldInterval);
+        }
+    }
+    /**
+     * Dispatched by PubNub client when presence state for its user has been changed.
+     */
+    class PubNubClientPresenceStateChangeEvent extends BasePubNubClientEvent {
+        /**
+         * Create a PubNub client presence state change event.
+         *
+         * @param client - Reference to the PubNub client that changed presence state for `userId`.
+         * @param state - Payloads that are associated with `userId` at specified (as keys) channels and groups.
+         */
+        constructor(client, state) {
+            super(PubNubClientEvent.PresenceStateChange, { detail: { client, state } });
+        }
+        /**
+         * Retrieve the presence state that has been associated with `client`'s `userId`.
+         *
+         * @returns Presence state that has been associated with `client`'s `userId
+         */
+        get state() {
+            return this.detail.state;
+        }
+        /**
+         * Create a clone of `presence state` _change_ event to make it possible to forward event upstream.
+         *
+         * @returns Clone `presence state` _change_ event.
+         */
+        clone() {
+            return new PubNubClientPresenceStateChangeEvent(this.client, this.state);
         }
     }
     /**
@@ -1444,17 +1482,20 @@
          * @param timetokenOverride - Timetoken which should be used to patch timetoken in initial response.
          * @param timetokenRegionOverride - Timetoken origin which should be used to patch timetoken origin in initial
          * response.
+         * @param [cachedState] - Previously cached user's presence state for channels and groups.
          * @returns Aggregated subscribe request which will be sent.
          */
-        static fromRequests(requests, accessToken, timetokenOverride, timetokenRegionOverride) {
+        static fromRequests(requests, accessToken, timetokenOverride, timetokenRegionOverride, cachedState) {
+            var _a;
             const baseRequest = requests[Math.floor(Math.random() * requests.length)];
+            const isInitialSubscribe = ((_a = baseRequest.request.queryParameters.tt) !== null && _a !== void 0 ? _a : '0') === '0';
+            const state = isInitialSubscribe ? (cachedState !== null && cachedState !== void 0 ? cachedState : {}) : {};
             const aggregatedRequest = Object.assign({}, baseRequest.request);
-            let state = {};
             const channelGroups = new Set();
             const channels = new Set();
             for (const request of requests) {
-                if (request.state)
-                    state = Object.assign(Object.assign({}, state), request.state);
+                if (isInitialSubscribe && !cachedState && request.state)
+                    Object.assign(state, request.state);
                 request.channelGroups.forEach(channelGroups.add, channelGroups);
                 request.channels.forEach(channels.add, channels);
             }
@@ -1476,7 +1517,7 @@
                 aggregatedRequest.queryParameters.auth = accessToken.toString();
             aggregatedRequest.identifier = uuidGenerator.createUUID();
             // Create service request and link to its result other requests used in aggregation.
-            const request = new SubscribeRequest(aggregatedRequest, baseRequest.subscribeKey, accessToken);
+            const request = new SubscribeRequest(aggregatedRequest, baseRequest.subscribeKey, accessToken, [...channelGroups], [...channels], state);
             for (const clientRequest of requests)
                 clientRequest.serviceRequest = request;
             if (request.isInitialSubscribe && timetokenOverride && timetokenOverride !== '0') {
@@ -1522,12 +1563,19 @@
             if (request.queryParameters['filter-expr'])
                 this.filterExpression = request.queryParameters['filter-expr'];
             this._timetoken = ((_a = request.queryParameters.tt) !== null && _a !== void 0 ? _a : '0');
+            if (this._timetoken === '0') {
+                delete request.queryParameters.tt;
+                delete request.queryParameters.tr;
+            }
             if (request.queryParameters.tr)
                 this._region = request.queryParameters.tr;
             if (cachedState)
                 this.state = cachedState;
             // Clean up `state` from objects which is not used with request (if needed).
-            if (this.state || !request.queryParameters.state || request.queryParameters.state.length === 0)
+            if (this.state ||
+                !request.queryParameters.state ||
+                request.queryParameters.state.length <= 2 ||
+                this._timetoken !== '0')
                 return;
             const state = JSON.parse(request.queryParameters.state);
             for (const objectName of Object.keys(state))
@@ -2114,6 +2162,15 @@
              */
             this.clientsState = {};
             /**
+             * Map of explicitly set `userId` presence state.
+             *
+             * This is the final source of truth, which is applied on the aggregated `state` object.
+             *
+             * **Note:** This information is removed only with the {@link SubscriptionState.removeClient|removeClient} function
+             * call.
+             */
+            this.clientsPresenceState = {};
+            /**
              * Map of {@link PubNubClient|client} to its {@link SubscribeRequest|request} that already received response/error
              * or has been canceled.
              */
@@ -2217,6 +2274,22 @@
                 this.accessToken = accessToken;
         }
         /**
+         * Update presence associated with `client`'s `userId` with channels and groups.
+         * @param client - Reference to the {@link PubNubClient|PubNub} client for which `userId` presence state has been
+         * changed.
+         * @param state - Payloads that are associated with `userId` at specified (as keys) channels and groups.
+         */
+        updateClientPresenceState(client, state) {
+            const presenceState = this.clientsPresenceState[client.identifier];
+            state !== null && state !== void 0 ? state : (state = {});
+            if (!presenceState)
+                this.clientsPresenceState[client.identifier] = { update: Date.now(), state };
+            else {
+                Object.assign(presenceState.state, state);
+                presenceState.update = Date.now();
+            }
+        }
+        /**
          * Mark specific client as suitable for state invalidation when it will be appropriate.
          *
          * @param client - Reference to the {@link PubNubClient|PubNub} client which should be invalidated when will be
@@ -2277,6 +2350,7 @@
                 }
                 if (remove && (!!this.requests[clientIdentifier] || !!this.lastCompletedRequest[clientIdentifier])) {
                     if (clientInvalidate) {
+                        delete this.clientsPresenceState[clientIdentifier];
                         delete this.lastCompletedRequest[clientIdentifier];
                         delete this.clientsState[clientIdentifier];
                     }
@@ -2451,11 +2525,25 @@
             Object.entries(this.requests).forEach(([clientIdentifier, request]) => {
                 var _a;
                 var _b;
+                const presenceState = this.clientsPresenceState[clientIdentifier];
+                const cachedPresenceStateKeys = presenceState ? Object.keys(presenceState.state) : [];
                 const clientState = ((_a = (_b = this.clientsState)[clientIdentifier]) !== null && _a !== void 0 ? _a : (_b[clientIdentifier] = { channels: new Set(), channelGroups: new Set() }));
-                request.channelGroups.forEach(clientState.channelGroups.add, clientState.channelGroups);
-                request.channels.forEach(clientState.channels.add, clientState.channels);
-                request.channelGroups.forEach(channelGroups.add, channelGroups);
-                request.channels.forEach(channels.add, channels);
+                request.channelGroups.forEach((group) => {
+                    clientState.channelGroups.add(group);
+                    channelGroups.add(group);
+                });
+                request.channels.forEach((channel) => {
+                    clientState.channels.add(channel);
+                    channels.add(channel);
+                });
+                if (presenceState && cachedPresenceStateKeys.length) {
+                    cachedPresenceStateKeys.forEach((key) => {
+                        if (!request.channels.includes(key) && !request.channelGroups.includes(key))
+                            delete presenceState.state[key];
+                    });
+                    if (Object.keys(presenceState.state).length === 0)
+                        delete this.clientsPresenceState[clientIdentifier];
+                }
             });
             const changes = this.subscriptionStateChanges(channels, channelGroups);
             // Update state information.
@@ -2467,8 +2555,11 @@
                 .filter((request) => !!request.accessToken)
                 .map((request) => request.accessToken)
                 .sort(AccessToken.compare);
-            if (sortedTokens && sortedTokens.length > 0)
-                this.accessToken = sortedTokens.pop();
+            if (sortedTokens && sortedTokens.length > 0) {
+                const latestAccessToken = sortedTokens.pop();
+                if (!this.accessToken || (latestAccessToken && latestAccessToken.isNewerThan(this.accessToken)))
+                    this.accessToken = latestAccessToken;
+            }
             return changes;
         }
         // endregion
@@ -2487,6 +2578,7 @@
                         const clientIdx = this.clientsForInvalidation.indexOf(request.client.identifier);
                         if (clientIdx > 0) {
                             this.clientsForInvalidation.splice(clientIdx, 1);
+                            delete this.clientsPresenceState[request.client.identifier];
                             delete this.lastCompletedRequest[request.client.identifier];
                             delete this.clientsState[request.client.identifier];
                             // Check whether subscription state for all registered clients has been removed or not.
@@ -2618,9 +2710,19 @@
          * @param regionOverride - Timetoken region that should replace the initial response timetoken region.
          */
         createAggregatedRequest(requests, serviceRequests, timetokenOverride, regionOverride) {
+            var _a;
             if (requests.length === 0)
                 return;
-            const serviceRequest = SubscribeRequest.fromRequests(requests, this.accessToken, timetokenOverride, regionOverride);
+            let targetState;
+            // Apply aggregated presence state in proper order.
+            if (((_a = requests[0].request.queryParameters.tt) !== null && _a !== void 0 ? _a : '0') === '0' && Object.keys(this.clientsPresenceState).length) {
+                targetState = {};
+                requests.forEach((request) => { var _a; return Object.keys((_a = request.state) !== null && _a !== void 0 ? _a : {}).length && Object.assign(targetState, request.state); });
+                Object.values(this.clientsPresenceState)
+                    .sort((lhs, rhs) => lhs.update - rhs.update)
+                    .forEach(({ state }) => Object.assign(targetState, state));
+            }
+            const serviceRequest = SubscribeRequest.fromRequests(requests, this.accessToken, timetokenOverride, regionOverride, targetState);
             this.addListenersForRequestEvents(serviceRequest);
             requests.forEach((request) => (request.serviceRequest = serviceRequest));
             this.serviceRequests.push(serviceRequest);
@@ -3080,6 +3182,12 @@
                 }, {
                     signal: abortController.signal,
                 });
+                client.addEventListener(PubNubClientEvent.PresenceStateChange, (event) => {
+                    var _a;
+                    if (!(event instanceof PubNubClientPresenceStateChangeEvent))
+                        return;
+                    (_a = this.subscriptionStateForClient(event.client)) === null || _a === void 0 ? void 0 : _a.updateClientPresenceState(event.client, event.state);
+                }, { signal: abortController.signal });
                 client.addEventListener(PubNubClientEvent.SendSubscribeRequest, (event) => {
                     if (!(event instanceof PubNubClientSendSubscribeEvent))
                         return;
@@ -3355,8 +3463,8 @@
          * @param [aggregatedChannels] - List of aggregated channels for the same user.
          * @param [aggregatedState] - State aggregated for the same user.
          * @param [accessToken] - Access token with read permissions on
-         * {@link PubNubSharedWorkerRequest.channels|channels} and
-         * {@link PubNubSharedWorkerRequest.channelGroups|channelGroups}.
+         * {@link BasePubNubRequest.channels|channels} and
+         * {@link BasePubNubRequest.channelGroups|channelGroups}.
          * @retusns Initialized and ready to use heartbeat request.
          */
         static fromCachedState(request, subscriptionKey, aggregatedChannelGroups, aggregatedChannels, aggregatedState, accessToken) {
@@ -3373,7 +3481,7 @@
             if (aggregatedState && Object.keys(aggregatedState).length)
                 request.queryParameters.state = JSON.stringify(aggregatedState);
             else
-                delete request.queryParameters.aggregatedState;
+                delete request.queryParameters.state;
             if (accessToken)
                 request.queryParameters.auth = accessToken.toString();
             request.identifier = uuidGenerator.createUUID();
@@ -3481,11 +3589,20 @@
             // --------------------------------------------------------
             // region Information
             /**
-             * Map of client identifiers to their portion of data which affects heartbeat state.
+             * Map of client identifiers to their portion of data (received from the explicit `heartbeat` requests), which affects
+             * heartbeat state.
              *
-             * **Note:** This information removed only with {@link HeartbeatState.removeClient|removeClient} function call.
+             * **Note:** This information is removed only with the {@link removeClient} function call.
              */
             this.clientsState = {};
+            /**
+             * Map of explicitly set `userId` presence state.
+             *
+             * This is the final source of truth, which is applied on the aggregated `state` object.
+             *
+             * **Note:** This information is removed only with the {@link removeClient} function call.
+             */
+            this.clientsPresenceState = {};
             /**
              * Map of client to its requests which is pending for service request processing results.
              */
@@ -3545,7 +3662,9 @@
                 .filter((request) => !!request.accessToken)
                 .map((request) => request.accessToken);
             accessTokens.push(value);
-            this._accessToken = accessTokens.sort(AccessToken.compare).pop();
+            const latestAccessToken = accessTokens.sort(AccessToken.compare).pop();
+            if (!this._accessToken || (latestAccessToken && latestAccessToken.isNewerThan(this._accessToken)))
+                this._accessToken = latestAccessToken;
             // Restart _backup_ heartbeat if previous call failed because of permissions error.
             if (this.isAccessDeniedError) {
                 this.canSendBackupHeartbeat = true;
@@ -3596,13 +3715,26 @@
             this.clientsState[client.identifier] = { channels: request.channels, channelGroups: request.channelGroups };
             if (request.state)
                 this.clientsState[client.identifier].state = Object.assign({}, request.state);
+            const presenceState = this.clientsPresenceState[client.identifier];
+            const cachedPresenceStateKeys = presenceState ? Object.keys(presenceState.state) : [];
+            if (presenceState && cachedPresenceStateKeys.length) {
+                cachedPresenceStateKeys.forEach((key) => {
+                    if (!request.channels.includes(key) && !request.channelGroups.includes(key))
+                        delete presenceState.state[key];
+                });
+                if (Object.keys(presenceState.state).length === 0)
+                    delete this.clientsPresenceState[client.identifier];
+            }
             // Update access token information (use the one which will provide permissions for longer period).
             const sortedTokens = Object.values(this.requests)
                 .filter((request) => !!request.accessToken)
                 .map((request) => request.accessToken)
                 .sort(AccessToken.compare);
-            if (sortedTokens && sortedTokens.length > 0)
-                this._accessToken = sortedTokens.pop();
+            if (sortedTokens && sortedTokens.length > 0) {
+                const latestAccessToken = sortedTokens.pop();
+                if (!this._accessToken || (latestAccessToken && latestAccessToken.isNewerThan(this._accessToken)))
+                    this._accessToken = latestAccessToken;
+            }
             this.sendAggregatedHeartbeat(request);
         }
         /**
@@ -3611,6 +3743,7 @@
          * @param client - Reference to the PubNub client which should be removed.
          */
         removeClient(client) {
+            delete this.clientsPresenceState[client.identifier];
             delete this.clientsState[client.identifier];
             delete this.requests[client.identifier];
             // Stop backup timer if there is no more channels and groups left.
@@ -3619,12 +3752,28 @@
                 this.dispatchEvent(new HeartbeatStateInvalidateEvent());
             }
         }
+        /**
+         * Remove channels and groups associated with specific client.
+         *
+         * @param client - Reference to the PubNub client for which internal state should be updated.
+         * @param channels - List of channels that should be removed from the client's state (won't be used for "backup"
+         * heartbeat).
+         * @param channelGroups - List of channel groups that should be removed from the client's state (won't be used for
+         * "backup" heartbeat).
+         */
         removeFromClientState(client, channels, channelGroups) {
+            const presenceState = this.clientsPresenceState[client.identifier];
             const clientState = this.clientsState[client.identifier];
             if (!clientState)
                 return;
             clientState.channelGroups = clientState.channelGroups.filter((group) => !channelGroups.includes(group));
             clientState.channels = clientState.channels.filter((channel) => !channels.includes(channel));
+            if (presenceState && Object.keys(presenceState.state).length) {
+                channelGroups.forEach((group) => delete presenceState.state[group]);
+                channels.forEach((channel) => delete presenceState.state[channel]);
+                if (Object.keys(presenceState.state).length === 0)
+                    delete this.clientsPresenceState[client.identifier];
+            }
             if (clientState.channels.length === 0 && clientState.channelGroups.length === 0) {
                 this.removeClient(client);
                 return;
@@ -3636,6 +3785,22 @@
                 if (!clientState.channels.includes(key) && !clientState.channelGroups.includes(key))
                     delete clientState.state[key];
             });
+        }
+        /**
+         * Update presence associated with `client`'s `userId` with channels and groups.
+         * @param client - Reference to the {@link PubNubClient|PubNub} client for which `userId` presence state has been
+         * changed.
+         * @param state - Payloads that are associated with `userId` at specified (as keys) channels and groups.
+         */
+        updateClientPresenceState(client, state) {
+            const presenceState = this.clientsPresenceState[client.identifier];
+            state !== null && state !== void 0 ? state : (state = {});
+            if (!presenceState)
+                this.clientsPresenceState[client.identifier] = { update: Date.now(), state };
+            else {
+                Object.assign(presenceState.state, state);
+                presenceState.update = Date.now();
+            }
         }
         /**
          * Start "backup" presence heartbeat timer.
@@ -3684,17 +3849,22 @@
             const requests = Object.values(this.requests);
             const baseRequest = requests[Math.floor(Math.random() * requests.length)];
             const aggregatedRequest = Object.assign({}, baseRequest.request);
-            let state = {};
+            const targetState = {};
             const channelGroups = new Set();
             const channels = new Set();
-            Object.values(this.clientsState).forEach((clientState) => {
+            Object.entries(this.clientsState).forEach(([clientIdentifier, clientState]) => {
                 if (clientState.state)
-                    state = Object.assign(Object.assign({}, state), clientState.state);
+                    Object.assign(targetState, clientState.state);
                 clientState.channelGroups.forEach(channelGroups.add, channelGroups);
                 clientState.channels.forEach(channels.add, channels);
             });
+            if (Object.keys(this.clientsPresenceState).length) {
+                Object.values(this.clientsPresenceState)
+                    .sort((lhs, rhs) => lhs.update - rhs.update)
+                    .forEach(({ state }) => Object.assign(targetState, state));
+            }
             this.lastHeartbeatTimestamp = Date.now();
-            const serviceRequest = HeartbeatRequest.fromCachedState(aggregatedRequest, requests[0].subscribeKey, [...channelGroups], [...channels], Object.keys(state).length > 0 ? state : undefined, this._accessToken);
+            const serviceRequest = HeartbeatRequest.fromCachedState(aggregatedRequest, requests[0].subscribeKey, [...channelGroups], [...channels], Object.keys(targetState).length > 0 ? targetState : undefined, this._accessToken);
             // Set service request for all client-provided requests without response.
             Object.values(this.requests).forEach((request) => !request.serviceRequest && (request.serviceRequest = serviceRequest));
             this.addListenersForRequest(serviceRequest);
@@ -3912,6 +4082,8 @@
                     if (!!event.oldAuth !== !!event.newAuth ||
                         (event.oldAuth && event.newAuth && !event.newAuth.equalTo(event.oldAuth)))
                         this.moveClient(client);
+                    else if (state && event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
+                        state.accessToken = event.newAuth;
                 }, {
                     signal: abortController.signal,
                 });
@@ -3921,6 +4093,12 @@
                     const state = this.heartbeatStateForClient(client);
                     if (state)
                         state.interval = (_a = event.newInterval) !== null && _a !== void 0 ? _a : 0;
+                }, { signal: abortController.signal });
+                client.addEventListener(PubNubClientEvent.PresenceStateChange, (event) => {
+                    var _a;
+                    if (!(event instanceof PubNubClientPresenceStateChangeEvent))
+                        return;
+                    (_a = this.heartbeatStateForClient(event.client)) === null || _a === void 0 ? void 0 : _a.updateClientPresenceState(event.client, event.state);
                 }, { signal: abortController.signal });
                 client.addEventListener(PubNubClientEvent.SendHeartbeatRequest, (evt) => this.addClient(client, evt.request), { signal: abortController.signal });
                 client.addEventListener(PubNubClientEvent.SendLeaveRequest, (evt) => {
@@ -4246,6 +4424,8 @@
                     this.handleUnregisterEvent();
                 else if (event.data.type === 'client-update')
                     this.handleConfigurationUpdateEvent(event.data);
+                else if (event.data.type === 'client-presence-state-update')
+                    this.handlePresenceStateUpdateEvent(event.data);
                 else if (event.data.type === 'send-request')
                     this.handleSendRequestEvent(event.data);
                 else if (event.data.type === 'cancel-request')
@@ -4323,6 +4503,15 @@
                 this._heartbeatInterval = heartbeatInterval;
                 this.dispatchEvent(new PubNubClientHeartbeatIntervalChangeEvent(this, heartbeatInterval, oldValue));
             }
+        }
+        /**
+         * Handle client's user presence state information update.
+         *
+         * @param event - Object with up-to-date `userId` presence `state`, which should be reflected in SharedWorker's state
+         * for the registered client.
+         */
+        handlePresenceStateUpdateEvent(event) {
+            this.dispatchEvent(new PubNubClientPresenceStateChangeEvent(this, event.state));
         }
         /**
          * Handle requests send request from the core PubNub client module.

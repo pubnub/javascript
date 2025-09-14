@@ -5,13 +5,13 @@
 import { createMalformedResponseError, createValidationError, PubNubError } from '../../errors/pubnub-error';
 import { TransportResponse } from '../types/transport-response';
 import { ICryptoModule } from '../interfaces/crypto-module';
+import { encodeNames, messageFingerprint } from '../utils';
 import * as Subscription from '../types/api/subscription';
 import { AbstractRequest } from '../components/request';
 import * as FileSharing from '../types/api/file-sharing';
 import RequestOperation from '../constants/operations';
 import * as AppContext from '../types/api/app-context';
 import { KeySet, Payload, Query } from '../types/api';
-import { encodeNames } from '../utils';
 
 // --------------------------------------------------------
 // ---------------------- Defaults ------------------------
@@ -665,6 +665,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
 
         // Resolve missing event type.
         eventType ??= envelope.c.endsWith('-pnpres') ? PubNubEventType.Presence : PubNubEventType.Message;
+        const pn_mfp = messageFingerprint(envelope.d);
 
         // Check whether payload is string (potentially encrypted data).
         if (eventType != PubNubEventType.Signal && typeof envelope.d === 'string') {
@@ -672,43 +673,51 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
             return {
               type: PubNubEventType.Message,
               data: this.messageFromEnvelope(envelope),
+              pn_mfp,
             };
           }
 
           return {
             type: PubNubEventType.Files,
             data: this.fileFromEnvelope(envelope),
+            pn_mfp,
           };
         } else if (eventType == PubNubEventType.Message) {
           return {
             type: PubNubEventType.Message,
             data: this.messageFromEnvelope(envelope),
+            pn_mfp,
           };
         } else if (eventType === PubNubEventType.Presence) {
           return {
             type: PubNubEventType.Presence,
             data: this.presenceEventFromEnvelope(envelope),
+            pn_mfp,
           };
         } else if (eventType == PubNubEventType.Signal) {
           return {
             type: PubNubEventType.Signal,
             data: this.signalFromEnvelope(envelope),
+            pn_mfp,
           };
         } else if (eventType === PubNubEventType.AppContext) {
           return {
             type: PubNubEventType.AppContext,
             data: this.appContextFromEnvelope(envelope),
+            pn_mfp,
           };
         } else if (eventType === PubNubEventType.MessageAction) {
           return {
             type: PubNubEventType.MessageAction,
             data: this.messageActionFromEnvelope(envelope),
+            pn_mfp,
           };
         }
 
         return {
           type: PubNubEventType.Files,
           data: this.fileFromEnvelope(envelope),
+          pn_mfp,
         };
       });
 
