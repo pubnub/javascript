@@ -21,11 +21,6 @@ import { encodeNames, encodeString } from '../../utils';
  */
 type RequestParameters = Presence.GetPresenceStateParameters & {
   /**
-   * The subscriber uuid to get the current state.
-   */
-  uuid: string;
-
-  /**
    * PubNub REST API access key set.
    */
   keySet: KeySet;
@@ -111,7 +106,7 @@ export class GetPresenceStateRequest extends AbstractRequest<Presence.GetPresenc
     return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(
       channels ?? [],
       ',',
-    )}/uuid/${encodeString(uuid)}`;
+    )}/uuid/${encodeString(uuid ?? '')}`;
   }
 
   protected get queryParameters(): Query {
