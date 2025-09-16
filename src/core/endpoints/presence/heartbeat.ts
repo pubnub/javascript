@@ -91,7 +91,7 @@ export class HeartbeatRequest extends AbstractRequest<Presence.PresenceHeartbeat
     const query: Record<string, string> = { heartbeat: `${heartbeat}` };
 
     if (channelGroups && channelGroups.length !== 0) query['channel-group'] = channelGroups.join(',');
-    if (state) query.state = JSON.stringify(state);
+    if (state !== undefined) query.state = JSON.stringify(state);
 
     return query;
   }

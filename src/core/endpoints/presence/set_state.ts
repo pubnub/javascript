@@ -80,7 +80,7 @@ export class SetPresenceStateRequest extends AbstractRequest<Presence.SetPresenc
     } = this.parameters;
 
     if (!subscribeKey) return 'Missing Subscribe Key';
-    if (!state) return 'Missing State';
+    if (state === undefined) return 'Missing State';
     if (channels?.length === 0 && channelGroups?.length === 0)
       return 'Please provide a list of channels and/or channel-groups';
   }

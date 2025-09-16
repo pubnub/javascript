@@ -2549,7 +2549,7 @@ export class PubNubCore<
 
       const request = new GetPresenceStateRequest({
         ...parameters,
-        uuid: parameters.uuid ?? this._configuration.userId,
+        uuid: parameters.uuid ?? this._configuration.userId!,
         keySet: this._configuration.keySet,
       });
       const logResponse = (response: Presence.GetPresenceStateResponse | null) => {
