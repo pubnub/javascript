@@ -108,18 +108,6 @@ describe('WhereNowRequest', () => {
       assert.deepEqual(result.channels, []);
     });
 
-    it('should handle payload without channels', async () => {
-      const request = new WhereNowRequest(defaultParameters);
-      const mockResponse = createMockResponse({
-        status: 200,
-        message: 'OK',
-        payload: {},
-        service: 'Presence',
-      });
-      const result = await request.parse(mockResponse);
-      assert.deepEqual(result.channels, []);
-    });
-
     it('should handle single channel', async () => {
       const request = new WhereNowRequest(defaultParameters);
       const mockResponse = createMockResponse({

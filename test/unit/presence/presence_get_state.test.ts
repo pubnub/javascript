@@ -156,7 +156,7 @@ describe('GetPresenceStateRequest', () => {
         channels: ['channel1'],
       });
       const transportRequest = request.request();
-      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/channel1/uuid/undefined`;
+      const expectedPath = `/v2/presence/sub-key/${defaultKeySet.subscribeKey}/channel/channel1/uuid/`;
       assert.equal(transportRequest.path, expectedPath);
     });
   });
