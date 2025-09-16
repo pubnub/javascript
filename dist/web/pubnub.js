@@ -11210,7 +11210,7 @@
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, uuid, channels, } = this.parameters;
-	        return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels !== null && channels !== void 0 ? channels : [], ',')}/uuid/${uuid}`;
+	        return `/v2/presence/sub-key/${subscribeKey}/channel/${encodeNames(channels !== null && channels !== void 0 ? channels : [], ',')}/uuid/${encodeString(uuid !== null && uuid !== void 0 ? uuid : '')}`;
 	    }
 	    get queryParameters() {
 	        const { channelGroups } = this.parameters;
@@ -11243,7 +11243,7 @@
 	        const { keySet: { subscribeKey }, state, channels = [], channelGroups = [], } = this.parameters;
 	        if (!subscribeKey)
 	            return 'Missing Subscribe Key';
-	        if (!state)
+	        if (state === undefined)
 	            return 'Missing State';
 	        if ((channels === null || channels === void 0 ? void 0 : channels.length) === 0 && (channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.length) === 0)
 	            return 'Please provide a list of channels and/or channel-groups';
@@ -11309,7 +11309,7 @@
 	        const query = { heartbeat: `${heartbeat}` };
 	        if (channelGroups && channelGroups.length !== 0)
 	            query['channel-group'] = channelGroups.join(',');
-	        if (state)
+	        if (state !== undefined)
 	            query.state = JSON.stringify(state);
 	        return query;
 	    }
