@@ -25,6 +25,11 @@ const INCLUDE_UUID = true;
  * Whether state associated with `uuid` should be included in response or not.
  */
 const INCLUDE_STATE = false;
+
+/**
+ * Maximum number of participants which can be returned with single response.
+ */
+const MAXIMUM_COUNT = 1000;
 // endregion
 
 // --------------------------------------------------------
@@ -137,6 +142,9 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, Se
     this.parameters.queryParameters ??= {};
     this.parameters.includeUUIDs ??= INCLUDE_UUID;
     this.parameters.includeState ??= INCLUDE_STATE;
+    if (this.parameters.limit) this.parameters.limit = Math.min(this.parameters.limit, MAXIMUM_COUNT);
+    else this.parameters.limit = MAXIMUM_COUNT;
+    this.parameters.offset ??= 0;
   }
 
   operation(): RequestOperation {
@@ -182,6 +190,7 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, Se
     return {
       totalChannels,
       totalOccupancy,
+      next: 0,
       channels: channelsPresence,
     };
   }
@@ -201,9 +210,11 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, Se
   }
 
   protected get queryParameters(): Query {
-    const { channelGroups, includeUUIDs, includeState, queryParameters } = this.parameters;
+    const { channelGroups, includeUUIDs, includeState, limit, offset, queryParameters } = this.parameters;
 
     return {
+      ...(this.operation() === RequestOperation.PNHereNowOperation ? { limit } : {}),
+      ...(this.operation() === RequestOperation.PNHereNowOperation && offset! > 0 ? { offset } : {}),
       ...(!includeUUIDs! ? { disable_uuids: '1' } : {}),
       ...((includeState ?? false) ? { state: '1' } : {}),
       ...(channelGroups && channelGroups.length > 0 ? { 'channel-group': channelGroups.join(',') } : {}),
