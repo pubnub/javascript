@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2025-09-18
+    version: v9.11.0
+    changes:
+      - type: feature
+        text: "Add 'limit' and 'offset' parameters for 'HereNowRequest' for pagination support."
   - date: 2025-09-09
     version: v9.10.0
     changes:
@@ -1335,7 +1340,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.10.0'
+version: '9.11.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1351,7 +1356,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.10.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.11.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2022,7 +2027,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.10.0/pubnub.9.10.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v9.11.0/pubnub.9.11.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
