@@ -1,3 +1,9 @@
+## v10.0.0
+September 18 2025
+
+#### Added
+- BREAKING CHANGES: Add 'limit' and 'offset' parameters for 'HereNowRequest' for pagination support.
+
 ## v9.10.0
 September 09 2025
 
