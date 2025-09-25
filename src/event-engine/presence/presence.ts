@@ -53,6 +53,10 @@ export class PresenceEventEngine {
   }
 
   leave({ channels, groups }: { channels?: string[]; groups?: string[] }) {
+    // Update internal channel tracking to prevent stale heartbeat requests
+    this.channels = this.channels.filter(channel => !(channels ?? []).includes(channel));
+    this.groups = this.groups.filter(group => !(groups ?? []).includes(group));
+    
     if (this.dependencies.presenceState) {
       channels?.forEach((c) => delete this.dependencies.presenceState[c]);
       groups?.forEach((g) => delete this.dependencies.presenceState[g]);
