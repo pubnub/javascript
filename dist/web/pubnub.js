@@ -8924,8 +8924,8 @@
 	    }
 	    leave({ channels, groups }) {
 	        // Update internal channel tracking to prevent stale heartbeat requests
-	        this.channels = this.channels.filter(channel => !(channels !== null && channels !== void 0 ? channels : []).includes(channel));
-	        this.groups = this.groups.filter(group => !(groups !== null && groups !== void 0 ? groups : []).includes(group));
+	        this.channels = this.channels.filter((channel) => !(channels !== null && channels !== void 0 ? channels : []).includes(channel));
+	        this.groups = this.groups.filter((group) => !(groups !== null && groups !== void 0 ? groups : []).includes(group));
 	        if (this.dependencies.presenceState) {
 	            channels === null || channels === void 0 ? void 0 : channels.forEach((c) => delete this.dependencies.presenceState[c]);
 	            groups === null || groups === void 0 ? void 0 : groups.forEach((g) => delete this.dependencies.presenceState[g]);
@@ -8933,6 +8933,14 @@
 	        this.engine.transition(left(channels !== null && channels !== void 0 ? channels : [], groups !== null && groups !== void 0 ? groups : []));
 	    }
 	    leaveAll(isOffline = false) {
+	        // Clear presence state for all current channels and groups
+	        if (this.dependencies.presenceState) {
+	            this.channels.forEach((c) => delete this.dependencies.presenceState[c]);
+	            this.groups.forEach((g) => delete this.dependencies.presenceState[g]);
+	        }
+	        // Reset internal channel and group tracking
+	        this.channels = [];
+	        this.groups = [];
 	        this.engine.transition(leftAll(isOffline));
 	    }
 	    reconnect() {

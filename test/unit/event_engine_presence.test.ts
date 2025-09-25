@@ -46,6 +46,8 @@ describe('EventEngine', () => {
 
   afterEach(() => {
     unsub();
+    // Properly destroy PubNub instance to prevent open handles
+    pubnub.destroy(true);
   });
 
   function forEvent(eventLabel: string, timeout?: number) {
@@ -323,5 +325,193 @@ describe('EventEngine', () => {
     
     // Verify that group2 is NOT in the tracked groups
     expect(presenceEngine?.groups).to.not.include('group2');
+  });
+
+  it('should properly reset all channel tracking when calling leaveAll', async () => {
+    // This test verifies that leaveAll properly resets internal channel and group tracking
+    // Scenario: subscribe(a,b) -> subscribe(groups: [g1,g2]) -> leaveAll -> verify empty tracking
+    
+    // Mock heartbeat requests
+    utils.createNock()
+      .get('/v2/presence/sub-key/demo/channel/a,b/heartbeat')
+      .query(true)
+      .reply(200, '{"message":"OK", "service":"Presence"}', { 'content-type': 'text/javascript' })
+      .persist();
+    
+    utils.createNock()
+      .get('/v2/presence/sub-key/demo/channel/a,b/heartbeat')
+      .query(query => query['channel-group'] === 'group1,group2')
+      .reply(200, '{"message":"OK", "service":"Presence"}', { 'content-type': 'text/javascript' })
+      .persist();
+
+    // Mock leaveAll request
+    utils.createPresenceMockScopes({
+      subKey: 'demo',
+      presenceType: 'leave',
+      requests: [{ channels: [], groups: [] }], // leaveAll sends empty arrays
+    });
+
+    engine.subscribe(
+      (change: { type: string; event: { type: string } } | { type: string; toState: { label: string } }) =>
+        'toState' in change ? stateChanges.push(change) : receivedEvents.push(change),
+    );
+
+    // @ts-expect-error Access internal state for verification
+    const presenceEngine = pubnub.presenceEventEngine;
+
+    // Step 1: Subscribe to channels 'a' and 'b'
+    // @ts-expect-error Intentional access to the private interface.
+    pubnub.join({ channels: ['a', 'b'] });
+
+    await forEvent('JOINED', 1000);
+
+    // Verify presence engine has both channels
+    expect(presenceEngine?.channels).to.deep.equal(['a', 'b']);
+
+    // Step 2: Subscribe to channel groups 'group1' and 'group2'
+    // @ts-expect-error Intentional access to the private interface.
+    pubnub.join({ groups: ['group1', 'group2'] });
+
+    await forEvent('JOINED', 1000);
+
+    // Verify presence engine has both channels and groups
+    expect(presenceEngine?.channels).to.deep.equal(['a', 'b']);
+    expect(presenceEngine?.groups).to.deep.equal(['group1', 'group2']);
+
+    // Step 3: Call leaveAll
+    // @ts-expect-error Intentional access to the private interface.
+    pubnub.leaveAll();
+
+    await forEvent('LEFT_ALL', 1000);
+
+    // CRITICAL VERIFICATION: After leaveAll, both channels and groups should be empty
+    // This test verifies the leaveAll fix is working
+    expect(presenceEngine?.channels).to.deep.equal([]);
+    expect(presenceEngine?.groups).to.deep.equal([]);
+    
+    // Double-check that no channels or groups remain tracked
+    expect(presenceEngine?.channels).to.have.lengthOf(0);
+    expect(presenceEngine?.groups).to.have.lengthOf(0);
+  });
+
+  it('should properly clear presence state for all channels and groups when calling leaveAll', async () => {
+    // This test verifies that leaveAll clears presence state for all tracked channels/groups
+    // and that subsequent operations start with clean state
+    
+    // Mock heartbeat requests
+    utils.createNock()
+      .get('/v2/presence/sub-key/demo/channel/test1,test2/heartbeat')
+      .query(true)
+      .reply(200, '{"message":"OK", "service":"Presence"}', { 'content-type': 'text/javascript' })
+      .persist();
+
+    // Mock leaveAll request  
+    utils.createPresenceMockScopes({
+      subKey: 'demo',
+      presenceType: 'leave',
+      requests: [{ channels: [], groups: [] }],
+    });
+
+    engine.subscribe(
+      (change: { type: string; event: { type: string } } | { type: string; toState: { label: string } }) =>
+        'toState' in change ? stateChanges.push(change) : receivedEvents.push(change),
+    );
+
+    // @ts-expect-error Access internal state for verification
+    const presenceEngine = pubnub.presenceEventEngine;
+
+    // Step 1: Join channels with presence state
+    // @ts-expect-error Intentional access to the private interface.  
+    pubnub.join({ channels: ['test1', 'test2'] });
+
+    await forEvent('JOINED', 1000);
+
+    // Simulate presence state being set (this would normally happen through heartbeat responses)
+    if (presenceEngine?.dependencies.presenceState) {
+      presenceEngine.dependencies.presenceState['test1'] = { mood: 'happy' };
+      presenceEngine.dependencies.presenceState['test2'] = { mood: 'excited' };
+    }
+
+    // Verify initial state
+    expect(presenceEngine?.channels).to.deep.equal(['test1', 'test2']);
+    expect(presenceEngine?.dependencies.presenceState?.['test1']).to.deep.equal({ mood: 'happy' });
+    expect(presenceEngine?.dependencies.presenceState?.['test2']).to.deep.equal({ mood: 'excited' });
+
+    // Step 2: Call leaveAll
+    // @ts-expect-error Intentional access to the private interface.
+    pubnub.leaveAll();
+
+    await forEvent('LEFT_ALL', 1000);
+
+    // CRITICAL VERIFICATION: After leaveAll, presence state should be cleared
+    expect(presenceEngine?.channels).to.deep.equal([]);
+    expect(presenceEngine?.dependencies?.presenceState?.['test1']).to.be.undefined;
+    expect(presenceEngine?.dependencies.presenceState?.['test2']).to.be.undefined;
+  });
+
+  it('should handle leaveAll correctly when called with offline flag', async () => {
+    // This test verifies that leaveAll(true) properly handles offline scenarios
+    // and still resets internal tracking even when offline
+    
+    // Mock heartbeat requests
+    utils.createNock()
+      .get('/v2/presence/sub-key/demo/channel/offline-test/heartbeat')
+      .query(true)
+      .reply(200, '{"message":"OK", "service":"Presence"}', { 'content-type': 'text/javascript' })
+      .persist();
+
+    engine.subscribe(
+      (change: { type: string; event: { type: string } } | { type: string; toState: { label: string } }) =>
+        'toState' in change ? stateChanges.push(change) : receivedEvents.push(change),
+    );
+
+    // @ts-expect-error Access internal state for verification
+    const presenceEngine = pubnub.presenceEventEngine;
+
+    // Step 1: Join a channel
+    // @ts-expect-error Intentional access to the private interface.
+    pubnub.join({ channels: ['offline-test'] });
+
+    await forEvent('JOINED', 1000);
+
+    // Verify initial state
+    expect(presenceEngine?.channels).to.deep.equal(['offline-test']);
+
+    // Step 2: Call leaveAll with offline=true (simulating network disconnection)
+    // @ts-expect-error Intentional access to the private interface.
+    pubnub.leaveAll(true);
+
+    await forEvent('LEFT_ALL', 1000);
+
+    // CRITICAL VERIFICATION: Even when offline, leaveAll should reset tracking
+    expect(presenceEngine?.channels).to.deep.equal([]);
+    expect(presenceEngine?.groups).to.deep.equal([]);
+  });
+
+  it('should handle leaveAll when no channels or groups are tracked', async () => {
+    // This test verifies that leaveAll behaves correctly when called with empty tracking
+    // (edge case that should not cause errors)
+    
+    engine.subscribe(
+      (change: { type: string; event: { type: string } } | { type: string; toState: { label: string } }) =>
+        'toState' in change ? stateChanges.push(change) : receivedEvents.push(change),
+    );
+
+    // @ts-expect-error Access internal state for verification
+    const presenceEngine = pubnub.presenceEventEngine;
+
+    // Verify initial empty state
+    expect(presenceEngine?.channels).to.deep.equal([]);
+    expect(presenceEngine?.groups).to.deep.equal([]);
+
+    // Call leaveAll on empty state (should not cause errors)
+    // @ts-expect-error Intentional access to the private interface.
+    pubnub.leaveAll();
+
+    await forEvent('LEFT_ALL', 1000);
+
+    // Verify state remains empty (no side effects)
+    expect(presenceEngine?.channels).to.deep.equal([]);
+    expect(presenceEngine?.groups).to.deep.equal([]);
   });
 });
