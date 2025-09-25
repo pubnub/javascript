@@ -166,6 +166,9 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, Se
       'occupancy' in serviceResponse ? serviceResponse.occupancy : serviceResponse.payload.total_occupancy;
     const channelsPresence: Presence.HereNowResponse['channels'] = {};
     let channels: Required<MultipleChannelServiceResponse['payload']>['channels'] = {};
+    const limit = this.parameters.limit!;
+    let occupancyMatchLimit = false;
+    let next = 0;
 
     // Remap single channel presence to multiple channels presence response.
     if ('occupancy' in serviceResponse) {
@@ -185,12 +188,17 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, Se
         name: channel,
         occupancy: channelEntry.occupancy,
       };
+
+      if (!occupancyMatchLimit && channelEntry.occupancy === limit) occupancyMatchLimit = true;
     });
+
+    if (this.operation() === RequestOperation.PNHereNowOperation && totalOccupancy > limit && occupancyMatchLimit)
+      next = this.parameters.offset! + 1;
 
     return {
       totalChannels,
       totalOccupancy,
-      next: 0,
+      next,
       channels: channelsPresence,
     };
   }
@@ -214,7 +222,7 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, Se
 
     return {
       ...(this.operation() === RequestOperation.PNHereNowOperation ? { limit } : {}),
-      ...(this.operation() === RequestOperation.PNHereNowOperation && offset! > 0 ? { offset } : {}),
+      ...(this.operation() === RequestOperation.PNHereNowOperation && offset! > 0 ? { offset: offset! * limit! } : {}),
       ...(!includeUUIDs! ? { disable_uuids: '1' } : {}),
       ...((includeState ?? false) ? { state: '1' } : {}),
       ...(channelGroups && channelGroups.length > 0 ? { 'channel-group': channelGroups.join(',') } : {}),

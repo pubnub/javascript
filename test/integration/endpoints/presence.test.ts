@@ -405,6 +405,7 @@ describe('presence endpoints', () => {
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
+          limit: 1000,
         })
         .reply(
           200,
@@ -443,6 +444,7 @@ describe('presence endpoints', () => {
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
+          limit: 1000,
         })
         .reply(200, '{"status": 200, "message": "OK", "occupancy": 1, "service": "Presence"}', {
           'content-type': 'text/javascript',
@@ -474,6 +476,7 @@ describe('presence endpoints', () => {
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
+          limit: 1000,
         })
         .reply(
           200,
@@ -505,7 +508,7 @@ describe('presence endpoints', () => {
       });
     });
 
-    it.only('returns response for multiple channels with limit', (done) => {
+    it('returns response for multiple channels with limit', (done) => {
       const scope = utils
         .createNock()
         .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2')
@@ -516,7 +519,7 @@ describe('presence endpoints', () => {
         })
         .reply(
           200,
-          '{"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1}, "ch2": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d70e"], "occupancy": 1}}, "total_channels": 2, "total_occupancy": 2}, "service": "Presence"}',
+          '{"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e","a3ffd012-a3b9-478c-8705-64089f24b71e"], "occupancy": 2}, "ch2": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d70e","a3ffd012-a3b9-078c-8705-64089f24d70e"], "occupancy": 2}}, "total_channels": 2, "total_occupancy": 5}, "service": "Presence"}',
           { 'content-type': 'text/javascript' },
         );
 
@@ -524,27 +527,23 @@ describe('presence endpoints', () => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
-          assert.equal(response.totalOccupancy, 2);
+          assert.equal(response.totalOccupancy, 5);
           assert.equal(response.next, 1);
           assert.deepEqual(response.channels, {
             ch1: {
               name: 'ch1',
-              occupancy: 1,
+              occupancy: 2,
               occupants: [
-                {
-                  state: null,
-                  uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e',
-                },
+                { state: null, uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e' },
+                { state: null, uuid: 'a3ffd012-a3b9-478c-8705-64089f24b71e' },
               ],
             },
             ch2: {
               name: 'ch2',
-              occupancy: 1,
+              occupancy: 2,
               occupants: [
-                {
-                  state: null,
-                  uuid: 'a3ffd012-a3b9-478c-8705-64089f24d70e',
-                },
+                { state: null, uuid: 'a3ffd012-a3b9-478c-8705-64089f24d70e' },
+                { state: null, uuid: 'a3ffd012-a3b9-078c-8705-64089f24d70e' },
               ],
             },
           });
@@ -556,7 +555,48 @@ describe('presence endpoints', () => {
       });
     });
 
-    it.only('returns response for multiple channels with too large limit', (done) => {
+    it('returns response for multiple channels with limit and 0 offset', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2')
+        .query({
+          pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+          limit: 2,
+          uuid: 'myUUID',
+        })
+        .reply(
+          200,
+          '{"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1}, "ch2": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d70e"], "occupancy": 1}}, "total_channels": 2, "total_occupancy": 4}, "service": "Presence"}',
+          { 'content-type': 'text/javascript' },
+        );
+
+      pubnub.hereNow({ channels: ['ch1', 'ch2'], limit: 2 }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          assert.equal(response.totalOccupancy, 4);
+          assert.equal(response.next, 0);
+          assert.deepEqual(response.channels, {
+            ch1: {
+              name: 'ch1',
+              occupancy: 1,
+              occupants: [{ state: null, uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e' }],
+            },
+            ch2: {
+              name: 'ch2',
+              occupancy: 1,
+              occupants: [{ state: null, uuid: 'a3ffd012-a3b9-478c-8705-64089f24d70e' }],
+            },
+          });
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
+
+    it('returns response for multiple channels with too large limit', (done) => {
       const scope = utils
         .createNock()
         .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2')
@@ -576,6 +616,7 @@ describe('presence endpoints', () => {
           assert.equal(status.error, false);
           assert(response !== null);
           assert.equal(response.totalOccupancy, 1);
+          assert.equal(response.next, 0);
           assert.deepEqual(response.channels, {
             ch1: {
               name: 'ch1',
@@ -596,47 +637,43 @@ describe('presence endpoints', () => {
       });
     });
 
-    it.only('returns response for multiple channels with limit and offset', (done) => {
+    it('returns response for multiple channels with limit and offset', (done) => {
       const scope = utils
         .createNock()
         .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           limit: 2,
-          offset: 1,
+          offset: 4,
           uuid: 'myUUID',
         })
         .reply(
           200,
-          '{"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e"], "occupancy": 1}, "ch2": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d70e"], "occupancy": 1}}, "total_channels": 2, "total_occupancy": 2}, "service": "Presence"}',
+          '{"status": 200, "message": "OK", "payload": {"channels": {"ch1": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d71e","a3ffd012-a3b9-478c-8705-64089f24d31e"], "occupancy": 2}, "ch2": {"uuids": ["a3ffd012-a3b9-478c-8705-64089f24d70e","a3ffd012-a3b9-478c-8705-64089f24df0e"], "occupancy": 2}}, "total_channels": 2, "total_occupancy": 8}, "service": "Presence"}',
           { 'content-type': 'text/javascript' },
         );
 
-      pubnub.hereNow({ channels: ['ch1', 'ch2'], limit: 2, offset: 1 }, (status, response) => {
+      pubnub.hereNow({ channels: ['ch1', 'ch2'], limit: 2, offset: 2 }, (status, response) => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
-          assert.equal(response.totalOccupancy, 2);
-          assert.equal(response.next, 2);
+          assert.equal(response.totalOccupancy, 8);
+          assert.equal(response.next, 3);
           assert.deepEqual(response.channels, {
             ch1: {
               name: 'ch1',
-              occupancy: 1,
+              occupancy: 2,
               occupants: [
-                {
-                  state: null,
-                  uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e',
-                },
+                { state: null, uuid: 'a3ffd012-a3b9-478c-8705-64089f24d71e' },
+                { state: null, uuid: 'a3ffd012-a3b9-478c-8705-64089f24d31e' },
               ],
             },
             ch2: {
               name: 'ch2',
-              occupancy: 1,
+              occupancy: 2,
               occupants: [
-                {
-                  state: null,
-                  uuid: 'a3ffd012-a3b9-478c-8705-64089f24d70e',
-                },
+                { state: null, uuid: 'a3ffd012-a3b9-478c-8705-64089f24d70e' },
+                { state: null, uuid: 'a3ffd012-a3b9-478c-8705-64089f24df0e' },
               ],
             },
           });
@@ -655,6 +692,7 @@ describe('presence endpoints', () => {
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
+          limit: 1000,
           state: 1,
         })
         .reply(
@@ -705,6 +743,7 @@ describe('presence endpoints', () => {
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
+          limit: 1000,
           disable_uuids: 1,
         })
         .reply(
@@ -745,6 +784,7 @@ describe('presence endpoints', () => {
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
           'channel-group': 'cg1',
+          limit: 1000,
         })
         .reply(
           200,
@@ -929,6 +969,7 @@ describe('presence endpoints', () => {
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
           test: 'param',
+          limit: 1000,
         })
         .reply(
           200,

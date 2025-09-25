@@ -769,11 +769,7 @@ describe('fetch messages endpoints', () => {
         include_uuid: 'true',
         include_message_type: 'true',
       })
-      .reply(
-        200,
-        '{ "channels": {} }',
-        { 'content-type': 'text/javascript' },
-      );
+      .reply(200, '{ "channels": {} }', { 'content-type': 'text/javascript' });
 
     pubnub.fetchMessages({ channels: ['ch1'] }, (status, response) => {
       try {
@@ -890,7 +886,7 @@ describe('fetch messages endpoints', () => {
 
   it('handles binary encryption results with ArrayBuffer', (done) => {
     nock.disableNetConnect();
-    
+
     // Create a mock crypto module that returns ArrayBuffer
     const mockCrypto = {
       logger: {
@@ -899,14 +895,14 @@ describe('fetch messages endpoints', () => {
         info: () => {},
         warn: () => {},
         error: () => {},
-        trace: () => {}
+        trace: () => {},
       } as any,
       decrypt: () => new TextEncoder().encode('{"text": "hello"}').buffer,
       encrypt: (data: string | ArrayBuffer) => data,
       encryptFile: (data: ArrayBuffer) => data,
       decryptFile: (data: ArrayBuffer) => data,
     } as any;
-    
+
     const pubnubWithMockCrypto = new PubNub({
       subscribeKey,
       publishKey,
@@ -992,7 +988,7 @@ describe('fetch messages endpoints', () => {
       assert(error instanceof PubNubError);
       assert.equal(
         error.status!.message,
-        'History can return actions data for a single channel only. Either pass a single channel or disable the includeMessageActions flag.'
+        'History can return actions data for a single channel only. Either pass a single channel or disable the includeMessageActions flag.',
       );
       errorCaught = true;
     }
@@ -1011,11 +1007,9 @@ describe('fetch messages endpoints', () => {
         include_uuid: 'true',
         include_message_type: 'true',
       })
-      .reply(
-        403,
-        '{"status": 403, "error": true, "error_message": "Forbidden"}',
-        { 'content-type': 'text/javascript' },
-      );
+      .reply(403, '{"status": 403, "error": true, "error_message": "Forbidden"}', {
+        'content-type': 'text/javascript',
+      });
 
     pubnub.fetchMessages({ channels: ['ch1'] }, (status, response) => {
       try {
@@ -1052,7 +1046,10 @@ describe('fetch messages endpoints', () => {
         assert.equal(status.error, false);
         assert(response !== null);
         assert('more' in response);
-        assert.equal(response.more.url, '/v3/history-with-actions/sub-key/sub-key/channel/ch1?start=16048329933709932&max=25');
+        assert.equal(
+          response.more.url,
+          '/v3/history-with-actions/sub-key/sub-key/channel/ch1?start=16048329933709932&max=25',
+        );
         assert.equal(response.more.start, '16048329933709932');
         assert.equal(response.more.max, 25);
         assert.equal(scope.isDone(), true);
@@ -1275,27 +1272,30 @@ describe('fetch messages endpoints', () => {
         { 'content-type': 'text/javascript' },
       );
 
-    pubnub.fetchMessages({ 
-      channels: ['ch1'], 
-      start: '15610547826970000', 
-      end: '15610547826970100' 
-    }, (status, response) => {
-      try {
-        assert.equal(status.error, false);
-        assert(response !== null);
-        const message = response.channels.ch1[0];
-        assert.equal(message.timetoken, '15610547826970050');
-        assert.equal(scope.isDone(), true);
-        done();
-      } catch (error) {
-        done(error);
-      }
-    });
+    pubnub.fetchMessages(
+      {
+        channels: ['ch1'],
+        start: '15610547826970000',
+        end: '15610547826970100',
+      },
+      (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert(response !== null);
+          const message = response.channels.ch1[0];
+          assert.equal(message.timetoken, '15610547826970050');
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      },
+    );
   });
 
   it('supports both callback and promise patterns', async () => {
     nock.disableNetConnect();
-    
+
     // Test Promise pattern
     const promiseScope = utils
       .createNock()
@@ -1356,7 +1356,7 @@ describe('fetch messages endpoints', () => {
 
   it('logs requests and responses when logVerbosity enabled', (done) => {
     nock.disableNetConnect();
-    
+
     // Create PubNub instance with logVerbosity enabled
     const pubnubWithLogging = new PubNub({
       subscribeKey,
@@ -1364,7 +1364,7 @@ describe('fetch messages endpoints', () => {
       uuid: 'myUUID',
       // @ts-expect-error Force override default value.
       useRequestId: false,
-      logVerbosity: true,
+      logVerbosity: false,
     });
 
     const scope = utils
@@ -1387,7 +1387,7 @@ describe('fetch messages endpoints', () => {
     const originalLog = console.log;
     let logCalled = false;
     console.log = (...args) => {
-      if (args.some(arg => typeof arg === 'string' && arg.includes('decryption'))) {
+      if (args.some((arg) => typeof arg === 'string' && arg.includes('decryption'))) {
         logCalled = true;
       }
       originalLog.apply(console, args);
@@ -1410,8 +1410,8 @@ describe('fetch messages endpoints', () => {
 
   it('handles concurrent fetchMessages calls safely', async () => {
     nock.disableNetConnect();
-    
-    const scopes = [1, 2, 3].map(i => 
+
+    const scopes = [1, 2, 3].map((i) =>
       utils
         .createNock()
         .get(`/v3/history/sub-key/${subscribeKey}/channel/ch${i}`)
@@ -1426,15 +1426,13 @@ describe('fetch messages endpoints', () => {
           200,
           `{ "channels": { "ch${i}": [{"message": {"text": "hello${i}"}, "timetoken": "1604832993370993${i}", "uuid": "test-uuid"}] } }`,
           { 'content-type': 'text/javascript' },
-        )
+        ),
     );
 
-    const promises = [1, 2, 3].map(i => 
-      pubnub.fetchMessages({ channels: [`ch${i}`] })
-    );
+    const promises = [1, 2, 3].map((i) => pubnub.fetchMessages({ channels: [`ch${i}`] }));
 
     const responses = await Promise.all(promises);
-    
+
     responses.forEach((response, index) => {
       assert(response !== null);
       assert(response.channels[`ch${index + 1}`]);
@@ -1444,10 +1442,10 @@ describe('fetch messages endpoints', () => {
 
   it('supports large channel lists within limits', (done) => {
     nock.disableNetConnect();
-    
+
     const channels = Array.from({ length: 10 }, (_, i) => `channel${i}`);
     const encodedChannels = channels.join(',');
-    
+
     const scope = utils
       .createNock()
       .get(`/v3/history/sub-key/${subscribeKey}/channel/${encodedChannels}`)
@@ -1458,11 +1456,7 @@ describe('fetch messages endpoints', () => {
         include_uuid: 'true',
         include_message_type: 'true',
       })
-      .reply(
-        200,
-        '{ "channels": {} }',
-        { 'content-type': 'text/javascript' },
-      );
+      .reply(200, '{ "channels": {} }', { 'content-type': 'text/javascript' });
 
     pubnub.fetchMessages({ channels }, (status, response) => {
       try {
@@ -1487,11 +1481,7 @@ describe('fetch messages endpoints', () => {
         include_uuid: 'true',
         include_message_type: 'true',
       })
-      .reply(
-        200,
-        'invalid json response',
-        { 'content-type': 'text/javascript' },
-      );
+      .reply(200, 'invalid json response', { 'content-type': 'text/javascript' });
 
     pubnub.fetchMessages({ channels: ['ch1'] }, (status, response) => {
       try {
@@ -1506,7 +1496,7 @@ describe('fetch messages endpoints', () => {
 
   it('adds signature when secretKey configured', (done) => {
     nock.disableNetConnect();
-    
+
     const pubnubWithSecret = new PubNub({
       subscribeKey,
       publishKey,
@@ -1544,7 +1534,7 @@ describe('fetch messages endpoints', () => {
 
   it('handles very large message payloads', (done) => {
     nock.disableNetConnect();
-    
+
     const largeMessage = 'x'.repeat(10000); // Large message payload
     const scope = utils
       .createNock()
@@ -1600,14 +1590,14 @@ describe('fetch messages endpoints', () => {
         assert.equal(status.error, false);
         assert(response !== null);
         const messages = response.channels.ch1;
-        
+
         // Regular message
         assert.equal(messages[0].messageType, -1);
         assert.deepEqual(messages[0].message, { text: 'regular message' });
-        
+
         // File message - just check that message type is correct
         assert.equal(messages[1].messageType, 4);
-        
+
         assert.equal(scope.isDone(), true);
         done();
       } catch (error) {
@@ -1618,7 +1608,7 @@ describe('fetch messages endpoints', () => {
 
   it('handles includeCustomMessageType flag variations', (done) => {
     nock.disableNetConnect();
-    
+
     // Test with includeCustomMessageType: true
     const trueScope = utils
       .createNock()
@@ -1631,17 +1621,13 @@ describe('fetch messages endpoints', () => {
         include_message_type: 'true',
         include_custom_message_type: 'true',
       })
-      .reply(
-        200,
-        '{ "channels": { "ch1": [] } }',
-        { 'content-type': 'text/javascript' },
-      );
+      .reply(200, '{ "channels": { "ch1": [] } }', { 'content-type': 'text/javascript' });
 
     pubnub.fetchMessages({ channels: ['ch1'], includeCustomMessageType: true }, (status, response) => {
       try {
         assert.equal(status.error, false);
         assert.equal(trueScope.isDone(), true);
-        
+
         // Test with includeCustomMessageType: false
         const falseScope = utils
           .createNock()
@@ -1654,11 +1640,7 @@ describe('fetch messages endpoints', () => {
             include_message_type: 'true',
             include_custom_message_type: 'false',
           })
-          .reply(
-            200,
-            '{ "channels": { "ch2": [] } }',
-            { 'content-type': 'text/javascript' },
-          );
+          .reply(200, '{ "channels": { "ch2": [] } }', { 'content-type': 'text/javascript' });
 
         pubnub.fetchMessages({ channels: ['ch2'], includeCustomMessageType: false }, (status2, response2) => {
           try {
@@ -1689,7 +1671,7 @@ describe('fetch messages endpoints', () => {
 
   it('handles edge case count values', (done) => {
     nock.disableNetConnect();
-    
+
     // Test count=0 should use defaults
     const scope1 = utils
       .createNock()
@@ -1701,17 +1683,13 @@ describe('fetch messages endpoints', () => {
         include_uuid: 'true',
         include_message_type: 'true',
       })
-      .reply(
-        200,
-        '{ "channels": { "ch1": [] } }',
-        { 'content-type': 'text/javascript' },
-      );
+      .reply(200, '{ "channels": { "ch1": [] } }', { 'content-type': 'text/javascript' });
 
     pubnub.fetchMessages({ channels: ['ch1'], count: 0 }, (status, response) => {
       try {
         assert.equal(status.error, false);
         assert.equal(scope1.isDone(), true);
-        
+
         // Test count=1 should work as specified
         const scope2 = utils
           .createNock()
@@ -1723,11 +1701,7 @@ describe('fetch messages endpoints', () => {
             include_uuid: 'true',
             include_message_type: 'true',
           })
-          .reply(
-            200,
-            '{ "channels": { "ch2": [] } }',
-            { 'content-type': 'text/javascript' },
-          );
+          .reply(200, '{ "channels": { "ch2": [] } }', { 'content-type': 'text/javascript' });
 
         pubnub.fetchMessages({ channels: ['ch2'], count: 1 }, (status2, response2) => {
           try {

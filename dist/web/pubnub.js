@@ -8924,8 +8924,10 @@
 	    }
 	    leave({ channels, groups }) {
 	        // Update internal channel tracking to prevent stale heartbeat requests
-	        this.channels = this.channels.filter((channel) => !(channels !== null && channels !== void 0 ? channels : []).includes(channel));
-	        this.groups = this.groups.filter((group) => !(groups !== null && groups !== void 0 ? groups : []).includes(group));
+	        if (channels)
+	            this.channels = this.channels.filter((channel) => !channels.includes(channel));
+	        if (groups)
+	            this.groups = this.groups.filter((group) => !groups.includes(group));
 	        if (this.dependencies.presenceState) {
 	            channels === null || channels === void 0 ? void 0 : channels.forEach((c) => delete this.dependencies.presenceState[c]);
 	            groups === null || groups === void 0 ? void 0 : groups.forEach((g) => delete this.dependencies.presenceState[g]);
@@ -11476,6 +11478,9 @@
 	            const totalOccupancy = 'occupancy' in serviceResponse ? serviceResponse.occupancy : serviceResponse.payload.total_occupancy;
 	            const channelsPresence = {};
 	            let channels = {};
+	            const limit = this.parameters.limit;
+	            let occupancyMatchLimit = false;
+	            let next = 0;
 	            // Remap single channel presence to multiple channels presence response.
 	            if ('occupancy' in serviceResponse) {
 	                const channel = this.parameters.channels[0];
@@ -11496,11 +11501,15 @@
 	                    name: channel,
 	                    occupancy: channelEntry.occupancy,
 	                };
+	                if (!occupancyMatchLimit && channelEntry.occupancy === limit)
+	                    occupancyMatchLimit = true;
 	            });
+	            if (this.operation() === RequestOperation$1.PNHereNowOperation && totalOccupancy > limit && occupancyMatchLimit)
+	                next = this.parameters.offset + 1;
 	            return {
 	                totalChannels,
 	                totalOccupancy,
-	                next: 0,
+	                next,
 	                channels: channelsPresence,
 	            };
 	        });
@@ -11514,7 +11523,7 @@
 	    }
 	    get queryParameters() {
 	        const { channelGroups, includeUUIDs, includeState, limit, offset, queryParameters } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (this.operation() === RequestOperation$1.PNHereNowOperation ? { limit } : {})), (this.operation() === RequestOperation$1.PNHereNowOperation && offset > 0 ? { offset } : {})), (!includeUUIDs ? { disable_uuids: '1' } : {})), ((includeState !== null && includeState !== void 0 ? includeState : false) ? { state: '1' } : {})), (channelGroups && channelGroups.length > 0 ? { 'channel-group': channelGroups.join(',') } : {})), queryParameters);
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (this.operation() === RequestOperation$1.PNHereNowOperation ? { limit } : {})), (this.operation() === RequestOperation$1.PNHereNowOperation && offset > 0 ? { offset: offset * limit } : {})), (!includeUUIDs ? { disable_uuids: '1' } : {})), ((includeState !== null && includeState !== void 0 ? includeState : false) ? { state: '1' } : {})), (channelGroups && channelGroups.length > 0 ? { 'channel-group': channelGroups.join(',') } : {})), queryParameters);
 	    }
 	}
 
