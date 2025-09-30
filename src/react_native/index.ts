@@ -146,7 +146,6 @@ export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
     const transportMiddleware = new PubNubMiddleware({
       clientConfiguration,
       tokenManager,
-      shaHMAC: process.env.CRYPTO_MODULE !== 'disabled' ? crypto?.HMACSHA256.bind(crypto) : undefined,
       transport: new ReactNativeTransport(clientConfiguration.logger(), clientConfiguration.keepAlive),
     });
 
