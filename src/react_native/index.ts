@@ -14,6 +14,8 @@ import { decode } from '../core/components/base64_codec';
 import PubNubFile from '../file/modules/react-native';
 import { PubNubConfiguration } from './configuration';
 import Crypto from '../core/components/cryptography';
+import LegacyCryptoModule from '../crypto/modules/LegacyCryptoModule';
+import type { CryptorConfiguration, ICryptoModule } from '../core/interfaces/crypto-module';
 import { PubNubCore } from '../core/pubnub-common';
 import { setDefaults } from './configuration';
 import Cbor from '../cbor/common';
@@ -96,7 +98,26 @@ export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
     if (process.env.FILE_SHARING_MODULE !== 'disabled') platformConfiguration.PubNubFile = PubNubFile;
 
     // Prepare full client configuration.
-    const clientConfiguration = makeConfiguration(platformConfiguration);
+    // Install a CryptoModule on RN when a cipherKey is provided by adapting legacy Crypto.
+    const clientConfiguration = makeConfiguration(
+      platformConfiguration,
+      (cryptoConfiguration: CryptorConfiguration): ICryptoModule | undefined => {
+        if (!cryptoConfiguration.cipherKey) return undefined;
+
+        if (process.env.CRYPTO_MODULE !== 'disabled') {
+          const legacy = new Crypto({
+            secretKey: platformConfiguration.secretKey,
+            cipherKey: cryptoConfiguration.cipherKey,
+            useRandomIVs: platformConfiguration.useRandomIVs,
+            customEncrypt: platformConfiguration.customEncrypt,
+            customDecrypt: platformConfiguration.customDecrypt,
+            logger: cryptoConfiguration.logger,
+          });
+          return new LegacyCryptoModule(legacy);
+        }
+        return undefined;
+      },
+    );
 
     // Prepare Token manager.
     let tokenManager: TokenManager | undefined;
