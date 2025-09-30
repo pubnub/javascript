@@ -1,5 +1,14 @@
 ---
 changelog:
+  - date: 2025-09-30
+    version: v10.1.0
+    changes:
+      - type: feature
+        text: "Reintroduced legacy encryption and decryption functions for the React Native target to ensure backward compatibility. This change merges PR #476."
+      - type: bug
+        text: "Resolves issue where presence heartbeat channels/groups sets were out of sync."
+      - type: improvement
+        text: "Temporarily remove the `offset` parameter until implementation synchronization across SDKs is completed."
   - date: 2025-09-18
     version: v10.0.0
     changes:
@@ -1340,7 +1349,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '10.0.0'
+version: '10.1.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1356,7 +1365,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v10.0.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v10.1.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2027,7 +2036,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v10.0.0/pubnub.10.0.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v10.1.0/pubnub.10.1.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
