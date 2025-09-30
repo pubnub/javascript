@@ -4,7 +4,7 @@ changelog:
     version: v10.1.0
     changes:
       - type: feature
-        text: "Reintroduced legacy encryption and decryption functions for the React Native target to ensure backward compatibility. This change merges PR #476."
+        text: "Reintroduced legacy encryption and decryption functions for the React Native target to ensure backward compatibility."
       - type: bug
         text: "Resolves issue where presence heartbeat channels/groups sets were out of sync."
       - type: improvement
