@@ -144,7 +144,6 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, Se
     this.parameters.includeState ??= INCLUDE_STATE;
     if (this.parameters.limit) this.parameters.limit = Math.min(this.parameters.limit, MAXIMUM_COUNT);
     else this.parameters.limit = MAXIMUM_COUNT;
-    this.parameters.offset ??= 0;
   }
 
   operation(): RequestOperation {
@@ -166,6 +165,8 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, Se
       'occupancy' in serviceResponse ? serviceResponse.occupancy : serviceResponse.payload.total_occupancy;
     const channelsPresence: Presence.HereNowResponse['channels'] = {};
     let channels: Required<MultipleChannelServiceResponse['payload']>['channels'] = {};
+    const limit = this.parameters.limit!;
+    let occupancyMatchLimit = false;
 
     // Remap single channel presence to multiple channels presence response.
     if ('occupancy' in serviceResponse) {
@@ -185,12 +186,13 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, Se
         name: channel,
         occupancy: channelEntry.occupancy,
       };
+
+      if (!occupancyMatchLimit && channelEntry.occupancy === limit) occupancyMatchLimit = true;
     });
 
     return {
       totalChannels,
       totalOccupancy,
-      next: 0,
       channels: channelsPresence,
     };
   }
@@ -210,11 +212,10 @@ export class HereNowRequest extends AbstractRequest<Presence.HereNowResponse, Se
   }
 
   protected get queryParameters(): Query {
-    const { channelGroups, includeUUIDs, includeState, limit, offset, queryParameters } = this.parameters;
+    const { channelGroups, includeUUIDs, includeState, limit, queryParameters } = this.parameters;
 
     return {
       ...(this.operation() === RequestOperation.PNHereNowOperation ? { limit } : {}),
-      ...(this.operation() === RequestOperation.PNHereNowOperation && offset! > 0 ? { offset } : {}),
       ...(!includeUUIDs! ? { disable_uuids: '1' } : {}),
       ...((includeState ?? false) ? { state: '1' } : {}),
       ...(channelGroups && channelGroups.length > 0 ? { 'channel-group': channelGroups.join(',') } : {}),

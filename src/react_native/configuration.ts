@@ -7,7 +7,12 @@ import {
 /**
  * React Native platform PubNub client configuration.
  */
-export type PubNubConfiguration = UserConfiguration;
+export type PubNubConfiguration = UserConfiguration & {
+  /**
+   * If passed, will encrypt the payloads.
+   */
+  cipherKey?: string;
+};
 
 /**
  * Apply configuration default values.

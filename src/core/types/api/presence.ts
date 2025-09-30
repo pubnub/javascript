@@ -202,13 +202,6 @@ export type HereNowParameters = {
   limit?: number;
 
   /**
-   * Starting position of results to return, used for pagination.
-   *
-   * @default `0`.
-   */
-  offset?: number;
-
-  /**
    * Additional query parameters.
    */
   queryParameters?: Record<string, string>;
@@ -227,15 +220,6 @@ export type HereNowResponse = {
    * Total occupancy for all retrieved channels.
    */
   totalOccupancy: number;
-
-  /**
-   * Next page offset value.
-   *
-   * Value that could be passed as {@link HereNowParameters.offset|offset} to fetch the next participants list page.
-   *
-   * **Note:** There are no more pages if the value is set to `0`.
-   */
-  next: number;
 
   /**
    * List of channels to which `uuid` currently subscribed.

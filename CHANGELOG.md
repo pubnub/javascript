@@ -1,3 +1,15 @@
+## v10.1.0
+September 30 2025
+
+#### Added
+- Reintroduced legacy encryption and decryption functions for the React Native target to ensure backward compatibility. This change merges PR #476. Fixed the following issues reported by [@nholik](https://github.com/nholik): [#474](https://github.com/pubnub/javascript/issues/474).
+
+#### Fixed
+- Resolves issue where presence heartbeat channels/groups sets were out of sync.
+
+#### Modified
+- Temporarily remove the `offset` parameter until implementation synchronization across SDKs is completed.
+
 ## v10.0.0
 September 18 2025
 

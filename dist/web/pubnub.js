@@ -5436,7 +5436,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '10.0.0';
+	            return '10.1.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -8923,6 +8923,11 @@
 	        this.engine.transition(joined(this.channels.slice(0), this.groups.slice(0)));
 	    }
 	    leave({ channels, groups }) {
+	        // Update internal channel tracking to prevent stale heartbeat requests
+	        if (channels)
+	            this.channels = this.channels.filter((channel) => !channels.includes(channel));
+	        if (groups)
+	            this.groups = this.groups.filter((group) => !groups.includes(group));
 	        if (this.dependencies.presenceState) {
 	            channels === null || channels === void 0 ? void 0 : channels.forEach((c) => delete this.dependencies.presenceState[c]);
 	            groups === null || groups === void 0 ? void 0 : groups.forEach((g) => delete this.dependencies.presenceState[g]);
@@ -8930,6 +8935,14 @@
 	        this.engine.transition(left(channels !== null && channels !== void 0 ? channels : [], groups !== null && groups !== void 0 ? groups : []));
 	    }
 	    leaveAll(isOffline = false) {
+	        // Clear presence state for all current channels and groups
+	        if (this.dependencies.presenceState) {
+	            this.channels.forEach((c) => delete this.dependencies.presenceState[c]);
+	            this.groups.forEach((g) => delete this.dependencies.presenceState[g]);
+	        }
+	        // Reset internal channel and group tracking
+	        this.channels = [];
+	        this.groups = [];
 	        this.engine.transition(leftAll(isOffline));
 	    }
 	    reconnect() {
@@ -11432,19 +11445,18 @@
 	 */
 	class HereNowRequest extends AbstractRequest {
 	    constructor(parameters) {
-	        var _a, _b, _c, _d;
-	        var _e, _f, _g, _h;
+	        var _a, _b, _c;
+	        var _d, _e, _f;
 	        super();
 	        this.parameters = parameters;
 	        // Apply defaults.
-	        (_a = (_e = this.parameters).queryParameters) !== null && _a !== void 0 ? _a : (_e.queryParameters = {});
-	        (_b = (_f = this.parameters).includeUUIDs) !== null && _b !== void 0 ? _b : (_f.includeUUIDs = INCLUDE_UUID$1);
-	        (_c = (_g = this.parameters).includeState) !== null && _c !== void 0 ? _c : (_g.includeState = INCLUDE_STATE);
+	        (_a = (_d = this.parameters).queryParameters) !== null && _a !== void 0 ? _a : (_d.queryParameters = {});
+	        (_b = (_e = this.parameters).includeUUIDs) !== null && _b !== void 0 ? _b : (_e.includeUUIDs = INCLUDE_UUID$1);
+	        (_c = (_f = this.parameters).includeState) !== null && _c !== void 0 ? _c : (_f.includeState = INCLUDE_STATE);
 	        if (this.parameters.limit)
 	            this.parameters.limit = Math.min(this.parameters.limit, MAXIMUM_COUNT);
 	        else
 	            this.parameters.limit = MAXIMUM_COUNT;
-	        (_d = (_h = this.parameters).offset) !== null && _d !== void 0 ? _d : (_h.offset = 0);
 	    }
 	    operation() {
 	        const { channels = [], channelGroups = [] } = this.parameters;
@@ -11465,6 +11477,8 @@
 	            const totalOccupancy = 'occupancy' in serviceResponse ? serviceResponse.occupancy : serviceResponse.payload.total_occupancy;
 	            const channelsPresence = {};
 	            let channels = {};
+	            const limit = this.parameters.limit;
+	            let occupancyMatchLimit = false;
 	            // Remap single channel presence to multiple channels presence response.
 	            if ('occupancy' in serviceResponse) {
 	                const channel = this.parameters.channels[0];
@@ -11485,11 +11499,12 @@
 	                    name: channel,
 	                    occupancy: channelEntry.occupancy,
 	                };
+	                if (!occupancyMatchLimit && channelEntry.occupancy === limit)
+	                    occupancyMatchLimit = true;
 	            });
 	            return {
 	                totalChannels,
 	                totalOccupancy,
-	                next: 0,
 	                channels: channelsPresence,
 	            };
 	        });
@@ -11502,8 +11517,8 @@
 	        return path;
 	    }
 	    get queryParameters() {
-	        const { channelGroups, includeUUIDs, includeState, limit, offset, queryParameters } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (this.operation() === RequestOperation$1.PNHereNowOperation ? { limit } : {})), (this.operation() === RequestOperation$1.PNHereNowOperation && offset > 0 ? { offset } : {})), (!includeUUIDs ? { disable_uuids: '1' } : {})), ((includeState !== null && includeState !== void 0 ? includeState : false) ? { state: '1' } : {})), (channelGroups && channelGroups.length > 0 ? { 'channel-group': channelGroups.join(',') } : {})), queryParameters);
+	        const { channelGroups, includeUUIDs, includeState, limit, queryParameters } = this.parameters;
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (this.operation() === RequestOperation$1.PNHereNowOperation ? { limit } : {})), (!includeUUIDs ? { disable_uuids: '1' } : {})), ((includeState !== null && includeState !== void 0 ? includeState : false) ? { state: '1' } : {})), (channelGroups && channelGroups.length > 0 ? { 'channel-group': channelGroups.join(',') } : {})), queryParameters);
 	    }
 	}
 
@@ -16778,16 +16793,10 @@
 	                };
 	                if (callback)
 	                    return this.sendRequest(request, (status, response) => {
-	                        var _a;
-	                        if (response && response.totalOccupancy === parameters.limit)
-	                            response.next = ((_a = parameters.offset) !== null && _a !== void 0 ? _a : 0) + 1;
 	                        logResponse(response);
 	                        callback(status, response);
 	                    });
 	                return this.sendRequest(request).then((response) => {
-	                    var _a;
-	                    if (response && response.totalOccupancy === parameters.limit)
-	                        response.next = ((_a = parameters.offset) !== null && _a !== void 0 ? _a : 0) + 1;
 	                    logResponse(response);
 	                    return response;
 	                });

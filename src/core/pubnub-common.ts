@@ -2428,15 +2428,11 @@ export class PubNubCore<
 
       if (callback)
         return this.sendRequest(request, (status, response) => {
-          if (response && response.totalOccupancy === parameters.limit) response.next = (parameters.offset ?? 0) + 1;
-
           logResponse(response);
           callback(status, response);
         });
 
       return this.sendRequest(request).then((response) => {
-        if (response && response.totalOccupancy === parameters.limit) response.next = (parameters.offset ?? 0) + 1;
-
         logResponse(response);
         return response;
       });
