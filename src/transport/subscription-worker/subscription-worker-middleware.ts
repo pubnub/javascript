@@ -9,17 +9,17 @@
 
 import { CancellationController, TransportRequest } from '../../core/types/transport-request';
 import { TransportResponse } from '../../core/types/transport-response';
+import * as PubNubSubscriptionWorker from './subscription-worker-types';
 import { LoggerManager } from '../../core/components/logger-manager';
+import { LogLevel, LogMessage } from '../../core/interfaces/logger';
+import { Status, StatusEvent, Payload } from '../../core/types/api';
 import { TokenManager } from '../../core/components/token_manager';
-import * as PubNubSubscriptionWorker from './subscription-worker';
+import { RequestSendingError } from './subscription-worker-types';
 import { PubNubAPIError } from '../../errors/pubnub-api-error';
 import StatusCategory from '../../core/constants/categories';
 import { Transport } from '../../core/interfaces/transport';
 import * as PAM from '../../core/types/api/access-manager';
-import { LogMessage } from '../../core/interfaces/logger';
-import { Status, StatusEvent } from '../../core/types/api';
 import PNOperations from '../../core/constants/operations';
-import { RequestSendingError } from './subscription-worker';
 
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
@@ -63,9 +63,9 @@ type PubNubMiddlewareConfiguration = {
   workerUnsubscribeOfflineClients: boolean;
 
   /**
-   * Whether verbose logging should be enabled for `Subscription` worker should print debug messages or not.
+   * Minimum messages log level which should be passed to the `Subscription` worker logger.
    */
-  workerLogVerbosity: boolean;
+  workerLogLevel: LogLevel;
 
   /**
    * Whether heartbeat request success should be announced or not.
@@ -180,6 +180,23 @@ export class SubscriptionWorkerMiddleware implements Transport {
       clientIdentifier: this.configuration.clientIdentifier,
       subscriptionKey: this.configuration.subscriptionKey,
       userId: this.configuration.userId,
+      workerLogLevel: this.configuration.workerLogLevel,
+    });
+  }
+
+  /**
+   * Update presence state associated with `userId`.
+   *
+   * @param state - Key-value pair of payloads (states) that should be associated with channels / groups specified as
+   * keys.
+   */
+  onPresenceStateChange(state: Record<string, Payload>) {
+    this.scheduleEventPost({
+      type: 'client-presence-state-update',
+      clientIdentifier: this.configuration.clientIdentifier,
+      subscriptionKey: this.configuration.subscriptionKey,
+      workerLogLevel: this.configuration.workerLogLevel,
+      state,
     });
   }
 
@@ -197,6 +214,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
       clientIdentifier: this.configuration.clientIdentifier,
       subscriptionKey: this.configuration.subscriptionKey,
       userId: this.configuration.userId,
+      workerLogLevel: this.configuration.workerLogLevel,
     });
   }
 
@@ -212,6 +230,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
       clientIdentifier: this.configuration.clientIdentifier,
       subscriptionKey: this.configuration.subscriptionKey,
       userId: this.configuration.userId,
+      workerLogLevel: this.configuration.workerLogLevel,
     };
 
     // Trigger request processing by Service Worker.
@@ -224,6 +243,18 @@ export class SubscriptionWorkerMiddleware implements Transport {
   }
 
   /**
+   * Disconnect client and terminate ongoing long-poll requests (if needed).
+   */
+  disconnect() {
+    this.scheduleEventPost({
+      type: 'client-disconnect',
+      clientIdentifier: this.configuration.clientIdentifier,
+      subscriptionKey: this.configuration.subscriptionKey,
+      workerLogLevel: this.configuration.workerLogLevel,
+    });
+  }
+
+  /**
    * Terminate all ongoing long-poll requests.
    */
   terminate() {
@@ -231,6 +262,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
       type: 'client-unregister',
       clientIdentifier: this.configuration.clientIdentifier,
       subscriptionKey: this.configuration.subscriptionKey,
+      workerLogLevel: this.configuration.workerLogLevel,
     });
   }
 
@@ -247,6 +279,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
       clientIdentifier: this.configuration.clientIdentifier,
       subscriptionKey: this.configuration.subscriptionKey,
       request: req,
+      workerLogLevel: this.configuration.workerLogLevel,
     };
 
     if (req.cancellable) {
@@ -257,6 +290,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
             clientIdentifier: this.configuration.clientIdentifier,
             subscriptionKey: this.configuration.subscriptionKey,
             identifier: req.identifier,
+            workerLogLevel: this.configuration.workerLogLevel,
           };
 
           // Cancel active request with specified identifier.
@@ -375,12 +409,21 @@ export class SubscriptionWorkerMiddleware implements Transport {
         heartbeatInterval: this.configuration.heartbeatInterval,
         workerOfflineClientsCheckInterval: this.configuration.workerOfflineClientsCheckInterval,
         workerUnsubscribeOfflineClients: this.configuration.workerUnsubscribeOfflineClients,
-        workerLogVerbosity: this.configuration.workerLogVerbosity,
+        workerLogLevel: this.configuration.workerLogLevel,
       },
       true,
     );
 
     this.subscriptionWorker.port.onmessage = (event) => this.handleWorkerEvent(event);
+
+    if (this.shouldAnnounceNewerSharedWorkerVersionAvailability())
+      localStorage.setItem('PNSubscriptionSharedWorkerVersion', this.configuration.sdkVersion);
+
+    window.addEventListener('storage', (event) => {
+      if (event.key !== 'PNSubscriptionSharedWorkerVersion' || !event.newValue) return;
+      if (this._emitStatus && this.isNewerSharedWorkerVersion(event.newValue))
+        this._emitStatus({ error: false, category: StatusCategory.PNSharedWorkerUpdatedCategory });
+    });
   }
 
   private handleWorkerEvent(event: MessageEvent<PubNubSubscriptionWorker.SubscriptionWorkerEvent>) {
@@ -422,7 +465,12 @@ export class SubscriptionWorkerMiddleware implements Transport {
     } else if (data.type === 'shared-worker-ping') {
       const { subscriptionKey, clientIdentifier } = this.configuration;
 
-      this.scheduleEventPost({ type: 'client-pong', subscriptionKey, clientIdentifier });
+      this.scheduleEventPost({
+        type: 'client-pong',
+        subscriptionKey,
+        clientIdentifier,
+        workerLogLevel: this.configuration.workerLogLevel,
+      });
     } else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
       if (this.callbacks!.has(data.identifier)) {
         const { resolve, reject } = this.callbacks!.get(data.identifier)!;
@@ -478,7 +526,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
       if (!token || !stringifiedToken) return undefined;
 
       return (this.accessTokensMap = {
-        [accessToken]: { token: stringifiedToken, expiration: token.timestamp * token.ttl * 60 },
+        [accessToken]: { token: stringifiedToken, expiration: token.timestamp + token.ttl * 60 },
       })[accessToken];
     });
   }
@@ -559,5 +607,31 @@ export class SubscriptionWorkerMiddleware implements Transport {
     }
 
     return new PubNubAPIError(message, category, 0, new Error(message));
+  }
+
+  /**
+   * Check whether current subscription `SharedWorker` version should be announced or not.
+   *
+   * @returns `true` if local storage is empty (only newer version will add value) or stored version is smaller than
+   * current.
+   */
+  private shouldAnnounceNewerSharedWorkerVersionAvailability() {
+    const version = localStorage.getItem('PNSubscriptionSharedWorkerVersion');
+    if (!version) return true;
+
+    return !this.isNewerSharedWorkerVersion(version);
+  }
+
+  /**
+   * Check whether current subscription `SharedWorker` version should be announced or not.
+   *
+   * @param version - Stored (received on init or event) version of subscription shared worker.
+   * @returns `true` if provided `version` is newer than current client version.
+   */
+  private isNewerSharedWorkerVersion(version: string) {
+    const [currentMajor, currentMinor, currentPatch] = this.configuration.sdkVersion.split('.').map(Number);
+    const [storedMajor, storedMinor, storedPatch] = version.split('.').map(Number);
+
+    return storedMajor > currentMajor || storedMinor > currentMinor || storedPatch > currentPatch;
   }
 }

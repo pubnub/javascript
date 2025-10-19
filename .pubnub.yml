@@ -1,5 +1,56 @@
 ---
 changelog:
+  - date: 2025-09-30
+    version: v10.1.0
+    changes:
+      - type: feature
+        text: "Reintroduced legacy encryption and decryption functions for the React Native target to ensure backward compatibility."
+      - type: bug
+        text: "Resolves issue where presence heartbeat channels/groups sets were out of sync."
+      - type: improvement
+        text: "Temporarily remove the `offset` parameter until implementation synchronization across SDKs is completed."
+  - date: 2025-09-18
+    version: v10.0.0
+    changes:
+      - type: feature
+        text: "BREAKING CHANGES: Add 'limit' and 'offset' parameters for 'HereNowRequest' for pagination support."
+  - date: 2025-09-09
+    version: v9.10.0
+    changes:
+      - type: feature
+        text: "Send new presence `state` to the `SharedWorker` as soon as it has been set with `setState` to avoid race conditions between regular heartbeats and `backup` heartbeats."
+      - type: bug
+        text: "Fix issue because of which requests aggregated from other clients were able to override previously explicitly set newer access token."
+      - type: improvement
+        text: "Remove presence `state` from long-poll subscribe requests as part of the transition to explicit  heartbeat."
+  - date: 2025-08-25
+    version: v9.9.0
+    changes:
+      - type: bug
+        text: "Resolved the issue because of which requests that were too early received a response and still have been sent."
+      - type: improvement
+        text: "Decouple and re-organize `SharedWorker` code for better maintainability."
+      - type: improvement
+        text: "Additional query parameter (removed before sending) is added for requests triggered by user and state will be updated only for these requests."
+      - type: improvement
+        text: "Log entry timestamp will be altered on millisecond if multiple log entries have similar timestamp (logged in fraction of nanoseconds)."
+      - type: improvement
+        text: "Change the condition that is used to identify whether the `offline` detection timer has been suspended by the browser or not before trying to evict `offline` PubNub clients."
+  - date: 2025-08-07
+    version: v9.8.4
+    changes:
+      - type: bug
+        text: "Resolved an issue that prevented access to static fields of the PubNub class when using the SDK in React Native target builds."
+  - date: 2025-07-28
+    version: v9.8.3
+    changes:
+      - type: improvement
+        text: "Update workflow with `id-token: write` permission for AWS CLI configuration."
+  - date: 2025-07-28
+    version: v9.8.2
+    changes:
+      - type: improvement
+        text: "Upgraded `form-data` dependency to version 4.0.4 to address potential vulnerability issue."
   - date: 2025-07-15
     version: v9.8.1
     changes:
@@ -1298,7 +1349,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '9.8.1'
+version: '10.1.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1314,7 +1365,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v9.8.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v10.1.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -1985,7 +2036,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v9.8.1/pubnub.9.8.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v10.1.0/pubnub.10.1.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

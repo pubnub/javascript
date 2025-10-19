@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "9.8.1",
+  "version": "10.1.0",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "scripts": {
@@ -61,7 +61,7 @@
     "cbor-js": "^0.1.0",
     "cbor-sync": "^1.0.4",
     "fflate": "^0.8.2",
-    "form-data": "^4.0.0",
+    "form-data": "^4.0.4",
     "lil-uuid": "^0.1.1",
     "node-fetch": "^2.7.0",
     "proxy-agent": "^6.3.0",

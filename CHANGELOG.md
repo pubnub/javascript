@@ -1,3 +1,63 @@
+## v10.1.0
+September 30 2025
+
+#### Added
+- Reintroduced legacy encryption and decryption functions for the React Native target to ensure backward compatibility. This change merges PR #476. Fixed the following issues reported by [@nholik](https://github.com/nholik): [#474](https://github.com/pubnub/javascript/issues/474).
+
+#### Fixed
+- Resolves issue where presence heartbeat channels/groups sets were out of sync.
+
+#### Modified
+- Temporarily remove the `offset` parameter until implementation synchronization across SDKs is completed.
+
+## v10.0.0
+September 18 2025
+
+#### Added
+- BREAKING CHANGES: Add 'limit' and 'offset' parameters for 'HereNowRequest' for pagination support.
+
+## v9.10.0
+September 09 2025
+
+#### Added
+- Send new presence `state` to the `SharedWorker` as soon as it has been set with `setState` to avoid race conditions between regular heartbeats and `backup` heartbeats.
+
+#### Fixed
+- Fix issue because of which requests aggregated from other clients were able to override previously explicitly set newer access token.
+
+#### Modified
+- Remove presence `state` from long-poll subscribe requests as part of the transition to explicit  heartbeat.
+
+## v9.9.0
+August 25 2025
+
+#### Fixed
+- Resolved the issue because of which requests that were too early received a response and still have been sent.
+
+#### Modified
+- Decouple and re-organize `SharedWorker` code for better maintainability.
+- Additional query parameter (removed before sending) is added for requests triggered by user and state will be updated only for these requests.
+- Log entry timestamp will be altered on millisecond if multiple log entries have similar timestamp (logged in fraction of nanoseconds).
+- Change the condition that is used to identify whether the `offline` detection timer has been suspended by the browser or not before trying to evict "offline" PubNub clients.
+
+## v9.8.4
+August 07 2025
+
+#### Fixed
+- Resolved an issue that prevented access to static fields of the PubNub class when using the SDK in React Native target builds.
+
+## v9.8.3
+July 28 2025
+
+#### Modified
+- Update workflow with `id-token: write` permission for AWS CLI configuration.
+
+## v9.8.2
+July 28 2025
+
+#### Modified
+- Upgraded `form-data` dependency to version 4.0.4 to address potential vulnerability issue.
+
 ## v9.8.1
 July 15 2025
 

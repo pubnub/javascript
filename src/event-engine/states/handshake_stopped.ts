@@ -39,7 +39,7 @@ HandshakeStoppedState.on(subscriptionChange.type, (context, { payload }) => {
 });
 
 HandshakeStoppedState.on(reconnect.type, (context, { payload }) =>
-  HandshakingState.with({ ...context, cursor: payload.cursor || context.cursor }),
+  HandshakingState.with({ ...context, cursor: payload.cursor || context.cursor, onDemand: true }),
 );
 
 HandshakeStoppedState.on(restore.type, (context, { payload }) => {

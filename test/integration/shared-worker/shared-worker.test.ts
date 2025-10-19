@@ -1316,11 +1316,11 @@ describe('PubNub Shared Worker Integration Tests', () => {
       const channel1 = testChannels[0];
       const channel2 = testChannels[1];
 
-      let firstRequestIntercepted = false;
-      let secondRequestIntercepted = false;
       let errorOccurred = false;
       let testCompleted = false;
-      let firstSubscriptionEstablished = false;
+      let tokenUpdated = false;
+      let seenFirstForChannel1 = false;
+      let seenSecondForChannel2 = false;
 
       // Set initial token
       pubnubWithWorker.setToken(initialToken);
@@ -1334,7 +1334,19 @@ describe('PubNub Shared Worker Integration Tests', () => {
       const underlyingTransport = transport.configuration.transport;
       const originalMakeSendable = underlyingTransport.makeSendable.bind(underlyingTransport);
 
-      let interceptedRequests: any[] = [];
+      const interceptedRequests: any[] = [];
+
+      const pathContainsChannel = (path: string, channel: string) => {
+        const match = path.match(/\/v2\/subscribe\/[^/]+\/([^/]+)/) || path.match(/\/subscribe\/[^/]+\/([^/]+)/);
+        if (!match) return false;
+        try {
+          const segment = decodeURIComponent(match[1]);
+          const channels = segment.split(',');
+          return channels.includes(channel);
+        } catch {
+          return false;
+        }
+      };
 
       // Override makeSendable to capture requests after middleware processing
       underlyingTransport.makeSendable = function (req: any) {
@@ -1349,43 +1361,41 @@ describe('PubNub Shared Worker Integration Tests', () => {
 
           interceptedRequests.push(interceptedRequest);
 
-          // Handle first request (should have initial token)
-          if (!firstRequestIntercepted) {
-            firstRequestIntercepted = true;
+          const pathHasChannel1 = pathContainsChannel(interceptedRequest.path, channel1);
+          const pathHasChannel2 = pathContainsChannel(interceptedRequest.path, channel2);
+
+          // First subscribe: path includes channel1 (but not channel2 yet); must carry initial token
+          if (!seenFirstForChannel1 && pathHasChannel1 && !pathHasChannel2) {
+            seenFirstForChannel1 = true;
 
             try {
               expect(interceptedRequest.queryParameters).to.exist;
               expect(interceptedRequest.queryParameters.auth).to.equal(initialToken);
 
-              // Update token and subscribe to second channel after a short delay
-              setTimeout(() => {
-                if (!testCompleted && !errorOccurred) {
-                  pubnubWithWorker.setToken(updatedToken);
+              if (!testCompleted && !errorOccurred) {
+                // Update token first, then subscribe to channel2 so that the next request uses updated token
+                pubnubWithWorker.setToken(updatedToken);
+                tokenUpdated = true;
 
-                  // Verify token was updated
-                  const newToken = pubnubWithWorker.getToken();
-                  expect(newToken).to.equal(updatedToken);
+                const newToken = pubnubWithWorker.getToken();
+                expect(newToken).to.equal(updatedToken);
 
-                  // Subscribe to second channel
-                  const subscription2 = pubnubWithWorker.channel(channel2).subscription();
-                  subscription2.subscribe();
-                }
-              }, 500);
+                const subscription2 = pubnubWithWorker.channel(channel2).subscription();
+                subscription2.subscribe();
+              }
             } catch (error) {
               if (!testCompleted) {
                 errorOccurred = true;
                 testCompleted = true;
-
-                // Restore original transport
                 underlyingTransport.makeSendable = originalMakeSendable;
                 done(error);
                 return;
               }
             }
           }
-          // Handle second request (should have updated token)
-          else if (!secondRequestIntercepted && firstRequestIntercepted) {
-            secondRequestIntercepted = true;
+          // Second subscribe we care about: first request that includes channel2 after token update
+          else if (!seenSecondForChannel2 && tokenUpdated && pathHasChannel2) {
+            seenSecondForChannel2 = true;
 
             try {
               expect(interceptedRequest.queryParameters).to.exist;
@@ -1393,8 +1403,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
 
               if (!testCompleted) {
                 testCompleted = true;
-
-                // Restore original transport
                 underlyingTransport.makeSendable = originalMakeSendable;
                 done();
                 return;
@@ -1403,8 +1411,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
               if (!testCompleted) {
                 errorOccurred = true;
                 testCompleted = true;
-
-                // Restore original transport
                 underlyingTransport.makeSendable = originalMakeSendable;
                 done(error);
                 return;
@@ -1417,72 +1423,30 @@ describe('PubNub Shared Worker Integration Tests', () => {
         return originalMakeSendable(req);
       };
 
-      // Set up listener to handle subscription status
-      pubnubWithWorker.addListener({
-        status: (statusEvent) => {
-          if (errorOccurred || testCompleted) return;
-
-          if (statusEvent.category === PubNub.CATEGORIES.PNConnectedCategory) {
-            if (!firstSubscriptionEstablished) {
-              firstSubscriptionEstablished = true;
-            }
-          } else if (statusEvent.category === PubNub.CATEGORIES.PNNetworkIssuesCategory) {
-            if (!testCompleted) {
-              errorOccurred = true;
-              testCompleted = true;
-
-              // Restore original transport
-              underlyingTransport.makeSendable = originalMakeSendable;
-              done(new Error(`Subscription failed with network issues: ${statusEvent.error || 'Unknown error'}`));
-            }
-          } else if (statusEvent.error) {
-            if (!testCompleted) {
-              errorOccurred = true;
-              testCompleted = true;
-
-              // Restore original transport
-              underlyingTransport.makeSendable = originalMakeSendable;
-              done(new Error(`Subscription failed: ${statusEvent.error}`));
-            }
-          }
-        },
-      });
-
-      // Add a timeout fallback
+      // Add a timeout fallback that validates we saw both phases
       setTimeout(() => {
         if (!testCompleted && !errorOccurred) {
           testCompleted = true;
-
-          // Restore original transport
           underlyingTransport.makeSendable = originalMakeSendable;
 
-          // Check if we got both requests with correct tokens
-          if (interceptedRequests.length >= 2) {
-            try {
-              const firstReq = interceptedRequests[0];
-              const secondReq = interceptedRequests[interceptedRequests.length - 1];
+          try {
+            const first = interceptedRequests.find((r) =>
+              (r.path.includes('/v2/subscribe/') || r.path.includes('/subscribe')) &&
+              pathContainsChannel(r.path, channel1) &&
+              !pathContainsChannel(r.path, channel2),
+            );
+            const second = interceptedRequests.find((r) =>
+              (r.path.includes('/v2/subscribe/') || r.path.includes('/subscribe')) &&
+              pathContainsChannel(r.path, channel2),
+            );
 
-              expect(firstReq.queryParameters.auth).to.equal(initialToken);
-              expect(secondReq.queryParameters.auth).to.equal(updatedToken);
-
-              done();
-            } catch (error) {
-              done(error);
-            }
-          } else if (interceptedRequests.length === 1) {
-            // Only got first request, check if it has correct token
-            try {
-              expect(interceptedRequests[0].queryParameters.auth).to.equal(initialToken);
-              done(
-                new Error(
-                  'Only received first subscription request, second request with updated token was not intercepted',
-                ),
-              );
-            } catch (error) {
-              done(error);
-            }
-          } else {
-            done(new Error('No subscription requests were intercepted - shared worker may not be working'));
+            expect(first, 'no initial subscribe with channel1 captured').to.exist;
+            expect(first.queryParameters.auth).to.equal(initialToken);
+            expect(second, 'no subsequent subscribe with channel2 captured').to.exist;
+            expect(second.queryParameters.auth).to.equal(updatedToken);
+            done();
+          } catch (error) {
+            done(error);
           }
         }
       }, 12000);

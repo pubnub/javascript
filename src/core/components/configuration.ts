@@ -202,6 +202,10 @@ export const makeConfiguration = (
     getUseRandomIVs(): boolean | undefined {
       return base.useRandomIVs;
     },
+    isSharedWorkerEnabled(): boolean {
+      // @ts-expect-error: Access field from web-based SDK configuration.
+      return base.sdkFamily === 'Web' && base['subscriptionWorkerUrl'];
+    },
     getKeepPresenceChannelsInPresenceRequests(): boolean {
       // @ts-expect-error: Access field from web-based SDK configuration.
       return base.sdkFamily === 'Web' && base['subscriptionWorkerUrl'];
@@ -232,7 +236,7 @@ export const makeConfiguration = (
       return base.PubNubFile;
     },
     get version(): string {
-      return '9.8.1';
+      return '10.1.0';
     },
     getVersion(): string {
       return this.version;

@@ -106,7 +106,10 @@ export default class PubNubChannelGroups {
     const request = new ListChannelGroupChannels({ ...parameters, keySet: this.keySet });
     const logResponse = (response: ChannelGroups.ListChannelGroupChannelsResponse | null) => {
       if (!response) return;
-      this.logger.info('PubNub', `List channel group channels success. Received ${response.channels.length} channels.`);
+      this.logger.debug(
+        'PubNub',
+        `List channel group channels success. Received ${response.channels.length} channels.`,
+      );
     };
 
     if (callback)
@@ -157,7 +160,7 @@ export default class PubNubChannelGroups {
     const request = new ListChannelGroupsRequest({ keySet: this.keySet });
     const logResponse = (response: ChannelGroups.ListAllChannelGroupsResponse | null) => {
       if (!response) return;
-      this.logger.info('PubNub', `List all channel groups success. Received ${response.groups.length} groups.`);
+      this.logger.debug('PubNub', `List all channel groups success. Received ${response.groups.length} groups.`);
     };
 
     if (callback)
@@ -219,7 +222,7 @@ export default class PubNubChannelGroups {
 
     const request = new AddChannelGroupChannelsRequest({ ...parameters, keySet: this.keySet });
     const logResponse = () => {
-      this.logger.info('PubNub', `Add channels to the channel group success.`);
+      this.logger.debug('PubNub', `Add channels to the channel group success.`);
     };
 
     if (callback)
@@ -274,7 +277,7 @@ export default class PubNubChannelGroups {
 
     const request = new RemoveChannelGroupChannelsRequest({ ...parameters, keySet: this.keySet });
     const logResponse = () => {
-      this.logger.info('PubNub', `Remove channels from the channel group success.`);
+      this.logger.debug('PubNub', `Remove channels from the channel group success.`);
     };
 
     if (callback)
@@ -326,7 +329,7 @@ export default class PubNubChannelGroups {
 
     const request = new DeleteChannelGroupRequest({ ...parameters, keySet: this.keySet });
     const logResponse = () => {
-      this.logger.info(
+      this.logger.debug(
         'PubNub',
         `Remove a channel group success. Removed '${parameters.channelGroup}' channel group.'`,
       );

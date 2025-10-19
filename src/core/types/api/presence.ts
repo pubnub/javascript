@@ -193,6 +193,15 @@ export type HereNowParameters = {
   includeState?: boolean;
 
   /**
+   * Limit the number of results returned.
+   *
+   * **Important:** Maximum value is `1000` users per request.
+   *
+   * @default `1000`.
+   */
+  limit?: number;
+
+  /**
    * Additional query parameters.
    */
   queryParameters?: Record<string, string>;

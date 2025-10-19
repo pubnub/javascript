@@ -214,6 +214,13 @@ export class PubNubCore<
   protected onHeartbeatIntervalChange?: (interval: number) => void;
 
   /**
+   * User's associated presence data change handler.
+   *
+   * @internal
+   */
+  protected onPresenceStateChange?: (state: Record<string, Payload>) => void;
+
+  /**
    * `authKey` or `token` change handler.
    *
    * @internal
@@ -714,6 +721,9 @@ export class PubNubCore<
    * Change the current PubNub client user identifier.
    *
    * **Important:** Change won't affect ongoing REST API calls.
+   * **Warning:** Because ongoing REST API calls won't be canceled there could happen unexpected events like implicit
+   * `join` event for the previous `userId` after a long-poll subscribe request will receive a response. To avoid this
+   * it is advised to unsubscribe from all/disconnect before changing `userId`.
    *
    * @param value - New PubNub client user identifier.
    *
@@ -1659,6 +1669,9 @@ export class PubNubCore<
     callback: ResultCallback<Subscription.SubscriptionResponse>,
   ): void {
     if (process.env.SUBSCRIBE_MANAGER_MODULE !== 'disabled') {
+      // `on-demand` query parameter not required for non-SharedWorker environment.
+      if (!this._configuration.isSharedWorkerEnabled()) parameters.onDemand = false;
+
       const request = new SubscribeRequest({
         ...parameters,
         keySet: this._configuration.keySet,
@@ -1820,6 +1833,9 @@ export class PubNubCore<
    */
   private async subscribeHandshake(parameters: Subscription.CancelableSubscribeParameters) {
     if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      // `on-demand` query parameter not required for non-SharedWorker environment.
+      if (!this._configuration.isSharedWorkerEnabled()) parameters.onDemand = false;
+
       const request = new HandshakeSubscribeRequest({
         ...parameters,
         keySet: this._configuration.keySet,
@@ -1854,6 +1870,9 @@ export class PubNubCore<
    */
   private async subscribeReceiveMessages(parameters: Subscription.CancelableSubscribeParameters) {
     if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
+      // `on-demand` query parameter not required for non-SharedWorker environment.
+      if (!this._configuration.isSharedWorkerEnabled()) parameters.onDemand = false;
+
       const request = new ReceiveMessagesSubscribeRequest({
         ...parameters,
         keySet: this._configuration.keySet,
@@ -2530,7 +2549,7 @@ export class PubNubCore<
 
       const request = new GetPresenceStateRequest({
         ...parameters,
-        uuid: parameters.uuid ?? this._configuration.userId,
+        uuid: parameters.uuid ?? this._configuration.userId!,
         keySet: this._configuration.keySet,
       });
       const logResponse = (response: Presence.GetPresenceStateResponse | null) => {
@@ -2613,6 +2632,8 @@ export class PubNubCore<
         if ('channelGroups' in parameters) {
           parameters.channelGroups?.forEach((group) => (presenceState[group] = parameters.state));
         }
+
+        if (this.onPresenceStateChange) this.onPresenceStateChange(this.presenceState);
       }
 
       // Check whether the state should be set with heartbeat or not.
@@ -2633,7 +2654,10 @@ export class PubNubCore<
       };
 
       // Update state used by subscription manager.
-      if (this.subscriptionManager) this.subscriptionManager.setState(parameters);
+      if (this.subscriptionManager) {
+        this.subscriptionManager.setState(parameters);
+        if (this.onPresenceStateChange) this.onPresenceStateChange(this.subscriptionManager.presenceState);
+      }
 
       if (callback)
         return this.sendRequest(request, (status, response) => {
@@ -2692,10 +2716,8 @@ export class PubNubCore<
       let { channels, channelGroups } = parameters;
 
       // Remove `-pnpres` channels / groups if they not acceptable in the current PubNub client configuration.
-      if (!this._configuration.getKeepPresenceChannelsInPresenceRequests()) {
-        if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
-        if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
-      }
+      if (channelGroups) channelGroups = channelGroups.filter((channelGroup) => !channelGroup.endsWith('-pnpres'));
+      if (channels) channels = channels.filter((channel) => !channel.endsWith('-pnpres'));
 
       // Complete immediately request only for presence channels.
       if ((channelGroups ?? []).length === 0 && (channels ?? []).length === 0) {
@@ -2714,8 +2736,8 @@ export class PubNubCore<
 
       const request = new HeartbeatRequest({
         ...parameters,
-        channels,
-        channelGroups,
+        channels: [...new Set(channels)],
+        channelGroups: [...new Set(channelGroups)],
         keySet: this._configuration.keySet,
       });
 

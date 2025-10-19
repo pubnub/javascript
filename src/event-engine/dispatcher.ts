@@ -63,6 +63,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             channelGroups: payload.groups,
             filterExpression: config.filterExpression,
             ...(config.maintainPresenceState && { state: presenceState }),
+            onDemand: payload.onDemand,
           });
           return engine.transition(events.handshakeSuccess(result));
         } catch (e) {
@@ -86,6 +87,7 @@ export class EventEngineDispatcher extends Dispatcher<effects.Effects, Dependenc
             timetoken: payload.cursor.timetoken,
             region: payload.cursor.region,
             filterExpression: config.filterExpression,
+            onDemand: payload.onDemand,
           });
 
           engine.transition(events.receiveSuccess(result.cursor, result.messages));

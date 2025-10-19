@@ -53,6 +53,10 @@ export class PresenceEventEngine {
   }
 
   leave({ channels, groups }: { channels?: string[]; groups?: string[] }) {
+    // Update internal channel tracking to prevent stale heartbeat requests
+    if (channels) this.channels = this.channels.filter((channel) => !channels.includes(channel));
+    if (groups) this.groups = this.groups.filter((group) => !groups.includes(group));
+
     if (this.dependencies.presenceState) {
       channels?.forEach((c) => delete this.dependencies.presenceState[c]);
       groups?.forEach((g) => delete this.dependencies.presenceState[g]);
@@ -61,6 +65,16 @@ export class PresenceEventEngine {
   }
 
   leaveAll(isOffline: boolean = false) {
+    // Clear presence state for all current channels and groups
+    if (this.dependencies.presenceState) {
+      this.channels.forEach((c) => delete this.dependencies.presenceState[c]);
+      this.groups.forEach((g) => delete this.dependencies.presenceState[g]);
+    }
+
+    // Reset internal channel and group tracking
+    this.channels = [];
+    this.groups = [];
+
     this.engine.transition(events.leftAll(isOffline));
   }
 

@@ -219,20 +219,45 @@ pubnub.unsubscribe({
   subscriptionSet.subscribe();
   // snippet.end
 }
+{
+  // snippet.SubscriptionSetFrom2Sets
+  // create a subscription set with multiple channels
+  const subscriptionSet1 = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'] });
 
-// snippet.SubscriptionSetFrom2Sets
+  // create another subscription set with multiple channels and options
+  const subscriptionSet2 = pubnub.subscriptionSet({
+    channels: ['ch3', 'ch4'],
+    subscriptionOptions: { receivePresenceEvents: true },
+  });
+
+  // add a subscription set to another subscription set
+  subscriptionSet1.addSubscriptionSet(subscriptionSet2);
+
+  // remove a subscription set from another subscription set
+  subscriptionSet1.removeSubscriptionSet(subscriptionSet2);
+  // snippet.end
+}
+// snippet.AddToExistingSubscriptionSet
 // create a subscription set with multiple channels
 const subscriptionSet1 = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'] });
 
-// create a subscription set with multiple channel groups and options
-const subscriptionSet2 = pubnub.subscriptionSet({
-  channels: ['ch1', 'ch2'],
-  subscriptionOptions: { receivePresenceEvents: true },
-});
+// subscribe to the set
+// start receiving events from ch1 and ch2
+subscriptionSet1.subscribe();
 
-// add a subscription set to another subscription set
+// create another subscription set with multiple channels
+const subscriptionSet2 = pubnub.subscriptionSet({ channels: ['ch3', 'ch4'] });
+
+// add the new set to the initial set
 subscriptionSet1.addSubscriptionSet(subscriptionSet2);
 
-// remove a subscription set from another subscription set
-subscriptionSet1.removeSubscriptionSet(subscriptionSet2);
+// you're now receiving events from ch1, ch2, ch3, and ch4
+// because the set has been subscribed to previously
+
+// create and add another subscription to the set
+const channelGroup = pubnub.channelGroup('channelGroup_1');
+const subscription2 = channelGroup.subscription();
+subscriptionSet1.addSubscription(subscription2);
+
+// you're now receiving events from ch1, ch2, ch3, and ch4 and channelGroup_1
 // snippet.end
