@@ -80,6 +80,7 @@ jobs:
         uses: ./.github/.release/actions/actions/services/npm
         with:
           token: ${{ secrets.GH_TOKEN }}
+          npm-auth-type: oidc
           npm-token: ${{ secrets.NPM_TOKEN }}
           check-ownership: false
           build-command: npm run build
