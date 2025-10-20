@@ -910,4 +910,252 @@ describe('presence endpoints', () => {
       });
     });
   });
+
+  describe('heartbeat tests (run for 4+ seconds)', () => {
+    let pubnubWithEE: PubNub;
+
+    before(() => {
+      nock.disableNetConnect();
+    });
+
+    beforeEach(() => {
+      nock.cleanAll();
+      pubnubWithEE = new PubNub({
+        subscribeKey: 'mySubKey',
+        publishKey: 'myPublishKey',
+        uuid: 'myUUID',
+        // @ts-expect-error Force override default value.
+        useRequestId: false,
+        enableEventEngine: true,
+        presenceTimeout: 10,
+        heartbeatInterval: 3, // minimal value to avoid prolonged test execution
+      });
+    });
+
+    afterEach(() => {
+      pubnubWithEE.destroy(true);
+    });
+
+    it('subscriptions with same channel name', async () => {
+      utils.createPresenceMockScopes({
+        subKey: 'mySubKey',
+        presenceType: 'heartbeat',
+        requests: [{ channels: ['c1'] }, { channels: ['c1'] }, { channels: ['c1'] }, { channels: ['c1'] }],
+      });
+      utils.createSubscribeMockScopes({
+        subKey: 'mySubKey',
+        pnsdk: `PubNub-JS-Nodejs/${pubnubWithEE.getVersion()}`,
+        userId: 'myUUID',
+        eventEngine: true,
+        requests: [
+          { channels: ['c1'], messages: [{ channel: 'c1', message: { hello: 'world' } }] },
+          {
+            channels: ['c1'],
+            messages: [{ channel: 'c1', message: { next: 'message' } }],
+            replyDelay: 1000,
+          },
+          { channels: ['c1'], messages: [], replyDelay: 500 },
+        ],
+      });
+
+      const ch1Subscription1 = pubnubWithEE.channel('c1').subscription();
+
+      const connectionPromise = new Promise<void>((resolve) => {
+        pubnubWithEE.onStatus = (status) => {
+          if (status.category === PubNub.CATEGORIES.PNConnectedCategory) {
+            pubnubWithEE.onStatus = undefined;
+            resolve();
+          }
+        };
+      });
+
+      ch1Subscription1.subscribe();
+      await connectionPromise;
+
+      assert.deepEqual(pubnubWithEE.getSubscribedChannels(), ['c1']);
+
+      const ch1Subscription2 = pubnubWithEE.channel('c1').subscription();
+
+      const subscriptionChangedPromise = new Promise<void>((resolve) => {
+        pubnubWithEE.onStatus = (status) => {
+          if (status.category === PubNub.CATEGORIES.PNSubscriptionChangedCategory) {
+            pubnubWithEE.onStatus = undefined;
+            resolve();
+          }
+        };
+      });
+      ch1Subscription2.subscribe();
+      await subscriptionChangedPromise;
+
+      await new Promise((resolve) => setTimeout(resolve, 4000)); // wait for heartbeat to trigger
+    });
+    it('subscriptions with same channel name, using pubnub.subscribe()', async () => {
+      utils.createPresenceMockScopes({
+        subKey: 'mySubKey',
+        presenceType: 'heartbeat',
+        requests: [{ channels: ['c1'] }, { channels: ['c1'] }, { channels: ['c1'] }, { channels: ['c1'] }],
+      });
+      utils.createSubscribeMockScopes({
+        subKey: 'mySubKey',
+        pnsdk: `PubNub-JS-Nodejs/${pubnubWithEE.getVersion()}`,
+        userId: 'myUUID',
+        eventEngine: true,
+        requests: [
+          { channels: ['c1'], messages: [{ channel: 'c1', message: { hello: 'world' } }] },
+          {
+            channels: ['c1'],
+            messages: [{ channel: 'c1', message: { next: 'message' } }],
+            replyDelay: 1000,
+          },
+          { channels: ['c1'], messages: [], replyDelay: 500 },
+        ],
+      });
+
+      const connectionPromise = new Promise<void>((resolve) => {
+        pubnubWithEE.onStatus = (status) => {
+          if (status.category === PubNub.CATEGORIES.PNConnectedCategory) {
+            pubnubWithEE.onStatus = undefined;
+            resolve();
+          }
+        };
+      });
+
+      pubnubWithEE.subscribe({ channels: ['c1', 'c1'] });
+      await connectionPromise;
+
+      assert.deepEqual(pubnubWithEE.getSubscribedChannels(), ['c1']);
+
+      const subscriptionChangedPromise = new Promise<void>((resolve) => {
+        pubnubWithEE.onStatus = (status) => {
+          if (status.category === PubNub.CATEGORIES.PNSubscriptionChangedCategory) {
+            pubnubWithEE.onStatus = undefined;
+            resolve();
+          }
+        };
+      });
+      pubnubWithEE.subscribe({ channels: ['c1'] });
+      await subscriptionChangedPromise;
+
+      await new Promise((resolve) => setTimeout(resolve, 4000)); // wait for heartbeat to trigger
+    });
+
+    it('subscriptions with same channel name,groups, using pubnub.subscribe()', async () => {
+      utils.createPresenceMockScopes({
+        subKey: 'mySubKey',
+        presenceType: 'heartbeat',
+        requests: [
+          { channels: ['c1'], groups: ['cg1'] },
+          { channels: ['c1'], groups: ['cg1'] },
+          { channels: ['c1'], groups: ['cg1'] },
+          { channels: ['c1'], groups: ['cg1'] },
+        ],
+      });
+      utils.createSubscribeMockScopes({
+        subKey: 'mySubKey',
+        pnsdk: `PubNub-JS-Nodejs/${pubnubWithEE.getVersion()}`,
+        userId: 'myUUID',
+        eventEngine: true,
+        requests: [
+          { channels: ['c1'], groups: ['cg1'], messages: [], replyDelay: 500 },
+          { channels: ['c1'], groups: ['cg1'], messages: [{ channel: 'c1', message: { hello: 'world' } }] },
+          {
+            channels: ['c1'],
+            groups: ['cg1'],
+            messages: [{ channel: 'c1', message: { next: 'message' } }],
+            replyDelay: 1000,
+          },
+        ],
+      });
+
+      const connectionPromise = new Promise<void>((resolve) => {
+        pubnubWithEE.onStatus = (status) => {
+          if (status.category === PubNub.CATEGORIES.PNConnectedCategory) {
+            pubnubWithEE.onStatus = undefined;
+            resolve();
+          }
+        };
+      });
+
+      pubnubWithEE.subscribe({ channels: ['c1', 'c1'], channelGroups: ['cg1', 'cg1'] });
+      await connectionPromise;
+
+      assert.deepEqual(pubnubWithEE.getSubscribedChannels(), ['c1']);
+
+      const subscriptionChangedPromise = new Promise<void>((resolve) => {
+        pubnubWithEE.onStatus = (status) => {
+          if (status.category === PubNub.CATEGORIES.PNSubscriptionChangedCategory) {
+            pubnubWithEE.onStatus = undefined;
+            resolve();
+          }
+        };
+      });
+      pubnubWithEE.subscribe({ channels: ['c1'], channelGroups: ['cg1', 'cg1'] });
+      await subscriptionChangedPromise;
+
+      await new Promise((resolve) => setTimeout(resolve, 4000)); // wait for heartbeat to trigger
+    });
+
+    it('subscriptions with same channel name,groups, combination', async () => {
+      utils.createPresenceMockScopes({
+        subKey: 'mySubKey',
+        presenceType: 'heartbeat',
+        requests: [
+          { channels: ['c1'], groups: ['cg1'] },
+          { channels: ['c1'], groups: ['cg1'] },
+          { channels: ['c1'], groups: ['cg1'] },
+          { channels: ['c1'], groups: ['cg1'] },
+          { channels: ['c1'], groups: ['cg1'] },
+        ],
+      });
+      utils.createSubscribeMockScopes({
+        subKey: 'mySubKey',
+        pnsdk: `PubNub-JS-Nodejs/${pubnubWithEE.getVersion()}`,
+        userId: 'myUUID',
+        eventEngine: true,
+        requests: [
+          { channels: ['c1'], groups: ['cg1'], messages: [], replyDelay: 500 },
+          {
+            channels: ['c1'],
+            groups: ['cg1'],
+            messages: [{ channel: 'c1', message: { hello: 'world' } }],
+            replyDelay: 500,
+          },
+          {
+            channels: ['c1'],
+            groups: ['cg1'],
+            messages: [{ channel: 'c1', message: { next: 'message' } }],
+            replyDelay: 3000,
+          },
+        ],
+      });
+
+      const connectionPromise = new Promise<void>((resolve) => {
+        pubnubWithEE.onStatus = (status) => {
+          if (status.category === PubNub.CATEGORIES.PNConnectedCategory) {
+            pubnubWithEE.onStatus = undefined;
+            resolve();
+          }
+        };
+      });
+
+      pubnubWithEE.subscribe({ channels: ['c1', 'c1'], channelGroups: ['cg1', 'cg1'] });
+      await connectionPromise;
+
+      assert.deepEqual(pubnubWithEE.getSubscribedChannels(), ['c1']);
+
+      const subscriptionChangedPromise = new Promise<void>((resolve) => {
+        pubnubWithEE.onStatus = (status) => {
+          if (status.category === PubNub.CATEGORIES.PNSubscriptionChangedCategory) {
+            pubnubWithEE.onStatus = undefined;
+            resolve();
+          }
+        };
+      });
+      pubnubWithEE.subscribe({ channelGroups: ['cg1', 'cg1'] });
+      pubnubWithEE.subscribe({ channels: ['c1'], channelGroups: ['cg1', 'cg1'] });
+      await subscriptionChangedPromise;
+
+      await new Promise((resolve) => setTimeout(resolve, 4000)); // wait for heartbeat to trigger
+    });
+  });
 });
