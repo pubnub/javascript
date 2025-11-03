@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2025-11-03
+    version: v10.2.1
+    changes:
+      - type: improvement
+        text: "Expose `File` on pubnub instance to manually create supported File construct."
   - date: 2025-10-29
     version: v10.2.0
     changes:
@@ -1354,7 +1359,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '10.2.0'
+version: '10.2.1'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1370,7 +1375,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v10.2.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v10.2.1.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2041,7 +2046,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v10.2.0/pubnub.10.2.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v10.2.1/pubnub.10.2.1.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
