@@ -35,11 +35,6 @@ export class PubNub extends PubNubCore<null, null> {
       );
     }
 
-  /**
-   * PubNub File constructor.
-   */
-  public File: PubNubFileConstructor<PubNubFile, PubNubFileParameters> = PubNubFile;
-
     // Setup transport layer.
     const transportMiddleware = new PubNubMiddleware({
       clientConfiguration,

@@ -18358,6 +18358,10 @@
 	            tokenManager,
 	            crypto,
 	        });
+	        /**
+	         * PubNub File constructor.
+	         */
+	        this.File = PubNubFile;
 	        this.onHeartbeatIntervalChange = heartbeatIntervalChangeHandler;
 	        this.onAuthenticationChange = authenticationChangeHandler;
 	        this.onPresenceStateChange = presenceStateChangeHandler;
