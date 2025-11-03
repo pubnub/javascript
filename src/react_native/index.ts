@@ -19,6 +19,7 @@ import type { CryptorConfiguration, ICryptoModule } from '../core/interfaces/cry
 import { PubNubCore } from '../core/pubnub-common';
 import { setDefaults } from './configuration';
 import Cbor from '../cbor/common';
+import { PubNubFileConstructor } from '../core/types/file';
 
 export type {
   LinearRetryPolicyConfiguration,
@@ -76,6 +77,11 @@ export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
    * Generate unique identifier.
    */
   static generateUUID = PubNubCore.generateUUID;
+
+  /**
+   * PubNub File constructor.
+   */
+  public File: PubNubFileConstructor<PubNubFile, PubNubFileParameters> = PubNubFile;
 
   /**
    * Construct notification payload which will trigger push notification.
