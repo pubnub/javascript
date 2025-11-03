@@ -444,13 +444,13 @@ describe('presence endpoints', () => {
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
-          limit: 1000,
+          limit: 10000,
         })
         .reply(200, '{"status": 200, "message": "OK", "occupancy": 1, "service": "Presence"}', {
           'content-type': 'text/javascript',
         });
 
-      pubnub.hereNow({ channels: ['game1'] }, (status, response) => {
+      pubnub.hereNow({ channels: ['game1'], limit: 10000, offset: 0 }, (status, response) => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
@@ -477,6 +477,7 @@ describe('presence endpoints', () => {
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
           uuid: 'myUUID',
           limit: 1000,
+          offset: 1,
         })
         .reply(
           200,
@@ -484,7 +485,7 @@ describe('presence endpoints', () => {
           { 'content-type': 'text/javascript' },
         );
 
-      pubnub.hereNow({ channels: ['ch1', 'ch2'] }, (status, response) => {
+      pubnub.hereNow({ channels: ['ch1', 'ch2'], offset: 1 }, (status, response) => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
@@ -560,7 +561,7 @@ describe('presence endpoints', () => {
         .get('/v2/presence/sub-key/mySubscribeKey/channel/ch1,ch2')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-          limit: 1000,
+          limit: 10000,
           uuid: 'myUUID',
         })
         .reply(

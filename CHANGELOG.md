@@ -1,3 +1,9 @@
+## v10.2.0
+October 29 2025
+
+#### Added
+- Add a zero-based `offset` index parameter to be used together with `limit` for `here now` pagination.
+
 ## v10.1.0
 September 30 2025
 
