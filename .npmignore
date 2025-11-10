@@ -8,9 +8,15 @@ coverage/
 .idea
 *.iml
 .travis
-
+test/*
+.eslintignore
+.eslintrc.cjs
+.prettierrc
+.prettierignore
+.prettierignore
+.claude/*
 .babelrc
-
 .github
 release-artifacts-*
 resources/*
+docs-snippets/*

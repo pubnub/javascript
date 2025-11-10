@@ -5436,7 +5436,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '10.2.0';
+	            return '10.2.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -18358,6 +18358,10 @@
 	            tokenManager,
 	            crypto,
 	        });
+	        /**
+	         * PubNub File constructor.
+	         */
+	        this.File = PubNubFile;
 	        this.onHeartbeatIntervalChange = heartbeatIntervalChangeHandler;
 	        this.onAuthenticationChange = authenticationChangeHandler;
 	        this.onPresenceStateChange = presenceStateChangeHandler;

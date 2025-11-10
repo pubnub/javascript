@@ -25,6 +25,7 @@ import WebCryptography from '../crypto/modules/web';
 import { PubNubCore } from '../core/pubnub-common';
 import Cbor from '../cbor/common';
 import { Payload } from '../core/types/api';
+import { PubNubFileConstructor } from '../core/types/file';
 
 /**
  * PubNub client for browser platform.
@@ -36,6 +37,10 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
   static CryptoModule: typeof CryptoModuleType | undefined =
     process.env.CRYPTO_MODULE !== 'disabled' ? WebCryptoModule : undefined;
 
+  /**
+   * PubNub File constructor.
+   */
+  public File: PubNubFileConstructor<PubNubFile, PubNubFileParameters> = PubNubFile;
   /**
    * Create and configure the PubNub client core.
    *

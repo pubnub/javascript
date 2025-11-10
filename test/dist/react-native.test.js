@@ -324,7 +324,7 @@ describe('#distribution test (rkt-native)', function () {
 
     it('should maintain compatibility with all static method signatures', function () {
       // Test that all methods match expected signatures from Web/Node
-      
+
       // Retry policy methods should accept configuration objects
       expect(() => {
         PubNub.ExponentialRetryPolicy({
@@ -354,6 +354,63 @@ describe('#distribution test (rkt-native)', function () {
       expect(() => {
         PubNub.notificationPayload('title', 'body');
       }).to.not.throw();
+    });
+  });
+
+  describe('#File', function () {
+    it('should have access to File property on pubnub instance', function () {
+      expect(pubnub.File).to.be.a('function');
+      expect(pubnub.File).to.have.property('create');
+    });
+
+    it('should be able to create a PubNubFile using pubnub.File.create() with data object', function () {
+      const fileData = {
+        data: 'Hello World',
+        name: 'test.txt',
+        mimeType: 'text/plain'
+      };
+
+      const file = pubnub.File.create(fileData);
+
+      expect(file).to.be.an('object');
+      expect(file).to.have.property('name').equal('test.txt');
+      expect(file).to.have.property('mimeType').equal('text/plain');
+      expect(file).to.have.property('data');
+    });
+
+    it('should be able to create a PubNubFile using pubnub.File.create() with Blob', function () {
+      const blob = new Blob(['test content'], { type: 'text/plain' });
+      const fileData = {
+        data: blob,
+        name: 'blob-test.txt',
+        mimeType: 'text/plain'
+      };
+
+      const file = pubnub.File.create(fileData);
+
+      expect(file).to.be.an('object');
+      expect(file).to.have.property('name').equal('blob-test.txt');
+      expect(file).to.have.property('mimeType').equal('text/plain');
+    });
+
+    it('should be able to create a PubNubFile using pubnub.File.create() with uri', function () {
+      const fileData = {
+        uri: 'file:///path/to/file.txt',
+        name: 'uri-test.txt',
+        mimeType: 'text/plain'
+      };
+
+      const file = pubnub.File.create(fileData);
+
+      expect(file).to.be.an('object');
+      expect(file).to.have.property('name').equal('uri-test.txt');
+      expect(file).to.have.property('mimeType').equal('text/plain');
+    });
+
+    it('should throw error when creating PubNubFile without required parameters', function () {
+      expect(() => {
+        pubnub.File.create({});
+      }).to.throw();
     });
   });
 });

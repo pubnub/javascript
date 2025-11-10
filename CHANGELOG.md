@@ -1,3 +1,9 @@
+## v10.2.1
+November 03 2025
+
+#### Modified
+- Expose `File` on pubnub instance to manually create supported File construct.
+
 ## v10.2.0
 October 29 2025
 
