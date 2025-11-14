@@ -88,12 +88,12 @@ describe('push endpoints', () => {
         .query({
           add: 'a,b',
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-          type: 'gcm',
+          type: 'fcm',
           uuid: 'myUUID',
         })
         .reply(200, '[1, "Modified Channels"]', { 'content-type': 'text/javascript' });
 
-      pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
+      pubnub.push.addChannels({ channels: ['a', 'b'], device: 'niceDevice', pushGateway: 'fcm' }, (status) => {
         try {
           assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);
@@ -165,12 +165,12 @@ describe('push endpoints', () => {
         .get('/v1/push/sub-key/mySubKey/devices/coolDevice')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-          type: 'gcm',
+          type: 'fcm',
           uuid: 'myUUID',
         })
         .reply(200, '["ch1", "ch2", "ch3"]', { 'content-type': 'text/javascript' });
 
-      pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'gcm' }, (status, response) => {
+      pubnub.push.listChannels({ device: 'coolDevice', pushGateway: 'fcm' }, (status, response) => {
         try {
           assert.equal(status.error, false);
           assert(response !== null);
@@ -243,7 +243,7 @@ describe('push endpoints', () => {
         .query({
           remove: 'a,b',
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-          type: 'gcm',
+          type: 'fcm',
           uuid: 'myUUID',
         })
         .reply(200, '[1, "Modified Channels"]', { 'content-type': 'text/javascript' });
@@ -252,7 +252,7 @@ describe('push endpoints', () => {
         {
           channels: ['a', 'b'],
           device: 'niceDevice',
-          pushGateway: 'gcm',
+          pushGateway: 'fcm',
         },
         (status) => {
           try {
@@ -323,12 +323,12 @@ describe('push endpoints', () => {
         .get('/v1/push/sub-key/mySubKey/devices/niceDevice/remove')
         .query({
           pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-          type: 'gcm',
+          type: 'fcm',
           uuid: 'myUUID',
         })
         .reply(200, '[1, "Modified Channels"]', { 'content-type': 'text/javascript' });
 
-      pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'gcm' }, (status) => {
+      pubnub.push.deleteDevice({ device: 'niceDevice', pushGateway: 'fcm' }, (status) => {
         try {
           assert.equal(status.error, false);
           assert.equal(scope.isDone(), true);

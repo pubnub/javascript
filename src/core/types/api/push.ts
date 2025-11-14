@@ -74,7 +74,7 @@ type ManageFCMDeviceChannelsParameters = ManagedDeviceChannels & {
   /**
    * Push Notifications gateway type.
    */
-  pushGateway: 'gcm';
+  pushGateway: 'fcm';
 };
 
 /**

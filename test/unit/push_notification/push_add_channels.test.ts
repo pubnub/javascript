@@ -19,7 +19,7 @@ describe('AddDevicePushNotificationChannelsRequest', () => {
 
     defaultParameters = {
       device: 'test_device_id',
-      pushGateway: 'gcm',
+      pushGateway: 'fcm',
       channels: ['channel1', 'channel2'],
       keySet: defaultKeySet,
     };
@@ -55,7 +55,7 @@ describe('AddDevicePushNotificationChannelsRequest', () => {
         ...defaultParameters,
         pushGateway: undefined,
       });
-      assert.equal(request.validate(), 'Missing GW Type (pushGateway: gcm or apns2)');
+      assert.equal(request.validate(), 'Missing GW Type (pushGateway: fcm or apns2)');
     });
 
     it('should validate APNS2 topic when using apns2', () => {
@@ -90,7 +90,7 @@ describe('AddDevicePushNotificationChannelsRequest', () => {
   });
 
   describe('path construction', () => {
-    it('should construct path for GCM', () => {
+    it('should construct path for FCM', () => {
       const request = new AddDevicePushNotificationChannelsRequest(defaultParameters);
       const transportRequest = request.request();
       const expectedPath = `/v1/push/sub-key/${defaultKeySet.subscribeKey}/devices/${defaultParameters.device}`;
@@ -110,11 +110,11 @@ describe('AddDevicePushNotificationChannelsRequest', () => {
   });
 
   describe('query parameters', () => {
-    it('should include required query parameters for GCM', () => {
+    it('should include required query parameters for FCM', () => {
       const request = new AddDevicePushNotificationChannelsRequest(defaultParameters);
       const transportRequest = request.request();
       
-      assert.equal(transportRequest.queryParameters?.type, 'gcm');
+      assert.equal(transportRequest.queryParameters?.type, 'fcm');
       assert.equal(transportRequest.queryParameters?.add, 'channel1,channel2');
       assert.equal(transportRequest.queryParameters?.environment, undefined);
       assert.equal(transportRequest.queryParameters?.topic, undefined);
@@ -244,7 +244,7 @@ describe('AddDevicePushNotificationChannelsRequest', () => {
     it('should not set environment for GCM', () => {
       const request = new AddDevicePushNotificationChannelsRequest({
         ...defaultParameters,
-        pushGateway: 'gcm',
+        pushGateway: 'fcm',
         environment: 'production', // Should be ignored for GCM
       });
       const transportRequest = request.request();

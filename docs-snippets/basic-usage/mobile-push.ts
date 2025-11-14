@@ -31,7 +31,7 @@ try {
   const response = await pubnub.push.addChannels({
     channels: ['a', 'b'],
     device: 'niceDevice',
-    pushGateway: 'gcm',
+    pushGateway: 'fcm',
   });
   console.log('device added to channels response:', response);
 } catch (error) {
@@ -68,7 +68,7 @@ try {
 try {
   const response = await pubnub.push.listChannels({
     device: 'niceDevice',
-    pushGateway: 'gcm',
+    pushGateway: 'fcm',
   });
 
   console.log('listing channels for device response:', response);
@@ -110,7 +110,7 @@ try {
   const response = await pubnub.push.removeChannels({
     channels: ['a', 'b'],
     device: 'niceDevice',
-    pushGateway: 'gcm',
+    pushGateway: 'fcm',
   });
 
   console.log('removing device from channel response:', response);
@@ -147,7 +147,7 @@ try {
 try {
   const response = await pubnub.push.deleteDevice({
     device: 'niceDevice',
-    pushGateway: 'gcm',
+    pushGateway: 'fcm',
   });
 
   console.log('deleteDevice response:', response);
