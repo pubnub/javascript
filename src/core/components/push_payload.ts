@@ -155,7 +155,7 @@ type PubNubAPNS2Target = Omit<APNS2Target, 'excludedDevices'> & {
 
 // region FCM
 /**
- * Payload for `pn_gcm` field in published message.
+ * Payload for `pn_fcm` field in published message.
  */
 type FCMPayload = {
   /**
@@ -975,7 +975,7 @@ class NotificationsPayload {
    * specified platforms.
    */
   buildPayload(platforms: ('apns' | 'apns2' | 'fcm')[]) {
-    const payload: { pn_apns?: APNSPayload; pn_gcm?: FCMPayload; pn_debug?: boolean } = {};
+    const payload: { pn_apns?: APNSPayload; pn_fcm?: FCMPayload; pn_debug?: boolean } = {};
 
     if (platforms.includes('apns') || platforms.includes('apns2')) {
       // @ts-expect-error Override APNS version.
@@ -988,7 +988,7 @@ class NotificationsPayload {
     if (platforms.includes('fcm')) {
       const fcmPayload = this.fcm.toObject();
 
-      if (fcmPayload && Object.keys(fcmPayload).length) payload.pn_gcm = fcmPayload;
+      if (fcmPayload && Object.keys(fcmPayload).length) payload.pn_fcm = fcmPayload;
     }
 
     if (Object.keys(payload).length && this._debugging) payload.pn_debug = true;

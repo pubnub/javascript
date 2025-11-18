@@ -4006,7 +4006,7 @@ declare namespace PubNub {
   };
 
   /**
-   * Payload for `pn_gcm` field in published message.
+   * Payload for `pn_fcm` field in published message.
    */
   type FCMPayload = {
     /**
@@ -4400,7 +4400,7 @@ declare namespace PubNub {
      */
     buildPayload(platforms: ('apns' | 'apns2' | 'fcm')[]): {
       pn_apns?: APNSPayload;
-      pn_gcm?: FCMPayload;
+      pn_fcm?: FCMPayload;
       pn_debug?: boolean;
     };
   }
@@ -8927,7 +8927,7 @@ declare namespace PubNub {
       /**
        * Push Notifications gateway type.
        */
-      pushGateway: 'gcm';
+      pushGateway: 'fcm';
     };
 
     /**
