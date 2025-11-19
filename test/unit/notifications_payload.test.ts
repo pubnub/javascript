@@ -95,7 +95,7 @@ describe('#notifications helper', () => {
         pn_apns: {
           aps: { alert: { title: expectedTitle, body: expectedBody } },
         },
-        pn_gcm: {
+        pn_fcm: {
           notification: { title: expectedTitle, body: expectedBody },
         },
       };
@@ -120,7 +120,7 @@ describe('#notifications helper', () => {
             },
           ],
         },
-        pn_gcm: {
+        pn_fcm: {
           notification: { title: expectedTitle, body: expectedBody },
         },
       };

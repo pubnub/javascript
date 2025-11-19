@@ -34,7 +34,7 @@ describe('BasePushNotificationChannelsRequest', () => {
 
     defaultParameters = {
       device: 'test_device_id',
-      pushGateway: 'gcm',
+      pushGateway: 'fcm',
       channels: ['channel1', 'channel2'],
       keySet: defaultKeySet,
       action: 'add',
@@ -115,7 +115,7 @@ describe('BasePushNotificationChannelsRequest', () => {
         ...defaultParameters,
         pushGateway: undefined,
       });
-      assert.equal(request.validate(), 'Missing GW Type (pushGateway: gcm or apns2)');
+      assert.equal(request.validate(), 'Missing GW Type (pushGateway: fcm or apns2)');
     });
 
     it('should validate missing pushGateway', () => {
@@ -123,7 +123,7 @@ describe('BasePushNotificationChannelsRequest', () => {
         ...defaultParameters,
         pushGateway: '',
       });
-      assert.equal(request.validate(), 'Missing GW Type (pushGateway: gcm or apns2)');
+      assert.equal(request.validate(), 'Missing GW Type (pushGateway: fcm or apns2)');
     });
 
     it('should validate APNS2 topic when using apns2', () => {
@@ -144,7 +144,7 @@ describe('BasePushNotificationChannelsRequest', () => {
       assert.equal(request.validate(), 'Missing APNS2 topic');
     });
 
-    it('should pass validation with valid GCM parameters', () => {
+    it('should pass validation with valid FCM parameters', () => {
       const request = new TestPushNotificationRequest(defaultParameters);
       assert.equal(request.validate(), undefined);
     });
@@ -202,11 +202,11 @@ describe('BasePushNotificationChannelsRequest', () => {
   });
 
   describe('query parameters', () => {
-    it('should include type parameter for GCM', () => {
+    it('should include type parameter for FCM', () => {
       const request = new TestPushNotificationRequest(defaultParameters);
       const transportRequest = request.request();
-      
-      assert.equal(transportRequest.queryParameters?.type, 'gcm');
+
+      assert.equal(transportRequest.queryParameters?.type, 'fcm');
     });
 
     it('should include type parameter for APNS2', () => {
@@ -290,10 +290,10 @@ describe('BasePushNotificationChannelsRequest', () => {
       assert.equal(transportRequest.queryParameters?.environment, 'development');
     });
 
-    it('should not include environment for GCM', () => {
+    it('should not include environment for FCM', () => {
       const request = new TestPushNotificationRequest({
         ...defaultParameters,
-        pushGateway: 'gcm',
+        pushGateway: 'fcm',
         environment: 'production',
       });
       const transportRequest = request.request();

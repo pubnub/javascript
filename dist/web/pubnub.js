@@ -5436,7 +5436,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '10.2.1';
+	            return '10.2.2';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -8160,7 +8160,7 @@
 	        if (platforms.includes('fcm')) {
 	            const fcmPayload = this.fcm.toObject();
 	            if (fcmPayload && Object.keys(fcmPayload).length)
-	                payload.pn_gcm = fcmPayload;
+	                payload.pn_fcm = fcmPayload;
 	        }
 	        if (Object.keys(payload).length && this._debugging)
 	            payload.pn_debug = true;
@@ -13240,7 +13240,7 @@
 	            (!('channels' in this.parameters) || this.parameters.channels.length === 0))
 	            return 'Missing Channels';
 	        if (!pushGateway)
-	            return 'Missing GW Type (pushGateway: gcm or apns2)';
+	            return 'Missing GW Type (pushGateway: fcm or apns2)';
 	        if (this.parameters.pushGateway === 'apns2' && !this.parameters.topic)
 	            return 'Missing APNS2 topic';
 	    }

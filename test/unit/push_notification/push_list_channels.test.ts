@@ -19,7 +19,7 @@ describe('ListDevicePushNotificationChannelsRequest', () => {
 
     defaultParameters = {
       device: 'test_device_id',
-      pushGateway: 'gcm',
+      pushGateway: 'fcm',
       keySet: defaultKeySet,
     };
   });
@@ -46,7 +46,7 @@ describe('ListDevicePushNotificationChannelsRequest', () => {
         ...defaultParameters,
         pushGateway: undefined,
       });
-      assert.equal(request.validate(), 'Missing GW Type (pushGateway: gcm or apns2)');
+      assert.equal(request.validate(), 'Missing GW Type (pushGateway: fcm or apns2)');
     });
 
     it('should validate APNS2 topic when using apns2', () => {
@@ -58,7 +58,7 @@ describe('ListDevicePushNotificationChannelsRequest', () => {
       assert.equal(request.validate(), 'Missing APNS2 topic');
     });
 
-    it('should pass validation with valid GCM parameters', () => {
+    it('should pass validation with valid FCM parameters', () => {
       const request = new ListDevicePushNotificationChannelsRequest(defaultParameters);
       assert.equal(request.validate(), undefined);
     });
@@ -87,7 +87,7 @@ describe('ListDevicePushNotificationChannelsRequest', () => {
   });
 
   describe('path construction', () => {
-    it('should construct path for GCM', () => {
+    it('should construct path for FCM', () => {
       const request = new ListDevicePushNotificationChannelsRequest(defaultParameters);
       const transportRequest = request.request();
       const expectedPath = `/v1/push/sub-key/${defaultKeySet.subscribeKey}/devices/${defaultParameters.device}`;
@@ -107,11 +107,11 @@ describe('ListDevicePushNotificationChannelsRequest', () => {
   });
 
   describe('query parameters', () => {
-    it('should include required query parameters for GCM', () => {
+    it('should include required query parameters for FCM', () => {
       const request = new ListDevicePushNotificationChannelsRequest(defaultParameters);
       const transportRequest = request.request();
       
-      assert.equal(transportRequest.queryParameters?.type, 'gcm');
+      assert.equal(transportRequest.queryParameters?.type, 'fcm');
       assert.equal(transportRequest.queryParameters?.environment, undefined);
       assert.equal(transportRequest.queryParameters?.topic, undefined);
       assert.equal(transportRequest.queryParameters?.add, undefined);
@@ -281,11 +281,11 @@ describe('ListDevicePushNotificationChannelsRequest', () => {
   });
 
   describe('environment defaults', () => {
-    it('should not set environment for GCM', () => {
+    it('should not set environment for FCM', () => {
       const request = new ListDevicePushNotificationChannelsRequest({
         ...defaultParameters,
-        pushGateway: 'gcm',
-        environment: 'production', // Should be ignored for GCM
+        pushGateway: 'fcm',
+        environment: 'production', // Should be ignored for FCM
       });
       const transportRequest = request.request();
       

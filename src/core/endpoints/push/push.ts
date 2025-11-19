@@ -80,7 +80,7 @@ export class BasePushNotificationChannelsRequest<R, S extends object> extends Ab
     )
       return 'Missing Channels';
 
-    if (!pushGateway) return 'Missing GW Type (pushGateway: gcm or apns2)';
+    if (!pushGateway) return 'Missing GW Type (pushGateway: fcm or apns2)';
     if (this.parameters.pushGateway === 'apns2' && !this.parameters.topic) return 'Missing APNS2 topic';
   }
 

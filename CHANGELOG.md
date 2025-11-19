@@ -1,3 +1,9 @@
+## v10.2.2
+November 19 2025
+
+#### Modified
+- Replace `gcm` with `fcm` for push notification gateway type.
+
 ## v10.2.1
 November 03 2025
 

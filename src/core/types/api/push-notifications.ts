@@ -1,7 +1,7 @@
 /**
  * Type of Push Notifications gateway which should be used with Push Notifications REST API.
  */
-type PushGateway = 'apns2' | 'gcm';
+type PushGateway = 'apns2' | 'fcm';
 
 /**
  * Basic information required by Push Notifications REST API about device.
@@ -16,8 +16,8 @@ type DevicePush = {
    * Push Notifications gateway to use.
    *
    * **Important:** Depends on from the source of `device` token and can be `apns2` (for token
-   * provided during device registration using Apple's framework) or `gcm` (when used Firebase
-   * or similar framework to receive token).
+   * provided during device registration using Apple's framework) or `fcm` (when used Firebase
+   * Cloud Messaging or similar framework to receive token).
    */
   pushGateway: PushGateway;
 };
