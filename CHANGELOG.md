@@ -1,3 +1,9 @@
+## v10.2.3
+November 20 2025
+
+#### Modified
+- Enforce use of the `fetch` function from the context, which is not affected by APM monkey patching.
+
 ## v10.2.2
 November 19 2025
 
