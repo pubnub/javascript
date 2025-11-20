@@ -105,24 +105,12 @@ export class WebTransport implements Transport {
 
     if (this.transport !== 'fetch') return;
 
-    // Keeping reference on current `window.fetch` function.
-    WebTransport.originalFetch = fetch.bind(window);
+    // Storing reference on original `fetch` function implementation as protection against APM lib monkey patching.
+    WebTransport.originalFetch = WebTransport.getOriginalFetch();
 
     // Check whether `fetch` has been monkey patched or not.
-    if (this.isFetchMonkeyPatched()) {
-      WebTransport.originalFetch = WebTransport.getOriginalFetch();
-
+    if (this.isFetchMonkeyPatched())
       logger.warn('WebTransport', "Native Web Fetch API 'fetch' function monkey patched.");
-
-      if (!this.isFetchMonkeyPatched(WebTransport.originalFetch)) {
-        logger.info('WebTransport', "Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
-      } else {
-        logger.warn(
-          'WebTransport',
-          'Unable receive native Web Fetch API. There can be issues with subscribe long-poll  cancellation',
-        );
-      }
-    }
   }
 
   makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
