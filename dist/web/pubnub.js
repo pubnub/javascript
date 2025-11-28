@@ -9566,6 +9566,11 @@
 	        return subscriptionTimetokenFromReference(currentTimetoken, referenceTimetoken !== null && referenceTimetoken !== void 0 ? referenceTimetoken : '0');
 	    }
 	    subscribe({ channels, channelGroups, timetoken, withPresence, }) {
+	        var _a;
+	        // check if the channels and groups are already subscribed
+	        const hasNewChannels = channels === null || channels === void 0 ? void 0 : channels.some((channel) => !this.channels.includes(channel));
+	        const hasNewGroups = channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.some((group) => !this.groups.includes(group));
+	        const hasNewSubscriptions = hasNewChannels || hasNewGroups;
 	        this.channels = [...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])];
 	        this.groups = [...this.groups, ...(channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])];
 	        if (withPresence) {
@@ -9576,7 +9581,29 @@
 	            this.engine.transition(restore(Array.from(new Set([...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])])), Array.from(new Set([...this.groups, ...(channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])])), timetoken));
 	        }
 	        else {
-	            this.engine.transition(subscriptionChange(Array.from(new Set([...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])])), Array.from(new Set([...this.groups, ...(channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])]))));
+	            if (hasNewSubscriptions) {
+	                this.engine.transition(subscriptionChange(Array.from(new Set([...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])])), Array.from(new Set([...this.groups, ...(channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])]))));
+	            }
+	            else {
+	                this.dependencies.config
+	                    .logger()
+	                    .debug('EventEngine', 'Skipping state transition - all channels/groups already subscribed. Emitting SubscriptionChanged event.');
+	                // Get current timetoken from state context
+	                const currentState = this.engine.currentState;
+	                const currentContext = this.engine.currentContext;
+	                let currentTimetoken = '0';
+	                if ((currentState === null || currentState === void 0 ? void 0 : currentState.label) === ReceivingState.label && currentContext) {
+	                    const receivingContext = currentContext;
+	                    currentTimetoken = (_a = receivingContext.cursor) === null || _a === void 0 ? void 0 : _a.timetoken;
+	                }
+	                // Manually emit SubscriptionChanged status event
+	                this.dependencies.emitStatus({
+	                    category: StatusCategory$1.PNSubscriptionChangedCategory,
+	                    affectedChannels: Array.from(new Set(this.channels.filter((c) => !c.endsWith('-pnpres')))),
+	                    affectedChannelGroups: Array.from(new Set(this.groups.filter((g) => !g.endsWith('-pnpres')))),
+	                    currentTimetoken,
+	                });
+	            }
 	        }
 	        if (this.dependencies.join) {
 	            this.dependencies.join({
