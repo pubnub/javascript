@@ -128,8 +128,8 @@ export class EventEngine {
         // Manually emit SubscriptionChanged status event
         this.dependencies.emitStatus({
           category: categoryConstants.PNSubscriptionChangedCategory,
-          affectedChannels: Array.from(new Set(this.channels.filter((c) => !c.endsWith('-pnpres')))),
-          affectedChannelGroups: Array.from(new Set(this.groups.filter((g) => !g.endsWith('-pnpres')))),
+          affectedChannels: Array.from(new Set(this.channels)),
+          affectedChannelGroups: Array.from(new Set(this.groups)),
           currentTimetoken,
         });
       }
