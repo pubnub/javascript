@@ -1,3 +1,9 @@
+## v10.2.4
+December 04 2025
+
+#### Modified
+- Prevent resubscribe to previously subscribed entities.
+
 ## v10.2.3
 November 20 2025
 
