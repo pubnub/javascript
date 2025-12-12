@@ -1,5 +1,5 @@
-import { TextEncoder, TextDecoder } from 'text-encoding';
 import 'react-native-url-polyfill/auto';
+import 'fast-text-encoding';
 import CborReader from 'cbor-js';
 import { Buffer } from 'buffer';
 
@@ -29,9 +29,7 @@ export type {
 } from '../core/components/retry-policy';
 export type { PubNubConfiguration };
 
-// Polyfill global environment
-global.TextEncoder = global.TextEncoder || TextEncoder;
-global.TextDecoder = global.TextDecoder || TextDecoder;
+// Polyfill global Buffer for React Native environment
 global.Buffer = global.Buffer || Buffer;
 
 /**
