@@ -1,3 +1,9 @@
+## v10.2.5
+December 16 2025
+
+#### Modified
+- Use `fast-text-encoding` for react native instead of outdated `fast-encoding` polyfill.
+
 ## v10.2.4
 December 04 2025
 
