@@ -1,3 +1,27 @@
+## v10.2.5
+December 16 2025
+
+#### Modified
+- Use `fast-text-encoding` for react native instead of outdated `fast-encoding` polyfill.
+
+## v10.2.4
+December 04 2025
+
+#### Modified
+- Prevent resubscribe to previously subscribed entities.
+
+## v10.2.3
+November 20 2025
+
+#### Modified
+- Enforce use of the `fetch` function from the context, which is not affected by APM monkey patching.
+
+## v10.2.2
+November 19 2025
+
+#### Modified
+- Replace `gcm` with `fcm` for push notification gateway type.
+
 ## v10.2.1
 November 03 2025
 

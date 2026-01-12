@@ -211,6 +211,135 @@ describe('EventEngine', () => {
     await forState('UNSUBSCRIBED', 1000);
   });
 
+  it('should not trigger state transition when subscribing to already subscribed channels', async () => {
+    utils.createPresenceMockScopes({
+      subKey: 'demo',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1'] }],
+    });
+    utils.createPresenceMockScopes({
+      subKey: 'demo',
+      presenceType: 'leave',
+      requests: [{ channels: ['ch1'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'demo',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'test-js',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1'], messages: [] },
+        { channels: ['ch1'], messages: [], replyDelay: 500 }, // Long poll with shorter delay
+      ],
+    });
+
+    let subscriptionChangeTransitionCount = 0;
+    let subscriptionChangedCount = 0;
+
+    engine.subscribe((change: { type: string; toState: { label: string }; event?: { type: string } }) => {
+      if (change.type === 'transitionDone' && change.event?.type === 'SUBSCRIPTION_CHANGED') {
+        subscriptionChangeTransitionCount++;
+        stateChanges.push(change);
+      }
+    });
+
+    pubnub.addListener({
+      status: (statusEvent) => {
+        receivedStatuses.push(statusEvent);
+        if (statusEvent.category === StatusCategory.PNSubscriptionChangedCategory) {
+          subscriptionChangedCount++;
+        }
+      },
+    });
+
+    // First subscribe to 'ch1'
+    pubnub.subscribe({ channels: ['ch1'] });
+
+    await forState('RECEIVING', 1000);
+
+    const subscriptionChangeTransitionsBeforeResubscribe = subscriptionChangeTransitionCount;
+
+    // Subscribe to 'ch1' again (already subscribed)
+    pubnub.subscribe({ channels: ['ch1'] });
+
+    // Wait a bit to ensure no state transition occurs
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // Verify no additional subscriptionChange state transition occurred
+    if (subscriptionChangeTransitionCount !== subscriptionChangeTransitionsBeforeResubscribe) {
+      throw new Error(
+        `Expected no subscriptionChange transition, but got ${subscriptionChangeTransitionCount - subscriptionChangeTransitionsBeforeResubscribe} transitions`,
+      );
+    }
+
+    // Verify SubscriptionChanged event was emitted for the re-subscribe
+    if (subscriptionChangedCount < 1) {
+      throw new Error(`Expected at least 1 SubscriptionChanged event from re-subscribe, but got ${subscriptionChangedCount}`);
+    }
+
+    // Verify we're still in RECEIVING state (long poll not aborted)
+    if (engine.currentState?.label !== 'RECEIVING') {
+      throw new Error(`Expected state to be RECEIVING, but got ${engine.currentState?.label}`);
+    }
+
+    // Test passed! Clean up (let afterEach handle full cleanup)
+    pubnub.unsubscribe({ channels: ['ch1'] });
+  });
+
+  it('should trigger state transition when subscribing to new channel alongside existing channel', async () => {
+    utils.createPresenceMockScopes({
+      subKey: 'demo',
+      presenceType: 'heartbeat',
+      requests: [{ channels: ['ch1'] }, { channels: ['ch1', 'ch2'] }],
+    });
+    utils.createPresenceMockScopes({
+      subKey: 'demo',
+      presenceType: 'leave',
+      requests: [{ channels: ['ch1', 'ch2'] }],
+    });
+    utils.createSubscribeMockScopes({
+      subKey: 'demo',
+      pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+      userId: 'test-js',
+      eventEngine: true,
+      requests: [
+        { channels: ['ch1'], messages: [] },
+        { channels: ['ch1', 'ch2'], messages: [] },
+        { channels: ['ch1', 'ch2'], messages: [], replyDelay: 1000 },
+      ],
+    });
+
+    let receivingStateCount = 0;
+
+    engine.subscribe((change: { type: string; toState: { label: string } }) => {
+      if (change.type === 'transitionDone' && change.toState.label === 'RECEIVING') {
+        receivingStateCount++;
+      }
+      stateChanges.push(change);
+    });
+
+    pubnub.addListener({ status: (statusEvent) => receivedStatuses.push(statusEvent) });
+
+    // First subscribe to 'ch1'
+    pubnub.subscribe({ channels: ['ch1'] });
+
+    await forState('RECEIVING', 1000);
+
+    // Subscribe to 'ch2' (new channel) - should trigger state transition
+    pubnub.subscribe({ channels: ['ch2'] });
+
+    await forStatus(StatusCategory.PNSubscriptionChangedCategory, 1000);
+
+    // Verify state transition occurred (should have at least 2 RECEIVING states)
+    if (receivingStateCount < 2) {
+      throw new Error(`Expected at least 2 RECEIVING state transitions, but got ${receivingStateCount}`);
+    }
+
+    // Clean up
+    pubnub.unsubscribe({ channels: ['ch1', 'ch2'] });
+    await forState('UNSUBSCRIBED', 1000);
+  });
+
   // TODO: retry with configuration
   // it('should retry correctly', async () => {
   //   utils.createNock().get('/v2/subscribe/demo/test/0').query(true).reply(200, '{"t":{"t":"12345","r":1}, "m": []}');

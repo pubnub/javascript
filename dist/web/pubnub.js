@@ -5436,7 +5436,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '10.2.1';
+	            return '10.2.5';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -5913,19 +5913,11 @@
 	        }
 	        if (this.transport !== 'fetch')
 	            return;
-	        // Keeping reference on current `window.fetch` function.
-	        WebTransport.originalFetch = fetch.bind(window);
+	        // Storing reference on original `fetch` function implementation as protection against APM lib monkey patching.
+	        WebTransport.originalFetch = WebTransport.getOriginalFetch();
 	        // Check whether `fetch` has been monkey patched or not.
-	        if (this.isFetchMonkeyPatched()) {
-	            WebTransport.originalFetch = WebTransport.getOriginalFetch();
+	        if (this.isFetchMonkeyPatched())
 	            logger.warn('WebTransport', "Native Web Fetch API 'fetch' function monkey patched.");
-	            if (!this.isFetchMonkeyPatched(WebTransport.originalFetch)) {
-	                logger.info('WebTransport', "Use native Web Fetch API 'fetch' implementation from iframe as APM workaround.");
-	            }
-	            else {
-	                logger.warn('WebTransport', 'Unable receive native Web Fetch API. There can be issues with subscribe long-poll  cancellation');
-	            }
-	        }
 	    }
 	    makeSendable(req) {
 	        const abortController = new AbortController();
@@ -8160,7 +8152,7 @@
 	        if (platforms.includes('fcm')) {
 	            const fcmPayload = this.fcm.toObject();
 	            if (fcmPayload && Object.keys(fcmPayload).length)
-	                payload.pn_gcm = fcmPayload;
+	                payload.pn_fcm = fcmPayload;
 	        }
 	        if (Object.keys(payload).length && this._debugging)
 	            payload.pn_debug = true;
@@ -9574,6 +9566,11 @@
 	        return subscriptionTimetokenFromReference(currentTimetoken, referenceTimetoken !== null && referenceTimetoken !== void 0 ? referenceTimetoken : '0');
 	    }
 	    subscribe({ channels, channelGroups, timetoken, withPresence, }) {
+	        var _a;
+	        // check if the channels and groups are already subscribed
+	        const hasNewChannels = channels === null || channels === void 0 ? void 0 : channels.some((channel) => !this.channels.includes(channel));
+	        const hasNewGroups = channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.some((group) => !this.groups.includes(group));
+	        const hasNewSubscriptions = hasNewChannels || hasNewGroups;
 	        this.channels = [...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])];
 	        this.groups = [...this.groups, ...(channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])];
 	        if (withPresence) {
@@ -9584,7 +9581,29 @@
 	            this.engine.transition(restore(Array.from(new Set([...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])])), Array.from(new Set([...this.groups, ...(channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])])), timetoken));
 	        }
 	        else {
-	            this.engine.transition(subscriptionChange(Array.from(new Set([...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])])), Array.from(new Set([...this.groups, ...(channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])]))));
+	            if (hasNewSubscriptions) {
+	                this.engine.transition(subscriptionChange(Array.from(new Set([...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])])), Array.from(new Set([...this.groups, ...(channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])]))));
+	            }
+	            else {
+	                this.dependencies.config
+	                    .logger()
+	                    .debug('EventEngine', 'Skipping state transition - all channels/groups already subscribed. Emitting SubscriptionChanged event.');
+	                // Get current timetoken from state context
+	                const currentState = this.engine.currentState;
+	                const currentContext = this.engine.currentContext;
+	                let currentTimetoken = '0';
+	                if ((currentState === null || currentState === void 0 ? void 0 : currentState.label) === ReceivingState.label && currentContext) {
+	                    const receivingContext = currentContext;
+	                    currentTimetoken = (_a = receivingContext.cursor) === null || _a === void 0 ? void 0 : _a.timetoken;
+	                }
+	                // Manually emit SubscriptionChanged status event
+	                this.dependencies.emitStatus({
+	                    category: StatusCategory$1.PNSubscriptionChangedCategory,
+	                    affectedChannels: Array.from(new Set(this.channels)),
+	                    affectedChannelGroups: Array.from(new Set(this.groups)),
+	                    currentTimetoken,
+	                });
+	            }
 	        }
 	        if (this.dependencies.join) {
 	            this.dependencies.join({

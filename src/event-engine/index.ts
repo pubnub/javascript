@@ -9,6 +9,7 @@ import { Dependencies, EventEngineDispatcher } from './dispatcher';
 import { subscriptionTimetokenFromReference } from '../core/utils';
 import { UnsubscribedState } from './states/unsubscribed';
 import { Dispatcher, Engine } from './core';
+import categoryConstants from '../core/constants/categories';
 import * as utils from '../core/utils';
 import * as effects from './effects';
 import * as events from './events';
@@ -79,6 +80,11 @@ export class EventEngine {
     timetoken?: string | number;
     withPresence?: boolean;
   }): void {
+    // check if the channels and groups are already subscribed
+    const hasNewChannels = channels?.some((channel) => !this.channels.includes(channel));
+    const hasNewGroups = channelGroups?.some((group) => !this.groups.includes(group));
+    const hasNewSubscriptions = hasNewChannels || hasNewGroups;
+
     this.channels = [...this.channels, ...(channels ?? [])];
     this.groups = [...this.groups, ...(channelGroups ?? [])];
 
@@ -95,12 +101,38 @@ export class EventEngine {
         ),
       );
     } else {
-      this.engine.transition(
-        events.subscriptionChange(
-          Array.from(new Set([...this.channels, ...(channels ?? [])])),
-          Array.from(new Set([...this.groups, ...(channelGroups ?? [])])),
-        ),
-      );
+      if (hasNewSubscriptions) {
+        this.engine.transition(
+          events.subscriptionChange(
+            Array.from(new Set([...this.channels, ...(channels ?? [])])),
+            Array.from(new Set([...this.groups, ...(channelGroups ?? [])])),
+          ),
+        );
+      } else {
+        this.dependencies.config
+          .logger()
+          .debug(
+            'EventEngine',
+            'Skipping state transition - all channels/groups already subscribed. Emitting SubscriptionChanged event.',
+          );
+        // Get current timetoken from state context
+        const currentState = this.engine.currentState;
+        const currentContext = this.engine.currentContext;
+        let currentTimetoken: string | undefined = '0';
+
+        if (currentState?.label === ReceivingState.label && currentContext) {
+          const receivingContext = currentContext as ReceivingStateContext;
+          currentTimetoken = receivingContext.cursor?.timetoken;
+        }
+
+        // Manually emit SubscriptionChanged status event
+        this.dependencies.emitStatus({
+          category: categoryConstants.PNSubscriptionChangedCategory,
+          affectedChannels: Array.from(new Set(this.channels)),
+          affectedChannelGroups: Array.from(new Set(this.groups)),
+          currentTimetoken,
+        });
+      }
     }
     if (this.dependencies.join) {
       this.dependencies.join({

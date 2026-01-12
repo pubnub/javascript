@@ -269,7 +269,7 @@ describe('#distribution test (rkt-native)', function () {
       
       expect(payload).to.be.an('object');
       expect(payload).to.have.property('pn_apns');
-      expect(payload).to.have.property('pn_gcm');
+      expect(payload).to.have.property('pn_fcm');
       expect(payload.pn_apns.aps.alert.title).to.equal('Test Title');
       expect(payload.pn_apns.aps.alert.body).to.equal('Test Body');
     });
