@@ -173,7 +173,7 @@ export class PubNubMiddleware implements Transport {
 
           const responseHandler = (res?: TransportResponse, error?: PubNubAPIError) => {
             const retriableError = error ? error.category !== StatusCategory.PNCancelledCategory : true;
-            const retriableStatusCode = !res || res.status >= 400;
+            const retriableStatusCode = (!res || res.status >= 400) && error?.statusCode!== 404;
             let delay = -1;
 
             if (
