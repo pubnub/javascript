@@ -3118,6 +3118,8 @@
 	        data !== null && data !== void 0 ? data : (data = response.body);
 	        if (status === 402)
 	            message = 'Not available for used key set. Contact support@pubnub.com';
+	        else if (status === 404)
+	            message = 'Resource not found';
 	        else if (status === 400) {
 	            category = StatusCategory$1.PNBadRequestCategory;
 	            message = 'Bad request';
