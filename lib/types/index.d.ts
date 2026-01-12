@@ -8927,7 +8927,7 @@ declare namespace PubNub {
       /**
        * Push Notifications gateway type.
        */
-      pushGateway: 'gcm';
+      pushGateway: 'fcm';
     };
 
     /**

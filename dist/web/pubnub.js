@@ -5790,7 +5790,7 @@
 	                    activeCancellation = attemptCancellation;
 	                    const responseHandler = (res, error) => {
 	                        const retriableError = error ? error.category !== StatusCategory$1.PNCancelledCategory : true;
-	                        const retriableStatusCode = !res || res.status >= 400;
+	                        const retriableStatusCode = (!res || res.status >= 400) && (error === null || error === void 0 ? void 0 : error.statusCode) !== 404;
 	                        let delay = -1;
 	                        if (retriableError &&
 	                            retriableStatusCode &&
@@ -13240,7 +13240,7 @@
 	            (!('channels' in this.parameters) || this.parameters.channels.length === 0))
 	            return 'Missing Channels';
 	        if (!pushGateway)
-	            return 'Missing GW Type (pushGateway: gcm or apns2)';
+	            return 'Missing GW Type (pushGateway: fcm or apns2)';
 	        if (this.parameters.pushGateway === 'apns2' && !this.parameters.topic)
 	            return 'Missing APNS2 topic';
 	    }
