@@ -736,7 +736,7 @@ describe('objects channel', () => {
       const scope = utils
         .createNock()
         .get(`/v2/objects/${SUBSCRIBE_KEY}/channels/${channelName}`)
-        .once()
+        .times(1)
         .query(true)
         .reply(404, {
           status: 404,

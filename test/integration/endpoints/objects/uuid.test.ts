@@ -3,6 +3,7 @@ import nock from 'nock';
 
 import { asResponse, allUsers, user1 } from './fixtures';
 import PubNub from '../../../../src/node/index';
+import { RetryPolicy } from '../../../../src/core/components/retry-policy.js';
 import utils from '../../../utils';
 
 describe('objects UUID', () => {
@@ -320,6 +321,65 @@ describe('objects UUID', () => {
         status: 200,
         data: {},
       });
+    });
+  });
+
+  describe('retry policy', () => {
+    it('should not retry on 404 Not Found error with linear retry policy', async () => {
+      const nonExistentUUID = 'non-existent-uuid';
+
+      // Set up nock mock before creating PubNub instance
+      const scope = utils
+        .createNock()
+        .get(`/v2/objects/${SUBSCRIBE_KEY}/uuids/${nonExistentUUID}`)
+        .times(1)
+        .query(true)
+        .reply(404, {
+          status: 404,
+          error: {
+            message: 'Requested object was not found.',
+            source: 'objects',
+          },
+        });
+
+      // Create a new PubNub instance with linear retry policy
+      const pubnubWithRetry = new PubNub({
+        subscribeKey: SUBSCRIBE_KEY,
+        publishKey: PUBLISH_KEY,
+        uuid: UUID,
+        // @ts-expect-error Force override default value.
+        useRequestId: false,
+        authKey: AUTH_KEY,
+        retryConfiguration: RetryPolicy.LinearRetryPolicy({
+          delay: 2,
+          maximumRetry: 2,
+        }),
+      });
+
+      let caughtError: any;
+      try {
+        await pubnubWithRetry.objects.getUUIDMetadata({ uuid: nonExistentUUID });
+      } catch (error) {
+        caughtError = error;
+      }
+
+      // Verify that an error was thrown
+      expect(caughtError).to.exist;
+
+      // Verify the error status code is 404
+      expect(caughtError).to.have.property('status');
+      expect(caughtError.status.statusCode).to.equal(404);
+
+      // Verify the error message
+      expect(caughtError.status.errorData).to.exist;
+      expect(caughtError.status.errorData.error).to.exist;
+      expect(caughtError.status.errorData.error.message).to.equal('Requested object was not found.');
+      expect(caughtError.status.errorData.error.source).to.equal('objects');
+
+      // Verify the scope was called exactly once (no retries on 404)
+      expect(scope.isDone()).to.be.true;
+
+      pubnubWithRetry.destroy(true);
     });
   });
 });
