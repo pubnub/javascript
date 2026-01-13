@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2026-01-13
+    version: v10.2.6
+    changes:
+      - type: improvement
+        text: "Prevent retry when response is having http status code 404."
   - date: 2025-12-16
     version: v10.2.5
     changes:
@@ -1379,7 +1384,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '10.2.5'
+version: '10.2.6'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1395,7 +1400,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v10.2.5.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v10.2.6.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2066,7 +2071,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v10.2.5/pubnub.10.2.5.js
+            location: https://github.com/pubnub/javascript/releases/download/v10.2.6/pubnub.10.2.6.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

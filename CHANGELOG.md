@@ -1,3 +1,9 @@
+## v10.2.6
+January 13 2026
+
+#### Modified
+- Prevent retry when response is having http status code 404.
+
 ## v10.2.5
 December 16 2025
 
