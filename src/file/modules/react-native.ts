@@ -116,8 +116,53 @@ export class PubNubFile implements PubNubFileInterface {
 
       fileMimeType = file.mimeType;
       fileName = file.name;
-      fileData = new File([contents], fileName, { type: fileMimeType });
-      contentLength = fileData.size;
+
+      // create a ReadableFile wrapper for ArrayBuffer data
+      if (contents instanceof ArrayBuffer || ArrayBuffer.isView(contents)) {
+        // Create ReadableFile wrapper for ArrayBuffer
+        const arrayBuffer = contents instanceof ArrayBuffer ? contents : contents.buffer;
+        contentLength = arrayBuffer.byteLength;
+
+        fileData = {
+          arrayBuffer: async () => arrayBuffer,
+          blob: async () => {
+            throw new Error('toBlob() is not supported in React Native environment. Use toArrayBuffer() instead.');
+          },
+          text: async () => {
+            const decoder = new TextDecoder();
+            return decoder.decode(arrayBuffer);
+          },
+        } as ReadableFile;
+      } else if (typeof contents === 'string') {
+        // Handle string data
+        const encoder = new TextEncoder();
+        const arrayBuffer = encoder.encode(contents).buffer;
+        contentLength = arrayBuffer.byteLength;
+
+        fileData = {
+          arrayBuffer: async () => arrayBuffer,
+          blob: async () => new Blob([contents], { type: fileMimeType }),
+          text: async () => contents,
+        } as ReadableFile;
+      } else if (contents instanceof Blob) {
+        // Handle Blob data
+        contentLength = contents.size;
+        fileData = {
+          arrayBuffer: async () => await contents.arrayBuffer(),
+          blob: async () => contents,
+          text: async () => await contents.text(),
+        } as ReadableFile;
+      } else {
+        // Fallback: Try to use File constructor (may still fail in some environments)
+        try {
+          fileData = new File([contents], fileName, { type: fileMimeType });
+          contentLength = fileData.size;
+        } catch (error) {
+          throw new Error(
+            `Unable to create file from provided data type. ArrayBuffer, Blob, or string expected. Error: ${error}`
+          );
+        }
+      }
     } else if ('uri' in file) {
       fileMimeType = file.mimeType;
       fileName = file.name;

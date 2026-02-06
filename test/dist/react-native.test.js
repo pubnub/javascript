@@ -412,5 +412,69 @@ describe('#distribution test (rkt-native)', function () {
         pubnub.File.create({});
       }).to.throw();
     });
+
+    it('should wrap string data with readable file support', async function () {
+      const fileData = {
+        data: 'Hello React Native',
+        name: 'string-test.txt',
+        mimeType: 'text/plain'
+      };
+
+      const file = pubnub.File.create(fileData);
+
+      expect(file).to.be.an('object');
+      expect(file).to.have.property('name').equal('string-test.txt');
+      expect(file).to.have.property('mimeType').equal('text/plain');
+
+      const text = await file.toString();
+      expect(text).to.equal('Hello React Native');
+
+      const arrayBuffer = await file.toArrayBuffer();
+      const decoded = new TextDecoder().decode(arrayBuffer);
+      expect(decoded).to.equal('Hello React Native');
+
+      const blob = await file.toBlob();
+      expect(blob).to.be.instanceOf(Blob);
+      expect(blob.type).to.equal('text/plain');
+    });
+
+    it('should wrap ArrayBuffer data and disallow toBlob in React Native', async function () {
+      const encoder = new TextEncoder();
+      const arrayBuffer = encoder.encode('ArrayBuffer content').buffer;
+      const fileData = {
+        data: arrayBuffer,
+        name: 'arraybuffer-test.txt',
+        mimeType: 'text/plain'
+      };
+
+      const file = pubnub.File.create(fileData);
+
+      const buffer = await file.toArrayBuffer();
+      const decoded = new TextDecoder().decode(buffer);
+      expect(decoded).to.equal('ArrayBuffer content');
+
+      try {
+        await file.toBlob();
+        throw new Error('Expected toBlob to throw');
+      } catch (error) {
+        expect(error.message).to.equal(
+          'toBlob() is not supported in React Native environment. Use toArrayBuffer() instead.'
+        );
+      }
+    });
+
+    it('should accept ArrayBufferView data and expose content via toArrayBuffer', async function () {
+      const dataView = new Uint8Array([80, 117, 98, 78, 117, 98]);
+      const fileData = {
+        data: dataView,
+        name: 'view-test.txt',
+        mimeType: 'text/plain'
+      };
+
+      const file = pubnub.File.create(fileData);
+      const buffer = await file.toArrayBuffer();
+      const decoded = new TextDecoder().decode(buffer);
+      expect(decoded).to.equal('PubNub');
+    });
   });
 });
