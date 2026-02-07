@@ -159,7 +159,7 @@ export class PubNubFile implements PubNubFileInterface {
           contentLength = fileData.size;
         } catch (error) {
           throw new Error(
-            `Unable to create file from provided data type. ArrayBuffer, Blob, or string expected. Error: ${error}`
+            `Unable to create file from provided data type. ArrayBuffer, Blob, or string expected.Error: ${error}`,
           );
         }
       }
