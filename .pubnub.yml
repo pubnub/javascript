@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2026-02-11
+    version: v10.2.7
+    changes:
+      - type: improvement
+        text: "PubNubFile to support `ReadableFile` type for React Native target platform."
   - date: 2026-01-13
     version: v10.2.6
     changes:
@@ -1384,7 +1389,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '10.2.6'
+version: '10.2.7'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1400,7 +1405,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v10.2.6.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v10.2.7.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2071,7 +2076,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v10.2.6/pubnub.10.2.6.js
+            location: https://github.com/pubnub/javascript/releases/download/v10.2.7/pubnub.10.2.7.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

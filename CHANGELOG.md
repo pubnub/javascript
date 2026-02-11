@@ -1,3 +1,9 @@
+## v10.2.7
+February 11 2026
+
+#### Modified
+- PubNubFile to support `ReadableFile` type for React Native target platform.
+
 ## v10.2.6
 January 13 2026
 
