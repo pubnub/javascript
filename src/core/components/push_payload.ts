@@ -1,3 +1,5 @@
+import type { Payload } from '../types/api';
+
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
 // --------------------------------------------------------
@@ -187,7 +189,7 @@ type FCMPayload = {
    *
    * Silent notification configuration.
    */
-  data?: { notification?: FCMPayload['notification'] } & Record<string, unknown>;
+  data?: { notification?: FCMPayload['notification'] } & Record<string, Payload | null>;
 
   /**
    * Android-specific options for notification delivery.
@@ -206,22 +208,22 @@ type FCMPayload = {
 
       tag?: string;
     };
-  } & Record<string, unknown>;
+  } & Record<string, Payload | null>;
 
   /**
    * APNS-specific options for notification delivery.
    */
-  apns?: Record<string, unknown>;
+  apns?: Record<string, Payload | null>;
 
   /**
    * Web Push-specific options for notification delivery.
    */
-  webpush?: Record<string, unknown>;
+  webpush?: Record<string, Payload | null>;
 
   /**
    * FCM service level options.
    */
-  fcm_options?: Record<string, unknown>;
+  fcm_options?: Record<string, Payload | null>;
 };
 // endregion
 // endregion
@@ -850,7 +852,7 @@ export class FCMNotificationPayload extends BaseNotificationPayload {
     let android = this.payload.android ? { ...this.payload.android } : undefined;
     const payload: FCMPayload = {};
     const { apns, webpush, fcm_options } = this.payload;
-    const additionalData = { ...this.payload } as Record<string, unknown>;
+    const additionalData = { ...this.payload } as Record<string, Payload | null>;
 
     android = this.moveLegacyAndroidNotificationFields(notification, android);
 
