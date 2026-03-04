@@ -177,16 +177,9 @@ type FCMPayload = {
     body?: string;
 
     /**
-     * Name of the icon file from resource bundle which should be shown on notification.
+     * URL of an image to be displayed in the notification.
      */
-    icon?: string;
-
-    /**
-     * Name of the file from resource bundle which should be played when notification received.
-     */
-    sound?: string;
-
-    tag?: string;
+    image?: string;
   };
 
   /**
@@ -194,7 +187,41 @@ type FCMPayload = {
    *
    * Silent notification configuration.
    */
-  data?: { notification?: FCMPayload['notification'] };
+  data?: { notification?: FCMPayload['notification'] } & Record<string, unknown>;
+
+  /**
+   * Android-specific options for notification delivery.
+   */
+  android?: {
+    notification?: {
+      /**
+       * Name of the icon file from resource bundle which should be shown on notification.
+       */
+      icon?: string;
+
+      /**
+       * Name of the file from resource bundle which should be played when notification received.
+       */
+      sound?: string;
+
+      tag?: string;
+    };
+  } & Record<string, unknown>;
+
+  /**
+   * APNS-specific options for notification delivery.
+   */
+  apns?: Record<string, unknown>;
+
+  /**
+   * Web Push-specific options for notification delivery.
+   */
+  webpush?: Record<string, unknown>;
+
+  /**
+   * FCM service level options.
+   */
+  fcm_options?: Record<string, unknown>;
 };
 // endregion
 // endregion
@@ -700,7 +727,7 @@ export class FCMNotificationPayload extends BaseNotificationPayload {
   set sound(value) {
     if (!value || !value.length) return;
 
-    this.payload.notification!.sound = value;
+    this.androidNotification.sound = value;
     this._sound = value;
   }
 
@@ -716,12 +743,12 @@ export class FCMNotificationPayload extends BaseNotificationPayload {
   /**
    * Update notification icon.
    *
-   * @param value - Name of the icon file which should be shown on notification.
+   * @param value - Name of the icon file set for `android.notification.icon`.
    */
   set icon(value) {
     if (!value || !value.length) return;
 
-    this.payload.notification!.icon = value;
+    this.androidNotification.icon = value;
     this._icon = value;
   }
 
@@ -737,12 +764,12 @@ export class FCMNotificationPayload extends BaseNotificationPayload {
   /**
    * Update notifications grouping tag.
    *
-   * @param value - String which will be used to group similar notifications in notification center.
+   * @param value - String set for `android.notification.tag` to group similar notifications.
    */
   set tag(value) {
     if (!value || !value.length) return;
 
-    this.payload.notification!.tag = value;
+    this.androidNotification.tag = value;
     this._tag = value;
   }
 
@@ -768,6 +795,48 @@ export class FCMNotificationPayload extends BaseNotificationPayload {
   }
 
   /**
+   * Retrieve Android notification payload and initialize required structure.
+   *
+   * @returns Android specific notification payload.
+   */
+  private get androidNotification() {
+    if (!this.payload.android) this.payload.android = {};
+    if (!this.payload.android.notification) this.payload.android.notification = {};
+
+    return this.payload.android.notification;
+  }
+
+  /**
+   * Move legacy Android-specific notification fields under `android.notification`.
+   *
+   * @param notification - Common FCM notification payload.
+   * @param android - Android-specific payload.
+   *
+   * @returns Updated Android payload.
+   */
+  private moveLegacyAndroidNotificationFields(
+    notification: NonNullable<FCMPayload['notification']>,
+    android?: FCMPayload['android'],
+  ): FCMPayload['android'] {
+    const legacyFields = ['sound', 'icon', 'tag'] as const;
+    const notificationPayload = notification as Record<string, unknown>;
+    let androidPayload = android;
+
+    legacyFields.forEach((field) => {
+      const value = notificationPayload[field];
+      if (typeof value !== 'string' || !value.length) return;
+
+      if (!androidPayload) androidPayload = {};
+      if (!androidPayload.notification) androidPayload.notification = {};
+
+      androidPayload.notification[field] = value;
+      delete notificationPayload[field];
+    });
+
+    return androidPayload;
+  }
+
+  /**
    * Translate data object into PubNub push notification payload object.
    *
    * @internal
@@ -775,22 +844,33 @@ export class FCMNotificationPayload extends BaseNotificationPayload {
    * @returns Preformatted push notification payload.
    */
   public toObject(): FCMPayload | null {
-    let data = { ...this.payload.data };
-    let notification = null;
+    const reservedTopLevelKeys = ['notification', 'data', 'android', 'apns', 'webpush', 'fcm_options'] as const;
+    let data = { ...(this.payload.data ?? {}) };
+    const notification = { ...(this.payload.notification ?? {}) };
+    let android = this.payload.android ? { ...this.payload.android } : undefined;
     const payload: FCMPayload = {};
+    const { apns, webpush, fcm_options } = this.payload;
+    const additionalData = { ...this.payload } as Record<string, unknown>;
+
+    android = this.moveLegacyAndroidNotificationFields(notification, android);
+
+    reservedTopLevelKeys.forEach((key) => {
+      delete additionalData[key];
+    });
 
     // Check whether additional data has been passed outside 'data' object and put it into it if required.
-    if (Object.keys(this.payload).length > 2) {
-      const { notification: initialNotification, data: initialData, ...additionalData } = this.payload;
-
+    if (Object.keys(additionalData).length) {
       data = { ...data, ...additionalData };
     }
 
-    if (this._isSilent) data.notification = this.payload.notification;
-    else notification = this.payload.notification;
+    if (this._isSilent && Object.keys(notification).length) data.notification = notification;
+    else if (Object.keys(notification).length) payload.notification = notification;
 
     if (Object.keys(data).length) payload.data = data;
-    if (notification && Object.keys(notification).length) payload.notification = notification;
+    if (android && Object.keys(android).length) payload.android = android;
+    if (apns && Object.keys(apns).length) payload.apns = apns;
+    if (webpush && Object.keys(webpush).length) payload.webpush = webpush;
+    if (fcm_options && Object.keys(fcm_options).length) payload.fcm_options = fcm_options;
 
     return Object.keys(payload).length ? payload : null;
   }
