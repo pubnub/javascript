@@ -899,29 +899,27 @@ export class FCMNotificationPayload extends BaseNotificationPayload {
     const { title: _t, body: _b, ...androidSpecificFields } = androidNotification;
 
     if (this._isSilent) {
-      // For silent notifications, send only title/body under top-level data field.
+      // For silent (data-only) notifications, strip all `notification` fields
+      // (both root and android) and move everything into the root `data` object.
       const data: Record<string, string> = {};
 
       if (this._title) data.title = this._title;
       if (this._body) data.body = this._body;
+
+      // Merge android-specific notification fields (sound, icon, tag, etc.) into data.
+      for (const [key, value] of Object.entries(androidSpecificFields)) {
+        if (value !== undefined && value !== null) data[key] = String(value);
+      }
 
       // Merge any existing user-provided custom data.
       if (this.payload.data) Object.assign(data, this.payload.data);
 
       if (Object.keys(data).length) payload.data = data;
 
-      // Keep android-specific notification fields (sound, icon, tag) in android.notification.
-      if (Object.keys(androidSpecificFields).length) {
-        const { notification: _, ...androidWithoutNotification } = android;
-        payload.android = {
-          ...androidWithoutNotification,
-          notification: androidSpecificFields as FCMAndroidNotification,
-        };
-      } else {
-        const { notification: _, ...androidWithoutNotification } = android;
-        if (android.data || android.collapse_key || android.priority || android.ttl) {
-          payload.android = androidWithoutNotification;
-        }
+      // Exclude `notification` entirely from android — only keep non-notification android fields.
+      delete android.notification;
+      if (Object.keys(android).length) {
+        payload.android = android;
       }
     } else {
       if (Object.keys(notification).length) payload.notification = notification;

@@ -221,9 +221,7 @@ describe('#notifications helper', () => {
           data: {
             title: expectedTitle,
             body: expectedBody,
-          },
-          android: {
-            notification: { sound: expectedSound },
+            sound: expectedSound,
           },
         },
       };
@@ -426,17 +424,26 @@ describe('#notifications helper', () => {
       assert(platformPayloadStorage.android.notification);
     });
 
-    it("should set notification 'title' and 'body' with constructor", () => {
+
+    it("should set title and body in top-level notification and badge as notification_count in android.notification", () => {
       let expectedTitle = PubNub.generateUUID();
       let expectedBody = PubNub.generateUUID();
 
       let builder = new FCMNotificationPayload(platformPayloadStorage, expectedTitle, expectedBody);
+      builder.badge = 10;
+      const payload = builder.toObject();
 
-      assert(builder);
-      assert.equal(platformPayloadStorage.notification.title, expectedTitle);
-      assert.equal(platformPayloadStorage.notification.body, expectedBody);
-      assert.equal(platformPayloadStorage.android.notification.title, expectedTitle);
-      assert.equal(platformPayloadStorage.android.notification.body, expectedBody);
+      assert(payload);
+      // title and body should be in top-level notification
+      assert.equal(payload.notification!.title, expectedTitle);
+      assert.equal(payload.notification!.body, expectedBody);
+      // title and body should not be duplicated in android.notification
+      assert(!payload.android?.notification?.title);
+      assert(!payload.android?.notification?.body);
+      // badge should be set as notification_count in android.notification
+      assert(payload.android);
+      assert(payload.android.notification);
+      assert.equal(payload.android.notification.notification_count, 10);
     });
 
     it("should not set 'subtitle' because it is not supported", () => {
@@ -560,10 +567,8 @@ describe('#notifications helper', () => {
       assert(payload.data);
       assert.equal(payload.data.title, expectedTitle);
       assert.equal(payload.data.body, expectedBody);
-      assert(!payload.data.sound, 'sound should not be in data, it belongs in android.notification');
-      assert(payload.android);
-      assert(payload.android.notification);
-      assert.equal(payload.android.notification.sound, expectedSound);
+      assert.equal(payload.data.sound, expectedSound, 'sound should be merged into data for silent notifications');
+      assert(!payload.android, 'android should not be present when only notification fields were set');
     });
 
     it('should return valid payload object with v1 structure', () => {
