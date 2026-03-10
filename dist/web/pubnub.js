@@ -5438,7 +5438,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '10.2.7';
+	            return '10.2.8';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -7555,11 +7555,6 @@
 	    }
 	}
 
-	// --------------------------------------------------------
-	// ------------------------ Types -------------------------
-	// --------------------------------------------------------
-	// region Types
-	// endregion
 	// endregion
 	/**
 	 * Base notification payload object.
@@ -7898,6 +7893,15 @@
 	        return this.payload.data;
 	    }
 	    /**
+	     * Retrieve Android notification payload and initialize required structure.
+	     *
+	     * @returns Android specific notification payload.
+	     */
+	    get androidNotification() {
+	        var _c;
+	        return (_c = this.payload.android) === null || _c === void 0 ? void 0 : _c.notification;
+	    }
+	    /**
 	     * Notification title.
 	     *
 	     * @returns Main notification title.
@@ -7914,6 +7918,7 @@
 	        if (!value || !value.length)
 	            return;
 	        this.payload.notification.title = value;
+	        this.androidNotification.title = value;
 	        this._title = value;
 	    }
 	    /**
@@ -7933,7 +7938,27 @@
 	        if (!value || !value.length)
 	            return;
 	        this.payload.notification.body = value;
+	        this.androidNotification.body = value;
 	        this._body = value;
+	    }
+	    /**
+	     * Retrieve unread notifications number.
+	     *
+	     * @returns Number of unread notifications which should be shown on application badge.
+	     */
+	    get badge() {
+	        return this._badge;
+	    }
+	    /**
+	     * Update application badge number.
+	     *
+	     * @param value - Number which should be shown in application badge upon receiving notification.
+	     */
+	    set badge(value) {
+	        if (value === undefined || value === null)
+	            return;
+	        this.androidNotification.notification_count = value;
+	        this._badge = value;
 	    }
 	    /**
 	     * Retrieve notification sound file.
@@ -7951,7 +7976,7 @@
 	    set sound(value) {
 	        if (!value || !value.length)
 	            return;
-	        this.payload.notification.sound = value;
+	        this.androidNotification.sound = value;
 	        this._sound = value;
 	    }
 	    /**
@@ -7965,12 +7990,12 @@
 	    /**
 	     * Update notification icon.
 	     *
-	     * @param value - Name of the icon file which should be shown on notification.
+	     * @param value - Name of the icon file set for `android.notification.icon`.
 	     */
 	    set icon(value) {
 	        if (!value || !value.length)
 	            return;
-	        this.payload.notification.icon = value;
+	        this.androidNotification.icon = value;
 	        this._icon = value;
 	    }
 	    /**
@@ -7984,12 +8009,12 @@
 	    /**
 	     * Update notifications grouping tag.
 	     *
-	     * @param value - String which will be used to group similar notifications in notification center.
+	     * @param value - String set for `android.notification.tag` to group similar notifications.
 	     */
 	    set tag(value) {
 	        if (!value || !value.length)
 	            return;
-	        this.payload.notification.tag = value;
+	        this.androidNotification.tag = value;
 	        this._tag = value;
 	    }
 	    /**
@@ -8010,6 +8035,7 @@
 	    setDefaultPayloadStructure() {
 	        this.payload.notification = {};
 	        this.payload.data = {};
+	        this.payload.android = { notification: {} };
 	    }
 	    /**
 	     * Translate data object into PubNub push notification payload object.
@@ -8019,22 +8045,60 @@
 	     * @returns Preformatted push notification payload.
 	     */
 	    toObject() {
-	        let data = Object.assign({}, this.payload.data);
-	        let notification = null;
+	        var _c, _e;
 	        const payload = {};
-	        // Check whether additional data has been passed outside 'data' object and put it into it if required.
-	        if (Object.keys(this.payload).length > 2) {
-	            const _a = this.payload, additionalData = __rest(_a, ["notification", "data"]);
-	            data = Object.assign(Object.assign({}, data), additionalData);
+	        const notification = Object.assign({}, this.payload.notification);
+	        const android = Object.assign({}, this.payload.android);
+	        const androidNotification = Object.assign({}, ((_c = android.notification) !== null && _c !== void 0 ? _c : {}));
+	        // Strip title/body from android.notification — they belong in top-level notification (or data for silent).
+	        const androidSpecificFields = __rest(androidNotification, ["title", "body"]);
+	        if (this._isSilent) {
+	            // For silent (data-only) notifications, strip all `notification` fields
+	            // (both root and android) and move everything into the root `data` object.
+	            const data = {};
+	            if (this._title)
+	                data.title = this._title;
+	            if (this._body)
+	                data.body = this._body;
+	            // Merge android-specific notification fields (sound, icon, tag, etc.) into data.
+	            for (const [key, value] of Object.entries(androidSpecificFields)) {
+	                if (value !== undefined && value !== null)
+	                    data[key] = String(value);
+	            }
+	            // Merge any existing user-provided custom data.
+	            if (this.payload.data)
+	                Object.assign(data, this.payload.data);
+	            if (Object.keys(data).length)
+	                payload.data = data;
+	            // Exclude `notification` entirely from android — only keep non-notification android fields.
+	            delete android.notification;
+	            if (Object.keys(android).length) {
+	                payload.android = android;
+	            }
 	        }
-	        if (this._isSilent)
-	            data.notification = this.payload.notification;
-	        else
-	            notification = this.payload.notification;
-	        if (Object.keys(data).length)
-	            payload.data = data;
-	        if (notification && Object.keys(notification).length)
-	            payload.notification = notification;
+	        else {
+	            if (Object.keys(notification).length)
+	                payload.notification = notification;
+	            // Include top-level data if present.
+	            if (this.payload.data && Object.keys(this.payload.data).length)
+	                payload.data = Object.assign({}, this.payload.data);
+	            // android.notification should only contain android-specific fields (sound, icon, tag, etc.).
+	            if (Object.keys(androidSpecificFields).length) {
+	                const androidWithoutNotification = __rest(android, ["notification"]);
+	                payload.android = Object.assign(Object.assign({}, androidWithoutNotification), { notification: androidSpecificFields });
+	            }
+	            else {
+	                const androidWithoutNotification = __rest(android, ["notification"]);
+	                if (Object.keys(androidWithoutNotification).length) {
+	                    payload.android = androidWithoutNotification;
+	                }
+	            }
+	        }
+	        // Preserve other top-level FCM fields (apns, webpush, fcm_options, etc.).
+	        const _f = this.payload, otherFields = __rest(_f, ["notification", "android", "data", "pn_exceptions"]);
+	        Object.assign(payload, otherFields);
+	        if ((_e = this.payload.pn_exceptions) === null || _e === void 0 ? void 0 : _e.length)
+	            payload.pn_exceptions = this.payload.pn_exceptions;
 	        return Object.keys(payload).length ? payload : null;
 	    }
 	}

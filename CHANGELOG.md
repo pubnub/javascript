@@ -1,3 +1,9 @@
+## v10.2.8
+March 10 2026
+
+#### Fixed
+- Updated push notification payload builder utility method to generate fcm payload as per updated specification.
+
 ## v10.2.7
 February 11 2026
 
