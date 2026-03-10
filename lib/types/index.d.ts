@@ -4005,44 +4005,116 @@ declare namespace PubNub {
     excluded_devices?: string[];
   };
 
+  type FCMNotification = {
+    /**
+     * First line title.
+     *
+     * Title which is shown in bold on the first line of notification bubble.
+     */
+    title?: string;
+    /**
+     * Notification body.
+     *
+     * Body which is shown to the user after interaction with notification.
+     */
+    body?: string;
+    /**
+     * URL of the image to be displayed in the notification.
+     */
+    image?: string;
+  };
+
+  /**
+   * Android-specific notification fields for FCM HTTP v1 API.
+   *
+   * These fields are only applicable to Android devices and are nested under `android.notification`.
+   */
+  type FCMAndroidNotification = {
+    /**
+     * Notification title override for Android.
+     */
+    title?: string;
+    /**
+     * Notification body override for Android.
+     */
+    body?: string;
+    /**
+     * Name of the icon file from resource bundle which should be shown on notification.
+     */
+    icon?: string;
+    /**
+     * URL of the image to be displayed in the notification.
+     */
+    image?: string;
+    /**
+     * Name of the file from resource bundle which should be played when notification received.
+     */
+    sound?: string;
+    /**
+     * Identifier used to group notifications in the notification center.
+     */
+    tag?: string;
+    /**
+     * Number of active notifications associated with the application shown on the device badge.
+     */
+    notification_count?: number;
+  } & Record<string, Payload | null>;
+
+  /**
+   * Android platform configuration for FCM HTTP v1 API.
+   */
+  type FCMAndroidConfig = {
+    /**
+     * Identifier for a group of messages that can be collapsed.
+     *
+     * Only the last message gets sent when delivery resumes. Maximum of 4 different collapse keys at any given time.
+     */
+    collapse_key?: string;
+    /**
+     * Android-specific notification fields.
+     */
+    notification?: FCMAndroidNotification;
+    /**
+     * Arbitrary key/value payload.
+     *
+     * Values must be strings. Delivered as intent extras when the app is in the foreground.
+     */
+    data?: Record<string, string>;
+  } & Record<string, Payload | null>;
+
   /**
    * Payload for `pn_fcm` field in published message.
+   *
+   * Follows the FCM HTTP v1 API message structure.
    */
   type FCMPayload = {
     /**
-     * Configuration of visual notification representation.
+     * Cross-platform notification payload.
      */
-    notification?: {
-      /**
-       * First line title.
-       *
-       * Title which is shown in bold on the first line of notification bubble.
-       */
-      title?: string;
-      /**
-       * Notification body.
-       *
-       * Body which is shown to the user after interaction with notification.
-       */
-      body?: string;
-      /**
-       * Name of the icon file from resource bundle which should be shown on notification.
-       */
-      icon?: string;
-      /**
-       * Name of the file from resource bundle which should be played when notification received.
-       */
-      sound?: string;
-      tag?: string;
-    };
+    notification?: FCMNotification;
     /**
-     * Configuration of data notification.
-     *
-     * Silent notification configuration.
+     * Android-specific message configuration.
      */
-    data?: {
-      notification?: FCMPayload['notification'];
-    };
+    android?: FCMAndroidConfig;
+    /**
+     * Cross-platform arbitrary key/value payload.
+     *
+     * All values must be strings. If the app is in the background, the data payload is used to determine which callback
+     * is fired — notification or data.
+     */
+    data?: Record<string, string>;
+    /**
+     * APNS-specific options for notification delivery.
+     */
+    apns?: Record<string, Payload | null>;
+    /**
+     * Web Push-specific options for notification delivery.
+     */
+    webpush?: Record<string, Payload | null>;
+    /**
+     * List of device tokens that should be excluded from receiving the notification.
+     */
+    pn_exceptions?: string[];
   };
 
   /**
@@ -4220,41 +4292,19 @@ declare namespace PubNub {
      *
      * @returns Platform-specific part of PubNub notification payload.
      */
-    get notification():
-      | {
-          /**
-           * First line title.
-           *
-           * Title which is shown in bold on the first line of notification bubble.
-           */
-          title?: string;
-          /**
-           * Notification body.
-           *
-           * Body which is shown to the user after interaction with notification.
-           */
-          body?: string;
-          /**
-           * Name of the icon file from resource bundle which should be shown on notification.
-           */
-          icon?: string;
-          /**
-           * Name of the file from resource bundle which should be played when notification received.
-           */
-          sound?: string;
-          tag?: string;
-        }
-      | undefined;
+    get notification(): FCMNotification | undefined;
     /**
      * Silent notification payload.
      *
      * @returns Silent notification payload (data notification).
      */
-    get data():
-      | {
-          notification?: FCMPayload['notification'];
-        }
-      | undefined;
+    get data(): Record<string, string> | undefined;
+    /**
+     * Retrieve Android notification payload and initialize required structure.
+     *
+     * @returns Android specific notification payload.
+     */
+    private get androidNotification();
     /**
      * Notification title.
      *
@@ -4280,6 +4330,18 @@ declare namespace PubNub {
      */
     set body(value: string | undefined);
     /**
+     * Retrieve unread notifications number.
+     *
+     * @returns Number of unread notifications which should be shown on application badge.
+     */
+    get badge(): number | null | undefined;
+    /**
+     * Update application badge number.
+     *
+     * @param value - Number which should be shown in application badge upon receiving notification.
+     */
+    set badge(value: number | null | undefined);
+    /**
      * Retrieve notification sound file.
      *
      * @returns Notification sound file name from resource bundle.
@@ -4300,7 +4362,7 @@ declare namespace PubNub {
     /**
      * Update notification icon.
      *
-     * @param value - Name of the icon file which should be shown on notification.
+     * @param value - Name of the icon file set for `android.notification.icon`.
      */
     set icon(value: string | undefined);
     /**
@@ -4312,7 +4374,7 @@ declare namespace PubNub {
     /**
      * Update notifications grouping tag.
      *
-     * @param value - String which will be used to group similar notifications in notification center.
+     * @param value - String set for `android.notification.tag` to group similar notifications.
      */
     set tag(value: string | undefined);
     /**
