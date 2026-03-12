@@ -285,6 +285,17 @@ export type UserConfiguration = {
   autoNetworkDetection?: boolean;
 
   /**
+   * If the browser fails to detect the network changes from Wi-Fi to LAN and vice versa, or you
+   * get reconnection issues, set the flag to `false`. This allows the SDK reconnection logic to
+   * take over.
+   *
+   * **Note:** This option is available only in the **browser** environment.
+   *
+   * @default `true`
+   */
+  listenToBrowserNetworkEvents?: boolean;
+
+  /**
    * Whether to use the standardized workflows for subscribe and presence.
    *
    * Note that the `maintainPresenceState` parameter is set to true by default, so make sure to
