@@ -1,3 +1,9 @@
+## v10.2.9
+March 16 2026
+
+#### Fixed
+- Added missing property `listenToBrowserNetworkEvents` to type definition file.
+
 ## v10.2.8
 March 10 2026
 

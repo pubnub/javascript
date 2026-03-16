@@ -2667,7 +2667,6 @@ declare namespace PubNub {
      * @default `false`
      */
     autoNetworkDetection?: boolean;
-
     /**
      * If the browser fails to detect the network changes from Wi-Fi to LAN and vice versa, or you
      * get reconnection issues, set the flag to `false`. This allows the SDK reconnection logic to
@@ -2678,7 +2677,6 @@ declare namespace PubNub {
      * @default `true`
      */
     listenToBrowserNetworkEvents?: boolean;
-
     /**
      * Whether to use the standardized workflows for subscribe and presence.
      *
