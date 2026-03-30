@@ -123,7 +123,11 @@ export abstract class AbstractRequest<ResponseType, ServiceResponse extends obje
     if (headers) request.headers = headers;
 
     // Attach body (if required).
-    if (request.method === TransportMethod.POST || request.method === TransportMethod.PATCH || request.method === TransportMethod.PUT) {
+    if (
+      request.method === TransportMethod.POST ||
+      request.method === TransportMethod.PATCH ||
+      request.method === TransportMethod.PUT
+    ) {
       const [body, formData] = [this.body, this.formData];
       if (formData) request.formData = formData;
       if (body) request.body = body;
