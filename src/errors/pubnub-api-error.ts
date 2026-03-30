@@ -143,6 +143,29 @@ export class PubNubAPIError extends Error {
               ) {
                 errorData = errorResponse;
                 status = errorResponse.status;
+              } else if (
+                'errors' in errorResponse &&
+                Array.isArray(errorResponse.errors) &&
+                errorResponse.errors.length > 0
+              ) {
+                // Handle DataSync-style structured error responses:
+                // { errors: [{ errorCode: "SYN-0008", message: "...", path: "/id" }] }
+                errorData = errorResponse;
+
+                const errors = errorResponse.errors as Array<{
+                  errorCode?: string;
+                  message?: string;
+                  path?: string;
+                }>;
+
+                message = errors
+                  .map((e) => {
+                    const parts: string[] = [];
+                    if (e.errorCode) parts.push(e.errorCode);
+                    if (e.message) parts.push(e.message);
+                    return parts.join(': ');
+                  })
+                  .join('; ');
               } else errorData = errorResponse;
 
               if ('error' in errorResponse && errorResponse.error instanceof Error) errorData = errorResponse.error;
@@ -227,6 +250,35 @@ export class PubNubAPIError extends Error {
         return JSON.stringify({ ...status, errorData: normalizedErrorData });
       },
     };
+  }
+
+  /**
+   * Format a user-facing error message for this API error.
+   *
+   * When the error contains structured details extracted from the service response
+   * (e.g., DataSync `errors` array), those details are included in the message.
+   * Otherwise, falls back to a generic description.
+   *
+   * @param operation - Request operation during which error happened.
+   *
+   * @returns Formatted error message string.
+   */
+  public toFormattedMessage(operation: RequestOperation): string {
+    const fallback = 'REST API request processing error, check status for details';
+
+    // When errorData contains a structured `errors` array, `this.message` was already
+    // constructed from it in `createFromServiceResponse` — prefer it over the generic fallback.
+    if (
+      this.errorData &&
+      typeof this.errorData === 'object' &&
+      !('name' in this.errorData && 'message' in this.errorData && 'stack' in this.errorData) &&
+      'errors' in this.errorData &&
+      Array.isArray((this.errorData as Record<string, unknown>).errors)
+    ) {
+      return `${operation}: ${this.message}`;
+    }
+
+    return fallback;
   }
 
   /**
