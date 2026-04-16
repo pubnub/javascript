@@ -77,6 +77,7 @@ HandshakingState.on(handshakeSuccess.type, (context, { payload }) =>
         category: categoryConstants.PNConnectedCategory,
         affectedChannels: context.channels.slice(0),
         affectedChannelGroups: context.groups.slice(0),
+        operation: RequestOperation.PNSubscribeOperation,
         currentTimetoken: !!context.cursor?.timetoken ? context.cursor?.timetoken : payload.timetoken,
       }),
     ],
