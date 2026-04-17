@@ -2638,7 +2638,7 @@ declare namespace PubNub {
     /**
      * `true` to allow catch up on the front-end applications.
      *
-     * @default `false`
+     * @default `true`
      */
     restore?: boolean;
     /**
@@ -2685,7 +2685,7 @@ declare namespace PubNub {
      * param description in this table.
      *
      *
-     * @default `false`
+     * @default `true`
      */
     enableEventEngine?: boolean;
     /**

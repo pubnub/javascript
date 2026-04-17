@@ -4068,7 +4068,7 @@
 	/**
 	 * Whether PubNub client should catch up subscription after network issues.
 	 */
-	const RESTORE = false;
+	const RESTORE = true;
 	/**
 	 * Whether network availability change should be announced with `PNNetworkDownCategory` and
 	 * `PNNetworkUpCategory` state or not.
@@ -4089,7 +4089,7 @@
 	/**
 	 * Whether subscription event engine should be used or not.
 	 */
-	const ENABLE_EVENT_ENGINE = false;
+	const ENABLE_EVENT_ENGINE = true;
 	/**
 	 * Whether configured user presence state should be maintained by the PubNub client or not.
 	 */
@@ -4991,8 +4991,6 @@
 	            validate() {
 	                if (this.delay < 2)
 	                    throw new Error('Delay can not be set less than 2 seconds for retry');
-	                if (this.maximumRetry > 10)
-	                    throw new Error('Maximum retry for linear retry policy can not be more than 10');
 	            },
 	        };
 	    }
@@ -5017,10 +5015,6 @@
 	            validate() {
 	                if (this.minimumDelay < 2)
 	                    throw new Error('Minimum delay can not be set less than 2 seconds for retry');
-	                else if (this.maximumDelay > 150)
-	                    throw new Error('Maximum delay can not be set more than 150 seconds for' + ' retry');
-	                else if (this.maximumRetry > 6)
-	                    throw new Error('Maximum retry for exponential retry policy can not be more than 6');
 	            },
 	        };
 	    }
@@ -9307,6 +9301,7 @@
 	            category: StatusCategory$1.PNConnectedCategory,
 	            affectedChannels: context.channels.slice(0),
 	            affectedChannelGroups: context.groups.slice(0),
+	            operation: RequestOperation$1.PNSubscribeOperation,
 	            currentTimetoken: !!((_d = context.cursor) === null || _d === void 0 ? void 0 : _d.timetoken) ? (_e = context.cursor) === null || _e === void 0 ? void 0 : _e.timetoken : payload.timetoken,
 	        }),
 	    ]);
@@ -9464,7 +9459,7 @@
 	        return UnsubscribedState.with(undefined, [
 	            emitStatus(Object.assign({ category: !payload.isOffline
 	                    ? StatusCategory$1.PNDisconnectedCategory
-	                    : StatusCategory$1.PNDisconnectedUnexpectedlyCategory }, (errorCategory ? { error: errorCategory } : {}))),
+	                    : StatusCategory$1.PNDisconnectedUnexpectedlyCategory, operation: RequestOperation$1.PNUnsubscribeOperation }, (errorCategory ? { error: errorCategory } : {}))),
 	        ]);
 	    }
 	    return ReceivingState.with({
@@ -9510,7 +9505,10 @@
 	    var _a;
 	    if (!event.payload.isOffline) {
 	        return ReceiveStoppedState.with(Object.assign({}, context), [
-	            emitStatus({ category: StatusCategory$1.PNDisconnectedCategory }),
+	            emitStatus({
+	                category: StatusCategory$1.PNDisconnectedCategory,
+	                operation: RequestOperation$1.PNUnsubscribeOperation,
+	            }),
 	        ]);
 	    }
 	    else {
@@ -9518,12 +9516,18 @@
 	        return ReceiveFailedState.with(Object.assign(Object.assign({}, context), { reason: errorReason }), [
 	            emitStatus({
 	                category: StatusCategory$1.PNDisconnectedUnexpectedlyCategory,
+	                operation: RequestOperation$1.PNUnsubscribeOperation,
 	                error: (_a = errorReason.status) === null || _a === void 0 ? void 0 : _a.category,
 	            }),
 	        ]);
 	    }
 	});
-	ReceivingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [emitStatus({ category: StatusCategory$1.PNDisconnectedCategory })]));
+	ReceivingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined, [
+	    emitStatus({
+	        category: StatusCategory$1.PNDisconnectedCategory,
+	        operation: RequestOperation$1.PNUnsubscribeOperation,
+	    }),
+	]));
 
 	/**
 	 * Subscribe Event Engine effects dispatcher.
