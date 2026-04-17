@@ -29,6 +29,7 @@ describe('#components/subscription_manager', () => {
       // @ts-expect-error Force override default value.
       useRequestId: false,
       autoNetworkDetection: false,
+      enableEventEngine: false,
       heartbeatInterval: 149,
     });
     pubnubWithLimitedDeduplicationQueue = new PubNub({
@@ -41,6 +42,7 @@ describe('#components/subscription_manager', () => {
       autoNetworkDetection: false,
       maximumCacheSize: 1,
       dedupeOnSubscribe: true,
+      enableEventEngine: false,
       heartbeatInterval: 149,
     });
     pubnubWithPassingHeartbeats = new PubNub({
@@ -52,6 +54,7 @@ describe('#components/subscription_manager', () => {
       announceSuccessfulHeartbeats: true,
       useRequestId: false,
       autoNetworkDetection: false,
+      enableEventEngine: false,
       heartbeatInterval: 149,
     });
     pubnubWithLimitedQueue = new PubNub({
@@ -63,6 +66,7 @@ describe('#components/subscription_manager', () => {
       useRequestId: false,
       requestMessageCountThreshold: 1,
       autoNetworkDetection: false,
+      enableEventEngine: false,
       heartbeatInterval: 149,
     });
     pubnubWithCrypto = new PubNub({
@@ -70,6 +74,7 @@ describe('#components/subscription_manager', () => {
       publishKey: 'myPublishKey',
       origin: 'ps.pndsn.com',
       uuid: 'myUUID',
+      enableEventEngine: false,
       // @ts-expect-error Force override default value.
       useRequestId: false,
       cryptoModule: PubNub.CryptoModule.aesCbcCryptoModule({ cipherKey: 'cipherKey' }),
