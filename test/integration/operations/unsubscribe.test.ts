@@ -23,6 +23,8 @@ describe('unsubscribe', () => {
       // @ts-expect-error Force override default value.
       useRequestId: false,
       // logVerbosity: true,
+      enableEventEngine: false, // This test is not designed to test Event Engine execution flow.
+      // Reason: event engine makes leave call on unsubscribe no matter heartbeat interval is set or not.
     });
     pubnub.setHeartbeatInterval(0);
   });
