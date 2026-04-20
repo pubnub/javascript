@@ -76,6 +76,7 @@ ReceivingState.on(subscriptionChange.type, (context, { payload }) => {
         category: !payload.isOffline
           ? categoryConstants.PNDisconnectedCategory
           : categoryConstants.PNDisconnectedUnexpectedlyCategory,
+        operation: RequestOperation.PNUnsubscribeOperation,
         ...(errorCategory ? { error: errorCategory } : {}),
       }),
     ]);
@@ -136,7 +137,10 @@ ReceivingState.on(receiveFailure.type, (context, { payload }) =>
 ReceivingState.on(disconnect.type, (context, event) => {
   if (!event.payload.isOffline) {
     return ReceiveStoppedState.with({ ...context }, [
-      emitStatus({ category: categoryConstants.PNDisconnectedCategory }),
+      emitStatus({
+        category: categoryConstants.PNDisconnectedCategory,
+        operation: RequestOperation.PNSubscribeOperation,
+      }),
     ]);
   } else {
     const errorReason = PubNubAPIError.create(new Error('Network connection error')).toPubNubError(
@@ -146,6 +150,7 @@ ReceivingState.on(disconnect.type, (context, event) => {
     return ReceiveFailedState.with({ ...context, reason: errorReason }, [
       emitStatus({
         category: categoryConstants.PNDisconnectedUnexpectedlyCategory,
+        operation: RequestOperation.PNSubscribeOperation,
         error: errorReason.status?.category,
       }),
     ]);
@@ -153,5 +158,10 @@ ReceivingState.on(disconnect.type, (context, event) => {
 });
 
 ReceivingState.on(unsubscribeAll.type, (_) =>
-  UnsubscribedState.with(undefined, [emitStatus({ category: categoryConstants.PNDisconnectedCategory })]),
+  UnsubscribedState.with(undefined, [
+    emitStatus({
+      category: categoryConstants.PNDisconnectedCategory,
+      operation: RequestOperation.PNUnsubscribeOperation,
+    }),
+  ]),
 );

@@ -1,3 +1,12 @@
+## v11.0.0
+April 20 2026
+
+#### Added
+- **BREAKING CHANGES**: Subscription now uses the event engine workflow by default and automatically restores subscriptions after reconnect.
+
+#### Modified
+- Drop `maximumRetry` validation caps for linear/exponential policies.
+
 ## v10.2.9
 March 16 2026
 

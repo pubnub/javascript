@@ -1,0 +1,105 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: en-US
+
+reviews:
+  # Enable high-level summary of changes
+  high_level_summary: false
+
+  # Add a poem... just kidding, disable it
+  poem: false
+
+  # Collapse walkthrough to keep PR comments clean
+  collapse_walkthrough: true
+
+  # Auto-review on every push
+  auto_review:
+    enabled: true
+    drafts: true
+
+  # Path-based review instructions
+  path_instructions:
+    - path: "src/core/**"
+      instructions: |
+        This is the core SDK module. Pay close attention to:
+        - Backward compatibility of public API changes
+        - Proper TypeScript typing (strict mode is enabled)
+        - No platform-specific code (Node.js, Web, React Native specifics belong in their respective platform directories)
+        - Thread safety considerations for shared state
+    - path: "src/core/endpoints/**"
+      instructions: |
+        These are REST API endpoint implementations. Review for:
+        - Correct request/response type definitions
+        - Proper error handling and status code mapping
+        - Consistent parameter validation
+        - Adherence to PubNub REST API contracts
+    - path: "src/core/types/**"
+      instructions: |
+        TypeScript type definitions. Ensure:
+        - Types are precise and not overly permissive (avoid `any`)
+        - Exported types maintain backward compatibility
+        - Proper use of generics and utility types
+    - path: "src/event-engine/**"
+      instructions: |
+        State-machine-based subscription management. Review for:
+        - Correct state transitions and edge cases
+        - No leaked subscriptions or event listeners
+        - Proper cleanup on state exit
+    - path: "src/entities/**"
+      instructions: |
+        High-level subscription API (Channel, ChannelGroup, etc.). Review for:
+        - Proper event handler lifecycle management
+        - Memory leak prevention (listener cleanup)
+    - path: "src/transport/**"
+      instructions: |
+        Platform-specific HTTP transport implementations. Review for:
+        - Proper timeout and cancellation handling
+        - Correct header management
+        - Error propagation consistency across platforms
+    - path: "src/node/**"
+      instructions: "Node.js platform implementation. Ensure no browser/DOM APIs are used."
+    - path: "src/web/**"
+      instructions: "Browser platform implementation. Ensure no Node.js-specific APIs (fs, crypto, etc.) are used."
+    - path: "src/react_native/**"
+      instructions: "React Native platform implementation. Verify compatibility with RN runtime."
+    - path: "test/**"
+      instructions: |
+        Test files. Review for:
+        - Adequate coverage of edge cases
+        - Proper use of mocks/stubs (Sinon + Nock)
+        - No flaky patterns (hardcoded timeouts, race conditions)
+        - Tests that actually assert meaningful behavior
+
+  # Tools configuration
+  tools:
+    # Enable GitHub checks integration
+    github-checks:
+      enabled: true
+      timeout_ms: 120000
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  mcp:
+    usage: enabled
+
+# Path filters - ignore generated/vendored/build output
+path_filters:
+  # Build outputs
+  - "!dist/**"
+  - "!lib/**"
+  - "!upload/**"
+
+  # Dependencies
+  - "!node_modules/**"
+
+  # Lock files - too noisy, low review value
+  - "!package-lock.json"
+
+  # Config/metadata that rarely needs review
+  - "!.pubnub.yml"
+  - "!.vscode/**"
+
+  # Generated type bundles
+  - "!lib/types/**"
