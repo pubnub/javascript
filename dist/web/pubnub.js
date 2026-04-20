@@ -5432,7 +5432,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '10.2.9';
+	            return '11.0.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -9507,7 +9507,7 @@
 	        return ReceiveStoppedState.with(Object.assign({}, context), [
 	            emitStatus({
 	                category: StatusCategory$1.PNDisconnectedCategory,
-	                operation: RequestOperation$1.PNUnsubscribeOperation,
+	                operation: RequestOperation$1.PNSubscribeOperation,
 	            }),
 	        ]);
 	    }
@@ -9516,7 +9516,7 @@
 	        return ReceiveFailedState.with(Object.assign(Object.assign({}, context), { reason: errorReason }), [
 	            emitStatus({
 	                category: StatusCategory$1.PNDisconnectedUnexpectedlyCategory,
-	                operation: RequestOperation$1.PNUnsubscribeOperation,
+	                operation: RequestOperation$1.PNSubscribeOperation,
 	                error: (_a = errorReason.status) === null || _a === void 0 ? void 0 : _a.category,
 	            }),
 	        ]);

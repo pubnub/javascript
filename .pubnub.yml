@@ -1,5 +1,12 @@
 ---
 changelog:
+  - date: 2026-04-20
+    version: v11.0.0
+    changes:
+      - type: feature
+        text: "BREAKING CHANGES: Subscription now uses the event engine workflow by default and automatically restores subscriptions after reconnect."
+      - type: improvement
+        text: "Drop `maximumRetry` validation caps for linear/exponential policies."
   - date: 2026-03-16
     version: v10.2.9
     changes:
@@ -1399,7 +1406,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '10.2.9'
+version: '11.0.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1415,7 +1422,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v10.2.9.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v11.0.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2086,7 +2093,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v10.2.9/pubnub.10.2.9.js
+            location: https://github.com/pubnub/javascript/releases/download/v11.0.0/pubnub.11.0.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
