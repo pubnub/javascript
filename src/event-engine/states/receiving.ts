@@ -139,7 +139,7 @@ ReceivingState.on(disconnect.type, (context, event) => {
     return ReceiveStoppedState.with({ ...context }, [
       emitStatus({
         category: categoryConstants.PNDisconnectedCategory,
-        operation: RequestOperation.PNUnsubscribeOperation,
+        operation: RequestOperation.PNSubscribeOperation,
       }),
     ]);
   } else {
@@ -150,7 +150,7 @@ ReceivingState.on(disconnect.type, (context, event) => {
     return ReceiveFailedState.with({ ...context, reason: errorReason }, [
       emitStatus({
         category: categoryConstants.PNDisconnectedUnexpectedlyCategory,
-        operation: RequestOperation.PNUnsubscribeOperation,
+        operation: RequestOperation.PNSubscribeOperation,
         error: errorReason.status?.category,
       }),
     ]);
