@@ -23,7 +23,7 @@ const USE_SSL = true;
 /**
  * Whether PubNub client should catch up subscription after network issues.
  */
-const RESTORE = false;
+const RESTORE = true;
 
 /**
  * Whether network availability change should be announced with `PNNetworkDownCategory` and
@@ -49,7 +49,7 @@ const FILE_PUBLISH_RETRY_LIMIT = 5;
 /**
  * Whether subscription event engine should be used or not.
  */
-const ENABLE_EVENT_ENGINE = false;
+const ENABLE_EVENT_ENGINE = true;
 
 /**
  * Whether configured user presence state should be maintained by the PubNub client or not.
@@ -250,7 +250,7 @@ export type UserConfiguration = {
   /**
    * `true` to allow catch up on the front-end applications.
    *
-   * @default `false`
+   * @default `true`
    */
   restore?: boolean;
 
@@ -303,7 +303,7 @@ export type UserConfiguration = {
    * param description in this table.
    *
    *
-   * @default `false`
+   * @default `true`
    */
   enableEventEngine?: boolean;
 

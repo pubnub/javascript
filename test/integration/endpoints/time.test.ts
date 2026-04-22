@@ -22,6 +22,9 @@ describe('time endpoints', () => {
       // @ts-expect-error Force override default value.
       useRequestId: false,
       keepAlive: true,
+      // Default Event Engine config adds exponential retries for non-excluded endpoints; `/time/0` is retried on 5xx
+      // with multi-second backoff, so failure tests exceed the 5s Mocha timeout before the callback runs.
+      retryConfiguration: PubNub.NoneRetryPolicy(),
     });
   });
 

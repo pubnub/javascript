@@ -54,19 +54,46 @@ describe('subscribe endpoints', () => {
   });
 
   it('supports addition of multiple channels', (done) => {
+    // Event Engine: handshake returns only the cursor (payload `m` is ignored). A long-poll
+    // (`receiveMessages`) follows immediately and must be mocked or the connection stalls.
+    const cursorTimetoken = '14607577960932487';
+
     const scope = utils
       .createNock()
       .get('/v2/subscribe/mySubKey/coolChannel,coolChannel2/0')
       .query({
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
-        heartbeat: 300,
+        ee: '',
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+        `{"t":{"t":"${cursorTimetoken}","r":1},"m":[]}`,
         { 'content-type': 'text/javascript' },
       );
+
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/coolChannel,coolChannel2/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: cursorTimetoken,
+        tr: 1,
+      })
+      .reply(
+        200,
+        `{"t":{"t":"${cursorTimetoken}","r":1},"m":[]}`,
+        { 'content-type': 'text/javascript' },
+      )
+      .persist();
+
+    utils
+      .createNock()
+      .get(/heartbeat$/)
+      .query(true)
+      .reply(200, '{"status": 200,"message":"OK","service":"Presence"}', { 'content-type': 'text/javascript' });
 
     pubnub.addListener({
       status(status) {
@@ -89,6 +116,10 @@ describe('subscribe endpoints', () => {
   });
 
   it('supports addition of multiple channels / channel groups', (done) => {
+    // Event Engine: handshake uses `ee` (no `heartbeat` on subscribe); `m` on handshake is ignored.
+    // Long-poll receive must be mocked after handshake.
+    const cursorTimetoken = '14607577960932487';
+
     const scope = utils
       .createNock()
       .get('/v2/subscribe/mySubKey/coolChannel,coolChannel2/0')
@@ -96,13 +127,37 @@ describe('subscribe endpoints', () => {
         'channel-group': 'cg1,cg2',
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
-        heartbeat: 300,
+        ee: '',
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+        `{"t":{"t":"${cursorTimetoken}","r":1},"m":[]}`,
         { 'content-type': 'text/javascript' },
       );
+
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/coolChannel,coolChannel2/0')
+      .query({
+        'channel-group': 'cg1,cg2',
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: cursorTimetoken,
+        tr: 1,
+      })
+      .reply(
+        200,
+        `{"t":{"t":"${cursorTimetoken}","r":1},"m":[]}`,
+        { 'content-type': 'text/javascript' },
+      )
+      .persist();
+
+    utils
+      .createNock()
+      .get(/heartbeat$/)
+      .query(true)
+      .reply(200, '{"status": 200,"message":"OK","service":"Presence"}', { 'content-type': 'text/javascript' });
 
     pubnub.addListener({
       status(status) {
@@ -128,6 +183,8 @@ describe('subscribe endpoints', () => {
   });
 
   it('supports just channel group', (done) => {
+    const cursorTimetoken = '14607577960932487';
+
     const scope = utils
       .createNock()
       .get('/v2/subscribe/mySubKey/,/0')
@@ -135,13 +192,37 @@ describe('subscribe endpoints', () => {
         'channel-group': 'cg1,cg2',
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
-        heartbeat: 300,
+        ee: '',
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+        `{"t":{"t":"${cursorTimetoken}","r":1},"m":[]}`,
         { 'content-type': 'text/javascript' },
       );
+
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/,/0')
+      .query({
+        'channel-group': 'cg1,cg2',
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: cursorTimetoken,
+        tr: 1,
+      })
+      .reply(
+        200,
+        `{"t":{"t":"${cursorTimetoken}","r":1},"m":[]}`,
+        { 'content-type': 'text/javascript' },
+      )
+      .persist();
+
+    utils
+      .createNock()
+      .get(/heartbeat$/)
+      .query(true)
+      .reply(200, '{"status": 200,"message":"OK","service":"Presence"}', { 'content-type': 'text/javascript' });
 
     pubnub.addListener({
       status(status) {
@@ -164,6 +245,8 @@ describe('subscribe endpoints', () => {
   });
 
   it('supports filter expression', (done) => {
+    const cursorTimetoken = '14607577960932487';
+
     const scope = utils
       .createNock()
       .get('/v2/subscribe/mySubKey/coolChannel,coolChannel2/0')
@@ -171,13 +254,37 @@ describe('subscribe endpoints', () => {
         'filter-expr': 'hello!',
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
-        heartbeat: 300,
+        ee: '',
       })
       .reply(
         200,
-        '{"t":{"t":"14607577960932487","r":1},"m":[{"a":"4","f":0,"i":"Client-g5d4g","p":{"t":"14607577960925503","r":1},"k":"mySubKey","c":"coolChannel","d":{"text":"Enter Message Here"},"b":"coolChan-bnel"}]}',
+        `{"t":{"t":"${cursorTimetoken}","r":1},"m":[]}`,
         { 'content-type': 'text/javascript' },
       );
+
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/coolChannel,coolChannel2/0')
+      .query({
+        'filter-expr': 'hello!',
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        ee: '',
+        tt: cursorTimetoken,
+        tr: 1,
+      })
+      .reply(
+        200,
+        `{"t":{"t":"${cursorTimetoken}","r":1},"m":[]}`,
+        { 'content-type': 'text/javascript' },
+      )
+      .persist();
+
+    utils
+      .createNock()
+      .get(/heartbeat$/)
+      .query(true)
+      .reply(200, '{"status": 200,"message":"OK","service":"Presence"}', { 'content-type': 'text/javascript' });
 
     pubnubWithFiltering.addListener({
       status(status) {
@@ -325,30 +432,55 @@ describe('subscribe endpoints', () => {
   });
 
   it('presence listener called for interval / delta update', (done) => {
+    const cursorHandshake = '14523669555221452';
+    const cursorAfterInterval = '14523669555221453';
+
     utils
       .createNock()
       .get('/v2/subscribe/mySubKey/c1,c1-pnpres/0')
       .query({
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
-        heartbeat: 300,
-      })
-      .reply(200, '{"t":{"t":"14523669555221452","r":1},"m":[]}', { 'content-type': 'text/javascript' });
-    utils
-      .createNock()
-      .get('/v2/subscribe/mySubKey/c1,c1-pnpres/0')
-      .query({
-        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
-        uuid: 'myUUID',
-        tt: '14523669555221452',
-        tr: 1,
-        heartbeat: 300,
+        ee: '',
       })
       .reply(
         200,
-        '{"t":{"t":"14523669555221453","r":1},"m":[{"a":"3","f":0,"i":"myUniqueUserId","p":{"t":"17200339136465528","r":41},"k":"mySubKey","c":"c1-pnpres","d":{"action":"interval","timestamp":"1720033913","occupancy":0,"here_now_refresh":true}}]}',
+        `{"t":{"t":"${cursorHandshake}","r":1},"m":[]}`,
         { 'content-type': 'text/javascript' },
       );
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/c1,c1-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        tt: cursorHandshake,
+        tr: 1,
+        ee: '',
+      })
+      .reply(
+        200,
+        `{"t":{"t":"${cursorAfterInterval}","r":1},"m":[{"a":"3","f":0,"i":"myUniqueUserId","p":{"t":"17200339136465528","r":41},"k":"mySubKey","c":"c1-pnpres","d":{"action":"interval","timestamp":"1720033913","occupancy":0,"here_now_refresh":true}}]}`,
+        { 'content-type': 'text/javascript' },
+      );
+    utils
+      .createNock()
+      .get('/v2/subscribe/mySubKey/c1,c1-pnpres/0')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        tt: cursorAfterInterval,
+        tr: 1,
+        ee: '',
+      })
+      .reply(200, `{"t":{"t":"${cursorAfterInterval}","r":1},"m":[]}`, { 'content-type': 'text/javascript' })
+      .persist();
+
+    utils
+      .createNock()
+      .get(/heartbeat$/)
+      .query(true)
+      .reply(200, '{"status": 200,"message":"OK","service":"Presence"}', { 'content-type': 'text/javascript' });
 
     pubnub.addListener({
       presence(presence) {

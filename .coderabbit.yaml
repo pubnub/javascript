@@ -3,11 +3,8 @@
 language: en-US
 
 reviews:
-  # Review draft PRs so we get early feedback
-  drafts: true
-
   # Enable high-level summary of changes
-  high_level_summary: true
+  high_level_summary: false
 
   # Add a poem... just kidding, disable it
   poem: false
@@ -83,6 +80,10 @@ reviews:
 chat:
   auto_reply: true
 
+knowledge_base:
+  mcp:
+    usage: enabled
+
 # Path filters - ignore generated/vendored/build output
 path_filters:
   # Build outputs
@@ -92,13 +93,6 @@ path_filters:
 
   # Dependencies
   - "!node_modules/**"
-
-  # Unrelated working directories (not part of the SDK source)
-  - "!dataSync/**"
-  - "!new-dataSync/**"
-  - "!demo-app/**"
-  - "!loan_quote/**"
-  - "!docs/**"
 
   # Lock files - too noisy, low review value
   - "!package-lock.json"

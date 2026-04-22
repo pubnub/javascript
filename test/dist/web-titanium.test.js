@@ -150,9 +150,7 @@ describe('#distribution test (titanium)', function () {
   });
 
   it('should have to unsubscribe', function (done) {
-    pubnub.disconnect();
-    pubnub.removeListener(listener);
-    pubnub.reconnect();
+    pubnub.subscribe({ channels: [myChannel1] });
 
     var finished = false;
 
@@ -171,6 +169,6 @@ describe('#distribution test (titanium)', function () {
         }
       },
     });
-    pubnub.unsubscribe({ channels: [myChannel1] });
+    pubnub.unsubscribeAll();
   });
 });
