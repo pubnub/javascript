@@ -3,6 +3,13 @@
 language: en-US
 
 reviews:
+<<<<<<< Updated upstream
+=======
+  profile: "assertive"  #more feedback
+  # Review draft PRs so we get early feedback
+  drafts: true
+
+>>>>>>> Stashed changes
   # Enable high-level summary of changes
   high_level_summary: false
 
@@ -94,6 +101,12 @@ path_filters:
   # Dependencies
   - "!node_modules/**"
 
+<<<<<<< Updated upstream
+=======
+  # Unrelated working directories (not part of the SDK source)
+  - "!docs/**"
+
+>>>>>>> Stashed changes
   # Lock files - too noisy, low review value
   - "!package-lock.json"
 

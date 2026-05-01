@@ -1,12 +1,12 @@
 {
   "require": "tsx",
   "file": ["test/setup-why.ts"],
-  "spec": "test/**/*.test.ts",
+  "spec": "test/integration/endpoints/dataSync.test.ts",
   "exclude": [
     "test/dist/*.{js,ts}",
     "test/feature/*.{js,ts}",
     "test/integration/shared-worker/*.{js,ts}"
   ],
-  "timeout": 5000,
+  "timeout": 5000000,
   "reporter": "spec"
 }

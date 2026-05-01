@@ -176,6 +176,100 @@ enum RequestOperation {
   PNSetMembershipsOperation = 'PNSetMembershipsOperation',
 
   // --------------------------------------------------------
+  // ------------------- DataSync API ----------------------
+  // --------------------------------------------------------
+
+  /**
+   * Create entity class REST API operation.
+   */
+  PNCreateEntityClassOperation = 'PNCreateEntityClassOperation',
+
+  /**
+   * Get entity class REST API operation.
+   */
+  PNGetEntityClassOperation = 'PNGetEntityClassOperation',
+
+  /**
+   * Get all entity classes REST API operation.
+   */
+  PNGetAllEntityClassesOperation = 'PNGetAllEntityClassesOperation',
+
+  /**
+   * Update entity class REST API operation.
+   */
+  PNUpdateEntityClassOperation = 'PNUpdateEntityClassOperation',
+
+  /**
+   * Patch entity class REST API operation.
+   */
+  PNPatchEntityClassOperation = 'PNPatchEntityClassOperation',
+
+  /**
+   * Remove entity class REST API operation.
+   */
+  PNRemoveEntityClassOperation = 'PNRemoveEntityClassOperation',
+
+  /**
+   * Create entity REST API operation.
+   */
+  PNCreateEntityOperation = 'PNCreateEntityOperation',
+
+  /**
+   * Get entity REST API operation.
+   */
+  PNGetEntityOperation = 'PNGetEntityOperation',
+
+  /**
+   * Get all entities REST API operation.
+   */
+  PNGetAllEntitiesOperation = 'PNGetAllEntitiesOperation',
+
+  /**
+   * Update entity REST API operation.
+   */
+  PNUpdateEntityOperation = 'PNUpdateEntityOperation',
+
+  /**
+   * Patch entity REST API operation.
+   */
+  PNPatchEntityOperation = 'PNPatchEntityOperation',
+
+  /**
+   * Remove entity REST API operation.
+   */
+  PNRemoveEntityOperation = 'PNRemoveEntityOperation',
+
+  /**
+   * Create relationship REST API operation.
+   */
+  PNCreateRelationshipOperation = 'PNCreateRelationshipOperation',
+
+  /**
+   * Get relationship REST API operation.
+   */
+  PNGetRelationshipOperation = 'PNGetRelationshipOperation',
+
+  /**
+   * Get all relationships REST API operation.
+   */
+  PNGetAllRelationshipsOperation = 'PNGetAllRelationshipsOperation',
+
+  /**
+   * Update relationship REST API operation.
+   */
+  PNUpdateRelationshipOperation = 'PNUpdateRelationshipOperation',
+
+  /**
+   * Patch relationship REST API operation.
+   */
+  PNPatchRelationshipOperation = 'PNPatchRelationshipOperation',
+
+  /**
+   * Remove relationship REST API operation.
+   */
+  PNRemoveRelationshipOperation = 'PNRemoveRelationshipOperation',
+
+  // --------------------------------------------------------
   // -------------------- File Upload API -------------------
   // --------------------------------------------------------
 
