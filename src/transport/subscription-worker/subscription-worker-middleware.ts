@@ -229,23 +229,30 @@ export class SubscriptionWorkerMiddleware implements Transport {
    * @param [token] - Authorization token which should be used.
    */
   onTokenChange(token: string | undefined) {
-    this.tokenChangeChain = this.tokenChangeChain.then(() => {
-      const updateEvent: PubNubSubscriptionWorker.UpdateEvent = {
-        type: 'client-update',
-        heartbeatInterval: this.configuration.heartbeatInterval,
-        clientIdentifier: this.configuration.clientIdentifier,
-        subscriptionKey: this.configuration.subscriptionKey,
-        userId: this.configuration.userId,
-        workerLogLevel: this.configuration.workerLogLevel,
-      };
+    this.tokenChangeChain = this.tokenChangeChain
+      .then(() => {
+        const updateEvent: PubNubSubscriptionWorker.UpdateEvent = {
+          type: 'client-update',
+          heartbeatInterval: this.configuration.heartbeatInterval,
+          clientIdentifier: this.configuration.clientIdentifier,
+          subscriptionKey: this.configuration.subscriptionKey,
+          userId: this.configuration.userId,
+          workerLogLevel: this.configuration.workerLogLevel,
+        };
 
-      return this.parsedAccessToken(token)
-        .then((accessToken) => {
-          updateEvent.preProcessedToken = accessToken;
-          updateEvent.accessToken = token;
-        })
-        .then(() => this.scheduleEventPost(updateEvent));
-    });
+        return this.parsedAccessToken(token)
+          .then((accessToken) => {
+            updateEvent.preProcessedToken = accessToken;
+            updateEvent.accessToken = token;
+          })
+          .then(() => this.scheduleEventPost(updateEvent));
+      })
+      .catch((error) => {
+        this.configuration.logger.warn('SubscriptionWorkerMiddleware', () => ({
+          messageType: 'text',
+          message: `Token change processing failed: ${error}`,
+        }));
+      });
   }
 
   /**

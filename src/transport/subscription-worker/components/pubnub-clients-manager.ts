@@ -211,7 +211,7 @@ export class PubNubClientsManager extends EventTarget {
     const clientsBySubscribeKey = this.clientBySubscribeKey[client.subKey];
     if (clientsBySubscribeKey) {
       const clientIdx = clientsBySubscribeKey.indexOf(client);
-      clientsBySubscribeKey.splice(clientIdx, 1);
+      if (clientIdx >= 0) clientsBySubscribeKey.splice(clientIdx, 1);
 
       if (clientsBySubscribeKey.length === 0) {
         delete this.clientBySubscribeKey[client.subKey];

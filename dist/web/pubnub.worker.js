@@ -3243,6 +3243,9 @@
          * @param client - {@link PubNubClient|PubNub} client for which listeners should be attached.
          */
         attachClientListeners(client) {
+            const previous = this.clientAbortControllers[client.identifier];
+            if (previous)
+                previous.abort();
             const abortController = new AbortController();
             this.clientAbortControllers[client.identifier] = abortController;
             client.addEventListener(PubNubClientEvent.IdentityChange, (event) => {
@@ -4141,6 +4144,9 @@
          * @param client - {@link PubNubClient|PubNub} client for which listeners should be attached.
          */
         attachClientListeners(client) {
+            const previous = this.clientAbortControllers[client.identifier];
+            if (previous)
+                previous.abort();
             const abortController = new AbortController();
             this.clientAbortControllers[client.identifier] = abortController;
             client.addEventListener(PubNubClientEvent.Disconnect, () => this.removeClient(client), {
@@ -4953,7 +4959,8 @@
             const clientsBySubscribeKey = this.clientBySubscribeKey[client.subKey];
             if (clientsBySubscribeKey) {
                 const clientIdx = clientsBySubscribeKey.indexOf(client);
-                clientsBySubscribeKey.splice(clientIdx, 1);
+                if (clientIdx >= 0)
+                    clientsBySubscribeKey.splice(clientIdx, 1);
                 if (clientsBySubscribeKey.length === 0) {
                     delete this.clientBySubscribeKey[client.subKey];
                     this.stopClientTimeoutCheck(client);

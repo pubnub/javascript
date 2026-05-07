@@ -3638,7 +3638,8 @@
 	     * @param [token] - Authorization token which should be used.
 	     */
 	    onTokenChange(token) {
-	        this.tokenChangeChain = this.tokenChangeChain.then(() => {
+	        this.tokenChangeChain = this.tokenChangeChain
+	            .then(() => {
 	            const updateEvent = {
 	                type: 'client-update',
 	                heartbeatInterval: this.configuration.heartbeatInterval,
@@ -3653,6 +3654,12 @@
 	                updateEvent.accessToken = token;
 	            })
 	                .then(() => this.scheduleEventPost(updateEvent));
+	        })
+	            .catch((error) => {
+	            this.configuration.logger.warn('SubscriptionWorkerMiddleware', () => ({
+	                messageType: 'text',
+	                message: `Token change processing failed: ${error}`,
+	            }));
 	        });
 	    }
 	    /**

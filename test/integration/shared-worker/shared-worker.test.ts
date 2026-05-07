@@ -1634,7 +1634,7 @@ describe('PubNub Shared Worker Integration Tests', () => {
       }, 20000);
     }).timeout(25000);
 
-    it.only('should receive timeout presence events when browser tabs are closed', (done) => {
+    it('should receive timeout presence events when browser tabs are closed', (done) => {
       const testChannel = testChannels[0];
       let testCompleted = false;
       let timeoutPresenceReceived = false;

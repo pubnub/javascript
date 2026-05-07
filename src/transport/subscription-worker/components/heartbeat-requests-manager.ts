@@ -181,6 +181,9 @@ export class HeartbeatRequestsManager extends RequestsManager {
    * @param client - {@link PubNubClient|PubNub} client for which listeners should be attached.
    */
   private attachClientListeners(client: PubNubClient) {
+    const previous = this.clientAbortControllers[client.identifier];
+    if (previous) previous.abort();
+
     const abortController = new AbortController();
     this.clientAbortControllers[client.identifier] = abortController;
 
