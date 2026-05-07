@@ -135,6 +135,11 @@ export class SubscriptionWorkerMiddleware implements Transport {
   private subscriptionWorkerReady: boolean = false;
 
   /**
+   * Promise chain serializing token change operations to preserve ordering.
+   */
+  private tokenChangeChain: Promise<void> = Promise.resolve();
+
+  /**
    * Map of base64-encoded access tokens to their parsed representations.
    */
   private accessTokensMap: Record<
@@ -224,22 +229,23 @@ export class SubscriptionWorkerMiddleware implements Transport {
    * @param [token] - Authorization token which should be used.
    */
   onTokenChange(token: string | undefined) {
-    const updateEvent: PubNubSubscriptionWorker.UpdateEvent = {
-      type: 'client-update',
-      heartbeatInterval: this.configuration.heartbeatInterval,
-      clientIdentifier: this.configuration.clientIdentifier,
-      subscriptionKey: this.configuration.subscriptionKey,
-      userId: this.configuration.userId,
-      workerLogLevel: this.configuration.workerLogLevel,
-    };
+    this.tokenChangeChain = this.tokenChangeChain.then(() => {
+      const updateEvent: PubNubSubscriptionWorker.UpdateEvent = {
+        type: 'client-update',
+        heartbeatInterval: this.configuration.heartbeatInterval,
+        clientIdentifier: this.configuration.clientIdentifier,
+        subscriptionKey: this.configuration.subscriptionKey,
+        userId: this.configuration.userId,
+        workerLogLevel: this.configuration.workerLogLevel,
+      };
 
-    // Trigger request processing by Service Worker.
-    this.parsedAccessToken(token)
-      .then((accessToken) => {
-        updateEvent.preProcessedToken = accessToken;
-        updateEvent.accessToken = token;
-      })
-      .then(() => this.scheduleEventPost(updateEvent));
+      return this.parsedAccessToken(token)
+        .then((accessToken) => {
+          updateEvent.preProcessedToken = accessToken;
+          updateEvent.accessToken = token;
+        })
+        .then(() => this.scheduleEventPost(updateEvent));
+    });
   }
 
   /**
@@ -435,6 +441,7 @@ export class SubscriptionWorkerMiddleware implements Transport {
       data.type !== 'shared-worker-connected' &&
       data.type !== 'shared-worker-console-log' &&
       data.type !== 'shared-worker-console-dir' &&
+      data.type !== 'shared-worker-client-suspended' &&
       data.clientIdentifier !== this.configuration.clientIdentifier
     )
       return;
@@ -470,6 +477,17 @@ export class SubscriptionWorkerMiddleware implements Transport {
         subscriptionKey,
         clientIdentifier,
         workerLogLevel: this.configuration.workerLogLevel,
+      });
+    } else if (data.type === 'shared-worker-client-suspended') {
+      this.configuration.logger.warn(
+        'SubscriptionWorkerMiddleware',
+        'Client suspended by SharedWorker (missed ping-pong). Triggering retryable error for recovery.',
+      );
+
+      // Reject all pending callbacks with a retryable (timeout) error to trigger retry/reconnect.
+      this.callbacks!.forEach(({ reject }, identifier) => {
+        this.callbacks!.delete(identifier);
+        reject(new PubNubAPIError('SharedWorker client suspended', StatusCategory.PNTimeoutCategory, 0, new Error('SharedWorker client suspended')));
       });
     } else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
       if (this.callbacks!.has(data.identifier)) {
@@ -525,9 +543,8 @@ export class SubscriptionWorkerMiddleware implements Transport {
     return this.stringifyAccessToken(accessToken).then(([token, stringifiedToken]) => {
       if (!token || !stringifiedToken) return undefined;
 
-      return (this.accessTokensMap = {
-        [accessToken]: { token: stringifiedToken, expiration: token.timestamp + token.ttl * 60 },
-      })[accessToken];
+      this.accessTokensMap[accessToken] = { token: stringifiedToken, expiration: token.timestamp + token.ttl * 60 };
+      return this.accessTokensMap[accessToken];
     });
   }
 
@@ -632,6 +649,8 @@ export class SubscriptionWorkerMiddleware implements Transport {
     const [currentMajor, currentMinor, currentPatch] = this.configuration.sdkVersion.split('.').map(Number);
     const [storedMajor, storedMinor, storedPatch] = version.split('.').map(Number);
 
-    return storedMajor > currentMajor || storedMinor > currentMinor || storedPatch > currentPatch;
+    if (storedMajor !== currentMajor) return storedMajor > currentMajor;
+    if (storedMinor !== currentMinor) return storedMinor > currentMinor;
+    return storedPatch > currentPatch;
   }
 }

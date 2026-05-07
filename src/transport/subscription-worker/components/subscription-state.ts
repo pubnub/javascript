@@ -47,8 +47,8 @@ export class SubscriptionStateChange {
     // Remove changes which first add and then remove same request (removes both addition and removal change entry).
     const requestAddChange = sortedChanges.filter((change) => !change.remove);
     requestAddChange.forEach((addChange) => {
-      for (let idx = 0; idx < requestAddChange.length; idx++) {
-        const change = requestAddChange[idx];
+      for (let idx = 0; idx < sortedChanges.length; idx++) {
+        const change = sortedChanges[idx];
         if (!change.remove || change.request.identifier !== addChange.request.identifier) continue;
         sortedChanges.splice(idx, 1);
         sortedChanges.splice(sortedChanges.indexOf(addChange), 1);
@@ -370,7 +370,10 @@ export class SubscriptionState extends EventTarget {
    */
   processChanges(changes: SubscriptionStateChange[]) {
     if (changes.length) changes = SubscriptionStateChange.squashedChanges(changes);
-    if (!changes.length) return;
+    if (!changes.length) {
+      if (!Object.keys(this.clientsState).length) this.dispatchEvent(new SubscriptionStateInvalidateEvent());
+      return;
+    }
 
     let stateRefreshRequired = this.channelGroups.size === 0 && this.channels.size === 0;
     if (!stateRefreshRequired)
@@ -704,7 +707,7 @@ export class SubscriptionState extends EventTarget {
           delete this.requests[request.client.identifier];
 
           const clientIdx = this.clientsForInvalidation.indexOf(request.client.identifier);
-          if (clientIdx > 0) {
+          if (clientIdx >= 0) {
             this.clientsForInvalidation.splice(clientIdx, 1);
             delete this.clientsPresenceState[request.client.identifier];
             delete this.lastCompletedRequest[request.client.identifier];

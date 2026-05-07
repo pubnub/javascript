@@ -14,6 +14,11 @@ export enum PubNubClientsManagerEvent {
    * PubNub client has been unregistered.
    */
   Unregistered = 'Unregistered',
+
+  /**
+   * PubNub client has been reactivated after suspension.
+   */
+  Reactivated = 'Reactivated',
 }
 
 /**
@@ -87,5 +92,37 @@ export class PubNubClientManagerUnregisterEvent extends CustomEvent<{ client: Pu
    */
   clone() {
     return new PubNubClientManagerUnregisterEvent(this.client, this.withLeave);
+  }
+}
+
+/**
+ * Dispatched by clients manager when a suspended PubNub client reactivates within `SharedWorker`.
+ */
+export class PubNubClientManagerReactivateEvent extends CustomEvent<PubNubClient> {
+  /**
+   * Create client reactivation event.
+   *
+   * @param client - Reference to the reactivated PubNub client.
+   */
+  constructor(client: PubNubClient) {
+    super(PubNubClientsManagerEvent.Reactivated, { detail: client });
+  }
+
+  /**
+   * Retrieve reference to the reactivated PubNub client.
+   *
+   * @returns Reference to the reactivated PubNub client.
+   */
+  get client(): PubNubClient {
+    return this.detail;
+  }
+
+  /**
+   * Create clone of client reactivation event to make it possible to forward event upstream.
+   *
+   * @returns Client reactivation event clone.
+   */
+  clone() {
+    return new PubNubClientManagerReactivateEvent(this.client);
   }
 }

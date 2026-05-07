@@ -11,6 +11,7 @@ import {
   PubNubClientsManagerEvent,
   PubNubClientManagerRegisterEvent,
   PubNubClientManagerUnregisterEvent,
+  PubNubClientManagerReactivateEvent,
 } from './custom-events/client-manager-event';
 import { SubscriptionStateChangeEvent, SubscriptionStateEvent } from './custom-events/subscription-state-event';
 import { SubscriptionState, SubscriptionStateChange } from './subscription-state';
@@ -297,13 +298,14 @@ export class SubscribeRequestsManager extends RequestsManager {
   private handleDelayedAggregation(identifier: string) {
     if (!this.requestsChangeAggregationQueue[identifier]) return;
 
-    const state = this.subscriptionStateForIdentifier(identifier);
-
     // Squash self-excluding change entries.
     const changes = [...this.requestsChangeAggregationQueue[identifier].changes];
     delete this.requestsChangeAggregationQueue[identifier];
 
+    if (!changes.length) return;
+
     // Apply final changes to the subscription state.
+    const state = this.subscriptionStateForIdentifier(identifier);
     state.processChanges(changes);
   }
 
@@ -341,83 +343,7 @@ export class SubscribeRequestsManager extends RequestsManager {
   private addEventListenersForClientsManager(clientsManager: PubNubClientsManager) {
     clientsManager.addEventListener(PubNubClientsManagerEvent.Registered, (evt) => {
       const { client } = evt as PubNubClientManagerRegisterEvent;
-
-      // Keep track of the client's listener abort controller.
-      const abortController = new AbortController();
-      this.clientAbortControllers[client.identifier] = abortController;
-
-      client.addEventListener(
-        PubNubClientEvent.IdentityChange,
-        (event) => {
-          if (!(event instanceof PubNubClientIdentityChangeEvent)) return;
-          // Make changes into state only if `userId` actually changed.
-          if (
-            !!event.oldUserId !== !!event.newUserId ||
-            (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId)
-          )
-            this.moveClient(client);
-        },
-        {
-          signal: abortController.signal,
-        },
-      );
-      client.addEventListener(
-        PubNubClientEvent.AuthChange,
-        (event) => {
-          if (!(event instanceof PubNubClientAuthChangeEvent)) return;
-          // Check whether the client should be moved to another state because of a permissions change or whether the
-          // same token with the same permissions should be used for the next requests.
-          if (
-            !!event.oldAuth !== !!event.newAuth ||
-            (event.oldAuth && event.newAuth && !event.oldAuth.equalTo(event.newAuth))
-          )
-            this.moveClient(client);
-          else if (event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
-            this.subscriptionStateForClient(client)?.updateClientAccessToken(event.newAuth);
-        },
-        {
-          signal: abortController.signal,
-        },
-      );
-      client.addEventListener(
-        PubNubClientEvent.PresenceStateChange,
-        (event) => {
-          if (!(event instanceof PubNubClientPresenceStateChangeEvent)) return;
-          this.subscriptionStateForClient(event.client)?.updateClientPresenceState(event.client, event.state);
-        },
-        { signal: abortController.signal },
-      );
-      client.addEventListener(
-        PubNubClientEvent.SendSubscribeRequest,
-        (event) => {
-          if (!(event instanceof PubNubClientSendSubscribeEvent)) return;
-          this.enqueueForAggregation(event.client, event.request, false, false);
-        },
-        { signal: abortController.signal },
-      );
-      client.addEventListener(
-        PubNubClientEvent.CancelSubscribeRequest,
-        (event) => {
-          if (!(event instanceof PubNubClientCancelSubscribeEvent)) return;
-          this.enqueueForAggregation(event.client, event.request, true, false);
-        },
-        { signal: abortController.signal },
-      );
-      client.addEventListener(
-        PubNubClientEvent.SendLeaveRequest,
-        (event) => {
-          if (!(event instanceof PubNubClientSendLeaveEvent)) return;
-          const request = this.patchedLeaveRequest(event.request);
-          if (!request) return;
-
-          this.sendRequest(
-            request,
-            (fetchRequest, response) => request.handleProcessingSuccess(fetchRequest, response),
-            (fetchRequest, errorResponse) => request.handleProcessingError(fetchRequest, errorResponse),
-          );
-        },
-        { signal: abortController.signal },
-      );
+      this.attachClientListeners(client);
     });
     clientsManager.addEventListener(PubNubClientsManagerEvent.Unregistered, (event) => {
       const { client, withLeave } = event as PubNubClientManagerUnregisterEvent;
@@ -430,6 +356,88 @@ export class SubscribeRequestsManager extends RequestsManager {
       // Update manager's state.
       this.removeClient(client, false, withLeave, true);
     });
+    clientsManager.addEventListener(PubNubClientsManagerEvent.Reactivated, (evt) => {
+      const { client } = evt as PubNubClientManagerReactivateEvent;
+      this.attachClientListeners(client);
+    });
+  }
+
+  /**
+   * Attach event listeners for a {@link PubNubClient|PubNub} client's subscribe-related events.
+   *
+   * Used both on initial registration and on reactivation after suspension.
+   *
+   * @param client - {@link PubNubClient|PubNub} client for which listeners should be attached.
+   */
+  private attachClientListeners(client: PubNubClient) {
+    const abortController = new AbortController();
+    this.clientAbortControllers[client.identifier] = abortController;
+
+    client.addEventListener(
+      PubNubClientEvent.IdentityChange,
+      (event) => {
+        if (!(event instanceof PubNubClientIdentityChangeEvent)) return;
+        if (
+          !!event.oldUserId !== !!event.newUserId ||
+          (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId)
+        )
+          this.moveClient(client);
+      },
+      { signal: abortController.signal },
+    );
+    client.addEventListener(
+      PubNubClientEvent.AuthChange,
+      (event) => {
+        if (!(event instanceof PubNubClientAuthChangeEvent)) return;
+        if (
+          !!event.oldAuth !== !!event.newAuth ||
+          (event.oldAuth && event.newAuth && !event.oldAuth.equalTo(event.newAuth))
+        )
+          this.moveClient(client);
+        else if (event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
+          this.subscriptionStateForClient(client)?.updateClientAccessToken(event.newAuth);
+      },
+      { signal: abortController.signal },
+    );
+    client.addEventListener(
+      PubNubClientEvent.PresenceStateChange,
+      (event) => {
+        if (!(event instanceof PubNubClientPresenceStateChangeEvent)) return;
+        this.subscriptionStateForClient(event.client)?.updateClientPresenceState(event.client, event.state);
+      },
+      { signal: abortController.signal },
+    );
+    client.addEventListener(
+      PubNubClientEvent.SendSubscribeRequest,
+      (event) => {
+        if (!(event instanceof PubNubClientSendSubscribeEvent)) return;
+        this.enqueueForAggregation(event.client, event.request, false, false);
+      },
+      { signal: abortController.signal },
+    );
+    client.addEventListener(
+      PubNubClientEvent.CancelSubscribeRequest,
+      (event) => {
+        if (!(event instanceof PubNubClientCancelSubscribeEvent)) return;
+        this.enqueueForAggregation(event.client, event.request, true, false);
+      },
+      { signal: abortController.signal },
+    );
+    client.addEventListener(
+      PubNubClientEvent.SendLeaveRequest,
+      (event) => {
+        if (!(event instanceof PubNubClientSendLeaveEvent)) return;
+        const request = this.patchedLeaveRequest(event.request);
+        if (!request) return;
+
+        this.sendRequest(
+          request,
+          (fetchRequest, response) => request.handleProcessingSuccess(fetchRequest, response),
+          (fetchRequest, errorResponse) => request.handleProcessingError(fetchRequest, errorResponse),
+        );
+      },
+      { signal: abortController.signal },
+    );
   }
 
   /**
