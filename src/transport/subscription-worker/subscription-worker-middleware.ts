@@ -487,7 +487,14 @@ export class SubscriptionWorkerMiddleware implements Transport {
       // Reject all pending callbacks with a retryable (timeout) error to trigger retry/reconnect.
       this.callbacks!.forEach(({ reject }, identifier) => {
         this.callbacks!.delete(identifier);
-        reject(new PubNubAPIError('SharedWorker client suspended', StatusCategory.PNTimeoutCategory, 0, new Error('SharedWorker client suspended')));
+        reject(
+          new PubNubAPIError(
+            'SharedWorker client suspended',
+            StatusCategory.PNTimeoutCategory,
+            0,
+            new Error('SharedWorker client suspended'),
+          ),
+        );
       });
     } else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
       if (this.callbacks!.has(data.identifier)) {

@@ -343,11 +343,7 @@ export class PubNubClientsManager extends EventTarget {
 
     // Reactivation listener must NOT use the client's abort signal because suspension aborts it.
     // Use `once: true` to ensure it's cleaned up after firing.
-    client.addEventListener(
-      PubNubClientEvent.Reactivate,
-      () => this.reactivateClient(client),
-      { once: true },
-    );
+    client.addEventListener(PubNubClientEvent.Reactivate, () => this.reactivateClient(client), { once: true });
   }
   // endregion
 
