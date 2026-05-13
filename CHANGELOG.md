@@ -1,3 +1,9 @@
+## v11.0.1
+May 13 2026
+
+#### Modified
+- Bumped version of basic-ftp through override deps for proxy agent to use safe transitive dependency.
+
 ## v11.0.0
 April 20 2026
 
