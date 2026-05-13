@@ -17,6 +17,17 @@ reviews:
     enabled: true
     drafts: true
 
+  # Sparse-checkout / review scope: include .github explicitly; exclude generated and vendor paths
+  path_filters:
+    - ".github/**"
+    - "!dist/**"
+    - "!lib/**"
+    - "!upload/**"
+    - "!node_modules/**"
+    - "!package-lock.json"
+    - "!.pubnub.yml"
+    - "!.vscode/**"
+
   # Path-based review instructions
   path_instructions:
     - path: "src/core/**"
@@ -69,6 +80,12 @@ reviews:
         - Proper use of mocks/stubs (Sinon + Nock)
         - No flaky patterns (hardcoded timeouts, race conditions)
         - Tests that actually assert meaningful behavior
+    - path: ".github/**"
+      instructions: |
+        GitHub Actions workflows and repo automation. Review for:
+        - Valid workflow YAML (triggers, concurrency, job dependencies)
+        - Safe use of secrets and minimal required permissions
+        - Reasonable timeouts and matrix coverage; actionlint/YAMLlint findings should be addressed
 
   # Tools configuration
   tools:
@@ -76,6 +93,10 @@ reviews:
     github-checks:
       enabled: true
       timeout_ms: 120000
+    yamllint:
+      enabled: true
+    actionlint:
+      enabled: true
 
 chat:
   auto_reply: true
@@ -83,23 +104,3 @@ chat:
 knowledge_base:
   mcp:
     usage: enabled
-
-# Path filters - ignore generated/vendored/build output
-path_filters:
-  # Build outputs
-  - "!dist/**"
-  - "!lib/**"
-  - "!upload/**"
-
-  # Dependencies
-  - "!node_modules/**"
-
-  # Lock files - too noisy, low review value
-  - "!package-lock.json"
-
-  # Config/metadata that rarely needs review
-  - "!.pubnub.yml"
-  - "!.vscode/**"
-
-  # Generated type bundles
-  - "!lib/types/**"
