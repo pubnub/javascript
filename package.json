@@ -10,7 +10,7 @@
     "build:node-types": "ts-node ./.scripts/types-aggregate.ts --ts-config=./tsconfig.json --package=PubNub --working-dir=./lib/types --input=./lib/types/node/index.d.ts --output=./lib/types",
     "test": "npm run test:web && npm run test:node",
     "test:web": "karma start karma/web.config.cjs",
-    "test:web:shared-worker": "karma start karma/shared-worker.config.js",
+    "test:web:shared-worker": "karma start karma/shared-worker.config.js && karma start karma/shared-worker-suspension.config.js",
     "test:node": "TS_NODE_PROJECT='./tsconfig.json' mocha --project tsconfig.mocha.json",
     "clean": "rimraf lib dist upload",
     "lint": "eslint \"src/**/*\" --config .eslintrc.cjs",
