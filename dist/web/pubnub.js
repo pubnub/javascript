@@ -3566,6 +3566,10 @@
 	         */
 	        this.subscriptionWorkerReady = false;
 	        /**
+	         * Promise chain serializing token change operations to preserve ordering.
+	         */
+	        this.tokenChangeChain = Promise.resolve();
+	        /**
 	         * Map of base64-encoded access tokens to their parsed representations.
 	         */
 	        this.accessTokensMap = {};
@@ -3634,21 +3638,29 @@
 	     * @param [token] - Authorization token which should be used.
 	     */
 	    onTokenChange(token) {
-	        const updateEvent = {
-	            type: 'client-update',
-	            heartbeatInterval: this.configuration.heartbeatInterval,
-	            clientIdentifier: this.configuration.clientIdentifier,
-	            subscriptionKey: this.configuration.subscriptionKey,
-	            userId: this.configuration.userId,
-	            workerLogLevel: this.configuration.workerLogLevel,
-	        };
-	        // Trigger request processing by Service Worker.
-	        this.parsedAccessToken(token)
-	            .then((accessToken) => {
-	            updateEvent.preProcessedToken = accessToken;
-	            updateEvent.accessToken = token;
+	        this.tokenChangeChain = this.tokenChangeChain
+	            .then(() => {
+	            const updateEvent = {
+	                type: 'client-update',
+	                heartbeatInterval: this.configuration.heartbeatInterval,
+	                clientIdentifier: this.configuration.clientIdentifier,
+	                subscriptionKey: this.configuration.subscriptionKey,
+	                userId: this.configuration.userId,
+	                workerLogLevel: this.configuration.workerLogLevel,
+	            };
+	            return this.parsedAccessToken(token)
+	                .then((accessToken) => {
+	                updateEvent.preProcessedToken = accessToken;
+	                updateEvent.accessToken = token;
+	            })
+	                .then(() => this.scheduleEventPost(updateEvent));
 	        })
-	            .then(() => this.scheduleEventPost(updateEvent));
+	            .catch((error) => {
+	            this.configuration.logger.warn('SubscriptionWorkerMiddleware', () => ({
+	                messageType: 'text',
+	                message: `Token change processing failed: ${error}`,
+	            }));
+	        });
 	    }
 	    /**
 	     * Disconnect client and terminate ongoing long-poll requests (if needed).
@@ -3818,6 +3830,7 @@
 	            data.type !== 'shared-worker-connected' &&
 	            data.type !== 'shared-worker-console-log' &&
 	            data.type !== 'shared-worker-console-dir' &&
+	            data.type !== 'shared-worker-client-suspended' &&
 	            data.clientIdentifier !== this.configuration.clientIdentifier)
 	            return;
 	        if (data.type === 'shared-worker-connected') {
@@ -3852,6 +3865,14 @@
 	                subscriptionKey,
 	                clientIdentifier,
 	                workerLogLevel: this.configuration.workerLogLevel,
+	            });
+	        }
+	        else if (data.type === 'shared-worker-client-suspended') {
+	            this.configuration.logger.warn('SubscriptionWorkerMiddleware', 'Client suspended by SharedWorker (missed ping-pong). Triggering retryable error for recovery.');
+	            // Reject all pending callbacks with a retryable (timeout) error to trigger retry/reconnect.
+	            this.callbacks.forEach(({ reject }, identifier) => {
+	                this.callbacks.delete(identifier);
+	                reject(new PubNubAPIError('SharedWorker client suspended', StatusCategory$1.PNTimeoutCategory, 0, new Error('SharedWorker client suspended')));
 	            });
 	        }
 	        else if (data.type === 'request-process-success' || data.type === 'request-process-error') {
@@ -3913,9 +3934,8 @@
 	            return this.stringifyAccessToken(accessToken).then(([token, stringifiedToken]) => {
 	                if (!token || !stringifiedToken)
 	                    return undefined;
-	                return (this.accessTokensMap = {
-	                    [accessToken]: { token: stringifiedToken, expiration: token.timestamp + token.ttl * 60 },
-	                })[accessToken];
+	                this.accessTokensMap[accessToken] = { token: stringifiedToken, expiration: token.timestamp + token.ttl * 60 };
+	                return this.accessTokensMap[accessToken];
 	            });
 	        });
 	    }
@@ -4008,7 +4028,11 @@
 	    isNewerSharedWorkerVersion(version) {
 	        const [currentMajor, currentMinor, currentPatch] = this.configuration.sdkVersion.split('.').map(Number);
 	        const [storedMajor, storedMinor, storedPatch] = version.split('.').map(Number);
-	        return storedMajor > currentMajor || storedMinor > currentMinor || storedPatch > currentPatch;
+	        if (storedMajor !== currentMajor)
+	            return storedMajor > currentMajor;
+	        if (storedMinor !== currentMinor)
+	            return storedMinor > currentMinor;
+	        return storedPatch > currentPatch;
 	    }
 	}
 
@@ -18419,7 +18443,7 @@
 	                        window.addEventListener('pagehide', (event) => {
 	                            if (!event.persisted)
 	                                middleware.terminate();
-	                        }, { once: true });
+	                        });
 	                    }
 	                }
 	                catch (e) {

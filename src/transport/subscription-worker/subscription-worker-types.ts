@@ -338,12 +338,28 @@ export type SharedWorkerPing = {
 };
 
 /**
+ * Shared worker client suspended notification.
+ *
+ * Sent when the SharedWorker determines a client is unresponsive (missed pong) and suspends it.
+ * The client should treat this as a retryable error and re-subscribe.
+ */
+export type SharedWorkerClientSuspended = {
+  type: 'shared-worker-client-suspended';
+
+  /**
+   * Receiving PubNub client unique identifier.
+   */
+  clientIdentifier: string;
+};
+
+/**
  * List of known events from the PubNub Subscription Service Worker.
  */
 export type SubscriptionWorkerEvent =
   | SharedWorkerConnected
   | SharedWorkerConsole
   | SharedWorkerPing
+  | SharedWorkerClientSuspended
   | RequestSendingResult;
 
 /**

@@ -15,6 +15,10 @@
          */
         PubNubClientEvent["Unregister"] = "unregister";
         /**
+         * Client reactivated after suspension (resumed from background tab).
+         */
+        PubNubClientEvent["Reactivate"] = "reactivate";
+        /**
          * Client temporarily disconnected.
          */
         PubNubClientEvent["Disconnect"] = "disconnect";
@@ -386,6 +390,27 @@
             return new PubNubClientSendLeaveEvent(this.client, this.request);
         }
     }
+    /**
+     * Dispatched by PubNub client when it reactivates from suspended state.
+     */
+    class PubNubClientReactivateEvent extends BasePubNubClientEvent {
+        /**
+         * Create PubNub client reactivate event.
+         *
+         * @param client - Reference to reactivated PubNub client.
+         */
+        constructor(client) {
+            super(PubNubClientEvent.Reactivate, { detail: { client } });
+        }
+        /**
+         * Create a clone of `reactivate` event to make it possible to forward event upstream.
+         *
+         * @returns Clone of `reactivate` event.
+         */
+        clone() {
+            return new PubNubClientReactivateEvent(this.client);
+        }
+    }
 
     /**
      * Type with events which is dispatched by PubNub clients manager and can be handled with callback passed to the
@@ -401,6 +426,10 @@
          * PubNub client has been unregistered.
          */
         PubNubClientsManagerEvent["Unregistered"] = "Unregistered";
+        /**
+         * PubNub client has been reactivated after suspension.
+         */
+        PubNubClientsManagerEvent["Reactivated"] = "Reactivated";
     })(PubNubClientsManagerEvent || (PubNubClientsManagerEvent = {}));
     /**
      * Dispatched by clients manager when new PubNub client registers within `SharedWorker`.
@@ -467,6 +496,35 @@
          */
         clone() {
             return new PubNubClientManagerUnregisterEvent(this.client, this.withLeave);
+        }
+    }
+    /**
+     * Dispatched by clients manager when a suspended PubNub client reactivates within `SharedWorker`.
+     */
+    class PubNubClientManagerReactivateEvent extends CustomEvent {
+        /**
+         * Create client reactivation event.
+         *
+         * @param client - Reference to the reactivated PubNub client.
+         */
+        constructor(client) {
+            super(PubNubClientsManagerEvent.Reactivated, { detail: client });
+        }
+        /**
+         * Retrieve reference to the reactivated PubNub client.
+         *
+         * @returns Reference to the reactivated PubNub client.
+         */
+        get client() {
+            return this.detail;
+        }
+        /**
+         * Create clone of client reactivation event to make it possible to forward event upstream.
+         *
+         * @returns Client reactivation event clone.
+         */
+        clone() {
+            return new PubNubClientManagerReactivateEvent(this.client);
         }
     }
 
@@ -2024,8 +2082,8 @@
             // Remove changes which first add and then remove same request (removes both addition and removal change entry).
             const requestAddChange = sortedChanges.filter((change) => !change.remove);
             requestAddChange.forEach((addChange) => {
-                for (let idx = 0; idx < requestAddChange.length; idx++) {
-                    const change = requestAddChange[idx];
+                for (let idx = 0; idx < sortedChanges.length; idx++) {
+                    const change = sortedChanges[idx];
                     if (!change.remove || change.request.identifier !== addChange.request.identifier)
                         continue;
                     sortedChanges.splice(idx, 1);
@@ -2309,8 +2367,11 @@
         processChanges(changes) {
             if (changes.length)
                 changes = SubscriptionStateChange.squashedChanges(changes);
-            if (!changes.length)
+            if (!changes.length) {
+                if (!Object.keys(this.clientsState).length)
+                    this.dispatchEvent(new SubscriptionStateInvalidateEvent());
                 return;
+            }
             let stateRefreshRequired = this.channelGroups.size === 0 && this.channels.size === 0;
             if (!stateRefreshRequired)
                 stateRefreshRequired = changes.some((change) => change.remove || change.request.requireCachedStateReset);
@@ -2576,7 +2637,7 @@
                         this.lastCompletedRequest[request.client.identifier] = request;
                         delete this.requests[request.client.identifier];
                         const clientIdx = this.clientsForInvalidation.indexOf(request.client.identifier);
-                        if (clientIdx > 0) {
+                        if (clientIdx >= 0) {
                             this.clientsForInvalidation.splice(clientIdx, 1);
                             delete this.clientsPresenceState[request.client.identifier];
                             delete this.lastCompletedRequest[request.client.identifier];
@@ -3118,11 +3179,13 @@
         handleDelayedAggregation(identifier) {
             if (!this.requestsChangeAggregationQueue[identifier])
                 return;
-            const state = this.subscriptionStateForIdentifier(identifier);
             // Squash self-excluding change entries.
             const changes = [...this.requestsChangeAggregationQueue[identifier].changes];
             delete this.requestsChangeAggregationQueue[identifier];
+            if (!changes.length)
+                return;
             // Apply final changes to the subscription state.
+            const state = this.subscriptionStateForIdentifier(identifier);
             state.processChanges(changes);
         }
         /**
@@ -3155,57 +3218,7 @@
         addEventListenersForClientsManager(clientsManager) {
             clientsManager.addEventListener(PubNubClientsManagerEvent.Registered, (evt) => {
                 const { client } = evt;
-                // Keep track of the client's listener abort controller.
-                const abortController = new AbortController();
-                this.clientAbortControllers[client.identifier] = abortController;
-                client.addEventListener(PubNubClientEvent.IdentityChange, (event) => {
-                    if (!(event instanceof PubNubClientIdentityChangeEvent))
-                        return;
-                    // Make changes into state only if `userId` actually changed.
-                    if (!!event.oldUserId !== !!event.newUserId ||
-                        (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId))
-                        this.moveClient(client);
-                }, {
-                    signal: abortController.signal,
-                });
-                client.addEventListener(PubNubClientEvent.AuthChange, (event) => {
-                    var _a;
-                    if (!(event instanceof PubNubClientAuthChangeEvent))
-                        return;
-                    // Check whether the client should be moved to another state because of a permissions change or whether the
-                    // same token with the same permissions should be used for the next requests.
-                    if (!!event.oldAuth !== !!event.newAuth ||
-                        (event.oldAuth && event.newAuth && !event.oldAuth.equalTo(event.newAuth)))
-                        this.moveClient(client);
-                    else if (event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
-                        (_a = this.subscriptionStateForClient(client)) === null || _a === void 0 ? void 0 : _a.updateClientAccessToken(event.newAuth);
-                }, {
-                    signal: abortController.signal,
-                });
-                client.addEventListener(PubNubClientEvent.PresenceStateChange, (event) => {
-                    var _a;
-                    if (!(event instanceof PubNubClientPresenceStateChangeEvent))
-                        return;
-                    (_a = this.subscriptionStateForClient(event.client)) === null || _a === void 0 ? void 0 : _a.updateClientPresenceState(event.client, event.state);
-                }, { signal: abortController.signal });
-                client.addEventListener(PubNubClientEvent.SendSubscribeRequest, (event) => {
-                    if (!(event instanceof PubNubClientSendSubscribeEvent))
-                        return;
-                    this.enqueueForAggregation(event.client, event.request, false, false);
-                }, { signal: abortController.signal });
-                client.addEventListener(PubNubClientEvent.CancelSubscribeRequest, (event) => {
-                    if (!(event instanceof PubNubClientCancelSubscribeEvent))
-                        return;
-                    this.enqueueForAggregation(event.client, event.request, true, false);
-                }, { signal: abortController.signal });
-                client.addEventListener(PubNubClientEvent.SendLeaveRequest, (event) => {
-                    if (!(event instanceof PubNubClientSendLeaveEvent))
-                        return;
-                    const request = this.patchedLeaveRequest(event.request);
-                    if (!request)
-                        return;
-                    this.sendRequest(request, (fetchRequest, response) => request.handleProcessingSuccess(fetchRequest, response), (fetchRequest, errorResponse) => request.handleProcessingError(fetchRequest, errorResponse));
-                }, { signal: abortController.signal });
+                this.attachClientListeners(client);
             });
             clientsManager.addEventListener(PubNubClientsManagerEvent.Unregistered, (event) => {
                 const { client, withLeave } = event;
@@ -3217,6 +3230,65 @@
                 // Update manager's state.
                 this.removeClient(client, false, withLeave, true);
             });
+            clientsManager.addEventListener(PubNubClientsManagerEvent.Reactivated, (evt) => {
+                const { client } = evt;
+                this.attachClientListeners(client);
+            });
+        }
+        /**
+         * Attach event listeners for a {@link PubNubClient|PubNub} client's subscribe-related events.
+         *
+         * Used both on initial registration and on reactivation after suspension.
+         *
+         * @param client - {@link PubNubClient|PubNub} client for which listeners should be attached.
+         */
+        attachClientListeners(client) {
+            const previous = this.clientAbortControllers[client.identifier];
+            if (previous)
+                previous.abort();
+            const abortController = new AbortController();
+            this.clientAbortControllers[client.identifier] = abortController;
+            client.addEventListener(PubNubClientEvent.IdentityChange, (event) => {
+                if (!(event instanceof PubNubClientIdentityChangeEvent))
+                    return;
+                if (!!event.oldUserId !== !!event.newUserId ||
+                    (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId))
+                    this.moveClient(client);
+            }, { signal: abortController.signal });
+            client.addEventListener(PubNubClientEvent.AuthChange, (event) => {
+                var _a;
+                if (!(event instanceof PubNubClientAuthChangeEvent))
+                    return;
+                if (!!event.oldAuth !== !!event.newAuth ||
+                    (event.oldAuth && event.newAuth && !event.oldAuth.equalTo(event.newAuth)))
+                    this.moveClient(client);
+                else if (event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
+                    (_a = this.subscriptionStateForClient(client)) === null || _a === void 0 ? void 0 : _a.updateClientAccessToken(event.newAuth);
+            }, { signal: abortController.signal });
+            client.addEventListener(PubNubClientEvent.PresenceStateChange, (event) => {
+                var _a;
+                if (!(event instanceof PubNubClientPresenceStateChangeEvent))
+                    return;
+                (_a = this.subscriptionStateForClient(event.client)) === null || _a === void 0 ? void 0 : _a.updateClientPresenceState(event.client, event.state);
+            }, { signal: abortController.signal });
+            client.addEventListener(PubNubClientEvent.SendSubscribeRequest, (event) => {
+                if (!(event instanceof PubNubClientSendSubscribeEvent))
+                    return;
+                this.enqueueForAggregation(event.client, event.request, false, false);
+            }, { signal: abortController.signal });
+            client.addEventListener(PubNubClientEvent.CancelSubscribeRequest, (event) => {
+                if (!(event instanceof PubNubClientCancelSubscribeEvent))
+                    return;
+                this.enqueueForAggregation(event.client, event.request, true, false);
+            }, { signal: abortController.signal });
+            client.addEventListener(PubNubClientEvent.SendLeaveRequest, (event) => {
+                if (!(event instanceof PubNubClientSendLeaveEvent))
+                    return;
+                const request = this.patchedLeaveRequest(event.request);
+                if (!request)
+                    return;
+                this.sendRequest(request, (fetchRequest, response) => request.handleProcessingSuccess(fetchRequest, response), (fetchRequest, errorResponse) => request.handleProcessingError(fetchRequest, errorResponse));
+            }, { signal: abortController.signal });
         }
         /**
          * Listen for subscription {@link SubscriptionState|state} events.
@@ -4046,70 +4118,10 @@
          * @param clientsManager - Clients manager for which change in clients should be tracked.
          */
         subscribeOnClientEvents(clientsManager) {
-            // Listen for new core PubNub client registrations.
             clientsManager.addEventListener(PubNubClientsManagerEvent.Registered, (evt) => {
                 const { client } = evt;
-                // Keep track of the client's listener abort controller.
-                const abortController = new AbortController();
-                this.clientAbortControllers[client.identifier] = abortController;
-                client.addEventListener(PubNubClientEvent.Disconnect, () => this.removeClient(client), {
-                    signal: abortController.signal,
-                });
-                client.addEventListener(PubNubClientEvent.IdentityChange, (event) => {
-                    if (!(event instanceof PubNubClientIdentityChangeEvent))
-                        return;
-                    // Make changes into state only if `userId` actually changed.
-                    if (!!event.oldUserId !== !!event.newUserId ||
-                        (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId)) {
-                        const state = this.heartbeatStateForClient(client);
-                        const request = state ? state.requestForClient(client) : undefined;
-                        if (request)
-                            request.userId = event.newUserId;
-                        this.moveClient(client);
-                    }
-                }, {
-                    signal: abortController.signal,
-                });
-                client.addEventListener(PubNubClientEvent.AuthChange, (event) => {
-                    if (!(event instanceof PubNubClientAuthChangeEvent))
-                        return;
-                    const state = this.heartbeatStateForClient(client);
-                    const request = state ? state.requestForClient(client) : undefined;
-                    if (request)
-                        request.accessToken = event.newAuth;
-                    // Check whether the client should be moved to another state because of a permissions change or whether the
-                    // same token with the same permissions should be used for the next requests.
-                    if (!!event.oldAuth !== !!event.newAuth ||
-                        (event.oldAuth && event.newAuth && !event.newAuth.equalTo(event.oldAuth)))
-                        this.moveClient(client);
-                    else if (state && event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
-                        state.accessToken = event.newAuth;
-                }, {
-                    signal: abortController.signal,
-                });
-                client.addEventListener(PubNubClientEvent.HeartbeatIntervalChange, (evt) => {
-                    var _a;
-                    const event = evt;
-                    const state = this.heartbeatStateForClient(client);
-                    if (state)
-                        state.interval = (_a = event.newInterval) !== null && _a !== void 0 ? _a : 0;
-                }, { signal: abortController.signal });
-                client.addEventListener(PubNubClientEvent.PresenceStateChange, (event) => {
-                    var _a;
-                    if (!(event instanceof PubNubClientPresenceStateChangeEvent))
-                        return;
-                    (_a = this.heartbeatStateForClient(event.client)) === null || _a === void 0 ? void 0 : _a.updateClientPresenceState(event.client, event.state);
-                }, { signal: abortController.signal });
-                client.addEventListener(PubNubClientEvent.SendHeartbeatRequest, (evt) => this.addClient(client, evt.request), { signal: abortController.signal });
-                client.addEventListener(PubNubClientEvent.SendLeaveRequest, (evt) => {
-                    const { request } = evt;
-                    const state = this.heartbeatStateForClient(client);
-                    if (!state)
-                        return;
-                    state.removeFromClientState(client, request.channels, request.channelGroups);
-                }, { signal: abortController.signal });
+                this.attachClientListeners(client);
             });
-            // Listen for core PubNub client module disappearance.
             clientsManager.addEventListener(PubNubClientsManagerEvent.Unregistered, (evt) => {
                 const { client } = evt;
                 // Remove all listeners added for the client.
@@ -4119,6 +4131,73 @@
                     abortController.abort();
                 this.removeClient(client);
             });
+            clientsManager.addEventListener(PubNubClientsManagerEvent.Reactivated, (evt) => {
+                const { client } = evt;
+                this.attachClientListeners(client);
+            });
+        }
+        /**
+         * Attach event listeners for a {@link PubNubClient|PubNub} client's heartbeat-related events.
+         *
+         * Used both on initial registration and on reactivation after suspension.
+         *
+         * @param client - {@link PubNubClient|PubNub} client for which listeners should be attached.
+         */
+        attachClientListeners(client) {
+            const previous = this.clientAbortControllers[client.identifier];
+            if (previous)
+                previous.abort();
+            const abortController = new AbortController();
+            this.clientAbortControllers[client.identifier] = abortController;
+            client.addEventListener(PubNubClientEvent.Disconnect, () => this.removeClient(client), {
+                signal: abortController.signal,
+            });
+            client.addEventListener(PubNubClientEvent.IdentityChange, (event) => {
+                if (!(event instanceof PubNubClientIdentityChangeEvent))
+                    return;
+                if (!!event.oldUserId !== !!event.newUserId ||
+                    (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId)) {
+                    const state = this.heartbeatStateForClient(client);
+                    const request = state ? state.requestForClient(client) : undefined;
+                    if (request)
+                        request.userId = event.newUserId;
+                    this.moveClient(client);
+                }
+            }, { signal: abortController.signal });
+            client.addEventListener(PubNubClientEvent.AuthChange, (event) => {
+                if (!(event instanceof PubNubClientAuthChangeEvent))
+                    return;
+                const state = this.heartbeatStateForClient(client);
+                const request = state ? state.requestForClient(client) : undefined;
+                if (request)
+                    request.accessToken = event.newAuth;
+                if (!!event.oldAuth !== !!event.newAuth ||
+                    (event.oldAuth && event.newAuth && !event.newAuth.equalTo(event.oldAuth)))
+                    this.moveClient(client);
+                else if (state && event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
+                    state.accessToken = event.newAuth;
+            }, { signal: abortController.signal });
+            client.addEventListener(PubNubClientEvent.HeartbeatIntervalChange, (evt) => {
+                var _a;
+                const event = evt;
+                const state = this.heartbeatStateForClient(client);
+                if (state)
+                    state.interval = (_a = event.newInterval) !== null && _a !== void 0 ? _a : 0;
+            }, { signal: abortController.signal });
+            client.addEventListener(PubNubClientEvent.PresenceStateChange, (event) => {
+                var _a;
+                if (!(event instanceof PubNubClientPresenceStateChangeEvent))
+                    return;
+                (_a = this.heartbeatStateForClient(event.client)) === null || _a === void 0 ? void 0 : _a.updateClientPresenceState(event.client, event.state);
+            }, { signal: abortController.signal });
+            client.addEventListener(PubNubClientEvent.SendHeartbeatRequest, (evt) => this.addClient(client, evt.request), { signal: abortController.signal });
+            client.addEventListener(PubNubClientEvent.SendLeaveRequest, (evt) => {
+                const { request } = evt;
+                const state = this.heartbeatStateForClient(client);
+                if (!state)
+                    return;
+                state.removeFromClientState(client, request.channels, request.channelGroups);
+            }, { signal: abortController.signal });
         }
         /**
          * Listen for heartbeat state events.
@@ -4330,6 +4409,13 @@
              * Whether {@link PubNubClient|PubNub} client has been invalidated (unregistered) or not.
              */
             this._invalidated = false;
+            /**
+             * Whether {@link PubNubClient|PubNub} client has been suspended due to missed ping-pong.
+             *
+             * Suspended clients keep their port listener alive for recovery but are removed from
+             * subscription/heartbeat state.
+             */
+            this._suspended = false;
             this.logger = new ClientLogger(logLevel, this.port);
             this._heartbeatInterval = heartbeatInterval;
             this.subscribeOnEvents();
@@ -4382,6 +4468,22 @@
             return this._invalidated;
         }
         /**
+         * Retrieve whether the {@link PubNubClient|PubNub} client has been suspended or not.
+         *
+         * @returns `true` if the client has been suspended due to missed ping-pong.
+         */
+        get isSuspended() {
+            return this._suspended;
+        }
+        /**
+         * Update client's suspended state.
+         *
+         * @param value - Whether the client should be marked as suspended.
+         */
+        set suspended(value) {
+            this._suspended = value;
+        }
+        /**
          * Retrieve the last time, the core PubNub client module responded with the `PONG` event.
          *
          * @returns Last time, the core PubNub client module responded with the `PONG` event.
@@ -4420,6 +4522,10 @@
          */
         subscribeOnEvents() {
             this.port.addEventListener('message', (event) => {
+                if (this._suspended && event.data.type !== 'client-unregister' && event.data.type !== 'client-pong') {
+                    this.handleReactivation(event.data);
+                    return;
+                }
                 if (event.data.type === 'client-unregister')
                     this.handleUnregisterEvent();
                 else if (event.data.type === 'client-update')
@@ -4435,6 +4541,31 @@
                 else if (event.data.type === 'client-pong')
                     this.handlePongEvent();
             }, { signal: this.listenerAbortController.signal });
+        }
+        /**
+         * Handle reactivation of a suspended client.
+         *
+         * When a suspended client sends any message (other than unregister/pong), it means the tab
+         * has resumed and the core module is retrying. Reactivate the client and process the message.
+         *
+         * @param data - Event data received from the core PubNub client module.
+         */
+        handleReactivation(data) {
+            this._suspended = false;
+            this._lastPongEvent = Date.now() / 1000;
+            this.lastPingRequest = undefined;
+            this.logger.debug('Client reactivated from suspended state.');
+            this.dispatchEvent(new PubNubClientReactivateEvent(this));
+            if (data.type === 'client-update')
+                this.handleConfigurationUpdateEvent(data);
+            else if (data.type === 'client-presence-state-update')
+                this.handlePresenceStateUpdateEvent(data);
+            else if (data.type === 'send-request')
+                this.handleSendRequestEvent(data);
+            else if (data.type === 'cancel-request')
+                this.handleCancelRequestEvent(data);
+            else if (data.type === 'client-disconnect')
+                this.handleDisconnectEvent();
         }
         /**
          * Handle PubNub client unregister event.
@@ -4628,6 +4759,14 @@
         cancelRequests() {
             Object.values(this.requests).forEach((request) => request.cancel());
         }
+        /**
+         * Cancel active requests (public entry point for suspension).
+         *
+         * Unlike {@link invalidate}, this only cancels requests without killing the port listener.
+         */
+        cancelActiveRequests() {
+            this.cancelRequests();
+        }
         // endregion
         // --------------------------------------------------------
         // ----------------------- Helpers ------------------------
@@ -4744,6 +4883,65 @@
             this.dispatchEvent(new PubNubClientManagerRegisterEvent(client));
         }
         /**
+         * Check whether a client with the given identifier exists.
+         *
+         * @param identifier - Unique PubNub client identifier to check.
+         * @returns `true` if a client with the given identifier is registered.
+         */
+        hasClient(identifier) {
+            return !!this.clients[identifier];
+        }
+        /**
+         * Suspend {@link PubNubClient|PubNub} client (keep port alive, remove from data plane).
+         *
+         * Suspended clients maintain their communication port so they can be reactivated when the tab
+         * resumes, but their subscription/heartbeat state is removed.
+         *
+         * @param client - Previously created {@link PubNubClient|PubNub} client which should be suspended.
+         * @param withLeave - Whether `leave` request should be sent for the client's channels/groups.
+         */
+        suspendClient(client, withLeave) {
+            if (!this.clients[client.identifier] || client.isSuspended)
+                return;
+            client.suspended = true;
+            // Notify client (via port) that it has been suspended — this triggers retryable error.
+            client.postEvent({ type: 'shared-worker-client-suspended', clientIdentifier: client.identifier });
+            // Cancel active requests so they don't dangle.
+            client.cancelActiveRequests();
+            // Remove from tracking (but keep port listener alive via NOT calling invalidate).
+            if (this.clients[client.identifier].abortController)
+                this.clients[client.identifier].abortController.abort();
+            delete this.clients[client.identifier];
+            const clientsBySubscribeKey = this.clientBySubscribeKey[client.subKey];
+            if (clientsBySubscribeKey) {
+                const clientIdx = clientsBySubscribeKey.indexOf(client);
+                if (clientIdx >= 0)
+                    clientsBySubscribeKey.splice(clientIdx, 1);
+                if (clientsBySubscribeKey.length === 0) {
+                    delete this.clientBySubscribeKey[client.subKey];
+                    this.stopClientTimeoutCheck(client);
+                }
+            }
+            this.forEachClient(client.subKey, (subKeyClient) => subKeyClient.logger.debug(`'${client.identifier}' client suspended by '${this.sharedWorkerIdentifier}' shared worker.`));
+            // Dispatch unregister event to remove from subscription/heartbeat state.
+            this.dispatchEvent(new PubNubClientManagerUnregisterEvent(client, withLeave));
+        }
+        /**
+         * Reactivate a suspended {@link PubNubClient|PubNub} client.
+         *
+         * @param client - Previously suspended client to reactivate.
+         */
+        reactivateClient(client) {
+            this.clients[client.identifier] = { client, abortController: new AbortController() };
+            if (!this.clientBySubscribeKey[client.subKey])
+                this.clientBySubscribeKey[client.subKey] = [client];
+            else
+                this.clientBySubscribeKey[client.subKey].push(client);
+            this.forEachClient(client.subKey, (subKeyClient) => subKeyClient.logger.debug(`'${client.identifier}' client reactivated in '${this.sharedWorkerIdentifier}' shared worker (${this.clientBySubscribeKey[client.subKey].length} active clients).`));
+            this.subscribeOnClientEvents(client);
+            this.dispatchEvent(new PubNubClientManagerReactivateEvent(client));
+        }
+        /**
          * Remove {@link PubNubClient|PubNub} client from manager's internal state.
          *
          * @param client - Previously created {@link PubNubClient|PubNub} client which should be removed.
@@ -4761,7 +4959,8 @@
             const clientsBySubscribeKey = this.clientBySubscribeKey[client.subKey];
             if (clientsBySubscribeKey) {
                 const clientIdx = clientsBySubscribeKey.indexOf(client);
-                clientsBySubscribeKey.splice(clientIdx, 1);
+                if (clientIdx >= 0)
+                    clientsBySubscribeKey.splice(clientIdx, 1);
                 if (clientsBySubscribeKey.length === 0) {
                     delete this.clientBySubscribeKey[client.subKey];
                     this.stopClientTimeoutCheck(client);
@@ -4828,11 +5027,11 @@
                 }
                 if (client.lastPingRequest &&
                     (!client.lastPongEvent || Math.abs(client.lastPongEvent - client.lastPingRequest) > interval)) {
-                    this.unregisterClient(client, this.timeouts[subKey].unsubscribeOffline);
+                    this.suspendClient(client, this.timeouts[subKey].unsubscribeOffline);
                     // Notify other clients with same subscription key that one of them became inactive.
                     this.forEachClient(subKey, (subKeyClient) => {
                         if (subKeyClient.identifier !== client.identifier)
-                            subKeyClient.logger.debug(`'${client.identifier}' client is inactive. Invalidating...`);
+                            subKeyClient.logger.debug(`'${client.identifier}' client is inactive. Suspending...`);
                     });
                 }
                 if (this.clients[client.identifier]) {
@@ -4855,7 +5054,11 @@
          * @param client - {@link PubNubClient|PubNub} client for which event should be listened.
          */
         subscribeOnClientEvents(client) {
-            client.addEventListener(PubNubClientEvent.Unregister, () => this.unregisterClient(client, this.timeouts[client.subKey] ? this.timeouts[client.subKey].unsubscribeOffline : false, true), { signal: this.clients[client.identifier].abortController.signal, once: true });
+            const abortSignal = this.clients[client.identifier].abortController.signal;
+            client.addEventListener(PubNubClientEvent.Unregister, () => this.unregisterClient(client, this.timeouts[client.subKey] ? this.timeouts[client.subKey].unsubscribeOffline : false, true), { signal: abortSignal, once: true });
+            // Reactivation listener must NOT use the client's abort signal because suspension aborts it.
+            // Use `once: true` to ensure it's cleaned up after firing.
+            client.addEventListener(PubNubClientEvent.Reactivate, () => this.reactivateClient(client), { once: true });
         }
         // endregion
         // --------------------------------------------------------

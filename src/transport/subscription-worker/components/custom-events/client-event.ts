@@ -17,6 +17,11 @@ export enum PubNubClientEvent {
   Unregister = 'unregister',
 
   /**
+   * Client reactivated after suspension (resumed from background tab).
+   */
+  Reactivate = 'reactivate',
+
+  /**
    * Client temporarily disconnected.
    */
   Disconnect = 'disconnect',
@@ -443,5 +448,28 @@ export class PubNubClientSendLeaveEvent extends BasePubNubClientEvent<{
    */
   clone() {
     return new PubNubClientSendLeaveEvent(this.client, this.request);
+  }
+}
+
+/**
+ * Dispatched by PubNub client when it reactivates from suspended state.
+ */
+export class PubNubClientReactivateEvent extends BasePubNubClientEvent {
+  /**
+   * Create PubNub client reactivate event.
+   *
+   * @param client - Reference to reactivated PubNub client.
+   */
+  constructor(client: PubNubClient) {
+    super(PubNubClientEvent.Reactivate, { detail: { client } });
+  }
+
+  /**
+   * Create a clone of `reactivate` event to make it possible to forward event upstream.
+   *
+   * @returns Clone of `reactivate` event.
+   */
+  clone() {
+    return new PubNubClientReactivateEvent(this.client);
   }
 }

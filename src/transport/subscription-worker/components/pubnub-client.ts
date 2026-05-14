@@ -3,6 +3,7 @@ import {
   PubNubClientAuthChangeEvent,
   PubNubClientDisconnectEvent,
   PubNubClientUnregisterEvent,
+  PubNubClientReactivateEvent,
   PubNubClientSendHeartbeatEvent,
   PubNubClientSendSubscribeEvent,
   PubNubClientIdentityChangeEvent,
@@ -110,6 +111,14 @@ export class PubNubClient extends EventTarget {
    * Whether {@link PubNubClient|PubNub} client has been invalidated (unregistered) or not.
    */
   private _invalidated = false;
+
+  /**
+   * Whether {@link PubNubClient|PubNub} client has been suspended due to missed ping-pong.
+   *
+   * Suspended clients keep their port listener alive for recovery but are removed from
+   * subscription/heartbeat state.
+   */
+  private _suspended = false;
   // endregion
 
   // --------------------------------------------------------
@@ -196,6 +205,24 @@ export class PubNubClient extends EventTarget {
   }
 
   /**
+   * Retrieve whether the {@link PubNubClient|PubNub} client has been suspended or not.
+   *
+   * @returns `true` if the client has been suspended due to missed ping-pong.
+   */
+  get isSuspended() {
+    return this._suspended;
+  }
+
+  /**
+   * Update client's suspended state.
+   *
+   * @param value - Whether the client should be marked as suspended.
+   */
+  set suspended(value: boolean) {
+    this._suspended = value;
+  }
+
+  /**
    * Retrieve the last time, the core PubNub client module responded with the `PONG` event.
    *
    * @returns Last time, the core PubNub client module responded with the `PONG` event.
@@ -240,6 +267,11 @@ export class PubNubClient extends EventTarget {
     this.port.addEventListener(
       'message',
       (event: MessageEvent<ClientEvent>) => {
+        if (this._suspended && event.data.type !== 'client-unregister' && event.data.type !== 'client-pong') {
+          this.handleReactivation(event.data);
+          return;
+        }
+
         if (event.data.type === 'client-unregister') this.handleUnregisterEvent();
         else if (event.data.type === 'client-update') this.handleConfigurationUpdateEvent(event.data);
         else if (event.data.type === 'client-presence-state-update') this.handlePresenceStateUpdateEvent(event.data);
@@ -250,6 +282,30 @@ export class PubNubClient extends EventTarget {
       },
       { signal: this.listenerAbortController.signal },
     );
+  }
+
+  /**
+   * Handle reactivation of a suspended client.
+   *
+   * When a suspended client sends any message (other than unregister/pong), it means the tab
+   * has resumed and the core module is retrying. Reactivate the client and process the message.
+   *
+   * @param data - Event data received from the core PubNub client module.
+   */
+  private handleReactivation(data: ClientEvent) {
+    this._suspended = false;
+    this._lastPongEvent = Date.now() / 1000;
+    this.lastPingRequest = undefined;
+
+    this.logger.debug('Client reactivated from suspended state.');
+
+    this.dispatchEvent(new PubNubClientReactivateEvent(this));
+
+    if (data.type === 'client-update') this.handleConfigurationUpdateEvent(data);
+    else if (data.type === 'client-presence-state-update') this.handlePresenceStateUpdateEvent(data);
+    else if (data.type === 'send-request') this.handleSendRequestEvent(data);
+    else if (data.type === 'cancel-request') this.handleCancelRequestEvent(data);
+    else if (data.type === 'client-disconnect') this.handleDisconnectEvent();
   }
 
   /**
@@ -480,6 +536,15 @@ export class PubNubClient extends EventTarget {
    */
   private cancelRequests() {
     Object.values(this.requests).forEach((request) => request.cancel());
+  }
+
+  /**
+   * Cancel active requests (public entry point for suspension).
+   *
+   * Unlike {@link invalidate}, this only cancels requests without killing the port listener.
+   */
+  cancelActiveRequests() {
+    this.cancelRequests();
   }
   // endregion
 

@@ -11,6 +11,7 @@ import {
   PubNubClientsManagerEvent,
   PubNubClientManagerRegisterEvent,
   PubNubClientManagerUnregisterEvent,
+  PubNubClientManagerReactivateEvent,
 } from './custom-events/client-manager-event';
 import { HeartbeatStateEvent, HeartbeatStateHeartbeatEvent } from './custom-events/heartbeat-state-event';
 import { PubNubClientsManager } from './pubnub-clients-manager';
@@ -152,94 +153,10 @@ export class HeartbeatRequestsManager extends RequestsManager {
    * @param clientsManager - Clients manager for which change in clients should be tracked.
    */
   private subscribeOnClientEvents(clientsManager: PubNubClientsManager) {
-    // Listen for new core PubNub client registrations.
     clientsManager.addEventListener(PubNubClientsManagerEvent.Registered, (evt) => {
       const { client } = evt as PubNubClientManagerRegisterEvent;
-
-      // Keep track of the client's listener abort controller.
-      const abortController = new AbortController();
-      this.clientAbortControllers[client.identifier] = abortController;
-
-      client.addEventListener(PubNubClientEvent.Disconnect, () => this.removeClient(client), {
-        signal: abortController.signal,
-      });
-      client.addEventListener(
-        PubNubClientEvent.IdentityChange,
-        (event) => {
-          if (!(event instanceof PubNubClientIdentityChangeEvent)) return;
-          // Make changes into state only if `userId` actually changed.
-          if (
-            !!event.oldUserId !== !!event.newUserId ||
-            (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId)
-          ) {
-            const state = this.heartbeatStateForClient(client);
-            const request = state ? state.requestForClient(client) : undefined;
-            if (request) request.userId = event.newUserId;
-
-            this.moveClient(client);
-          }
-        },
-        {
-          signal: abortController.signal,
-        },
-      );
-      client.addEventListener(
-        PubNubClientEvent.AuthChange,
-        (event) => {
-          if (!(event instanceof PubNubClientAuthChangeEvent)) return;
-          const state = this.heartbeatStateForClient(client);
-          const request = state ? state.requestForClient(client) : undefined;
-          if (request) request.accessToken = event.newAuth;
-
-          // Check whether the client should be moved to another state because of a permissions change or whether the
-          // same token with the same permissions should be used for the next requests.
-          if (
-            !!event.oldAuth !== !!event.newAuth ||
-            (event.oldAuth && event.newAuth && !event.newAuth.equalTo(event.oldAuth))
-          )
-            this.moveClient(client);
-          else if (state && event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
-            state.accessToken = event.newAuth;
-        },
-        {
-          signal: abortController.signal,
-        },
-      );
-      client.addEventListener(
-        PubNubClientEvent.HeartbeatIntervalChange,
-        (evt) => {
-          const event = evt as PubNubClientHeartbeatIntervalChangeEvent;
-          const state = this.heartbeatStateForClient(client);
-          if (state) state.interval = event.newInterval ?? 0;
-        },
-        { signal: abortController.signal },
-      );
-      client.addEventListener(
-        PubNubClientEvent.PresenceStateChange,
-        (event) => {
-          if (!(event instanceof PubNubClientPresenceStateChangeEvent)) return;
-          this.heartbeatStateForClient(event.client)?.updateClientPresenceState(event.client, event.state);
-        },
-        { signal: abortController.signal },
-      );
-      client.addEventListener(
-        PubNubClientEvent.SendHeartbeatRequest,
-        (evt) => this.addClient(client, (evt as PubNubClientSendHeartbeatEvent).request),
-        { signal: abortController.signal },
-      );
-      client.addEventListener(
-        PubNubClientEvent.SendLeaveRequest,
-        (evt) => {
-          const { request } = evt as PubNubClientSendLeaveEvent;
-          const state = this.heartbeatStateForClient(client);
-          if (!state) return;
-
-          state.removeFromClientState(client, request.channels, request.channelGroups);
-        },
-        { signal: abortController.signal },
-      );
+      this.attachClientListeners(client);
     });
-    // Listen for core PubNub client module disappearance.
     clientsManager.addEventListener(PubNubClientsManagerEvent.Unregistered, (evt) => {
       const { client } = evt as PubNubClientManagerUnregisterEvent;
 
@@ -250,6 +167,97 @@ export class HeartbeatRequestsManager extends RequestsManager {
 
       this.removeClient(client);
     });
+    clientsManager.addEventListener(PubNubClientsManagerEvent.Reactivated, (evt) => {
+      const { client } = evt as PubNubClientManagerReactivateEvent;
+      this.attachClientListeners(client);
+    });
+  }
+
+  /**
+   * Attach event listeners for a {@link PubNubClient|PubNub} client's heartbeat-related events.
+   *
+   * Used both on initial registration and on reactivation after suspension.
+   *
+   * @param client - {@link PubNubClient|PubNub} client for which listeners should be attached.
+   */
+  private attachClientListeners(client: PubNubClient) {
+    const previous = this.clientAbortControllers[client.identifier];
+    if (previous) previous.abort();
+
+    const abortController = new AbortController();
+    this.clientAbortControllers[client.identifier] = abortController;
+
+    client.addEventListener(PubNubClientEvent.Disconnect, () => this.removeClient(client), {
+      signal: abortController.signal,
+    });
+    client.addEventListener(
+      PubNubClientEvent.IdentityChange,
+      (event) => {
+        if (!(event instanceof PubNubClientIdentityChangeEvent)) return;
+        if (
+          !!event.oldUserId !== !!event.newUserId ||
+          (event.oldUserId && event.newUserId && event.newUserId !== event.oldUserId)
+        ) {
+          const state = this.heartbeatStateForClient(client);
+          const request = state ? state.requestForClient(client) : undefined;
+          if (request) request.userId = event.newUserId;
+
+          this.moveClient(client);
+        }
+      },
+      { signal: abortController.signal },
+    );
+    client.addEventListener(
+      PubNubClientEvent.AuthChange,
+      (event) => {
+        if (!(event instanceof PubNubClientAuthChangeEvent)) return;
+        const state = this.heartbeatStateForClient(client);
+        const request = state ? state.requestForClient(client) : undefined;
+        if (request) request.accessToken = event.newAuth;
+
+        if (
+          !!event.oldAuth !== !!event.newAuth ||
+          (event.oldAuth && event.newAuth && !event.newAuth.equalTo(event.oldAuth))
+        )
+          this.moveClient(client);
+        else if (state && event.oldAuth && event.newAuth && event.oldAuth.equalTo(event.newAuth))
+          state.accessToken = event.newAuth;
+      },
+      { signal: abortController.signal },
+    );
+    client.addEventListener(
+      PubNubClientEvent.HeartbeatIntervalChange,
+      (evt) => {
+        const event = evt as PubNubClientHeartbeatIntervalChangeEvent;
+        const state = this.heartbeatStateForClient(client);
+        if (state) state.interval = event.newInterval ?? 0;
+      },
+      { signal: abortController.signal },
+    );
+    client.addEventListener(
+      PubNubClientEvent.PresenceStateChange,
+      (event) => {
+        if (!(event instanceof PubNubClientPresenceStateChangeEvent)) return;
+        this.heartbeatStateForClient(event.client)?.updateClientPresenceState(event.client, event.state);
+      },
+      { signal: abortController.signal },
+    );
+    client.addEventListener(
+      PubNubClientEvent.SendHeartbeatRequest,
+      (evt) => this.addClient(client, (evt as PubNubClientSendHeartbeatEvent).request),
+      { signal: abortController.signal },
+    );
+    client.addEventListener(
+      PubNubClientEvent.SendLeaveRequest,
+      (evt) => {
+        const { request } = evt as PubNubClientSendLeaveEvent;
+        const state = this.heartbeatStateForClient(client);
+        if (!state) return;
+
+        state.removeFromClientState(client, request.channels, request.channelGroups);
+      },
+      { signal: abortController.signal },
+    );
   }
 
   /**

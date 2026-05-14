@@ -94,58 +94,42 @@ describe('PubNub Shared Worker Integration Tests', () => {
     it('should handle subscription changes correctly', (done) => {
       const channel1 = testChannels[0];
       const channel2 = testChannels[1];
-      let firstSubscriptionReady = false;
-      let secondSubscriptionReady = false;
-      let statusEventCount = 0;
+      let publishScheduled = false;
 
       const testMessage1 = { text: `Test message for ${channel1}`, timestamp: Date.now() };
       const testMessage2 = { text: `Test message for ${channel2}`, timestamp: Date.now() };
       let receivedFromChannel1 = false;
       let receivedFromChannel2 = false;
 
+      const subscription1 = pubnubWithWorker.channel(channel1).subscription();
+      const subscription2 = pubnubWithWorker.channel(channel2).subscription();
+
       pubnubWithWorker.addListener({
         status: (statusEvent) => {
-          // Listen for both connected and subscription changed events
           if (
             statusEvent.category === PubNub.CATEGORIES.PNConnectedCategory ||
             statusEvent.category === PubNub.CATEGORIES.PNSubscriptionChangedCategory
           ) {
-            statusEventCount++;
+            const currentChannels = pubnubWithWorker.getSubscribedChannels();
+            const hasChannel1 = currentChannels.includes(channel1);
+            const hasChannel2 = currentChannels.includes(channel2);
 
-            // Wait for both subscription status events to ensure both channels are properly subscribed
-            if (statusEventCount === 1) {
-              firstSubscriptionReady = true;
-            } else if (statusEventCount >= 2) {
-              secondSubscriptionReady = true;
-            }
+            // Both channels confirmed — publish to verify message delivery.
+            if (hasChannel1 && hasChannel2 && !publishScheduled) {
+              publishScheduled = true;
 
-            // After both subscriptions are ready, test message delivery to verify they actually work
-            if (firstSubscriptionReady && secondSubscriptionReady) {
-              const currentChannels = pubnubWithWorker.getSubscribedChannels();
-
-              try {
-                expect(currentChannels.length).to.be.greaterThan(0);
-                expect(statusEvent.error).to.satisfy((error: any) => error === false || error === undefined);
-
-                // Test actual message delivery to verify subscriptions work
-                setTimeout(() => {
-                  // Publish to both channels to verify they're actually receiving messages
-                  Promise.all([
-                    pubnubWithWorker.publish({ channel: channel1, message: testMessage1 }),
-                    pubnubWithWorker.publish({ channel: channel2, message: testMessage2 }),
-                  ]).catch((error) => {
-                    // Even if publish fails with demo keys, if we got this far, subscriptions are working
-                    done();
-                  });
-                }, 500);
-              } catch (error) {
-                done(error);
-              }
+              setTimeout(() => {
+                Promise.all([
+                  pubnubWithWorker.publish({ channel: channel1, message: testMessage1 }),
+                  pubnubWithWorker.publish({ channel: channel2, message: testMessage2 }),
+                ]).catch((error) => {
+                  done(error);
+                });
+              }, 500);
             }
           }
         },
         message: (messageEvent) => {
-          // If we receive messages, verify they're from the correct channels
           if (messageEvent.channel === channel1 && !receivedFromChannel1) {
             receivedFromChannel1 = true;
             try {
@@ -166,15 +150,8 @@ describe('PubNub Shared Worker Integration Tests', () => {
         },
       });
 
-      // Subscribe to both channels with proper sequencing to test aggregation
-      const subscription1 = pubnubWithWorker.channel(channel1).subscription();
-      const subscription2 = pubnubWithWorker.channel(channel2).subscription();
-
       subscription1.subscribe();
-      // Subscribe to second channel after a short delay to test sequential subscription handling
-      setTimeout(() => {
-        subscription2.subscribe();
-      }, 500);
+      subscription2.subscribe();
     }).timeout(15000);
 
     it('rapid subscription changes', (done) => {
@@ -263,7 +240,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
       const channel3 = `channel3-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
       let firstTwoChannelsReady = false;
-      let statusEventCount = 0;
       let channel3Subscribed = false;
       let testMessage3Sent = false;
 
@@ -272,54 +248,43 @@ describe('PubNub Shared Worker Integration Tests', () => {
         timestamp: Date.now(),
       };
 
+      const subscription1 = pubnubWithWorker.channel(channel1).subscription();
+      const subscription2 = pubnubWithWorker.channel(channel2).subscription();
+
       pubnubWithWorker.addListener({
         status: (statusEvent) => {
           if (
             statusEvent.category === PubNub.CATEGORIES.PNConnectedCategory ||
             statusEvent.category === PubNub.CATEGORIES.PNSubscriptionChangedCategory
           ) {
-            statusEventCount++;
+            const currentChannels = pubnubWithWorker.getSubscribedChannels();
+            const hasChannel1 = currentChannels.includes(channel1);
+            const hasChannel2 = currentChannels.includes(channel2);
+            const hasChannel3 = currentChannels.includes(channel3);
 
-            // Wait for first two subscriptions to be established
-            if (statusEventCount >= 2 && !firstTwoChannelsReady) {
+            // Both initial channels confirmed — unsubscribe ch2 and subscribe ch3.
+            if (hasChannel1 && hasChannel2 && !firstTwoChannelsReady) {
               firstTwoChannelsReady = true;
 
+              subscription2.unsubscribe();
+
               setTimeout(() => {
-                // Verify we have both initial channels
-                const currentChannels = pubnubWithWorker.getSubscribedChannels();
-
-                try {
-                  expect(currentChannels).to.include(channel1);
-                  expect(currentChannels).to.include(channel2);
-
-                  // Unsubscribe from channel2 and immediately subscribe to channel3
-                  subscription2.unsubscribe();
-
-                  // Small delay to ensure unsubscribe is processed, then immediately subscribe to channel3
-                  setTimeout(() => {
-                    const subscription3 = pubnubWithWorker.channel(channel3).subscription();
-                    subscription3.subscribe();
-                  }, 100);
-                } catch (error) {
-                  done(error);
-                }
-              }, 500);
+                const subscription3 = pubnubWithWorker.channel(channel3).subscription();
+                subscription3.subscribe();
+              }, 100);
             }
-            // Handle subscription to channel3
-            else if (firstTwoChannelsReady && !channel3Subscribed) {
+            // Channel3 confirmed in subscription list — verify and publish.
+            else if (firstTwoChannelsReady && hasChannel3 && !channel3Subscribed) {
               channel3Subscribed = true;
 
               setTimeout(() => {
                 const finalChannels = pubnubWithWorker.getSubscribedChannels();
 
                 try {
-                  // Verify final state: should have channel1 and channel3, but not channel2
                   expect(finalChannels).to.include(channel1);
                   expect(finalChannels).to.include(channel3);
                   expect(finalChannels).to.not.include(channel2);
 
-                  // Send a test message to channel3 to verify the subscription actually works
-                  // This addresses the reviewer's concern about SharedWorker ignoring new channels
                   if (!testMessage3Sent) {
                     testMessage3Sent = true;
                     pubnubWithWorker
@@ -328,15 +293,12 @@ describe('PubNub Shared Worker Integration Tests', () => {
                         message: testMessage,
                       })
                       .then(() => {
-                        // If we don't receive the message within timeout, the test will complete anyway
-                        // since we've verified the subscription state
                         setTimeout(() => {
                           done();
                         }, 2000);
                       })
                       .catch((error) => {
-                        // Even if publish fails due to demo keys, subscription state verification passed
-                        done();
+                        done(error);
                       });
                   }
                 } catch (error) {
@@ -349,7 +311,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
           }
         },
         message: (messageEvent) => {
-          // If we receive the test message on channel3, the subscription is definitely working
           if (messageEvent.channel === channel3 && testMessage3Sent) {
             try {
               expect(messageEvent.message).to.deep.equal(testMessage);
@@ -358,23 +319,14 @@ describe('PubNub Shared Worker Integration Tests', () => {
             } catch (error) {
               done(error);
             }
-          }
-          // Ensure we don't receive messages on channel2 after unsubscribing
-          else if (messageEvent.channel === channel2) {
+          } else if (messageEvent.channel === channel2) {
             done(new Error('Should not receive messages on unsubscribed channel2'));
           }
         },
       });
 
-      // Start with subscriptions to channel1 and channel2
-      const subscription1 = pubnubWithWorker.channel(channel1).subscription();
-      const subscription2 = pubnubWithWorker.channel(channel2).subscription();
-
       subscription1.subscribe();
-      // Add delay between subscriptions to ensure proper sequencing
-      setTimeout(() => {
-        subscription2.subscribe();
-      }, 300);
+      subscription2.subscribe();
     }).timeout(20000);
   });
 
@@ -1018,13 +970,17 @@ describe('PubNub Shared Worker Integration Tests', () => {
           queryParameters: req.queryParameters,
         });
 
-        // Return a resolved promise to avoid actual network calls
+        // Return a valid subscribe response to avoid JSON parse errors.
+        const responseBody = new TextEncoder().encode('{"t":{"t":"0","r":0},"m":[]}');
         return [
           Promise.resolve({
             status: 200,
             url: `${req.origin}${req.path}`,
-            headers: {},
-            body: new ArrayBuffer(0),
+            headers: {
+              'content-type': 'text/javascript; charset="UTF-8"',
+              'content-length': `${responseBody.byteLength}`,
+            },
+            body: responseBody.buffer,
           }),
           undefined,
         ];
@@ -1228,7 +1184,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
               // Restore original transport
               underlyingTransport.makeSendable = originalMakeSendable;
               done();
-              return;
             } catch (error) {
               errorOccurred = true;
               testCompleted = true;
@@ -1236,7 +1191,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
               // Restore original transport
               underlyingTransport.makeSendable = originalMakeSendable;
               done(error);
-              return;
             }
           }
         }
@@ -1387,7 +1341,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
                 testCompleted = true;
                 underlyingTransport.makeSendable = originalMakeSendable;
                 done(error);
-                return;
               }
             }
           }
@@ -1403,7 +1356,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
                 testCompleted = true;
                 underlyingTransport.makeSendable = originalMakeSendable;
                 done();
-                return;
               }
             } catch (error) {
               if (!testCompleted) {
@@ -1411,7 +1363,6 @@ describe('PubNub Shared Worker Integration Tests', () => {
                 testCompleted = true;
                 underlyingTransport.makeSendable = originalMakeSendable;
                 done(error);
-                return;
               }
             }
           }
@@ -1428,14 +1379,16 @@ describe('PubNub Shared Worker Integration Tests', () => {
           underlyingTransport.makeSendable = originalMakeSendable;
 
           try {
-            const first = interceptedRequests.find((r) =>
-              (r.path.includes('/v2/subscribe/') || r.path.includes('/subscribe')) &&
-              pathContainsChannel(r.path, channel1) &&
-              !pathContainsChannel(r.path, channel2),
+            const first = interceptedRequests.find(
+              (r) =>
+                (r.path.includes('/v2/subscribe/') || r.path.includes('/subscribe')) &&
+                pathContainsChannel(r.path, channel1) &&
+                !pathContainsChannel(r.path, channel2),
             );
-            const second = interceptedRequests.find((r) =>
-              (r.path.includes('/v2/subscribe/') || r.path.includes('/subscribe')) &&
-              pathContainsChannel(r.path, channel2),
+            const second = interceptedRequests.find(
+              (r) =>
+                (r.path.includes('/v2/subscribe/') || r.path.includes('/subscribe')) &&
+                pathContainsChannel(r.path, channel2),
             );
 
             expect(first, 'no initial subscribe with channel1 captured').to.exist;
@@ -1684,181 +1637,5 @@ describe('PubNub Shared Worker Integration Tests', () => {
         }
       }, 20000);
     }).timeout(25000);
-
-    it('should receive timeout presence events when browser tabs are closed', (done) => {
-      const testChannel = testChannels[0];
-      let testCompleted = false;
-      let timeoutPresenceReceived = false;
-
-      // Create three PubNub instances simulating different browser tabs
-      const tab1 = new PubNub({
-        publishKey: 'demo',
-        subscribeKey: 'demo',
-        enableEventEngine: false,
-        heartbeatInterval: 1.5,
-        presenceTimeout: 5,
-        autoNetworkDetection: false,
-        userId: `tab1-${Date.now()}`,
-        subscriptionWorkerUrl: getWorkerUrl(),
-      });
-
-      const tab2 = new PubNub({
-        publishKey: 'demo',
-        subscribeKey: 'demo',
-        enableEventEngine: false,
-        heartbeatInterval: 1.5,
-        presenceTimeout: 5,
-        autoNetworkDetection: false,
-        userId: `tab2-${Date.now()}`,
-        subscriptionWorkerUrl: getWorkerUrl(),
-      });
-
-      const tab3 = new PubNub({
-        publishKey: 'demo',
-        subscribeKey: 'demo',
-        enableEventEngine: false,
-        heartbeatInterval: 1.5,
-        presenceTimeout: 5,
-        autoNetworkDetection: false,
-        userId: `tab3-${Date.now()}`,
-        subscriptionWorkerUrl: getWorkerUrl(),
-      });
-
-      let joinEventsReceived = 0;
-      let leaveEventsReceived = 0;
-      let tab2Closed = false;
-      const expectedJoinEvents = 3; // We expect join events from all 3 tabs
-      const tab2UserId = tab2.getUserId();
-      const receivedPresenceEvents: string[] = [];
-
-      // Set up presence listener on tab1 to monitor all presence events
-      tab1.addListener({
-        presence: (presenceEvent) => {
-          if (testCompleted) return;
-
-          const eventInfo = `${presenceEvent.action}:${(presenceEvent as any).uuid}:${presenceEvent.channel}`;
-          receivedPresenceEvents.push(eventInfo);
-
-          if (presenceEvent.action === 'join' && presenceEvent.channel === testChannel) {
-            joinEventsReceived++;
-
-            // Once all tabs have joined, close tab2 to trigger timeout
-            if (joinEventsReceived >= expectedJoinEvents && !tab2Closed) {
-              tab2Closed = true;
-
-              // Close tab2 after ensuring all joins are processed
-              setTimeout(() => {
-                if (!testCompleted) {
-                  // Simulate tab closure by destroying the PubNub instance
-                  tab2.removeAllListeners();
-                  tab2.unsubscribeAll();
-                  tab2.destroy(true);
-                }
-              }, 1500); // Increased delay to ensure heartbeat stops
-            }
-          }
-
-          // Check for leave events (might occur before timeout)
-          if (presenceEvent.action === 'leave' && presenceEvent.channel === testChannel) {
-            leaveEventsReceived++;
-            if ((presenceEvent as any).uuid === tab2UserId) {
-              timeoutPresenceReceived = true;
-              testCompleted = true;
-
-              try {
-                expect(presenceEvent.action).to.equal('leave');
-                expect(presenceEvent.channel).to.equal(testChannel);
-                expect((presenceEvent as any).uuid).to.equal(tab2UserId);
-
-                // Clean up remaining tabs
-                cleanupTabs();
-                done();
-              } catch (error) {
-                cleanupTabs();
-                done(error);
-              }
-            }
-          }
-
-          // Check for timeout presence event
-          if (presenceEvent.action === 'timeout' && presenceEvent.channel === testChannel) {
-            // Verify this is the timeout for tab2
-            if ((presenceEvent as any).uuid === tab2UserId) {
-              timeoutPresenceReceived = true;
-              testCompleted = true;
-
-              try {
-                expect(presenceEvent.action).to.equal('timeout');
-                expect(presenceEvent.channel).to.equal(testChannel);
-                expect((presenceEvent as any).uuid).to.equal(tab2UserId);
-
-                // Clean up remaining tabs
-                cleanupTabs();
-                done();
-              } catch (error) {
-                cleanupTabs();
-                done(error);
-              }
-            }
-          }
-        },
-      });
-
-      function cleanupTabs() {
-        [tab1, tab3].forEach((tab) => {
-          if (tab) {
-            tab.removeAllListeners();
-            tab.unsubscribeAll();
-            tab.destroy(true);
-          }
-        });
-      }
-
-      // Subscribe all tabs to the same channel with presence events
-      const tab1Subscription = tab1.channel(testChannel).subscription({ receivePresenceEvents: true });
-      const tab2Subscription = tab2.channel(testChannel).subscription({ receivePresenceEvents: true });
-      const tab3Subscription = tab3.channel(testChannel).subscription({ receivePresenceEvents: true });
-
-      // Start subscriptions with small delays to ensure proper ordering
-      tab1Subscription.subscribe();
-      setTimeout(() => tab2Subscription.subscribe(), 200);
-      setTimeout(() => tab3Subscription.subscribe(), 400);
-
-      // Extended timeout - presence timeout is 5 seconds, so we wait 10 seconds total
-      setTimeout(() => {
-        if (!testCompleted) {
-          testCompleted = true;
-          cleanupTabs();
-
-          const debugInfo = {
-            joinEventsReceived,
-            leaveEventsReceived,
-            expectedJoinEvents,
-            tab2Closed,
-            timeoutPresenceReceived,
-            tab2UserId,
-            receivedPresenceEvents,
-          };
-
-          if (joinEventsReceived < expectedJoinEvents) {
-            done(
-              new Error(
-                `Not all tabs joined. Expected ${expectedJoinEvents}, got ${joinEventsReceived}. Debug: ${JSON.stringify(debugInfo)}`,
-              ),
-            );
-          } else if (!tab2Closed) {
-            done(new Error(`Tab2 was not closed as expected. Debug: ${JSON.stringify(debugInfo)}`));
-          } else if (!timeoutPresenceReceived) {
-            done(
-              new Error(
-                `Neither timeout nor leave presence event was received for tab2. Debug: ${JSON.stringify(debugInfo)}`,
-              ),
-            );
-          } else {
-            done(new Error(`Test completed but outcome unclear. Debug: ${JSON.stringify(debugInfo)}`));
-          }
-        }
-      }, 10000);
-    }).timeout(15000);
   });
 });

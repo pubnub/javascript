@@ -1,8 +1,9 @@
 import {
   PubNubClientManagerRegisterEvent,
   PubNubClientManagerUnregisterEvent,
+  PubNubClientManagerReactivateEvent,
 } from './custom-events/client-manager-event';
-import { PubNubClientEvent, PubNubClientUnregisterEvent } from './custom-events/client-event';
+import { PubNubClientEvent, PubNubClientReactivateEvent } from './custom-events/client-event';
 import { RegisterEvent } from '../subscription-worker-types';
 import { PubNubClient } from './pubnub-client';
 
@@ -115,6 +116,84 @@ export class PubNubClientsManager extends EventTarget {
   }
 
   /**
+   * Check whether a client with the given identifier exists.
+   *
+   * @param identifier - Unique PubNub client identifier to check.
+   * @returns `true` if a client with the given identifier is registered.
+   */
+  hasClient(identifier: string): boolean {
+    return !!this.clients[identifier];
+  }
+
+  /**
+   * Suspend {@link PubNubClient|PubNub} client (keep port alive, remove from data plane).
+   *
+   * Suspended clients maintain their communication port so they can be reactivated when the tab
+   * resumes, but their subscription/heartbeat state is removed.
+   *
+   * @param client - Previously created {@link PubNubClient|PubNub} client which should be suspended.
+   * @param withLeave - Whether `leave` request should be sent for the client's channels/groups.
+   */
+  private suspendClient(client: PubNubClient, withLeave: boolean) {
+    if (!this.clients[client.identifier] || client.isSuspended) return;
+
+    client.suspended = true;
+
+    // Notify client (via port) that it has been suspended — this triggers retryable error.
+    client.postEvent({ type: 'shared-worker-client-suspended', clientIdentifier: client.identifier });
+
+    // Cancel active requests so they don't dangle.
+    client.cancelActiveRequests();
+
+    // Remove from tracking (but keep port listener alive via NOT calling invalidate).
+    if (this.clients[client.identifier].abortController) this.clients[client.identifier].abortController.abort();
+    delete this.clients[client.identifier];
+
+    const clientsBySubscribeKey = this.clientBySubscribeKey[client.subKey];
+    if (clientsBySubscribeKey) {
+      const clientIdx = clientsBySubscribeKey.indexOf(client);
+      if (clientIdx >= 0) clientsBySubscribeKey.splice(clientIdx, 1);
+
+      if (clientsBySubscribeKey.length === 0) {
+        delete this.clientBySubscribeKey[client.subKey];
+        this.stopClientTimeoutCheck(client);
+      }
+    }
+
+    this.forEachClient(client.subKey, (subKeyClient) =>
+      subKeyClient.logger.debug(
+        `'${client.identifier}' client suspended by '${this.sharedWorkerIdentifier}' shared worker.`,
+      ),
+    );
+
+    // Dispatch unregister event to remove from subscription/heartbeat state.
+    this.dispatchEvent(new PubNubClientManagerUnregisterEvent(client, withLeave));
+  }
+
+  /**
+   * Reactivate a suspended {@link PubNubClient|PubNub} client.
+   *
+   * @param client - Previously suspended client to reactivate.
+   */
+  private reactivateClient(client: PubNubClient) {
+    this.clients[client.identifier] = { client, abortController: new AbortController() };
+
+    if (!this.clientBySubscribeKey[client.subKey]) this.clientBySubscribeKey[client.subKey] = [client];
+    else this.clientBySubscribeKey[client.subKey].push(client);
+
+    this.forEachClient(client.subKey, (subKeyClient) =>
+      subKeyClient.logger.debug(
+        `'${client.identifier}' client reactivated in '${this.sharedWorkerIdentifier}' shared worker (${
+          this.clientBySubscribeKey[client.subKey].length
+        } active clients).`,
+      ),
+    );
+
+    this.subscribeOnClientEvents(client);
+    this.dispatchEvent(new PubNubClientManagerReactivateEvent(client));
+  }
+
+  /**
    * Remove {@link PubNubClient|PubNub} client from manager's internal state.
    *
    * @param client - Previously created {@link PubNubClient|PubNub} client which should be removed.
@@ -132,7 +211,7 @@ export class PubNubClientsManager extends EventTarget {
     const clientsBySubscribeKey = this.clientBySubscribeKey[client.subKey];
     if (clientsBySubscribeKey) {
       const clientIdx = clientsBySubscribeKey.indexOf(client);
-      clientsBySubscribeKey.splice(clientIdx, 1);
+      if (clientIdx >= 0) clientsBySubscribeKey.splice(clientIdx, 1);
 
       if (clientsBySubscribeKey.length === 0) {
         delete this.clientBySubscribeKey[client.subKey];
@@ -217,12 +296,12 @@ export class PubNubClientsManager extends EventTarget {
         client.lastPingRequest &&
         (!client.lastPongEvent || Math.abs(client.lastPongEvent - client.lastPingRequest) > interval)
       ) {
-        this.unregisterClient(client, this.timeouts[subKey].unsubscribeOffline);
+        this.suspendClient(client, this.timeouts[subKey].unsubscribeOffline);
 
         // Notify other clients with same subscription key that one of them became inactive.
         this.forEachClient(subKey, (subKeyClient) => {
           if (subKeyClient.identifier !== client.identifier)
-            subKeyClient.logger.debug(`'${client.identifier}' client is inactive. Invalidating...`);
+            subKeyClient.logger.debug(`'${client.identifier}' client is inactive. Suspending...`);
         });
       }
 
@@ -249,6 +328,8 @@ export class PubNubClientsManager extends EventTarget {
    * @param client - {@link PubNubClient|PubNub} client for which event should be listened.
    */
   private subscribeOnClientEvents(client: PubNubClient) {
+    const abortSignal = this.clients[client.identifier].abortController.signal;
+
     client.addEventListener(
       PubNubClientEvent.Unregister,
       () =>
@@ -257,8 +338,12 @@ export class PubNubClientsManager extends EventTarget {
           this.timeouts[client.subKey] ? this.timeouts[client.subKey].unsubscribeOffline : false,
           true,
         ),
-      { signal: this.clients[client.identifier].abortController.signal, once: true },
+      { signal: abortSignal, once: true },
     );
+
+    // Reactivation listener must NOT use the client's abort signal because suspension aborts it.
+    // Use `once: true` to ensure it's cleaned up after firing.
+    client.addEventListener(PubNubClientEvent.Reactivate, () => this.reactivateClient(client), { once: true });
   }
   // endregion
 
