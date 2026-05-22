@@ -66,7 +66,7 @@ class RequestSignature {
     const method = req.path.startsWith('/publish') ? TransportMethod.GET : req.method;
 
     let signatureInput = `${method}\n${this.publishKey}\n${req.path}\n${this.queryParameters(req.queryParameters!)}\n`;
-    if (method === TransportMethod.POST || method === TransportMethod.PATCH) {
+    if (method === TransportMethod.POST || method === TransportMethod.PATCH || method === TransportMethod.PUT) {
       const body = req.body;
       let payload: string | undefined;
 
