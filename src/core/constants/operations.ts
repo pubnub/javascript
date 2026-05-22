@@ -176,6 +176,160 @@ enum RequestOperation {
   PNSetMembershipsOperation = 'PNSetMembershipsOperation',
 
   // --------------------------------------------------------
+  // ------------------- DataSync API ----------------------
+  // --------------------------------------------------------
+
+  /**
+   * Create entity REST API operation.
+   */
+  PNCreateEntityOperation = 'PNCreateEntityOperation',
+
+  /**
+   * Get entity REST API operation.
+   */
+  PNGetEntityOperation = 'PNGetEntityOperation',
+
+  /**
+   * Get all entities REST API operation.
+   */
+  PNGetAllEntitiesOperation = 'PNGetAllEntitiesOperation',
+
+  /**
+   * Update entity REST API operation.
+   */
+  PNUpdateEntityOperation = 'PNUpdateEntityOperation',
+
+  /**
+   * Patch entity REST API operation.
+   */
+  PNPatchEntityOperation = 'PNPatchEntityOperation',
+
+  /**
+   * Remove entity REST API operation.
+   */
+  PNRemoveEntityOperation = 'PNRemoveEntityOperation',
+
+  /**
+   * Create relationship REST API operation.
+   */
+  PNCreateRelationshipOperation = 'PNCreateRelationshipOperation',
+
+  /**
+   * Get relationship REST API operation.
+   */
+  PNGetRelationshipOperation = 'PNGetRelationshipOperation',
+
+  /**
+   * Get all relationships REST API operation.
+   */
+  PNGetAllRelationshipsOperation = 'PNGetAllRelationshipsOperation',
+
+  /**
+   * Update relationship REST API operation.
+   */
+  PNUpdateRelationshipOperation = 'PNUpdateRelationshipOperation',
+
+  /**
+   * Patch relationship REST API operation.
+   */
+  PNPatchRelationshipOperation = 'PNPatchRelationshipOperation',
+
+  /**
+   * Remove relationship REST API operation.
+   */
+  PNRemoveRelationshipOperation = 'PNRemoveRelationshipOperation',
+
+  /**
+   * Create user REST API operation.
+   */
+  PNCreateUserOperation = 'PNCreateUserOperation',
+
+  /**
+   * Get user REST API operation.
+   */
+  PNGetUserOperation = 'PNGetUserOperation',
+
+  /**
+   * Get all users REST API operation.
+   */
+  PNGetAllUsersOperation = 'PNGetAllUsersOperation',
+
+  /**
+   * Update user REST API operation.
+   */
+  PNUpdateUserOperation = 'PNUpdateUserOperation',
+
+  /**
+   * Patch user REST API operation.
+   */
+  PNPatchUserOperation = 'PNPatchUserOperation',
+
+  /**
+   * Remove user REST API operation.
+   */
+  PNRemoveUserOperation = 'PNRemoveUserOperation',
+
+  /**
+   * Create channel REST API operation.
+   */
+  PNCreateChannelOperation = 'PNCreateChannelOperation',
+
+  /**
+   * Get channel REST API operation.
+   */
+  PNGetChannelOperation = 'PNGetChannelOperation',
+
+  /**
+   * Get all channels REST API operation.
+   */
+  PNGetAllChannelsOperation = 'PNGetAllChannelsOperation',
+
+  /**
+   * Update channel REST API operation.
+   */
+  PNUpdateChannelOperation = 'PNUpdateChannelOperation',
+
+  /**
+   * Patch channel REST API operation.
+   */
+  PNPatchChannelOperation = 'PNPatchChannelOperation',
+
+  /**
+   * Remove channel REST API operation.
+   */
+  PNRemoveChannelOperation = 'PNRemoveChannelOperation',
+
+  /**
+   * Create membership REST API operation.
+   */
+  PNCreateMembershipOperation = 'PNCreateMembershipOperation',
+
+  /**
+   * Get membership REST API operation.
+   */
+  PNGetMembershipOperation = 'PNGetMembershipOperation',
+
+  /**
+   * Get all memberships REST API operation.
+   */
+  PNGetAllMembershipsOperation = 'PNGetAllMembershipsOperation',
+
+  /**
+   * Update membership REST API operation.
+   */
+  PNUpdateMembershipOperation = 'PNUpdateMembershipOperation',
+
+  /**
+   * Patch membership REST API operation.
+   */
+  PNPatchMembershipOperation = 'PNPatchMembershipOperation',
+
+  /**
+   * Remove membership REST API operation.
+   */
+  PNRemoveMembershipOperation = 'PNRemoveMembershipOperation',
+
+  // --------------------------------------------------------
   // -------------------- File Upload API -------------------
   // --------------------------------------------------------
 

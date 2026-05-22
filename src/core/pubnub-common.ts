@@ -115,6 +115,9 @@ import PubNubPushNotifications from './pubnub-push';
 import * as AppContext from './types/api/app-context';
 import PubNubObjects from './pubnub-objects';
 // endregion
+// region DataSync
+import PubNubDataSync from './pubnub-data-sync';
+// endregion
 // region Time
 import * as Time from './endpoints/time';
 // endregion
@@ -316,6 +319,13 @@ export class PubNubCore<
   private readonly _objects: PubNubObjects;
 
   /**
+   * PubNub DataSync REST API entry point.
+   *
+   * @internal
+   */
+  private readonly _dataSync: PubNubDataSync;
+
+  /**
    * PubNub Channel Group REST API entry point.
    *
    * @internal
@@ -433,6 +443,7 @@ export class PubNubCore<
     // API group entry points initialization.
     if (process.env.APP_CONTEXT_MODULE !== 'disabled')
       this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
+    this._dataSync = new PubNubDataSync(this._configuration, this.sendRequest.bind(this));
     if (process.env.CHANNEL_GROUPS_MODULE !== 'disabled')
       this._channelGroups = new PubNubChannelGroups(
         this._configuration.logger(),
@@ -1146,23 +1157,21 @@ export class PubNubCore<
       })
       .catch((error: Error) => {
         const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
+        const errorMessage = apiError.toFormattedMessage(operation);
 
         // Notify callback (if possible).
         if (callback) {
           if (apiError.category !== Categories.PNCancelledCategory) {
             this.logger.error('PubNub', () => ({
               messageType: 'error',
-              message: apiError.toPubNubError(operation, 'REST API request processing error, check status for details'),
+              message: apiError.toPubNubError(operation, errorMessage),
             }));
           }
 
           return callback(apiError.toStatus(operation), null);
         }
 
-        const pubNubError = apiError.toPubNubError(
-          operation,
-          'REST API request processing error, check status for details',
-        );
+        const pubNubError = apiError.toPubNubError(operation, errorMessage);
 
         if (apiError.category !== Categories.PNCancelledCategory)
           this.logger.error('PubNub', () => ({ messageType: 'error', message: pubNubError }));
@@ -3231,6 +3240,20 @@ export class PubNubCore<
   get objects(): PubNubObjects {
     return this._objects;
   }
+
+  // --------------------------------------------------------
+  // -------------------- DataSync API ---------------------
+  // --------------------------------------------------------
+  // region DataSync API
+
+  /**
+   * PubNub DataSync API group.
+   */
+  get dataSync(): PubNubDataSync {
+    return this._dataSync;
+  }
+
+  // endregion
 
   // region Deprecated API
   /**
