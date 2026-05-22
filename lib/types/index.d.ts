@@ -770,6 +770,10 @@ declare class PubNubCore<
    */
   get objects(): PubNub.PubNubObjects;
   /**
+   * PubNub DataSync API group.
+   */
+  get dataSync(): PubNub.PubNubDataSync;
+  /**
    * Fetch a paginated list of User objects.
    *
    * @param callback - Request completion handler callback.
@@ -2026,6 +2030,54 @@ declare namespace PubNub {
      */
     PNSetMembershipsOperation = 'PNSetMembershipsOperation',
     /**
+     * Create entity REST API operation.
+     */
+    PNCreateEntityOperation = 'PNCreateEntityOperation',
+    /**
+     * Get entity REST API operation.
+     */
+    PNGetEntityOperation = 'PNGetEntityOperation',
+    /**
+     * Get all entities REST API operation.
+     */
+    PNGetAllEntitiesOperation = 'PNGetAllEntitiesOperation',
+    /**
+     * Update entity REST API operation.
+     */
+    PNUpdateEntityOperation = 'PNUpdateEntityOperation',
+    /**
+     * Patch entity REST API operation.
+     */
+    PNPatchEntityOperation = 'PNPatchEntityOperation',
+    /**
+     * Remove entity REST API operation.
+     */
+    PNRemoveEntityOperation = 'PNRemoveEntityOperation',
+    /**
+     * Create relationship REST API operation.
+     */
+    PNCreateRelationshipOperation = 'PNCreateRelationshipOperation',
+    /**
+     * Get relationship REST API operation.
+     */
+    PNGetRelationshipOperation = 'PNGetRelationshipOperation',
+    /**
+     * Get all relationships REST API operation.
+     */
+    PNGetAllRelationshipsOperation = 'PNGetAllRelationshipsOperation',
+    /**
+     * Update relationship REST API operation.
+     */
+    PNUpdateRelationshipOperation = 'PNUpdateRelationshipOperation',
+    /**
+     * Patch relationship REST API operation.
+     */
+    PNPatchRelationshipOperation = 'PNPatchRelationshipOperation',
+    /**
+     * Remove relationship REST API operation.
+     */
+    PNRemoveRelationshipOperation = 'PNRemoveRelationshipOperation',
+    /**
      * Fetch list of files sent to the channel REST API operation.
      */
     PNListFilesOperation = 'PNListFilesOperation',
@@ -3074,6 +3126,10 @@ declare namespace PubNub {
      * Request will be sent using `PATCH` method.
      */
     PATCH = 'PATCH',
+    /**
+     * Request will be sent using `PUT` method.
+     */
+    PUT = 'PUT',
     /**
      * Request will be sent using `DELETE` method.
      */
@@ -5476,6 +5532,241 @@ declare namespace PubNub {
       | AppContext.SetMembersResponse<Custom, MetadataCustom>
       | void
     >;
+  }
+
+  /**
+   * PubNub DataSync API interface.
+   */
+  export class PubNubDataSync {
+    /**
+     * Create a new Entity.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    createEntity(
+      parameters: DataSync.CreateEntityParameters,
+      callback: ResultCallback<DataSync.CreateEntityResponse>,
+    ): void;
+    /**
+     * Create a new Entity.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous create entity response.
+     */
+    createEntity(parameters: DataSync.CreateEntityParameters): Promise<DataSync.CreateEntityResponse>;
+    /**
+     * Fetch a specific Entity.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getEntity(parameters: DataSync.GetEntityParameters, callback: ResultCallback<DataSync.GetEntityResponse>): void;
+    /**
+     * Fetch a specific Entity.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous get entity response.
+     */
+    getEntity(parameters: DataSync.GetEntityParameters): Promise<DataSync.GetEntityResponse>;
+    /**
+     * Fetch a paginated list of Entities for a given Entity Class.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getAllEntities(
+      parameters: DataSync.GetAllEntitiesParameters,
+      callback: ResultCallback<DataSync.GetAllEntitiesResponse>,
+    ): void;
+    /**
+     * Fetch a paginated list of Entities for a given Entity Class.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous get all entities response.
+     */
+    getAllEntities(parameters: DataSync.GetAllEntitiesParameters): Promise<DataSync.GetAllEntitiesResponse>;
+    /**
+     * Update an Entity (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    updateEntity(
+      parameters: DataSync.UpdateEntityParameters,
+      callback: ResultCallback<DataSync.UpdateEntityResponse>,
+    ): void;
+    /**
+     * Update an Entity (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous update entity response.
+     */
+    updateEntity(parameters: DataSync.UpdateEntityParameters): Promise<DataSync.UpdateEntityResponse>;
+    /**
+     * Patch an Entity (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `set` and `remove` with dot-notation field paths.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    patchEntity(
+      parameters: DataSync.PatchEntityParameters,
+      callback: ResultCallback<DataSync.PatchEntityResponse>,
+    ): void;
+    /**
+     * Patch an Entity (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `set` and `remove` with dot-notation field paths.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous patch entity response.
+     */
+    patchEntity(parameters: DataSync.PatchEntityParameters): Promise<DataSync.PatchEntityResponse>;
+    /**
+     * Remove an Entity.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    removeEntity(
+      parameters: DataSync.RemoveEntityParameters,
+      callback: ResultCallback<DataSync.RemoveEntityResponse>,
+    ): void;
+    /**
+     * Remove an Entity.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous remove entity response.
+     */
+    removeEntity(parameters: DataSync.RemoveEntityParameters): Promise<DataSync.RemoveEntityResponse>;
+    /**
+     * Create a new Relationship.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    createRelationship(
+      parameters: DataSync.CreateRelationshipParameters,
+      callback: ResultCallback<DataSync.CreateRelationshipResponse>,
+    ): void;
+    /**
+     * Create a new Relationship.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous create relationship response.
+     */
+    createRelationship(parameters: DataSync.CreateRelationshipParameters): Promise<DataSync.CreateRelationshipResponse>;
+    /**
+     * Fetch a specific Relationship.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getRelationship(
+      parameters: DataSync.GetRelationshipParameters,
+      callback: ResultCallback<DataSync.GetRelationshipResponse>,
+    ): void;
+    /**
+     * Fetch a specific Relationship.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous get relationship response.
+     */
+    getRelationship(parameters: DataSync.GetRelationshipParameters): Promise<DataSync.GetRelationshipResponse>;
+    /**
+     * Fetch a paginated list of Relationships.
+     *
+     * @param callback - Request completion handler callback.
+     */
+    getAllRelationships(callback: ResultCallback<DataSync.GetAllRelationshipsResponse>): void;
+    /**
+     * Fetch a paginated list of Relationships.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getAllRelationships(
+      parameters: DataSync.GetAllRelationshipsParameters,
+      callback: ResultCallback<DataSync.GetAllRelationshipsResponse>,
+    ): void;
+    /**
+     * Fetch a paginated list of Relationships.
+     *
+     * @param [parameters] - Request configuration parameters.
+     *
+     * @returns Asynchronous get all relationships response.
+     */
+    getAllRelationships(
+      parameters?: DataSync.GetAllRelationshipsParameters,
+    ): Promise<DataSync.GetAllRelationshipsResponse>;
+    /**
+     * Update a Relationship (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    updateRelationship(
+      parameters: DataSync.UpdateRelationshipParameters,
+      callback: ResultCallback<DataSync.UpdateRelationshipResponse>,
+    ): void;
+    /**
+     * Update a Relationship (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous update relationship response.
+     */
+    updateRelationship(parameters: DataSync.UpdateRelationshipParameters): Promise<DataSync.UpdateRelationshipResponse>;
+    /**
+     * Patch a Relationship (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `set` and `remove` with dot-notation field paths.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    patchRelationship(
+      parameters: DataSync.PatchRelationshipParameters,
+      callback: ResultCallback<DataSync.PatchRelationshipResponse>,
+    ): void;
+    /**
+     * Patch a Relationship (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `set` and `remove` with dot-notation field paths.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous patch relationship response.
+     */
+    patchRelationship(parameters: DataSync.PatchRelationshipParameters): Promise<DataSync.PatchRelationshipResponse>;
+    /**
+     * Remove a Relationship.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    removeRelationship(
+      parameters: DataSync.RemoveRelationshipParameters,
+      callback: ResultCallback<DataSync.RemoveRelationshipResponse>,
+    ): void;
+    /**
+     * Remove a Relationship.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous remove relationship response.
+     */
+    removeRelationship(parameters: DataSync.RemoveRelationshipParameters): Promise<DataSync.RemoveRelationshipResponse>;
   }
 
   /**
@@ -8925,6 +9216,523 @@ declare namespace PubNub {
        * High-precision time when published data has been received by the PubNub service.
        */
       timetoken: string;
+    };
+  }
+
+  export namespace DataSync {
+    /**
+     * Filterable field definition for entity classes.
+     */
+    export type FilterableField = {
+      /** Unique semantic identifier for the property. */
+      name: string;
+      /** JSON Pointer (RFC 6901) to the property location. */
+      path: string;
+      /** Data type of the property value. */
+      valueKind: 'string' | 'number' | 'boolean' | 'date' | 'datetime';
+      /**
+       * Whether the property should be indexed for full-text search.
+       * @default false
+       */
+      enabledAdvancedFiltering?: boolean;
+      /**
+       * Whether the property can have null values.
+       * @default true
+       */
+      isNullable?: boolean;
+    };
+
+    /**
+     * Cursor-based pagination metadata returned by the server.
+     */
+    export type DataSyncPageMeta = {
+      /** Opaque cursor for the next page. Null if no more results. */
+      next_cursor: string | null;
+      /** Opaque cursor for the previous page. Null if first page. */
+      prev_cursor: string | null;
+      /** Whether there are more results after this page. */
+      has_next: boolean;
+      /** Whether there are results before this page. */
+      has_prev: boolean;
+      /** The limit applied to this page. */
+      limit: number;
+    };
+
+    /**
+     * HATEOAS navigation links.
+     */
+    export type DataSyncLinks = {
+      /** Link to the current page. */
+      self: string;
+      /** Link to the next page, if available. */
+      next?: string | null;
+      /** Link to the previous page, if available. */
+      prev?: string | null;
+      /** Additional links for related resources. */
+      [key: string]: string | null | undefined;
+    };
+
+    /**
+     * Common parameters for paginated list requests.
+     */
+    type PagedRequestParameters = {
+      /** Opaque cursor for pagination. Omit for the first page. */
+      cursor?: string;
+      /**
+       * Maximum number of items per page.
+       * @default 20
+       * @max 100
+       */
+      limit?: number;
+      /** Filter expression for results. */
+      filter?: string;
+      /**
+       * Sort expression. Comma-separated fields, optionally prefixed with + (asc) or - (desc).
+       * Example: "+name,-createdAt"
+       */
+      sort?: string;
+    };
+
+    /**
+     * Single-entity response envelope.
+     */
+    type DataSyncEntityResponse<T> = {
+      /** HTTP status code. */
+      status: number;
+      /** Response data. */
+      data: T;
+      /** HATEOAS links. */
+      links?: DataSyncLinks;
+      /** Response metadata. */
+      meta?: DataSyncPageMeta;
+    };
+
+    /**
+     * Paged list response envelope.
+     */
+    type DataSyncPagedResponse<T> = {
+      /** HTTP status code. */
+      status: number;
+      /** Array of response items. */
+      data: T[];
+      /** HATEOAS links for pagination. */
+      links?: DataSyncLinks;
+      /** Cursor-based pagination metadata. */
+      meta?: DataSyncPageMeta;
+    };
+
+    /**
+     * Entity properties for create requests.
+     *
+     * Includes `entityClass` since it must be set at creation time and is immutable afterward.
+     */
+    export type CreateEntityProperties = {
+      /** Entity class this entity belongs to. */
+      entityClass: string;
+      /** Version of the entity class schema. */
+      entityClassVersion: number;
+      /** Optional lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload conforming to the entity class schema. */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Entity properties for update (PUT) requests.
+     *
+     * `entityClass` is immutable after creation and therefore excluded from updates.
+     */
+    export type UpdateEntityProperties = {
+      /** Version of the entity class schema. */
+      entityClassVersion: number;
+      /** Optional lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload conforming to the entity class schema. */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Entity resource as returned from the server.
+     */
+    export type EntityObject = {
+      /** Unique identifier (UUID). */
+      id: string;
+      /** Entity class this entity belongs to. */
+      entityClass: string;
+      /** Version of the entity class schema. */
+      entityClassVersion: number;
+      /** Lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload. */
+      payload?: Record<string, unknown>;
+      /** Date and time the entity was created (ISO 8601). */
+      createdAt: string;
+      /** Date and time the entity was last updated (ISO 8601). */
+      updatedAt: string;
+      /** Content fingerprint for optimistic concurrency control. */
+      eTag: string;
+      /** Auto-deletion timestamp (ISO 8601). Entities expire at this time. */
+      expiresAt?: string;
+    };
+
+    /**
+     * Create Entity request parameters.
+     */
+    export type CreateEntityParameters = {
+      /**
+       * Entity properties to create.
+       *
+       * All entity properties go inside `entity` because they map to the request body envelope.
+       * Unlike EntityClass (where `name`/`version` are URL path params), Entity creation
+       * posts to a collection URL with all fields in the body.
+       */
+      entity: CreateEntityProperties & {
+        /**
+         * Optional entity ID.
+         * Server auto-generates a UUID if not provided.
+         */
+        id?: string;
+      };
+      /**
+       * UUIDv4 idempotency key for safe retries.
+       * Auto-generated if not provided.
+       */
+      idempotencyKey?: string;
+    };
+
+    /**
+     * Get Entity request parameters.
+     */
+    export type GetEntityParameters = {
+      /** Entity ID. */
+      id: string;
+    };
+
+    /**
+     * Get All Entities request parameters.
+     *
+     * `entityClass` is required — entities are always listed within the context of their class.
+     */
+    export type GetAllEntitiesParameters = PagedRequestParameters & {
+      /** Entity class name to filter by (required). */
+      entityClass: string;
+      /**
+       * Entity class version. If not provided, the server returns entities for the latest version.
+       */
+      entityClassVersion?: number;
+      /**
+       * Advanced filter expression for complex queries.
+       *
+       * Supports logical operators and nested conditions for sophisticated filtering
+       * beyond what the basic `filter` parameter provides.
+       */
+      filterAdvanced?: string;
+    };
+
+    /**
+     * Update Entity request parameters (full replacement via PUT).
+     *
+     * `entityClass` is immutable after creation — only `entityClassVersion`, `status`,
+     * and `payload` can be updated.
+     */
+    export type UpdateEntityParameters = {
+      /** Entity ID. */
+      id: string;
+      /** Complete entity properties for replacement (excludes immutable `entityClass`). */
+      entity: UpdateEntityProperties;
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the update only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Patch Entity request parameters (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `set` and `remove` with dot-notation field paths.
+     * The SDK converts these to JSON Patch operations on the wire.
+     *
+     * At least one of `set` or `remove` must be provided.
+     */
+    export type PatchEntityParameters = {
+      /** Entity ID. */
+      id: string;
+      /**
+       * Fields to add or replace, using dot-notation keys.
+       *
+       * Each key is a dot-delimited path to the target field.
+       * The SDK converts these to JSON Patch "replace" operations.
+       *
+       * @example
+       * ```typescript
+       * set: {
+       *   'status': 'active',
+       *   'payload.score': 300,
+       *   'payload.profile.displayName': 'Alice',
+       * }
+       * ```
+       */
+      set?: Record<string, unknown>;
+      /**
+       * Array of dot-notation field paths to remove.
+       *
+       * The SDK converts these to JSON Patch "remove" operations.
+       *
+       * @example
+       * ```typescript
+       * remove: ['payload.tempFlag', 'payload.legacyField']
+       * ```
+       */
+      remove?: string[];
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the patch only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+      /**
+       * UUIDv4 idempotency key for safe retries.
+       * Auto-generated if not provided.
+       */
+      idempotencyKey?: string;
+    };
+
+    /**
+     * Remove Entity request parameters.
+     */
+    export type RemoveEntityParameters = {
+      /** Entity ID. */
+      id: string;
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the delete only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /** Response for creating an entity. */
+    export type CreateEntityResponse = DataSyncEntityResponse<EntityObject>;
+
+    /** Response for getting a single entity. */
+    export type GetEntityResponse = DataSyncEntityResponse<EntityObject>;
+
+    /** Response for listing entities. */
+    export type GetAllEntitiesResponse = DataSyncPagedResponse<EntityObject>;
+
+    /** Response for updating an entity (PUT). */
+    export type UpdateEntityResponse = DataSyncEntityResponse<EntityObject>;
+
+    /** Response for patching an entity (PATCH). */
+    export type PatchEntityResponse = DataSyncEntityResponse<EntityObject>;
+
+    /** Response for removing an entity. */
+    export type RemoveEntityResponse = {
+      /** HTTP status code. */
+      status: number;
+    };
+
+    /**
+     * Relationship properties for create requests.
+     *
+     * Both `entityAId` and `entityBId` must be set at creation time.
+     */
+    export type CreateRelationshipProperties = {
+      /** First entity ID in the relationship. */
+      entityAId: string;
+      /** Second entity ID in the relationship. */
+      entityBId: string;
+      /** Optional lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload. */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Relationship properties for update (PUT) requests.
+     *
+     * PUT is a full replacement — `entityAId` and `entityBId` are required.
+     */
+    export type UpdateRelationshipProperties = {
+      /** First entity ID in the relationship. */
+      entityAId: string;
+      /** Second entity ID in the relationship. */
+      entityBId: string;
+      /** Optional lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload. */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Relationship resource as returned from the server.
+     */
+    export type RelationshipObject = {
+      /** Unique identifier. */
+      id: string;
+      /** First entity ID in the relationship. */
+      entityAId: string;
+      /** Second entity ID in the relationship. */
+      entityBId: string;
+      /** Lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload. */
+      payload?: Record<string, unknown>;
+      /** Date and time the relationship was created (ISO 8601). */
+      createdAt: string;
+      /** Date and time the relationship was last updated (ISO 8601). */
+      updatedAt: string;
+      /** Content fingerprint for optimistic concurrency control. */
+      eTag: string;
+      /** Auto-deletion timestamp (ISO 8601). */
+      expiresAt?: string;
+    };
+
+    /**
+     * Create Relationship request parameters.
+     */
+    export type CreateRelationshipParameters = {
+      /**
+       * Relationship properties to create.
+       *
+       * All relationship properties go inside `relationship` because they map to the request body envelope.
+       */
+      relationship: CreateRelationshipProperties & {
+        /**
+         * Optional relationship ID.
+         * Server auto-generates a UUID if not provided.
+         */
+        id?: string;
+      };
+      /**
+       * UUIDv4 idempotency key for safe retries.
+       * Auto-generated if not provided.
+       */
+      idempotencyKey?: string;
+    };
+
+    /**
+     * Get Relationship request parameters.
+     */
+    export type GetRelationshipParameters = {
+      /** Relationship ID. */
+      id: string;
+    };
+
+    /**
+     * Get All Relationships request parameters.
+     *
+     * All parameters are optional — relationships can be listed without any filters.
+     */
+    export type GetAllRelationshipsParameters = PagedRequestParameters & {
+      /** Filter relationships by first entity ID. */
+      entityAId?: string;
+      /** Filter relationships by second entity ID. */
+      entityBId?: string;
+      /**
+       * Advanced filter expression for complex queries.
+       *
+       * Supports logical operators and nested conditions for sophisticated filtering
+       * beyond what the basic `filter` parameter provides.
+       */
+      filterAdvanced?: string;
+    };
+
+    /**
+     * Update Relationship request parameters (full replacement via PUT).
+     */
+    export type UpdateRelationshipParameters = {
+      /** Relationship ID. */
+      id: string;
+      /** Complete relationship properties for replacement. */
+      relationship: UpdateRelationshipProperties;
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the update only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Patch Relationship request parameters (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `set` and `remove` with dot-notation field paths.
+     * The SDK converts these to JSON Patch operations on the wire.
+     *
+     * At least one of `set` or `remove` must be provided.
+     */
+    export type PatchRelationshipParameters = {
+      /** Relationship ID. */
+      id: string;
+      /**
+       * Fields to add or replace, using dot-notation keys.
+       *
+       * Each key is a dot-delimited path to the target field within `payload`.
+       * The SDK converts these to JSON Patch "replace" operations.
+       *
+       * @example
+       * ```typescript
+       * set: {
+       *   'role': 'admin',
+       *   'permissions.read': true,
+       * }
+       * ```
+       */
+      set?: Record<string, unknown>;
+      /**
+       * Array of dot-notation field paths to remove from `payload`.
+       *
+       * The SDK converts these to JSON Patch "remove" operations.
+       *
+       * @example
+       * ```typescript
+       * remove: ['tempFlag', 'legacyField']
+       * ```
+       */
+      remove?: string[];
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the patch only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+      /**
+       * UUIDv4 idempotency key for safe retries.
+       * Auto-generated if not provided.
+       */
+      idempotencyKey?: string;
+    };
+
+    /**
+     * Remove Relationship request parameters.
+     */
+    export type RemoveRelationshipParameters = {
+      /** Relationship ID. */
+      id: string;
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the delete only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /** Response for creating a relationship. */
+    export type CreateRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+
+    /** Response for getting a single relationship. */
+    export type GetRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+
+    /** Response for listing relationships. */
+    export type GetAllRelationshipsResponse = DataSyncPagedResponse<RelationshipObject>;
+
+    /** Response for updating a relationship (PUT). */
+    export type UpdateRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+
+    /** Response for patching a relationship (PATCH). */
+    export type PatchRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+
+    /** Response for removing a relationship. */
+    export type RemoveRelationshipResponse = {
+      /** HTTP status code. */
+      status: number;
     };
   }
 

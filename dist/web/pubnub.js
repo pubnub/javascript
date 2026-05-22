@@ -3155,6 +3155,24 @@
 	                                errorData = errorResponse;
 	                                status = errorResponse.status;
 	                            }
+	                            else if ('errors' in errorResponse &&
+	                                Array.isArray(errorResponse.errors) &&
+	                                errorResponse.errors.length > 0) {
+	                                // Handle DataSync-style structured error responses:
+	                                // { errors: [{ errorCode: "SYN-0008", message: "...", path: "/id" }] }
+	                                errorData = errorResponse;
+	                                const errors = errorResponse.errors;
+	                                message = errors
+	                                    .map((e) => {
+	                                    const parts = [];
+	                                    if (e.errorCode)
+	                                        parts.push(e.errorCode);
+	                                    if (e.message)
+	                                        parts.push(e.message);
+	                                    return parts.join(': ');
+	                                })
+	                                    .join('; ');
+	                            }
 	                            else
 	                                errorData = errorResponse;
 	                            if ('error' in errorResponse && errorResponse.error instanceof Error)
@@ -3234,6 +3252,30 @@
 	                return JSON.stringify(Object.assign(Object.assign({}, status), { errorData: normalizedErrorData }));
 	            },
 	        };
+	    }
+	    /**
+	     * Format a user-facing error message for this API error.
+	     *
+	     * When the error contains structured details extracted from the service response
+	     * (e.g., DataSync `errors` array), those details are included in the message.
+	     * Otherwise, falls back to a generic description.
+	     *
+	     * @param operation - Request operation during which error happened.
+	     *
+	     * @returns Formatted error message string.
+	     */
+	    toFormattedMessage(operation) {
+	        const fallback = 'REST API request processing error, check status for details';
+	        // When errorData contains a structured `errors` array, `this.message` was already
+	        // constructed from it in `createFromServiceResponse` — prefer it over the generic fallback.
+	        if (this.errorData &&
+	            typeof this.errorData === 'object' &&
+	            !('name' in this.errorData && 'message' in this.errorData && 'stack' in this.errorData) &&
+	            'errors' in this.errorData &&
+	            Array.isArray(this.errorData.errors)) {
+	            return `${operation}: ${this.message}`;
+	        }
+	        return fallback;
 	    }
 	    /**
 	     * Convert API error object to PubNub client error object.
@@ -3438,6 +3480,57 @@
 	     * Update channel memberships REST API operation.
 	     */
 	    RequestOperation["PNSetMembershipsOperation"] = "PNSetMembershipsOperation";
+	    // --------------------------------------------------------
+	    // ------------------- DataSync API ----------------------
+	    // --------------------------------------------------------
+	    /**
+	     * Create entity REST API operation.
+	     */
+	    RequestOperation["PNCreateEntityOperation"] = "PNCreateEntityOperation";
+	    /**
+	     * Get entity REST API operation.
+	     */
+	    RequestOperation["PNGetEntityOperation"] = "PNGetEntityOperation";
+	    /**
+	     * Get all entities REST API operation.
+	     */
+	    RequestOperation["PNGetAllEntitiesOperation"] = "PNGetAllEntitiesOperation";
+	    /**
+	     * Update entity REST API operation.
+	     */
+	    RequestOperation["PNUpdateEntityOperation"] = "PNUpdateEntityOperation";
+	    /**
+	     * Patch entity REST API operation.
+	     */
+	    RequestOperation["PNPatchEntityOperation"] = "PNPatchEntityOperation";
+	    /**
+	     * Remove entity REST API operation.
+	     */
+	    RequestOperation["PNRemoveEntityOperation"] = "PNRemoveEntityOperation";
+	    /**
+	     * Create relationship REST API operation.
+	     */
+	    RequestOperation["PNCreateRelationshipOperation"] = "PNCreateRelationshipOperation";
+	    /**
+	     * Get relationship REST API operation.
+	     */
+	    RequestOperation["PNGetRelationshipOperation"] = "PNGetRelationshipOperation";
+	    /**
+	     * Get all relationships REST API operation.
+	     */
+	    RequestOperation["PNGetAllRelationshipsOperation"] = "PNGetAllRelationshipsOperation";
+	    /**
+	     * Update relationship REST API operation.
+	     */
+	    RequestOperation["PNUpdateRelationshipOperation"] = "PNUpdateRelationshipOperation";
+	    /**
+	     * Patch relationship REST API operation.
+	     */
+	    RequestOperation["PNPatchRelationshipOperation"] = "PNPatchRelationshipOperation";
+	    /**
+	     * Remove relationship REST API operation.
+	     */
+	    RequestOperation["PNRemoveRelationshipOperation"] = "PNRemoveRelationshipOperation";
 	    // --------------------------------------------------------
 	    // -------------------- File Upload API -------------------
 	    // --------------------------------------------------------
@@ -5657,6 +5750,10 @@
 	     */
 	    TransportMethod["PATCH"] = "PATCH";
 	    /**
+	     * Request will be sent using `PUT` method.
+	     */
+	    TransportMethod["PUT"] = "PUT";
+	    /**
 	     * Request will be sent using `DELETE` method.
 	     */
 	    TransportMethod["DELETE"] = "DELETE";
@@ -5694,7 +5791,7 @@
 	    signature(req) {
 	        const method = req.path.startsWith('/publish') ? TransportMethod.GET : req.method;
 	        let signatureInput = `${method}\n${this.publishKey}\n${req.path}\n${this.queryParameters(req.queryParameters)}\n`;
-	        if (method === TransportMethod.POST || method === TransportMethod.PATCH) {
+	        if (method === TransportMethod.POST || method === TransportMethod.PATCH || method === TransportMethod.PUT) {
 	            const body = req.body;
 	            let payload;
 	            if (body && body instanceof ArrayBuffer) {
@@ -6339,7 +6436,9 @@
 	        if (headers)
 	            request.headers = headers;
 	        // Attach body (if required).
-	        if (request.method === TransportMethod.POST || request.method === TransportMethod.PATCH) {
+	        if (request.method === TransportMethod.POST ||
+	            request.method === TransportMethod.PATCH ||
+	            request.method === TransportMethod.PUT) {
 	            const [body, formData] = [this.body, this.formData];
 	            if (formData)
 	                request.formData = formData;
@@ -15278,6 +15377,852 @@
 	}
 
 	/**
+	 * Create Relationship REST API module.
+	 *
+	 * @internal
+	 */
+	// endregion
+	/**
+	 * Create Relationship request.
+	 *
+	 * @internal
+	 */
+	class CreateRelationshipRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        super({ method: TransportMethod.POST });
+	        this.parameters = parameters;
+	    }
+	    operation() {
+	        return RequestOperation$1.PNCreateRelationshipOperation;
+	    }
+	    validate() {
+	        if (!this.parameters.relationship)
+	            return 'Relationship cannot be empty';
+	        if (!this.parameters.relationship.entityAId)
+	            return 'Entity A id cannot be empty';
+	        if (!this.parameters.relationship.entityBId)
+	            return 'Entity B id cannot be empty';
+	    }
+	    get headers() {
+	        var _a;
+	        let headers = (_a = super.headers) !== null && _a !== void 0 ? _a : {};
+	        if (this.parameters.idempotencyKey)
+	            headers = Object.assign(Object.assign({}, headers), { 'Idempotency-Key': this.parameters.idempotencyKey });
+	        return Object.assign(Object.assign({}, headers), { 'Content-Type': 'application/vnd.pubnub.objects.relationship+json;version=1' });
+	    }
+	    get path() {
+	        const { keySet: { subscribeKey }, } = this.parameters;
+	        return `/subkeys/${subscribeKey}/relationships`;
+	    }
+	    get body() {
+	        return JSON.stringify({ data: this.parameters.relationship });
+	    }
+	}
+
+	/**
+	 * Get All Relationships REST API module.
+	 *
+	 * @internal
+	 */
+	// --------------------------------------------------------
+	// ----------------------- Defaults -----------------------
+	// --------------------------------------------------------
+	// region Defaults
+	/**
+	 * Default number of items per page.
+	 */
+	const DEFAULT_LIMIT$1 = 20;
+	// endregion
+	/**
+	 * Get All Relationships request.
+	 *
+	 * @internal
+	 */
+	class GetAllRelationshipsRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        var _a;
+	        super();
+	        this.parameters = parameters;
+	        // Apply defaults.
+	        (_a = parameters.limit) !== null && _a !== void 0 ? _a : (parameters.limit = DEFAULT_LIMIT$1);
+	    }
+	    operation() {
+	        return RequestOperation$1.PNGetAllRelationshipsOperation;
+	    }
+	    get path() {
+	        return `/subkeys/${this.parameters.keySet.subscribeKey}/relationships`;
+	    }
+	    get queryParameters() {
+	        const { entityAId, entityBId, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityAId ? { entity_a_id: entityAId } : {})), (entityBId ? { entity_b_id: entityBId } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sort ? { sort } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	    }
+	}
+
+	/**
+	 * Update Relationship REST API module.
+	 *
+	 * Full resource replacement via PUT.
+	 *
+	 * @internal
+	 */
+	// endregion
+	/**
+	 * Update Relationship request.
+	 *
+	 * @internal
+	 */
+	class UpdateRelationshipRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        super({ method: TransportMethod.PUT });
+	        this.parameters = parameters;
+	    }
+	    operation() {
+	        return RequestOperation$1.PNUpdateRelationshipOperation;
+	    }
+	    validate() {
+	        if (!this.parameters.id)
+	            return 'Relationship id cannot be empty';
+	        if (!this.parameters.relationship)
+	            return 'Relationship cannot be empty';
+	        if (!this.parameters.relationship.entityAId)
+	            return 'Entity A id cannot be empty';
+	        if (!this.parameters.relationship.entityBId)
+	            return 'Entity B id cannot be empty';
+	    }
+	    get headers() {
+	        var _a;
+	        let headers = (_a = super.headers) !== null && _a !== void 0 ? _a : {};
+	        if (this.parameters.ifMatchesEtag)
+	            headers = Object.assign(Object.assign({}, headers), { 'If-Match': this.parameters.ifMatchesEtag });
+	        return Object.assign(Object.assign({}, headers), { 'Content-Type': 'application/vnd.pubnub.objects.relationship+json;version=1' });
+	    }
+	    get path() {
+	        const { keySet: { subscribeKey }, id, } = this.parameters;
+	        return `/subkeys/${subscribeKey}/relationships/${encodeString(id)}`;
+	    }
+	    get body() {
+	        return JSON.stringify({ data: this.parameters.relationship });
+	    }
+	}
+
+	/**
+	 * Remove Relationship REST API module.
+	 *
+	 * @internal
+	 */
+	// endregion
+	/**
+	 * Remove Relationship request.
+	 *
+	 * @internal
+	 */
+	class RemoveRelationshipRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        super({ method: TransportMethod.DELETE });
+	        this.parameters = parameters;
+	    }
+	    operation() {
+	        return RequestOperation$1.PNRemoveRelationshipOperation;
+	    }
+	    validate() {
+	        if (!this.parameters.id)
+	            return 'Relationship id cannot be empty';
+	    }
+	    get headers() {
+	        var _a;
+	        let headers = (_a = super.headers) !== null && _a !== void 0 ? _a : {};
+	        if (this.parameters.ifMatchesEtag)
+	            headers = Object.assign(Object.assign({}, headers), { 'If-Match': this.parameters.ifMatchesEtag });
+	        return Object.keys(headers).length > 0 ? headers : undefined;
+	    }
+	    parse(response) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return { status: response.status };
+	        });
+	    }
+	    get path() {
+	        const { keySet: { subscribeKey }, id, } = this.parameters;
+	        return `/subkeys/${subscribeKey}/relationships/${encodeString(id)}`;
+	    }
+	}
+
+	/**
+	 * PubNub DataSync API type definitions.
+	 *
+	 * Types for Entity Class CRUD operations.
+	 */
+	/**
+	 * Convert dot-notation path to JSON Pointer (RFC 6901).
+	 *
+	 * "config.ttlSec"           → "/config/ttlSec"
+	 * "filterableFields.0.name" → "/filterableFields/0/name"
+	 *
+	 * @internal
+	 */
+	function toJsonPointer(dotPath) {
+	    return '/' + dotPath.split('.').join('/');
+	}
+	/**
+	 * Convert `set` and `remove` parameters to JSON Patch operations (wire format).
+	 *
+	 * - Each key in `set` becomes a "replace" operation.
+	 * - Each entry in `remove` becomes a "remove" operation.
+	 *
+	 * @internal
+	 */
+	function toJsonPatchOperations(set, remove) {
+	    const ops = [];
+	    if (set) {
+	        for (const [dotPath, value] of Object.entries(set)) {
+	            ops.push({ op: 'add', path: toJsonPointer(dotPath), value });
+	        }
+	    }
+	    if (remove) {
+	        for (const dotPath of remove) {
+	            ops.push({ op: 'remove', path: toJsonPointer(dotPath) });
+	        }
+	    }
+	    return ops;
+	}
+
+	/**
+	 * Patch Relationship REST API module.
+	 *
+	 * Partial update via JSON Patch (RFC 6902).
+	 * Accepts `set` (dot-notation key-value pairs) and `remove` (dot-notation paths)
+	 * and converts them to JSON Patch operations on the wire.
+	 *
+	 * @internal
+	 */
+	// endregion
+	/**
+	 * Patch Relationship request.
+	 *
+	 * @internal
+	 */
+	class PatchRelationshipRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        super({ method: TransportMethod.PATCH });
+	        this.parameters = parameters;
+	    }
+	    operation() {
+	        return RequestOperation$1.PNPatchRelationshipOperation;
+	    }
+	    validate() {
+	        if (!this.parameters.id)
+	            return 'Relationship id cannot be empty';
+	        const hasSet = this.parameters.set && Object.keys(this.parameters.set).length > 0;
+	        const hasRemove = this.parameters.remove && this.parameters.remove.length > 0;
+	        if (!hasSet && !hasRemove)
+	            return 'At least one of set or remove must be provided';
+	    }
+	    get headers() {
+	        var _a;
+	        let headers = (_a = super.headers) !== null && _a !== void 0 ? _a : {};
+	        if (this.parameters.ifMatchesEtag)
+	            headers = Object.assign(Object.assign({}, headers), { 'If-Match': this.parameters.ifMatchesEtag });
+	        if (this.parameters.idempotencyKey)
+	            headers = Object.assign(Object.assign({}, headers), { 'Idempotency-Key': this.parameters.idempotencyKey });
+	        return Object.assign(Object.assign({}, headers), { 'Content-Type': 'application/json-patch+json' });
+	    }
+	    get path() {
+	        const { keySet: { subscribeKey }, id, } = this.parameters;
+	        return `/subkeys/${subscribeKey}/relationships/${encodeString(id)}`;
+	    }
+	    get body() {
+	        // Prefix all field paths with 'payload.' so users write simple field names
+	        // (e.g., 'role') and the SDK produces '/payload/role' on the wire.
+	        const prefixedSet = this.parameters.set
+	            ? Object.fromEntries(Object.entries(this.parameters.set).map(([key, value]) => [`payload.${key}`, value]))
+	            : undefined;
+	        const prefixedRemove = this.parameters.remove ? this.parameters.remove.map((key) => `payload.${key}`) : undefined;
+	        // Convert set/remove (dot notation) to JSON Patch operations (JSON Pointer notation).
+	        const jsonPatchOps = toJsonPatchOperations(prefixedSet, prefixedRemove);
+	        return JSON.stringify(jsonPatchOps);
+	    }
+	}
+
+	/**
+	 * Get Relationship REST API module.
+	 *
+	 * @internal
+	 */
+	// endregion
+	/**
+	 * Get Relationship request.
+	 *
+	 * @internal
+	 */
+	class GetRelationshipRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        super();
+	        this.parameters = parameters;
+	    }
+	    operation() {
+	        return RequestOperation$1.PNGetRelationshipOperation;
+	    }
+	    validate() {
+	        if (!this.parameters.id)
+	            return 'Relationship id cannot be empty';
+	    }
+	    get path() {
+	        const { keySet: { subscribeKey }, id, } = this.parameters;
+	        return `/subkeys/${subscribeKey}/relationships/${encodeString(id)}`;
+	    }
+	}
+
+	/**
+	 * Create Entity REST API module.
+	 *
+	 * @internal
+	 */
+	// endregion
+	/**
+	 * Create Entity request.
+	 *
+	 * @internal
+	 */
+	class CreateEntityRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        super({ method: TransportMethod.POST });
+	        this.parameters = parameters;
+	    }
+	    operation() {
+	        return RequestOperation$1.PNCreateEntityOperation;
+	    }
+	    validate() {
+	        if (!this.parameters.entity)
+	            return 'Entity cannot be empty';
+	        if (!this.parameters.entity.entityClass)
+	            return 'Entity class cannot be empty';
+	        if (this.parameters.entity.entityClassVersion === undefined || this.parameters.entity.entityClassVersion === null)
+	            return 'Entity class version cannot be empty';
+	    }
+	    get headers() {
+	        var _a;
+	        let headers = (_a = super.headers) !== null && _a !== void 0 ? _a : {};
+	        if (this.parameters.idempotencyKey)
+	            headers = Object.assign(Object.assign({}, headers), { 'Idempotency-Key': this.parameters.idempotencyKey });
+	        return Object.assign(Object.assign({}, headers), { 'Content-Type': 'application/vnd.pubnub.objects.entity+json;version=1' });
+	    }
+	    get path() {
+	        const { keySet: { subscribeKey }, } = this.parameters;
+	        return `/subkeys/${subscribeKey}/entities`;
+	    }
+	    get body() {
+	        return JSON.stringify({ data: this.parameters.entity });
+	    }
+	}
+
+	/**
+	 * Get All Entities REST API module.
+	 *
+	 * @internal
+	 */
+	// --------------------------------------------------------
+	// ----------------------- Defaults -----------------------
+	// --------------------------------------------------------
+	// region Defaults
+	/**
+	 * Default number of items per page.
+	 */
+	const DEFAULT_LIMIT = 20;
+	// endregion
+	/**
+	 * Get All Entities request.
+	 *
+	 * @internal
+	 */
+	class GetAllEntitiesRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        var _a;
+	        super();
+	        this.parameters = parameters;
+	        // Apply defaults.
+	        (_a = parameters.limit) !== null && _a !== void 0 ? _a : (parameters.limit = DEFAULT_LIMIT);
+	    }
+	    operation() {
+	        return RequestOperation$1.PNGetAllEntitiesOperation;
+	    }
+	    validate() {
+	        if (!this.parameters.entityClass)
+	            return 'Entity class cannot be empty';
+	    }
+	    get path() {
+	        return `/subkeys/${this.parameters.keySet.subscribeKey}/entities`;
+	    }
+	    get queryParameters() {
+	        const { entityClass, entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ entity_class: entityClass }, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sort ? { sort } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	    }
+	}
+
+	/**
+	 * Update Entity REST API module.
+	 *
+	 * Full resource replacement via PUT.
+	 * Note: `entityClass` is immutable and cannot be changed via update.
+	 *
+	 * @internal
+	 */
+	// endregion
+	/**
+	 * Update Entity request.
+	 *
+	 * @internal
+	 */
+	class UpdateEntityRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        super({ method: TransportMethod.PUT });
+	        this.parameters = parameters;
+	    }
+	    operation() {
+	        return RequestOperation$1.PNUpdateEntityOperation;
+	    }
+	    validate() {
+	        if (!this.parameters.id)
+	            return 'Entity id cannot be empty';
+	        if (!this.parameters.entity)
+	            return 'Entity cannot be empty';
+	        if (this.parameters.entity.entityClassVersion === undefined || this.parameters.entity.entityClassVersion === null)
+	            return 'Entity class version cannot be empty';
+	    }
+	    get headers() {
+	        var _a;
+	        let headers = (_a = super.headers) !== null && _a !== void 0 ? _a : {};
+	        if (this.parameters.ifMatchesEtag)
+	            headers = Object.assign(Object.assign({}, headers), { 'If-Match': this.parameters.ifMatchesEtag });
+	        return Object.assign(Object.assign({}, headers), { 'Content-Type': 'application/vnd.pubnub.objects.entity+json;version=1' });
+	    }
+	    get path() {
+	        const { keySet: { subscribeKey }, id, } = this.parameters;
+	        return `/subkeys/${subscribeKey}/entities/${encodeString(id)}`;
+	    }
+	    get body() {
+	        return JSON.stringify({ data: this.parameters.entity });
+	    }
+	}
+
+	/**
+	 * Remove Entity REST API module.
+	 *
+	 * @internal
+	 */
+	// endregion
+	/**
+	 * Remove Entity request.
+	 *
+	 * @internal
+	 */
+	class RemoveEntityRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        super({ method: TransportMethod.DELETE });
+	        this.parameters = parameters;
+	    }
+	    operation() {
+	        return RequestOperation$1.PNRemoveEntityOperation;
+	    }
+	    validate() {
+	        if (!this.parameters.id)
+	            return 'Entity id cannot be empty';
+	    }
+	    get headers() {
+	        var _a;
+	        let headers = (_a = super.headers) !== null && _a !== void 0 ? _a : {};
+	        if (this.parameters.ifMatchesEtag)
+	            headers = Object.assign(Object.assign({}, headers), { 'If-Match': this.parameters.ifMatchesEtag });
+	        return Object.keys(headers).length > 0 ? headers : undefined;
+	    }
+	    parse(response) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return { status: response.status };
+	        });
+	    }
+	    get path() {
+	        const { keySet: { subscribeKey }, id, } = this.parameters;
+	        return `/subkeys/${subscribeKey}/entities/${encodeString(id)}`;
+	    }
+	}
+
+	/**
+	 * Patch Entity REST API module.
+	 *
+	 * Partial update via JSON Patch (RFC 6902).
+	 * Accepts `set` (dot-notation key-value pairs) and `remove` (dot-notation paths)
+	 * and converts them to JSON Patch operations on the wire.
+	 *
+	 * @internal
+	 */
+	// endregion
+	/**
+	 * Patch Entity request.
+	 *
+	 * @internal
+	 */
+	class PatchEntityRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        super({ method: TransportMethod.PATCH });
+	        this.parameters = parameters;
+	    }
+	    operation() {
+	        return RequestOperation$1.PNPatchEntityOperation;
+	    }
+	    validate() {
+	        if (!this.parameters.id)
+	            return 'Entity id cannot be empty';
+	        const hasSet = this.parameters.set && Object.keys(this.parameters.set).length > 0;
+	        const hasRemove = this.parameters.remove && this.parameters.remove.length > 0;
+	        if (!hasSet && !hasRemove)
+	            return 'At least one of set or remove must be provided';
+	    }
+	    get headers() {
+	        var _a;
+	        let headers = (_a = super.headers) !== null && _a !== void 0 ? _a : {};
+	        if (this.parameters.ifMatchesEtag)
+	            headers = Object.assign(Object.assign({}, headers), { 'If-Match': this.parameters.ifMatchesEtag });
+	        if (this.parameters.idempotencyKey)
+	            headers = Object.assign(Object.assign({}, headers), { 'Idempotency-Key': this.parameters.idempotencyKey });
+	        return Object.assign(Object.assign({}, headers), { 'Content-Type': 'application/json-patch+json' });
+	    }
+	    get path() {
+	        const { keySet: { subscribeKey }, id, } = this.parameters;
+	        return `/subkeys/${subscribeKey}/entities/${encodeString(id)}`;
+	    }
+	    get body() {
+	        // Prefix all field paths with 'payload.' so users write simple field names
+	        // (e.g., 'standards') and the SDK produces '/payload/standards' on the wire.
+	        const prefixedSet = this.parameters.set
+	            ? Object.fromEntries(Object.entries(this.parameters.set).map(([key, value]) => [`payload.${key}`, value]))
+	            : undefined;
+	        const prefixedRemove = this.parameters.remove ? this.parameters.remove.map((key) => `payload.${key}`) : undefined;
+	        // Convert set/remove (dot notation) to JSON Patch operations (JSON Pointer notation).
+	        const jsonPatchOps = toJsonPatchOperations(prefixedSet, prefixedRemove);
+	        return JSON.stringify(jsonPatchOps);
+	    }
+	}
+
+	/**
+	 * Get Entity REST API module.
+	 *
+	 * @internal
+	 */
+	// endregion
+	/**
+	 * Get Entity request.
+	 *
+	 * @internal
+	 */
+	class GetEntityRequest extends AbstractRequest {
+	    constructor(parameters) {
+	        super();
+	        this.parameters = parameters;
+	    }
+	    operation() {
+	        return RequestOperation$1.PNGetEntityOperation;
+	    }
+	    validate() {
+	        if (!this.parameters.id)
+	            return 'Entity id cannot be empty';
+	    }
+	    get path() {
+	        const { keySet: { subscribeKey }, id, } = this.parameters;
+	        return `/subkeys/${subscribeKey}/entities/${encodeString(id)}`;
+	    }
+	}
+
+	/**
+	 * PubNub DataSync API module.
+	 */
+	/**
+	 * PubNub DataSync API interface.
+	 */
+	class PubNubDataSync {
+	    /**
+	     * Create DataSync API access object.
+	     *
+	     * @param configuration - Extended PubNub client configuration object.
+	     * @param sendRequest - Function which should be used to send REST API calls.
+	     *
+	     * @internal
+	     */
+	    constructor(configuration, 
+	    /* eslint-disable  @typescript-eslint/no-explicit-any */
+	    sendRequest) {
+	        this.keySet = configuration.keySet;
+	        this.configuration = configuration;
+	        this.sendRequest = sendRequest;
+	    }
+	    /**
+	     * Get registered loggers' manager.
+	     *
+	     * @returns Registered loggers' manager.
+	     *
+	     * @internal
+	     */
+	    get logger() {
+	        return this.configuration.logger();
+	    }
+	    /**
+	     * Create a new Entity.
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous create entity response or `void` in case if `callback` provided.
+	     */
+	    createEntity(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Create Entity with parameters:',
+	            }));
+	            const request = new CreateEntityRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Fetch a specific Entity.
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous get entity response or `void` in case if `callback` provided.
+	     */
+	    getEntity(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Get Entity with parameters:',
+	            }));
+	            const request = new GetEntityRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Fetch a paginated list of Entities for a given Entity Class.
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous get all entities response or `void` in case if `callback` provided.
+	     */
+	    getAllEntities(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Get all Entities with parameters:',
+	            }));
+	            const request = new GetAllEntitiesRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Update an Entity (full replacement via PUT).
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous update entity response or `void` in case if `callback` provided.
+	     */
+	    updateEntity(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Update Entity with parameters:',
+	            }));
+	            const request = new UpdateEntityRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Patch an Entity (partial update via JSON Patch RFC 6902).
+	     *
+	     * Uses `set` and `remove` with dot-notation field paths.
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous patch entity response or `void` in case if `callback` provided.
+	     */
+	    patchEntity(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Patch Entity with parameters:',
+	            }));
+	            const request = new PatchEntityRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Remove an Entity.
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous remove entity response or `void` in case if `callback` provided.
+	     */
+	    removeEntity(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Remove Entity with parameters:',
+	            }));
+	            const request = new RemoveEntityRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Create a new Relationship.
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous create relationship response or `void` in case if `callback` provided.
+	     */
+	    createRelationship(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Create Relationship with parameters:',
+	            }));
+	            const request = new CreateRelationshipRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Fetch a specific Relationship.
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous get relationship response or `void` in case if `callback` provided.
+	     */
+	    getRelationship(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Get Relationship with parameters:',
+	            }));
+	            const request = new GetRelationshipRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Fetch a paginated list of Relationships.
+	     *
+	     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous get all relationships response or `void` in case if `callback` provided.
+	     */
+	    getAllRelationships(parametersOrCallback, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const parameters = parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
+	            callback !== null && callback !== void 0 ? callback : (callback = typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined);
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Get all Relationships with parameters:',
+	            }));
+	            const request = new GetAllRelationshipsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Update a Relationship (full replacement via PUT).
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous update relationship response or `void` in case if `callback` provided.
+	     */
+	    updateRelationship(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Update Relationship with parameters:',
+	            }));
+	            const request = new UpdateRelationshipRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Patch a Relationship (partial update via JSON Patch RFC 6902).
+	     *
+	     * Uses `set` and `remove` with dot-notation field paths.
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous patch relationship response or `void` in case if `callback` provided.
+	     */
+	    patchRelationship(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Patch Relationship with parameters:',
+	            }));
+	            const request = new PatchRelationshipRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Remove a Relationship.
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous remove relationship response or `void` in case if `callback` provided.
+	     */
+	    removeRelationship(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Remove Relationship with parameters:',
+	            }));
+	            const request = new RemoveRelationshipRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	}
+
+	/**
 	 * Time REST API module.
 	 */
 	// endregion
@@ -15429,6 +16374,7 @@
 	        }));
 	        // API group entry points initialization.
 	        this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
+	        this._dataSync = new PubNubDataSync(this._configuration, this.sendRequest.bind(this));
 	        this._channelGroups = new PubNubChannelGroups(this._configuration.logger(), this._configuration.keySet, this.sendRequest.bind(this));
 	        this._push = new PubNubPushNotifications(this._configuration.logger(), this._configuration.keySet, this.sendRequest.bind(this));
 	        {
@@ -16029,17 +16975,18 @@
 	            })
 	                .catch((error) => {
 	                const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
+	                const errorMessage = apiError.toFormattedMessage(operation);
 	                // Notify callback (if possible).
 	                if (callback) {
 	                    if (apiError.category !== StatusCategory$1.PNCancelledCategory) {
 	                        this.logger.error('PubNub', () => ({
 	                            messageType: 'error',
-	                            message: apiError.toPubNubError(operation, 'REST API request processing error, check status for details'),
+	                            message: apiError.toPubNubError(operation, errorMessage),
 	                        }));
 	                    }
 	                    return callback(apiError.toStatus(operation), null);
 	                }
-	                const pubNubError = apiError.toPubNubError(operation, 'REST API request processing error, check status for details');
+	                const pubNubError = apiError.toPubNubError(operation, errorMessage);
 	                if (apiError.category !== StatusCategory$1.PNCancelledCategory)
 	                    this.logger.error('PubNub', () => ({ messageType: 'error', message: pubNubError }));
 	                throw pubNubError;
@@ -17343,6 +18290,16 @@
 	     */
 	    get objects() {
 	        return this._objects;
+	    }
+	    // --------------------------------------------------------
+	    // -------------------- DataSync API ---------------------
+	    // --------------------------------------------------------
+	    // region DataSync API
+	    /**
+	     * PubNub DataSync API group.
+	     */
+	    get dataSync() {
+	        return this._dataSync;
 	    }
 	    /**
 	     Fetch a paginated list of User objects.
