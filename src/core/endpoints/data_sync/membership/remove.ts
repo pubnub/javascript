@@ -33,9 +33,10 @@ type RequestParameters = DataSync.RemoveMembershipParameters & {
  *
  * @internal
  */
-export class RemoveMembershipRequest<
-  Response extends DataSync.RemoveMembershipResponse,
-> extends AbstractRequest<Response, Response> {
+export class RemoveMembershipRequest<Response extends DataSync.RemoveMembershipResponse> extends AbstractRequest<
+  Response,
+  Response
+> {
   constructor(private readonly parameters: RequestParameters) {
     super({ method: TransportMethod.DELETE });
   }
@@ -51,8 +52,7 @@ export class RemoveMembershipRequest<
   protected get headers(): Record<string, string> | undefined {
     let headers = super.headers ?? {};
 
-    if (this.parameters.ifMatchesEtag)
-      headers = { ...headers, 'If-Match': this.parameters.ifMatchesEtag };
+    if (this.parameters.ifMatchesEtag) headers = { ...headers, 'If-Match': this.parameters.ifMatchesEtag };
 
     return Object.keys(headers).length > 0 ? headers : undefined;
   }

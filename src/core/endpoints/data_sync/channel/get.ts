@@ -31,9 +31,10 @@ type RequestParameters = DataSync.GetChannelParameters & {
  *
  * @internal
  */
-export class GetChannelRequest<
-  Response extends DataSync.GetChannelResponse,
-> extends AbstractRequest<Response, Response> {
+export class GetChannelRequest<Response extends DataSync.GetChannelResponse> extends AbstractRequest<
+  Response,
+  Response
+> {
   constructor(private readonly parameters: RequestParameters) {
     super();
   }

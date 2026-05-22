@@ -41,9 +41,10 @@ type RequestParameters = DataSync.GetAllEntitiesParameters & {
  *
  * @internal
  */
-export class GetAllEntitiesRequest<
-  Response extends DataSync.GetAllEntitiesResponse,
-> extends AbstractRequest<Response, Response> {
+export class GetAllEntitiesRequest<Response extends DataSync.GetAllEntitiesResponse> extends AbstractRequest<
+  Response,
+  Response
+> {
   constructor(private readonly parameters: RequestParameters) {
     super();
 

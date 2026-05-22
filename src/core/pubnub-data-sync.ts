@@ -117,9 +117,7 @@ export default class PubNubDataSync {
    *
    * @returns Asynchronous create entity response.
    */
-  public async createEntity(
-    parameters: DataSync.CreateEntityParameters,
-  ): Promise<DataSync.CreateEntityResponse>;
+  public async createEntity(parameters: DataSync.CreateEntityParameters): Promise<DataSync.CreateEntityResponse>;
 
   /**
    * Create a new Entity.
@@ -166,9 +164,7 @@ export default class PubNubDataSync {
    *
    * @returns Asynchronous get entity response.
    */
-  public async getEntity(
-    parameters: DataSync.GetEntityParameters,
-  ): Promise<DataSync.GetEntityResponse>;
+  public async getEntity(parameters: DataSync.GetEntityParameters): Promise<DataSync.GetEntityResponse>;
 
   /**
    * Fetch a specific Entity.
@@ -215,9 +211,7 @@ export default class PubNubDataSync {
    *
    * @returns Asynchronous get all entities response.
    */
-  public async getAllEntities(
-    parameters: DataSync.GetAllEntitiesParameters,
-  ): Promise<DataSync.GetAllEntitiesResponse>;
+  public async getAllEntities(parameters: DataSync.GetAllEntitiesParameters): Promise<DataSync.GetAllEntitiesResponse>;
 
   /**
    * Fetch a paginated list of Entities for a given Entity Class.
@@ -264,9 +258,7 @@ export default class PubNubDataSync {
    *
    * @returns Asynchronous update entity response.
    */
-  public async updateEntity(
-    parameters: DataSync.UpdateEntityParameters,
-  ): Promise<DataSync.UpdateEntityResponse>;
+  public async updateEntity(parameters: DataSync.UpdateEntityParameters): Promise<DataSync.UpdateEntityResponse>;
 
   /**
    * Update an Entity (full replacement via PUT).
@@ -317,9 +309,7 @@ export default class PubNubDataSync {
    *
    * @returns Asynchronous patch entity response.
    */
-  public async patchEntity(
-    parameters: DataSync.PatchEntityParameters,
-  ): Promise<DataSync.PatchEntityResponse>;
+  public async patchEntity(parameters: DataSync.PatchEntityParameters): Promise<DataSync.PatchEntityResponse>;
 
   /**
    * Patch an Entity (partial update via JSON Patch RFC 6902).
@@ -368,9 +358,7 @@ export default class PubNubDataSync {
    *
    * @returns Asynchronous remove entity response.
    */
-  public async removeEntity(
-    parameters: DataSync.RemoveEntityParameters,
-  ): Promise<DataSync.RemoveEntityResponse>;
+  public async removeEntity(parameters: DataSync.RemoveEntityParameters): Promise<DataSync.RemoveEntityResponse>;
 
   /**
    * Remove an Entity.
@@ -509,9 +497,7 @@ export default class PubNubDataSync {
    *
    * @param callback - Request completion handler callback.
    */
-  public getAllRelationships(
-    callback: ResultCallback<DataSync.GetAllRelationshipsResponse>,
-  ): void;
+  public getAllRelationships(callback: ResultCallback<DataSync.GetAllRelationshipsResponse>): void;
 
   /**
    * Fetch a paginated list of Relationships.
@@ -1150,9 +1136,7 @@ export default class PubNubDataSync {
    *
    * @returns Asynchronous get all channels response.
    */
-  public async getAllChannels(
-    parameters?: DataSync.GetAllChannelsParameters,
-  ): Promise<DataSync.GetAllChannelsResponse>;
+  public async getAllChannels(parameters?: DataSync.GetAllChannelsParameters): Promise<DataSync.GetAllChannelsResponse>;
 
   /**
    * Fetch a paginated list of Channels.

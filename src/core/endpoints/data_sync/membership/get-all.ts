@@ -41,9 +41,10 @@ type RequestParameters = DataSync.GetAllMembershipsParameters & {
  *
  * @internal
  */
-export class GetAllMembershipsRequest<
-  Response extends DataSync.GetAllMembershipsResponse,
-> extends AbstractRequest<Response, Response> {
+export class GetAllMembershipsRequest<Response extends DataSync.GetAllMembershipsResponse> extends AbstractRequest<
+  Response,
+  Response
+> {
   constructor(private readonly parameters: RequestParameters) {
     super();
 
@@ -66,9 +67,7 @@ export class GetAllMembershipsRequest<
     return {
       ...(userId ? { user_id: userId } : {}),
       ...(channelId ? { channel_id: channelId } : {}),
-      ...(relationshipClassVersion !== undefined
-        ? { relationship_class_version: `${relationshipClassVersion}` }
-        : {}),
+      ...(relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {}),
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),

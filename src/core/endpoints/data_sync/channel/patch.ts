@@ -37,9 +37,10 @@ type RequestParameters = DataSync.PatchChannelParameters & {
  *
  * @internal
  */
-export class PatchChannelRequest<
-  Response extends DataSync.PatchChannelResponse,
-> extends AbstractRequest<Response, Response> {
+export class PatchChannelRequest<Response extends DataSync.PatchChannelResponse> extends AbstractRequest<
+  Response,
+  Response
+> {
   constructor(private readonly parameters: RequestParameters) {
     super({ method: TransportMethod.PATCH });
   }
@@ -60,11 +61,9 @@ export class PatchChannelRequest<
   protected get headers(): Record<string, string> | undefined {
     let headers = super.headers ?? {};
 
-    if (this.parameters.ifMatchesEtag)
-      headers = { ...headers, 'If-Match': this.parameters.ifMatchesEtag };
+    if (this.parameters.ifMatchesEtag) headers = { ...headers, 'If-Match': this.parameters.ifMatchesEtag };
 
-    if (this.parameters.idempotencyKey)
-      headers = { ...headers, 'Idempotency-Key': this.parameters.idempotencyKey };
+    if (this.parameters.idempotencyKey) headers = { ...headers, 'Idempotency-Key': this.parameters.idempotencyKey };
 
     return {
       ...headers,

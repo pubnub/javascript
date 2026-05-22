@@ -34,9 +34,10 @@ type RequestParameters = DataSync.UpdateChannelParameters & {
  *
  * @internal
  */
-export class UpdateChannelRequest<
-  Response extends DataSync.UpdateChannelResponse,
-> extends AbstractRequest<Response, Response> {
+export class UpdateChannelRequest<Response extends DataSync.UpdateChannelResponse> extends AbstractRequest<
+  Response,
+  Response
+> {
   constructor(private readonly parameters: RequestParameters) {
     super({ method: TransportMethod.PUT });
   }
@@ -55,8 +56,7 @@ export class UpdateChannelRequest<
   protected get headers(): Record<string, string> | undefined {
     let headers = super.headers ?? {};
 
-    if (this.parameters.ifMatchesEtag)
-      headers = { ...headers, 'If-Match': this.parameters.ifMatchesEtag };
+    if (this.parameters.ifMatchesEtag) headers = { ...headers, 'If-Match': this.parameters.ifMatchesEtag };
 
     return {
       ...headers,

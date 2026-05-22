@@ -31,9 +31,10 @@ type RequestParameters = DataSync.CreateUserParameters & {
  *
  * @internal
  */
-export class CreateUserRequest<
-  Response extends DataSync.CreateUserResponse,
-> extends AbstractRequest<Response, Response> {
+export class CreateUserRequest<Response extends DataSync.CreateUserResponse> extends AbstractRequest<
+  Response,
+  Response
+> {
   constructor(private readonly parameters: RequestParameters) {
     super({ method: TransportMethod.POST });
   }
@@ -51,8 +52,7 @@ export class CreateUserRequest<
   protected get headers(): Record<string, string> | undefined {
     let headers = super.headers ?? {};
 
-    if (this.parameters.idempotencyKey)
-      headers = { ...headers, 'Idempotency-Key': this.parameters.idempotencyKey };
+    if (this.parameters.idempotencyKey) headers = { ...headers, 'Idempotency-Key': this.parameters.idempotencyKey };
 
     return {
       ...headers,
