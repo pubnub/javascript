@@ -56,14 +56,30 @@ export class GetAllRelationshipsRequest<Response extends DataSync.GetAllRelation
     return RequestOperation.PNGetAllRelationshipsOperation;
   }
 
+  validate(): string | undefined {
+    if (!this.parameters.relationshipClass) return 'Relationship class cannot be empty';
+  }
+
   protected get path(): string {
     return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/relationships`;
   }
 
   protected get queryParameters(): Query {
-    const { entityAId, entityBId, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+    const {
+      relationshipClass,
+      relationshipClassVersion,
+      entityAId,
+      entityBId,
+      cursor,
+      limit,
+      filter,
+      sort,
+      filterAdvanced,
+    } = this.parameters;
 
     return {
+      relationship_class: relationshipClass,
+      ...(relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {}),
       ...(entityAId ? { entity_a_id: entityAId } : {}),
       ...(entityBId ? { entity_b_id: entityBId } : {}),
       ...(cursor ? { cursor } : {}),

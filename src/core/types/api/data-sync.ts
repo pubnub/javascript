@@ -573,10 +573,14 @@ export type GetRelationshipParameters = {
 
 /**
  * Get All Relationships request parameters.
- *
- * All parameters are optional — relationships can be listed without any filters.
  */
 export type GetAllRelationshipsParameters = PagedRequestParameters & {
+  /** Relationship class name (required by the server). */
+  relationshipClass: string;
+
+  /** Relationship class version. */
+  relationshipClassVersion?: number;
+
   /** Filter relationships by first entity ID. */
   entityAId?: string;
 
