@@ -495,13 +495,6 @@ export default class PubNubDataSync {
   /**
    * Fetch a paginated list of Relationships.
    *
-   * @param callback - Request completion handler callback.
-   */
-  public getAllRelationships(callback: ResultCallback<DataSync.GetAllRelationshipsResponse>): void;
-
-  /**
-   * Fetch a paginated list of Relationships.
-   *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
@@ -513,32 +506,26 @@ export default class PubNubDataSync {
   /**
    * Fetch a paginated list of Relationships.
    *
-   * @param [parameters] - Request configuration parameters.
+   * @param parameters - Request configuration parameters.
    *
    * @returns Asynchronous get all relationships response.
    */
   public async getAllRelationships(
-    parameters?: DataSync.GetAllRelationshipsParameters,
+    parameters: DataSync.GetAllRelationshipsParameters,
   ): Promise<DataSync.GetAllRelationshipsResponse>;
 
   /**
    * Fetch a paginated list of Relationships.
    *
-   * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
+   * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
    * @returns Asynchronous get all relationships response or `void` in case if `callback` provided.
    */
   async getAllRelationships(
-    parametersOrCallback?:
-      | DataSync.GetAllRelationshipsParameters
-      | ResultCallback<DataSync.GetAllRelationshipsResponse>,
+    parameters: DataSync.GetAllRelationshipsParameters,
     callback?: ResultCallback<DataSync.GetAllRelationshipsResponse>,
   ): Promise<DataSync.GetAllRelationshipsResponse | void> {
-    const parameters: DataSync.GetAllRelationshipsParameters =
-      parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
-    callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
-
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
