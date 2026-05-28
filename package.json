@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "11.0.0",
+  "version": "11.0.1",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "scripts": {
@@ -67,6 +67,9 @@
     "node-fetch": "^2.7.0",
     "proxy-agent": "^6.3.0",
     "react-native-url-polyfill": "^2.0.0"
+  },
+  "overrides": {
+    "basic-ftp": "5.3.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
