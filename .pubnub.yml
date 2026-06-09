@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2026-05-13
+    version: v11.0.1
+    changes:
+      - type: improvement
+        text: "Bumped version of basic-ftp through override deps for proxy agent to use safe transitive dependency."
   - date: 2026-04-20
     version: v11.0.0
     changes:
@@ -1406,7 +1411,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '11.0.0'
+version: '11.0.1'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1422,7 +1427,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v11.0.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v11.0.1.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2093,7 +2098,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v11.0.0/pubnub.11.0.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v11.0.1/pubnub.11.0.1.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
