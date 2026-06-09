@@ -275,7 +275,7 @@ export class RetryPolicy {
         let delay = -1;
         if (response && response.headers['retry-after'] !== undefined)
           delay = parseInt(response.headers['retry-after'], 10);
-        if (delay === -1) delay = Math.min(Math.pow(2, attempt), this.maximumDelay);
+        if (delay === -1) delay = Math.min(this.minimumDelay * Math.pow(2, attempt), this.maximumDelay);
 
         return (delay + Math.random()) * 1000;
       },
