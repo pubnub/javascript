@@ -1,3 +1,9 @@
+## v11.0.2
+June 11 2026
+
+#### Fixed
+- Fix exponential retry policy delay calculation to respected minimum delay configured value.
+
 ## v11.0.1
 May 13 2026
 

@@ -1,5 +1,10 @@
 ---
 changelog:
+  - date: 2026-06-11
+    version: v11.0.2
+    changes:
+      - type: bug
+        text: "Fix exponential retry policy delay calculation to respected minimum delay configured value."
   - date: 2026-05-13
     version: v11.0.1
     changes:
@@ -1411,7 +1416,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '11.0.1'
+version: '11.0.2'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1427,7 +1432,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v11.0.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v11.0.2.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2098,7 +2103,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v11.0.1/pubnub.11.0.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v11.0.2/pubnub.11.0.2.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
