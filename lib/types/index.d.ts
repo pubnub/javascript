@@ -34,7 +34,7 @@ declare class PubNub extends PubNubCore<
    * @throws An error if {@link PubNub} client already configured to use `keepAlive`.
    * `keepAlive` and `proxy` can't be used simultaneously.
    */
-  setProxy(configuration?: ProxyAgentOptions): void;
+  setProxy(configuration?: NodeTransportProxyConfiguration): void;
 }
 
 /**
