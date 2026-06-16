@@ -174,4 +174,123 @@ describe('NodeTransport (undici)', () => {
     expect(rawBody).to.contain('value-1');
     expect(rawBody).to.contain('cat.txt');
   });
+
+  describe('network error classification', () => {
+    // `normalizeNetworkError` is the node-only shim that re-shapes undici/global-`fetch` rejections so
+    // the shared `PubNubAPIError` classifier maps them to the same categories `node-fetch` produced.
+    // nock cannot synthesise undici's `error.cause.code`, so the contract is exercised directly.
+    const classify = (error: unknown): StatusCategory => {
+      const normalize = (NodeTransport as unknown as { normalizeNetworkError(e: unknown): Error })
+        .normalizeNetworkError;
+      return PubNubAPIError.create(normalize(error)).category;
+    };
+
+    // A global-`fetch` rejection is always a `TypeError: fetch failed` with the real cause attached.
+    // A sentinel distinguishes "no cause" (the bad-request path) from "cause is undefined".
+    const NO_CAUSE = Symbol('no-cause');
+    const fetchFailed = (cause: unknown = NO_CAUSE): TypeError => {
+      const error = new TypeError('fetch failed');
+      if (cause !== NO_CAUSE) (error as { cause?: unknown }).cause = cause;
+      return error;
+    };
+
+    it('maps undici UND_ERR_*_TIMEOUT causes to PNTimeoutCategory', () => {
+      for (const code of ['UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT', 'UND_ERR_BODY_TIMEOUT']) {
+        expect(classify(fetchFailed({ code, message: code }))).to.equal(StatusCategory.PNTimeoutCategory);
+      }
+    });
+
+    it('maps a POSIX ECONNREFUSED cause to PNNetworkIssuesCategory', () => {
+      expect(classify(fetchFailed({ code: 'ECONNREFUSED', message: 'connect ECONNREFUSED' }))).to.equal(
+        StatusCategory.PNNetworkIssuesCategory,
+      );
+    });
+
+    it('maps a POSIX ETIMEDOUT cause to PNTimeoutCategory', () => {
+      expect(classify(fetchFailed({ code: 'ETIMEDOUT', message: 'connect ETIMEDOUT' }))).to.equal(
+        StatusCategory.PNTimeoutCategory,
+      );
+    });
+
+    it('maps a fetch failure whose cause carries no code (TLS/DNS) to PNNetworkIssuesCategory', () => {
+      // e.g. a TLS handshake failure or a DNS AggregateError — cause object without a string `code`.
+      expect(classify(fetchFailed({ message: 'unable to verify the first certificate' }))).to.equal(
+        StatusCategory.PNNetworkIssuesCategory,
+      );
+    });
+
+    it('unwraps an AggregateError cause to classify on the wrapped error code', () => {
+      // Multi-address connect failures surface a top-level-codeless AggregateError whose wrapped
+      // errors carry the real POSIX code; the code must drive classification, not the generic branch.
+      const aggregate = { message: 'connect failed', errors: [{ code: 'ECONNREFUSED' }] };
+      expect(classify(fetchFailed(aggregate))).to.equal(StatusCategory.PNNetworkIssuesCategory);
+
+      const timedOut = { message: 'connect failed', errors: [{ code: 'ETIMEDOUT' }] };
+      expect(classify(fetchFailed(timedOut))).to.equal(StatusCategory.PNTimeoutCategory);
+    });
+
+    it('leaves a TypeError without a cause as PNBadRequestCategory', () => {
+      // A genuine request-construction error must remain a (non-retryable) bad request.
+      expect(classify(fetchFailed())).to.equal(StatusCategory.PNBadRequestCategory);
+    });
+  });
+
+  it('does not charge body-building time against the request timeout', async () => {
+    nock(ORIGIN).post('/upload').reply(204, '');
+
+    // `toArrayBuffer` takes longer than the request timeout. Because the timeout clock only starts at
+    // the `fetch` call (after the body is built), the upload must still succeed — matching node-fetch,
+    // whose `{timeout}` likewise started at the fetch call.
+    const file: PubNubFileInterface = {
+      name: 'slow.txt',
+      mimeType: 'text/plain',
+      toArrayBuffer: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 120));
+        return new TextEncoder().encode('slow').buffer;
+      },
+      toFileUri: async () => ({}),
+    };
+
+    const [promise] = makeTransport().makeSendable(
+      makeRequest({
+        path: '/upload',
+        method: TransportMethod.POST,
+        timeout: 0.05, // 50ms — shorter than the 120ms body build.
+        formData: [{ key: 'key', value: 'value-1' }],
+        body: file as unknown as TransportRequest['body'],
+      }),
+    );
+
+    const response = await promise;
+    expect(response.status).to.equal(204);
+  });
+
+  it('classifies a body-building rejection instead of letting it escape unhandled', async () => {
+    // A file whose `toArrayBuffer()` rejects fails inside `requestFromTransportRequest`, before the
+    // `fetch` call. The outer `.catch` must still convert it into a PubNubAPIError.
+    const file: PubNubFileInterface = {
+      name: 'broken.txt',
+      mimeType: 'text/plain',
+      toArrayBuffer: async () => {
+        throw new Error('unreadable file');
+      },
+      toFileUri: async () => ({}),
+    };
+
+    const [promise] = makeTransport().makeSendable(
+      makeRequest({
+        path: '/upload',
+        method: TransportMethod.POST,
+        formData: [{ key: 'key', value: 'value-1' }],
+        body: file as unknown as TransportRequest['body'],
+      }),
+    );
+
+    try {
+      await promise;
+      expect.fail('expected rejection');
+    } catch (error) {
+      expect(error).to.be.instanceOf(PubNubAPIError);
+    }
+  });
 });

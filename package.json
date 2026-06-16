@@ -64,7 +64,7 @@
     "fflate": "^0.8.2",
     "lil-uuid": "^0.1.1",
     "react-native-url-polyfill": "^2.0.0",
-    "undici": "^6.26.0"
+    "undici": "^7.27.2"
   },
   "overrides": {
     "basic-ftp": "5.3.1"
@@ -134,6 +134,6 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.0.0"
   }
 }

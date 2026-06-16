@@ -25,10 +25,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        node: [18.18.0, 20]
+        node: [22, 24]
         env: ['ci:node']
         include:
-          - node: 18.18.0
+          - node: 22
             env: 'ci:web'
     steps:
       - name: Checkout repository
