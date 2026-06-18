@@ -3342,6 +3342,11 @@ declare namespace PubNub {
      * Object with data received from a transport-specific response object.
      */
     message: TransportResponse;
+    /**
+     * Additional information which can be useful alongside the response (e.g. the application-layer
+     * protocol negotiated for the connection).
+     */
+    details?: string;
   };
 
   /**

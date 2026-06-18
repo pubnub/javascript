@@ -145,8 +145,10 @@ export class ConsoleLogger implements Logger {
       return `Received HTTP response:\n  ${this.paddedString('URL', padding)}: ${
         response.url
       }\n  ${this.paddedString('Status', padding)}: ${response.status}${
-        headersList ? `\n  ${this.paddedString('Headers', padding)}:\n${headersList}` : ''
-      }${formattedBody?.body ? `\n  ${this.paddedString('Body', padding)}:\n${formattedBody.body}` : ''}`;
+        message.details ? `\n  ${this.paddedString('Details', padding)}: ${message.details}` : ''
+      }${headersList ? `\n  ${this.paddedString('Headers', padding)}:\n${headersList}` : ''}${
+        formattedBody?.body ? `\n  ${this.paddedString('Body', padding)}:\n${formattedBody.body}` : ''
+      }`;
     } else if (message.messageType === 'error') {
       const formattedStatus = this.formattedErrorStatus(message);
       const error = message.message;
