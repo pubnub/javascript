@@ -63,8 +63,15 @@
     "fast-text-encoding": "^1.0.6",
     "fflate": "^0.8.2",
     "lil-uuid": "^0.1.1",
-    "react-native-url-polyfill": "^2.0.0",
     "undici": "^7.27.2"
+  },
+  "peerDependencies": {
+    "react-native-url-polyfill": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react-native-url-polyfill": {
+      "optional": true
+    }
   },
   "overrides": {
     "basic-ftp": "5.3.1"
@@ -114,6 +121,7 @@
     "node-fetch": "^2.7.0",
     "prettier": "^3.2.5",
     "process": "^0.11.10",
+    "react-native-url-polyfill": "^2.0.0",
     "rimraf": "^3.0.2",
     "rollup": "4.22.4",
     "rollup-plugin-gzip": "^3.1.2",
