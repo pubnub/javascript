@@ -1,3 +1,12 @@
+## v12.0.0
+June 22 2026
+
+#### Added
+- **BREAKING CHANGES**: Added HTTP/2 support for Node, upgrade minimum node version requirements to v22.
+
+#### Fixed
+- React native specific dependencies is made as peer-dependency for package dependency installation. Fixed the following issues reported by [@tmcpartlin](https://github.com/tmcpartlin): [#383](https://github.com/pubnub/javascript/issues/383).
+
 ## v11.0.2
 June 11 2026
 

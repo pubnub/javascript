@@ -1,5 +1,12 @@
 ---
 changelog:
+  - date: 2026-06-22
+    version: v12.0.0
+    changes:
+      - type: feature
+        text: "BREAKING CHANGES: Added HTTP/2 support for Node, upgrade minimum node version requirements to v22."
+      - type: bug
+        text: "React native specific dependencies is made as peer-dependency for package dependency installation."
   - date: 2026-06-11
     version: v11.0.2
     changes:
@@ -1416,7 +1423,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '11.0.2'
+version: '12.0.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1432,7 +1439,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v11.0.2.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v12.0.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2103,7 +2110,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v11.0.2/pubnub.11.0.2.js
+            location: https://github.com/pubnub/javascript/releases/download/v12.0.0/pubnub.12.0.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

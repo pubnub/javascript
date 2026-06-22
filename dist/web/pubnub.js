@@ -4621,7 +4621,7 @@
 	            const formattedBody = this.formattedBody(message);
 	            const padding = ((formattedBody === null || formattedBody === void 0 ? void 0 : formattedBody.formData) ? 'Headers' : 'Status').length;
 	            const response = message.message;
-	            return `Received HTTP response:\n  ${this.paddedString('URL', padding)}: ${response.url}\n  ${this.paddedString('Status', padding)}: ${response.status}${headersList ? `\n  ${this.paddedString('Headers', padding)}:\n${headersList}` : ''}${(formattedBody === null || formattedBody === void 0 ? void 0 : formattedBody.body) ? `\n  ${this.paddedString('Body', padding)}:\n${formattedBody.body}` : ''}`;
+	            return `Received HTTP response:\n  ${this.paddedString('URL', padding)}: ${response.url}\n  ${this.paddedString('Status', padding)}: ${response.status}${message.details ? `\n  ${this.paddedString('Details', padding)}: ${message.details}` : ''}${headersList ? `\n  ${this.paddedString('Headers', padding)}:\n${headersList}` : ''}${(formattedBody === null || formattedBody === void 0 ? void 0 : formattedBody.body) ? `\n  ${this.paddedString('Body', padding)}:\n${formattedBody.body}` : ''}`;
 	        }
 	        else if (message.messageType === 'error') {
 	            const formattedStatus = this.formattedErrorStatus(message);
@@ -5432,7 +5432,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '11.0.2';
+	            return '12.0.0';
 	        },
 	        getVersion() {
 	            return this.version;
