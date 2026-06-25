@@ -34,7 +34,7 @@ declare class PubNub extends PubNubCore<
    * @throws An error if {@link PubNub} client already configured to use `keepAlive`.
    * `keepAlive` and `proxy` can't be used simultaneously.
    */
-  setProxy(configuration?: ProxyAgentOptions): void;
+  setProxy(configuration?: NodeTransportProxyConfiguration): void;
 }
 
 /**
@@ -3398,6 +3398,11 @@ declare namespace PubNub {
      * Object with data received from a transport-specific response object.
      */
     message: TransportResponse;
+    /**
+     * Additional information which can be useful alongside the response (e.g. the application-layer
+     * protocol negotiated for the connection).
+     */
+    details?: string;
   };
 
   /**

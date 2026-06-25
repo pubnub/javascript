@@ -25,10 +25,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        node: [18.18.0, 20]
+        node: [22, 24]
         env: ['ci:node']
         include:
-          - node: 18.18.0
+          - node: 22
             env: 'ci:web'
     steps:
       - name: Checkout repository
@@ -51,7 +51,7 @@ jobs:
           npm install
           npm run ${{ matrix.env }}
       - name: Test docs snippets syntax
-        if: matrix.node == '18.18.0' && matrix.env == 'ci:node'
+        if: matrix.node == '22' && matrix.env == 'ci:node'
         run: npm run test:snippets
       - name: Cancel workflow runs for commit on error
         if: failure()

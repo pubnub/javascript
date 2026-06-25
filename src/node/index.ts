@@ -1,4 +1,3 @@
-import { ProxyAgentOptions } from 'proxy-agent';
 import CborReader from 'cbor-sync';
 import { Readable } from 'stream';
 import { Buffer } from 'buffer';
@@ -13,7 +12,7 @@ import { CryptorConfiguration } from '../core/interfaces/crypto-module';
 import { makeConfiguration } from '../core/components/configuration';
 import { TokenManager } from '../core/components/token_manager';
 import { Cryptography } from '../core/interfaces/cryptography';
-import { NodeTransport } from '../transport/node-transport';
+import { NodeTransport, NodeTransportProxyConfiguration } from '../transport/node-transport';
 import { PubNubMiddleware } from '../transport/middleware';
 import { PubNubFileConstructor } from '../core/types/file';
 import { decode } from '../core/components/base64_codec';
@@ -142,7 +141,7 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
    * @throws An error if {@link PubNub} client already configured to use `keepAlive`.
    * `keepAlive` and `proxy` can't be used simultaneously.
    */
-  public setProxy(configuration?: ProxyAgentOptions) {
+  public setProxy(configuration?: NodeTransportProxyConfiguration) {
     if (configuration && (this._configuration.keepAlive ?? false))
       throw new PubNubError("Can't set 'proxy' because already configured for 'keepAlive'");
 
