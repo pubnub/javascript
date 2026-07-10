@@ -300,6 +300,16 @@ export abstract class SubscriptionBase implements EventEmitCapable, EventHandleC
   }
 
   /**
+   * Set a new DataSync event handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new
+   * DataSync event is received from the real-time network.
+   */
+  set onDataSync(listener: ((event: Subscription.DataSyncObject) => void) | undefined) {
+    this.eventDispatcher.onDataSync = listener;
+  }
+
+  /**
    * Set events handler.
    *
    * @param listener - Events listener configuration object, which lets specify handlers for multiple

@@ -48,12 +48,39 @@ type PermissionPayload = {
   groups?: Record<string, number>;
 
   /**
+   * Object containing DataSync `entity` permissions.
+   */
+  'datasync:entities'?: Record<string, number>;
+
+  /**
+   * Object containing DataSync `relationship` permissions.
+   */
+  'datasync:relationships'?: Record<string, number>;
+
+  /**
+   * Object containing DataSync `membership` permissions.
+   */
+  'datasync:memberships'?: Record<string, number>;
+
+  /**
    * Extra metadata to be published with the request.
    *
    * **Important:** Values must be scalar only; `arrays` or `objects` aren't supported.
    */
   meta?: PAM.Metadata;
 };
+
+/**
+ * Encoded DataSync projections payload, stored under the `pn-projections` meta key.
+ */
+type ProjectionsPayload = Record<'res' | 'pat', Record<string, string>>;
+
+/**
+ * Wire-level `meta` section.
+ *
+ * Holds user-supplied scalar metadata plus the SDK-injected `pn-projections` object.
+ */
+type MetaPayload = Record<string, PAM.Metadata[string] | ProjectionsPayload>;
 
 /**
  * Service success response.
@@ -111,10 +138,14 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
       patterns,
     } = this.parameters;
 
+    // DataSync projections are a standalone grant target — a request carrying only projections
+    // (no resources / patterns permissions) is still valid.
+    const hasProjections = this.buildProjections() !== undefined;
+
     if (!subscribeKey) return 'Missing Subscribe Key';
     if (!publishKey) return 'Missing Publish Key';
     if (!secretKey) return 'Missing Secret Key';
-    if (!resources && !patterns) return 'Missing either Resources or Patterns';
+    if (!resources && !patterns && !hasProjections) return 'Missing either Resources or Patterns';
 
     if (
       this.isVspPermissions(this.parameters) &&
@@ -140,7 +171,7 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
       });
     });
 
-    if (permissionsEmpty) return 'Missing values for either Resources or Patterns';
+    if (permissionsEmpty && !hasProjections) return 'Missing values for either Resources or Patterns';
   }
 
   async parse(response: TransportResponse): Promise<PAM.GrantTokenResponse> {
@@ -162,7 +193,7 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
       ? this.parameters.authorizedUserId
       : this.parameters.authorized_uuid;
 
-    const permissions: Record<string, PAM.Metadata | string | Record<string, PermissionPayload>> = {};
+    const permissions: Record<string, MetaPayload | string | Record<string, PermissionPayload>> = {};
     const resourcePermissions: PermissionPayload = {};
     const patternPermissions: PermissionPayload = {};
     const mapPermissions = (
@@ -213,15 +244,93 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
       Object.keys(uuidsPermissions).forEach((uuids) =>
         mapPermissions(uuids, this.extractPermissions(uuidsPermissions[uuids]), 'uuids', target),
       );
+
+      if (refPerm && 'dataSync' in refPerm) this.mapDataSyncPermissions(refPerm.dataSync, target, mapPermissions);
     });
 
     if (uuid) permissions.uuid = `${uuid}`;
     permissions.resources = resourcePermissions;
     permissions.patterns = patternPermissions;
-    permissions.meta = meta ?? {};
+
+    // Merge DataSync projections into `meta` under `pn-projections`, preserving user-supplied meta.
+    // `pn-projections` is omitted entirely when no projections are set.
+    const projections = this.buildProjections();
+    permissions.meta = { ...(meta ?? {}), ...(projections ? { 'pn-projections': projections } : {}) };
     body.permissions = permissions;
 
     return JSON.stringify(body);
+  }
+
+  /**
+   * Serialize DataSync entity-level permissions into a resources / patterns target.
+   *
+   * The `datasync:*` wire keys are only written when their scope map is non-empty, so tokens that
+   * don't use DataSync stay byte-for-byte identical.
+   *
+   * @param dataSync - User provided DataSync permission scopes.
+   * @param target - Resources or patterns payload to populate.
+   * @param mapPermissions - Helper which writes a single bit-encoded permission into the target.
+   */
+  private mapDataSyncPermissions(
+    dataSync: PAM.DataSyncTokenScopes | undefined,
+    target: PermissionPayload,
+    mapPermissions: (
+      name: string,
+      permissionBit: number,
+      type: keyof PermissionPayload,
+      target: PermissionPayload,
+    ) => void,
+  ) {
+    if (!dataSync) return;
+
+    const dataSyncScopes: [keyof PAM.DataSyncTokenScopes, keyof PermissionPayload][] = [
+      ['entities', 'datasync:entities'],
+      ['relationships', 'datasync:relationships'],
+      ['memberships', 'datasync:memberships'],
+    ];
+
+    dataSyncScopes.forEach(([scope, wireKey]) => {
+      const scopePermissions = dataSync[scope];
+      if (!scopePermissions) return;
+
+      Object.keys(scopePermissions).forEach((id) =>
+        mapPermissions(id, this.extractPermissions(scopePermissions[id]), wireKey, target),
+      );
+    });
+  }
+
+  /**
+   * Build the `pn-projections` meta payload from DataSync projection parameters.
+   *
+   * Each projection scope is encoded into a flat composite key (`datasync:<type>:<id>`) mapped to
+   * the projection name. The `res` / `pat` sub-objects are omitted when empty.
+   *
+   * @returns Encoded projections payload, or `undefined` when no projections are set.
+   */
+  private buildProjections(): ProjectionsPayload | undefined {
+    const projections = 'dataSyncProjections' in this.parameters ? this.parameters.dataSyncProjections : undefined;
+    if (!projections) return undefined;
+
+    const encodeScope = (scope?: PAM.DataSyncProjectionScope) => {
+      const encoded: Record<string, string> = {};
+      if (!scope) return encoded;
+
+      (['entities', 'relationships', 'memberships'] as const).forEach((type) => {
+        const assignments = scope[type];
+        if (assignments)
+          Object.keys(assignments).forEach((id) => (encoded[`datasync:${type}:${id}`] = assignments[id]));
+      });
+
+      return encoded;
+    };
+
+    const result = {} as ProjectionsPayload;
+    const res = encodeScope(projections.resources);
+    const pat = encodeScope(projections.patterns);
+    if (Object.keys(res).length > 0) result.res = res;
+    if (Object.keys(pat).length > 0) result.pat = pat;
+
+    return Object.keys(result).length > 0 ? result : undefined;
   }
 
   /**
@@ -232,13 +341,18 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
    * @returns Permissions bit.
    */
   private extractPermissions(
-    permissions: PAM.UuidTokenPermissions | PAM.ChannelTokenPermissions | PAM.ChannelGroupTokenPermissions,
+    permissions:
+      | PAM.UuidTokenPermissions
+      | PAM.ChannelTokenPermissions
+      | PAM.ChannelGroupTokenPermissions
+      | PAM.DataSyncTokenPermissions,
   ): number {
     let permissionsResult = 0;
 
     if ('join' in permissions && permissions.join) permissionsResult |= 128;
     if ('update' in permissions && permissions.update) permissionsResult |= 64;
     if ('get' in permissions && permissions.get) permissionsResult |= 32;
+    if ('create' in permissions && permissions.create) permissionsResult |= 16;
     if ('delete' in permissions && permissions.delete) permissionsResult |= 8;
     if ('manage' in permissions && permissions.manage) permissionsResult |= 4;
     if ('write' in permissions && permissions.write) permissionsResult |= 2;

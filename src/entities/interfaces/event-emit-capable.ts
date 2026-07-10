@@ -45,6 +45,13 @@ export interface EventEmitCapable {
   onFile?: (event: Subscription.File) => void;
 
   /**
+   * Set a new DataSync event handler.
+   *
+   * Function, which will be called each time when a new DataSync event is received from the real-time network.
+   */
+  onDataSync?: (event: Subscription.DataSyncObject) => void;
+
+  /**
    * Set events handler.
    *
    * @param listener - Events listener configuration object, which lets specify handlers for multiple types of events.

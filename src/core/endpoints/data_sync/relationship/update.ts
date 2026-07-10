@@ -51,6 +51,7 @@ export class UpdateRelationshipRequest<Response extends DataSync.UpdateRelations
     if (!this.parameters.relationship) return 'Relationship cannot be empty';
     if (!this.parameters.relationship.entityAId) return 'Entity A id cannot be empty';
     if (!this.parameters.relationship.entityBId) return 'Entity B id cannot be empty';
+    if (!this.parameters.relationship.relationshipClassVersion) return 'Relationship class version cannot be empty';
   }
 
   protected get headers(): Record<string, string> | undefined {

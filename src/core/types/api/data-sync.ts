@@ -483,7 +483,9 @@ export type CreateRelationshipProperties = {
 /**
  * Relationship properties for update (PUT) requests.
  *
- * PUT is a full replacement — `entityAId` and `entityBId` are required.
+ * PUT is a full replacement — `entityAId`, `entityBId`, and `relationshipClassVersion` are required
+ * (`relationshipClass` is immutable after creation and therefore excluded). The server rejects a
+ * PUT that omits `relationshipClassVersion`.
  */
 export type UpdateRelationshipProperties = {
   /** First entity ID in the relationship. */
@@ -491,6 +493,9 @@ export type UpdateRelationshipProperties = {
 
   /** Second entity ID in the relationship. */
   entityBId: string;
+
+  /** Version of the relationship class schema. */
+  relationshipClassVersion: number;
 
   /** Optional lifecycle status. */
   status?: string;

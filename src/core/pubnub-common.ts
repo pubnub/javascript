@@ -4746,6 +4746,18 @@ export class PubNubCore<
   }
 
   /**
+   * Set a new DataSync event handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new
+   * DataSync event is received from the real-time network.
+   */
+  set onDataSync(listener: ((event: Subscription.DataSyncObject) => void) | undefined) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.onDataSync = listener;
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
    * Set events handler.
    *
    * @param listener - Events listener configuration object, which lets specify handlers for multiple

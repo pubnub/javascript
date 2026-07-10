@@ -92,6 +92,108 @@ export type UuidTokenPermissions = {
 type UserTokenPermissions = UuidTokenPermissions;
 
 /**
+ * DataSync entity-level token permissions.
+ *
+ * Applies to DataSync entities, relationships, and memberships. Only the CRUD-relevant operations
+ * are exposed.
+ */
+export type DataSyncTokenPermissions = {
+  /**
+   * Whether `create` operations are permitted for corresponding level or not.
+   */
+  create?: boolean;
+
+  /**
+   * Whether `get` operations are permitted for corresponding level or not.
+   */
+  get?: boolean;
+
+  /**
+   * Whether `update` operations are permitted for corresponding level or not.
+   */
+  update?: boolean;
+
+  /**
+   * Whether `delete` operations are permitted for corresponding level or not.
+   */
+  delete?: boolean;
+};
+
+/**
+ * DataSync permission scopes.
+ *
+ * Carried in the grant token `resources` / `patterns` sections and serialized to the wire keys
+ * `datasync:entities` / `datasync:relationships` / `datasync:memberships`.
+ */
+export type DataSyncTokenScopes = {
+  /**
+   * Object containing DataSync `entity` permissions.
+   *
+   * Keys are concrete entity ids (e.g. `order-456`) for `resources` or RegEx patterns
+   * (e.g. `order-*`) for `patterns`.
+   */
+  entities?: Record<string, DataSyncTokenPermissions>;
+
+  /**
+   * Object containing DataSync `relationship` permissions.
+   *
+   * Keys are composite relationship ids (e.g. `user.A:channel.X`).
+   */
+  relationships?: Record<string, DataSyncTokenPermissions>;
+
+  /**
+   * Object containing DataSync `membership` permissions.
+   *
+   * Keys are composite membership ids (e.g. `user-123:channel-X`).
+   */
+  memberships?: Record<string, DataSyncTokenPermissions>;
+};
+
+/**
+ * Per-resource DataSync projection assignment.
+ *
+ * Each id maps to the single projection name the principal is "looking through" for that resource
+ * (use `__default__` for the base projection).
+ */
+export type DataSyncProjectionScope = {
+  /**
+   * Entity id -> projection name.
+   *
+   * Keys are concrete entity ids (e.g. `user.A`) for `resources` or RegEx patterns
+   * (e.g. `user.*`) for `patterns`.
+   */
+  entities?: Record<string, string>;
+
+  /**
+   * Relationship id -> projection name.
+   */
+  relationships?: Record<string, string>;
+
+  /**
+   * Membership id -> projection name.
+   */
+  memberships?: Record<string, string>;
+};
+
+/**
+ * DataSync projection permissions for grant token requests.
+ *
+ * Encoded into the `pn-projections` key within the token's `meta` section. Exact (`res`) match
+ * takes priority over pattern (`pat`) match.
+ */
+export type DataSyncProjections = {
+  /**
+   * Projection assignments for concrete resources.
+   */
+  resources?: DataSyncProjectionScope;
+
+  /**
+   * Projection assignments for resources which match a RegEx pattern.
+   */
+  patterns?: DataSyncProjectionScope;
+};
+
+/**
  * Generate access token with permissions.
  *
  * Generate time-limited access token with required permissions for App Context objects.
@@ -180,6 +282,11 @@ export type GrantTokenParameters = {
      * Object containing `channel group` permissions.
      */
     groups?: Record<string, ChannelGroupTokenPermissions>;
+
+    /**
+     * Object containing DataSync entity-level permissions.
+     */
+    dataSync?: DataSyncTokenScopes;
   };
 
   /**
@@ -203,6 +310,12 @@ export type GrantTokenParameters = {
      * RegEx pattern.
      */
     groups?: Record<string, ChannelGroupTokenPermissions>;
+
+    /**
+     * Object containing DataSync entity-level permissions to apply to all DataSync resources
+     * matching the RegEx pattern.
+     */
+    dataSync?: DataSyncTokenScopes;
   };
 
   /**
@@ -211,6 +324,13 @@ export type GrantTokenParameters = {
    * **Important:** Values must be scalar only; `arrays` or `objects` aren't supported.
    */
   meta?: Metadata;
+
+  /**
+   * DataSync projection permissions.
+   *
+   * Encoded into the `pn-projections` key within the token's `meta` section.
+   */
+  dataSyncProjections?: DataSyncProjections;
 
   /**
    * Single `uuid` which is authorized to use the token to make API requests to PubNub.

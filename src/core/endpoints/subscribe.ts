@@ -65,6 +65,13 @@ export enum PubNubEventType {
    * Files event.
    */
   Files,
+
+  /**
+   * DataSync object change event.
+   *
+   * **Note:** Value must equal `5` to match the service wire value (`e: 5`).
+   */
+  DataSync,
 }
 
 /**
@@ -417,6 +424,167 @@ export type VSPMembershipObjectData = ObjectData<
 export type AppContextObjectData = ChannelObjectData | UuidObjectData | MembershipObjectData;
 // endregion
 
+// region DataSync service response
+/**
+ * DataSync change event kinds.
+ */
+type DataSyncEventName = 'create' | 'update' | 'delete';
+
+/**
+ * DataSync object kinds carried on the wire.
+ */
+type DataSyncObjectType = 'entity' | 'relationship';
+
+/**
+ * DataSync entity change payload (create / update).
+ */
+export type DataSyncEntityData = {
+  /**
+   * Unique entity identifier.
+   */
+  id: string;
+
+  /**
+   * Lifecycle status.
+   */
+  status?: string;
+
+  /**
+   * User-defined JSON payload.
+   */
+  payload?: Payload;
+
+  /**
+   * Date and time the entity was created (ISO 8601).
+   */
+  createdAt?: string;
+
+  /**
+   * Date and time the entity was last updated (ISO 8601).
+   */
+  updatedAt?: string;
+
+  /**
+   * Content fingerprint for optimistic concurrency control.
+   */
+  eTag?: string;
+
+  /**
+   * Auto-deletion timestamp (ISO 8601).
+   */
+  expiresAt?: string;
+
+  /**
+   * Entity class name (last `:`-delimited segment of the wire `className`).
+   */
+  entityClass?: string;
+
+  /**
+   * Version of the entity class schema (parsed from the wire `classVersion`).
+   */
+  entityClassVersion?: number;
+};
+
+/**
+ * DataSync relationship change payload (create / update).
+ */
+export type DataSyncRelationshipData = Omit<DataSyncEntityData, 'entityClass' | 'entityClassVersion'> & {
+  /**
+   * First entity id in the relationship.
+   */
+  entityAId?: string;
+
+  /**
+   * Second entity id in the relationship.
+   */
+  entityBId?: string;
+
+  /**
+   * Relationship class name (last `:`-delimited segment of the wire `className`).
+   */
+  relationshipClass?: string;
+
+  /**
+   * Version of the relationship class schema (parsed from the wire `classVersion`).
+   */
+  relationshipClassVersion?: number;
+};
+
+/**
+ * DataSync delete change payload.
+ */
+export type DataSyncDeleteData = {
+  /**
+   * Unique identifier of the removed object.
+   */
+  id: string;
+
+  /**
+   * Date and time the object was removed (ISO 8601).
+   */
+  deletedAt?: string;
+};
+
+/**
+ * Parsed DataSync change event (dispatched under `message`).
+ */
+export type DataSyncData = {
+  /**
+   * DataSync service payload version.
+   */
+  version?: string;
+
+  /**
+   * The type of change which happened to the object.
+   */
+  event: DataSyncEventName;
+
+  /**
+   * Name of the service which generated the update (always `data-sync`).
+   */
+  source: string;
+
+  /**
+   * DataSync object kind.
+   */
+  type: DataSyncObjectType;
+
+  /**
+   * Object class name (last `:`-delimited segment of the wire `className`).
+   */
+  className?: string;
+
+  /**
+   * Version of the object class schema (parsed from the wire `classVersion`).
+   */
+  classVersion?: number;
+
+  /**
+   * Changed object information.
+   *
+   * For `delete` events only `{ id, deletedAt }` is populated.
+   */
+  data: DataSyncEntityData | DataSyncRelationshipData | DataSyncDeleteData;
+};
+
+/**
+ * Raw DataSync envelope payload (before parsing).
+ *
+ * @internal
+ */
+type DataSyncServiceData = {
+  version?: string;
+  metadata?: {
+    event?: DataSyncEventName;
+    source?: string;
+    type?: DataSyncObjectType;
+    className?: string;
+    classVersion?: string | number;
+  };
+  data?: Record<string, unknown>;
+};
+// endregion
+
 // region File service response
 /**
  * File service response.
@@ -712,6 +880,13 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
             data: this.messageActionFromEnvelope(envelope),
             pn_mfp,
           };
+        } else if (eventType === PubNubEventType.DataSync) {
+          const dataSync = this.dataSyncFromEnvelope(envelope);
+
+          // Guard: only treat as DataSync when the service marks it so; otherwise fall back to message.
+          if (dataSync) return { type: PubNubEventType.DataSync, data: dataSync, pn_mfp };
+
+          return { type: PubNubEventType.Message, data: this.messageFromEnvelope(envelope), pn_mfp };
         }
 
         return {
@@ -837,6 +1012,48 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       subscription,
       timetoken: envelope.p.t,
       message: object,
+    };
+  }
+
+  private dataSyncFromEnvelope(envelope: Envelope): Subscription.DataSyncObject | undefined {
+    const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
+    const payload = envelope.d as DataSyncServiceData;
+    const metadata = payload?.metadata;
+
+    // Only treat the envelope as DataSync when the service marks it and carries the required fields.
+    if (!metadata || metadata.source !== 'data-sync' || !metadata.event || !metadata.type) return undefined;
+
+    const className = metadata.className ? metadata.className.split(':').pop() : undefined;
+    const parsedVersion = metadata.classVersion !== undefined ? Number.parseInt(`${metadata.classVersion}`, 10) : NaN;
+    const classVersion = Number.isNaN(parsedVersion) ? undefined : parsedVersion;
+    const raw = (payload.data ?? {}) as Record<string, unknown>;
+
+    let data: DataSyncData['data'];
+    if (metadata.event === 'delete') {
+      data = { id: raw.id as string, deletedAt: raw.deletedAt as string | undefined };
+    } else if (metadata.type === 'relationship') {
+      data = {
+        ...raw,
+        relationshipClass: className,
+        relationshipClassVersion: classVersion,
+      } as DataSyncRelationshipData;
+    } else {
+      data = { ...raw, entityClass: className, entityClassVersion: classVersion } as DataSyncEntityData;
+    }
+
+    return {
+      channel,
+      subscription,
+      timetoken: envelope.p.t,
+      message: {
+        version: payload.version,
+        event: metadata.event,
+        source: metadata.source,
+        type: metadata.type,
+        className,
+        classVersion,
+        data,
+      },
     };
   }
 
