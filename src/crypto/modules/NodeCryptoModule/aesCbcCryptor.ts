@@ -171,6 +171,6 @@ export default class AesCbcCryptor implements ICryptor {
    * @returns Serialized cryptor information.
    */
   toString() {
-    return `AesCbcCryptor { cipherKey: ${this.cipherKey} }`;
+    return 'AesCbcCryptor {}';
   }
 }

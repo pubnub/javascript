@@ -28,7 +28,13 @@ export type CryptorConfiguration = {
   /**
    * Whether random initialization vector should be used or not.
    *
+   * When `false`, a hard-coded IV is used. That mode is insecure and exists only for
+   * compatibility with legacy clients — do not disable random IVs in new applications.
+   *
    * @default `true`
+   *
+   * @deprecated Prefer leaving random IVs enabled. Pass cryptor options through
+   * {@link AbstractCryptoModule.aesCbcCryptoModule} for new applications.
    */
   useRandomIVs?: boolean;
 
@@ -165,6 +171,8 @@ export abstract class AbstractCryptoModule<C> implements ICryptoModule {
    * @returns Crypto module which encrypts data using legacy cryptor.
    *
    * @throws Error if `config.cipherKey` not set.
+   *
+   * @deprecated Use {@link aesCbcCryptoModule} for new applications.
    */
   static legacyCryptoModule(config: CryptorConfiguration): ICryptoModule {
     throw new Error('Should be implemented by concrete crypto module implementation.');
