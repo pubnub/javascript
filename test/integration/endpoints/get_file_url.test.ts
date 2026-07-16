@@ -64,4 +64,26 @@ describe('getFileUrl', () => {
       `https://example.com/v1/files/demo/channels/channel/files/id/name?uuid=myUUID&pnsdk=${pnsdk}&auth=tokenString`,
     );
   });
+
+  it('encodes path-traversal sequences in id and name so the URL stays on the files endpoint', () => {
+    const pubnub = new PubNub({
+      subscribeKey: 'demo',
+      publishKey: 'demo',
+      uuid: 'myUUID',
+      // @ts-expect-error Force override default value.
+      useRequestId: false,
+      origin: 'example.com',
+    });
+
+    const maliciousName = '../../../../../../../v3/pam/grant';
+    const maliciousId = '../other/files/other-id';
+    const url = pubnub.getFileUrl({ channel: 'public-channel', id: maliciousId, name: maliciousName });
+    const parsed = new URL(url);
+
+    assert.equal(parsed.origin, 'https://example.com');
+    assert(parsed.pathname.startsWith('/v1/files/demo/channels/public-channel/files/'));
+    assert(parsed.pathname.includes('%2F'));
+    assert(!parsed.pathname.includes('/v3/pam/grant'));
+    assert.equal(parsed.pathname, `/v1/files/demo/channels/public-channel/files/${encodeURIComponent(maliciousId)}/${encodeURIComponent(maliciousName)}`);
+  });
 });
