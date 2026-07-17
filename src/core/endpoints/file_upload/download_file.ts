@@ -100,6 +100,8 @@ export class DownloadFileRequest<
       name,
     } = this.parameters;
 
-    return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files/${encodeString(id)}/${encodeString(name)}`;
+    return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files/${encodeString(id)}/${encodeString(
+      name,
+    )}`;
   }
 }

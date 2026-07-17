@@ -134,7 +134,8 @@ export const makeConfiguration = (
     if (explicitUseRandomIVs === false) {
       loggerManager.warn(
         'Configuration',
-        "Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients. Do not disable random IVs in new applications.",
+        `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+        Do not disable random IVs in new applications.`,
       );
     }
   }

@@ -54,7 +54,8 @@ export default class LegacyCryptor implements ILegacyCryptor {
     if (this.config.useRandomIVs === false) {
       logger.warn(
         'LegacyCryptor',
-        "Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients. Do not disable random IVs in new applications.",
+        `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+        Do not disable random IVs in new applications.`,
       );
     }
   }

@@ -426,12 +426,7 @@ export class PubNubCore<
       message: configuration.configuration as unknown as Record<string, unknown>,
       details: 'Create with configuration:',
       ignoredKeys(key: string, obj: Record<string, unknown>) {
-        return (
-          typeof obj[key] === 'function' ||
-          key.startsWith('_') ||
-          key === 'keySet' ||
-          isSensitiveLogKey(key)
-        );
+        return typeof obj[key] === 'function' || key.startsWith('_') || key === 'keySet' || isSensitiveLogKey(key);
       },
     }));
 

@@ -78,7 +78,8 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
       if (config.useRandomIVs === false) {
         config.logger.warn(
           'CryptoModule',
-          "Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients. Do not disable random IVs in new applications.",
+          `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+          Do not disable random IVs in new applications.`,
         );
       }
     }

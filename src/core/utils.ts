@@ -11,14 +11,7 @@ import { Payload, Query } from './types/api';
  *
  * @internal
  */
-export const SENSITIVE_LOG_KEYS = new Set([
-  'authKey',
-  'authKeys',
-  'secretKey',
-  'cipherKey',
-  'token',
-  'auth',
-]);
+export const SENSITIVE_LOG_KEYS = new Set(['authKey', 'authKeys', 'secretKey', 'cipherKey', 'token', 'auth']);
 
 /**
  * Whether an object log key should be omitted because it may hold a secret.
