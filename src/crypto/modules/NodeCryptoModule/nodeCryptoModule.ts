@@ -44,9 +44,13 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
    * @internal
    */
   set logger(logger: LoggerManager) {
-    if (this.defaultCryptor.identifier === NodeCryptoModule.LEGACY_IDENTIFIER)
+    if (this.defaultCryptor.identifier === NodeCryptoModule.LEGACY_IDENTIFIER) {
+      logger.warn(
+        'CryptoModule',
+        "'legacyCryptoModule' is deprecated. Use 'aesCbcCryptoModule' instead for new applications.",
+      );
       (this.defaultCryptor as LegacyCryptor).logger = logger;
-    else {
+    } else {
       const cryptor = this.cryptors.find((cryptor) => cryptor.identifier === NodeCryptoModule.LEGACY_IDENTIFIER);
       if (cryptor) (cryptor as LegacyCryptor).logger = logger;
     }
@@ -57,8 +61,28 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
   // -------------------------------------------------------
   // region Convenience functions
 
+  /**
+   * Construct crypto module with legacy cryptor for encryption and both legacy and AES-CBC
+   * cryptors for decryption.
+   *
+   * @deprecated Use {@link aesCbcCryptoModule} for new applications.
+   */
   static legacyCryptoModule(config: CryptorConfiguration) {
     if (!config.cipherKey) throw new PubNubError('Crypto module error: cipher key not set.');
+
+    if (config.logger) {
+      config.logger.warn(
+        'CryptoModule',
+        "'legacyCryptoModule' is deprecated. Use 'aesCbcCryptoModule' instead for new applications.",
+      );
+      if (config.useRandomIVs === false) {
+        config.logger.warn(
+          'CryptoModule',
+          `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+          Do not disable random IVs in new applications.`,
+        );
+      }
+    }
 
     return new this({
       default: new LegacyCryptor({

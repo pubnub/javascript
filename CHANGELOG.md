@@ -1,3 +1,13 @@
+## v12.0.1
+July 21 2026
+
+#### Fixed
+- Encoding on user provided file api inputs to avoid potential path traversal attack.
+
+#### Modified
+- Logger omits potential use sensitive information to be logged.
+- User will get warning while trying to configure legacy crypto module.
+
 ## v12.0.0
 June 22 2026
 

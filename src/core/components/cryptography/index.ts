@@ -6,6 +6,7 @@
 
 import { CryptorConfiguration } from '../../interfaces/crypto-module';
 import { LoggerManager } from '../logger-manager';
+import { isSensitiveLogKey } from '../../utils';
 import { Payload } from '../../types/api';
 import { decode } from '../base64_codec';
 import CryptoJS from './hmac-sha256';
@@ -104,7 +105,7 @@ export default class {
         message: this.configuration as unknown as Record<string, unknown>,
         details: 'Create with configuration:',
         ignoredKeys(key: string, obj: Record<string, unknown>) {
-          return typeof obj[key] === 'function' || key === 'logger';
+          return typeof obj[key] === 'function' || key === 'logger' || isSensitiveLogKey(key);
         },
       }));
     }
@@ -201,8 +202,9 @@ export default class {
     if (this.logger) {
       this.logger.debug('Crypto', () => ({
         messageType: 'object',
-        message: { data, cipherKey: decidedCipherKey, ...(options ?? {}) },
+        message: { data, ...(options ?? {}) },
         details: 'Encrypt with parameters:',
+        ignoredKeys: isSensitiveLogKey,
       }));
     }
 
@@ -244,8 +246,9 @@ export default class {
     if (this.logger) {
       this.logger.debug('Crypto', () => ({
         messageType: 'object',
-        message: { data, cipherKey: decidedCipherKey, ...(options ?? {}) },
+        message: { data, ...(options ?? {}) },
         details: 'Decrypt with parameters:',
+        ignoredKeys: isSensitiveLogKey,
       }));
     }
 
