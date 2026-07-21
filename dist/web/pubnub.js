@@ -5904,10 +5904,10 @@
 	        this.transport = transport;
 	        logger.debug('WebTransport', `Create with configuration:\n  - transport: ${transport}`);
 	        // Check for `fetch` availability directly (works in DOM and DOM-less contexts such as service workers).
-	        // Note: a bare `window` reference would throw in a service worker, and a partial `window = self` shim can
+	        // because a bare `window` reference would throw in a service worker, and a partial `window = self` shim can
 	        // define `window` without `fetch`, so probe the actual `fetch` global via `typeof`.
 	        if (transport === 'fetch' && typeof fetch === 'undefined') {
-	            logger.warn('WebTransport', `'${transport}' not supported in this environment. Fallback to the 'xhr' transport.`);
+	            logger.warn('WebTransport', `'${transport}' not supported in this browser. Fallback to the 'xhr' transport.`);
 	            this.transport = 'xhr';
 	        }
 	        if (this.transport !== 'fetch')
@@ -5920,7 +5920,7 @@
 	        // obtain the reference based on the environment (iframe when a DOM is available, context `fetch` otherwise),
 	        // which keeps construction safe in DOM-less contexts such as MV3 service workers.
 	        WebTransport.originalFetch = WebTransport.getOriginalFetch();
-	        // Check whether `fetch` has been monkey patched or not (informational log only).
+	        // Check whether `fetch` has been monkey patched or not.
 	        if (this.isFetchMonkeyPatched())
 	            logger.warn('WebTransport', "Native Web Fetch API 'fetch' function monkey patched.");
 	    }
