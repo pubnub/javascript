@@ -127,9 +127,18 @@ export const makeConfiguration = (
   // Ensure that retry policy has proper configuration (if has been set).
   base.retryConfiguration?.validate();
 
+  const explicitUseRandomIVs = base.useRandomIVs;
   base.useRandomIVs ??= USE_RANDOM_INITIALIZATION_VECTOR;
-  if (base.useRandomIVs)
-    loggerManager.warn('Configuration', "'useRandomIVs' is deprecated. Use 'cryptoModule' instead.");
+  if (explicitUseRandomIVs !== undefined) {
+    loggerManager.warn('Configuration', "'useRandomIVs' is deprecated. Pass it to 'cryptoModule' instead.");
+    if (explicitUseRandomIVs === false) {
+      loggerManager.warn(
+        'Configuration',
+        `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+        Do not disable random IVs in new applications.`,
+      );
+    }
+  }
 
   // Override origin value.
   base.origin = standardOrigin(base.ssl ?? false, base.origin!);
@@ -236,7 +245,7 @@ export const makeConfiguration = (
       return base.PubNubFile;
     },
     get version(): string {
-      return '12.0.0';
+      return '12.0.1';
     },
     getVersion(): string {
       return this.version;

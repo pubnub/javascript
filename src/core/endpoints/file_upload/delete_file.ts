@@ -67,6 +67,8 @@ export class DeleteFileRequest extends AbstractRequest<FileSharing.DeleteFileRes
       name,
     } = this.parameters;
 
-    return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files/${id}/${name}`;
+    return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files/${encodeString(id)}/${encodeString(
+      name,
+    )}`;
   }
 }

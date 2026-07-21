@@ -9,10 +9,10 @@ import Crypto from '../../../core/components/cryptography/index';
 import { PubNubFileConstructor } from '../../../core/types/file';
 import { encode } from '../../../core/components/base64_codec';
 import { PubNubError } from '../../../errors/pubnub-error';
+import { isSensitiveLogKey } from '../../../core/utils';
 import { ILegacyCryptor } from './ILegacyCryptor';
 import { EncryptedDataType } from './ICryptor';
 import FileCryptor from '../web';
-import AesCbcCryptor from './aesCbcCryptor';
 
 /**
  * Legacy cryptor.
@@ -56,6 +56,14 @@ export default class LegacyCryptor implements ILegacyCryptor {
    */
   set logger(logger: LoggerManager) {
     this.cryptor.logger = logger;
+
+    if (this.config.useRandomIVs === false) {
+      logger.warn(
+        'LegacyCryptor',
+        `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+         Do not disable random IVs in new applications.`,
+      );
+    }
   }
 
   // --------------------------------------------------------
@@ -114,10 +122,10 @@ export default class LegacyCryptor implements ILegacyCryptor {
    */
   toString() {
     const configurationEntries = Object.entries(this.config).reduce((acc, [key, value]) => {
-      if (key === 'logger') return acc;
+      if (key === 'logger' || isSensitiveLogKey(key)) return acc;
       acc.push(`${key}: ${typeof value === 'function' ? '<function>' : value}`);
       return acc;
     }, [] as string[]);
-    return `AesCbcCryptor { ${configurationEntries.join(', ')} }`;
+    return `LegacyCryptor { ${configurationEntries.join(', ')} }`;
   }
 }

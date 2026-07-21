@@ -123,7 +123,7 @@ import { DownloadFileRequest } from './endpoints/file_upload/download_file';
 import { SubscriptionInput } from './types/api/subscription';
 import { LoggerManager } from './components/logger-manager';
 import { LogLevel as LoggerLogLevel } from './interfaces/logger';
-import { encodeString, messageFingerprint } from './utils';
+import { encodeString, isSensitiveLogKey, messageFingerprint } from './utils';
 import { Entity } from '../entities/entity';
 import Categories from './constants/categories';
 
@@ -426,7 +426,7 @@ export class PubNubCore<
       message: configuration.configuration as unknown as Record<string, unknown>,
       details: 'Create with configuration:',
       ignoredKeys(key: string, obj: Record<string, unknown>) {
-        return typeof obj[key] === 'function' || key.startsWith('_');
+        return typeof obj[key] === 'function' || key.startsWith('_') || key === 'keySet' || isSensitiveLogKey(key);
       },
     }));
 
@@ -702,7 +702,7 @@ export class PubNubCore<
    * @param authKey - New authorization key which should be used with new requests.
    */
   setAuthKey(authKey: string): void {
-    this.logger.debug('PubNub', `Set auth key: ${authKey}`);
+    this.logger.debug('PubNub', 'Auth key updated.');
     this._configuration.setAuthKey(authKey);
 
     if (this.onAuthenticationChange) this.onAuthenticationChange(authKey);
@@ -827,7 +827,7 @@ export class PubNubCore<
    * @param key - New key which should be used for data encryption / decryption.
    */
   setCipherKey(key: string): void {
-    this.logger.debug('PubNub', `Set cipher key: ${key}`);
+    this.logger.debug('PubNub', 'Cipher key updated.');
     this.cipherKey = key;
   }
 
@@ -2952,16 +2952,14 @@ export class PubNubCore<
         messageType: 'object',
         message: { ...parameters },
         details: 'Grant token permissions with parameters:',
+        ignoredKeys: isSensitiveLogKey,
       }));
 
       const request = new GrantTokenRequest({ ...parameters, keySet: this._configuration.keySet });
       const logResponse = (response: PAM.GrantTokenResponse | null) => {
         if (!response) return;
 
-        this.logger.debug(
-          'PubNub',
-          `Grant token permissions success. Received token with requested permissions: ${response}`,
-        );
+        this.logger.debug('PubNub', 'Grant token permissions success.');
       };
 
       if (callback)
@@ -3009,11 +3007,7 @@ export class PubNubCore<
     callback?: ResultCallback<PAM.RevokeTokenResponse>,
   ): Promise<PAM.RevokeTokenResponse | void> {
     if (process.env.PAM_MODULE !== 'disabled') {
-      this.logger.debug('PubNub', () => ({
-        messageType: 'object',
-        message: { token },
-        details: 'Revoke token permissions with parameters:',
-      }));
+      this.logger.debug('PubNub', 'Revoke token permissions.');
 
       const request = new RevokeTokenRequest({ token, keySet: this._configuration.keySet });
       const logResponse = (response: PAM.RevokeTokenResponse | null) => {
@@ -3071,6 +3065,7 @@ export class PubNubCore<
    * @param token - New access token which should be used with next REST API endpoint calls.
    */
   public setToken(token: string | undefined): void {
+    this.logger.debug('PubNub', 'Access token updated.');
     this.token = token;
   }
 
@@ -3084,6 +3079,7 @@ export class PubNubCore<
    * @returns Token's permissions information for the resources.
    */
   public parseToken(token: string): PAM.Token | undefined {
+    this.logger.debug('PubNub', 'Parse access token.');
     return this.tokenManager && this.tokenManager.parseToken(token);
   }
   // endregion
@@ -3130,6 +3126,7 @@ export class PubNubCore<
         messageType: 'object',
         message: { ...parameters },
         details: 'Grant auth key(s) permissions with parameters:',
+        ignoredKeys: isSensitiveLogKey,
       }));
 
       const request = new GrantRequest({ ...parameters, keySet: this._configuration.keySet });
@@ -3194,6 +3191,7 @@ export class PubNubCore<
         messageType: 'object',
         message: { ...parameters },
         details: 'Audit auth key(s) permissions with parameters:',
+        ignoredKeys: isSensitiveLogKey,
       }));
 
       const request = new AuditRequest({ ...parameters, keySet: this._configuration.keySet });

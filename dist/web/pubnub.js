@@ -482,6 +482,8 @@
 	     * @returns Crypto module which encrypts data using legacy cryptor.
 	     *
 	     * @throws Error if `config.cipherKey` not set.
+	     *
+	     * @deprecated Use {@link aesCbcCryptoModule} for new applications.
 	     */
 	    static legacyCryptoModule(config) {
 	        throw new Error('Should be implemented by concrete crypto module implementation.');
@@ -2033,7 +2035,7 @@
 	     * @returns Serialized cryptor information.
 	     */
 	    toString() {
-	        return `AesCbcCryptor { cipherKey: ${this.cipherKey} }`;
+	        return 'AesCbcCryptor {}';
 	    }
 	}
 	/**
@@ -2048,6 +2050,193 @@
 	 *  {@link ArrayBuffer} to {@link string} decoder.
 	 */
 	AesCbcCryptor.decoder = new TextDecoder();
+
+	/**
+	 * PubNub package utilities module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Object log property names that must never appear in SDK logs.
+	 *
+	 * @internal
+	 */
+	const SENSITIVE_LOG_KEYS = new Set(['authKey', 'authKeys', 'secretKey', 'cipherKey', 'token', 'auth']);
+	/**
+	 * Whether an object log key should be omitted because it may hold a secret.
+	 *
+	 * @param key - Property name from an object being logged.
+	 *
+	 * @returns `true` when the key should be filtered from log output.
+	 *
+	 * @internal
+	 */
+	const isSensitiveLogKey = (key) => SENSITIVE_LOG_KEYS.has(key);
+	/**
+	 * Percent-encode input string.
+	 *
+	 * **Note:** Encode content in accordance of the `PubNub` service requirements.
+	 *
+	 * @param input - Source string or number for encoding.
+	 *
+	 * @returns Percent-encoded string.
+	 *
+	 * @internal
+	 */
+	const encodeString = (input) => {
+	    return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
+	};
+	/**
+	 * Percent-encode list of names (channels).
+	 *
+	 * @param names - List of names which should be encoded.
+	 *
+	 * @param [defaultString] - String which should be used in case if {@link names} is empty.
+	 *
+	 * @returns String which contains encoded names joined by non-encoded `,`.
+	 *
+	 * @internal
+	 */
+	const encodeNames = (names, defaultString) => {
+	    const encodedNames = names.map((name) => encodeString(name));
+	    return encodedNames.length ? encodedNames.join(',') : (defaultString !== null && defaultString !== void 0 ? defaultString : '');
+	};
+	/**
+	 * @internal
+	 */
+	const removeSingleOccurrence = (source, elementsToRemove) => {
+	    const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
+	    return source.filter((e) => {
+	        if (elementsToRemove.includes(e) && !removed[e]) {
+	            removed[e] = true;
+	            return false;
+	        }
+	        return true;
+	    });
+	};
+	/**
+	 * @internal
+	 */
+	const findUniqueCommonElements = (a, b) => {
+	    return [...a].filter((value) => b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value));
+	};
+	/**
+	 * Transform query key / value pairs to the string.
+	 *
+	 * @param query - Key / value pairs of the request query parameters.
+	 *
+	 * @returns Stringified query key / value pairs.
+	 *
+	 * @internal
+	 */
+	const queryStringFromObject = (query) => {
+	    return Object.keys(query)
+	        .map((key) => {
+	        const queryValue = query[key];
+	        if (!Array.isArray(queryValue))
+	            return `${key}=${encodeString(queryValue)}`;
+	        return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
+	    })
+	        .join('&');
+	};
+	/**
+	 * Adjust `timetoken` to represent current time in PubNub's high-precision time format.
+	 *
+	 * @param timetoken - Timetoken recently used for subscribe long-poll request.
+	 * @param [referenceTimetoken] - Previously computed reference timetoken.
+	 *
+	 * @returns Adjusted timetoken if recent timetoken available.
+	 */
+	const subscriptionTimetokenFromReference = (timetoken, referenceTimetoken) => {
+	    if (referenceTimetoken === '0' || timetoken === '0')
+	        return undefined;
+	    const timetokenDiff = adjustedTimetokenBy(`${Date.now()}0000`, referenceTimetoken, false);
+	    return adjustedTimetokenBy(timetoken, timetokenDiff, true);
+	};
+	/**
+	 * Create reference timetoken based on subscribe timetoken and the user's local time.
+	 *
+	 * Subscription-based reference timetoken allows later computing approximate timetoken at any point in time.
+	 *
+	 * @param [serviceTimetoken] - Timetoken received from the PubNub subscribe service.
+	 * @param [catchUpTimetoken] - Previously stored or user-provided catch-up timetoken.
+	 * @param [referenceTimetoken] - Previously computed reference timetoken. **Important:** This value should be used
+	 * in the case of restore because the actual time when service and catch-up timetokens are received is really
+	 * different from the current local time.
+	 *
+	 * @returns Reference timetoken.
+	 */
+	const referenceSubscribeTimetoken = (serviceTimetoken, catchUpTimetoken, referenceTimetoken) => {
+	    if (!serviceTimetoken || serviceTimetoken.length === 0)
+	        return undefined;
+	    if (catchUpTimetoken && catchUpTimetoken.length > 0 && catchUpTimetoken !== '0') {
+	        // Compensate reference timetoken because catch-up timetoken has been used.
+	        const timetokensDiff = adjustedTimetokenBy(serviceTimetoken, catchUpTimetoken, false);
+	        return adjustedTimetokenBy(referenceTimetoken !== null && referenceTimetoken !== void 0 ? referenceTimetoken : `${Date.now()}0000`, timetokensDiff.replace('-', ''), Number(timetokensDiff) < 0);
+	    }
+	    else if (referenceTimetoken && referenceTimetoken.length > 0 && referenceTimetoken !== '0')
+	        return referenceTimetoken;
+	    else
+	        return `${Date.now()}0000`;
+	};
+	/**
+	 * High-precision time token adjustment.
+	 *
+	 * @param timetoken - Source timetoken which should be adjusted.
+	 * @param value - Value in nanoseconds which should be used for source timetoken adjustment.
+	 * @param increment - Whether source timetoken should be incremented or decremented.
+	 *
+	 * @returns Adjusted high-precision PubNub timetoken.
+	 */
+	const adjustedTimetokenBy = (timetoken, value, increment) => {
+	    // Normalize value to the PubNub's high-precision time format.
+	    if (value.startsWith('-')) {
+	        value = value.replace('-', '');
+	        increment = false;
+	    }
+	    value = value.padStart(17, '0');
+	    const secA = timetoken.slice(0, 10);
+	    const tickA = timetoken.slice(10, 17);
+	    const secB = value.slice(0, 10);
+	    const tickB = value.slice(10, 17);
+	    let seconds = Number(secA);
+	    let ticks = Number(tickA);
+	    seconds += Number(secB) * (increment ? 1 : -1);
+	    ticks += Number(tickB) * (increment ? 1 : -1);
+	    if (ticks >= 10000000) {
+	        seconds += Math.floor(ticks / 10000000);
+	        ticks %= 10000000;
+	    }
+	    else if (ticks < 0) {
+	        if (seconds > 0) {
+	            seconds -= 1;
+	            ticks += 10000000;
+	        }
+	        else if (seconds < 0)
+	            ticks *= -1;
+	    }
+	    else if (seconds < 0 && ticks > 0) {
+	        seconds += 1;
+	        ticks = 10000000 - ticks;
+	    }
+	    return seconds !== 0 ? `${seconds}${`${ticks}`.padStart(7, '0')}` : `${ticks}`;
+	};
+	/**
+	 * Compute received update (message, event) fingerprint.
+	 *
+	 * @param input - Data payload from subscribe API response.
+	 *
+	 * @returns Received update fingerprint.
+	 */
+	const messageFingerprint = (input) => {
+	    const msg = typeof input !== 'string' ? JSON.stringify(input) : input;
+	    const mfp = new Uint32Array(1);
+	    let walk = 0;
+	    let len = msg.length;
+	    while (len-- > 0)
+	        mfp[0] = (mfp[0] << 5) - mfp[0] + msg.charCodeAt(walk++);
+	    return mfp[0].toString(16).padStart(8, '0');
+	};
 
 	/**
 	 * Legacy cryptography module.
@@ -2118,7 +2307,7 @@
 	                message: this.configuration,
 	                details: 'Create with configuration:',
 	                ignoredKeys(key, obj) {
-	                    return typeof obj[key] === 'function' || key === 'logger';
+	                    return typeof obj[key] === 'function' || key === 'logger' || isSensitiveLogKey(key);
 	                },
 	            }));
 	        }
@@ -2205,8 +2394,9 @@
 	        if (this.logger) {
 	            this.logger.debug('Crypto', () => ({
 	                messageType: 'object',
-	                message: Object.assign({ data, cipherKey: decidedCipherKey }, (options !== null && options !== void 0 ? options : {})),
+	                message: Object.assign({ data }, (options !== null && options !== void 0 ? options : {})),
 	                details: 'Encrypt with parameters:',
+	                ignoredKeys: isSensitiveLogKey,
 	            }));
 	        }
 	        options = this.parseOptions(options);
@@ -2242,8 +2432,9 @@
 	        if (this.logger) {
 	            this.logger.debug('Crypto', () => ({
 	                messageType: 'object',
-	                message: Object.assign({ data, cipherKey: decidedCipherKey }, (options !== null && options !== void 0 ? options : {})),
+	                message: Object.assign({ data }, (options !== null && options !== void 0 ? options : {})),
 	                details: 'Decrypt with parameters:',
+	                ignoredKeys: isSensitiveLogKey,
 	            }));
 	        }
 	        options = this.parseOptions(options);
@@ -2618,6 +2809,10 @@
 	     */
 	    set logger(logger) {
 	        this.cryptor.logger = logger;
+	        if (this.config.useRandomIVs === false) {
+	            logger.warn('LegacyCryptor', `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+         Do not disable random IVs in new applications.`);
+	        }
 	    }
 	    // --------------------------------------------------------
 	    // --------------------- Encryption -----------------------
@@ -2670,12 +2865,12 @@
 	     */
 	    toString() {
 	        const configurationEntries = Object.entries(this.config).reduce((acc, [key, value]) => {
-	            if (key === 'logger')
+	            if (key === 'logger' || isSensitiveLogKey(key))
 	                return acc;
 	            acc.push(`${key}: ${typeof value === 'function' ? '<function>' : value}`);
 	            return acc;
 	        }, []);
-	        return `AesCbcCryptor { ${configurationEntries.join(', ')} }`;
+	        return `LegacyCryptor { ${configurationEntries.join(', ')} }`;
 	    }
 	}
 	/**
@@ -2702,8 +2897,10 @@
 	     * @internal
 	     */
 	    set logger(logger) {
-	        if (this.defaultCryptor.identifier === WebCryptoModule.LEGACY_IDENTIFIER)
+	        if (this.defaultCryptor.identifier === WebCryptoModule.LEGACY_IDENTIFIER) {
+	            logger.warn('CryptoModule', "'legacyCryptoModule' is deprecated. Use 'aesCbcCryptoModule' instead for new applications.");
 	            this.defaultCryptor.logger = logger;
+	        }
 	        else {
 	            const cryptor = this.cryptors.find((cryptor) => cryptor.identifier === WebCryptoModule.LEGACY_IDENTIFIER);
 	            if (cryptor)
@@ -2714,10 +2911,23 @@
 	    // --------------- Convenience functions ------------------
 	    // -------------------------------------------------------
 	    // region Convenience functions
+	    /**
+	     * Construct crypto module with legacy cryptor for encryption and both legacy and AES-CBC
+	     * cryptors for decryption.
+	     *
+	     * @deprecated Use {@link aesCbcCryptoModule} for new applications.
+	     */
 	    static legacyCryptoModule(config) {
 	        var _a;
 	        if (!config.cipherKey)
 	            throw new PubNubError('Crypto module error: cipher key not set.');
+	        if (config.logger) {
+	            config.logger.warn('CryptoModule', "'legacyCryptoModule' is deprecated. Use 'aesCbcCryptoModule' instead for new applications.");
+	            if (config.useRandomIVs === false) {
+	                config.logger.warn('CryptoModule', `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+          Do not disable random IVs in new applications.`);
+	            }
+	        }
 	        return new WebCryptoModule({
 	            default: new LegacyCryptor(Object.assign(Object.assign({}, config), { useRandomIVs: (_a = config.useRandomIVs) !== null && _a !== void 0 ? _a : true })),
 	            cryptors: [new AesCbcCryptor({ cipherKey: config.cipherKey })],
@@ -4349,177 +4559,6 @@
 	})(LogLevel || (LogLevel = {}));
 
 	/**
-	 * PubNub package utilities module.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Percent-encode input string.
-	 *
-	 * **Note:** Encode content in accordance of the `PubNub` service requirements.
-	 *
-	 * @param input - Source string or number for encoding.
-	 *
-	 * @returns Percent-encoded string.
-	 *
-	 * @internal
-	 */
-	const encodeString = (input) => {
-	    return encodeURIComponent(input).replace(/[!~*'()]/g, (x) => `%${x.charCodeAt(0).toString(16).toUpperCase()}`);
-	};
-	/**
-	 * Percent-encode list of names (channels).
-	 *
-	 * @param names - List of names which should be encoded.
-	 *
-	 * @param [defaultString] - String which should be used in case if {@link names} is empty.
-	 *
-	 * @returns String which contains encoded names joined by non-encoded `,`.
-	 *
-	 * @internal
-	 */
-	const encodeNames = (names, defaultString) => {
-	    const encodedNames = names.map((name) => encodeString(name));
-	    return encodedNames.length ? encodedNames.join(',') : (defaultString !== null && defaultString !== void 0 ? defaultString : '');
-	};
-	/**
-	 * @internal
-	 */
-	const removeSingleOccurrence = (source, elementsToRemove) => {
-	    const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
-	    return source.filter((e) => {
-	        if (elementsToRemove.includes(e) && !removed[e]) {
-	            removed[e] = true;
-	            return false;
-	        }
-	        return true;
-	    });
-	};
-	/**
-	 * @internal
-	 */
-	const findUniqueCommonElements = (a, b) => {
-	    return [...a].filter((value) => b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value));
-	};
-	/**
-	 * Transform query key / value pairs to the string.
-	 *
-	 * @param query - Key / value pairs of the request query parameters.
-	 *
-	 * @returns Stringified query key / value pairs.
-	 *
-	 * @internal
-	 */
-	const queryStringFromObject = (query) => {
-	    return Object.keys(query)
-	        .map((key) => {
-	        const queryValue = query[key];
-	        if (!Array.isArray(queryValue))
-	            return `${key}=${encodeString(queryValue)}`;
-	        return queryValue.map((value) => `${key}=${encodeString(value)}`).join('&');
-	    })
-	        .join('&');
-	};
-	/**
-	 * Adjust `timetoken` to represent current time in PubNub's high-precision time format.
-	 *
-	 * @param timetoken - Timetoken recently used for subscribe long-poll request.
-	 * @param [referenceTimetoken] - Previously computed reference timetoken.
-	 *
-	 * @returns Adjusted timetoken if recent timetoken available.
-	 */
-	const subscriptionTimetokenFromReference = (timetoken, referenceTimetoken) => {
-	    if (referenceTimetoken === '0' || timetoken === '0')
-	        return undefined;
-	    const timetokenDiff = adjustedTimetokenBy(`${Date.now()}0000`, referenceTimetoken, false);
-	    return adjustedTimetokenBy(timetoken, timetokenDiff, true);
-	};
-	/**
-	 * Create reference timetoken based on subscribe timetoken and the user's local time.
-	 *
-	 * Subscription-based reference timetoken allows later computing approximate timetoken at any point in time.
-	 *
-	 * @param [serviceTimetoken] - Timetoken received from the PubNub subscribe service.
-	 * @param [catchUpTimetoken] - Previously stored or user-provided catch-up timetoken.
-	 * @param [referenceTimetoken] - Previously computed reference timetoken. **Important:** This value should be used
-	 * in the case of restore because the actual time when service and catch-up timetokens are received is really
-	 * different from the current local time.
-	 *
-	 * @returns Reference timetoken.
-	 */
-	const referenceSubscribeTimetoken = (serviceTimetoken, catchUpTimetoken, referenceTimetoken) => {
-	    if (!serviceTimetoken || serviceTimetoken.length === 0)
-	        return undefined;
-	    if (catchUpTimetoken && catchUpTimetoken.length > 0 && catchUpTimetoken !== '0') {
-	        // Compensate reference timetoken because catch-up timetoken has been used.
-	        const timetokensDiff = adjustedTimetokenBy(serviceTimetoken, catchUpTimetoken, false);
-	        return adjustedTimetokenBy(referenceTimetoken !== null && referenceTimetoken !== void 0 ? referenceTimetoken : `${Date.now()}0000`, timetokensDiff.replace('-', ''), Number(timetokensDiff) < 0);
-	    }
-	    else if (referenceTimetoken && referenceTimetoken.length > 0 && referenceTimetoken !== '0')
-	        return referenceTimetoken;
-	    else
-	        return `${Date.now()}0000`;
-	};
-	/**
-	 * High-precision time token adjustment.
-	 *
-	 * @param timetoken - Source timetoken which should be adjusted.
-	 * @param value - Value in nanoseconds which should be used for source timetoken adjustment.
-	 * @param increment - Whether source timetoken should be incremented or decremented.
-	 *
-	 * @returns Adjusted high-precision PubNub timetoken.
-	 */
-	const adjustedTimetokenBy = (timetoken, value, increment) => {
-	    // Normalize value to the PubNub's high-precision time format.
-	    if (value.startsWith('-')) {
-	        value = value.replace('-', '');
-	        increment = false;
-	    }
-	    value = value.padStart(17, '0');
-	    const secA = timetoken.slice(0, 10);
-	    const tickA = timetoken.slice(10, 17);
-	    const secB = value.slice(0, 10);
-	    const tickB = value.slice(10, 17);
-	    let seconds = Number(secA);
-	    let ticks = Number(tickA);
-	    seconds += Number(secB) * (increment ? 1 : -1);
-	    ticks += Number(tickB) * (increment ? 1 : -1);
-	    if (ticks >= 10000000) {
-	        seconds += Math.floor(ticks / 10000000);
-	        ticks %= 10000000;
-	    }
-	    else if (ticks < 0) {
-	        if (seconds > 0) {
-	            seconds -= 1;
-	            ticks += 10000000;
-	        }
-	        else if (seconds < 0)
-	            ticks *= -1;
-	    }
-	    else if (seconds < 0 && ticks > 0) {
-	        seconds += 1;
-	        ticks = 10000000 - ticks;
-	    }
-	    return seconds !== 0 ? `${seconds}${`${ticks}`.padStart(7, '0')}` : `${ticks}`;
-	};
-	/**
-	 * Compute received update (message, event) fingerprint.
-	 *
-	 * @param input - Data payload from subscribe API response.
-	 *
-	 * @returns Received update fingerprint.
-	 */
-	const messageFingerprint = (input) => {
-	    const msg = typeof input !== 'string' ? JSON.stringify(input) : input;
-	    const mfp = new Uint32Array(1);
-	    let walk = 0;
-	    let len = msg.length;
-	    while (len-- > 0)
-	        mfp[0] = (mfp[0] << 5) - mfp[0] + msg.charCodeAt(walk++);
-	    return mfp[0].toString(16).padStart(8, '0');
-	};
-
-	/**
 	 * Default console-based logger.
 	 *
 	 * **Important:** This logger is always added as part of {@link LoggerManager} instance configuration and can't be
@@ -5332,9 +5371,15 @@
 	        loggerManager.warn('Configuration', "'logVerbosity' is deprecated. Use 'logLevel' instead.");
 	    // Ensure that retry policy has proper configuration (if has been set).
 	    (_b = base.retryConfiguration) === null || _b === void 0 ? void 0 : _b.validate();
+	    const explicitUseRandomIVs = base.useRandomIVs;
 	    (_c = base.useRandomIVs) !== null && _c !== void 0 ? _c : (base.useRandomIVs = USE_RANDOM_INITIALIZATION_VECTOR);
-	    if (base.useRandomIVs)
-	        loggerManager.warn('Configuration', "'useRandomIVs' is deprecated. Use 'cryptoModule' instead.");
+	    if (explicitUseRandomIVs !== undefined) {
+	        loggerManager.warn('Configuration', "'useRandomIVs' is deprecated. Pass it to 'cryptoModule' instead.");
+	        if (explicitUseRandomIVs === false) {
+	            loggerManager.warn('Configuration', `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+        Do not disable random IVs in new applications.`);
+	        }
+	    }
 	    // Override origin value.
 	    base.origin = standardOrigin((_d = base.ssl) !== null && _d !== void 0 ? _d : false, base.origin);
 	    const cryptoModule = base.cryptoModule;
@@ -5432,7 +5477,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '12.0.0';
+	            return '12.0.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -12298,7 +12343,7 @@
 	    }
 	    get path() {
 	        const { channel, id, name, keySet: { subscribeKey }, } = this.parameters;
-	        return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files/${id}/${name}`;
+	        return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files/${encodeString(id)}/${encodeString(name)}`;
 	    }
 	}
 
@@ -12332,7 +12377,7 @@
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, id, channel, name, } = this.parameters;
-	        return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files/${id}/${name}`;
+	        return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files/${encodeString(id)}/${encodeString(name)}`;
 	    }
 	}
 
@@ -15369,7 +15414,7 @@
 	    }
 	    get path() {
 	        const { keySet: { subscribeKey }, channel, id, name, } = this.parameters;
-	        return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files/${id}/${name}`;
+	        return `/v1/files/${subscribeKey}/channels/${encodeString(channel)}/files/${encodeString(id)}/${encodeString(name)}`;
 	    }
 	}
 
@@ -15439,7 +15484,7 @@
 	            message: configuration.configuration,
 	            details: 'Create with configuration:',
 	            ignoredKeys(key, obj) {
-	                return typeof obj[key] === 'function' || key.startsWith('_');
+	                return typeof obj[key] === 'function' || key.startsWith('_') || key === 'keySet' || isSensitiveLogKey(key);
 	            },
 	        }));
 	        // API group entry points initialization.
@@ -15676,7 +15721,7 @@
 	     * @param authKey - New authorization key which should be used with new requests.
 	     */
 	    setAuthKey(authKey) {
-	        this.logger.debug('PubNub', `Set auth key: ${authKey}`);
+	        this.logger.debug('PubNub', 'Auth key updated.');
 	        this._configuration.setAuthKey(authKey);
 	        if (this.onAuthenticationChange)
 	            this.onAuthenticationChange(authKey);
@@ -15789,7 +15834,7 @@
 	     * @param key - New key which should be used for data encryption / decryption.
 	     */
 	    setCipherKey(key) {
-	        this.logger.debug('PubNub', `Set cipher key: ${key}`);
+	        this.logger.debug('PubNub', 'Cipher key updated.');
 	        this.cipherKey = key;
 	    }
 	    /**
@@ -17302,6 +17347,7 @@
 	     * @param token - New access token which should be used with next REST API endpoint calls.
 	     */
 	    setToken(token) {
+	        this.logger.debug('PubNub', 'Access token updated.');
 	        this.token = token;
 	    }
 	    /**
@@ -17314,6 +17360,7 @@
 	     * @returns Token's permissions information for the resources.
 	     */
 	    parseToken(token) {
+	        this.logger.debug('PubNub', 'Parse access token.');
 	        return this.tokenManager && this.tokenManager.parseToken(token);
 	    }
 	    /**

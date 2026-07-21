@@ -477,9 +477,12 @@ export type PlatformConfiguration = {
    * upload).
    * When `false` the IV is hard-coded for all requests except for file upload.
    *
+   * Disabling random IVs is insecure and should only be used to support legacy clients.
+   *
    * @default `true`
    *
-   * @deprecated Pass it to `cryptoModule` instead.
+   * @deprecated Pass it to `cryptoModule` instead. Prefer {@link cryptoModule} with
+   * `aesCbcCryptoModule` for new applications, and do not set this to `false`.
    */
   useRandomIVs?: boolean;
 
