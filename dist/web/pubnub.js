@@ -2061,14 +2061,7 @@
 	 *
 	 * @internal
 	 */
-	const SENSITIVE_LOG_KEYS = new Set([
-	    'authKey',
-	    'authKeys',
-	    'secretKey',
-	    'cipherKey',
-	    'token',
-	    'auth',
-	]);
+	const SENSITIVE_LOG_KEYS = new Set(['authKey', 'authKeys', 'secretKey', 'cipherKey', 'token', 'auth']);
 	/**
 	 * Whether an object log key should be omitted because it may hold a secret.
 	 *
@@ -2817,7 +2810,8 @@
 	    set logger(logger) {
 	        this.cryptor.logger = logger;
 	        if (this.config.useRandomIVs === false) {
-	            logger.warn('LegacyCryptor', "Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients. Do not disable random IVs in new applications.");
+	            logger.warn('LegacyCryptor', `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+         Do not disable random IVs in new applications.`);
 	        }
 	    }
 	    // --------------------------------------------------------
@@ -2930,7 +2924,8 @@
 	        if (config.logger) {
 	            config.logger.warn('CryptoModule', "'legacyCryptoModule' is deprecated. Use 'aesCbcCryptoModule' instead for new applications.");
 	            if (config.useRandomIVs === false) {
-	                config.logger.warn('CryptoModule', "Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients. Do not disable random IVs in new applications.");
+	                config.logger.warn('CryptoModule', `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+          Do not disable random IVs in new applications.`);
 	            }
 	        }
 	        return new WebCryptoModule({
@@ -5381,7 +5376,8 @@
 	    if (explicitUseRandomIVs !== undefined) {
 	        loggerManager.warn('Configuration', "'useRandomIVs' is deprecated. Pass it to 'cryptoModule' instead.");
 	        if (explicitUseRandomIVs === false) {
-	            loggerManager.warn('Configuration', "Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients. Do not disable random IVs in new applications.");
+	            loggerManager.warn('Configuration', `Setting 'useRandomIVs' to false is insecure and should only be used to support legacy clients.
+        Do not disable random IVs in new applications.`);
 	        }
 	    }
 	    // Override origin value.
@@ -5481,7 +5477,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '12.0.0';
+	            return '12.0.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -15473,10 +15469,7 @@
 	            message: configuration.configuration,
 	            details: 'Create with configuration:',
 	            ignoredKeys(key, obj) {
-	                return (typeof obj[key] === 'function' ||
-	                    key.startsWith('_') ||
-	                    key === 'keySet' ||
-	                    isSensitiveLogKey(key));
+	                return typeof obj[key] === 'function' || key.startsWith('_') || key === 'keySet' || isSensitiveLogKey(key);
 	            },
 	        }));
 	        // API group entry points initialization.
