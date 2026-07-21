@@ -52,8 +52,6 @@ export class CreateChannelRequest<Response extends DataSync.CreateChannelRespons
   protected get headers(): Record<string, string> | undefined {
     let headers = super.headers ?? {};
 
-    if (this.parameters.idempotencyKey) headers = { ...headers, 'Idempotency-Key': this.parameters.idempotencyKey };
-
     return {
       ...headers,
       'Content-Type': 'application/vnd.pubnub.objects.channel+json;version=1',

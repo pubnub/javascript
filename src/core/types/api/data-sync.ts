@@ -286,12 +286,6 @@ export type CreateEntityParameters = {
      */
     id?: string;
   };
-
-  /**
-   * UUIDv4 idempotency key for safe retries.
-   * Auto-generated if not provided.
-   */
-  idempotencyKey?: string;
 };
 
 /**
@@ -406,12 +400,6 @@ export type PatchEntityParameters = {
    * If provided, the patch only succeeds if the server's ETag matches.
    */
   ifMatchesEtag?: string;
-
-  /**
-   * UUIDv4 idempotency key for safe retries.
-   * Auto-generated if not provided.
-   */
-  idempotencyKey?: string;
 };
 
 /**
@@ -560,12 +548,6 @@ export type CreateRelationshipParameters = {
      */
     id?: string;
   };
-
-  /**
-   * UUIDv4 idempotency key for safe retries.
-   * Auto-generated if not provided.
-   */
-  idempotencyKey?: string;
 };
 
 /**
@@ -574,6 +556,7 @@ export type CreateRelationshipParameters = {
 export type GetRelationshipParameters = {
   /** Relationship ID. */
   id: string;
+
 };
 
 /**
@@ -678,12 +661,6 @@ export type PatchRelationshipParameters = {
    * If provided, the patch only succeeds if the server's ETag matches.
    */
   ifMatchesEtag?: string;
-
-  /**
-   * UUIDv4 idempotency key for safe retries.
-   * Auto-generated if not provided.
-   */
-  idempotencyKey?: string;
 };
 
 /**
@@ -786,12 +763,6 @@ export type CreateUserParameters = {
      */
     id?: string;
   };
-
-  /**
-   * UUIDv4 idempotency key for safe retries.
-   * Auto-generated if not provided.
-   */
-  idempotencyKey?: string;
 };
 
 /**
@@ -882,11 +853,6 @@ export type PatchUserParameters = {
    * ETag for optimistic concurrency control.
    */
   ifMatchesEtag?: string;
-
-  /**
-   * UUIDv4 idempotency key for safe retries.
-   */
-  idempotencyKey?: string;
 };
 
 /**
@@ -1002,11 +968,6 @@ export type CreateChannelParameters = {
      */
     id?: string;
   };
-
-  /**
-   * UUIDv4 idempotency key for safe retries.
-   */
-  idempotencyKey?: string;
 };
 
 /**
@@ -1081,11 +1042,6 @@ export type PatchChannelParameters = {
    * ETag for optimistic concurrency control.
    */
   ifMatchesEtag?: string;
-
-  /**
-   * UUIDv4 idempotency key for safe retries.
-   */
-  idempotencyKey?: string;
 };
 
 /**
@@ -1226,11 +1182,6 @@ export type CreateMembershipParameters = {
      */
     id?: string;
   };
-
-  /**
-   * UUIDv4 idempotency key for safe retries.
-   */
-  idempotencyKey?: string;
 };
 
 /**
@@ -1312,11 +1263,6 @@ export type PatchMembershipParameters = {
    * ETag for optimistic concurrency control.
    */
   ifMatchesEtag?: string;
-
-  /**
-   * UUIDv4 idempotency key for safe retries.
-   */
-  idempotencyKey?: string;
 };
 
 /**

@@ -60,8 +60,6 @@ export class PatchUserRequest<Response extends DataSync.PatchUserResponse> exten
 
     if (this.parameters.ifMatchesEtag) headers = { ...headers, 'If-Match': this.parameters.ifMatchesEtag };
 
-    if (this.parameters.idempotencyKey) headers = { ...headers, 'Idempotency-Key': this.parameters.idempotencyKey };
-
     return {
       ...headers,
       'Content-Type': 'application/json-patch+json',

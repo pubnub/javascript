@@ -53,8 +53,6 @@ export class CreateEntityRequest<Response extends DataSync.CreateEntityResponse>
   protected get headers(): Record<string, string> | undefined {
     let headers = super.headers ?? {};
 
-    if (this.parameters.idempotencyKey) headers = { ...headers, 'Idempotency-Key': this.parameters.idempotencyKey };
-
     return {
       ...headers,
       'Content-Type': 'application/vnd.pubnub.objects.entity+json;version=1',
