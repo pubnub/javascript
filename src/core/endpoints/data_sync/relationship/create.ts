@@ -52,7 +52,7 @@ export class CreateRelationshipRequest<Response extends DataSync.CreateRelations
   }
 
   protected get headers(): Record<string, string> | undefined {
-    let headers = super.headers ?? {};
+    const headers = super.headers ?? {};
 
     return {
       ...headers,

@@ -51,7 +51,7 @@ export class CreateMembershipRequest<Response extends DataSync.CreateMembershipR
   }
 
   protected get headers(): Record<string, string> | undefined {
-    let headers = super.headers ?? {};
+    const headers = super.headers ?? {};
 
     return {
       ...headers,

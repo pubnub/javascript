@@ -556,7 +556,6 @@ export type CreateRelationshipParameters = {
 export type GetRelationshipParameters = {
   /** Relationship ID. */
   id: string;
-
 };
 
 /**

@@ -51,7 +51,7 @@ export class CreateEntityRequest<Response extends DataSync.CreateEntityResponse>
   }
 
   protected get headers(): Record<string, string> | undefined {
-    let headers = super.headers ?? {};
+    const headers = super.headers ?? {};
 
     return {
       ...headers,

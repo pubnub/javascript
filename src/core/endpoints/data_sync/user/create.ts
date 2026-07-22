@@ -50,7 +50,7 @@ export class CreateUserRequest<Response extends DataSync.CreateUserResponse> ext
   }
 
   protected get headers(): Record<string, string> | undefined {
-    let headers = super.headers ?? {};
+    const headers = super.headers ?? {};
 
     return {
       ...headers,
