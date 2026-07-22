@@ -1,3 +1,9 @@
+## v12.0.2
+July 22 2026
+
+#### Fixed
+- Fixes issue of getting error while obtain APM safe fetch api.
+
 ## v12.0.1
 July 21 2026
 

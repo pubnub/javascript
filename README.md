@@ -27,8 +27,8 @@ Watch [Getting Started with PubNub JS SDK](https://app.dashcam.io/replay/64ee0d2
      npm install pubnub
      ```
    * or download one of our builds from our CDN: 
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.12.0.1.js
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.12.0.1.min.js
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.12.0.2.js
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.12.0.2.min.js
 
    > **React Native:** the SDK relies on a global `URL` implementation, which React Native does not
    > provide, so it depends on [`react-native-url-polyfill`](https://www.npmjs.com/package/react-native-url-polyfill).
