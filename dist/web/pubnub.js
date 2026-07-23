@@ -5570,7 +5570,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '12.0.1';
+	            return '12.0.2';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -6045,13 +6045,22 @@
 	        this.logger = logger;
 	        this.transport = transport;
 	        logger.debug('WebTransport', `Create with configuration:\n  - transport: ${transport}`);
-	        if (transport === 'fetch' && (!window || !window.fetch)) {
+	        // Check for `fetch` availability directly (works in DOM and DOM-less contexts such as service workers).
+	        // because a bare `window` reference would throw in a service worker, and a partial `window = self` shim can
+	        // define `window` without `fetch`, so probe the actual `fetch` global via `typeof`.
+	        if (transport === 'fetch' && typeof fetch === 'undefined') {
 	            logger.warn('WebTransport', `'${transport}' not supported in this browser. Fallback to the 'xhr' transport.`);
 	            this.transport = 'xhr';
 	        }
 	        if (this.transport !== 'fetch')
 	            return;
 	        // Storing reference on original `fetch` function implementation as protection against APM lib monkey patching.
+	        //
+	        // This is done unconditionally (not gated on `isFetchMonkeyPatched()`): APM libraries can defeat that
+	        // detection by overriding stringification to report `[native code]` while still patching `fetch`, so we
+	        // cannot rely on it to decide whether the workaround is needed. `getOriginalFetch()` itself decides how to
+	        // obtain the reference based on the environment (iframe when a DOM is available, context `fetch` otherwise),
+	        // which keeps construction safe in DOM-less contexts such as MV3 service workers.
 	        WebTransport.originalFetch = WebTransport.getOriginalFetch();
 	        // Check whether `fetch` has been monkey patched or not.
 	        if (this.isFetchMonkeyPatched())
@@ -6356,6 +6365,12 @@
 	     * @returns Reference to the `fetch` function.
 	     */
 	    static getOriginalFetch() {
+	        // The iframe-based APM workaround requires a DOM. In DOM-less contexts (e.g. MV3 service workers) there is
+	        // no `document`, and `fetch` cannot be reached through a fresh browsing context — return the context `fetch`
+	        // directly. This is safe there: without a DOM there is no APM page script to monkey patch `fetch` in the
+	        // first place. This environment check is what keeps the unconditional call in the constructor safe.
+	        if (typeof document === 'undefined' || !document.body)
+	            return fetch;
 	        let iframe = document.querySelector('iframe[name="pubnub-context-unpatched-fetch"]');
 	        if (!iframe) {
 	            iframe = document.createElement('iframe');
@@ -19419,7 +19434,9 @@
 	                    authenticationChangeHandler = (auth) => middleware.onTokenChange(auth);
 	                    userIdChangeHandler = (userId) => middleware.onUserIdChange(userId);
 	                    transport = middleware;
-	                    if (configurationCopy.subscriptionWorkerUnsubscribeOfflineClients) {
+	                    if (configurationCopy.subscriptionWorkerUnsubscribeOfflineClients &&
+	                        typeof window !== 'undefined' &&
+	                        window.addEventListener) {
 	                        window.addEventListener('pagehide', (event) => {
 	                            if (!event.persisted)
 	                                middleware.terminate();
@@ -19469,7 +19486,11 @@
 	                };
 	            }
 	        }
-	        if ((_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : true) {
+	        // `window` is unavailable in DOM-less contexts (e.g. MV3 service workers); only attach network
+	        // listeners when a `window` with event support actually exists.
+	        if (((_a = configuration.listenToBrowserNetworkEvents) !== null && _a !== void 0 ? _a : true) &&
+	            typeof window !== 'undefined' &&
+	            window.addEventListener) {
 	            window.addEventListener('offline', () => {
 	                this.networkDownDetected();
 	            });
