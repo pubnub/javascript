@@ -10826,13 +10826,17 @@ declare namespace PubNub {
     /**
      * Membership properties for update (PUT) requests.
      *
-     * PUT is a full replacement — `userId` and `channelId` are required.
+     * PUT is a full replacement — `userId`, `channelId`, and `relationshipClassVersion` are required.
+     * The server rejects a PUT that omits `relationshipClassVersion` (`SYN-0004: must not be null`),
+     * mirroring {@link UpdateRelationshipProperties}.
      */
     export type UpdateMembershipProperties = {
       /** User ID reference. */
       userId: string;
       /** Channel ID reference. */
       channelId: string;
+      /** Version of the Membership relationship class. */
+      relationshipClassVersion: number;
       /** Optional lifecycle status. */
       status?: string;
       /** User-defined JSON payload. */
@@ -10842,18 +10846,16 @@ declare namespace PubNub {
     /**
      * Membership resource as returned from the server.
      *
-     * Note: server responses are shaped like a relationship — `entityAId` corresponds
-     * to `channelId` and `entityBId` corresponds to `userId`.
      */
     export type MembershipObject = {
       /** Unique identifier. */
       id: string;
-      /** Channel ID (server returns this as `entityAId`). */
-      entityAId: string;
-      /** User ID (server returns this as `entityBId`). */
-      entityBId: string;
+      /** Channel ID reference. */
+      channelId: string;
+      /** User ID reference. */
+      userId: string;
       /** Relationship class. */
-      relationshipClass: string;
+      relationshipClass?: string;
       /** Version of the relationship class schema. */
       relationshipClassVersion: number;
       /** Lifecycle status. */
