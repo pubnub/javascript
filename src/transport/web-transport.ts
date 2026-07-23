@@ -444,7 +444,11 @@ export class WebTransport implements Transport {
     // no `document`, and `fetch` cannot be reached through a fresh browsing context — return the context `fetch`
     // directly. This is safe there: without a DOM there is no APM page script to monkey patch `fetch` in the
     // first place. This environment check is what keeps the unconditional call in the constructor safe.
-    if (typeof document === 'undefined' || !document.body) return fetch;
+    //
+    // `fetch` must be bound to the global scope: native `fetch` requires its `this` to be the `Window` /
+    // `WorkerGlobalScope`, and it is later invoked detached (`WebTransport.originalFetch(...)`). Without the bind
+    // a service worker throws "Failed to execute 'fetch' on 'WorkerGlobalScope': Illegal invocation".
+    if (typeof document === 'undefined' || !document.body) return fetch.bind(globalThis);
 
     let iframe = document.querySelector<HTMLIFrameElement>('iframe[name="pubnub-context-unpatched-fetch"]');
 
@@ -457,6 +461,6 @@ export class WebTransport implements Transport {
     }
 
     if (iframe.contentWindow) return iframe.contentWindow.fetch.bind(iframe.contentWindow);
-    return fetch;
+    return fetch.bind(globalThis);
   }
 }
