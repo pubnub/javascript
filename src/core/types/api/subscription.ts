@@ -13,6 +13,7 @@ import {
 
 export type {
   DataSyncData,
+  DataSyncNormalizedType,
   DataSyncEntityData,
   DataSyncRelationshipData,
   DataSyncDeleteData,

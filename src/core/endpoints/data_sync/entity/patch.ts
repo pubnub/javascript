@@ -9,6 +9,7 @@
  */
 
 import { TransportMethod } from '../../../types/transport-request';
+import { TransportResponse } from '../../../types/transport-response';
 import { AbstractRequest } from '../../../components/request';
 import RequestOperation from '../../../constants/operations';
 import * as DataSync from '../../../types/api/data-sync';
@@ -47,6 +48,13 @@ export class PatchEntityRequest<Response extends DataSync.PatchEntityResponse> e
 
   operation(): RequestOperation {
     return RequestOperation.PNPatchEntityOperation;
+  }
+
+  async parse(response: TransportResponse): Promise<Response> {
+    // The DataSync service returns the object envelope ({ data } or { data, meta }) without a
+    // top-level HTTP status; surface `response.status` so callers can inspect it (parity with remove).
+    const parsed = this.deserializeResponse(response);
+    return { ...parsed, status: response.status } as Response;
   }
 
   validate(): string | undefined {

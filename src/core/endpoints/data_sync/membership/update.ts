@@ -7,6 +7,7 @@
  */
 
 import { TransportMethod } from '../../../types/transport-request';
+import { TransportResponse } from '../../../types/transport-response';
 import { AbstractRequest } from '../../../components/request';
 import RequestOperation from '../../../constants/operations';
 import * as DataSync from '../../../types/api/data-sync';
@@ -46,11 +47,19 @@ export class UpdateMembershipRequest<Response extends DataSync.UpdateMembershipR
     return RequestOperation.PNUpdateMembershipOperation;
   }
 
+  async parse(response: TransportResponse): Promise<Response> {
+    // The DataSync service returns the object envelope ({ data } or { data, meta }) without a
+    // top-level HTTP status; surface `response.status` so callers can inspect it (parity with remove).
+    const parsed = this.deserializeResponse(response);
+    return { ...parsed, status: response.status } as Response;
+  }
+
   validate(): string | undefined {
     if (!this.parameters.id) return 'Membership id cannot be empty';
     if (!this.parameters.membership) return 'Membership cannot be empty';
     if (!this.parameters.membership.userId) return 'User id cannot be empty';
     if (!this.parameters.membership.channelId) return 'Channel id cannot be empty';
+    if (!this.parameters.membership.relationshipClassVersion) return 'Relationship class version cannot be empty';
   }
 
   protected get headers(): Record<string, string> | undefined {

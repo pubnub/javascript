@@ -431,9 +431,37 @@ export type AppContextObjectData = ChannelObjectData | UuidObjectData | Membersh
 type DataSyncEventName = 'create' | 'update' | 'delete';
 
 /**
- * DataSync object kinds carried on the wire.
+ * DataSync object kinds carried on the wire (raw service value).
  */
 type DataSyncObjectType = 'entity' | 'relationship';
+
+/**
+ * Normalized DataSync object kind derived from the wire `className`.
+ *
+ * Users and Channels are backed by entity classes; Memberships by a relationship class. This
+ * discriminator lets consumers branch on the semantic kind in a `dataSync` listener without matching
+ * class-name strings. Falls back to the raw wire {@link DataSyncObjectType} for unrecognized classes.
+ */
+export type DataSyncNormalizedType = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
+
+/**
+ * Reserved DataSync system class names (lower-cased, prefix-stripped) → normalized object type.
+ *
+ * NOTE: the exact wire `className` for typed User/Channel/Membership resources must be confirmed by
+ * running the `ds-event-test` spike against an origin that emits DataSync events. Keys are compared
+ * case-insensitively after `className.split(':').pop()`. Best-guess values are derived from the create
+ * content-types (`application/vnd.pubnub.objects.{user,channel,membership}+json`).
+ *
+ * @internal
+ */
+const DATA_SYNC_RESERVED_CLASSES: Record<string, DataSyncNormalizedType> = {
+  user: 'user',
+  channel: 'channel',
+  membership: 'membership',
+  pn_user: 'user',
+  pn_channel: 'channel',
+  pn_membership: 'membership',
+};
 
 /**
  * DataSync entity change payload (create / update).
@@ -545,9 +573,19 @@ export type DataSyncData = {
   source: string;
 
   /**
-   * DataSync object kind.
+   * Raw DataSync object kind as sent by the service.
    */
   type: DataSyncObjectType;
+
+  /**
+   * Normalized DataSync object kind.
+   *
+   * Derived from {@link className}: reserved User/Channel/Membership classes map to `'user'` /
+   * `'channel'` / `'membership'`; everything else falls back to the raw wire {@link type}
+   * (`'entity'` / `'relationship'`). Use this to discriminate typed resources without knowing
+   * class-name strings.
+   */
+  objectType: DataSyncNormalizedType;
 
   /**
    * Object class name (last `:`-delimited segment of the wire `className`).
@@ -1023,7 +1061,17 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     // Only treat the envelope as DataSync when the service marks it and carries the required fields.
     if (!metadata || metadata.source !== 'data-sync' || !metadata.event || !metadata.type) return undefined;
 
-    const className = metadata.className ? metadata.className.split(':').pop() : undefined;
+    // Wire `className` is a positional composite `<systemClass>::<developerClass>`:
+    //   - typed User/Channel/Membership → `User::` / `Channel::` / `Membership::` (system in 1st segment)
+    //   - generic entity / relationship → `::Customer` / `::REQUESTED_BY` (developer in last segment)
+    // The reserved system class (1st segment) drives `objectType`; the surfaced `className` is the
+    // developer class (last non-empty segment) when present, else the system class.
+    const classSegments = metadata.className ? metadata.className.split(':') : [];
+    const systemClass = classSegments.length > 0 ? classSegments[0] : undefined;
+    const nonEmptySegments = classSegments.filter((segment) => segment.length > 0);
+    const className = nonEmptySegments.length > 0 ? nonEmptySegments[nonEmptySegments.length - 1] : undefined;
+    const objectType: DataSyncNormalizedType =
+      (systemClass && DATA_SYNC_RESERVED_CLASSES[systemClass.toLowerCase()]) || metadata.type;
     const parsedVersion = metadata.classVersion !== undefined ? Number.parseInt(`${metadata.classVersion}`, 10) : NaN;
     const classVersion = Number.isNaN(parsedVersion) ? undefined : parsedVersion;
     const raw = (payload.data ?? {}) as Record<string, unknown>;
@@ -1050,6 +1098,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
         event: metadata.event,
         source: metadata.source,
         type: metadata.type,
+        objectType,
         className,
         classVersion,
         data,
