@@ -14,6 +14,17 @@ import { Payload } from '../types/api';
 // region Types
 
 /**
+ * DataSync scope wire keys as stored in the token `res` / `pat` sections.
+ */
+type DataSyncWireKey = 'datasync:entities' | 'datasync:relationships' | 'datasync:memberships';
+
+/**
+ * Raw bit-encoded permissions section (`res` or `pat`) stored in the access token.
+ */
+type RawTokenPermissions = Record<'chan' | 'grp' | 'uuid', Record<string, number>> &
+  Partial<Record<DataSyncWireKey, Record<string, number>>>;
+
+/**
  * Raw parsed token.
  *
  * Representation of data stored in base64-encoded access token.
@@ -37,12 +48,12 @@ type RawToken = {
   /**
    * Permissions granted to specific resources.
    */
-  res: Record<'chan' | 'grp' | 'uuid', Record<string, number>>;
+  res: RawTokenPermissions;
 
   /**
    * Permissions granted to resources which match specified regular expression.
    */
-  pat: Record<'chan' | 'grp' | 'uuid', Record<string, number>>;
+  pat: RawTokenPermissions;
 
   /**
    * The uuid that is exclusively authorized to use this token to make API requests.
@@ -146,6 +157,9 @@ export class TokenManager {
         }
       }
 
+      const resourceDataSync = this.extractDataSyncScopes(parsed.res);
+      if (resourceDataSync) (result.resources ??= {}).dataSync = resourceDataSync;
+
       const uuidPatterns = uuidPatternPermissions.length > 0;
       const channelPatterns = channelPatternPermissions.length > 0;
       const groupPatterns = groupPatternPermissions.length > 0;
@@ -168,6 +182,9 @@ export class TokenManager {
           groupPatternPermissions.forEach((id) => (groups[id] = this.extractPermissions(parsed.pat.grp[id])));
         }
       }
+
+      const patternDataSync = this.extractDataSyncScopes(parsed.pat);
+      if (patternDataSync) (result.patterns ??= {}).dataSync = patternDataSync;
 
       if (parsed.meta && Object.keys(parsed.meta).length > 0) result.meta = parsed.meta;
 
@@ -204,5 +221,54 @@ export class TokenManager {
     if ((permissions & 1) === 1) permissionsResult.read = true;
 
     return permissionsResult;
+  }
+
+  /**
+   * Extract DataSync permission scopes from a token permissions section.
+   *
+   * The `datasync:*` wire keys are only present for tokens which granted DataSync permissions, so a
+   * result is returned only when at least one scope carries permissions.
+   *
+   * @param section - Raw `res` or `pat` permissions section decoded from the token.
+   *
+   * @returns Human-readable DataSync permission scopes, or `undefined` when none are granted.
+   */
+  private extractDataSyncScopes(section: RawTokenPermissions): PAM.DataSyncScopePermissions | undefined {
+    const dataSyncScopes: [keyof PAM.DataSyncScopePermissions, DataSyncWireKey][] = [
+      ['entities', 'datasync:entities'],
+      ['relationships', 'datasync:relationships'],
+      ['memberships', 'datasync:memberships'],
+    ];
+
+    let result: PAM.DataSyncScopePermissions | undefined;
+
+    dataSyncScopes.forEach(([scope, wireKey]) => {
+      const permissions = section[wireKey];
+      if (!permissions) return;
+
+      const ids = Object.keys(permissions);
+      if (ids.length === 0) return;
+
+      const scopeResult: Record<string, PAM.DataSyncPermissions> = ((result ??= {})[scope] = {});
+      ids.forEach((id) => (scopeResult[id] = this.extractDataSyncPermissions(permissions[id])));
+    });
+
+    return result;
+  }
+
+  /**
+   * Extract DataSync resource access permission information.
+   *
+   * @param permissions - Bit-encoded resource permissions.
+   *
+   * @returns Human-readable DataSync resource permissions.
+   */
+  private extractDataSyncPermissions(permissions: number): PAM.DataSyncPermissions {
+    return {
+      create: (permissions & 16) === 16,
+      get: (permissions & 32) === 32,
+      update: (permissions & 64) === 64,
+      delete: (permissions & 8) === 8,
+    };
   }
 }

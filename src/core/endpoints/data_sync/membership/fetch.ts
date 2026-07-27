@@ -1,5 +1,5 @@
 /**
- * Get User REST API module.
+ * Fetch Membership REST API module.
  *
  * @internal
  */
@@ -19,7 +19,7 @@ import { encodeString } from '../../../utils';
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.GetUserParameters & {
+type RequestParameters = DataSync.FetchMembershipParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -28,17 +28,20 @@ type RequestParameters = DataSync.GetUserParameters & {
 // endregion
 
 /**
- * Get User request.
+ * Fetch Membership request.
  *
  * @internal
  */
-export class GetUserRequest<Response extends DataSync.GetUserResponse> extends AbstractRequest<Response, Response> {
+export class FetchMembershipRequest<Response extends DataSync.FetchMembershipResponse> extends AbstractRequest<
+  Response,
+  Response
+> {
   constructor(private readonly parameters: RequestParameters) {
     super();
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNGetUserOperation;
+    return RequestOperation.PNFetchMembershipOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -49,7 +52,7 @@ export class GetUserRequest<Response extends DataSync.GetUserResponse> extends A
   }
 
   validate(): string | undefined {
-    if (!this.parameters.id) return 'User id cannot be empty';
+    if (!this.parameters.id) return 'Membership id cannot be empty';
   }
 
   protected get path(): string {
@@ -58,6 +61,6 @@ export class GetUserRequest<Response extends DataSync.GetUserResponse> extends A
       id,
     } = this.parameters;
 
-    return `/v1/datasync/subkeys/${subscribeKey}/users/${encodeString(id)}`;
+    return `/v1/datasync/subkeys/${subscribeKey}/memberships/${encodeString(id)}`;
   }
 }

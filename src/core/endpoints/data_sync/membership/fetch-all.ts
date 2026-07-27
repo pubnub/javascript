@@ -1,5 +1,5 @@
 /**
- * Get All Channels REST API module.
+ * Fetch Memberships REST API module.
  *
  * @internal
  */
@@ -29,7 +29,7 @@ const DEFAULT_LIMIT = 20;
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.GetAllChannelsParameters & {
+type RequestParameters = DataSync.FetchMembershipsParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -38,11 +38,11 @@ type RequestParameters = DataSync.GetAllChannelsParameters & {
 // endregion
 
 /**
- * Get All Channels request.
+ * Fetch Memberships request.
  *
  * @internal
  */
-export class GetAllChannelsRequest<Response extends DataSync.GetAllChannelsResponse> extends AbstractRequest<
+export class FetchMembershipsRequest<Response extends DataSync.FetchMembershipsResponse> extends AbstractRequest<
   Response,
   Response
 > {
@@ -54,7 +54,7 @@ export class GetAllChannelsRequest<Response extends DataSync.GetAllChannelsRespo
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNGetAllChannelsOperation;
+    return RequestOperation.PNFetchMembershipsOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -65,18 +65,22 @@ export class GetAllChannelsRequest<Response extends DataSync.GetAllChannelsRespo
   }
 
   protected get path(): string {
-    return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/channels`;
+    return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/memberships`;
   }
 
   protected get queryParameters(): Query {
-    const { entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+    const { userId, channelId, relationshipClassVersion, cursor, limit, filter, sort, filterAdvanced } =
+      this.parameters;
+    const sorting = DataSync.serializeDataSyncSort(sort);
 
     return {
-      ...(entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {}),
+      ...(userId ? { user_id: userId } : {}),
+      ...(channelId ? { channel_id: channelId } : {}),
+      ...(relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {}),
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),
-      ...(sort ? { sort } : {}),
+      ...(sorting.length ? { sort: sorting } : {}),
       ...(filterAdvanced ? { filter_advanced: filterAdvanced } : {}),
     };
   }

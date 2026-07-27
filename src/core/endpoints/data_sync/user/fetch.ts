@@ -1,5 +1,5 @@
 /**
- * Get Entity REST API module.
+ * Fetch User REST API module.
  *
  * @internal
  */
@@ -19,7 +19,7 @@ import { encodeString } from '../../../utils';
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.GetEntityParameters & {
+type RequestParameters = DataSync.FetchUserParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -28,17 +28,17 @@ type RequestParameters = DataSync.GetEntityParameters & {
 // endregion
 
 /**
- * Get Entity request.
+ * Fetch User request.
  *
  * @internal
  */
-export class GetEntityRequest<Response extends DataSync.GetEntityResponse> extends AbstractRequest<Response, Response> {
+export class FetchUserRequest<Response extends DataSync.FetchUserResponse> extends AbstractRequest<Response, Response> {
   constructor(private readonly parameters: RequestParameters) {
     super();
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNGetEntityOperation;
+    return RequestOperation.PNFetchUserOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -49,7 +49,7 @@ export class GetEntityRequest<Response extends DataSync.GetEntityResponse> exten
   }
 
   validate(): string | undefined {
-    if (!this.parameters.id) return 'Entity id cannot be empty';
+    if (!this.parameters.id) return 'User id cannot be empty';
   }
 
   protected get path(): string {
@@ -58,6 +58,6 @@ export class GetEntityRequest<Response extends DataSync.GetEntityResponse> exten
       id,
     } = this.parameters;
 
-    return `/v1/datasync/subkeys/${subscribeKey}/entities/${encodeString(id)}`;
+    return `/v1/datasync/subkeys/${subscribeKey}/users/${encodeString(id)}`;
   }
 }

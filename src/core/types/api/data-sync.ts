@@ -89,11 +89,37 @@ type PagedRequestParameters = {
   filter?: string;
 
   /**
-   * Sort expression. Comma-separated fields, optionally prefixed with + (asc) or - (desc).
-   * Example: "+name,-createdAt"
+   * Sort expression.
+   *
+   * Either a raw string (comma-separated fields, optionally prefixed with + (asc) or - (desc),
+   * e.g. `"+name,-createdAt"`), or a map of field → direction that is serialized to the
+   * `field:order` form the service expects (e.g. `{ firstName: 'desc' }` → `firstName:desc`).
+   * Specify `null` as the direction for the service default (ascending).
    */
-  sort?: string;
+  sort?: DataSyncSort;
 };
+
+/**
+ * Sorting options for paginated DataSync list requests.
+ *
+ * Prefer the object form (`{ firstName: 'desc' }`), which is normalized to the `field:order`
+ * form the service expects. A raw string is passed through unchanged.
+ */
+export type DataSyncSort = string | Record<string, 'asc' | 'desc' | null>;
+
+/**
+ * Serialize a {@link DataSyncSort} into the query value the service expects.
+ *
+ * A raw string is passed through unchanged. An object is turned into a list of `field:order`
+ * entries (a `null` direction emits the bare field name, letting the service apply its default
+ * ascending order). Mirrors the App Context `getAllChannelMetadata` sort handling.
+ *
+ * @internal
+ */
+export function serializeDataSyncSort(sort?: DataSyncSort): string | string[] {
+  if (typeof sort === 'string') return sort;
+  return Object.entries(sort ?? {}).map(([option, order]) => (order !== null ? `${option}:${order}` : option));
+}
 
 /**
  * Single-entity response envelope.
@@ -136,14 +162,53 @@ type DataSyncPagedResponse<T> = {
 /**
  * JSON Patch operation as defined by RFC 6902.
  *
- * Internal wire format. Developers use `add`/`replace`/`remove` with dot notation instead.
+ * Internal wire format. Developers use `add`/`replace`/`remove`/`move`/`copy`/`test` with dot
+ * notation instead. `from` is the source location for `move`/`copy`; `value` carries the operand
+ * for `add`/`replace`/`test`.
  *
  * @internal
  */
 export type JsonPatchOperation = {
-  op: 'add' | 'remove' | 'replace';
+  op: 'add' | 'remove' | 'replace' | 'move' | 'copy' | 'test';
   path: string;
   value?: unknown;
+  from?: string;
+};
+
+/**
+ * A source → destination path pair (dot notation) for JSON Patch `move` and `copy` operations.
+ */
+export type PatchMovePath = {
+  /** Dot-notation source path (RFC 6902 `from`). */
+  from: string;
+
+  /** Dot-notation destination path (RFC 6902 `path`). */
+  path: string;
+};
+
+/**
+ * User-friendly JSON Patch input (dot notation), converted to RFC 6902 operations on the wire.
+ *
+ * @internal
+ */
+export type JsonPatchInput = {
+  /** Fields to add (dot path → value). */
+  add?: Record<string, unknown>;
+
+  /** Fields to replace (dot path → value). */
+  replace?: Record<string, unknown>;
+
+  /** Dot-notation paths to remove. */
+  remove?: string[];
+
+  /** Source → destination path pairs to move. */
+  move?: PatchMovePath[];
+
+  /** Source → destination path pairs to copy. */
+  copy?: PatchMovePath[];
+
+  /** Fields to test (dot path → expected value). */
+  test?: Record<string, unknown>;
 };
 
 /**
@@ -159,19 +224,19 @@ export function toJsonPointer(dotPath: string): string {
 }
 
 /**
- * Convert `add`, `replace`, and `remove` parameters to JSON Patch operations (wire format).
+ * Convert user-friendly dot-notation patch input to JSON Patch operations (wire format).
  *
  * - Each key in `add` becomes an "add" operation.
  * - Each key in `replace` becomes a "replace" operation.
  * - Each entry in `remove` becomes a "remove" operation.
+ * - Each `{ from, path }` pair in `move` becomes a "move" operation.
+ * - Each `{ from, path }` pair in `copy` becomes a "copy" operation.
+ * - Each key in `test` becomes a "test" operation.
  *
  * @internal
  */
-export function toJsonPatchOperations(
-  add?: Record<string, unknown>,
-  replace?: Record<string, unknown>,
-  remove?: string[],
-): JsonPatchOperation[] {
+export function toJsonPatchOperations(input: JsonPatchInput): JsonPatchOperation[] {
+  const { add, replace, remove, move, copy, test } = input;
   const ops: JsonPatchOperation[] = [];
 
   if (add) {
@@ -192,6 +257,24 @@ export function toJsonPatchOperations(
     }
   }
 
+  if (move) {
+    for (const { from, path } of move) {
+      ops.push({ op: 'move', from: toJsonPointer(from), path: toJsonPointer(path) });
+    }
+  }
+
+  if (copy) {
+    for (const { from, path } of copy) {
+      ops.push({ op: 'copy', from: toJsonPointer(from), path: toJsonPointer(path) });
+    }
+  }
+
+  if (test) {
+    for (const [dotPath, value] of Object.entries(test)) {
+      ops.push({ op: 'test', path: toJsonPointer(dotPath), value });
+    }
+  }
+
   return ops;
 }
 
@@ -200,16 +283,15 @@ export function toJsonPatchOperations(
 // --------------------------------------------------------
 
 /**
- * Entity properties for create requests.
+ * Entity data properties for create requests.
  *
- * Includes `entityClass` since it must be set at creation time and is immutable afterward.
+ * The mutable, versioned payload of an entity. `class` (immutable) and `id` live at the
+ * top level of {@link CreateEntityParameters}; everything that can change over the entity's
+ * lifetime is grouped here under `data`.
  */
-export type CreateEntityProperties = {
-  /** Entity class this entity belongs to. */
-  entityClass: string;
-
+export type CreateEntityData = {
   /** Version of the entity class schema. */
-  entityClassVersion: number;
+  classVersion: number;
 
   /** Optional lifecycle status. */
   status?: string;
@@ -219,13 +301,15 @@ export type CreateEntityProperties = {
 };
 
 /**
- * Entity properties for update (PUT) requests.
+ * Entity data properties for update (PUT) requests.
  *
- * `entityClass` is immutable after creation and therefore excluded from updates.
+ * The mutable, versioned payload of an entity. `id` lives at the top level of
+ * {@link UpdateEntityParameters}. `entityClass` is immutable after creation and therefore
+ * has no place in updates.
  */
-export type UpdateEntityProperties = {
+export type UpdateEntityData = {
   /** Version of the entity class schema. */
-  entityClassVersion: number;
+  classVersion: number;
 
   /** Optional lifecycle status. */
   status?: string;
@@ -273,25 +357,28 @@ export type EntityObject = {
  */
 export type CreateEntityParameters = {
   /**
-   * Entity properties to create.
-   *
-   * All entity properties go inside `entity` because they map to the request body envelope.
-   * Unlike EntityClass (where `name`/`version` are URL path params), Entity creation
-   * posts to a collection URL with all fields in the body.
+   * Optional entity ID.
+   * Server auto-generates a UUID if not provided.
    */
-  entity: CreateEntityProperties & {
-    /**
-     * Optional entity ID.
-     * Server auto-generates a UUID if not provided.
-     */
-    id?: string;
-  };
+  id?: string;
+
+  /** Entity class this entity belongs to. Set at creation time and immutable afterward. */
+  class: string;
+
+  /**
+   * Mutable, versioned entity data (class version, status, and payload).
+   *
+   * These fields map into the request body envelope. `id` and `class` are kept at the top
+   * level because they identify the resource, while everything in `data` is what the entity
+   * carries and can change over its lifetime.
+   */
+  data: CreateEntityData;
 };
 
 /**
  * Get Entity request parameters.
  */
-export type GetEntityParameters = {
+export type FetchEntityParameters = {
   /** Entity ID. */
   id: string;
 };
@@ -301,7 +388,7 @@ export type GetEntityParameters = {
  *
  * `entityClass` is required — entities are always listed within the context of their class.
  */
-export type GetAllEntitiesParameters = PagedRequestParameters & {
+export type FetchEntitiesParameters = PagedRequestParameters & {
   /** Entity class name to filter by (required). */
   entityClass: string;
 
@@ -322,15 +409,15 @@ export type GetAllEntitiesParameters = PagedRequestParameters & {
 /**
  * Update Entity request parameters (full replacement via PUT).
  *
- * `entityClass` is immutable after creation — only `entityClassVersion`, `status`,
+ * `entityClass` is immutable after creation — only `classVersion`, `status`,
  * and `payload` can be updated.
  */
 export type UpdateEntityParameters = {
   /** Entity ID. */
   id: string;
 
-  /** Complete entity properties for replacement (excludes immutable `entityClass`). */
-  entity: UpdateEntityProperties;
+  /** Complete, mutable entity data for replacement (excludes immutable `entityClass`). */
+  data: UpdateEntityData;
 
   /**
    * ETag for optimistic concurrency control.
@@ -396,6 +483,45 @@ export type PatchEntityParameters = {
   remove?: string[];
 
   /**
+   * Source → destination path pairs to move (RFC 6902 "move").
+   *
+   * The value at each `from` is removed and re-added at `path`. Both are dot-notation paths used
+   * exactly as provided (prefix with `payload.` to target payload fields).
+   *
+   * @example
+   * ```typescript
+   * move: [{ from: 'payload.legacyName', path: 'payload.displayName' }]
+   * ```
+   */
+  move?: PatchMovePath[];
+
+  /**
+   * Source → destination path pairs to copy (RFC 6902 "copy").
+   *
+   * The value at each `from` is duplicated to `path`. Both are dot-notation paths used exactly as
+   * provided (prefix with `payload.` to target payload fields).
+   *
+   * @example
+   * ```typescript
+   * copy: [{ from: 'payload.displayName', path: 'payload.previousName' }]
+   * ```
+   */
+  copy?: PatchMovePath[];
+
+  /**
+   * Fields to test (dot-notation keys → expected value; RFC 6902 "test").
+   *
+   * The patch fails if the value at any path does not equal the expected value. Keys are used
+   * exactly as provided (prefix with `payload.` for payload fields).
+   *
+   * @example
+   * ```typescript
+   * test: { 'status': 'active' }
+   * ```
+   */
+  test?: Record<string, unknown>;
+
+  /**
    * ETag for optimistic concurrency control.
    * If provided, the patch only succeeds if the server's ETag matches.
    */
@@ -422,10 +548,10 @@ export type RemoveEntityParameters = {
 export type CreateEntityResponse = DataSyncEntityResponse<EntityObject>;
 
 /** Response for getting a single entity. */
-export type GetEntityResponse = DataSyncEntityResponse<EntityObject>;
+export type FetchEntityResponse = DataSyncEntityResponse<EntityObject>;
 
 /** Response for listing entities. */
-export type GetAllEntitiesResponse = DataSyncPagedResponse<EntityObject>;
+export type FetchEntitiesResponse = DataSyncPagedResponse<EntityObject>;
 
 /** Response for updating an entity (PUT). */
 export type UpdateEntityResponse = DataSyncEntityResponse<EntityObject>;
@@ -444,22 +570,15 @@ export type RemoveEntityResponse = {
 // --------------------------------------------------------
 
 /**
- * Relationship properties for create requests.
+ * Relationship data properties for create requests.
  *
- * Both `entityAId` and `entityBId` must be set at creation time.
+ * The mutable, versioned payload of a relationship. `id`, `class`, `entityAId`, and `entityBId`
+ * live at the top level of {@link CreateRelationshipParameters} (identity + immutable structure);
+ * everything that can change over the relationship's lifetime is grouped here under `data`.
  */
-export type CreateRelationshipProperties = {
-  /** First entity ID in the relationship. */
-  entityAId: string;
-
-  /** Second entity ID in the relationship. */
-  entityBId: string;
-
-  /** Relationship class this relationship belongs to. */
-  relationshipClass: string;
-
+export type CreateRelationshipData = {
   /** Version of the relationship class schema. */
-  relationshipClassVersion: number;
+  classVersion: number;
 
   /** Optional lifecycle status. */
   status?: string;
@@ -469,21 +588,15 @@ export type CreateRelationshipProperties = {
 };
 
 /**
- * Relationship properties for update (PUT) requests.
+ * Relationship data properties for update (PUT) requests.
  *
- * PUT is a full replacement — `entityAId`, `entityBId`, and `relationshipClassVersion` are required
- * (`relationshipClass` is immutable after creation and therefore excluded). The server rejects a
- * PUT that omits `relationshipClassVersion`.
+ * The mutable, versioned payload of a relationship. `id`, `entityAId`, and `entityBId` live at the
+ * top level of {@link UpdateRelationshipParameters}. `relationshipClass` is immutable after creation
+ * and therefore has no place in updates. The server rejects a PUT that omits `classVersion`.
  */
-export type UpdateRelationshipProperties = {
-  /** First entity ID in the relationship. */
-  entityAId: string;
-
-  /** Second entity ID in the relationship. */
-  entityBId: string;
-
+export type UpdateRelationshipData = {
   /** Version of the relationship class schema. */
-  relationshipClassVersion: number;
+  classVersion: number;
 
   /** Optional lifecycle status. */
   status?: string;
@@ -537,23 +650,28 @@ export type RelationshipObject = {
  */
 export type CreateRelationshipParameters = {
   /**
-   * Relationship properties to create.
-   *
-   * All relationship properties go inside `relationship` because they map to the request body envelope.
+   * Optional relationship ID.
+   * Server auto-generates a UUID if not provided.
    */
-  relationship: CreateRelationshipProperties & {
-    /**
-     * Optional relationship ID.
-     * Server auto-generates a UUID if not provided.
-     */
-    id?: string;
-  };
+  id?: string;
+
+  /** Relationship class this relationship belongs to. Set at creation time and immutable afterward. */
+  class: string;
+
+  /** First entity ID in the relationship. */
+  entityAId: string;
+
+  /** Second entity ID in the relationship. */
+  entityBId: string;
+
+  /** Mutable, versioned relationship data (class version, status, and payload). */
+  data: CreateRelationshipData;
 };
 
 /**
  * Get Relationship request parameters.
  */
-export type GetRelationshipParameters = {
+export type FetchRelationshipParameters = {
   /** Relationship ID. */
   id: string;
 };
@@ -561,7 +679,7 @@ export type GetRelationshipParameters = {
 /**
  * Get All Relationships request parameters.
  */
-export type GetAllRelationshipsParameters = PagedRequestParameters & {
+export type FetchRelationshipsParameters = PagedRequestParameters & {
   /** Relationship class name (required by the server). */
   relationshipClass: string;
 
@@ -590,8 +708,14 @@ export type UpdateRelationshipParameters = {
   /** Relationship ID. */
   id: string;
 
-  /** Complete relationship properties for replacement. */
-  relationship: UpdateRelationshipProperties;
+  /** First entity ID in the relationship. */
+  entityAId: string;
+
+  /** Second entity ID in the relationship. */
+  entityBId: string;
+
+  /** Complete, mutable relationship data for replacement (excludes immutable `relationshipClass`). */
+  data: UpdateRelationshipData;
 
   /**
    * ETag for optimistic concurrency control.
@@ -615,13 +739,13 @@ export type PatchRelationshipParameters = {
   /**
    * Fields to add, using dot-notation keys.
    *
-   * Each key is a dot-delimited path to the target field within `payload`.
+   * Each key is a dot-delimited path to the target field (prefix with `payload.` to target payload fields).
    * The SDK converts these to JSON Patch "add" operations.
    *
    * @example
    * ```typescript
    * add: {
-   *   'tags.0': 'mentor',
+   *   'payload.tags.0': 'mentor',
    * }
    * ```
    */
@@ -630,30 +754,48 @@ export type PatchRelationshipParameters = {
   /**
    * Fields to replace, using dot-notation keys.
    *
-   * Each key is a dot-delimited path to the target field within `payload`.
+   * Each key is a dot-delimited path to the target field (prefix with `payload.` to target payload fields).
    * The SDK converts these to JSON Patch "replace" operations.
    *
    * @example
    * ```typescript
    * replace: {
-   *   'role': 'admin',
-   *   'permissions.read': true,
+   *   'payload.role': 'admin',
+   *   'payload.permissions.read': true,
    * }
    * ```
    */
   replace?: Record<string, unknown>;
 
   /**
-   * Array of dot-notation field paths to remove from `payload`.
+   * Array of dot-notation field paths to remove.
    *
    * The SDK converts these to JSON Patch "remove" operations.
    *
    * @example
    * ```typescript
-   * remove: ['tempFlag', 'legacyField']
+   * remove: ['payload.tempFlag', 'payload.legacyField']
    * ```
    */
   remove?: string[];
+
+  /**
+   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is removed and re-added at `path`.
+   */
+  move?: PatchMovePath[];
+
+  /**
+   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+   */
+  copy?: PatchMovePath[];
+
+  /**
+   * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+   * value at any path does not equal the expected value. Keys are used as provided (prefix with `payload.` for payload fields).
+   */
+  test?: Record<string, unknown>;
 
   /**
    * ETag for optimistic concurrency control.
@@ -682,10 +824,10 @@ export type RemoveRelationshipParameters = {
 export type CreateRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
 
 /** Response for getting a single relationship. */
-export type GetRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+export type FetchRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
 
 /** Response for listing relationships. */
-export type GetAllRelationshipsResponse = DataSyncPagedResponse<RelationshipObject>;
+export type FetchRelationshipsResponse = DataSyncPagedResponse<RelationshipObject>;
 
 /** Response for updating a relationship (PUT). */
 export type UpdateRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
@@ -704,11 +846,14 @@ export type RemoveRelationshipResponse = {
 // --------------------------------------------------------
 
 /**
- * User properties for create requests.
+ * User data properties for create requests.
+ *
+ * The mutable, versioned payload of a user. `id` lives at the top level of
+ * {@link CreateUserParameters}; everything that can change over the user's lifetime is here.
  */
-export type CreateUserProperties = {
+export type CreateUserData = {
   /** Version of the entity class schema. */
-  entityClassVersion: number;
+  classVersion: number;
 
   /** Optional lifecycle status. */
   status?: string;
@@ -753,23 +898,24 @@ export type UserObject = {
  */
 export type CreateUserParameters = {
   /**
-   * User properties to create.
+   * Optional user ID.
+   * Server auto-generates a UUID if not provided.
    */
-  user: CreateUserProperties & {
-    /**
-     * Optional user ID.
-     * Server auto-generates a UUID if not provided.
-     */
-    id?: string;
-  };
+  id?: string;
+
+  /** Mutable, versioned user data (class version, status, and payload). */
+  data: CreateUserData;
 };
 
 /**
- * User properties for update (PUT) requests.
+ * User data properties for update (PUT) requests.
+ *
+ * The mutable, versioned payload of a user. `id` lives at the top level of
+ * {@link UpdateUserParameters}.
  */
-export type UpdateUserProperties = {
+export type UpdateUserData = {
   /** Version of the entity class schema. */
-  entityClassVersion: number;
+  classVersion: number;
 
   /** Optional lifecycle status. */
   status?: string;
@@ -781,7 +927,7 @@ export type UpdateUserProperties = {
 /**
  * Get User request parameters.
  */
-export type GetUserParameters = {
+export type FetchUserParameters = {
   /** User ID. */
   id: string;
 };
@@ -789,7 +935,7 @@ export type GetUserParameters = {
 /**
  * Get All Users request parameters.
  */
-export type GetAllUsersParameters = PagedRequestParameters & {
+export type FetchUsersParameters = PagedRequestParameters & {
   /**
    * Entity class version. If not provided, the server returns users for the latest version.
    */
@@ -808,8 +954,8 @@ export type UpdateUserParameters = {
   /** User ID. */
   id: string;
 
-  /** Complete user properties for replacement. */
-  user: UpdateUserProperties;
+  /** Complete, mutable user data for replacement. */
+  data: UpdateUserData;
 
   /**
    * ETag for optimistic concurrency control.
@@ -849,6 +995,24 @@ export type PatchUserParameters = {
   remove?: string[];
 
   /**
+   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is removed and re-added at `path`.
+   */
+  move?: PatchMovePath[];
+
+  /**
+   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+   */
+  copy?: PatchMovePath[];
+
+  /**
+   * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+   * value at any path does not equal the expected value. Keys are used as provided (prefix with `payload.` for payload fields).
+   */
+  test?: Record<string, unknown>;
+
+  /**
    * ETag for optimistic concurrency control.
    */
   ifMatchesEtag?: string;
@@ -873,10 +1037,10 @@ export type RemoveUserParameters = {
 export type CreateUserResponse = DataSyncEntityResponse<UserObject>;
 
 /** Response for getting a single user. */
-export type GetUserResponse = DataSyncEntityResponse<UserObject>;
+export type FetchUserResponse = DataSyncEntityResponse<UserObject>;
 
 /** Response for listing users. */
-export type GetAllUsersResponse = DataSyncPagedResponse<UserObject>;
+export type FetchUsersResponse = DataSyncPagedResponse<UserObject>;
 
 /** Response for updating a user (PUT). */
 export type UpdateUserResponse = DataSyncEntityResponse<UserObject>;
@@ -895,11 +1059,14 @@ export type RemoveUserResponse = {
 // --------------------------------------------------------
 
 /**
- * Channel properties for create requests.
+ * Channel data properties for create requests.
+ *
+ * The mutable, versioned payload of a channel. `id` lives at the top level of
+ * {@link CreateChannelParameters}; everything that can change over the channel's lifetime is here.
  */
-export type CreateChannelProperties = {
+export type CreateChannelData = {
   /** Version of the entity class schema. */
-  entityClassVersion: number;
+  classVersion: number;
 
   /** Optional lifecycle status. */
   status?: string;
@@ -909,11 +1076,14 @@ export type CreateChannelProperties = {
 };
 
 /**
- * Channel properties for update (PUT) requests.
+ * Channel data properties for update (PUT) requests.
+ *
+ * The mutable, versioned payload of a channel. `id` lives at the top level of
+ * {@link UpdateChannelParameters}.
  */
-export type UpdateChannelProperties = {
+export type UpdateChannelData = {
   /** Version of the entity class schema. */
-  entityClassVersion: number;
+  classVersion: number;
 
   /** Optional lifecycle status. */
   status?: string;
@@ -958,21 +1128,19 @@ export type ChannelObject = {
  */
 export type CreateChannelParameters = {
   /**
-   * Channel properties to create.
+   * Optional channel ID.
+   * Server auto-generates a UUID if not provided.
    */
-  channel: CreateChannelProperties & {
-    /**
-     * Optional channel ID.
-     * Server auto-generates a UUID if not provided.
-     */
-    id?: string;
-  };
+  id?: string;
+
+  /** Mutable, versioned channel data (class version, status, and payload). */
+  data: CreateChannelData;
 };
 
 /**
  * Get Channel request parameters.
  */
-export type GetChannelParameters = {
+export type FetchChannelParameters = {
   /** Channel ID. */
   id: string;
 };
@@ -980,7 +1148,7 @@ export type GetChannelParameters = {
 /**
  * Get All Channels request parameters.
  */
-export type GetAllChannelsParameters = PagedRequestParameters & {
+export type FetchChannelsParameters = PagedRequestParameters & {
   /**
    * Entity class version. If not provided, the server returns channels for the latest version.
    */
@@ -999,8 +1167,8 @@ export type UpdateChannelParameters = {
   /** Channel ID. */
   id: string;
 
-  /** Complete channel properties for replacement. */
-  channel: UpdateChannelProperties;
+  /** Complete, mutable channel data for replacement. */
+  data: UpdateChannelData;
 
   /**
    * ETag for optimistic concurrency control.
@@ -1038,6 +1206,24 @@ export type PatchChannelParameters = {
   remove?: string[];
 
   /**
+   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is removed and re-added at `path`.
+   */
+  move?: PatchMovePath[];
+
+  /**
+   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+   */
+  copy?: PatchMovePath[];
+
+  /**
+   * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+   * value at any path does not equal the expected value. Keys are used as provided (prefix with `payload.` for payload fields).
+   */
+  test?: Record<string, unknown>;
+
+  /**
    * ETag for optimistic concurrency control.
    */
   ifMatchesEtag?: string;
@@ -1062,10 +1248,10 @@ export type RemoveChannelParameters = {
 export type CreateChannelResponse = DataSyncEntityResponse<ChannelObject>;
 
 /** Response for getting a single channel. */
-export type GetChannelResponse = DataSyncEntityResponse<ChannelObject>;
+export type FetchChannelResponse = DataSyncEntityResponse<ChannelObject>;
 
 /** Response for listing channels. */
-export type GetAllChannelsResponse = DataSyncPagedResponse<ChannelObject>;
+export type FetchChannelsResponse = DataSyncPagedResponse<ChannelObject>;
 
 /** Response for updating a channel (PUT). */
 export type UpdateChannelResponse = DataSyncEntityResponse<ChannelObject>;
@@ -1084,19 +1270,15 @@ export type RemoveChannelResponse = {
 // --------------------------------------------------------
 
 /**
- * Membership properties for create requests.
+ * Membership data properties for create requests.
  *
- * Both `userId` and `channelId` must be set at creation time.
+ * The mutable, versioned payload of a membership. `id`, `userId`, and `channelId` live at the
+ * top level of {@link CreateMembershipParameters} (identity + immutable structure); everything
+ * that can change over the membership's lifetime is grouped here under `data`.
  */
-export type CreateMembershipProperties = {
-  /** User ID reference. */
-  userId: string;
-
-  /** Channel ID reference. */
-  channelId: string;
-
+export type CreateMembershipData = {
   /** Version of the Membership relationship class. */
-  relationshipClassVersion: number;
+  classVersion: number;
 
   /** Optional lifecycle status. */
   status?: string;
@@ -1106,21 +1288,15 @@ export type CreateMembershipProperties = {
 };
 
 /**
- * Membership properties for update (PUT) requests.
+ * Membership data properties for update (PUT) requests.
  *
- * PUT is a full replacement — `userId`, `channelId`, and `relationshipClassVersion` are required.
- * The server rejects a PUT that omits `relationshipClassVersion` (`SYN-0004: must not be null`),
- * mirroring {@link UpdateRelationshipProperties}.
+ * The mutable, versioned payload of a membership. `id`, `userId`, and `channelId` live at the top
+ * level of {@link UpdateMembershipParameters}. The server rejects a PUT that omits `classVersion`
+ * (`SYN-0004: must not be null`), mirroring {@link UpdateRelationshipData}.
  */
-export type UpdateMembershipProperties = {
-  /** User ID reference. */
-  userId: string;
-
-  /** Channel ID reference. */
-  channelId: string;
-
+export type UpdateMembershipData = {
   /** Version of the Membership relationship class. */
-  relationshipClassVersion: number;
+  classVersion: number;
 
   /** Optional lifecycle status. */
   status?: string;
@@ -1175,21 +1351,25 @@ export type MembershipObject = {
  */
 export type CreateMembershipParameters = {
   /**
-   * Membership properties to create.
+   * Optional membership ID.
+   * Server auto-generates a UUID if not provided.
    */
-  membership: CreateMembershipProperties & {
-    /**
-     * Optional membership ID.
-     * Server auto-generates a UUID if not provided.
-     */
-    id?: string;
-  };
+  id?: string;
+
+  /** User ID reference. */
+  userId: string;
+
+  /** Channel ID reference. */
+  channelId: string;
+
+  /** Mutable, versioned membership data (class version, status, and payload). */
+  data: CreateMembershipData;
 };
 
 /**
  * Get Membership request parameters.
  */
-export type GetMembershipParameters = {
+export type FetchMembershipParameters = {
   /** Membership ID. */
   id: string;
 };
@@ -1197,7 +1377,7 @@ export type GetMembershipParameters = {
 /**
  * Get All Memberships request parameters.
  */
-export type GetAllMembershipsParameters = PagedRequestParameters & {
+export type FetchMembershipsParameters = PagedRequestParameters & {
   /** Filter memberships by user ID. */
   userId?: string;
 
@@ -1223,8 +1403,14 @@ export type UpdateMembershipParameters = {
   /** Membership ID. */
   id: string;
 
-  /** Complete membership properties for replacement. */
-  membership: UpdateMembershipProperties;
+  /** User ID reference. */
+  userId: string;
+
+  /** Channel ID reference. */
+  channelId: string;
+
+  /** Complete, mutable membership data for replacement. */
+  data: UpdateMembershipData;
 
   /**
    * ETag for optimistic concurrency control.
@@ -1262,6 +1448,24 @@ export type PatchMembershipParameters = {
   remove?: string[];
 
   /**
+   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is removed and re-added at `path`.
+   */
+  move?: PatchMovePath[];
+
+  /**
+   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+   */
+  copy?: PatchMovePath[];
+
+  /**
+   * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+   * value at any path does not equal the expected value. Keys are used as provided (prefix with `payload.` for payload fields).
+   */
+  test?: Record<string, unknown>;
+
+  /**
    * ETag for optimistic concurrency control.
    */
   ifMatchesEtag?: string;
@@ -1286,10 +1490,10 @@ export type RemoveMembershipParameters = {
 export type CreateMembershipResponse = DataSyncEntityResponse<MembershipObject>;
 
 /** Response for getting a single membership. */
-export type GetMembershipResponse = DataSyncEntityResponse<MembershipObject>;
+export type FetchMembershipResponse = DataSyncEntityResponse<MembershipObject>;
 
 /** Response for listing memberships. */
-export type GetAllMembershipsResponse = DataSyncPagedResponse<MembershipObject>;
+export type FetchMembershipsResponse = DataSyncPagedResponse<MembershipObject>;
 
 /** Response for updating a membership (PUT). */
 export type UpdateMembershipResponse = DataSyncEntityResponse<MembershipObject>;

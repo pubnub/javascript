@@ -56,8 +56,8 @@ export class UpdateChannelRequest<Response extends DataSync.UpdateChannelRespons
 
   validate(): string | undefined {
     if (!this.parameters.id) return 'Channel id cannot be empty';
-    if (!this.parameters.channel) return 'Channel cannot be empty';
-    if (this.parameters.channel.entityClassVersion === undefined || this.parameters.channel.entityClassVersion === null)
+    if (!this.parameters.data) return 'Channel data cannot be empty';
+    if (this.parameters.data.classVersion === undefined || this.parameters.data.classVersion === null)
       return 'Entity class version cannot be empty';
   }
 
@@ -82,6 +82,14 @@ export class UpdateChannelRequest<Response extends DataSync.UpdateChannelRespons
   }
 
   protected get body(): ArrayBuffer | string | undefined {
-    return JSON.stringify({ data: this.parameters.channel });
+    const { data } = this.parameters;
+
+    return JSON.stringify({
+      data: {
+        entityClassVersion: data.classVersion,
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.payload !== undefined ? { payload: data.payload } : {}),
+      },
+    });
   }
 }

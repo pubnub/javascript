@@ -56,10 +56,10 @@ export class UpdateRelationshipRequest<Response extends DataSync.UpdateRelations
 
   validate(): string | undefined {
     if (!this.parameters.id) return 'Relationship id cannot be empty';
-    if (!this.parameters.relationship) return 'Relationship cannot be empty';
-    if (!this.parameters.relationship.entityAId) return 'Entity A id cannot be empty';
-    if (!this.parameters.relationship.entityBId) return 'Entity B id cannot be empty';
-    if (!this.parameters.relationship.relationshipClassVersion) return 'Relationship class version cannot be empty';
+    if (!this.parameters.entityAId) return 'Entity A id cannot be empty';
+    if (!this.parameters.entityBId) return 'Entity B id cannot be empty';
+    if (!this.parameters.data) return 'Relationship data cannot be empty';
+    if (!this.parameters.data.classVersion) return 'Relationship class version cannot be empty';
   }
 
   protected get headers(): Record<string, string> | undefined {
@@ -83,6 +83,16 @@ export class UpdateRelationshipRequest<Response extends DataSync.UpdateRelations
   }
 
   protected get body(): ArrayBuffer | string | undefined {
-    return JSON.stringify({ data: this.parameters.relationship });
+    const { entityAId, entityBId, data } = this.parameters;
+
+    return JSON.stringify({
+      data: {
+        entityAId,
+        entityBId,
+        relationshipClassVersion: data.classVersion,
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.payload !== undefined ? { payload: data.payload } : {}),
+      },
+    });
   }
 }

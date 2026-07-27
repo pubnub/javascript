@@ -1,5 +1,5 @@
 /**
- * Get All Memberships REST API module.
+ * Fetch Users REST API module.
  *
  * @internal
  */
@@ -29,7 +29,7 @@ const DEFAULT_LIMIT = 20;
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.GetAllMembershipsParameters & {
+type RequestParameters = DataSync.FetchUsersParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -38,11 +38,11 @@ type RequestParameters = DataSync.GetAllMembershipsParameters & {
 // endregion
 
 /**
- * Get All Memberships request.
+ * Fetch Users request.
  *
  * @internal
  */
-export class GetAllMembershipsRequest<Response extends DataSync.GetAllMembershipsResponse> extends AbstractRequest<
+export class FetchUsersRequest<Response extends DataSync.FetchUsersResponse> extends AbstractRequest<
   Response,
   Response
 > {
@@ -54,7 +54,7 @@ export class GetAllMembershipsRequest<Response extends DataSync.GetAllMembership
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNGetAllMembershipsOperation;
+    return RequestOperation.PNFetchUsersOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -65,21 +65,19 @@ export class GetAllMembershipsRequest<Response extends DataSync.GetAllMembership
   }
 
   protected get path(): string {
-    return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/memberships`;
+    return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/users`;
   }
 
   protected get queryParameters(): Query {
-    const { userId, channelId, relationshipClassVersion, cursor, limit, filter, sort, filterAdvanced } =
-      this.parameters;
+    const { entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+    const sorting = DataSync.serializeDataSyncSort(sort);
 
     return {
-      ...(userId ? { user_id: userId } : {}),
-      ...(channelId ? { channel_id: channelId } : {}),
-      ...(relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {}),
+      ...(entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {}),
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),
-      ...(sort ? { sort } : {}),
+      ...(sorting.length ? { sort: sorting } : {}),
       ...(filterAdvanced ? { filter_advanced: filterAdvanced } : {}),
     };
   }

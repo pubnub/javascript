@@ -2,8 +2,9 @@
  * Patch User REST API module.
  *
  * Partial update via JSON Patch (RFC 6902).
- * Accepts `add` and `replace` (dot-notation key-value pairs) and `remove`
- * (dot-notation paths) and converts them to JSON Patch operations on the wire.
+ * Accepts `add`/`replace`/`test` (dot-notation key-value pairs), `remove`
+ * (dot-notation paths), and `move`/`copy` (dot-notation `{ from, path }` pairs)
+ * and converts them to JSON Patch operations on the wire.
  *
  * @internal
  */
@@ -57,10 +58,15 @@ export class PatchUserRequest<Response extends DataSync.PatchUserResponse> exten
   validate(): string | undefined {
     if (!this.parameters.id) return 'User id cannot be empty';
 
-    const hasAdd = this.parameters.add && Object.keys(this.parameters.add).length > 0;
-    const hasReplace = this.parameters.replace && Object.keys(this.parameters.replace).length > 0;
-    const hasRemove = this.parameters.remove && this.parameters.remove.length > 0;
-    if (!hasAdd && !hasReplace && !hasRemove) return 'At least one of add, replace, or remove must be provided';
+    const { add, replace, remove, move, copy, test } = this.parameters;
+    const hasAdd = add && Object.keys(add).length > 0;
+    const hasReplace = replace && Object.keys(replace).length > 0;
+    const hasRemove = remove && remove.length > 0;
+    const hasMove = move && move.length > 0;
+    const hasCopy = copy && copy.length > 0;
+    const hasTest = test && Object.keys(test).length > 0;
+    if (!hasAdd && !hasReplace && !hasRemove && !hasMove && !hasCopy && !hasTest)
+      return 'At least one of add, replace, remove, move, copy, or test must be provided';
   }
 
   protected get headers(): Record<string, string> | undefined {
@@ -84,17 +90,10 @@ export class PatchUserRequest<Response extends DataSync.PatchUserResponse> exten
   }
 
   protected get body(): ArrayBuffer | string | undefined {
-    // Prefix all field paths with 'payload.' so users write simple field names
-    // and the SDK produces '/payload/<field>' on the wire.
-    const prefixWithPayload = (input: Record<string, unknown>) =>
-      Object.fromEntries(Object.entries(input).map(([key, value]) => [`payload.${key}`, value]));
+    const { add, replace, remove, move, copy, test } = this.parameters;
 
-    const prefixedAdd = this.parameters.add ? prefixWithPayload(this.parameters.add) : undefined;
-    const prefixedReplace = this.parameters.replace ? prefixWithPayload(this.parameters.replace) : undefined;
-    const prefixedRemove = this.parameters.remove ? this.parameters.remove.map((key) => `payload.${key}`) : undefined;
-
-    // Convert add/replace/remove (dot notation) to JSON Patch operations (JSON Pointer notation).
-    const jsonPatchOps = toJsonPatchOperations(prefixedAdd, prefixedReplace, prefixedRemove);
+    // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
+    const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
     return JSON.stringify(jsonPatchOps);
   }
 }

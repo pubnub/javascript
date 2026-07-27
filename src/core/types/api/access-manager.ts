@@ -383,12 +383,22 @@ export type Token = {
   /**
    * Permissions granted to specific resources.
    */
-  resources?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>>;
+  resources?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>> & {
+    /**
+     * DataSync entity-level permissions granted to specific resources.
+     */
+    dataSync?: DataSyncScopePermissions;
+  };
 
   /**
    * Permissions granted to resources which match specified regular expression.
    */
-  patterns?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>>;
+  patterns?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>> & {
+    /**
+     * DataSync entity-level permissions granted to resources which match specified regular expression.
+     */
+    dataSync?: DataSyncScopePermissions;
+  };
 
   /**
    * The uuid that is exclusively authorized to use this token to make API requests.
@@ -492,6 +502,57 @@ export type Permissions = {
    * - set / remove channel members
    */
   join: boolean;
+};
+
+/**
+ * Granted DataSync entity-level permissions.
+ *
+ * Applies to parsed DataSync entities, relationships, and memberships. Only the CRUD-relevant
+ * operations are exposed.
+ */
+export type DataSyncPermissions = {
+  /**
+   * Resource `create` permission.
+   */
+  create: boolean;
+
+  /**
+   * Resource `get` permission.
+   */
+  get: boolean;
+
+  /**
+   * Resource `update` permission.
+   */
+  update: boolean;
+
+  /**
+   * Resource `delete` permission.
+   */
+  delete: boolean;
+};
+
+/**
+ * Parsed DataSync permission scopes.
+ *
+ * Decoded from the token `res` / `pat` wire keys `datasync:entities` / `datasync:relationships` /
+ * `datasync:memberships`.
+ */
+export type DataSyncScopePermissions = {
+  /**
+   * DataSync `entity` permissions keyed by concrete entity id or RegEx pattern.
+   */
+  entities?: Record<string, DataSyncPermissions | undefined>;
+
+  /**
+   * DataSync `relationship` permissions keyed by composite relationship id or RegEx pattern.
+   */
+  relationships?: Record<string, DataSyncPermissions | undefined>;
+
+  /**
+   * DataSync `membership` permissions keyed by composite membership id or RegEx pattern.
+   */
+  memberships?: Record<string, DataSyncPermissions | undefined>;
 };
 
 // endregion

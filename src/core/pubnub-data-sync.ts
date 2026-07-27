@@ -3,35 +3,35 @@
  */
 
 import { CreateUserRequest } from './endpoints/data_sync/user/create';
-import { GetAllUsersRequest } from './endpoints/data_sync/user/get-all';
+import { FetchUsersRequest } from './endpoints/data_sync/user/fetch-all';
 import { UpdateUserRequest } from './endpoints/data_sync/user/update';
 import { RemoveUserRequest } from './endpoints/data_sync/user/remove';
 import { PatchUserRequest } from './endpoints/data_sync/user/patch';
-import { GetUserRequest } from './endpoints/data_sync/user/get';
+import { FetchUserRequest } from './endpoints/data_sync/user/fetch';
 import { CreateChannelRequest } from './endpoints/data_sync/channel/create';
-import { GetAllChannelsRequest } from './endpoints/data_sync/channel/get-all';
+import { FetchChannelsRequest } from './endpoints/data_sync/channel/fetch-all';
 import { UpdateChannelRequest } from './endpoints/data_sync/channel/update';
 import { RemoveChannelRequest } from './endpoints/data_sync/channel/remove';
 import { PatchChannelRequest } from './endpoints/data_sync/channel/patch';
-import { GetChannelRequest } from './endpoints/data_sync/channel/get';
+import { FetchChannelRequest } from './endpoints/data_sync/channel/fetch';
 import { CreateMembershipRequest } from './endpoints/data_sync/membership/create';
-import { GetAllMembershipsRequest } from './endpoints/data_sync/membership/get-all';
+import { FetchMembershipsRequest } from './endpoints/data_sync/membership/fetch-all';
 import { UpdateMembershipRequest } from './endpoints/data_sync/membership/update';
 import { RemoveMembershipRequest } from './endpoints/data_sync/membership/remove';
 import { PatchMembershipRequest } from './endpoints/data_sync/membership/patch';
-import { GetMembershipRequest } from './endpoints/data_sync/membership/get';
+import { FetchMembershipRequest } from './endpoints/data_sync/membership/fetch';
 import { CreateRelationshipRequest } from './endpoints/data_sync/relationship/create';
-import { GetAllRelationshipsRequest } from './endpoints/data_sync/relationship/get-all';
+import { FetchRelationshipsRequest } from './endpoints/data_sync/relationship/fetch-all';
 import { UpdateRelationshipRequest } from './endpoints/data_sync/relationship/update';
 import { RemoveRelationshipRequest } from './endpoints/data_sync/relationship/remove';
 import { PatchRelationshipRequest } from './endpoints/data_sync/relationship/patch';
-import { GetRelationshipRequest } from './endpoints/data_sync/relationship/get';
+import { FetchRelationshipRequest } from './endpoints/data_sync/relationship/fetch';
 import { CreateEntityRequest } from './endpoints/data_sync/entity/create';
-import { GetAllEntitiesRequest } from './endpoints/data_sync/entity/get-all';
+import { FetchEntitiesRequest } from './endpoints/data_sync/entity/fetch-all';
 import { UpdateEntityRequest } from './endpoints/data_sync/entity/update';
 import { RemoveEntityRequest } from './endpoints/data_sync/entity/remove';
 import { PatchEntityRequest } from './endpoints/data_sync/entity/patch';
-import { GetEntityRequest } from './endpoints/data_sync/entity/get';
+import { FetchEntityRequest } from './endpoints/data_sync/entity/fetch';
 import { KeySet, ResultCallback, SendRequestFunction } from './types/api';
 import { PrivateClientConfiguration } from './interfaces/configuration';
 import * as DataSync from './types/api/data-sync';
@@ -144,7 +144,7 @@ export default class PubNubDataSync {
   }
 
   // endregion
-  // region Get Entity
+  // region Fetch Entity
 
   /**
    * Fetch a specific Entity.
@@ -152,9 +152,9 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public getEntity(
-    parameters: DataSync.GetEntityParameters,
-    callback: ResultCallback<DataSync.GetEntityResponse>,
+  public fetchEntity(
+    parameters: DataSync.FetchEntityParameters,
+    callback: ResultCallback<DataSync.FetchEntityResponse>,
   ): void;
 
   /**
@@ -162,9 +162,9 @@ export default class PubNubDataSync {
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous get entity response.
+   * @returns Asynchronous fetch entity response.
    */
-  public async getEntity(parameters: DataSync.GetEntityParameters): Promise<DataSync.GetEntityResponse>;
+  public async fetchEntity(parameters: DataSync.FetchEntityParameters): Promise<DataSync.FetchEntityResponse>;
 
   /**
    * Fetch a specific Entity.
@@ -172,26 +172,26 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous get entity response or `void` in case if `callback` provided.
+   * @returns Asynchronous fetch entity response or `void` in case if `callback` provided.
    */
-  async getEntity(
-    parameters: DataSync.GetEntityParameters,
-    callback?: ResultCallback<DataSync.GetEntityResponse>,
-  ): Promise<DataSync.GetEntityResponse | void> {
+  async fetchEntity(
+    parameters: DataSync.FetchEntityParameters,
+    callback?: ResultCallback<DataSync.FetchEntityResponse>,
+  ): Promise<DataSync.FetchEntityResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Get Entity with parameters:',
+      details: 'Fetch Entity with parameters:',
     }));
 
-    const request = new GetEntityRequest({ ...parameters, keySet: this.keySet });
+    const request = new FetchEntityRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
   }
 
   // endregion
-  // region Get All Entities
+  // region Fetch Entities
 
   /**
    * Fetch a paginated list of Entities for a given Entity Class.
@@ -199,9 +199,9 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public getAllEntities(
-    parameters: DataSync.GetAllEntitiesParameters,
-    callback: ResultCallback<DataSync.GetAllEntitiesResponse>,
+  public fetchEntities(
+    parameters: DataSync.FetchEntitiesParameters,
+    callback: ResultCallback<DataSync.FetchEntitiesResponse>,
   ): void;
 
   /**
@@ -209,9 +209,9 @@ export default class PubNubDataSync {
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous get all entities response.
+   * @returns Asynchronous fetch entities response.
    */
-  public async getAllEntities(parameters: DataSync.GetAllEntitiesParameters): Promise<DataSync.GetAllEntitiesResponse>;
+  public async fetchEntities(parameters: DataSync.FetchEntitiesParameters): Promise<DataSync.FetchEntitiesResponse>;
 
   /**
    * Fetch a paginated list of Entities for a given Entity Class.
@@ -219,19 +219,19 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous get all entities response or `void` in case if `callback` provided.
+   * @returns Asynchronous fetch entities response or `void` in case if `callback` provided.
    */
-  async getAllEntities(
-    parameters: DataSync.GetAllEntitiesParameters,
-    callback?: ResultCallback<DataSync.GetAllEntitiesResponse>,
-  ): Promise<DataSync.GetAllEntitiesResponse | void> {
+  async fetchEntities(
+    parameters: DataSync.FetchEntitiesParameters,
+    callback?: ResultCallback<DataSync.FetchEntitiesResponse>,
+  ): Promise<DataSync.FetchEntitiesResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Get all Entities with parameters:',
+      details: 'Fetch Entities with parameters:',
     }));
 
-    const request = new GetAllEntitiesRequest({ ...parameters, keySet: this.keySet });
+    const request = new FetchEntitiesRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -441,7 +441,7 @@ export default class PubNubDataSync {
   }
 
   // endregion
-  // region Get Relationship
+  // region Fetch Relationship
 
   /**
    * Fetch a specific Relationship.
@@ -449,9 +449,9 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public getRelationship(
-    parameters: DataSync.GetRelationshipParameters,
-    callback: ResultCallback<DataSync.GetRelationshipResponse>,
+  public fetchRelationship(
+    parameters: DataSync.FetchRelationshipParameters,
+    callback: ResultCallback<DataSync.FetchRelationshipResponse>,
   ): void;
 
   /**
@@ -459,11 +459,11 @@ export default class PubNubDataSync {
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous get relationship response.
+   * @returns Asynchronous fetch relationship response.
    */
-  public async getRelationship(
-    parameters: DataSync.GetRelationshipParameters,
-  ): Promise<DataSync.GetRelationshipResponse>;
+  public async fetchRelationship(
+    parameters: DataSync.FetchRelationshipParameters,
+  ): Promise<DataSync.FetchRelationshipResponse>;
 
   /**
    * Fetch a specific Relationship.
@@ -471,26 +471,26 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous get relationship response or `void` in case if `callback` provided.
+   * @returns Asynchronous fetch relationship response or `void` in case if `callback` provided.
    */
-  async getRelationship(
-    parameters: DataSync.GetRelationshipParameters,
-    callback?: ResultCallback<DataSync.GetRelationshipResponse>,
-  ): Promise<DataSync.GetRelationshipResponse | void> {
+  async fetchRelationship(
+    parameters: DataSync.FetchRelationshipParameters,
+    callback?: ResultCallback<DataSync.FetchRelationshipResponse>,
+  ): Promise<DataSync.FetchRelationshipResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Get Relationship with parameters:',
+      details: 'Fetch Relationship with parameters:',
     }));
 
-    const request = new GetRelationshipRequest({ ...parameters, keySet: this.keySet });
+    const request = new FetchRelationshipRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
   }
 
   // endregion
-  // region Get All Relationships
+  // region Fetch Relationships
 
   /**
    * Fetch a paginated list of Relationships.
@@ -498,9 +498,9 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public getAllRelationships(
-    parameters: DataSync.GetAllRelationshipsParameters,
-    callback: ResultCallback<DataSync.GetAllRelationshipsResponse>,
+  public fetchRelationships(
+    parameters: DataSync.FetchRelationshipsParameters,
+    callback: ResultCallback<DataSync.FetchRelationshipsResponse>,
   ): void;
 
   /**
@@ -508,11 +508,11 @@ export default class PubNubDataSync {
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous get all relationships response.
+   * @returns Asynchronous fetch relationships response.
    */
-  public async getAllRelationships(
-    parameters: DataSync.GetAllRelationshipsParameters,
-  ): Promise<DataSync.GetAllRelationshipsResponse>;
+  public async fetchRelationships(
+    parameters: DataSync.FetchRelationshipsParameters,
+  ): Promise<DataSync.FetchRelationshipsResponse>;
 
   /**
    * Fetch a paginated list of Relationships.
@@ -520,19 +520,19 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous get all relationships response or `void` in case if `callback` provided.
+   * @returns Asynchronous fetch relationships response or `void` in case if `callback` provided.
    */
-  async getAllRelationships(
-    parameters: DataSync.GetAllRelationshipsParameters,
-    callback?: ResultCallback<DataSync.GetAllRelationshipsResponse>,
-  ): Promise<DataSync.GetAllRelationshipsResponse | void> {
+  async fetchRelationships(
+    parameters: DataSync.FetchRelationshipsParameters,
+    callback?: ResultCallback<DataSync.FetchRelationshipsResponse>,
+  ): Promise<DataSync.FetchRelationshipsResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Get all Relationships with parameters:',
+      details: 'Fetch Relationships with parameters:',
     }));
 
-    const request = new GetAllRelationshipsRequest({ ...parameters, keySet: this.keySet });
+    const request = new FetchRelationshipsRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -746,7 +746,7 @@ export default class PubNubDataSync {
   }
 
   // endregion
-  // region Get User
+  // region Fetch User
 
   /**
    * Fetch a specific User.
@@ -754,16 +754,16 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public getUser(parameters: DataSync.GetUserParameters, callback: ResultCallback<DataSync.GetUserResponse>): void;
+  public fetchUser(parameters: DataSync.FetchUserParameters, callback: ResultCallback<DataSync.FetchUserResponse>): void;
 
   /**
    * Fetch a specific User.
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous get user response.
+   * @returns Asynchronous fetch user response.
    */
-  public async getUser(parameters: DataSync.GetUserParameters): Promise<DataSync.GetUserResponse>;
+  public async fetchUser(parameters: DataSync.FetchUserParameters): Promise<DataSync.FetchUserResponse>;
 
   /**
    * Fetch a specific User.
@@ -771,33 +771,33 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous get user response or `void` in case if `callback` provided.
+   * @returns Asynchronous fetch user response or `void` in case if `callback` provided.
    */
-  async getUser(
-    parameters: DataSync.GetUserParameters,
-    callback?: ResultCallback<DataSync.GetUserResponse>,
-  ): Promise<DataSync.GetUserResponse | void> {
+  async fetchUser(
+    parameters: DataSync.FetchUserParameters,
+    callback?: ResultCallback<DataSync.FetchUserResponse>,
+  ): Promise<DataSync.FetchUserResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Get User with parameters:',
+      details: 'Fetch User with parameters:',
     }));
 
-    const request = new GetUserRequest({ ...parameters, keySet: this.keySet });
+    const request = new FetchUserRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
   }
 
   // endregion
-  // region Get All Users
+  // region Fetch Users
 
   /**
    * Fetch a paginated list of Users.
    *
    * @param callback - Request completion handler callback.
    */
-  public getAllUsers(callback: ResultCallback<DataSync.GetAllUsersResponse>): void;
+  public fetchUsers(callback: ResultCallback<DataSync.FetchUsersResponse>): void;
 
   /**
    * Fetch a paginated list of Users.
@@ -805,9 +805,9 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public getAllUsers(
-    parameters: DataSync.GetAllUsersParameters,
-    callback: ResultCallback<DataSync.GetAllUsersResponse>,
+  public fetchUsers(
+    parameters: DataSync.FetchUsersParameters,
+    callback: ResultCallback<DataSync.FetchUsersResponse>,
   ): void;
 
   /**
@@ -815,9 +815,9 @@ export default class PubNubDataSync {
    *
    * @param [parameters] - Request configuration parameters.
    *
-   * @returns Asynchronous get all users response.
+   * @returns Asynchronous fetch users response.
    */
-  public async getAllUsers(parameters?: DataSync.GetAllUsersParameters): Promise<DataSync.GetAllUsersResponse>;
+  public async fetchUsers(parameters?: DataSync.FetchUsersParameters): Promise<DataSync.FetchUsersResponse>;
 
   /**
    * Fetch a paginated list of Users.
@@ -825,23 +825,23 @@ export default class PubNubDataSync {
    * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous get all users response or `void` in case if `callback` provided.
+   * @returns Asynchronous fetch users response or `void` in case if `callback` provided.
    */
-  async getAllUsers(
-    parametersOrCallback?: DataSync.GetAllUsersParameters | ResultCallback<DataSync.GetAllUsersResponse>,
-    callback?: ResultCallback<DataSync.GetAllUsersResponse>,
-  ): Promise<DataSync.GetAllUsersResponse | void> {
-    const parameters: DataSync.GetAllUsersParameters =
+  async fetchUsers(
+    parametersOrCallback?: DataSync.FetchUsersParameters | ResultCallback<DataSync.FetchUsersResponse>,
+    callback?: ResultCallback<DataSync.FetchUsersResponse>,
+  ): Promise<DataSync.FetchUsersResponse | void> {
+    const parameters: DataSync.FetchUsersParameters =
       parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
 
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Get all Users with parameters:',
+      details: 'Fetch Users with parameters:',
     }));
 
-    const request = new GetAllUsersRequest({ ...parameters, keySet: this.keySet });
+    const request = new FetchUsersRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -1049,7 +1049,7 @@ export default class PubNubDataSync {
   }
 
   // endregion
-  // region Get Channel
+  // region Fetch Channel
 
   /**
    * Fetch a specific Channel.
@@ -1057,9 +1057,9 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public getChannel(
-    parameters: DataSync.GetChannelParameters,
-    callback: ResultCallback<DataSync.GetChannelResponse>,
+  public fetchChannel(
+    parameters: DataSync.FetchChannelParameters,
+    callback: ResultCallback<DataSync.FetchChannelResponse>,
   ): void;
 
   /**
@@ -1067,9 +1067,9 @@ export default class PubNubDataSync {
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous get channel response.
+   * @returns Asynchronous fetch channel response.
    */
-  public async getChannel(parameters: DataSync.GetChannelParameters): Promise<DataSync.GetChannelResponse>;
+  public async fetchChannel(parameters: DataSync.FetchChannelParameters): Promise<DataSync.FetchChannelResponse>;
 
   /**
    * Fetch a specific Channel.
@@ -1077,33 +1077,33 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous get channel response or `void` in case if `callback` provided.
+   * @returns Asynchronous fetch channel response or `void` in case if `callback` provided.
    */
-  async getChannel(
-    parameters: DataSync.GetChannelParameters,
-    callback?: ResultCallback<DataSync.GetChannelResponse>,
-  ): Promise<DataSync.GetChannelResponse | void> {
+  async fetchChannel(
+    parameters: DataSync.FetchChannelParameters,
+    callback?: ResultCallback<DataSync.FetchChannelResponse>,
+  ): Promise<DataSync.FetchChannelResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Get Channel with parameters:',
+      details: 'Fetch Channel with parameters:',
     }));
 
-    const request = new GetChannelRequest({ ...parameters, keySet: this.keySet });
+    const request = new FetchChannelRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
   }
 
   // endregion
-  // region Get All Channels
+  // region Fetch Channels
 
   /**
    * Fetch a paginated list of Channels.
    *
    * @param callback - Request completion handler callback.
    */
-  public getAllChannels(callback: ResultCallback<DataSync.GetAllChannelsResponse>): void;
+  public fetchChannels(callback: ResultCallback<DataSync.FetchChannelsResponse>): void;
 
   /**
    * Fetch a paginated list of Channels.
@@ -1111,9 +1111,9 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public getAllChannels(
-    parameters: DataSync.GetAllChannelsParameters,
-    callback: ResultCallback<DataSync.GetAllChannelsResponse>,
+  public fetchChannels(
+    parameters: DataSync.FetchChannelsParameters,
+    callback: ResultCallback<DataSync.FetchChannelsResponse>,
   ): void;
 
   /**
@@ -1121,9 +1121,9 @@ export default class PubNubDataSync {
    *
    * @param [parameters] - Request configuration parameters.
    *
-   * @returns Asynchronous get all channels response.
+   * @returns Asynchronous fetch channels response.
    */
-  public async getAllChannels(parameters?: DataSync.GetAllChannelsParameters): Promise<DataSync.GetAllChannelsResponse>;
+  public async fetchChannels(parameters?: DataSync.FetchChannelsParameters): Promise<DataSync.FetchChannelsResponse>;
 
   /**
    * Fetch a paginated list of Channels.
@@ -1131,23 +1131,23 @@ export default class PubNubDataSync {
    * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous get all channels response or `void` in case if `callback` provided.
+   * @returns Asynchronous fetch channels response or `void` in case if `callback` provided.
    */
-  async getAllChannels(
-    parametersOrCallback?: DataSync.GetAllChannelsParameters | ResultCallback<DataSync.GetAllChannelsResponse>,
-    callback?: ResultCallback<DataSync.GetAllChannelsResponse>,
-  ): Promise<DataSync.GetAllChannelsResponse | void> {
-    const parameters: DataSync.GetAllChannelsParameters =
+  async fetchChannels(
+    parametersOrCallback?: DataSync.FetchChannelsParameters | ResultCallback<DataSync.FetchChannelsResponse>,
+    callback?: ResultCallback<DataSync.FetchChannelsResponse>,
+  ): Promise<DataSync.FetchChannelsResponse | void> {
+    const parameters: DataSync.FetchChannelsParameters =
       parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
 
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Get all Channels with parameters:',
+      details: 'Fetch Channels with parameters:',
     }));
 
-    const request = new GetAllChannelsRequest({ ...parameters, keySet: this.keySet });
+    const request = new FetchChannelsRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -1357,7 +1357,7 @@ export default class PubNubDataSync {
   }
 
   // endregion
-  // region Get Membership
+  // region Fetch Membership
 
   /**
    * Fetch a specific Membership.
@@ -1365,9 +1365,9 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public getMembership(
-    parameters: DataSync.GetMembershipParameters,
-    callback: ResultCallback<DataSync.GetMembershipResponse>,
+  public fetchMembership(
+    parameters: DataSync.FetchMembershipParameters,
+    callback: ResultCallback<DataSync.FetchMembershipResponse>,
   ): void;
 
   /**
@@ -1375,9 +1375,9 @@ export default class PubNubDataSync {
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous get membership response.
+   * @returns Asynchronous fetch membership response.
    */
-  public async getMembership(parameters: DataSync.GetMembershipParameters): Promise<DataSync.GetMembershipResponse>;
+  public async fetchMembership(parameters: DataSync.FetchMembershipParameters): Promise<DataSync.FetchMembershipResponse>;
 
   /**
    * Fetch a specific Membership.
@@ -1385,33 +1385,33 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous get membership response or `void` in case if `callback` provided.
+   * @returns Asynchronous fetch membership response or `void` in case if `callback` provided.
    */
-  async getMembership(
-    parameters: DataSync.GetMembershipParameters,
-    callback?: ResultCallback<DataSync.GetMembershipResponse>,
-  ): Promise<DataSync.GetMembershipResponse | void> {
+  async fetchMembership(
+    parameters: DataSync.FetchMembershipParameters,
+    callback?: ResultCallback<DataSync.FetchMembershipResponse>,
+  ): Promise<DataSync.FetchMembershipResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Get Membership with parameters:',
+      details: 'Fetch Membership with parameters:',
     }));
 
-    const request = new GetMembershipRequest({ ...parameters, keySet: this.keySet });
+    const request = new FetchMembershipRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
   }
 
   // endregion
-  // region Get All Memberships
+  // region Fetch Memberships
 
   /**
    * Fetch a paginated list of Memberships.
    *
    * @param callback - Request completion handler callback.
    */
-  public getAllMemberships(callback: ResultCallback<DataSync.GetAllMembershipsResponse>): void;
+  public fetchMemberships(callback: ResultCallback<DataSync.FetchMembershipsResponse>): void;
 
   /**
    * Fetch a paginated list of Memberships.
@@ -1419,9 +1419,9 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public getAllMemberships(
-    parameters: DataSync.GetAllMembershipsParameters,
-    callback: ResultCallback<DataSync.GetAllMembershipsResponse>,
+  public fetchMemberships(
+    parameters: DataSync.FetchMembershipsParameters,
+    callback: ResultCallback<DataSync.FetchMembershipsResponse>,
   ): void;
 
   /**
@@ -1429,11 +1429,11 @@ export default class PubNubDataSync {
    *
    * @param [parameters] - Request configuration parameters.
    *
-   * @returns Asynchronous get all memberships response.
+   * @returns Asynchronous fetch memberships response.
    */
-  public async getAllMemberships(
-    parameters?: DataSync.GetAllMembershipsParameters,
-  ): Promise<DataSync.GetAllMembershipsResponse>;
+  public async fetchMemberships(
+    parameters?: DataSync.FetchMembershipsParameters,
+  ): Promise<DataSync.FetchMembershipsResponse>;
 
   /**
    * Fetch a paginated list of Memberships.
@@ -1441,23 +1441,23 @@ export default class PubNubDataSync {
    * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous get all memberships response or `void` in case if `callback` provided.
+   * @returns Asynchronous fetch memberships response or `void` in case if `callback` provided.
    */
-  async getAllMemberships(
-    parametersOrCallback?: DataSync.GetAllMembershipsParameters | ResultCallback<DataSync.GetAllMembershipsResponse>,
-    callback?: ResultCallback<DataSync.GetAllMembershipsResponse>,
-  ): Promise<DataSync.GetAllMembershipsResponse | void> {
-    const parameters: DataSync.GetAllMembershipsParameters =
+  async fetchMemberships(
+    parametersOrCallback?: DataSync.FetchMembershipsParameters | ResultCallback<DataSync.FetchMembershipsResponse>,
+    callback?: ResultCallback<DataSync.FetchMembershipsResponse>,
+  ): Promise<DataSync.FetchMembershipsResponse | void> {
+    const parameters: DataSync.FetchMembershipsParameters =
       parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
 
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Get all Memberships with parameters:',
+      details: 'Fetch Memberships with parameters:',
     }));
 
-    const request = new GetAllMembershipsRequest({ ...parameters, keySet: this.keySet });
+    const request = new FetchMembershipsRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);

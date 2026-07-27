@@ -16,6 +16,11 @@ import { encodeString } from '../core/utils';
 import { Query } from '../core/types/api';
 
 /**
+ * HTTP status codes that represent definitive client outcomes and must not be retried.
+ */
+const NON_RETRIABLE_STATUS_CODES = [404, 409];
+
+/**
  * Transport middleware configuration options.
  *
  * @internal
@@ -172,8 +177,10 @@ export class PubNubMiddleware implements Transport {
           activeCancellation = attemptCancellation;
 
           const responseHandler = (res?: TransportResponse, error?: PubNubAPIError) => {
-            const retriableError = error ? error.category !== StatusCategory.PNCancelledCategory : true;
-            const retriableStatusCode = (!res || res.status >= 400) && error?.statusCode !== 404;
+            const retriableError = !error || error.category !== StatusCategory.PNCancelledCategory;
+            const statusCode = error?.statusCode;
+            const retriableStatusCode =
+              (!res || res.status >= 400) && !NON_RETRIABLE_STATUS_CODES.includes(statusCode as number);
             let delay = -1;
 
             if (

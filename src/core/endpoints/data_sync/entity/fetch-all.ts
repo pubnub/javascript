@@ -1,5 +1,5 @@
 /**
- * Get All Entities REST API module.
+ * Fetch Entities REST API module.
  *
  * @internal
  */
@@ -29,7 +29,7 @@ const DEFAULT_LIMIT = 20;
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.GetAllEntitiesParameters & {
+type RequestParameters = DataSync.FetchEntitiesParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -38,11 +38,11 @@ type RequestParameters = DataSync.GetAllEntitiesParameters & {
 // endregion
 
 /**
- * Get All Entities request.
+ * Fetch Entities request.
  *
  * @internal
  */
-export class GetAllEntitiesRequest<Response extends DataSync.GetAllEntitiesResponse> extends AbstractRequest<
+export class FetchEntitiesRequest<Response extends DataSync.FetchEntitiesResponse> extends AbstractRequest<
   Response,
   Response
 > {
@@ -54,7 +54,7 @@ export class GetAllEntitiesRequest<Response extends DataSync.GetAllEntitiesRespo
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNGetAllEntitiesOperation;
+    return RequestOperation.PNFetchEntitiesOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -74,6 +74,7 @@ export class GetAllEntitiesRequest<Response extends DataSync.GetAllEntitiesRespo
 
   protected get queryParameters(): Query {
     const { entityClass, entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+    const sorting = DataSync.serializeDataSyncSort(sort);
 
     return {
       entity_class: entityClass,
@@ -81,7 +82,7 @@ export class GetAllEntitiesRequest<Response extends DataSync.GetAllEntitiesRespo
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),
-      ...(sort ? { sort } : {}),
+      ...(sorting.length ? { sort: sorting } : {}),
       ...(filterAdvanced ? { filter_advanced: filterAdvanced } : {}),
     };
   }

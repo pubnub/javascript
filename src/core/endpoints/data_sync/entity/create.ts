@@ -52,9 +52,9 @@ export class CreateEntityRequest<Response extends DataSync.CreateEntityResponse>
   }
 
   validate(): string | undefined {
-    if (!this.parameters.entity) return 'Entity cannot be empty';
-    if (!this.parameters.entity.entityClass) return 'Entity class cannot be empty';
-    if (this.parameters.entity.entityClassVersion === undefined || this.parameters.entity.entityClassVersion === null)
+    if (!this.parameters.class) return 'Entity class cannot be empty';
+    if (!this.parameters.data) return 'Entity data cannot be empty';
+    if (this.parameters.data.classVersion === undefined || this.parameters.data.classVersion === null)
       return 'Entity class version cannot be empty';
   }
 
@@ -76,6 +76,16 @@ export class CreateEntityRequest<Response extends DataSync.CreateEntityResponse>
   }
 
   protected get body(): ArrayBuffer | string | undefined {
-    return JSON.stringify({ data: this.parameters.entity });
+    const { id, class: entityClass, data } = this.parameters;
+
+    return JSON.stringify({
+      data: {
+        ...(id !== undefined ? { id } : {}),
+        entityClass,
+        entityClassVersion: data.classVersion,
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.payload !== undefined ? { payload: data.payload } : {}),
+      },
+    });
   }
 }

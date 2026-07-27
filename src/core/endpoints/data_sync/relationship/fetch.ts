@@ -1,5 +1,5 @@
 /**
- * Get Relationship REST API module.
+ * Fetch Relationship REST API module.
  *
  * @internal
  */
@@ -19,7 +19,7 @@ import { encodeString } from '../../../utils';
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.GetRelationshipParameters & {
+type RequestParameters = DataSync.FetchRelationshipParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -28,11 +28,11 @@ type RequestParameters = DataSync.GetRelationshipParameters & {
 // endregion
 
 /**
- * Get Relationship request.
+ * Fetch Relationship request.
  *
  * @internal
  */
-export class GetRelationshipRequest<Response extends DataSync.GetRelationshipResponse> extends AbstractRequest<
+export class FetchRelationshipRequest<Response extends DataSync.FetchRelationshipResponse> extends AbstractRequest<
   Response,
   Response
 > {
@@ -41,7 +41,7 @@ export class GetRelationshipRequest<Response extends DataSync.GetRelationshipRes
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNGetRelationshipOperation;
+    return RequestOperation.PNFetchRelationshipOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {

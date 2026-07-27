@@ -56,10 +56,10 @@ export class UpdateMembershipRequest<Response extends DataSync.UpdateMembershipR
 
   validate(): string | undefined {
     if (!this.parameters.id) return 'Membership id cannot be empty';
-    if (!this.parameters.membership) return 'Membership cannot be empty';
-    if (!this.parameters.membership.userId) return 'User id cannot be empty';
-    if (!this.parameters.membership.channelId) return 'Channel id cannot be empty';
-    if (!this.parameters.membership.relationshipClassVersion) return 'Relationship class version cannot be empty';
+    if (!this.parameters.userId) return 'User id cannot be empty';
+    if (!this.parameters.channelId) return 'Channel id cannot be empty';
+    if (!this.parameters.data) return 'Membership data cannot be empty';
+    if (!this.parameters.data.classVersion) return 'Relationship class version cannot be empty';
   }
 
   protected get headers(): Record<string, string> | undefined {
@@ -83,6 +83,16 @@ export class UpdateMembershipRequest<Response extends DataSync.UpdateMembershipR
   }
 
   protected get body(): ArrayBuffer | string | undefined {
-    return JSON.stringify({ data: this.parameters.membership });
+    const { userId, channelId, data } = this.parameters;
+
+    return JSON.stringify({
+      data: {
+        userId,
+        channelId,
+        relationshipClassVersion: data.classVersion,
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.payload !== undefined ? { payload: data.payload } : {}),
+      },
+    });
   }
 }

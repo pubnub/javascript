@@ -1,5 +1,5 @@
 /**
- * Get All Users REST API module.
+ * Fetch Channels REST API module.
  *
  * @internal
  */
@@ -29,7 +29,7 @@ const DEFAULT_LIMIT = 20;
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.GetAllUsersParameters & {
+type RequestParameters = DataSync.FetchChannelsParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -38,11 +38,11 @@ type RequestParameters = DataSync.GetAllUsersParameters & {
 // endregion
 
 /**
- * Get All Users request.
+ * Fetch Channels request.
  *
  * @internal
  */
-export class GetAllUsersRequest<Response extends DataSync.GetAllUsersResponse> extends AbstractRequest<
+export class FetchChannelsRequest<Response extends DataSync.FetchChannelsResponse> extends AbstractRequest<
   Response,
   Response
 > {
@@ -54,7 +54,7 @@ export class GetAllUsersRequest<Response extends DataSync.GetAllUsersResponse> e
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNGetAllUsersOperation;
+    return RequestOperation.PNFetchChannelsOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -65,18 +65,19 @@ export class GetAllUsersRequest<Response extends DataSync.GetAllUsersResponse> e
   }
 
   protected get path(): string {
-    return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/users`;
+    return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/channels`;
   }
 
   protected get queryParameters(): Query {
     const { entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+    const sorting = DataSync.serializeDataSyncSort(sort);
 
     return {
       ...(entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {}),
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),
-      ...(sort ? { sort } : {}),
+      ...(sorting.length ? { sort: sorting } : {}),
       ...(filterAdvanced ? { filter_advanced: filterAdvanced } : {}),
     };
   }

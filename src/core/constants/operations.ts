@@ -187,12 +187,12 @@ enum RequestOperation {
   /**
    * Get entity REST API operation.
    */
-  PNGetEntityOperation = 'PNGetEntityOperation',
+  PNFetchEntityOperation = 'PNFetchEntityOperation',
 
   /**
    * Get all entities REST API operation.
    */
-  PNGetAllEntitiesOperation = 'PNGetAllEntitiesOperation',
+  PNFetchEntitiesOperation = 'PNFetchEntitiesOperation',
 
   /**
    * Update entity REST API operation.
@@ -217,12 +217,12 @@ enum RequestOperation {
   /**
    * Get relationship REST API operation.
    */
-  PNGetRelationshipOperation = 'PNGetRelationshipOperation',
+  PNFetchRelationshipOperation = 'PNFetchRelationshipOperation',
 
   /**
    * Get all relationships REST API operation.
    */
-  PNGetAllRelationshipsOperation = 'PNGetAllRelationshipsOperation',
+  PNFetchRelationshipsOperation = 'PNFetchRelationshipsOperation',
 
   /**
    * Update relationship REST API operation.
@@ -247,12 +247,12 @@ enum RequestOperation {
   /**
    * Get user REST API operation.
    */
-  PNGetUserOperation = 'PNGetUserOperation',
+  PNFetchUserOperation = 'PNFetchUserOperation',
 
   /**
    * Get all users REST API operation.
    */
-  PNGetAllUsersOperation = 'PNGetAllUsersOperation',
+  PNFetchUsersOperation = 'PNFetchUsersOperation',
 
   /**
    * Update user REST API operation.
@@ -277,12 +277,12 @@ enum RequestOperation {
   /**
    * Get channel REST API operation.
    */
-  PNGetChannelOperation = 'PNGetChannelOperation',
+  PNFetchChannelOperation = 'PNFetchChannelOperation',
 
   /**
    * Get all channels REST API operation.
    */
-  PNGetAllChannelsOperation = 'PNGetAllChannelsOperation',
+  PNFetchChannelsOperation = 'PNFetchChannelsOperation',
 
   /**
    * Update channel REST API operation.
@@ -307,12 +307,12 @@ enum RequestOperation {
   /**
    * Get membership REST API operation.
    */
-  PNGetMembershipOperation = 'PNGetMembershipOperation',
+  PNFetchMembershipOperation = 'PNFetchMembershipOperation',
 
   /**
    * Get all memberships REST API operation.
    */
-  PNGetAllMembershipsOperation = 'PNGetAllMembershipsOperation',
+  PNFetchMembershipsOperation = 'PNFetchMembershipsOperation',
 
   /**
    * Update membership REST API operation.

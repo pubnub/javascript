@@ -52,11 +52,11 @@ export class CreateRelationshipRequest<Response extends DataSync.CreateRelations
   }
 
   validate(): string | undefined {
-    if (!this.parameters.relationship) return 'Relationship cannot be empty';
-    if (!this.parameters.relationship.entityAId) return 'Entity A id cannot be empty';
-    if (!this.parameters.relationship.entityBId) return 'Entity B id cannot be empty';
-    if (!this.parameters.relationship.relationshipClass) return 'Relationship class cannot be empty';
-    if (!this.parameters.relationship.relationshipClassVersion) return 'Relationship class version cannot be empty';
+    if (!this.parameters.entityAId) return 'Entity A id cannot be empty';
+    if (!this.parameters.entityBId) return 'Entity B id cannot be empty';
+    if (!this.parameters.class) return 'Relationship class cannot be empty';
+    if (!this.parameters.data) return 'Relationship data cannot be empty';
+    if (!this.parameters.data.classVersion) return 'Relationship class version cannot be empty';
   }
 
   protected get headers(): Record<string, string> | undefined {
@@ -77,6 +77,18 @@ export class CreateRelationshipRequest<Response extends DataSync.CreateRelations
   }
 
   protected get body(): ArrayBuffer | string | undefined {
-    return JSON.stringify({ data: this.parameters.relationship });
+    const { id, class: relationshipClass, entityAId, entityBId, data } = this.parameters;
+
+    return JSON.stringify({
+      data: {
+        ...(id !== undefined ? { id } : {}),
+        entityAId,
+        entityBId,
+        relationshipClass,
+        relationshipClassVersion: data.classVersion,
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.payload !== undefined ? { payload: data.payload } : {}),
+      },
+    });
   }
 }

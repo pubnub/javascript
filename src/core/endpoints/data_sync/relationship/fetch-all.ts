@@ -1,5 +1,5 @@
 /**
- * Get All Relationships REST API module.
+ * Fetch Relationships REST API module.
  *
  * @internal
  */
@@ -29,7 +29,7 @@ const DEFAULT_LIMIT = 20;
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.GetAllRelationshipsParameters & {
+type RequestParameters = DataSync.FetchRelationshipsParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -38,11 +38,11 @@ type RequestParameters = DataSync.GetAllRelationshipsParameters & {
 // endregion
 
 /**
- * Get All Relationships request.
+ * Fetch Relationships request.
  *
  * @internal
  */
-export class GetAllRelationshipsRequest<Response extends DataSync.GetAllRelationshipsResponse> extends AbstractRequest<
+export class FetchRelationshipsRequest<Response extends DataSync.FetchRelationshipsResponse> extends AbstractRequest<
   Response,
   Response
 > {
@@ -54,7 +54,7 @@ export class GetAllRelationshipsRequest<Response extends DataSync.GetAllRelation
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNGetAllRelationshipsOperation;
+    return RequestOperation.PNFetchRelationshipsOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -84,6 +84,7 @@ export class GetAllRelationshipsRequest<Response extends DataSync.GetAllRelation
       sort,
       filterAdvanced,
     } = this.parameters;
+    const sorting = DataSync.serializeDataSyncSort(sort);
 
     return {
       relationship_class: relationshipClass,
@@ -93,7 +94,7 @@ export class GetAllRelationshipsRequest<Response extends DataSync.GetAllRelation
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),
-      ...(sort ? { sort } : {}),
+      ...(sorting.length ? { sort: sorting } : {}),
       ...(filterAdvanced ? { filter_advanced: filterAdvanced } : {}),
     };
   }
