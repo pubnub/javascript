@@ -754,7 +754,10 @@ export default class PubNubDataSync {
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public fetchUser(parameters: DataSync.FetchUserParameters, callback: ResultCallback<DataSync.FetchUserResponse>): void;
+  public fetchUser(
+    parameters: DataSync.FetchUserParameters,
+    callback: ResultCallback<DataSync.FetchUserResponse>,
+  ): void;
 
   /**
    * Fetch a specific User.
@@ -1377,7 +1380,9 @@ export default class PubNubDataSync {
    *
    * @returns Asynchronous fetch membership response.
    */
-  public async fetchMembership(parameters: DataSync.FetchMembershipParameters): Promise<DataSync.FetchMembershipResponse>;
+  public async fetchMembership(
+    parameters: DataSync.FetchMembershipParameters,
+  ): Promise<DataSync.FetchMembershipResponse>;
 
   /**
    * Fetch a specific Membership.

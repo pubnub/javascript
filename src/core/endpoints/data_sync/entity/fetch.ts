@@ -32,7 +32,10 @@ type RequestParameters = DataSync.FetchEntityParameters & {
  *
  * @internal
  */
-export class FetchEntityRequest<Response extends DataSync.FetchEntityResponse> extends AbstractRequest<Response, Response> {
+export class FetchEntityRequest<Response extends DataSync.FetchEntityResponse> extends AbstractRequest<
+  Response,
+  Response
+> {
   constructor(private readonly parameters: RequestParameters) {
     super();
   }

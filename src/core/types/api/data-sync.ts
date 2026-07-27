@@ -781,7 +781,8 @@ export type PatchRelationshipParameters = {
 
   /**
    * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is removed and re-added at `path`.
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+   * removed and re-added at `path`.
    */
   move?: PatchMovePath[];
 
@@ -793,7 +794,8 @@ export type PatchRelationshipParameters = {
 
   /**
    * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
-   * value at any path does not equal the expected value. Keys are used as provided (prefix with `payload.` for payload fields).
+   * value at any path does not equal the expected value. Keys are used as provided (prefix with
+   * `payload.` for payload fields).
    */
   test?: Record<string, unknown>;
 
@@ -996,7 +998,8 @@ export type PatchUserParameters = {
 
   /**
    * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is removed and re-added at `path`.
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+   * removed and re-added at `path`.
    */
   move?: PatchMovePath[];
 
@@ -1008,7 +1011,8 @@ export type PatchUserParameters = {
 
   /**
    * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
-   * value at any path does not equal the expected value. Keys are used as provided (prefix with `payload.` for payload fields).
+   * value at any path does not equal the expected value. Keys are used as provided (prefix with
+   * `payload.` for payload fields).
    */
   test?: Record<string, unknown>;
 
@@ -1207,7 +1211,8 @@ export type PatchChannelParameters = {
 
   /**
    * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is removed and re-added at `path`.
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+   * removed and re-added at `path`.
    */
   move?: PatchMovePath[];
 
@@ -1219,7 +1224,8 @@ export type PatchChannelParameters = {
 
   /**
    * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
-   * value at any path does not equal the expected value. Keys are used as provided (prefix with `payload.` for payload fields).
+   * value at any path does not equal the expected value. Keys are used as provided (prefix with
+   * `payload.` for payload fields).
    */
   test?: Record<string, unknown>;
 
@@ -1449,7 +1455,8 @@ export type PatchMembershipParameters = {
 
   /**
    * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is removed and re-added at `path`.
+   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+   * removed and re-added at `path`.
    */
   move?: PatchMovePath[];
 
@@ -1461,7 +1468,8 @@ export type PatchMembershipParameters = {
 
   /**
    * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
-   * value at any path does not equal the expected value. Keys are used as provided (prefix with `payload.` for payload fields).
+   * value at any path does not equal the expected value. Keys are used as provided (prefix with
+   * `payload.` for payload fields).
    */
   test?: Record<string, unknown>;
 
