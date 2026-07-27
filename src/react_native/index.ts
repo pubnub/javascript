@@ -1,33 +1,23 @@
-import 'react-native-url-polyfill/auto';
-import 'fast-text-encoding';
-import CborReader from 'cbor-js';
 import { Buffer } from 'buffer';
+import CborReader from 'cbor-js';
+import 'fast-text-encoding';
+import 'react-native-url-polyfill/auto';
 
-import { ExtendedConfiguration, PlatformConfiguration } from '../core/interfaces/configuration';
-import { stringifyBufferKeys } from '../core/components/stringify_buffer_keys';
-import { ReactNativeTransport } from '../transport/react-native-transport';
-import { makeConfiguration } from '../core/components/configuration';
-import { PubNubFileParameters } from '../file/modules/react-native';
-import { TokenManager } from '../core/components/token_manager';
-import { PubNubMiddleware } from '../transport/middleware';
+import Cbor from '../cbor/common';
 import { decode } from '../core/components/base64_codec';
-import PubNubFile from '../file/modules/react-native';
-import { PubNubConfiguration } from './configuration';
+import { makeConfiguration } from '../core/components/configuration';
 import Crypto from '../core/components/cryptography';
-import LegacyCryptoModule from '../crypto/modules/LegacyCryptoModule';
+import { stringifyBufferKeys } from '../core/components/stringify_buffer_keys';
+import { TokenManager } from '../core/components/token_manager';
+import { ExtendedConfiguration, PlatformConfiguration } from '../core/interfaces/configuration';
 import type { CryptorConfiguration, ICryptoModule } from '../core/interfaces/crypto-module';
 import { PubNubCore } from '../core/pubnub-common';
-import { setDefaults } from './configuration';
-import Cbor from '../cbor/common';
 import { PubNubFileConstructor } from '../core/types/file';
-
-export type {
-  LinearRetryPolicyConfiguration,
-  ExponentialRetryPolicyConfiguration,
-  RequestRetryPolicy,
-  Endpoint,
-} from '../core/components/retry-policy';
-export type { PubNubConfiguration };
+import LegacyCryptoModule from '../crypto/modules/LegacyCryptoModule';
+import PubNubFile, { PubNubFileParameters } from '../file/modules/react-native';
+import { PubNubMiddleware } from '../transport/middleware';
+import { ReactNativeTransport } from '../transport/react-native-transport';
+import { PubNubConfiguration, setDefaults } from './configuration';
 
 // Polyfill global Buffer for React Native environment
 global.Buffer = global.Buffer || Buffer;
@@ -35,56 +25,12 @@ global.Buffer = global.Buffer || Buffer;
 /**
  * PubNub client for React Native platform.
  */
-export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
-  /**
-   * Exponential retry policy constructor.
-   */
-  static ExponentialRetryPolicy = PubNubCore.ExponentialRetryPolicy;
-
-  /**
-   * Linear retry policy constructor.
-   */
-  static LinearRetryPolicy = PubNubCore.LinearRetryPolicy;
-
-  /**
-   * Disabled / inactive retry policy.
-   */
-  static NoneRetryPolicy = PubNubCore.NoneRetryPolicy;
-
-  /**
-   * API call status category.
-   */
-  static CATEGORIES = PubNubCore.CATEGORIES;
-
-  /**
-   * Enum with API endpoint groups which can be used with retry policy to set up exclusions.
-   */
-  static Endpoint = PubNubCore.Endpoint;
-
-  /**
-   * Available minimum log levels.
-   */
-  static LogLevel = PubNubCore.LogLevel;
-
-  /**
-   * Type of REST API endpoint which reported status.
-   */
-  static OPERATIONS = PubNubCore.OPERATIONS;
-
-  /**
-   * Generate unique identifier.
-   */
-  static generateUUID = PubNubCore.generateUUID;
-
+class PubNub extends PubNubCore<null, PubNubFileParameters> {
   /**
    * PubNub File constructor.
    */
   public File: PubNubFileConstructor<PubNubFile, PubNubFileParameters> = PubNubFile;
 
-  /**
-   * Construct notification payload which will trigger push notification.
-   */
-  static notificationPayload = PubNubCore.notificationPayload;
   /**
    * Create and configure PubNub client core.
    *
@@ -161,3 +107,5 @@ export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
     });
   }
 }
+
+export = PubNub;
