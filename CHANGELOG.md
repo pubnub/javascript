@@ -1,3 +1,9 @@
+## v12.0.3
+July 27 2026
+
+#### Fixed
+- Fixes unbound fetch issue.
+
 ## v12.0.2
 July 22 2026
 
