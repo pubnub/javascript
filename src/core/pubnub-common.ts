@@ -323,6 +323,7 @@ export class PubNubCore<
    *
    * @internal
    */
+  // @ts-expect-error Allowed to simplify interface when module can be disabled.
   private readonly _dataSync: PubNubDataSync;
 
   /**
@@ -443,7 +444,8 @@ export class PubNubCore<
     // API group entry points initialization.
     if (process.env.APP_CONTEXT_MODULE !== 'disabled')
       this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
-    this._dataSync = new PubNubDataSync(this._configuration, this.sendRequest.bind(this));
+    if (process.env.DATA_SYNC_MODULE !== 'disabled')
+      this._dataSync = new PubNubDataSync(this._configuration, this.sendRequest.bind(this));
     if (process.env.CHANNEL_GROUPS_MODULE !== 'disabled')
       this._channelGroups = new PubNubChannelGroups(
         this._configuration.logger(),
