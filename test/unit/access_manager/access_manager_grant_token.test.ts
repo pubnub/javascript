@@ -131,71 +131,121 @@ describe('GrantTokenRequest', () => {
     });
   });
 
-  describe('VSP legacy permissions validation', () => {
-    it('should validate VSP authorizedUserId without new permission fields', () => {
-      const vspRequest = new GrantTokenRequest({
+  describe('terminology synonym validation', () => {
+    it('should validate `users` with `authorizedUserId`', () => {
+      const request = new GrantTokenRequest({
         keySet: defaultKeySet,
         ttl: 60,
         authorizedUserId: 'user123',
         resources: {
           users: {
-            user1: {
-              get: true, // VSP legacy - using valid UuidTokenPermissions property
-            },
+            user1: { get: true },
           },
         },
-      } as any); // Type assertion for VSP legacy
-      assert.equal(vspRequest.validate(), undefined);
+      });
+      assert.equal(request.validate(), undefined);
     });
 
-    it('should reject mixing VSP and new permissions in resources', () => {
+    it('should reject mixing `users` with `uuids` (same wire scope)', () => {
       const mixedRequest = new GrantTokenRequest({
         keySet: defaultKeySet,
         ttl: 60,
-        authorizedUserId: 'user123',
         resources: {
           users: {
-            user1: {
-              get: true,
-            },
+            'user-alice-042': { get: true },
           },
-          channels: {
-            channel1: {
-              read: true,
-            },
+          uuids: {
+            'appctx-uuid': { get: true },
           },
         },
-      } as any); // Type assertion for VSP legacy
+      });
       assert.equal(
         mixedRequest.validate(),
-        "Cannot mix `users`, `spaces` and `authorizedUserId` with `uuids`, `channels`, `groups` and `authorized_uuid`"
+        'Cannot mix `users` with `uuids` — `uuids` is deprecated App Context terminology; use `users`'
       );
     });
 
-    it('should reject mixing VSP and new permissions in patterns', () => {
+    it('should reject mixing `users` with `uuids` across resources and patterns', () => {
       const mixedRequest = new GrantTokenRequest({
         keySet: defaultKeySet,
         ttl: 60,
-        authorizedUserId: 'user123',
         resources: {
           users: {
-            user1: {
-              get: true,
-            },
+            'user-alice-042': { get: true },
           },
         },
         patterns: {
+          uuids: {
+            'appctx-*': { get: true },
+          },
+        },
+      });
+      assert.equal(
+        mixedRequest.validate(),
+        'Cannot mix `users` with `uuids` — `uuids` is deprecated App Context terminology; use `users`'
+      );
+    });
+
+    it('should reject mixing `spaces` with `channels` (same wire scope)', () => {
+      const mixedRequest = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        resources: {
+          spaces: {
+            space1: { read: true },
+          },
           channels: {
-            '.*': {
-              read: true,
+            channel1: { read: true },
+          },
+        },
+      } as any); // Type assertion for legacy `spaces`
+      assert.equal(
+        mixedRequest.validate(),
+        'Cannot mix `spaces` with `channels` — `spaces` is deprecated terminology; use `channels`'
+      );
+    });
+
+    it('should reject mixing `authorizedUserId` with `authorized_uuid`', () => {
+      const mixedRequest = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        authorizedUserId: 'user-alice-042',
+        authorized_uuid: 'user-alice-042',
+        resources: {
+          users: {
+            'user-alice-042': { get: true },
+          },
+        },
+      });
+      assert.equal(
+        mixedRequest.validate(),
+        'Cannot mix `authorizedUserId` with `authorized_uuid` — use `authorizedUserId`'
+      );
+    });
+
+    it('should allow combining DataSync `users`, `channels`, `groups`, and `dataSync`', () => {
+      const combinedRequest = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        authorizedUserId: 'user-alice-042',
+        resources: {
+          users: {
+            'user-alice-042': { create: true, get: true, update: true, delete: true },
+          },
+          channels: {
+            'channel-engineering-001': { get: true, update: true },
+          },
+          groups: {
+            'group-eng': { read: true },
+          },
+          dataSync: {
+            memberships: {
+              'user-alice-042:channel-engineering-001': { get: true },
             },
           },
         },
-      } as any); // Type assertion for VSP legacy
-      assert.equal(
-        mixedRequest.validate(),
-        "Cannot mix `users`, `spaces` and `authorizedUserId` with `uuids`, `channels`, `groups` and `authorized_uuid`"
-      );
+      });
+      assert.equal(combinedRequest.validate(), undefined);
     });
   });
 
@@ -622,23 +672,25 @@ describe('GrantTokenRequest', () => {
   });
 
   describe('VSP legacy permissions handling', () => {
-    it('should handle VSP users as uuids', () => {
+    it('should handle VSP users as its own users scope', () => {
       const request = new GrantTokenRequest({
         keySet: defaultKeySet,
         ttl: 60,
         resources: {
           users: {
-            user1: { get: true }, // VSP legacy - mapped to uuids
+            user1: { get: true },
             user2: { get: true, update: true },
           },
         },
       } as any); // Type assertion for VSP legacy
-      
+
       const transportRequest = request.request();
       const body = parseBodyAsString(transportRequest.body!);
-      
-      assert.equal(body.permissions.resources.uuids.user1, 32); // get
-      assert.equal(body.permissions.resources.uuids.user2, 96); // 32 + 64
+
+      // `users` is its own wire scope, distinct from the legacy App Context `uuids` scope.
+      assert.equal(body.permissions.resources.users.user1, 32); // get
+      assert.equal(body.permissions.resources.users.user2, 96); // 32 + 64
+      assert.deepEqual(body.permissions.resources.uuids, {});
     });
 
     it('should handle VSP spaces as channels', () => {
@@ -677,8 +729,72 @@ describe('GrantTokenRequest', () => {
       const transportRequest = request.request();
       const body = parseBodyAsString(transportRequest.body!);
       
-      assert.equal(body.permissions.patterns.uuids['user.*'], 32);
+      // `users` keeps its own wire scope; `spaces` still collapses onto `channels`.
+      assert.equal(body.permissions.patterns.users['user.*'], 32);
+      assert.deepEqual(body.permissions.patterns.uuids, {});
       assert.equal(body.permissions.patterns.channels['space.*'], 3); // 1 + 2
+    });
+  });
+
+  describe('DataSync combined permissions handling', () => {
+    it('should serialize `users` into the users wire scope alongside channels', () => {
+      const request = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        authorizedUserId: 'user-alice-042',
+        resources: {
+          users: {
+            'user-alice-042': { create: true, get: true, update: true, delete: true },
+          },
+          channels: {
+            'channel-engineering-001': { get: true, update: true },
+          },
+        },
+      });
+
+      const transportRequest = request.request();
+      const body = parseBodyAsString(transportRequest.body!);
+
+      // Principal resolved from authorizedUserId.
+      assert.equal(body.permissions.uuid, 'user-alice-042');
+      // `users` maps to its own wire scope with full CRUD: 16 + 32 + 64 + 8 = 120.
+      assert.equal(body.permissions.resources.users['user-alice-042'], 120);
+      // The legacy `uuids` scope stays empty — `users` does not collapse onto it.
+      assert.deepEqual(body.permissions.resources.uuids, {});
+      // `channels` are preserved in the same grant: 32 + 64 = 96.
+      assert.equal(body.permissions.resources.channels['channel-engineering-001'], 96);
+    });
+
+    it('should serialize legacy `uuids` into the uuid wire scope when used alone', () => {
+      const request = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        resources: {
+          uuids: {
+            'appctx-uuid': { get: true }, // 32
+          },
+        },
+      });
+
+      const transportRequest = request.request();
+      const body = parseBodyAsString(transportRequest.body!);
+
+      assert.equal(body.permissions.resources.uuids['appctx-uuid'], 32);
+    });
+
+    it('should calculate create permission bit (16) for channels', () => {
+      const request = new GrantTokenRequest({
+        ...defaultParameters,
+        resources: {
+          channels: {
+            'channel-engineering-001': { create: true },
+          },
+        },
+      });
+
+      const transportRequest = request.request();
+      const body = parseBodyAsString(transportRequest.body!);
+      assert.equal(body.permissions.resources.channels['channel-engineering-001'], 16);
     });
   });
 

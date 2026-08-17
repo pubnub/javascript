@@ -20,9 +20,12 @@ type DataSyncWireKey = 'datasync:entities' | 'datasync:relationships' | 'datasyn
 
 /**
  * Raw bit-encoded permissions section (`res` or `pat`) stored in the access token.
+ *
+ * `usr` is the wire key for permissions granted through the `users` scope; it is distinct from the
+ * legacy App Context `uuid` scope.
  */
 type RawTokenPermissions = Record<'chan' | 'grp' | 'uuid', Record<string, number>> &
-  Partial<Record<DataSyncWireKey, Record<string, number>>>;
+  Partial<Record<'usr' | DataSyncWireKey, Record<string, number>>>;
 
 /**
  * Raw parsed token.
@@ -120,9 +123,11 @@ export class TokenManager {
 
     if (parsed !== undefined) {
       const uuidResourcePermissions = parsed.res.uuid ? Object.keys(parsed.res.uuid) : [];
+      const userResourcePermissions = parsed.res.usr ? Object.keys(parsed.res.usr) : [];
       const channelResourcePermissions = Object.keys(parsed.res.chan);
       const groupResourcePermissions = Object.keys(parsed.res.grp);
       const uuidPatternPermissions = parsed.pat.uuid ? Object.keys(parsed.pat.uuid) : [];
+      const userPatternPermissions = parsed.pat.usr ? Object.keys(parsed.pat.usr) : [];
       const channelPatternPermissions = Object.keys(parsed.pat.chan);
       const groupPatternPermissions = Object.keys(parsed.pat.grp);
 
@@ -135,15 +140,21 @@ export class TokenManager {
       };
 
       const uuidResources = uuidResourcePermissions.length > 0;
+      const userResources = userResourcePermissions.length > 0;
       const channelResources = channelResourcePermissions.length > 0;
       const groupResources = groupResourcePermissions.length > 0;
 
-      if (uuidResources || channelResources || groupResources) {
+      if (uuidResources || userResources || channelResources || groupResources) {
         result.resources = {};
 
         if (uuidResources) {
           const uuids: typeof result.resources.uuids = (result.resources.uuids = {});
           uuidResourcePermissions.forEach((id) => (uuids[id] = this.extractPermissions(parsed.res.uuid[id])));
+        }
+
+        if (userResources) {
+          const users: typeof result.resources.users = (result.resources.users = {});
+          userResourcePermissions.forEach((id) => (users[id] = this.extractUserPermissions(parsed.res.usr![id])));
         }
 
         if (channelResources) {
@@ -161,15 +172,21 @@ export class TokenManager {
       if (resourceDataSync) (result.resources ??= {}).dataSync = resourceDataSync;
 
       const uuidPatterns = uuidPatternPermissions.length > 0;
+      const userPatterns = userPatternPermissions.length > 0;
       const channelPatterns = channelPatternPermissions.length > 0;
       const groupPatterns = groupPatternPermissions.length > 0;
 
-      if (uuidPatterns || channelPatterns || groupPatterns) {
+      if (uuidPatterns || userPatterns || channelPatterns || groupPatterns) {
         result.patterns = {};
 
         if (uuidPatterns) {
           const uuids: typeof result.patterns.uuids = (result.patterns.uuids = {});
           uuidPatternPermissions.forEach((id) => (uuids[id] = this.extractPermissions(parsed.pat.uuid[id])));
+        }
+
+        if (userPatterns) {
+          const users: typeof result.patterns.users = (result.patterns.users = {});
+          userPatternPermissions.forEach((id) => (users[id] = this.extractUserPermissions(parsed.pat.usr![id])));
         }
 
         if (channelPatterns) {
@@ -221,6 +238,25 @@ export class TokenManager {
     if ((permissions & 1) === 1) permissionsResult.read = true;
 
     return permissionsResult;
+  }
+
+  /**
+   * Extract `User` scope access permission information.
+   *
+   * Permissions granted through the `users` scope only carry the CRUD operations, so the same bits
+   * as DataSync resources are decoded.
+   *
+   * @param permissions - Bit-encoded resource permissions.
+   *
+   * @returns Human-readable `User` resource permissions.
+   */
+  private extractUserPermissions(permissions: number): PAM.UserScopePermissions {
+    return {
+      create: (permissions & 16) === 16,
+      get: (permissions & 32) === 32,
+      update: (permissions & 64) === 64,
+      delete: (permissions & 8) === 8,
+    };
   }
 
   /**
