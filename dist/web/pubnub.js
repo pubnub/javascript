@@ -3696,123 +3696,123 @@
 	    /**
 	     * Create entity REST API operation.
 	     */
-	    RequestOperation["PNCreateEntityOperation"] = "PNCreateEntityOperation";
+	    RequestOperation["PNCreateDataSyncEntityOperation"] = "PNCreateDataSyncEntityOperation";
 	    /**
 	     * Get entity REST API operation.
 	     */
-	    RequestOperation["PNGetEntityOperation"] = "PNGetEntityOperation";
+	    RequestOperation["PNGetDataSyncEntityOperation"] = "PNGetDataSyncEntityOperation";
 	    /**
 	     * Get all entities REST API operation.
 	     */
-	    RequestOperation["PNGetAllEntitiesOperation"] = "PNGetAllEntitiesOperation";
+	    RequestOperation["PNGetDataSyncEntitiesOperation"] = "PNGetDataSyncEntitiesOperation";
 	    /**
-	     * Update entity REST API operation.
+	     * Set entity REST API operation (full replacement via PUT).
 	     */
-	    RequestOperation["PNUpdateEntityOperation"] = "PNUpdateEntityOperation";
+	    RequestOperation["PNSetDataSyncEntityOperation"] = "PNSetDataSyncEntityOperation";
 	    /**
-	     * Patch entity REST API operation.
+	     * Update entity REST API operation (partial update via PATCH).
 	     */
-	    RequestOperation["PNPatchEntityOperation"] = "PNPatchEntityOperation";
+	    RequestOperation["PNUpdateDataSyncEntityOperation"] = "PNUpdateDataSyncEntityOperation";
 	    /**
 	     * Remove entity REST API operation.
 	     */
-	    RequestOperation["PNRemoveEntityOperation"] = "PNRemoveEntityOperation";
+	    RequestOperation["PNRemoveDataSyncEntityOperation"] = "PNRemoveDataSyncEntityOperation";
 	    /**
 	     * Create relationship REST API operation.
 	     */
-	    RequestOperation["PNCreateRelationshipOperation"] = "PNCreateRelationshipOperation";
+	    RequestOperation["PNCreateDataSyncRelationshipOperation"] = "PNCreateDataSyncRelationshipOperation";
 	    /**
 	     * Get relationship REST API operation.
 	     */
-	    RequestOperation["PNGetRelationshipOperation"] = "PNGetRelationshipOperation";
+	    RequestOperation["PNGetDataSyncRelationshipOperation"] = "PNGetDataSyncRelationshipOperation";
 	    /**
 	     * Get all relationships REST API operation.
 	     */
-	    RequestOperation["PNGetAllRelationshipsOperation"] = "PNGetAllRelationshipsOperation";
+	    RequestOperation["PNGetDataSyncRelationshipsOperation"] = "PNGetDataSyncRelationshipsOperation";
 	    /**
-	     * Update relationship REST API operation.
+	     * Set relationship REST API operation (full replacement via PUT).
 	     */
-	    RequestOperation["PNUpdateRelationshipOperation"] = "PNUpdateRelationshipOperation";
+	    RequestOperation["PNSetDataSyncRelationshipOperation"] = "PNSetDataSyncRelationshipOperation";
 	    /**
-	     * Patch relationship REST API operation.
+	     * Update relationship REST API operation (partial update via PATCH).
 	     */
-	    RequestOperation["PNPatchRelationshipOperation"] = "PNPatchRelationshipOperation";
+	    RequestOperation["PNUpdateDataSyncRelationshipOperation"] = "PNUpdateDataSyncRelationshipOperation";
 	    /**
 	     * Remove relationship REST API operation.
 	     */
-	    RequestOperation["PNRemoveRelationshipOperation"] = "PNRemoveRelationshipOperation";
+	    RequestOperation["PNRemoveDataSyncRelationshipOperation"] = "PNRemoveDataSyncRelationshipOperation";
 	    /**
 	     * Create user REST API operation.
 	     */
-	    RequestOperation["PNCreateUserOperation"] = "PNCreateUserOperation";
+	    RequestOperation["PNCreateDataSyncUserOperation"] = "PNCreateDataSyncUserOperation";
 	    /**
 	     * Get user REST API operation.
 	     */
-	    RequestOperation["PNGetUserOperation"] = "PNGetUserOperation";
+	    RequestOperation["PNGetDataSyncUserOperation"] = "PNGetDataSyncUserOperation";
 	    /**
 	     * Get all users REST API operation.
 	     */
-	    RequestOperation["PNGetAllUsersOperation"] = "PNGetAllUsersOperation";
+	    RequestOperation["PNGetDataSyncUsersOperation"] = "PNGetDataSyncUsersOperation";
 	    /**
-	     * Update user REST API operation.
+	     * Set user REST API operation (full replacement via PUT).
 	     */
-	    RequestOperation["PNUpdateUserOperation"] = "PNUpdateUserOperation";
+	    RequestOperation["PNSetDataSyncUserOperation"] = "PNSetDataSyncUserOperation";
 	    /**
-	     * Patch user REST API operation.
+	     * Update user REST API operation (partial update via PATCH).
 	     */
-	    RequestOperation["PNPatchUserOperation"] = "PNPatchUserOperation";
+	    RequestOperation["PNUpdateDataSyncUserOperation"] = "PNUpdateDataSyncUserOperation";
 	    /**
 	     * Remove user REST API operation.
 	     */
-	    RequestOperation["PNRemoveUserOperation"] = "PNRemoveUserOperation";
+	    RequestOperation["PNRemoveDataSyncUserOperation"] = "PNRemoveDataSyncUserOperation";
 	    /**
 	     * Create channel REST API operation.
 	     */
-	    RequestOperation["PNCreateChannelOperation"] = "PNCreateChannelOperation";
+	    RequestOperation["PNCreateDataSyncChannelOperation"] = "PNCreateDataSyncChannelOperation";
 	    /**
 	     * Get channel REST API operation.
 	     */
-	    RequestOperation["PNGetChannelOperation"] = "PNGetChannelOperation";
+	    RequestOperation["PNGetDataSyncChannelOperation"] = "PNGetDataSyncChannelOperation";
 	    /**
 	     * Get all channels REST API operation.
 	     */
-	    RequestOperation["PNGetAllChannelsOperation"] = "PNGetAllChannelsOperation";
+	    RequestOperation["PNGetDataSyncChannelsOperation"] = "PNGetDataSyncChannelsOperation";
 	    /**
-	     * Update channel REST API operation.
+	     * Set channel REST API operation (full replacement via PUT).
 	     */
-	    RequestOperation["PNUpdateChannelOperation"] = "PNUpdateChannelOperation";
+	    RequestOperation["PNSetDataSyncChannelOperation"] = "PNSetDataSyncChannelOperation";
 	    /**
-	     * Patch channel REST API operation.
+	     * Update channel REST API operation (partial update via PATCH).
 	     */
-	    RequestOperation["PNPatchChannelOperation"] = "PNPatchChannelOperation";
+	    RequestOperation["PNUpdateDataSyncChannelOperation"] = "PNUpdateDataSyncChannelOperation";
 	    /**
 	     * Remove channel REST API operation.
 	     */
-	    RequestOperation["PNRemoveChannelOperation"] = "PNRemoveChannelOperation";
+	    RequestOperation["PNRemoveDataSyncChannelOperation"] = "PNRemoveDataSyncChannelOperation";
 	    /**
 	     * Create membership REST API operation.
 	     */
-	    RequestOperation["PNCreateMembershipOperation"] = "PNCreateMembershipOperation";
+	    RequestOperation["PNCreateDataSyncMembershipOperation"] = "PNCreateDataSyncMembershipOperation";
 	    /**
 	     * Get membership REST API operation.
 	     */
-	    RequestOperation["PNGetMembershipOperation"] = "PNGetMembershipOperation";
+	    RequestOperation["PNGetDataSyncMembershipOperation"] = "PNGetDataSyncMembershipOperation";
 	    /**
 	     * Get all memberships REST API operation.
 	     */
-	    RequestOperation["PNGetAllMembershipsOperation"] = "PNGetAllMembershipsOperation";
+	    RequestOperation["PNGetDataSyncMembershipsOperation"] = "PNGetDataSyncMembershipsOperation";
 	    /**
-	     * Update membership REST API operation.
+	     * Set membership REST API operation (full replacement via PUT).
 	     */
-	    RequestOperation["PNUpdateMembershipOperation"] = "PNUpdateMembershipOperation";
+	    RequestOperation["PNSetDataSyncMembershipOperation"] = "PNSetDataSyncMembershipOperation";
 	    /**
-	     * Patch membership REST API operation.
+	     * Update membership REST API operation (partial update via PATCH).
 	     */
-	    RequestOperation["PNPatchMembershipOperation"] = "PNPatchMembershipOperation";
+	    RequestOperation["PNUpdateDataSyncMembershipOperation"] = "PNUpdateDataSyncMembershipOperation";
 	    /**
 	     * Remove membership REST API operation.
 	     */
-	    RequestOperation["PNRemoveMembershipOperation"] = "PNRemoveMembershipOperation";
+	    RequestOperation["PNRemoveDataSyncMembershipOperation"] = "PNRemoveDataSyncMembershipOperation";
 	    // --------------------------------------------------------
 	    // -------------------- File Upload API -------------------
 	    // --------------------------------------------------------
@@ -5755,6 +5755,7 @@
 	     * @returns Information about resources and permissions which has been granted for them.
 	     */
 	    parseToken(tokenString) {
+	        var _a, _b;
 	        const parsed = this.cbor.decodeToken(tokenString);
 	        if (parsed !== undefined) {
 	            const uuidResourcePermissions = parsed.res.uuid ? Object.keys(parsed.res.uuid) : [];
@@ -5788,6 +5789,9 @@
 	                    groupResourcePermissions.forEach((id) => (groups[id] = this.extractPermissions(parsed.res.grp[id])));
 	                }
 	            }
+	            const resourceDataSync = this.extractDataSyncScopes(parsed.res);
+	            if (resourceDataSync)
+	                ((_a = result.resources) !== null && _a !== void 0 ? _a : (result.resources = {})).dataSync = resourceDataSync;
 	            const uuidPatterns = uuidPatternPermissions.length > 0;
 	            const channelPatterns = channelPatternPermissions.length > 0;
 	            const groupPatterns = groupPatternPermissions.length > 0;
@@ -5806,6 +5810,9 @@
 	                    groupPatternPermissions.forEach((id) => (groups[id] = this.extractPermissions(parsed.pat.grp[id])));
 	                }
 	            }
+	            const patternDataSync = this.extractDataSyncScopes(parsed.pat);
+	            if (patternDataSync)
+	                ((_b = result.patterns) !== null && _b !== void 0 ? _b : (result.patterns = {})).dataSync = patternDataSync;
 	            if (parsed.meta && Object.keys(parsed.meta).length > 0)
 	                result.meta = parsed.meta;
 	            return result;
@@ -5844,6 +5851,50 @@
 	        if ((permissions & 1) === 1)
 	            permissionsResult.read = true;
 	        return permissionsResult;
+	    }
+	    /**
+	     * Extract DataSync permission scopes from a token permissions section.
+	     *
+	     * The `datasync:*` wire keys are only present for tokens which granted DataSync permissions, so a
+	     * result is returned only when at least one scope carries permissions.
+	     *
+	     * @param section - Raw `res` or `pat` permissions section decoded from the token.
+	     *
+	     * @returns Human-readable DataSync permission scopes, or `undefined` when none are granted.
+	     */
+	    extractDataSyncScopes(section) {
+	        const dataSyncScopes = [
+	            ['entities', 'datasync:entities'],
+	            ['relationships', 'datasync:relationships'],
+	            ['memberships', 'datasync:memberships'],
+	        ];
+	        let result;
+	        dataSyncScopes.forEach(([scope, wireKey]) => {
+	            const permissions = section[wireKey];
+	            if (!permissions)
+	                return;
+	            const ids = Object.keys(permissions);
+	            if (ids.length === 0)
+	                return;
+	            const scopeResult = ((result !== null && result !== void 0 ? result : (result = {}))[scope] = {});
+	            ids.forEach((id) => (scopeResult[id] = this.extractDataSyncPermissions(permissions[id])));
+	        });
+	        return result;
+	    }
+	    /**
+	     * Extract DataSync resource access permission information.
+	     *
+	     * @param permissions - Bit-encoded resource permissions.
+	     *
+	     * @returns Human-readable DataSync resource permissions.
+	     */
+	    extractDataSyncPermissions(permissions) {
+	        return {
+	            create: (permissions & 16) === 16,
+	            get: (permissions & 32) === 32,
+	            update: (permissions & 64) === 64,
+	            delete: (permissions & 8) === 8,
+	        };
 	    }
 	}
 
@@ -5887,6 +5938,10 @@
 	 *
 	 * @internal
 	 */
+	/**
+	 * HTTP status codes that represent definitive client outcomes and must not be retried.
+	 */
+	const NON_RETRIABLE_STATUS_CODES = [404, 409];
 	/**
 	 * Request signature generator.
 	 *
@@ -5999,8 +6054,9 @@
 	                    const [attemptPromise, attemptCancellation] = transport.makeSendable(this.request(req));
 	                    activeCancellation = attemptCancellation;
 	                    const responseHandler = (res, error) => {
-	                        const retriableError = error ? error.category !== StatusCategory$1.PNCancelledCategory : true;
-	                        const retriableStatusCode = (!res || res.status >= 400) && (error === null || error === void 0 ? void 0 : error.statusCode) !== 404;
+	                        const retriableError = !error || error.category !== StatusCategory$1.PNCancelledCategory;
+	                        const statusCode = error === null || error === void 0 ? void 0 : error.statusCode;
+	                        const retriableStatusCode = (!res || res.status >= 400) && !NON_RETRIABLE_STATUS_CODES.includes(statusCode);
 	                        let delay = -1;
 	                        if (retriableError &&
 	                            retriableStatusCode &&
@@ -6708,12 +6764,11 @@
 	    PubNubEventType[PubNubEventType["DataSync"] = 5] = "DataSync";
 	})(PubNubEventType || (PubNubEventType = {}));
 	/**
-	 * Reserved DataSync system class names (lower-cased, prefix-stripped) → normalized object type.
+	 * Reserved DataSync system class names (lower-cased) → normalized object type.
 	 *
-	 * NOTE: the exact wire `className` for typed User/Channel/Membership resources must be confirmed by
-	 * running the `ds-event-test` spike against an origin that emits DataSync events. Keys are compared
-	 * case-insensitively after `className.split(':').pop()`. Best-guess values are derived from the create
-	 * content-types (`application/vnd.pubnub.objects.{user,channel,membership}+json`).
+	 * Only consulted for classes the service marks as `Global` (see {@link DataSyncClassLevel}), so a
+	 * developer-defined class which happens to share one of these names is not mistaken for a typed
+	 * resource. Keys are compared case-insensitively.
 	 *
 	 * @internal
 	 */
@@ -6721,9 +6776,6 @@
 	    user: 'user',
 	    channel: 'channel',
 	    membership: 'membership',
-	    pn_user: 'user',
-	    pn_channel: 'channel',
-	    pn_membership: 'membership',
 	};
 	// endregion
 	/**
@@ -6952,29 +7004,29 @@
 	        // Only treat the envelope as DataSync when the service marks it and carries the required fields.
 	        if (!metadata || metadata.source !== 'data-sync' || !metadata.event || !metadata.type)
 	            return undefined;
-	        // Wire `className` is a positional composite `<systemClass>::<developerClass>`:
-	        //   - typed User/Channel/Membership → `User::` / `Channel::` / `Membership::` (system in 1st segment)
-	        //   - generic entity / relationship → `::Customer` / `::REQUESTED_BY` (developer in last segment)
-	        // The reserved system class (1st segment) drives `objectType`; the surfaced `className` is the
-	        // developer class (last non-empty segment) when present, else the system class.
+	        // Wire `className` is a bare class name (`User`, `Membership`, `Customer`); the `:`-splitting below
+	        // is only there to keep tolerating the retired positional composite (`User::` / `::Customer`).
 	        const classSegments = metadata.className ? metadata.className.split(':') : [];
-	        const systemClass = classSegments.length > 0 ? classSegments[0] : undefined;
 	        const nonEmptySegments = classSegments.filter((segment) => segment.length > 0);
 	        const className = nonEmptySegments.length > 0 ? nonEmptySegments[nonEmptySegments.length - 1] : undefined;
+	        const classLevel = metadata.classLevel;
+	        // `classLevel` authoritatively separates the built-in classes from developer-defined ones, so a
+	        // developer class named `User` / `Channel` / `Membership` is not mistaken for a typed resource.
+	        // When it is absent (service predating the field) fall back to the legacy positional heuristic,
+	        // where the system class was the first segment.
+	        const systemClass = classLevel === undefined ? classSegments[0] : classLevel === 'Global' ? className : undefined;
 	        const objectType = (systemClass && DATA_SYNC_RESERVED_CLASSES[systemClass.toLowerCase()]) || metadata.type;
 	        const parsedVersion = metadata.classVersion !== undefined ? Number.parseInt(`${metadata.classVersion}`, 10) : NaN;
 	        const classVersion = Number.isNaN(parsedVersion) ? undefined : parsedVersion;
 	        const raw = ((_a = payload.data) !== null && _a !== void 0 ? _a : {});
+	        // `data` mirrors the object as sent by the service; class identity is reported once, on the event.
 	        let data;
-	        if (metadata.event === 'delete') {
+	        if (metadata.event === 'delete')
 	            data = { id: raw.id, deletedAt: raw.deletedAt };
-	        }
-	        else if (metadata.type === 'relationship') {
-	            data = Object.assign(Object.assign({}, raw), { relationshipClass: className, relationshipClassVersion: classVersion });
-	        }
-	        else {
-	            data = Object.assign(Object.assign({}, raw), { entityClass: className, entityClassVersion: classVersion });
-	        }
+	        else if (metadata.type === 'relationship')
+	            data = Object.assign({}, raw);
+	        else
+	            data = Object.assign({}, raw);
 	        return {
 	            channel,
 	            subscription,
@@ -6986,6 +7038,7 @@
 	                type: metadata.type,
 	                objectType,
 	                className,
+	                classLevel,
 	                classVersion,
 	                data,
 	            },
@@ -15627,7 +15680,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNCreateUserOperation;
+	        return RequestOperation$1.PNCreateDataSyncUserOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -15638,9 +15691,9 @@
 	        });
 	    }
 	    validate() {
-	        if (!this.parameters.user)
-	            return 'User cannot be empty';
-	        if (this.parameters.user.entityClassVersion === undefined || this.parameters.user.entityClassVersion === null)
+	        if (!this.parameters.data)
+	            return 'User data cannot be empty';
+	        if (this.parameters.data.classVersion === undefined || this.parameters.data.classVersion === null)
 	            return 'Entity class version cannot be empty';
 	    }
 	    get headers() {
@@ -15653,12 +15706,93 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/users`;
 	    }
 	    get body() {
-	        return JSON.stringify({ data: this.parameters.user });
+	        const { id, classLevel, data } = this.parameters;
+	        return JSON.stringify({
+	            data: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (id !== undefined ? { id } : {})), { entityClassVersion: data.classVersion }), (classLevel !== undefined ? { entityClassLevel: classLevel } : {})), (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	        });
 	    }
 	}
 
 	/**
-	 * Get All Users REST API module.
+	 * PubNub DataSync API type definitions.
+	 *
+	 * Types for Entity Class CRUD operations.
+	 */
+	/**
+	 * Serialize a {@link DataSyncSort} into the query value the service expects.
+	 *
+	 * A raw string is passed through unchanged. An object is turned into a list of `field:order`
+	 * entries (a `null` direction emits the bare field name, letting the service apply its default
+	 * ascending order). Mirrors the App Context `getAllChannelMetadata` sort handling.
+	 *
+	 * @internal
+	 */
+	function serializeDataSyncSort(sort) {
+	    if (typeof sort === 'string')
+	        return sort;
+	    return Object.entries(sort !== null && sort !== void 0 ? sort : {}).map(([option, order]) => (order !== null ? `${option}:${order}` : option));
+	}
+	/**
+	 * Convert dot-notation path to JSON Pointer (RFC 6901).
+	 *
+	 * "config.ttlSec"           → "/config/ttlSec"
+	 * "filterableFields.0.name" → "/filterableFields/0/name"
+	 *
+	 * @internal
+	 */
+	function toJsonPointer(dotPath) {
+	    return '/' + dotPath.split('.').join('/');
+	}
+	/**
+	 * Convert user-friendly dot-notation patch input to JSON Patch operations (wire format).
+	 *
+	 * - Each key in `add` becomes an "add" operation.
+	 * - Each key in `replace` becomes a "replace" operation.
+	 * - Each entry in `remove` becomes a "remove" operation.
+	 * - Each `{ from, path }` pair in `move` becomes a "move" operation.
+	 * - Each `{ from, path }` pair in `copy` becomes a "copy" operation.
+	 * - Each key in `test` becomes a "test" operation.
+	 *
+	 * @internal
+	 */
+	function toJsonPatchOperations(input) {
+	    const { add, replace, remove, move, copy, test } = input;
+	    const ops = [];
+	    if (add) {
+	        for (const [dotPath, value] of Object.entries(add)) {
+	            ops.push({ op: 'add', path: toJsonPointer(dotPath), value });
+	        }
+	    }
+	    if (replace) {
+	        for (const [dotPath, value] of Object.entries(replace)) {
+	            ops.push({ op: 'replace', path: toJsonPointer(dotPath), value });
+	        }
+	    }
+	    if (remove) {
+	        for (const dotPath of remove) {
+	            ops.push({ op: 'remove', path: toJsonPointer(dotPath) });
+	        }
+	    }
+	    if (move) {
+	        for (const { from, path } of move) {
+	            ops.push({ op: 'move', from: toJsonPointer(from), path: toJsonPointer(path) });
+	        }
+	    }
+	    if (copy) {
+	        for (const { from, path } of copy) {
+	            ops.push({ op: 'copy', from: toJsonPointer(from), path: toJsonPointer(path) });
+	        }
+	    }
+	    if (test) {
+	        for (const [dotPath, value] of Object.entries(test)) {
+	            ops.push({ op: 'test', path: toJsonPointer(dotPath), value });
+	        }
+	    }
+	    return ops;
+	}
+
+	/**
+	 * Get Users REST API module.
 	 *
 	 * @internal
 	 */
@@ -15672,11 +15806,11 @@
 	const DEFAULT_LIMIT$4 = 20;
 	// endregion
 	/**
-	 * Get All Users request.
+	 * Get Users request.
 	 *
 	 * @internal
 	 */
-	class GetAllUsersRequest extends AbstractRequest {
+	class GetUsersRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        var _a;
 	        super();
@@ -15685,7 +15819,7 @@
 	        (_a = parameters.limit) !== null && _a !== void 0 ? _a : (parameters.limit = DEFAULT_LIMIT$4);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetAllUsersOperation;
+	        return RequestOperation$1.PNGetDataSyncUsersOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -15700,12 +15834,13 @@
 	    }
 	    get queryParameters() {
 	        const { entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sort ? { sort } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	        const sorting = serializeDataSyncSort(sort);
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sorting.length ? { sort: sorting } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
 	    }
 	}
 
 	/**
-	 * Update User REST API module.
+	 * Set User REST API module.
 	 *
 	 * Full resource replacement via PUT.
 	 *
@@ -15713,17 +15848,17 @@
 	 */
 	// endregion
 	/**
-	 * Update User request.
+	 * Set User request.
 	 *
 	 * @internal
 	 */
-	class UpdateUserRequest extends AbstractRequest {
+	class SetUserRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super({ method: TransportMethod.PUT });
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNUpdateUserOperation;
+	        return RequestOperation$1.PNSetDataSyncUserOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -15736,9 +15871,9 @@
 	    validate() {
 	        if (!this.parameters.id)
 	            return 'User id cannot be empty';
-	        if (!this.parameters.user)
-	            return 'User cannot be empty';
-	        if (this.parameters.user.entityClassVersion === undefined || this.parameters.user.entityClassVersion === null)
+	        if (!this.parameters.data)
+	            return 'User data cannot be empty';
+	        if (this.parameters.data.classVersion === undefined || this.parameters.data.classVersion === null)
 	            return 'Entity class version cannot be empty';
 	    }
 	    get headers() {
@@ -15753,7 +15888,10 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/users/${encodeString(id)}`;
 	    }
 	    get body() {
-	        return JSON.stringify({ data: this.parameters.user });
+	        const { data } = this.parameters;
+	        return JSON.stringify({
+	            data: Object.assign(Object.assign({ entityClassVersion: data.classVersion }, (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	        });
 	    }
 	}
 
@@ -15774,7 +15912,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemoveUserOperation;
+	        return RequestOperation$1.PNRemoveDataSyncUserOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.id)
@@ -15799,72 +15937,28 @@
 	}
 
 	/**
-	 * PubNub DataSync API type definitions.
-	 *
-	 * Types for Entity Class CRUD operations.
-	 */
-	/**
-	 * Convert dot-notation path to JSON Pointer (RFC 6901).
-	 *
-	 * "config.ttlSec"           → "/config/ttlSec"
-	 * "filterableFields.0.name" → "/filterableFields/0/name"
-	 *
-	 * @internal
-	 */
-	function toJsonPointer(dotPath) {
-	    return '/' + dotPath.split('.').join('/');
-	}
-	/**
-	 * Convert `add`, `replace`, and `remove` parameters to JSON Patch operations (wire format).
-	 *
-	 * - Each key in `add` becomes an "add" operation.
-	 * - Each key in `replace` becomes a "replace" operation.
-	 * - Each entry in `remove` becomes a "remove" operation.
-	 *
-	 * @internal
-	 */
-	function toJsonPatchOperations(add, replace, remove) {
-	    const ops = [];
-	    if (add) {
-	        for (const [dotPath, value] of Object.entries(add)) {
-	            ops.push({ op: 'add', path: toJsonPointer(dotPath), value });
-	        }
-	    }
-	    if (replace) {
-	        for (const [dotPath, value] of Object.entries(replace)) {
-	            ops.push({ op: 'replace', path: toJsonPointer(dotPath), value });
-	        }
-	    }
-	    if (remove) {
-	        for (const dotPath of remove) {
-	            ops.push({ op: 'remove', path: toJsonPointer(dotPath) });
-	        }
-	    }
-	    return ops;
-	}
-
-	/**
-	 * Patch User REST API module.
+	 * Update User REST API module.
 	 *
 	 * Partial update via JSON Patch (RFC 6902).
-	 * Accepts `add` and `replace` (dot-notation key-value pairs) and `remove`
-	 * (dot-notation paths) and converts them to JSON Patch operations on the wire.
+	 * Accepts `add`/`replace`/`test` (dot-notation key-value pairs), `remove`
+	 * (dot-notation paths), and `move`/`copy` (dot-notation `{ from, path }` pairs)
+	 * and converts them to JSON Patch operations on the wire.
 	 *
 	 * @internal
 	 */
 	// endregion
 	/**
-	 * Patch User request.
+	 * Update User request.
 	 *
 	 * @internal
 	 */
-	class PatchUserRequest extends AbstractRequest {
+	class UpdateUserRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super({ method: TransportMethod.PATCH });
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNPatchUserOperation;
+	        return RequestOperation$1.PNUpdateDataSyncUserOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -15877,11 +15971,15 @@
 	    validate() {
 	        if (!this.parameters.id)
 	            return 'User id cannot be empty';
-	        const hasAdd = this.parameters.add && Object.keys(this.parameters.add).length > 0;
-	        const hasReplace = this.parameters.replace && Object.keys(this.parameters.replace).length > 0;
-	        const hasRemove = this.parameters.remove && this.parameters.remove.length > 0;
-	        if (!hasAdd && !hasReplace && !hasRemove)
-	            return 'At least one of add, replace, or remove must be provided';
+	        const { add, replace, remove, move, copy, test } = this.parameters;
+	        const hasAdd = add && Object.keys(add).length > 0;
+	        const hasReplace = replace && Object.keys(replace).length > 0;
+	        const hasRemove = remove && remove.length > 0;
+	        const hasMove = move && move.length > 0;
+	        const hasCopy = copy && copy.length > 0;
+	        const hasTest = test && Object.keys(test).length > 0;
+	        if (!hasAdd && !hasReplace && !hasRemove && !hasMove && !hasCopy && !hasTest)
+	            return 'At least one of add, replace, remove, move, copy, or test must be provided';
 	    }
 	    get headers() {
 	        var _a;
@@ -15895,14 +15993,9 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/users/${encodeString(id)}`;
 	    }
 	    get body() {
-	        // Prefix all field paths with 'payload.' so users write simple field names
-	        // and the SDK produces '/payload/<field>' on the wire.
-	        const prefixWithPayload = (input) => Object.fromEntries(Object.entries(input).map(([key, value]) => [`payload.${key}`, value]));
-	        const prefixedAdd = this.parameters.add ? prefixWithPayload(this.parameters.add) : undefined;
-	        const prefixedReplace = this.parameters.replace ? prefixWithPayload(this.parameters.replace) : undefined;
-	        const prefixedRemove = this.parameters.remove ? this.parameters.remove.map((key) => `payload.${key}`) : undefined;
-	        // Convert add/replace/remove (dot notation) to JSON Patch operations (JSON Pointer notation).
-	        const jsonPatchOps = toJsonPatchOperations(prefixedAdd, prefixedReplace, prefixedRemove);
+	        const { add, replace, remove, move, copy, test } = this.parameters;
+	        // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
+	        const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
 	        return JSON.stringify(jsonPatchOps);
 	    }
 	}
@@ -15924,7 +16017,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetUserOperation;
+	        return RequestOperation$1.PNGetDataSyncUserOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -15961,7 +16054,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNCreateChannelOperation;
+	        return RequestOperation$1.PNCreateDataSyncChannelOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -15972,9 +16065,9 @@
 	        });
 	    }
 	    validate() {
-	        if (!this.parameters.channel)
-	            return 'Channel cannot be empty';
-	        if (this.parameters.channel.entityClassVersion === undefined || this.parameters.channel.entityClassVersion === null)
+	        if (!this.parameters.data)
+	            return 'Channel data cannot be empty';
+	        if (this.parameters.data.classVersion === undefined || this.parameters.data.classVersion === null)
 	            return 'Entity class version cannot be empty';
 	    }
 	    get headers() {
@@ -15987,12 +16080,15 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/channels`;
 	    }
 	    get body() {
-	        return JSON.stringify({ data: this.parameters.channel });
+	        const { id, classLevel, data } = this.parameters;
+	        return JSON.stringify({
+	            data: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (id !== undefined ? { id } : {})), { entityClassVersion: data.classVersion }), (classLevel !== undefined ? { entityClassLevel: classLevel } : {})), (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	        });
 	    }
 	}
 
 	/**
-	 * Get All Channels REST API module.
+	 * Get Channels REST API module.
 	 *
 	 * @internal
 	 */
@@ -16006,11 +16102,11 @@
 	const DEFAULT_LIMIT$3 = 20;
 	// endregion
 	/**
-	 * Get All Channels request.
+	 * Get Channels request.
 	 *
 	 * @internal
 	 */
-	class GetAllChannelsRequest extends AbstractRequest {
+	class GetChannelsRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        var _a;
 	        super();
@@ -16019,7 +16115,7 @@
 	        (_a = parameters.limit) !== null && _a !== void 0 ? _a : (parameters.limit = DEFAULT_LIMIT$3);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetAllChannelsOperation;
+	        return RequestOperation$1.PNGetDataSyncChannelsOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16034,12 +16130,13 @@
 	    }
 	    get queryParameters() {
 	        const { entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sort ? { sort } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	        const sorting = serializeDataSyncSort(sort);
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sorting.length ? { sort: sorting } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
 	    }
 	}
 
 	/**
-	 * Update Channel REST API module.
+	 * Set Channel REST API module.
 	 *
 	 * Full resource replacement via PUT.
 	 *
@@ -16047,17 +16144,17 @@
 	 */
 	// endregion
 	/**
-	 * Update Channel request.
+	 * Set Channel request.
 	 *
 	 * @internal
 	 */
-	class UpdateChannelRequest extends AbstractRequest {
+	class SetChannelRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super({ method: TransportMethod.PUT });
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNUpdateChannelOperation;
+	        return RequestOperation$1.PNSetDataSyncChannelOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16070,9 +16167,9 @@
 	    validate() {
 	        if (!this.parameters.id)
 	            return 'Channel id cannot be empty';
-	        if (!this.parameters.channel)
-	            return 'Channel cannot be empty';
-	        if (this.parameters.channel.entityClassVersion === undefined || this.parameters.channel.entityClassVersion === null)
+	        if (!this.parameters.data)
+	            return 'Channel data cannot be empty';
+	        if (this.parameters.data.classVersion === undefined || this.parameters.data.classVersion === null)
 	            return 'Entity class version cannot be empty';
 	    }
 	    get headers() {
@@ -16087,7 +16184,10 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/channels/${encodeString(id)}`;
 	    }
 	    get body() {
-	        return JSON.stringify({ data: this.parameters.channel });
+	        const { data } = this.parameters;
+	        return JSON.stringify({
+	            data: Object.assign(Object.assign({ entityClassVersion: data.classVersion }, (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	        });
 	    }
 	}
 
@@ -16108,7 +16208,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemoveChannelOperation;
+	        return RequestOperation$1.PNRemoveDataSyncChannelOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.id)
@@ -16133,27 +16233,28 @@
 	}
 
 	/**
-	 * Patch Channel REST API module.
+	 * Update Channel REST API module.
 	 *
 	 * Partial update via JSON Patch (RFC 6902).
-	 * Accepts `add` and `replace` (dot-notation key-value pairs) and `remove`
-	 * (dot-notation paths) and converts them to JSON Patch operations on the wire.
+	 * Accepts `add`/`replace`/`test` (dot-notation key-value pairs), `remove`
+	 * (dot-notation paths), and `move`/`copy` (dot-notation from → path pairs),
+	 * converting them to JSON Patch operations on the wire.
 	 *
 	 * @internal
 	 */
 	// endregion
 	/**
-	 * Patch Channel request.
+	 * Update Channel request.
 	 *
 	 * @internal
 	 */
-	class PatchChannelRequest extends AbstractRequest {
+	class UpdateChannelRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super({ method: TransportMethod.PATCH });
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNPatchChannelOperation;
+	        return RequestOperation$1.PNUpdateDataSyncChannelOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16166,11 +16267,15 @@
 	    validate() {
 	        if (!this.parameters.id)
 	            return 'Channel id cannot be empty';
-	        const hasAdd = this.parameters.add && Object.keys(this.parameters.add).length > 0;
-	        const hasReplace = this.parameters.replace && Object.keys(this.parameters.replace).length > 0;
-	        const hasRemove = this.parameters.remove && this.parameters.remove.length > 0;
-	        if (!hasAdd && !hasReplace && !hasRemove)
-	            return 'At least one of add, replace, or remove must be provided';
+	        const { add, replace, remove, move, copy, test } = this.parameters;
+	        const hasAdd = add && Object.keys(add).length > 0;
+	        const hasReplace = replace && Object.keys(replace).length > 0;
+	        const hasRemove = remove && remove.length > 0;
+	        const hasMove = move && move.length > 0;
+	        const hasCopy = copy && copy.length > 0;
+	        const hasTest = test && Object.keys(test).length > 0;
+	        if (!hasAdd && !hasReplace && !hasRemove && !hasMove && !hasCopy && !hasTest)
+	            return 'At least one of add, replace, remove, move, copy, or test must be provided';
 	    }
 	    get headers() {
 	        var _a;
@@ -16184,14 +16289,9 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/channels/${encodeString(id)}`;
 	    }
 	    get body() {
-	        // Prefix all field paths with 'payload.' so users write simple field names
-	        // and the SDK produces '/payload/<field>' on the wire.
-	        const prefixWithPayload = (input) => Object.fromEntries(Object.entries(input).map(([key, value]) => [`payload.${key}`, value]));
-	        const prefixedAdd = this.parameters.add ? prefixWithPayload(this.parameters.add) : undefined;
-	        const prefixedReplace = this.parameters.replace ? prefixWithPayload(this.parameters.replace) : undefined;
-	        const prefixedRemove = this.parameters.remove ? this.parameters.remove.map((key) => `payload.${key}`) : undefined;
-	        // Convert add/replace/remove (dot notation) to JSON Patch operations (JSON Pointer notation).
-	        const jsonPatchOps = toJsonPatchOperations(prefixedAdd, prefixedReplace, prefixedRemove);
+	        const { add, replace, remove, move, copy, test } = this.parameters;
+	        // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
+	        const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
 	        return JSON.stringify(jsonPatchOps);
 	    }
 	}
@@ -16213,7 +16313,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetChannelOperation;
+	        return RequestOperation$1.PNGetDataSyncChannelOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16250,7 +16350,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNCreateMembershipOperation;
+	        return RequestOperation$1.PNCreateDataSyncMembershipOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16261,13 +16361,13 @@
 	        });
 	    }
 	    validate() {
-	        if (!this.parameters.membership)
-	            return 'Membership cannot be empty';
-	        if (!this.parameters.membership.userId)
+	        if (!this.parameters.userId)
 	            return 'User id cannot be empty';
-	        if (!this.parameters.membership.channelId)
+	        if (!this.parameters.channelId)
 	            return 'Channel id cannot be empty';
-	        if (!this.parameters.membership.relationshipClassVersion)
+	        if (!this.parameters.data)
+	            return 'Membership data cannot be empty';
+	        if (!this.parameters.data.classVersion)
 	            return 'Relationship class version cannot be empty';
 	    }
 	    get headers() {
@@ -16280,12 +16380,16 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/memberships`;
 	    }
 	    get body() {
-	        return JSON.stringify({ data: this.parameters.membership });
+	        const { id, userId, channelId, data } = this.parameters;
+	        return JSON.stringify({
+	            data: Object.assign(Object.assign(Object.assign(Object.assign({}, (id !== undefined ? { id } : {})), { userId,
+	                channelId, relationshipClassVersion: data.classVersion }), (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	        });
 	    }
 	}
 
 	/**
-	 * Get All Memberships REST API module.
+	 * Get Memberships REST API module.
 	 *
 	 * @internal
 	 */
@@ -16299,11 +16403,11 @@
 	const DEFAULT_LIMIT$2 = 20;
 	// endregion
 	/**
-	 * Get All Memberships request.
+	 * Get Memberships request.
 	 *
 	 * @internal
 	 */
-	class GetAllMembershipsRequest extends AbstractRequest {
+	class GetMembershipsRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        var _a;
 	        super();
@@ -16312,7 +16416,7 @@
 	        (_a = parameters.limit) !== null && _a !== void 0 ? _a : (parameters.limit = DEFAULT_LIMIT$2);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetAllMembershipsOperation;
+	        return RequestOperation$1.PNGetDataSyncMembershipsOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16327,12 +16431,13 @@
 	    }
 	    get queryParameters() {
 	        const { userId, channelId, relationshipClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (userId ? { user_id: userId } : {})), (channelId ? { channel_id: channelId } : {})), (relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sort ? { sort } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	        const sorting = serializeDataSyncSort(sort);
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (userId ? { user_id: userId } : {})), (channelId ? { channel_id: channelId } : {})), (relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sorting.length ? { sort: sorting } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
 	    }
 	}
 
 	/**
-	 * Update Membership REST API module.
+	 * Set Membership REST API module.
 	 *
 	 * Full resource replacement via PUT.
 	 *
@@ -16340,17 +16445,17 @@
 	 */
 	// endregion
 	/**
-	 * Update Membership request.
+	 * Set Membership request.
 	 *
 	 * @internal
 	 */
-	class UpdateMembershipRequest extends AbstractRequest {
+	class SetMembershipRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super({ method: TransportMethod.PUT });
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNUpdateMembershipOperation;
+	        return RequestOperation$1.PNSetDataSyncMembershipOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16363,13 +16468,13 @@
 	    validate() {
 	        if (!this.parameters.id)
 	            return 'Membership id cannot be empty';
-	        if (!this.parameters.membership)
-	            return 'Membership cannot be empty';
-	        if (!this.parameters.membership.userId)
+	        if (!this.parameters.userId)
 	            return 'User id cannot be empty';
-	        if (!this.parameters.membership.channelId)
+	        if (!this.parameters.channelId)
 	            return 'Channel id cannot be empty';
-	        if (!this.parameters.membership.relationshipClassVersion)
+	        if (!this.parameters.data)
+	            return 'Membership data cannot be empty';
+	        if (!this.parameters.data.classVersion)
 	            return 'Relationship class version cannot be empty';
 	    }
 	    get headers() {
@@ -16384,7 +16489,11 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/memberships/${encodeString(id)}`;
 	    }
 	    get body() {
-	        return JSON.stringify({ data: this.parameters.membership });
+	        const { userId, channelId, data } = this.parameters;
+	        return JSON.stringify({
+	            data: Object.assign(Object.assign({ userId,
+	                channelId, relationshipClassVersion: data.classVersion }, (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	        });
 	    }
 	}
 
@@ -16405,7 +16514,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemoveMembershipOperation;
+	        return RequestOperation$1.PNRemoveDataSyncMembershipOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.id)
@@ -16430,27 +16539,28 @@
 	}
 
 	/**
-	 * Patch Membership REST API module.
+	 * Update Membership REST API module.
 	 *
 	 * Partial update via JSON Patch (RFC 6902).
-	 * Accepts `add` and `replace` (dot-notation key-value pairs) and `remove`
-	 * (dot-notation paths) and converts them to JSON Patch operations on the wire.
+	 * Accepts `add`/`replace`/`test` (dot-notation key-value pairs), `remove`
+	 * (dot-notation paths), and `move`/`copy` (dot-notation `{ from, path }` pairs)
+	 * and converts them to JSON Patch operations on the wire.
 	 *
 	 * @internal
 	 */
 	// endregion
 	/**
-	 * Patch Membership request.
+	 * Update Membership request.
 	 *
 	 * @internal
 	 */
-	class PatchMembershipRequest extends AbstractRequest {
+	class UpdateMembershipRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super({ method: TransportMethod.PATCH });
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNPatchMembershipOperation;
+	        return RequestOperation$1.PNUpdateDataSyncMembershipOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16463,11 +16573,15 @@
 	    validate() {
 	        if (!this.parameters.id)
 	            return 'Membership id cannot be empty';
-	        const hasAdd = this.parameters.add && Object.keys(this.parameters.add).length > 0;
-	        const hasReplace = this.parameters.replace && Object.keys(this.parameters.replace).length > 0;
-	        const hasRemove = this.parameters.remove && this.parameters.remove.length > 0;
-	        if (!hasAdd && !hasReplace && !hasRemove)
-	            return 'At least one of add, replace, or remove must be provided';
+	        const { add, replace, remove, move, copy, test } = this.parameters;
+	        const hasAdd = add && Object.keys(add).length > 0;
+	        const hasReplace = replace && Object.keys(replace).length > 0;
+	        const hasRemove = remove && remove.length > 0;
+	        const hasMove = move && move.length > 0;
+	        const hasCopy = copy && copy.length > 0;
+	        const hasTest = test && Object.keys(test).length > 0;
+	        if (!hasAdd && !hasReplace && !hasRemove && !hasMove && !hasCopy && !hasTest)
+	            return 'At least one of add, replace, remove, move, copy, or test must be provided';
 	    }
 	    get headers() {
 	        var _a;
@@ -16481,14 +16595,9 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/memberships/${encodeString(id)}`;
 	    }
 	    get body() {
-	        // Prefix all field paths with 'payload.' so users write simple field names
-	        // and the SDK produces '/payload/<field>' on the wire.
-	        const prefixWithPayload = (input) => Object.fromEntries(Object.entries(input).map(([key, value]) => [`payload.${key}`, value]));
-	        const prefixedAdd = this.parameters.add ? prefixWithPayload(this.parameters.add) : undefined;
-	        const prefixedReplace = this.parameters.replace ? prefixWithPayload(this.parameters.replace) : undefined;
-	        const prefixedRemove = this.parameters.remove ? this.parameters.remove.map((key) => `payload.${key}`) : undefined;
-	        // Convert add/replace/remove (dot notation) to JSON Patch operations (JSON Pointer notation).
-	        const jsonPatchOps = toJsonPatchOperations(prefixedAdd, prefixedReplace, prefixedRemove);
+	        const { add, replace, remove, move, copy, test } = this.parameters;
+	        // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
+	        const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
 	        return JSON.stringify(jsonPatchOps);
 	    }
 	}
@@ -16510,7 +16619,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetMembershipOperation;
+	        return RequestOperation$1.PNGetDataSyncMembershipOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16547,7 +16656,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNCreateRelationshipOperation;
+	        return RequestOperation$1.PNCreateDataSyncRelationshipOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16558,15 +16667,15 @@
 	        });
 	    }
 	    validate() {
-	        if (!this.parameters.relationship)
-	            return 'Relationship cannot be empty';
-	        if (!this.parameters.relationship.entityAId)
+	        if (!this.parameters.entityAId)
 	            return 'Entity A id cannot be empty';
-	        if (!this.parameters.relationship.entityBId)
+	        if (!this.parameters.entityBId)
 	            return 'Entity B id cannot be empty';
-	        if (!this.parameters.relationship.relationshipClass)
+	        if (!this.parameters.class)
 	            return 'Relationship class cannot be empty';
-	        if (!this.parameters.relationship.relationshipClassVersion)
+	        if (!this.parameters.data)
+	            return 'Relationship data cannot be empty';
+	        if (!this.parameters.data.classVersion)
 	            return 'Relationship class version cannot be empty';
 	    }
 	    get headers() {
@@ -16579,12 +16688,17 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/relationships`;
 	    }
 	    get body() {
-	        return JSON.stringify({ data: this.parameters.relationship });
+	        const { id, class: relationshipClass, entityAId, entityBId, data } = this.parameters;
+	        return JSON.stringify({
+	            data: Object.assign(Object.assign(Object.assign(Object.assign({}, (id !== undefined ? { id } : {})), { entityAId,
+	                entityBId,
+	                relationshipClass, relationshipClassVersion: data.classVersion }), (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	        });
 	    }
 	}
 
 	/**
-	 * Get All Relationships REST API module.
+	 * Get Relationships REST API module.
 	 *
 	 * @internal
 	 */
@@ -16598,11 +16712,11 @@
 	const DEFAULT_LIMIT$1 = 20;
 	// endregion
 	/**
-	 * Get All Relationships request.
+	 * Get Relationships request.
 	 *
 	 * @internal
 	 */
-	class GetAllRelationshipsRequest extends AbstractRequest {
+	class GetRelationshipsRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        var _a;
 	        super();
@@ -16611,7 +16725,7 @@
 	        (_a = parameters.limit) !== null && _a !== void 0 ? _a : (parameters.limit = DEFAULT_LIMIT$1);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetAllRelationshipsOperation;
+	        return RequestOperation$1.PNGetDataSyncRelationshipsOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16630,12 +16744,13 @@
 	    }
 	    get queryParameters() {
 	        const { relationshipClass, relationshipClassVersion, entityAId, entityBId, cursor, limit, filter, sort, filterAdvanced, } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ relationship_class: relationshipClass }, (relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {})), (entityAId ? { entity_a_id: entityAId } : {})), (entityBId ? { entity_b_id: entityBId } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sort ? { sort } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	        const sorting = serializeDataSyncSort(sort);
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ relationship_class: relationshipClass }, (relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {})), (entityAId ? { entity_a_id: entityAId } : {})), (entityBId ? { entity_b_id: entityBId } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sorting.length ? { sort: sorting } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
 	    }
 	}
 
 	/**
-	 * Update Relationship REST API module.
+	 * Set Relationship REST API module.
 	 *
 	 * Full resource replacement via PUT.
 	 *
@@ -16643,17 +16758,17 @@
 	 */
 	// endregion
 	/**
-	 * Update Relationship request.
+	 * Set Relationship request.
 	 *
 	 * @internal
 	 */
-	class UpdateRelationshipRequest extends AbstractRequest {
+	class SetRelationshipRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super({ method: TransportMethod.PUT });
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNUpdateRelationshipOperation;
+	        return RequestOperation$1.PNSetDataSyncRelationshipOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16666,13 +16781,13 @@
 	    validate() {
 	        if (!this.parameters.id)
 	            return 'Relationship id cannot be empty';
-	        if (!this.parameters.relationship)
-	            return 'Relationship cannot be empty';
-	        if (!this.parameters.relationship.entityAId)
+	        if (!this.parameters.entityAId)
 	            return 'Entity A id cannot be empty';
-	        if (!this.parameters.relationship.entityBId)
+	        if (!this.parameters.entityBId)
 	            return 'Entity B id cannot be empty';
-	        if (!this.parameters.relationship.relationshipClassVersion)
+	        if (!this.parameters.data)
+	            return 'Relationship data cannot be empty';
+	        if (!this.parameters.data.classVersion)
 	            return 'Relationship class version cannot be empty';
 	    }
 	    get headers() {
@@ -16687,7 +16802,11 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/relationships/${encodeString(id)}`;
 	    }
 	    get body() {
-	        return JSON.stringify({ data: this.parameters.relationship });
+	        const { entityAId, entityBId, data } = this.parameters;
+	        return JSON.stringify({
+	            data: Object.assign(Object.assign({ entityAId,
+	                entityBId, relationshipClassVersion: data.classVersion }, (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	        });
 	    }
 	}
 
@@ -16708,7 +16827,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemoveRelationshipOperation;
+	        return RequestOperation$1.PNRemoveDataSyncRelationshipOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.id)
@@ -16733,27 +16852,29 @@
 	}
 
 	/**
-	 * Patch Relationship REST API module.
+	 * Update Relationship REST API module.
 	 *
 	 * Partial update via JSON Patch (RFC 6902).
-	 * Accepts `add` and `replace` (dot-notation key-value pairs) and `remove`
-	 * (dot-notation paths) and converts them to JSON Patch operations on the wire.
+	 * Accepts `add` and `replace` (dot-notation key-value pairs), `remove`
+	 * (dot-notation paths), `move` and `copy` (`{ from, path }` dot-notation pairs),
+	 * and `test` (dot-notation key-value pairs) and converts them to JSON Patch
+	 * operations on the wire.
 	 *
 	 * @internal
 	 */
 	// endregion
 	/**
-	 * Patch Relationship request.
+	 * Update Relationship request.
 	 *
 	 * @internal
 	 */
-	class PatchRelationshipRequest extends AbstractRequest {
+	class UpdateRelationshipRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super({ method: TransportMethod.PATCH });
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNPatchRelationshipOperation;
+	        return RequestOperation$1.PNUpdateDataSyncRelationshipOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16766,11 +16887,15 @@
 	    validate() {
 	        if (!this.parameters.id)
 	            return 'Relationship id cannot be empty';
-	        const hasAdd = this.parameters.add && Object.keys(this.parameters.add).length > 0;
-	        const hasReplace = this.parameters.replace && Object.keys(this.parameters.replace).length > 0;
-	        const hasRemove = this.parameters.remove && this.parameters.remove.length > 0;
-	        if (!hasAdd && !hasReplace && !hasRemove)
-	            return 'At least one of add, replace, or remove must be provided';
+	        const { add, replace, remove, move, copy, test } = this.parameters;
+	        const hasAdd = add && Object.keys(add).length > 0;
+	        const hasReplace = replace && Object.keys(replace).length > 0;
+	        const hasRemove = remove && remove.length > 0;
+	        const hasMove = move && move.length > 0;
+	        const hasCopy = copy && copy.length > 0;
+	        const hasTest = test && Object.keys(test).length > 0;
+	        if (!hasAdd && !hasReplace && !hasRemove && !hasMove && !hasCopy && !hasTest)
+	            return 'At least one of add, replace, remove, move, copy, or test must be provided';
 	    }
 	    get headers() {
 	        var _a;
@@ -16784,14 +16909,9 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/relationships/${encodeString(id)}`;
 	    }
 	    get body() {
-	        // Prefix all field paths with 'payload.' so users write simple field names
-	        // (e.g., 'role') and the SDK produces '/payload/role' on the wire.
-	        const prefixWithPayload = (input) => Object.fromEntries(Object.entries(input).map(([key, value]) => [`payload.${key}`, value]));
-	        const prefixedAdd = this.parameters.add ? prefixWithPayload(this.parameters.add) : undefined;
-	        const prefixedReplace = this.parameters.replace ? prefixWithPayload(this.parameters.replace) : undefined;
-	        const prefixedRemove = this.parameters.remove ? this.parameters.remove.map((key) => `payload.${key}`) : undefined;
-	        // Convert add/replace/remove (dot notation) to JSON Patch operations (JSON Pointer notation).
-	        const jsonPatchOps = toJsonPatchOperations(prefixedAdd, prefixedReplace, prefixedRemove);
+	        const { add, replace, remove, move, copy, test } = this.parameters;
+	        // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
+	        const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
 	        return JSON.stringify(jsonPatchOps);
 	    }
 	}
@@ -16813,7 +16933,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetRelationshipOperation;
+	        return RequestOperation$1.PNGetDataSyncRelationshipOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16850,7 +16970,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNCreateEntityOperation;
+	        return RequestOperation$1.PNCreateDataSyncEntityOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16861,11 +16981,11 @@
 	        });
 	    }
 	    validate() {
-	        if (!this.parameters.entity)
-	            return 'Entity cannot be empty';
-	        if (!this.parameters.entity.entityClass)
+	        if (!this.parameters.class)
 	            return 'Entity class cannot be empty';
-	        if (this.parameters.entity.entityClassVersion === undefined || this.parameters.entity.entityClassVersion === null)
+	        if (!this.parameters.data)
+	            return 'Entity data cannot be empty';
+	        if (this.parameters.data.classVersion === undefined || this.parameters.data.classVersion === null)
 	            return 'Entity class version cannot be empty';
 	    }
 	    get headers() {
@@ -16878,12 +16998,15 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/entities`;
 	    }
 	    get body() {
-	        return JSON.stringify({ data: this.parameters.entity });
+	        const { id, class: entityClass, classLevel, data } = this.parameters;
+	        return JSON.stringify({
+	            data: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (id !== undefined ? { id } : {})), { entityClass, entityClassVersion: data.classVersion }), (classLevel !== undefined ? { entityClassLevel: classLevel } : {})), (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	        });
 	    }
 	}
 
 	/**
-	 * Get All Entities REST API module.
+	 * Get Entities REST API module.
 	 *
 	 * @internal
 	 */
@@ -16897,11 +17020,11 @@
 	const DEFAULT_LIMIT = 20;
 	// endregion
 	/**
-	 * Get All Entities request.
+	 * Get Entities request.
 	 *
 	 * @internal
 	 */
-	class GetAllEntitiesRequest extends AbstractRequest {
+	class GetEntitiesRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        var _a;
 	        super();
@@ -16910,7 +17033,7 @@
 	        (_a = parameters.limit) !== null && _a !== void 0 ? _a : (parameters.limit = DEFAULT_LIMIT);
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetAllEntitiesOperation;
+	        return RequestOperation$1.PNGetDataSyncEntitiesOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16929,12 +17052,13 @@
 	    }
 	    get queryParameters() {
 	        const { entityClass, entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ entity_class: entityClass }, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sort ? { sort } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	        const sorting = serializeDataSyncSort(sort);
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ entity_class: entityClass }, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sorting.length ? { sort: sorting } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
 	    }
 	}
 
 	/**
-	 * Update Entity REST API module.
+	 * Set Entity REST API module.
 	 *
 	 * Full resource replacement via PUT.
 	 * Note: `entityClass` is immutable and cannot be changed via update.
@@ -16943,17 +17067,17 @@
 	 */
 	// endregion
 	/**
-	 * Update Entity request.
+	 * Set Entity request.
 	 *
 	 * @internal
 	 */
-	class UpdateEntityRequest extends AbstractRequest {
+	class SetEntityRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super({ method: TransportMethod.PUT });
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNUpdateEntityOperation;
+	        return RequestOperation$1.PNSetDataSyncEntityOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -16966,9 +17090,9 @@
 	    validate() {
 	        if (!this.parameters.id)
 	            return 'Entity id cannot be empty';
-	        if (!this.parameters.entity)
-	            return 'Entity cannot be empty';
-	        if (this.parameters.entity.entityClassVersion === undefined || this.parameters.entity.entityClassVersion === null)
+	        if (!this.parameters.data)
+	            return 'Entity data cannot be empty';
+	        if (this.parameters.data.classVersion === undefined || this.parameters.data.classVersion === null)
 	            return 'Entity class version cannot be empty';
 	    }
 	    get headers() {
@@ -16983,7 +17107,10 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/entities/${encodeString(id)}`;
 	    }
 	    get body() {
-	        return JSON.stringify({ data: this.parameters.entity });
+	        const { data } = this.parameters;
+	        return JSON.stringify({
+	            data: Object.assign(Object.assign({ entityClassVersion: data.classVersion }, (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	        });
 	    }
 	}
 
@@ -17004,7 +17131,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNRemoveEntityOperation;
+	        return RequestOperation$1.PNRemoveDataSyncEntityOperation;
 	    }
 	    validate() {
 	        if (!this.parameters.id)
@@ -17029,27 +17156,28 @@
 	}
 
 	/**
-	 * Patch Entity REST API module.
+	 * Update Entity REST API module.
 	 *
 	 * Partial update via JSON Patch (RFC 6902).
-	 * Accepts `add` and `replace` (dot-notation key-value pairs) and `remove`
-	 * (dot-notation paths) and converts them to JSON Patch operations on the wire.
+	 * Accepts `add`/`replace`/`test` (dot-notation key-value pairs), `remove`
+	 * (dot-notation paths), and `move`/`copy` (dot-notation from/path pairs), and
+	 * converts them to JSON Patch operations on the wire.
 	 *
 	 * @internal
 	 */
 	// endregion
 	/**
-	 * Patch Entity request.
+	 * Update Entity request.
 	 *
 	 * @internal
 	 */
-	class PatchEntityRequest extends AbstractRequest {
+	class UpdateEntityRequest extends AbstractRequest {
 	    constructor(parameters) {
 	        super({ method: TransportMethod.PATCH });
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNPatchEntityOperation;
+	        return RequestOperation$1.PNUpdateDataSyncEntityOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -17062,11 +17190,15 @@
 	    validate() {
 	        if (!this.parameters.id)
 	            return 'Entity id cannot be empty';
-	        const hasAdd = this.parameters.add && Object.keys(this.parameters.add).length > 0;
-	        const hasReplace = this.parameters.replace && Object.keys(this.parameters.replace).length > 0;
-	        const hasRemove = this.parameters.remove && this.parameters.remove.length > 0;
-	        if (!hasAdd && !hasReplace && !hasRemove)
-	            return 'At least one of add, replace, or remove must be provided';
+	        const { add, replace, remove, move, copy, test } = this.parameters;
+	        const hasAdd = add && Object.keys(add).length > 0;
+	        const hasReplace = replace && Object.keys(replace).length > 0;
+	        const hasRemove = remove && remove.length > 0;
+	        const hasMove = move && move.length > 0;
+	        const hasCopy = copy && copy.length > 0;
+	        const hasTest = test && Object.keys(test).length > 0;
+	        if (!hasAdd && !hasReplace && !hasRemove && !hasMove && !hasCopy && !hasTest)
+	            return 'At least one of add, replace, remove, move, copy, or test must be provided';
 	    }
 	    get headers() {
 	        var _a;
@@ -17080,14 +17212,9 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/entities/${encodeString(id)}`;
 	    }
 	    get body() {
-	        // Prefix all field paths with 'payload.' so users write simple field names
-	        // (e.g., 'standards') and the SDK produces '/payload/standards' on the wire.
-	        const prefixWithPayload = (input) => Object.fromEntries(Object.entries(input).map(([key, value]) => [`payload.${key}`, value]));
-	        const prefixedAdd = this.parameters.add ? prefixWithPayload(this.parameters.add) : undefined;
-	        const prefixedReplace = this.parameters.replace ? prefixWithPayload(this.parameters.replace) : undefined;
-	        const prefixedRemove = this.parameters.remove ? this.parameters.remove.map((key) => `payload.${key}`) : undefined;
-	        // Convert add/replace/remove (dot notation) to JSON Patch operations (JSON Pointer notation).
-	        const jsonPatchOps = toJsonPatchOperations(prefixedAdd, prefixedReplace, prefixedRemove);
+	        const { add, replace, remove, move, copy, test } = this.parameters;
+	        // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
+	        const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
 	        return JSON.stringify(jsonPatchOps);
 	    }
 	}
@@ -17109,7 +17236,7 @@
 	        this.parameters = parameters;
 	    }
 	    operation() {
-	        return RequestOperation$1.PNGetEntityOperation;
+	        return RequestOperation$1.PNGetDataSyncEntityOperation;
 	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -17183,7 +17310,7 @@
 	        });
 	    }
 	    /**
-	     * Fetch a specific Entity.
+	     * Get a specific Entity.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17204,28 +17331,51 @@
 	        });
 	    }
 	    /**
-	     * Fetch a paginated list of Entities for a given Entity Class.
+	     * Get a paginated list of Entities for a given Entity Class.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
 	     *
-	     * @returns Asynchronous get all entities response or `void` in case if `callback` provided.
+	     * @returns Asynchronous get entities response or `void` in case if `callback` provided.
 	     */
-	    getAllEntities(parameters, callback) {
+	    getEntities(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            this.logger.debug('PubNub', () => ({
 	                messageType: 'object',
 	                message: Object.assign({}, parameters),
-	                details: 'Get all Entities with parameters:',
+	                details: 'Get Entities with parameters:',
 	            }));
-	            const request = new GetAllEntitiesRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const request = new GetEntitiesRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            if (callback)
 	                return this.sendRequest(request, callback);
 	            return this.sendRequest(request);
 	        });
 	    }
 	    /**
-	     * Update an Entity (full replacement via PUT).
+	     * Set an Entity (full replacement via PUT).
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous set entity response or `void` in case if `callback` provided.
+	     */
+	    setEntity(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Set Entity with parameters:',
+	            }));
+	            const request = new SetEntityRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Update an Entity (partial update via JSON Patch RFC 6902).
+	     *
+	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17240,29 +17390,6 @@
 	                details: 'Update Entity with parameters:',
 	            }));
 	            const request = new UpdateEntityRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
-	        });
-	    }
-	    /**
-	     * Patch an Entity (partial update via JSON Patch RFC 6902).
-	     *
-	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-	     *
-	     * @param parameters - Request configuration parameters.
-	     * @param [callback] - Request completion handler callback.
-	     *
-	     * @returns Asynchronous patch entity response or `void` in case if `callback` provided.
-	     */
-	    patchEntity(parameters, callback) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            this.logger.debug('PubNub', () => ({
-	                messageType: 'object',
-	                message: Object.assign({}, parameters),
-	                details: 'Patch Entity with parameters:',
-	            }));
-	            const request = new PatchEntityRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            if (callback)
 	                return this.sendRequest(request, callback);
 	            return this.sendRequest(request);
@@ -17311,7 +17438,7 @@
 	        });
 	    }
 	    /**
-	     * Fetch a specific Relationship.
+	     * Get a specific Relationship.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17332,28 +17459,51 @@
 	        });
 	    }
 	    /**
-	     * Fetch a paginated list of Relationships.
+	     * Get a paginated list of Relationships.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
 	     *
-	     * @returns Asynchronous get all relationships response or `void` in case if `callback` provided.
+	     * @returns Asynchronous get relationships response or `void` in case if `callback` provided.
 	     */
-	    getAllRelationships(parameters, callback) {
+	    getRelationships(parameters, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            this.logger.debug('PubNub', () => ({
 	                messageType: 'object',
 	                message: Object.assign({}, parameters),
-	                details: 'Get all Relationships with parameters:',
+	                details: 'Get Relationships with parameters:',
 	            }));
-	            const request = new GetAllRelationshipsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const request = new GetRelationshipsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            if (callback)
 	                return this.sendRequest(request, callback);
 	            return this.sendRequest(request);
 	        });
 	    }
 	    /**
-	     * Update a Relationship (full replacement via PUT).
+	     * Set a Relationship (full replacement via PUT).
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous set relationship response or `void` in case if `callback` provided.
+	     */
+	    setRelationship(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Set Relationship with parameters:',
+	            }));
+	            const request = new SetRelationshipRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Update a Relationship (partial update via JSON Patch RFC 6902).
+	     *
+	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17368,29 +17518,6 @@
 	                details: 'Update Relationship with parameters:',
 	            }));
 	            const request = new UpdateRelationshipRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
-	        });
-	    }
-	    /**
-	     * Patch a Relationship (partial update via JSON Patch RFC 6902).
-	     *
-	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-	     *
-	     * @param parameters - Request configuration parameters.
-	     * @param [callback] - Request completion handler callback.
-	     *
-	     * @returns Asynchronous patch relationship response or `void` in case if `callback` provided.
-	     */
-	    patchRelationship(parameters, callback) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            this.logger.debug('PubNub', () => ({
-	                messageType: 'object',
-	                message: Object.assign({}, parameters),
-	                details: 'Patch Relationship with parameters:',
-	            }));
-	            const request = new PatchRelationshipRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            if (callback)
 	                return this.sendRequest(request, callback);
 	            return this.sendRequest(request);
@@ -17439,7 +17566,7 @@
 	        });
 	    }
 	    /**
-	     * Fetch a specific User.
+	     * Get a specific User.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17460,30 +17587,53 @@
 	        });
 	    }
 	    /**
-	     * Fetch a paginated list of Users.
+	     * Get a paginated list of Users.
 	     *
 	     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
 	     * @param [callback] - Request completion handler callback.
 	     *
-	     * @returns Asynchronous get all users response or `void` in case if `callback` provided.
+	     * @returns Asynchronous get users response or `void` in case if `callback` provided.
 	     */
-	    getAllUsers(parametersOrCallback, callback) {
+	    getUsers(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const parameters = parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
 	            callback !== null && callback !== void 0 ? callback : (callback = typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined);
 	            this.logger.debug('PubNub', () => ({
 	                messageType: 'object',
 	                message: Object.assign({}, parameters),
-	                details: 'Get all Users with parameters:',
+	                details: 'Get Users with parameters:',
 	            }));
-	            const request = new GetAllUsersRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const request = new GetUsersRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            if (callback)
 	                return this.sendRequest(request, callback);
 	            return this.sendRequest(request);
 	        });
 	    }
 	    /**
-	     * Update a User (full replacement via PUT).
+	     * Set a User (full replacement via PUT).
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous set user response or `void` in case if `callback` provided.
+	     */
+	    setUser(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Set User with parameters:',
+	            }));
+	            const request = new SetUserRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Update a User (partial update via JSON Patch RFC 6902).
+	     *
+	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17498,29 +17648,6 @@
 	                details: 'Update User with parameters:',
 	            }));
 	            const request = new UpdateUserRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
-	        });
-	    }
-	    /**
-	     * Patch a User (partial update via JSON Patch RFC 6902).
-	     *
-	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-	     *
-	     * @param parameters - Request configuration parameters.
-	     * @param [callback] - Request completion handler callback.
-	     *
-	     * @returns Asynchronous patch user response or `void` in case if `callback` provided.
-	     */
-	    patchUser(parameters, callback) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            this.logger.debug('PubNub', () => ({
-	                messageType: 'object',
-	                message: Object.assign({}, parameters),
-	                details: 'Patch User with parameters:',
-	            }));
-	            const request = new PatchUserRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            if (callback)
 	                return this.sendRequest(request, callback);
 	            return this.sendRequest(request);
@@ -17569,7 +17696,7 @@
 	        });
 	    }
 	    /**
-	     * Fetch a specific Channel.
+	     * Get a specific Channel.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17590,30 +17717,53 @@
 	        });
 	    }
 	    /**
-	     * Fetch a paginated list of Channels.
+	     * Get a paginated list of Channels.
 	     *
 	     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
 	     * @param [callback] - Request completion handler callback.
 	     *
-	     * @returns Asynchronous get all channels response or `void` in case if `callback` provided.
+	     * @returns Asynchronous get channels response or `void` in case if `callback` provided.
 	     */
-	    getAllChannels(parametersOrCallback, callback) {
+	    getChannels(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const parameters = parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
 	            callback !== null && callback !== void 0 ? callback : (callback = typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined);
 	            this.logger.debug('PubNub', () => ({
 	                messageType: 'object',
 	                message: Object.assign({}, parameters),
-	                details: 'Get all Channels with parameters:',
+	                details: 'Get Channels with parameters:',
 	            }));
-	            const request = new GetAllChannelsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const request = new GetChannelsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            if (callback)
 	                return this.sendRequest(request, callback);
 	            return this.sendRequest(request);
 	        });
 	    }
 	    /**
-	     * Update a Channel (full replacement via PUT).
+	     * Set a Channel (full replacement via PUT).
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous set channel response or `void` in case if `callback` provided.
+	     */
+	    setChannel(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Set Channel with parameters:',
+	            }));
+	            const request = new SetChannelRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Update a Channel (partial update via JSON Patch RFC 6902).
+	     *
+	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17628,29 +17778,6 @@
 	                details: 'Update Channel with parameters:',
 	            }));
 	            const request = new UpdateChannelRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
-	        });
-	    }
-	    /**
-	     * Patch a Channel (partial update via JSON Patch RFC 6902).
-	     *
-	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-	     *
-	     * @param parameters - Request configuration parameters.
-	     * @param [callback] - Request completion handler callback.
-	     *
-	     * @returns Asynchronous patch channel response or `void` in case if `callback` provided.
-	     */
-	    patchChannel(parameters, callback) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            this.logger.debug('PubNub', () => ({
-	                messageType: 'object',
-	                message: Object.assign({}, parameters),
-	                details: 'Patch Channel with parameters:',
-	            }));
-	            const request = new PatchChannelRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            if (callback)
 	                return this.sendRequest(request, callback);
 	            return this.sendRequest(request);
@@ -17699,7 +17826,7 @@
 	        });
 	    }
 	    /**
-	     * Fetch a specific Membership.
+	     * Get a specific Membership.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17720,30 +17847,53 @@
 	        });
 	    }
 	    /**
-	     * Fetch a paginated list of Memberships.
+	     * Get a paginated list of Memberships.
 	     *
 	     * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
 	     * @param [callback] - Request completion handler callback.
 	     *
-	     * @returns Asynchronous get all memberships response or `void` in case if `callback` provided.
+	     * @returns Asynchronous get memberships response or `void` in case if `callback` provided.
 	     */
-	    getAllMemberships(parametersOrCallback, callback) {
+	    getMemberships(parametersOrCallback, callback) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const parameters = parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
 	            callback !== null && callback !== void 0 ? callback : (callback = typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined);
 	            this.logger.debug('PubNub', () => ({
 	                messageType: 'object',
 	                message: Object.assign({}, parameters),
-	                details: 'Get all Memberships with parameters:',
+	                details: 'Get Memberships with parameters:',
 	            }));
-	            const request = new GetAllMembershipsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            const request = new GetMembershipsRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            if (callback)
 	                return this.sendRequest(request, callback);
 	            return this.sendRequest(request);
 	        });
 	    }
 	    /**
-	     * Update a Membership (full replacement via PUT).
+	     * Set a Membership (full replacement via PUT).
+	     *
+	     * @param parameters - Request configuration parameters.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns Asynchronous set membership response or `void` in case if `callback` provided.
+	     */
+	    setMembership(parameters, callback) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.debug('PubNub', () => ({
+	                messageType: 'object',
+	                message: Object.assign({}, parameters),
+	                details: 'Set Membership with parameters:',
+	            }));
+	            const request = new SetMembershipRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
+	            if (callback)
+	                return this.sendRequest(request, callback);
+	            return this.sendRequest(request);
+	        });
+	    }
+	    /**
+	     * Update a Membership (partial update via JSON Patch RFC 6902).
+	     *
+	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17758,29 +17908,6 @@
 	                details: 'Update Membership with parameters:',
 	            }));
 	            const request = new UpdateMembershipRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
-	            if (callback)
-	                return this.sendRequest(request, callback);
-	            return this.sendRequest(request);
-	        });
-	    }
-	    /**
-	     * Patch a Membership (partial update via JSON Patch RFC 6902).
-	     *
-	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-	     *
-	     * @param parameters - Request configuration parameters.
-	     * @param [callback] - Request completion handler callback.
-	     *
-	     * @returns Asynchronous patch membership response or `void` in case if `callback` provided.
-	     */
-	    patchMembership(parameters, callback) {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            this.logger.debug('PubNub', () => ({
-	                messageType: 'object',
-	                message: Object.assign({}, parameters),
-	                details: 'Patch Membership with parameters:',
-	            }));
-	            const request = new PatchMembershipRequest(Object.assign(Object.assign({}, parameters), { keySet: this.keySet }));
 	            if (callback)
 	                return this.sendRequest(request, callback);
 	            return this.sendRequest(request);

@@ -2053,123 +2053,123 @@ declare namespace PubNub {
     /**
      * Create entity REST API operation.
      */
-    PNCreateEntityOperation = 'PNCreateEntityOperation',
+    PNCreateDataSyncEntityOperation = 'PNCreateDataSyncEntityOperation',
     /**
      * Get entity REST API operation.
      */
-    PNGetEntityOperation = 'PNGetEntityOperation',
+    PNGetDataSyncEntityOperation = 'PNGetDataSyncEntityOperation',
     /**
      * Get all entities REST API operation.
      */
-    PNGetAllEntitiesOperation = 'PNGetAllEntitiesOperation',
+    PNGetDataSyncEntitiesOperation = 'PNGetDataSyncEntitiesOperation',
     /**
-     * Update entity REST API operation.
+     * Set entity REST API operation (full replacement via PUT).
      */
-    PNUpdateEntityOperation = 'PNUpdateEntityOperation',
+    PNSetDataSyncEntityOperation = 'PNSetDataSyncEntityOperation',
     /**
-     * Patch entity REST API operation.
+     * Update entity REST API operation (partial update via PATCH).
      */
-    PNPatchEntityOperation = 'PNPatchEntityOperation',
+    PNUpdateDataSyncEntityOperation = 'PNUpdateDataSyncEntityOperation',
     /**
      * Remove entity REST API operation.
      */
-    PNRemoveEntityOperation = 'PNRemoveEntityOperation',
+    PNRemoveDataSyncEntityOperation = 'PNRemoveDataSyncEntityOperation',
     /**
      * Create relationship REST API operation.
      */
-    PNCreateRelationshipOperation = 'PNCreateRelationshipOperation',
+    PNCreateDataSyncRelationshipOperation = 'PNCreateDataSyncRelationshipOperation',
     /**
      * Get relationship REST API operation.
      */
-    PNGetRelationshipOperation = 'PNGetRelationshipOperation',
+    PNGetDataSyncRelationshipOperation = 'PNGetDataSyncRelationshipOperation',
     /**
      * Get all relationships REST API operation.
      */
-    PNGetAllRelationshipsOperation = 'PNGetAllRelationshipsOperation',
+    PNGetDataSyncRelationshipsOperation = 'PNGetDataSyncRelationshipsOperation',
     /**
-     * Update relationship REST API operation.
+     * Set relationship REST API operation (full replacement via PUT).
      */
-    PNUpdateRelationshipOperation = 'PNUpdateRelationshipOperation',
+    PNSetDataSyncRelationshipOperation = 'PNSetDataSyncRelationshipOperation',
     /**
-     * Patch relationship REST API operation.
+     * Update relationship REST API operation (partial update via PATCH).
      */
-    PNPatchRelationshipOperation = 'PNPatchRelationshipOperation',
+    PNUpdateDataSyncRelationshipOperation = 'PNUpdateDataSyncRelationshipOperation',
     /**
      * Remove relationship REST API operation.
      */
-    PNRemoveRelationshipOperation = 'PNRemoveRelationshipOperation',
+    PNRemoveDataSyncRelationshipOperation = 'PNRemoveDataSyncRelationshipOperation',
     /**
      * Create user REST API operation.
      */
-    PNCreateUserOperation = 'PNCreateUserOperation',
+    PNCreateDataSyncUserOperation = 'PNCreateDataSyncUserOperation',
     /**
      * Get user REST API operation.
      */
-    PNGetUserOperation = 'PNGetUserOperation',
+    PNGetDataSyncUserOperation = 'PNGetDataSyncUserOperation',
     /**
      * Get all users REST API operation.
      */
-    PNGetAllUsersOperation = 'PNGetAllUsersOperation',
+    PNGetDataSyncUsersOperation = 'PNGetDataSyncUsersOperation',
     /**
-     * Update user REST API operation.
+     * Set user REST API operation (full replacement via PUT).
      */
-    PNUpdateUserOperation = 'PNUpdateUserOperation',
+    PNSetDataSyncUserOperation = 'PNSetDataSyncUserOperation',
     /**
-     * Patch user REST API operation.
+     * Update user REST API operation (partial update via PATCH).
      */
-    PNPatchUserOperation = 'PNPatchUserOperation',
+    PNUpdateDataSyncUserOperation = 'PNUpdateDataSyncUserOperation',
     /**
      * Remove user REST API operation.
      */
-    PNRemoveUserOperation = 'PNRemoveUserOperation',
+    PNRemoveDataSyncUserOperation = 'PNRemoveDataSyncUserOperation',
     /**
      * Create channel REST API operation.
      */
-    PNCreateChannelOperation = 'PNCreateChannelOperation',
+    PNCreateDataSyncChannelOperation = 'PNCreateDataSyncChannelOperation',
     /**
      * Get channel REST API operation.
      */
-    PNGetChannelOperation = 'PNGetChannelOperation',
+    PNGetDataSyncChannelOperation = 'PNGetDataSyncChannelOperation',
     /**
      * Get all channels REST API operation.
      */
-    PNGetAllChannelsOperation = 'PNGetAllChannelsOperation',
+    PNGetDataSyncChannelsOperation = 'PNGetDataSyncChannelsOperation',
     /**
-     * Update channel REST API operation.
+     * Set channel REST API operation (full replacement via PUT).
      */
-    PNUpdateChannelOperation = 'PNUpdateChannelOperation',
+    PNSetDataSyncChannelOperation = 'PNSetDataSyncChannelOperation',
     /**
-     * Patch channel REST API operation.
+     * Update channel REST API operation (partial update via PATCH).
      */
-    PNPatchChannelOperation = 'PNPatchChannelOperation',
+    PNUpdateDataSyncChannelOperation = 'PNUpdateDataSyncChannelOperation',
     /**
      * Remove channel REST API operation.
      */
-    PNRemoveChannelOperation = 'PNRemoveChannelOperation',
+    PNRemoveDataSyncChannelOperation = 'PNRemoveDataSyncChannelOperation',
     /**
      * Create membership REST API operation.
      */
-    PNCreateMembershipOperation = 'PNCreateMembershipOperation',
+    PNCreateDataSyncMembershipOperation = 'PNCreateDataSyncMembershipOperation',
     /**
      * Get membership REST API operation.
      */
-    PNGetMembershipOperation = 'PNGetMembershipOperation',
+    PNGetDataSyncMembershipOperation = 'PNGetDataSyncMembershipOperation',
     /**
      * Get all memberships REST API operation.
      */
-    PNGetAllMembershipsOperation = 'PNGetAllMembershipsOperation',
+    PNGetDataSyncMembershipsOperation = 'PNGetDataSyncMembershipsOperation',
     /**
-     * Update membership REST API operation.
+     * Set membership REST API operation (full replacement via PUT).
      */
-    PNUpdateMembershipOperation = 'PNUpdateMembershipOperation',
+    PNSetDataSyncMembershipOperation = 'PNSetDataSyncMembershipOperation',
     /**
-     * Patch membership REST API operation.
+     * Update membership REST API operation (partial update via PATCH).
      */
-    PNPatchMembershipOperation = 'PNPatchMembershipOperation',
+    PNUpdateDataSyncMembershipOperation = 'PNUpdateDataSyncMembershipOperation',
     /**
      * Remove membership REST API operation.
      */
-    PNRemoveMembershipOperation = 'PNRemoveMembershipOperation',
+    PNRemoveDataSyncMembershipOperation = 'PNRemoveDataSyncMembershipOperation',
     /**
      * Fetch list of files sent to the channel REST API operation.
      */
@@ -4035,16 +4035,29 @@ declare namespace PubNub {
   type DataSyncObjectType = 'entity' | 'relationship';
 
   /**
-   * Normalized DataSync object kind derived from the wire `className`.
+   * Scope of the class definition a DataSync object belongs to.
+   *
+   * `Global` identifies the built-in classes provided by the service (`User`, `Channel`,
+   * `Membership`); `SubKey` identifies classes defined by the developer on their own key set.
+   */
+  export type DataSyncClassLevel = 'Global' | 'SubKey';
+
+  /**
+   * Normalized DataSync object kind.
    *
    * Users and Channels are backed by entity classes; Memberships by a relationship class. This
    * discriminator lets consumers branch on the semantic kind in a `dataSync` listener without matching
-   * class-name strings. Falls back to the raw wire {@link DataSyncObjectType} for unrecognized classes.
+   * class-name strings. Falls back to the raw wire {@link DataSyncObjectType} for developer-defined
+   * classes.
    */
   export type DataSyncNormalizedType = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
 
   /**
    * DataSync entity change payload (create / update).
+   *
+   * Mirrors the object as sent by the service. Class identity is not repeated here: it is reported once
+   * on the event itself as {@link DataSyncData.className} / {@link DataSyncData.classLevel} /
+   * {@link DataSyncData.classVersion}.
    */
   export type DataSyncEntityData = {
     /**
@@ -4075,36 +4088,27 @@ declare namespace PubNub {
      * Auto-deletion timestamp (ISO 8601).
      */
     expiresAt?: string;
-    /**
-     * Entity class name (last `:`-delimited segment of the wire `className`).
-     */
-    entityClass?: string;
-    /**
-     * Version of the entity class schema (parsed from the wire `classVersion`).
-     */
-    entityClassVersion?: number;
   };
 
   /**
    * DataSync relationship change payload (create / update).
+   *
+   * Class identity is not repeated here: it is reported once on the event itself as
+   * {@link DataSyncData.className} / {@link DataSyncData.classLevel} / {@link DataSyncData.classVersion}.
    */
-  export type DataSyncRelationshipData = Omit<DataSyncEntityData, 'entityClass' | 'entityClassVersion'> & {
+  export type DataSyncRelationshipData = DataSyncEntityData & {
     /**
      * First entity id in the relationship.
+     *
+     * For a membership this is the channel id.
      */
     entityAId?: string;
     /**
      * Second entity id in the relationship.
+     *
+     * For a membership this is the user id.
      */
     entityBId?: string;
-    /**
-     * Relationship class name (last `:`-delimited segment of the wire `className`).
-     */
-    relationshipClass?: string;
-    /**
-     * Version of the relationship class schema (parsed from the wire `classVersion`).
-     */
-    relationshipClassVersion?: number;
   };
 
   /**
@@ -4144,16 +4148,20 @@ declare namespace PubNub {
     /**
      * Normalized DataSync object kind.
      *
-     * Derived from {@link className}: reserved User/Channel/Membership classes map to `'user'` /
-     * `'channel'` / `'membership'`; everything else falls back to the raw wire {@link type}
-     * (`'entity'` / `'relationship'`). Use this to discriminate typed resources without knowing
-     * class-name strings.
+     * The built-in `User` / `Channel` / `Membership` classes map to `'user'` / `'channel'` /
+     * `'membership'`; developer-defined classes fall back to the raw wire {@link type} (`'entity'` /
+     * `'relationship'`). Use this to discriminate typed resources without knowing class-name strings.
      */
     objectType: DataSyncNormalizedType;
     /**
-     * Object class name (last `:`-delimited segment of the wire `className`).
+     * Object class name.
      */
     className?: string;
+    /**
+     * Scope of the class definition: `Global` for the built-in classes (`User` / `Channel` /
+     * `Membership`), `SubKey` for classes defined by the developer on their own key set.
+     */
+    classLevel?: DataSyncClassLevel;
     /**
      * Version of the object class schema (parsed from the wire `classVersion`).
      */
@@ -5822,14 +5830,14 @@ declare namespace PubNub {
      */
     createEntity(parameters: DataSync.CreateEntityParameters): Promise<DataSync.CreateEntityResponse>;
     /**
-     * Fetch a specific Entity.
+     * Get a specific Entity.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
     getEntity(parameters: DataSync.GetEntityParameters, callback: ResultCallback<DataSync.GetEntityResponse>): void;
     /**
-     * Fetch a specific Entity.
+     * Get a specific Entity.
      *
      * @param parameters - Request configuration parameters.
      *
@@ -5837,25 +5845,42 @@ declare namespace PubNub {
      */
     getEntity(parameters: DataSync.GetEntityParameters): Promise<DataSync.GetEntityResponse>;
     /**
-     * Fetch a paginated list of Entities for a given Entity Class.
+     * Get a paginated list of Entities for a given Entity Class.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
-    getAllEntities(
-      parameters: DataSync.GetAllEntitiesParameters,
-      callback: ResultCallback<DataSync.GetAllEntitiesResponse>,
+    getEntities(
+      parameters: DataSync.GetEntitiesParameters,
+      callback: ResultCallback<DataSync.GetEntitiesResponse>,
     ): void;
     /**
-     * Fetch a paginated list of Entities for a given Entity Class.
+     * Get a paginated list of Entities for a given Entity Class.
      *
      * @param parameters - Request configuration parameters.
      *
-     * @returns Asynchronous get all entities response.
+     * @returns Asynchronous get entities response.
      */
-    getAllEntities(parameters: DataSync.GetAllEntitiesParameters): Promise<DataSync.GetAllEntitiesResponse>;
+    getEntities(parameters: DataSync.GetEntitiesParameters): Promise<DataSync.GetEntitiesResponse>;
     /**
-     * Update an Entity (full replacement via PUT).
+     * Set an Entity (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    setEntity(parameters: DataSync.SetEntityParameters, callback: ResultCallback<DataSync.SetEntityResponse>): void;
+    /**
+     * Set an Entity (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous set entity response.
+     */
+    setEntity(parameters: DataSync.SetEntityParameters): Promise<DataSync.SetEntityResponse>;
+    /**
+     * Update an Entity (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -5865,35 +5890,15 @@ declare namespace PubNub {
       callback: ResultCallback<DataSync.UpdateEntityResponse>,
     ): void;
     /**
-     * Update an Entity (full replacement via PUT).
+     * Update an Entity (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * @param parameters - Request configuration parameters.
      *
      * @returns Asynchronous update entity response.
      */
     updateEntity(parameters: DataSync.UpdateEntityParameters): Promise<DataSync.UpdateEntityResponse>;
-    /**
-     * Patch an Entity (partial update via JSON Patch RFC 6902).
-     *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     *
-     * @param parameters - Request configuration parameters.
-     * @param callback - Request completion handler callback.
-     */
-    patchEntity(
-      parameters: DataSync.PatchEntityParameters,
-      callback: ResultCallback<DataSync.PatchEntityResponse>,
-    ): void;
-    /**
-     * Patch an Entity (partial update via JSON Patch RFC 6902).
-     *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     *
-     * @param parameters - Request configuration parameters.
-     *
-     * @returns Asynchronous patch entity response.
-     */
-    patchEntity(parameters: DataSync.PatchEntityParameters): Promise<DataSync.PatchEntityResponse>;
     /**
      * Remove an Entity.
      *
@@ -5931,7 +5936,7 @@ declare namespace PubNub {
      */
     createRelationship(parameters: DataSync.CreateRelationshipParameters): Promise<DataSync.CreateRelationshipResponse>;
     /**
-     * Fetch a specific Relationship.
+     * Get a specific Relationship.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -5941,7 +5946,7 @@ declare namespace PubNub {
       callback: ResultCallback<DataSync.GetRelationshipResponse>,
     ): void;
     /**
-     * Fetch a specific Relationship.
+     * Get a specific Relationship.
      *
      * @param parameters - Request configuration parameters.
      *
@@ -5949,27 +5954,45 @@ declare namespace PubNub {
      */
     getRelationship(parameters: DataSync.GetRelationshipParameters): Promise<DataSync.GetRelationshipResponse>;
     /**
-     * Fetch a paginated list of Relationships.
+     * Get a paginated list of Relationships.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
-    getAllRelationships(
-      parameters: DataSync.GetAllRelationshipsParameters,
-      callback: ResultCallback<DataSync.GetAllRelationshipsResponse>,
+    getRelationships(
+      parameters: DataSync.GetRelationshipsParameters,
+      callback: ResultCallback<DataSync.GetRelationshipsResponse>,
     ): void;
     /**
-     * Fetch a paginated list of Relationships.
+     * Get a paginated list of Relationships.
      *
      * @param parameters - Request configuration parameters.
      *
-     * @returns Asynchronous get all relationships response.
+     * @returns Asynchronous get relationships response.
      */
-    getAllRelationships(
-      parameters: DataSync.GetAllRelationshipsParameters,
-    ): Promise<DataSync.GetAllRelationshipsResponse>;
+    getRelationships(parameters: DataSync.GetRelationshipsParameters): Promise<DataSync.GetRelationshipsResponse>;
     /**
-     * Update a Relationship (full replacement via PUT).
+     * Set a Relationship (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    setRelationship(
+      parameters: DataSync.SetRelationshipParameters,
+      callback: ResultCallback<DataSync.SetRelationshipResponse>,
+    ): void;
+    /**
+     * Set a Relationship (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous set relationship response.
+     */
+    setRelationship(parameters: DataSync.SetRelationshipParameters): Promise<DataSync.SetRelationshipResponse>;
+    /**
+     * Update a Relationship (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -5979,35 +6002,15 @@ declare namespace PubNub {
       callback: ResultCallback<DataSync.UpdateRelationshipResponse>,
     ): void;
     /**
-     * Update a Relationship (full replacement via PUT).
+     * Update a Relationship (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * @param parameters - Request configuration parameters.
      *
      * @returns Asynchronous update relationship response.
      */
     updateRelationship(parameters: DataSync.UpdateRelationshipParameters): Promise<DataSync.UpdateRelationshipResponse>;
-    /**
-     * Patch a Relationship (partial update via JSON Patch RFC 6902).
-     *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     *
-     * @param parameters - Request configuration parameters.
-     * @param callback - Request completion handler callback.
-     */
-    patchRelationship(
-      parameters: DataSync.PatchRelationshipParameters,
-      callback: ResultCallback<DataSync.PatchRelationshipResponse>,
-    ): void;
-    /**
-     * Patch a Relationship (partial update via JSON Patch RFC 6902).
-     *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     *
-     * @param parameters - Request configuration parameters.
-     *
-     * @returns Asynchronous patch relationship response.
-     */
-    patchRelationship(parameters: DataSync.PatchRelationshipParameters): Promise<DataSync.PatchRelationshipResponse>;
     /**
      * Remove a Relationship.
      *
@@ -6042,14 +6045,14 @@ declare namespace PubNub {
      */
     createUser(parameters: DataSync.CreateUserParameters): Promise<DataSync.CreateUserResponse>;
     /**
-     * Fetch a specific User.
+     * Get a specific User.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
     getUser(parameters: DataSync.GetUserParameters, callback: ResultCallback<DataSync.GetUserResponse>): void;
     /**
-     * Fetch a specific User.
+     * Get a specific User.
      *
      * @param parameters - Request configuration parameters.
      *
@@ -6057,63 +6060,60 @@ declare namespace PubNub {
      */
     getUser(parameters: DataSync.GetUserParameters): Promise<DataSync.GetUserResponse>;
     /**
-     * Fetch a paginated list of Users.
+     * Get a paginated list of Users.
      *
      * @param callback - Request completion handler callback.
      */
-    getAllUsers(callback: ResultCallback<DataSync.GetAllUsersResponse>): void;
+    getUsers(callback: ResultCallback<DataSync.GetUsersResponse>): void;
     /**
-     * Fetch a paginated list of Users.
+     * Get a paginated list of Users.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
-    getAllUsers(
-      parameters: DataSync.GetAllUsersParameters,
-      callback: ResultCallback<DataSync.GetAllUsersResponse>,
-    ): void;
+    getUsers(parameters: DataSync.GetUsersParameters, callback: ResultCallback<DataSync.GetUsersResponse>): void;
     /**
-     * Fetch a paginated list of Users.
+     * Get a paginated list of Users.
      *
      * @param [parameters] - Request configuration parameters.
      *
-     * @returns Asynchronous get all users response.
+     * @returns Asynchronous get users response.
      */
-    getAllUsers(parameters?: DataSync.GetAllUsersParameters): Promise<DataSync.GetAllUsersResponse>;
+    getUsers(parameters?: DataSync.GetUsersParameters): Promise<DataSync.GetUsersResponse>;
     /**
-     * Update a User (full replacement via PUT).
+     * Set a User (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    setUser(parameters: DataSync.SetUserParameters, callback: ResultCallback<DataSync.SetUserResponse>): void;
+    /**
+     * Set a User (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous set user response.
+     */
+    setUser(parameters: DataSync.SetUserParameters): Promise<DataSync.SetUserResponse>;
+    /**
+     * Update a User (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
     updateUser(parameters: DataSync.UpdateUserParameters, callback: ResultCallback<DataSync.UpdateUserResponse>): void;
     /**
-     * Update a User (full replacement via PUT).
+     * Update a User (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * @param parameters - Request configuration parameters.
      *
      * @returns Asynchronous update user response.
      */
     updateUser(parameters: DataSync.UpdateUserParameters): Promise<DataSync.UpdateUserResponse>;
-    /**
-     * Patch a User (partial update via JSON Patch RFC 6902).
-     *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     *
-     * @param parameters - Request configuration parameters.
-     * @param callback - Request completion handler callback.
-     */
-    patchUser(parameters: DataSync.PatchUserParameters, callback: ResultCallback<DataSync.PatchUserResponse>): void;
-    /**
-     * Patch a User (partial update via JSON Patch RFC 6902).
-     *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     *
-     * @param parameters - Request configuration parameters.
-     *
-     * @returns Asynchronous patch user response.
-     */
-    patchUser(parameters: DataSync.PatchUserParameters): Promise<DataSync.PatchUserResponse>;
     /**
      * Remove a User.
      *
@@ -6148,14 +6148,14 @@ declare namespace PubNub {
      */
     createChannel(parameters: DataSync.CreateChannelParameters): Promise<DataSync.CreateChannelResponse>;
     /**
-     * Fetch a specific Channel.
+     * Get a specific Channel.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
     getChannel(parameters: DataSync.GetChannelParameters, callback: ResultCallback<DataSync.GetChannelResponse>): void;
     /**
-     * Fetch a specific Channel.
+     * Get a specific Channel.
      *
      * @param parameters - Request configuration parameters.
      *
@@ -6163,31 +6163,48 @@ declare namespace PubNub {
      */
     getChannel(parameters: DataSync.GetChannelParameters): Promise<DataSync.GetChannelResponse>;
     /**
-     * Fetch a paginated list of Channels.
+     * Get a paginated list of Channels.
      *
      * @param callback - Request completion handler callback.
      */
-    getAllChannels(callback: ResultCallback<DataSync.GetAllChannelsResponse>): void;
+    getChannels(callback: ResultCallback<DataSync.GetChannelsResponse>): void;
     /**
-     * Fetch a paginated list of Channels.
+     * Get a paginated list of Channels.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
-    getAllChannels(
-      parameters: DataSync.GetAllChannelsParameters,
-      callback: ResultCallback<DataSync.GetAllChannelsResponse>,
+    getChannels(
+      parameters: DataSync.GetChannelsParameters,
+      callback: ResultCallback<DataSync.GetChannelsResponse>,
     ): void;
     /**
-     * Fetch a paginated list of Channels.
+     * Get a paginated list of Channels.
      *
      * @param [parameters] - Request configuration parameters.
      *
-     * @returns Asynchronous get all channels response.
+     * @returns Asynchronous get channels response.
      */
-    getAllChannels(parameters?: DataSync.GetAllChannelsParameters): Promise<DataSync.GetAllChannelsResponse>;
+    getChannels(parameters?: DataSync.GetChannelsParameters): Promise<DataSync.GetChannelsResponse>;
     /**
-     * Update a Channel (full replacement via PUT).
+     * Set a Channel (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    setChannel(parameters: DataSync.SetChannelParameters, callback: ResultCallback<DataSync.SetChannelResponse>): void;
+    /**
+     * Set a Channel (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous set channel response.
+     */
+    setChannel(parameters: DataSync.SetChannelParameters): Promise<DataSync.SetChannelResponse>;
+    /**
+     * Update a Channel (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -6197,35 +6214,15 @@ declare namespace PubNub {
       callback: ResultCallback<DataSync.UpdateChannelResponse>,
     ): void;
     /**
-     * Update a Channel (full replacement via PUT).
+     * Update a Channel (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * @param parameters - Request configuration parameters.
      *
      * @returns Asynchronous update channel response.
      */
     updateChannel(parameters: DataSync.UpdateChannelParameters): Promise<DataSync.UpdateChannelResponse>;
-    /**
-     * Patch a Channel (partial update via JSON Patch RFC 6902).
-     *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     *
-     * @param parameters - Request configuration parameters.
-     * @param callback - Request completion handler callback.
-     */
-    patchChannel(
-      parameters: DataSync.PatchChannelParameters,
-      callback: ResultCallback<DataSync.PatchChannelResponse>,
-    ): void;
-    /**
-     * Patch a Channel (partial update via JSON Patch RFC 6902).
-     *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     *
-     * @param parameters - Request configuration parameters.
-     *
-     * @returns Asynchronous patch channel response.
-     */
-    patchChannel(parameters: DataSync.PatchChannelParameters): Promise<DataSync.PatchChannelResponse>;
     /**
      * Remove a Channel.
      *
@@ -6263,7 +6260,7 @@ declare namespace PubNub {
      */
     createMembership(parameters: DataSync.CreateMembershipParameters): Promise<DataSync.CreateMembershipResponse>;
     /**
-     * Fetch a specific Membership.
+     * Get a specific Membership.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -6273,7 +6270,7 @@ declare namespace PubNub {
       callback: ResultCallback<DataSync.GetMembershipResponse>,
     ): void;
     /**
-     * Fetch a specific Membership.
+     * Get a specific Membership.
      *
      * @param parameters - Request configuration parameters.
      *
@@ -6281,31 +6278,51 @@ declare namespace PubNub {
      */
     getMembership(parameters: DataSync.GetMembershipParameters): Promise<DataSync.GetMembershipResponse>;
     /**
-     * Fetch a paginated list of Memberships.
+     * Get a paginated list of Memberships.
      *
      * @param callback - Request completion handler callback.
      */
-    getAllMemberships(callback: ResultCallback<DataSync.GetAllMembershipsResponse>): void;
+    getMemberships(callback: ResultCallback<DataSync.GetMembershipsResponse>): void;
     /**
-     * Fetch a paginated list of Memberships.
+     * Get a paginated list of Memberships.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
-    getAllMemberships(
-      parameters: DataSync.GetAllMembershipsParameters,
-      callback: ResultCallback<DataSync.GetAllMembershipsResponse>,
+    getMemberships(
+      parameters: DataSync.GetMembershipsParameters,
+      callback: ResultCallback<DataSync.GetMembershipsResponse>,
     ): void;
     /**
-     * Fetch a paginated list of Memberships.
+     * Get a paginated list of Memberships.
      *
      * @param [parameters] - Request configuration parameters.
      *
-     * @returns Asynchronous get all memberships response.
+     * @returns Asynchronous get memberships response.
      */
-    getAllMemberships(parameters?: DataSync.GetAllMembershipsParameters): Promise<DataSync.GetAllMembershipsResponse>;
+    getMemberships(parameters?: DataSync.GetMembershipsParameters): Promise<DataSync.GetMembershipsResponse>;
     /**
-     * Update a Membership (full replacement via PUT).
+     * Set a Membership (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    setMembership(
+      parameters: DataSync.SetMembershipParameters,
+      callback: ResultCallback<DataSync.SetMembershipResponse>,
+    ): void;
+    /**
+     * Set a Membership (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous set membership response.
+     */
+    setMembership(parameters: DataSync.SetMembershipParameters): Promise<DataSync.SetMembershipResponse>;
+    /**
+     * Update a Membership (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -6315,35 +6332,15 @@ declare namespace PubNub {
       callback: ResultCallback<DataSync.UpdateMembershipResponse>,
     ): void;
     /**
-     * Update a Membership (full replacement via PUT).
+     * Update a Membership (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * @param parameters - Request configuration parameters.
      *
      * @returns Asynchronous update membership response.
      */
     updateMembership(parameters: DataSync.UpdateMembershipParameters): Promise<DataSync.UpdateMembershipResponse>;
-    /**
-     * Patch a Membership (partial update via JSON Patch RFC 6902).
-     *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     *
-     * @param parameters - Request configuration parameters.
-     * @param callback - Request completion handler callback.
-     */
-    patchMembership(
-      parameters: DataSync.PatchMembershipParameters,
-      callback: ResultCallback<DataSync.PatchMembershipResponse>,
-    ): void;
-    /**
-     * Patch a Membership (partial update via JSON Patch RFC 6902).
-     *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     *
-     * @param parameters - Request configuration parameters.
-     *
-     * @returns Asynchronous patch membership response.
-     */
-    patchMembership(parameters: DataSync.PatchMembershipParameters): Promise<DataSync.PatchMembershipResponse>;
     /**
      * Remove a Membership.
      *
@@ -9221,6 +9218,13 @@ declare namespace PubNub {
        */
       write?: boolean;
       /**
+       * Whether `create` operations are permitted for corresponding level or not.
+       *
+       * Used by DataSync `Channel` grants (a DataSync Channel is an entity, granted through the reused
+       * `channels` scope). Ignored for classic messaging channels.
+       */
+      create?: boolean;
+      /**
        * Whether `get` operations are permitted for corresponding level or not.
        */
       get?: boolean;
@@ -9266,6 +9270,13 @@ declare namespace PubNub {
      */
     export type UuidTokenPermissions = {
       /**
+       * Whether `create` operations are permitted for corresponding level or not.
+       *
+       * Used by DataSync `User` grants (a DataSync User is an entity, granted through the reused
+       * `users` / `uuids` scope). Ignored for App Context UUID-metadata grants.
+       */
+      create?: boolean;
+      /**
        * Whether `get` operations are permitted for corresponding level or not.
        */
       get?: boolean;
@@ -9282,7 +9293,7 @@ declare namespace PubNub {
     /**
      * User-specific token permissions.
      */
-    type UserTokenPermissions = UuidTokenPermissions;
+    export type UserTokenPermissions = UuidTokenPermissions;
 
     /**
      * DataSync entity-level token permissions.
@@ -9447,7 +9458,18 @@ declare namespace PubNub {
        */
       resources?: {
         /**
+         * Object containing `user` permissions.
+         *
+         * Preferred DataSync terminology for granting permissions on `User` resources (create / get /
+         * update / delete). Serialized to the same wire scope as {@link uuids}; may be combined with
+         * `channels`, `groups`, `uuids`, and `dataSync` in a single grant.
+         */
+        users?: Record<string, UserTokenPermissions>;
+        /**
          * Object containing `uuid` metadata permissions.
+         *
+         * @deprecated Legacy App Context terminology. For DataSync `User` grants prefer {@link users}.
+         * `uuids` remains for App Context UUID-metadata permissions.
          */
         uuids?: Record<string, UuidTokenPermissions>;
         /**
@@ -9468,8 +9490,18 @@ declare namespace PubNub {
        */
       patterns?: {
         /**
+         * Object containing `user` permissions to apply to all `users` matching the RegEx pattern.
+         *
+         * Preferred DataSync terminology for granting permissions on `User` resources. Serialized to the
+         * same wire scope as {@link uuids}; may be combined with `channels`, `groups`, `uuids`, and
+         * `dataSync`.
+         */
+        users?: Record<string, UserTokenPermissions>;
+        /**
          * Object containing `uuid` metadata permissions to apply to all `uuids` matching the RegEx
          * pattern.
+         *
+         * @deprecated Legacy App Context terminology. For DataSync `User` grants prefer {@link users}.
          */
         uuids?: Record<string, UuidTokenPermissions>;
         /**
@@ -9540,11 +9572,21 @@ declare namespace PubNub {
       /**
        * Permissions granted to specific resources.
        */
-      resources?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>>;
+      resources?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>> & {
+        /**
+         * DataSync entity-level permissions granted to specific resources.
+         */
+        dataSync?: DataSyncScopePermissions;
+      };
       /**
        * Permissions granted to resources which match specified regular expression.
        */
-      patterns?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>>;
+      patterns?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>> & {
+        /**
+         * DataSync entity-level permissions granted to resources which match specified regular expression.
+         */
+        dataSync?: DataSyncScopePermissions;
+      };
       /**
        * The uuid that is exclusively authorized to use this token to make API requests.
        */
@@ -9639,6 +9681,52 @@ declare namespace PubNub {
        * - set / remove channel members
        */
       join: boolean;
+    };
+
+    /**
+     * Granted DataSync entity-level permissions.
+     *
+     * Applies to parsed DataSync entities, relationships, and memberships. Only the CRUD-relevant
+     * operations are exposed.
+     */
+    export type DataSyncPermissions = {
+      /**
+       * Resource `create` permission.
+       */
+      create: boolean;
+      /**
+       * Resource `get` permission.
+       */
+      get: boolean;
+      /**
+       * Resource `update` permission.
+       */
+      update: boolean;
+      /**
+       * Resource `delete` permission.
+       */
+      delete: boolean;
+    };
+
+    /**
+     * Parsed DataSync permission scopes.
+     *
+     * Decoded from the token `res` / `pat` wire keys `datasync:entities` / `datasync:relationships` /
+     * `datasync:memberships`.
+     */
+    export type DataSyncScopePermissions = {
+      /**
+       * DataSync `entity` permissions keyed by concrete entity id or RegEx pattern.
+       */
+      entities?: Record<string, DataSyncPermissions | undefined>;
+      /**
+       * DataSync `relationship` permissions keyed by composite relationship id or RegEx pattern.
+       */
+      relationships?: Record<string, DataSyncPermissions | undefined>;
+      /**
+       * DataSync `membership` permissions keyed by composite membership id or RegEx pattern.
+       */
+      memberships?: Record<string, DataSyncPermissions | undefined>;
     };
 
     /**
@@ -10009,11 +10097,31 @@ declare namespace PubNub {
       /** Filter expression for results. */
       filter?: string;
       /**
-       * Sort expression. Comma-separated fields, optionally prefixed with + (asc) or - (desc).
-       * Example: "+name,-createdAt"
+       * Sort expression.
+       *
+       * Either a raw string (comma-separated fields, optionally prefixed with + (asc) or - (desc),
+       * e.g. `"+name,-createdAt"`), or a map of field → direction that is serialized to the
+       * `field:order` form the service expects (e.g. `{ firstName: 'desc' }` → `firstName:desc`).
+       * Specify `null` as the direction for the service default (ascending).
        */
-      sort?: string;
+      sort?: DataSyncSort;
     };
+
+    /**
+     * Sorting options for paginated DataSync list requests.
+     *
+     * Prefer the object form (`{ firstName: 'desc' }`), which is normalized to the `field:order`
+     * form the service expects. A raw string is passed through unchanged.
+     */
+    export type DataSyncSort = string | Record<string, 'asc' | 'desc' | null>;
+
+    /**
+     * Class hierarchy level used to disambiguate classes that share a name at different levels.
+     *
+     * `Global` targets a class provided by the service; `SubKey` targets one defined on the key set.
+     * Mirrors the event-side `DataSyncClassLevel` reported on subscribe messages.
+     */
+    export type ClassLevel = 'Global' | 'SubKey';
 
     /**
      * Single-entity response envelope.
@@ -10044,15 +10152,25 @@ declare namespace PubNub {
     };
 
     /**
-     * Entity properties for create requests.
-     *
-     * Includes `entityClass` since it must be set at creation time and is immutable afterward.
+     * A source → destination path pair (dot notation) for JSON Patch `move` and `copy` operations.
      */
-    export type CreateEntityProperties = {
-      /** Entity class this entity belongs to. */
-      entityClass: string;
+    export type PatchMovePath = {
+      /** Dot-notation source path (RFC 6902 `from`). */
+      from: string;
+      /** Dot-notation destination path (RFC 6902 `path`). */
+      path: string;
+    };
+
+    /**
+     * Entity data properties for create requests.
+     *
+     * The mutable, versioned payload of an entity. `class` (immutable) and `id` live at the
+     * top level of {@link CreateEntityParameters}; everything that can change over the entity's
+     * lifetime is grouped here under `data`.
+     */
+    export type CreateEntityData = {
       /** Version of the entity class schema. */
-      entityClassVersion: number;
+      classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
       /** User-defined JSON payload conforming to the entity class schema. */
@@ -10060,13 +10178,15 @@ declare namespace PubNub {
     };
 
     /**
-     * Entity properties for update (PUT) requests.
+     * Entity data properties for update (PUT) requests.
      *
-     * `entityClass` is immutable after creation and therefore excluded from updates.
+     * The mutable, versioned payload of an entity. `id` lives at the top level of
+     * {@link SetEntityParameters}. `entityClass` is immutable after creation and therefore
+     * has no place in updates.
      */
-    export type UpdateEntityProperties = {
+    export type SetEntityData = {
       /** Version of the entity class schema. */
-      entityClassVersion: number;
+      classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
       /** User-defined JSON payload conforming to the entity class schema. */
@@ -10102,19 +10222,26 @@ declare namespace PubNub {
      */
     export type CreateEntityParameters = {
       /**
-       * Entity properties to create.
-       *
-       * All entity properties go inside `entity` because they map to the request body envelope.
-       * Unlike EntityClass (where `name`/`version` are URL path params), Entity creation
-       * posts to a collection URL with all fields in the body.
+       * Optional entity ID.
+       * Server auto-generates a UUID if not provided.
        */
-      entity: CreateEntityProperties & {
-        /**
-         * Optional entity ID.
-         * Server auto-generates a UUID if not provided.
-         */
-        id?: string;
-      };
+      id?: string;
+      /** Entity class this entity belongs to. Set at creation time and immutable afterward. */
+      class: string;
+      /**
+       * Class hierarchy level of `class`. Set at creation time and immutable afterward.
+       *
+       * Omit to let the service apply its default.
+       */
+      classLevel?: ClassLevel;
+      /**
+       * Mutable, versioned entity data (class version, status, and payload).
+       *
+       * These fields map into the request body envelope. `id` and `class` are kept at the top
+       * level because they identify the resource, while everything in `data` is what the entity
+       * carries and can change over its lifetime.
+       */
+      data: CreateEntityData;
     };
 
     /**
@@ -10130,7 +10257,7 @@ declare namespace PubNub {
      *
      * `entityClass` is required — entities are always listed within the context of their class.
      */
-    export type GetAllEntitiesParameters = PagedRequestParameters & {
+    export type GetEntitiesParameters = PagedRequestParameters & {
       /** Entity class name to filter by (required). */
       entityClass: string;
       /**
@@ -10147,16 +10274,16 @@ declare namespace PubNub {
     };
 
     /**
-     * Update Entity request parameters (full replacement via PUT).
+     * Set Entity request parameters (full replacement via PUT).
      *
-     * `entityClass` is immutable after creation — only `entityClassVersion`, `status`,
+     * `entityClass` is immutable after creation — only `classVersion`, `status`,
      * and `payload` can be updated.
      */
-    export type UpdateEntityParameters = {
+    export type SetEntityParameters = {
       /** Entity ID. */
       id: string;
-      /** Complete entity properties for replacement (excludes immutable `entityClass`). */
-      entity: UpdateEntityProperties;
+      /** Complete, mutable entity data for replacement (excludes immutable `entityClass`). */
+      data: SetEntityData;
       /**
        * ETag for optimistic concurrency control.
        * If provided, the update only succeeds if the server's ETag matches.
@@ -10165,14 +10292,14 @@ declare namespace PubNub {
     };
 
     /**
-     * Patch Entity request parameters (partial update via JSON Patch RFC 6902).
+     * Update Entity request parameters (partial update via JSON Patch RFC 6902).
      *
      * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      * The SDK converts these to JSON Patch operations on the wire.
      *
      * At least one of `add`, `replace`, or `remove` must be provided.
      */
-    export type PatchEntityParameters = {
+    export type UpdateEntityParameters = {
       /** Entity ID. */
       id: string;
       /**
@@ -10217,6 +10344,42 @@ declare namespace PubNub {
        */
       remove?: string[];
       /**
+       * Source → destination path pairs to move (RFC 6902 "move").
+       *
+       * The value at each `from` is removed and re-added at `path`. Both are dot-notation paths used
+       * exactly as provided (prefix with `payload.` to target payload fields).
+       *
+       * @example
+       * ```typescript
+       * move: [{ from: 'payload.legacyName', path: 'payload.displayName' }]
+       * ```
+       */
+      move?: PatchMovePath[];
+      /**
+       * Source → destination path pairs to copy (RFC 6902 "copy").
+       *
+       * The value at each `from` is duplicated to `path`. Both are dot-notation paths used exactly as
+       * provided (prefix with `payload.` to target payload fields).
+       *
+       * @example
+       * ```typescript
+       * copy: [{ from: 'payload.displayName', path: 'payload.previousName' }]
+       * ```
+       */
+      copy?: PatchMovePath[];
+      /**
+       * Fields to test (dot-notation keys → expected value; RFC 6902 "test").
+       *
+       * The patch fails if the value at any path does not equal the expected value. Keys are used
+       * exactly as provided (prefix with `payload.` for payload fields).
+       *
+       * @example
+       * ```typescript
+       * test: { 'status': 'active' }
+       * ```
+       */
+      test?: Record<string, unknown>;
+      /**
        * ETag for optimistic concurrency control.
        * If provided, the patch only succeeds if the server's ETag matches.
        */
@@ -10243,13 +10406,13 @@ declare namespace PubNub {
     export type GetEntityResponse = DataSyncEntityResponse<EntityObject>;
 
     /** Response for listing entities. */
-    export type GetAllEntitiesResponse = DataSyncPagedResponse<EntityObject>;
+    export type GetEntitiesResponse = DataSyncPagedResponse<EntityObject>;
 
     /** Response for updating an entity (PUT). */
-    export type UpdateEntityResponse = DataSyncEntityResponse<EntityObject>;
+    export type SetEntityResponse = DataSyncEntityResponse<EntityObject>;
 
     /** Response for patching an entity (PATCH). */
-    export type PatchEntityResponse = DataSyncEntityResponse<EntityObject>;
+    export type UpdateEntityResponse = DataSyncEntityResponse<EntityObject>;
 
     /** Response for removing an entity. */
     export type RemoveEntityResponse = {
@@ -10258,19 +10421,15 @@ declare namespace PubNub {
     };
 
     /**
-     * Relationship properties for create requests.
+     * Relationship data properties for create requests.
      *
-     * Both `entityAId` and `entityBId` must be set at creation time.
+     * The mutable, versioned payload of a relationship. `id`, `class`, `entityAId`, and `entityBId`
+     * live at the top level of {@link CreateRelationshipParameters} (identity + immutable structure);
+     * everything that can change over the relationship's lifetime is grouped here under `data`.
      */
-    export type CreateRelationshipProperties = {
-      /** First entity ID in the relationship. */
-      entityAId: string;
-      /** Second entity ID in the relationship. */
-      entityBId: string;
-      /** Relationship class this relationship belongs to. */
-      relationshipClass: string;
+    export type CreateRelationshipData = {
       /** Version of the relationship class schema. */
-      relationshipClassVersion: number;
+      classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
       /** User-defined JSON payload. */
@@ -10278,19 +10437,15 @@ declare namespace PubNub {
     };
 
     /**
-     * Relationship properties for update (PUT) requests.
+     * Relationship data properties for update (PUT) requests.
      *
-     * PUT is a full replacement — `entityAId`, `entityBId`, and `relationshipClassVersion` are required
-     * (`relationshipClass` is immutable after creation and therefore excluded). The server rejects a
-     * PUT that omits `relationshipClassVersion`.
+     * The mutable, versioned payload of a relationship. `id`, `entityAId`, and `entityBId` live at the
+     * top level of {@link SetRelationshipParameters}. `relationshipClass` is immutable after creation
+     * and therefore has no place in updates. The server rejects a PUT that omits `classVersion`.
      */
-    export type UpdateRelationshipProperties = {
-      /** First entity ID in the relationship. */
-      entityAId: string;
-      /** Second entity ID in the relationship. */
-      entityBId: string;
+    export type SetRelationshipData = {
       /** Version of the relationship class schema. */
-      relationshipClassVersion: number;
+      classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
       /** User-defined JSON payload. */
@@ -10330,17 +10485,18 @@ declare namespace PubNub {
      */
     export type CreateRelationshipParameters = {
       /**
-       * Relationship properties to create.
-       *
-       * All relationship properties go inside `relationship` because they map to the request body envelope.
+       * Optional relationship ID.
+       * Server auto-generates a UUID if not provided.
        */
-      relationship: CreateRelationshipProperties & {
-        /**
-         * Optional relationship ID.
-         * Server auto-generates a UUID if not provided.
-         */
-        id?: string;
-      };
+      id?: string;
+      /** Relationship class this relationship belongs to. Set at creation time and immutable afterward. */
+      class: string;
+      /** First entity ID in the relationship. */
+      entityAId: string;
+      /** Second entity ID in the relationship. */
+      entityBId: string;
+      /** Mutable, versioned relationship data (class version, status, and payload). */
+      data: CreateRelationshipData;
     };
 
     /**
@@ -10354,7 +10510,7 @@ declare namespace PubNub {
     /**
      * Get All Relationships request parameters.
      */
-    export type GetAllRelationshipsParameters = PagedRequestParameters & {
+    export type GetRelationshipsParameters = PagedRequestParameters & {
       /** Relationship class name (required by the server). */
       relationshipClass: string;
       /** Relationship class version. */
@@ -10373,13 +10529,17 @@ declare namespace PubNub {
     };
 
     /**
-     * Update Relationship request parameters (full replacement via PUT).
+     * Set Relationship request parameters (full replacement via PUT).
      */
-    export type UpdateRelationshipParameters = {
+    export type SetRelationshipParameters = {
       /** Relationship ID. */
       id: string;
-      /** Complete relationship properties for replacement. */
-      relationship: UpdateRelationshipProperties;
+      /** First entity ID in the relationship. */
+      entityAId: string;
+      /** Second entity ID in the relationship. */
+      entityBId: string;
+      /** Complete, mutable relationship data for replacement (excludes immutable `relationshipClass`). */
+      data: SetRelationshipData;
       /**
        * ETag for optimistic concurrency control.
        * If provided, the update only succeeds if the server's ETag matches.
@@ -10388,26 +10548,26 @@ declare namespace PubNub {
     };
 
     /**
-     * Patch Relationship request parameters (partial update via JSON Patch RFC 6902).
+     * Update Relationship request parameters (partial update via JSON Patch RFC 6902).
      *
      * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      * The SDK converts these to JSON Patch operations on the wire.
      *
      * At least one of `add`, `replace`, or `remove` must be provided.
      */
-    export type PatchRelationshipParameters = {
+    export type UpdateRelationshipParameters = {
       /** Relationship ID. */
       id: string;
       /**
        * Fields to add, using dot-notation keys.
        *
-       * Each key is a dot-delimited path to the target field within `payload`.
+       * Each key is a dot-delimited path to the target field (prefix with `payload.` to target payload fields).
        * The SDK converts these to JSON Patch "add" operations.
        *
        * @example
        * ```typescript
        * add: {
-       *   'tags.0': 'mentor',
+       *   'payload.tags.0': 'mentor',
        * }
        * ```
        */
@@ -10415,29 +10575,46 @@ declare namespace PubNub {
       /**
        * Fields to replace, using dot-notation keys.
        *
-       * Each key is a dot-delimited path to the target field within `payload`.
+       * Each key is a dot-delimited path to the target field (prefix with `payload.` to target payload fields).
        * The SDK converts these to JSON Patch "replace" operations.
        *
        * @example
        * ```typescript
        * replace: {
-       *   'role': 'admin',
-       *   'permissions.read': true,
+       *   'payload.role': 'admin',
+       *   'payload.permissions.read': true,
        * }
        * ```
        */
       replace?: Record<string, unknown>;
       /**
-       * Array of dot-notation field paths to remove from `payload`.
+       * Array of dot-notation field paths to remove.
        *
        * The SDK converts these to JSON Patch "remove" operations.
        *
        * @example
        * ```typescript
-       * remove: ['tempFlag', 'legacyField']
+       * remove: ['payload.tempFlag', 'payload.legacyField']
        * ```
        */
       remove?: string[];
+      /**
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
+       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+       * removed and re-added at `path`.
+       */
+      move?: PatchMovePath[];
+      /**
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
+       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+       */
+      copy?: PatchMovePath[];
+      /**
+       * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+       * value at any path does not equal the expected value. Keys are used as provided (prefix with
+       * `payload.` for payload fields).
+       */
+      test?: Record<string, unknown>;
       /**
        * ETag for optimistic concurrency control.
        * If provided, the patch only succeeds if the server's ETag matches.
@@ -10465,13 +10642,13 @@ declare namespace PubNub {
     export type GetRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
 
     /** Response for listing relationships. */
-    export type GetAllRelationshipsResponse = DataSyncPagedResponse<RelationshipObject>;
+    export type GetRelationshipsResponse = DataSyncPagedResponse<RelationshipObject>;
 
     /** Response for updating a relationship (PUT). */
-    export type UpdateRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+    export type SetRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
 
     /** Response for patching a relationship (PATCH). */
-    export type PatchRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+    export type UpdateRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
 
     /** Response for removing a relationship. */
     export type RemoveRelationshipResponse = {
@@ -10480,11 +10657,14 @@ declare namespace PubNub {
     };
 
     /**
-     * User properties for create requests.
+     * User data properties for create requests.
+     *
+     * The mutable, versioned payload of a user. `id` lives at the top level of
+     * {@link CreateUserParameters}; everything that can change over the user's lifetime is here.
      */
-    export type CreateUserProperties = {
+    export type CreateUserData = {
       /** Version of the entity class schema. */
-      entityClassVersion: number;
+      classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
       /** User-defined JSON payload conforming to the entity class schema. */
@@ -10518,23 +10698,29 @@ declare namespace PubNub {
      */
     export type CreateUserParameters = {
       /**
-       * User properties to create.
+       * Optional user ID.
+       * Server auto-generates a UUID if not provided.
        */
-      user: CreateUserProperties & {
-        /**
-         * Optional user ID.
-         * Server auto-generates a UUID if not provided.
-         */
-        id?: string;
-      };
+      id?: string;
+      /**
+       * Class hierarchy level of the user's entity class. Set at creation time and immutable afterward.
+       *
+       * Omit to let the service apply its default.
+       */
+      classLevel?: ClassLevel;
+      /** Mutable, versioned user data (class version, status, and payload). */
+      data: CreateUserData;
     };
 
     /**
-     * User properties for update (PUT) requests.
+     * User data properties for update (PUT) requests.
+     *
+     * The mutable, versioned payload of a user. `id` lives at the top level of
+     * {@link SetUserParameters}.
      */
-    export type UpdateUserProperties = {
+    export type SetUserData = {
       /** Version of the entity class schema. */
-      entityClassVersion: number;
+      classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
       /** User-defined JSON payload conforming to the entity class schema. */
@@ -10552,7 +10738,7 @@ declare namespace PubNub {
     /**
      * Get All Users request parameters.
      */
-    export type GetAllUsersParameters = PagedRequestParameters & {
+    export type GetUsersParameters = PagedRequestParameters & {
       /**
        * Entity class version. If not provided, the server returns users for the latest version.
        */
@@ -10564,13 +10750,13 @@ declare namespace PubNub {
     };
 
     /**
-     * Update User request parameters (full replacement via PUT).
+     * Set User request parameters (full replacement via PUT).
      */
-    export type UpdateUserParameters = {
+    export type SetUserParameters = {
       /** User ID. */
       id: string;
-      /** Complete user properties for replacement. */
-      user: UpdateUserProperties;
+      /** Complete, mutable user data for replacement. */
+      data: SetUserData;
       /**
        * ETag for optimistic concurrency control.
        * If provided, the update only succeeds if the server's ETag matches.
@@ -10579,14 +10765,14 @@ declare namespace PubNub {
     };
 
     /**
-     * Patch User request parameters (partial update via JSON Patch RFC 6902).
+     * Update User request parameters (partial update via JSON Patch RFC 6902).
      *
      * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      * The SDK converts these to JSON Patch operations on the wire.
      *
      * At least one of `add`, `replace`, or `remove` must be provided.
      */
-    export type PatchUserParameters = {
+    export type UpdateUserParameters = {
       /** User ID. */
       id: string;
       /**
@@ -10604,6 +10790,23 @@ declare namespace PubNub {
        * The SDK converts these to JSON Patch "remove" operations.
        */
       remove?: string[];
+      /**
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
+       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+       * removed and re-added at `path`.
+       */
+      move?: PatchMovePath[];
+      /**
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
+       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+       */
+      copy?: PatchMovePath[];
+      /**
+       * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+       * value at any path does not equal the expected value. Keys are used as provided (prefix with
+       * `payload.` for payload fields).
+       */
+      test?: Record<string, unknown>;
       /**
        * ETag for optimistic concurrency control.
        */
@@ -10629,13 +10832,13 @@ declare namespace PubNub {
     export type GetUserResponse = DataSyncEntityResponse<UserObject>;
 
     /** Response for listing users. */
-    export type GetAllUsersResponse = DataSyncPagedResponse<UserObject>;
+    export type GetUsersResponse = DataSyncPagedResponse<UserObject>;
 
     /** Response for updating a user (PUT). */
-    export type UpdateUserResponse = DataSyncEntityResponse<UserObject>;
+    export type SetUserResponse = DataSyncEntityResponse<UserObject>;
 
     /** Response for patching a user (PATCH). */
-    export type PatchUserResponse = DataSyncEntityResponse<UserObject>;
+    export type UpdateUserResponse = DataSyncEntityResponse<UserObject>;
 
     /** Response for removing a user. */
     export type RemoveUserResponse = {
@@ -10644,11 +10847,14 @@ declare namespace PubNub {
     };
 
     /**
-     * Channel properties for create requests.
+     * Channel data properties for create requests.
+     *
+     * The mutable, versioned payload of a channel. `id` lives at the top level of
+     * {@link CreateChannelParameters}; everything that can change over the channel's lifetime is here.
      */
-    export type CreateChannelProperties = {
+    export type CreateChannelData = {
       /** Version of the entity class schema. */
-      entityClassVersion: number;
+      classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
       /** User-defined JSON payload conforming to the entity class schema. */
@@ -10656,11 +10862,14 @@ declare namespace PubNub {
     };
 
     /**
-     * Channel properties for update (PUT) requests.
+     * Channel data properties for update (PUT) requests.
+     *
+     * The mutable, versioned payload of a channel. `id` lives at the top level of
+     * {@link SetChannelParameters}.
      */
-    export type UpdateChannelProperties = {
+    export type SetChannelData = {
       /** Version of the entity class schema. */
-      entityClassVersion: number;
+      classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
       /** User-defined JSON payload conforming to the entity class schema. */
@@ -10694,15 +10903,19 @@ declare namespace PubNub {
      */
     export type CreateChannelParameters = {
       /**
-       * Channel properties to create.
+       * Optional channel ID.
+       * Server auto-generates a UUID if not provided.
        */
-      channel: CreateChannelProperties & {
-        /**
-         * Optional channel ID.
-         * Server auto-generates a UUID if not provided.
-         */
-        id?: string;
-      };
+      id?: string;
+      /**
+       * Class hierarchy level of the channel's entity class. Set at creation time and immutable
+       * afterward.
+       *
+       * Omit to let the service apply its default.
+       */
+      classLevel?: ClassLevel;
+      /** Mutable, versioned channel data (class version, status, and payload). */
+      data: CreateChannelData;
     };
 
     /**
@@ -10716,7 +10929,7 @@ declare namespace PubNub {
     /**
      * Get All Channels request parameters.
      */
-    export type GetAllChannelsParameters = PagedRequestParameters & {
+    export type GetChannelsParameters = PagedRequestParameters & {
       /**
        * Entity class version. If not provided, the server returns channels for the latest version.
        */
@@ -10728,13 +10941,13 @@ declare namespace PubNub {
     };
 
     /**
-     * Update Channel request parameters (full replacement via PUT).
+     * Set Channel request parameters (full replacement via PUT).
      */
-    export type UpdateChannelParameters = {
+    export type SetChannelParameters = {
       /** Channel ID. */
       id: string;
-      /** Complete channel properties for replacement. */
-      channel: UpdateChannelProperties;
+      /** Complete, mutable channel data for replacement. */
+      data: SetChannelData;
       /**
        * ETag for optimistic concurrency control.
        */
@@ -10742,13 +10955,13 @@ declare namespace PubNub {
     };
 
     /**
-     * Patch Channel request parameters (partial update via JSON Patch RFC 6902).
+     * Update Channel request parameters (partial update via JSON Patch RFC 6902).
      *
      * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * At least one of `add`, `replace`, or `remove` must be provided.
      */
-    export type PatchChannelParameters = {
+    export type UpdateChannelParameters = {
       /** Channel ID. */
       id: string;
       /**
@@ -10766,6 +10979,23 @@ declare namespace PubNub {
        * The SDK converts these to JSON Patch "remove" operations.
        */
       remove?: string[];
+      /**
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
+       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+       * removed and re-added at `path`.
+       */
+      move?: PatchMovePath[];
+      /**
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
+       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+       */
+      copy?: PatchMovePath[];
+      /**
+       * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+       * value at any path does not equal the expected value. Keys are used as provided (prefix with
+       * `payload.` for payload fields).
+       */
+      test?: Record<string, unknown>;
       /**
        * ETag for optimistic concurrency control.
        */
@@ -10791,13 +11021,13 @@ declare namespace PubNub {
     export type GetChannelResponse = DataSyncEntityResponse<ChannelObject>;
 
     /** Response for listing channels. */
-    export type GetAllChannelsResponse = DataSyncPagedResponse<ChannelObject>;
+    export type GetChannelsResponse = DataSyncPagedResponse<ChannelObject>;
 
     /** Response for updating a channel (PUT). */
-    export type UpdateChannelResponse = DataSyncEntityResponse<ChannelObject>;
+    export type SetChannelResponse = DataSyncEntityResponse<ChannelObject>;
 
     /** Response for patching a channel (PATCH). */
-    export type PatchChannelResponse = DataSyncEntityResponse<ChannelObject>;
+    export type UpdateChannelResponse = DataSyncEntityResponse<ChannelObject>;
 
     /** Response for removing a channel. */
     export type RemoveChannelResponse = {
@@ -10806,17 +11036,15 @@ declare namespace PubNub {
     };
 
     /**
-     * Membership properties for create requests.
+     * Membership data properties for create requests.
      *
-     * Both `userId` and `channelId` must be set at creation time.
+     * The mutable, versioned payload of a membership. `id`, `userId`, and `channelId` live at the
+     * top level of {@link CreateMembershipParameters} (identity + immutable structure); everything
+     * that can change over the membership's lifetime is grouped here under `data`.
      */
-    export type CreateMembershipProperties = {
-      /** User ID reference. */
-      userId: string;
-      /** Channel ID reference. */
-      channelId: string;
+    export type CreateMembershipData = {
       /** Version of the Membership relationship class. */
-      relationshipClassVersion: number;
+      classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
       /** User-defined JSON payload. */
@@ -10824,19 +11052,15 @@ declare namespace PubNub {
     };
 
     /**
-     * Membership properties for update (PUT) requests.
+     * Membership data properties for update (PUT) requests.
      *
-     * PUT is a full replacement — `userId`, `channelId`, and `relationshipClassVersion` are required.
-     * The server rejects a PUT that omits `relationshipClassVersion` (`SYN-0004: must not be null`),
-     * mirroring {@link UpdateRelationshipProperties}.
+     * The mutable, versioned payload of a membership. `id`, `userId`, and `channelId` live at the top
+     * level of {@link SetMembershipParameters}. The server rejects a PUT that omits `classVersion`
+     * (`SYN-0004: must not be null`), mirroring {@link SetRelationshipData}.
      */
-    export type UpdateMembershipProperties = {
-      /** User ID reference. */
-      userId: string;
-      /** Channel ID reference. */
-      channelId: string;
+    export type SetMembershipData = {
       /** Version of the Membership relationship class. */
-      relationshipClassVersion: number;
+      classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
       /** User-defined JSON payload. */
@@ -10877,15 +11101,16 @@ declare namespace PubNub {
      */
     export type CreateMembershipParameters = {
       /**
-       * Membership properties to create.
+       * Optional membership ID.
+       * Server auto-generates a UUID if not provided.
        */
-      membership: CreateMembershipProperties & {
-        /**
-         * Optional membership ID.
-         * Server auto-generates a UUID if not provided.
-         */
-        id?: string;
-      };
+      id?: string;
+      /** User ID reference. */
+      userId: string;
+      /** Channel ID reference. */
+      channelId: string;
+      /** Mutable, versioned membership data (class version, status, and payload). */
+      data: CreateMembershipData;
     };
 
     /**
@@ -10899,7 +11124,7 @@ declare namespace PubNub {
     /**
      * Get All Memberships request parameters.
      */
-    export type GetAllMembershipsParameters = PagedRequestParameters & {
+    export type GetMembershipsParameters = PagedRequestParameters & {
       /** Filter memberships by user ID. */
       userId?: string;
       /** Filter memberships by channel ID. */
@@ -10916,13 +11141,17 @@ declare namespace PubNub {
     };
 
     /**
-     * Update Membership request parameters (full replacement via PUT).
+     * Set Membership request parameters (full replacement via PUT).
      */
-    export type UpdateMembershipParameters = {
+    export type SetMembershipParameters = {
       /** Membership ID. */
       id: string;
-      /** Complete membership properties for replacement. */
-      membership: UpdateMembershipProperties;
+      /** User ID reference. */
+      userId: string;
+      /** Channel ID reference. */
+      channelId: string;
+      /** Complete, mutable membership data for replacement. */
+      data: SetMembershipData;
       /**
        * ETag for optimistic concurrency control.
        */
@@ -10930,13 +11159,13 @@ declare namespace PubNub {
     };
 
     /**
-     * Patch Membership request parameters (partial update via JSON Patch RFC 6902).
+     * Update Membership request parameters (partial update via JSON Patch RFC 6902).
      *
      * Uses `add`, `replace`, and `remove` with dot-notation field paths.
      *
      * At least one of `add`, `replace`, or `remove` must be provided.
      */
-    export type PatchMembershipParameters = {
+    export type UpdateMembershipParameters = {
       /** Membership ID. */
       id: string;
       /**
@@ -10954,6 +11183,23 @@ declare namespace PubNub {
        * The SDK converts these to JSON Patch "remove" operations.
        */
       remove?: string[];
+      /**
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
+       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+       * removed and re-added at `path`.
+       */
+      move?: PatchMovePath[];
+      /**
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
+       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+       */
+      copy?: PatchMovePath[];
+      /**
+       * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+       * value at any path does not equal the expected value. Keys are used as provided (prefix with
+       * `payload.` for payload fields).
+       */
+      test?: Record<string, unknown>;
       /**
        * ETag for optimistic concurrency control.
        */
@@ -10979,13 +11225,13 @@ declare namespace PubNub {
     export type GetMembershipResponse = DataSyncEntityResponse<MembershipObject>;
 
     /** Response for listing memberships. */
-    export type GetAllMembershipsResponse = DataSyncPagedResponse<MembershipObject>;
+    export type GetMembershipsResponse = DataSyncPagedResponse<MembershipObject>;
 
     /** Response for updating a membership (PUT). */
-    export type UpdateMembershipResponse = DataSyncEntityResponse<MembershipObject>;
+    export type SetMembershipResponse = DataSyncEntityResponse<MembershipObject>;
 
     /** Response for patching a membership (PATCH). */
-    export type PatchMembershipResponse = DataSyncEntityResponse<MembershipObject>;
+    export type UpdateMembershipResponse = DataSyncEntityResponse<MembershipObject>;
 
     /** Response for removing a membership. */
     export type RemoveMembershipResponse = {
