@@ -42,7 +42,7 @@ export class RemoveEntityRequest<Response extends DataSync.RemoveEntityResponse>
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNRemoveEntityOperation;
+    return RequestOperation.PNRemoveDataSyncEntityOperation;
   }
 
   validate(): string | undefined {

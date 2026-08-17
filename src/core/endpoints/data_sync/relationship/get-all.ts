@@ -1,5 +1,5 @@
 /**
- * Fetch Relationships REST API module.
+ * Get Relationships REST API module.
  *
  * @internal
  */
@@ -29,7 +29,7 @@ const DEFAULT_LIMIT = 20;
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.FetchRelationshipsParameters & {
+type RequestParameters = DataSync.GetRelationshipsParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -38,11 +38,11 @@ type RequestParameters = DataSync.FetchRelationshipsParameters & {
 // endregion
 
 /**
- * Fetch Relationships request.
+ * Get Relationships request.
  *
  * @internal
  */
-export class FetchRelationshipsRequest<Response extends DataSync.FetchRelationshipsResponse> extends AbstractRequest<
+export class GetRelationshipsRequest<Response extends DataSync.GetRelationshipsResponse> extends AbstractRequest<
   Response,
   Response
 > {
@@ -54,7 +54,7 @@ export class FetchRelationshipsRequest<Response extends DataSync.FetchRelationsh
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNFetchRelationshipsOperation;
+    return RequestOperation.PNGetDataSyncRelationshipsOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {

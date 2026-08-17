@@ -1,5 +1,5 @@
 /**
- * Fetch Memberships REST API module.
+ * Get Entities REST API module.
  *
  * @internal
  */
@@ -29,7 +29,7 @@ const DEFAULT_LIMIT = 20;
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.FetchMembershipsParameters & {
+type RequestParameters = DataSync.GetEntitiesParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -38,11 +38,11 @@ type RequestParameters = DataSync.FetchMembershipsParameters & {
 // endregion
 
 /**
- * Fetch Memberships request.
+ * Get Entities request.
  *
  * @internal
  */
-export class FetchMembershipsRequest<Response extends DataSync.FetchMembershipsResponse> extends AbstractRequest<
+export class GetEntitiesRequest<Response extends DataSync.GetEntitiesResponse> extends AbstractRequest<
   Response,
   Response
 > {
@@ -54,7 +54,7 @@ export class FetchMembershipsRequest<Response extends DataSync.FetchMembershipsR
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNFetchMembershipsOperation;
+    return RequestOperation.PNGetDataSyncEntitiesOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -64,19 +64,21 @@ export class FetchMembershipsRequest<Response extends DataSync.FetchMembershipsR
     return { ...parsed, status: response.status } as Response;
   }
 
+  validate(): string | undefined {
+    if (!this.parameters.entityClass) return 'Entity class cannot be empty';
+  }
+
   protected get path(): string {
-    return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/memberships`;
+    return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/entities`;
   }
 
   protected get queryParameters(): Query {
-    const { userId, channelId, relationshipClassVersion, cursor, limit, filter, sort, filterAdvanced } =
-      this.parameters;
+    const { entityClass, entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
     const sorting = DataSync.serializeDataSyncSort(sort);
 
     return {
-      ...(userId ? { user_id: userId } : {}),
-      ...(channelId ? { channel_id: channelId } : {}),
-      ...(relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {}),
+      entity_class: entityClass,
+      ...(entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {}),
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),

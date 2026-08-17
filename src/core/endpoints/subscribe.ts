@@ -436,21 +436,29 @@ type DataSyncEventName = 'create' | 'update' | 'delete';
 type DataSyncObjectType = 'entity' | 'relationship';
 
 /**
- * Normalized DataSync object kind derived from the wire `className`.
+ * Scope of the class definition a DataSync object belongs to.
+ *
+ * `Global` identifies the built-in classes provided by the service (`User`, `Channel`,
+ * `Membership`); `SubKey` identifies classes defined by the developer on their own key set.
+ */
+export type DataSyncClassLevel = 'Global' | 'SubKey';
+
+/**
+ * Normalized DataSync object kind.
  *
  * Users and Channels are backed by entity classes; Memberships by a relationship class. This
  * discriminator lets consumers branch on the semantic kind in a `dataSync` listener without matching
- * class-name strings. Falls back to the raw wire {@link DataSyncObjectType} for unrecognized classes.
+ * class-name strings. Falls back to the raw wire {@link DataSyncObjectType} for developer-defined
+ * classes.
  */
 export type DataSyncNormalizedType = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
 
 /**
- * Reserved DataSync system class names (lower-cased, prefix-stripped) → normalized object type.
+ * Reserved DataSync system class names (lower-cased) → normalized object type.
  *
- * NOTE: the exact wire `className` for typed User/Channel/Membership resources must be confirmed by
- * running the `ds-event-test` spike against an origin that emits DataSync events. Keys are compared
- * case-insensitively after `className.split(':').pop()`. Best-guess values are derived from the create
- * content-types (`application/vnd.pubnub.objects.{user,channel,membership}+json`).
+ * Only consulted for classes the service marks as `Global` (see {@link DataSyncClassLevel}), so a
+ * developer-defined class which happens to share one of these names is not mistaken for a typed
+ * resource. Keys are compared case-insensitively.
  *
  * @internal
  */
@@ -458,13 +466,14 @@ const DATA_SYNC_RESERVED_CLASSES: Record<string, DataSyncNormalizedType> = {
   user: 'user',
   channel: 'channel',
   membership: 'membership',
-  pn_user: 'user',
-  pn_channel: 'channel',
-  pn_membership: 'membership',
 };
 
 /**
  * DataSync entity change payload (create / update).
+ *
+ * Mirrors the object as sent by the service. Class identity is not repeated here: it is reported once
+ * on the event itself as {@link DataSyncData.className} / {@link DataSyncData.classLevel} /
+ * {@link DataSyncData.classVersion}.
  */
 export type DataSyncEntityData = {
   /**
@@ -501,41 +510,28 @@ export type DataSyncEntityData = {
    * Auto-deletion timestamp (ISO 8601).
    */
   expiresAt?: string;
-
-  /**
-   * Entity class name (last `:`-delimited segment of the wire `className`).
-   */
-  entityClass?: string;
-
-  /**
-   * Version of the entity class schema (parsed from the wire `classVersion`).
-   */
-  entityClassVersion?: number;
 };
 
 /**
  * DataSync relationship change payload (create / update).
+ *
+ * Class identity is not repeated here: it is reported once on the event itself as
+ * {@link DataSyncData.className} / {@link DataSyncData.classLevel} / {@link DataSyncData.classVersion}.
  */
-export type DataSyncRelationshipData = Omit<DataSyncEntityData, 'entityClass' | 'entityClassVersion'> & {
+export type DataSyncRelationshipData = DataSyncEntityData & {
   /**
    * First entity id in the relationship.
+   *
+   * For a membership this is the channel id.
    */
   entityAId?: string;
 
   /**
    * Second entity id in the relationship.
+   *
+   * For a membership this is the user id.
    */
   entityBId?: string;
-
-  /**
-   * Relationship class name (last `:`-delimited segment of the wire `className`).
-   */
-  relationshipClass?: string;
-
-  /**
-   * Version of the relationship class schema (parsed from the wire `classVersion`).
-   */
-  relationshipClassVersion?: number;
 };
 
 /**
@@ -580,17 +576,22 @@ export type DataSyncData = {
   /**
    * Normalized DataSync object kind.
    *
-   * Derived from {@link className}: reserved User/Channel/Membership classes map to `'user'` /
-   * `'channel'` / `'membership'`; everything else falls back to the raw wire {@link type}
-   * (`'entity'` / `'relationship'`). Use this to discriminate typed resources without knowing
-   * class-name strings.
+   * The built-in `User` / `Channel` / `Membership` classes map to `'user'` / `'channel'` /
+   * `'membership'`; developer-defined classes fall back to the raw wire {@link type} (`'entity'` /
+   * `'relationship'`). Use this to discriminate typed resources without knowing class-name strings.
    */
   objectType: DataSyncNormalizedType;
 
   /**
-   * Object class name (last `:`-delimited segment of the wire `className`).
+   * Object class name.
    */
   className?: string;
+
+  /**
+   * Scope of the class definition: `Global` for the built-in classes (`User` / `Channel` /
+   * `Membership`), `SubKey` for classes defined by the developer on their own key set.
+   */
+  classLevel?: DataSyncClassLevel;
 
   /**
    * Version of the object class schema (parsed from the wire `classVersion`).
@@ -617,6 +618,7 @@ type DataSyncServiceData = {
     source?: string;
     type?: DataSyncObjectType;
     className?: string;
+    classLevel?: string;
     classVersion?: string | number;
   };
   data?: Record<string, unknown>;
@@ -1061,33 +1063,29 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     // Only treat the envelope as DataSync when the service marks it and carries the required fields.
     if (!metadata || metadata.source !== 'data-sync' || !metadata.event || !metadata.type) return undefined;
 
-    // Wire `className` is a positional composite `<systemClass>::<developerClass>`:
-    //   - typed User/Channel/Membership → `User::` / `Channel::` / `Membership::` (system in 1st segment)
-    //   - generic entity / relationship → `::Customer` / `::REQUESTED_BY` (developer in last segment)
-    // The reserved system class (1st segment) drives `objectType`; the surfaced `className` is the
-    // developer class (last non-empty segment) when present, else the system class.
+    // Wire `className` is a bare class name (`User`, `Membership`, `Customer`); the `:`-splitting below
+    // is only there to keep tolerating the retired positional composite (`User::` / `::Customer`).
     const classSegments = metadata.className ? metadata.className.split(':') : [];
-    const systemClass = classSegments.length > 0 ? classSegments[0] : undefined;
     const nonEmptySegments = classSegments.filter((segment) => segment.length > 0);
     const className = nonEmptySegments.length > 0 ? nonEmptySegments[nonEmptySegments.length - 1] : undefined;
+    const classLevel = metadata.classLevel as DataSyncClassLevel | undefined;
+
+    // `classLevel` authoritatively separates the built-in classes from developer-defined ones, so a
+    // developer class named `User` / `Channel` / `Membership` is not mistaken for a typed resource.
+    // When it is absent (service predating the field) fall back to the legacy positional heuristic,
+    // where the system class was the first segment.
+    const systemClass = classLevel === undefined ? classSegments[0] : classLevel === 'Global' ? className : undefined;
     const objectType: DataSyncNormalizedType =
       (systemClass && DATA_SYNC_RESERVED_CLASSES[systemClass.toLowerCase()]) || metadata.type;
     const parsedVersion = metadata.classVersion !== undefined ? Number.parseInt(`${metadata.classVersion}`, 10) : NaN;
     const classVersion = Number.isNaN(parsedVersion) ? undefined : parsedVersion;
     const raw = (payload.data ?? {}) as Record<string, unknown>;
 
+    // `data` mirrors the object as sent by the service; class identity is reported once, on the event.
     let data: DataSyncData['data'];
-    if (metadata.event === 'delete') {
-      data = { id: raw.id as string, deletedAt: raw.deletedAt as string | undefined };
-    } else if (metadata.type === 'relationship') {
-      data = {
-        ...raw,
-        relationshipClass: className,
-        relationshipClassVersion: classVersion,
-      } as DataSyncRelationshipData;
-    } else {
-      data = { ...raw, entityClass: className, entityClassVersion: classVersion } as DataSyncEntityData;
-    }
+    if (metadata.event === 'delete') data = { id: raw.id as string, deletedAt: raw.deletedAt as string | undefined };
+    else if (metadata.type === 'relationship') data = { ...raw } as DataSyncRelationshipData;
+    else data = { ...raw } as DataSyncEntityData;
 
     return {
       channel,
@@ -1100,6 +1098,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
         type: metadata.type,
         objectType,
         className,
+        classLevel,
         classVersion,
         data,
       },

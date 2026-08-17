@@ -42,7 +42,7 @@ export class RemoveChannelRequest<Response extends DataSync.RemoveChannelRespons
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNRemoveChannelOperation;
+    return RequestOperation.PNRemoveDataSyncChannelOperation;
   }
 
   validate(): string | undefined {

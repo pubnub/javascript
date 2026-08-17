@@ -1,10 +1,8 @@
 /**
- * Patch User REST API module.
+ * Set Entity REST API module.
  *
- * Partial update via JSON Patch (RFC 6902).
- * Accepts `add`/`replace`/`test` (dot-notation key-value pairs), `remove`
- * (dot-notation paths), and `move`/`copy` (dot-notation `{ from, path }` pairs)
- * and converts them to JSON Patch operations on the wire.
+ * Full resource replacement via PUT.
+ * Note: `entityClass` is immutable and cannot be changed via update.
  *
  * @internal
  */
@@ -14,7 +12,6 @@ import { TransportResponse } from '../../../types/transport-response';
 import { AbstractRequest } from '../../../components/request';
 import RequestOperation from '../../../constants/operations';
 import * as DataSync from '../../../types/api/data-sync';
-import { toJsonPatchOperations } from '../../../types/api/data-sync';
 import { KeySet } from '../../../types/api';
 import { encodeString } from '../../../utils';
 
@@ -26,7 +23,7 @@ import { encodeString } from '../../../utils';
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.PatchUserParameters & {
+type RequestParameters = DataSync.SetEntityParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -35,17 +32,17 @@ type RequestParameters = DataSync.PatchUserParameters & {
 // endregion
 
 /**
- * Patch User request.
+ * Set Entity request.
  *
  * @internal
  */
-export class PatchUserRequest<Response extends DataSync.PatchUserResponse> extends AbstractRequest<Response, Response> {
+export class SetEntityRequest<Response extends DataSync.SetEntityResponse> extends AbstractRequest<Response, Response> {
   constructor(private readonly parameters: RequestParameters) {
-    super({ method: TransportMethod.PATCH });
+    super({ method: TransportMethod.PUT });
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNPatchUserOperation;
+    return RequestOperation.PNSetDataSyncEntityOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -56,17 +53,10 @@ export class PatchUserRequest<Response extends DataSync.PatchUserResponse> exten
   }
 
   validate(): string | undefined {
-    if (!this.parameters.id) return 'User id cannot be empty';
-
-    const { add, replace, remove, move, copy, test } = this.parameters;
-    const hasAdd = add && Object.keys(add).length > 0;
-    const hasReplace = replace && Object.keys(replace).length > 0;
-    const hasRemove = remove && remove.length > 0;
-    const hasMove = move && move.length > 0;
-    const hasCopy = copy && copy.length > 0;
-    const hasTest = test && Object.keys(test).length > 0;
-    if (!hasAdd && !hasReplace && !hasRemove && !hasMove && !hasCopy && !hasTest)
-      return 'At least one of add, replace, remove, move, copy, or test must be provided';
+    if (!this.parameters.id) return 'Entity id cannot be empty';
+    if (!this.parameters.data) return 'Entity data cannot be empty';
+    if (this.parameters.data.classVersion === undefined || this.parameters.data.classVersion === null)
+      return 'Entity class version cannot be empty';
   }
 
   protected get headers(): Record<string, string> | undefined {
@@ -76,7 +66,7 @@ export class PatchUserRequest<Response extends DataSync.PatchUserResponse> exten
 
     return {
       ...headers,
-      'Content-Type': 'application/json-patch+json',
+      'Content-Type': 'application/vnd.pubnub.objects.entity+json;version=1',
     };
   }
 
@@ -86,14 +76,18 @@ export class PatchUserRequest<Response extends DataSync.PatchUserResponse> exten
       id,
     } = this.parameters;
 
-    return `/v1/datasync/subkeys/${subscribeKey}/users/${encodeString(id)}`;
+    return `/v1/datasync/subkeys/${subscribeKey}/entities/${encodeString(id)}`;
   }
 
   protected get body(): ArrayBuffer | string | undefined {
-    const { add, replace, remove, move, copy, test } = this.parameters;
+    const { data } = this.parameters;
 
-    // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
-    const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
-    return JSON.stringify(jsonPatchOps);
+    return JSON.stringify({
+      data: {
+        entityClassVersion: data.classVersion,
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.payload !== undefined ? { payload: data.payload } : {}),
+      },
+    });
   }
 }

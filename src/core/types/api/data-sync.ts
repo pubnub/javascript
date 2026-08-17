@@ -108,6 +108,14 @@ type PagedRequestParameters = {
 export type DataSyncSort = string | Record<string, 'asc' | 'desc' | null>;
 
 /**
+ * Class hierarchy level used to disambiguate classes that share a name at different levels.
+ *
+ * `Global` targets a class provided by the service; `SubKey` targets one defined on the key set.
+ * Mirrors the event-side `DataSyncClassLevel` reported on subscribe messages.
+ */
+export type ClassLevel = 'Global' | 'SubKey';
+
+/**
  * Serialize a {@link DataSyncSort} into the query value the service expects.
  *
  * A raw string is passed through unchanged. An object is turned into a list of `field:order`
@@ -162,7 +170,7 @@ type DataSyncPagedResponse<T> = {
 /**
  * JSON Patch operation as defined by RFC 6902.
  *
- * Internal wire format. Developers use `add`/`replace`/`remove`/`move`/`copy`/`test` with dot
+ * Internal request format. Developers use `add`/`replace`/`remove`/`move`/`copy`/`test` with dot
  * notation instead. `from` is the source location for `move`/`copy`; `value` carries the operand
  * for `add`/`replace`/`test`.
  *
@@ -187,7 +195,7 @@ export type PatchMovePath = {
 };
 
 /**
- * User-friendly JSON Patch input (dot notation), converted to RFC 6902 operations on the wire.
+ * User-friendly JSON Patch input (dot notation), converted to RFC 6902 operations before sending.
  *
  * @internal
  */
@@ -224,7 +232,7 @@ export function toJsonPointer(dotPath: string): string {
 }
 
 /**
- * Convert user-friendly dot-notation patch input to JSON Patch operations (wire format).
+ * Convert user-friendly dot-notation patch input to JSON Patch operations (request format).
  *
  * - Each key in `add` becomes an "add" operation.
  * - Each key in `replace` becomes a "replace" operation.
@@ -290,7 +298,12 @@ export function toJsonPatchOperations(input: JsonPatchInput): JsonPatchOperation
  * lifetime is grouped here under `data`.
  */
 export type CreateEntityData = {
-  /** Version of the entity class schema. */
+  /**
+   * Version of the entity class schema.
+   *
+   * Stored on the entity as `entityClassVersion` — use that name to address it in
+   * {@link UpdateEntityParameters} patch paths.
+   */
   classVersion: number;
 
   /** Optional lifecycle status. */
@@ -304,10 +317,10 @@ export type CreateEntityData = {
  * Entity data properties for update (PUT) requests.
  *
  * The mutable, versioned payload of an entity. `id` lives at the top level of
- * {@link UpdateEntityParameters}. `entityClass` is immutable after creation and therefore
+ * {@link SetEntityParameters}. `entityClass` is immutable after creation and therefore
  * has no place in updates.
  */
-export type UpdateEntityData = {
+export type SetEntityData = {
   /** Version of the entity class schema. */
   classVersion: number;
 
@@ -362,8 +375,23 @@ export type CreateEntityParameters = {
    */
   id?: string;
 
-  /** Entity class this entity belongs to. Set at creation time and immutable afterward. */
+  /**
+   * Entity class this entity belongs to. Set at creation time and immutable afterward.
+   *
+   * Stored on the entity as `entityClass` — the name it carries in responses, in real-time event
+   * payloads, and in {@link UpdateEntityParameters} patch paths (immutable, so never a patch
+   * target).
+   */
   class: string;
+
+  /**
+   * Class hierarchy level of `class`. Set at creation time and immutable afterward.
+   *
+   * Omit to let the service apply its default.
+   *
+   * Stored on the entity as `entityClassLevel`.
+   */
+  classLevel?: ClassLevel;
 
   /**
    * Mutable, versioned entity data (class version, status, and payload).
@@ -378,7 +406,7 @@ export type CreateEntityParameters = {
 /**
  * Get Entity request parameters.
  */
-export type FetchEntityParameters = {
+export type GetEntityParameters = {
   /** Entity ID. */
   id: string;
 };
@@ -388,7 +416,7 @@ export type FetchEntityParameters = {
  *
  * `entityClass` is required — entities are always listed within the context of their class.
  */
-export type FetchEntitiesParameters = PagedRequestParameters & {
+export type GetEntitiesParameters = PagedRequestParameters & {
   /** Entity class name to filter by (required). */
   entityClass: string;
 
@@ -407,17 +435,17 @@ export type FetchEntitiesParameters = PagedRequestParameters & {
 };
 
 /**
- * Update Entity request parameters (full replacement via PUT).
+ * Set Entity request parameters (full replacement via PUT).
  *
  * `entityClass` is immutable after creation — only `classVersion`, `status`,
  * and `payload` can be updated.
  */
-export type UpdateEntityParameters = {
+export type SetEntityParameters = {
   /** Entity ID. */
   id: string;
 
   /** Complete, mutable entity data for replacement (excludes immutable `entityClass`). */
-  data: UpdateEntityData;
+  data: SetEntityData;
 
   /**
    * ETag for optimistic concurrency control.
@@ -427,14 +455,20 @@ export type UpdateEntityParameters = {
 };
 
 /**
- * Patch Entity request parameters (partial update via JSON Patch RFC 6902).
+ * Update Entity request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with dot-notation field paths.
- * The SDK converts these to JSON Patch operations on the wire.
+ * Uses `add`, `replace`, and `remove` with dot-notation field paths, which the SDK converts to
+ * JSON Patch operations.
+ *
+ * Patch paths address the entity's **stored property names** — the same keys that come back in
+ * responses and real-time events — not the grouped parameter names used by
+ * {@link CreateEntityParameters}. So the class version is `entityClassVersion` (not
+ * `data.classVersion`), and payload fields keep their `payload.` prefix. `entityClass` and
+ * `entityClassLevel` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
  */
-export type PatchEntityParameters = {
+export type UpdateEntityParameters = {
   /** Entity ID. */
   id: string;
 
@@ -548,16 +582,16 @@ export type RemoveEntityParameters = {
 export type CreateEntityResponse = DataSyncEntityResponse<EntityObject>;
 
 /** Response for getting a single entity. */
-export type FetchEntityResponse = DataSyncEntityResponse<EntityObject>;
+export type GetEntityResponse = DataSyncEntityResponse<EntityObject>;
 
 /** Response for listing entities. */
-export type FetchEntitiesResponse = DataSyncPagedResponse<EntityObject>;
+export type GetEntitiesResponse = DataSyncPagedResponse<EntityObject>;
 
 /** Response for updating an entity (PUT). */
-export type UpdateEntityResponse = DataSyncEntityResponse<EntityObject>;
+export type SetEntityResponse = DataSyncEntityResponse<EntityObject>;
 
 /** Response for patching an entity (PATCH). */
-export type PatchEntityResponse = DataSyncEntityResponse<EntityObject>;
+export type UpdateEntityResponse = DataSyncEntityResponse<EntityObject>;
 
 /** Response for removing an entity. */
 export type RemoveEntityResponse = {
@@ -577,7 +611,12 @@ export type RemoveEntityResponse = {
  * everything that can change over the relationship's lifetime is grouped here under `data`.
  */
 export type CreateRelationshipData = {
-  /** Version of the relationship class schema. */
+  /**
+   * Version of the relationship class schema.
+   *
+   * Stored on the relationship as `relationshipClassVersion` — use that name to address it in
+   * {@link UpdateRelationshipParameters} patch paths.
+   */
   classVersion: number;
 
   /** Optional lifecycle status. */
@@ -591,10 +630,10 @@ export type CreateRelationshipData = {
  * Relationship data properties for update (PUT) requests.
  *
  * The mutable, versioned payload of a relationship. `id`, `entityAId`, and `entityBId` live at the
- * top level of {@link UpdateRelationshipParameters}. `relationshipClass` is immutable after creation
+ * top level of {@link SetRelationshipParameters}. `relationshipClass` is immutable after creation
  * and therefore has no place in updates. The server rejects a PUT that omits `classVersion`.
  */
-export type UpdateRelationshipData = {
+export type SetRelationshipData = {
   /** Version of the relationship class schema. */
   classVersion: number;
 
@@ -655,7 +694,13 @@ export type CreateRelationshipParameters = {
    */
   id?: string;
 
-  /** Relationship class this relationship belongs to. Set at creation time and immutable afterward. */
+  /**
+   * Relationship class this relationship belongs to. Set at creation time and immutable afterward.
+   *
+   * Stored on the relationship as `relationshipClass` — the name it carries in responses, in
+   * real-time event payloads, and in {@link UpdateRelationshipParameters} patch paths (immutable,
+   * so never a patch target).
+   */
   class: string;
 
   /** First entity ID in the relationship. */
@@ -671,7 +716,7 @@ export type CreateRelationshipParameters = {
 /**
  * Get Relationship request parameters.
  */
-export type FetchRelationshipParameters = {
+export type GetRelationshipParameters = {
   /** Relationship ID. */
   id: string;
 };
@@ -679,7 +724,7 @@ export type FetchRelationshipParameters = {
 /**
  * Get All Relationships request parameters.
  */
-export type FetchRelationshipsParameters = PagedRequestParameters & {
+export type GetRelationshipsParameters = PagedRequestParameters & {
   /** Relationship class name (required by the server). */
   relationshipClass: string;
 
@@ -702,9 +747,9 @@ export type FetchRelationshipsParameters = PagedRequestParameters & {
 };
 
 /**
- * Update Relationship request parameters (full replacement via PUT).
+ * Set Relationship request parameters (full replacement via PUT).
  */
-export type UpdateRelationshipParameters = {
+export type SetRelationshipParameters = {
   /** Relationship ID. */
   id: string;
 
@@ -715,7 +760,7 @@ export type UpdateRelationshipParameters = {
   entityBId: string;
 
   /** Complete, mutable relationship data for replacement (excludes immutable `relationshipClass`). */
-  data: UpdateRelationshipData;
+  data: SetRelationshipData;
 
   /**
    * ETag for optimistic concurrency control.
@@ -725,14 +770,20 @@ export type UpdateRelationshipParameters = {
 };
 
 /**
- * Patch Relationship request parameters (partial update via JSON Patch RFC 6902).
+ * Update Relationship request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with dot-notation field paths.
- * The SDK converts these to JSON Patch operations on the wire.
+ * Uses `add`, `replace`, and `remove` with dot-notation field paths, which the SDK converts to
+ * JSON Patch operations.
+ *
+ * Patch paths address the relationship's **stored property names** — the same keys that come back in
+ * responses and real-time events — not the grouped parameter names used by
+ * {@link CreateRelationshipParameters}. So the class version is `relationshipClassVersion` (not
+ * `data.classVersion`), and payload fields keep their `payload.` prefix. `relationshipClass`,
+ * `entityAId`, and `entityBId` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
  */
-export type PatchRelationshipParameters = {
+export type UpdateRelationshipParameters = {
   /** Relationship ID. */
   id: string;
 
@@ -826,16 +877,16 @@ export type RemoveRelationshipParameters = {
 export type CreateRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
 
 /** Response for getting a single relationship. */
-export type FetchRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+export type GetRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
 
 /** Response for listing relationships. */
-export type FetchRelationshipsResponse = DataSyncPagedResponse<RelationshipObject>;
+export type GetRelationshipsResponse = DataSyncPagedResponse<RelationshipObject>;
 
 /** Response for updating a relationship (PUT). */
-export type UpdateRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+export type SetRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
 
 /** Response for patching a relationship (PATCH). */
-export type PatchRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+export type UpdateRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
 
 /** Response for removing a relationship. */
 export type RemoveRelationshipResponse = {
@@ -854,7 +905,12 @@ export type RemoveRelationshipResponse = {
  * {@link CreateUserParameters}; everything that can change over the user's lifetime is here.
  */
 export type CreateUserData = {
-  /** Version of the entity class schema. */
+  /**
+   * Version of the entity class schema.
+   *
+   * Stored on the user as `entityClassVersion` — use that name to address it in
+   * {@link UpdateUserParameters} patch paths.
+   */
   classVersion: number;
 
   /** Optional lifecycle status. */
@@ -905,6 +961,25 @@ export type CreateUserParameters = {
    */
   id?: string;
 
+  /**
+   * Entity class this user belongs to. Set at creation time and immutable afterward.
+   *
+   * Must be `User` or one of its subclasses. Omit to let the service apply the default (`User`).
+   *
+   * Stored on the user as `entityClass` — the name it carries in responses, in real-time event
+   * payloads, and in {@link UpdateUserParameters} patch paths (immutable, so never a patch target).
+   */
+  class?: string;
+
+  /**
+   * Class hierarchy level of the user's entity class. Set at creation time and immutable afterward.
+   *
+   * Omit to let the service apply its default.
+   *
+   * Stored on the user as `entityClassLevel`.
+   */
+  classLevel?: ClassLevel;
+
   /** Mutable, versioned user data (class version, status, and payload). */
   data: CreateUserData;
 };
@@ -913,9 +988,9 @@ export type CreateUserParameters = {
  * User data properties for update (PUT) requests.
  *
  * The mutable, versioned payload of a user. `id` lives at the top level of
- * {@link UpdateUserParameters}.
+ * {@link SetUserParameters}.
  */
-export type UpdateUserData = {
+export type SetUserData = {
   /** Version of the entity class schema. */
   classVersion: number;
 
@@ -929,7 +1004,7 @@ export type UpdateUserData = {
 /**
  * Get User request parameters.
  */
-export type FetchUserParameters = {
+export type GetUserParameters = {
   /** User ID. */
   id: string;
 };
@@ -937,7 +1012,7 @@ export type FetchUserParameters = {
 /**
  * Get All Users request parameters.
  */
-export type FetchUsersParameters = PagedRequestParameters & {
+export type GetUsersParameters = PagedRequestParameters & {
   /**
    * Entity class version. If not provided, the server returns users for the latest version.
    */
@@ -950,14 +1025,14 @@ export type FetchUsersParameters = PagedRequestParameters & {
 };
 
 /**
- * Update User request parameters (full replacement via PUT).
+ * Set User request parameters (full replacement via PUT).
  */
-export type UpdateUserParameters = {
+export type SetUserParameters = {
   /** User ID. */
   id: string;
 
   /** Complete, mutable user data for replacement. */
-  data: UpdateUserData;
+  data: SetUserData;
 
   /**
    * ETag for optimistic concurrency control.
@@ -967,14 +1042,20 @@ export type UpdateUserParameters = {
 };
 
 /**
- * Patch User request parameters (partial update via JSON Patch RFC 6902).
+ * Update User request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with dot-notation field paths.
- * The SDK converts these to JSON Patch operations on the wire.
+ * Uses `add`, `replace`, and `remove` with dot-notation field paths, which the SDK converts to
+ * JSON Patch operations.
+ *
+ * Patch paths address the user's **stored property names** — the same keys that come back in
+ * responses and real-time events — not the grouped parameter names used by
+ * {@link CreateUserParameters}. So the class version is `entityClassVersion` (not
+ * `data.classVersion`), and payload fields keep their `payload.` prefix. `entityClass` and
+ * `entityClassLevel` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
  */
-export type PatchUserParameters = {
+export type UpdateUserParameters = {
   /** User ID. */
   id: string;
 
@@ -1041,16 +1122,16 @@ export type RemoveUserParameters = {
 export type CreateUserResponse = DataSyncEntityResponse<UserObject>;
 
 /** Response for getting a single user. */
-export type FetchUserResponse = DataSyncEntityResponse<UserObject>;
+export type GetUserResponse = DataSyncEntityResponse<UserObject>;
 
 /** Response for listing users. */
-export type FetchUsersResponse = DataSyncPagedResponse<UserObject>;
+export type GetUsersResponse = DataSyncPagedResponse<UserObject>;
 
 /** Response for updating a user (PUT). */
-export type UpdateUserResponse = DataSyncEntityResponse<UserObject>;
+export type SetUserResponse = DataSyncEntityResponse<UserObject>;
 
 /** Response for patching a user (PATCH). */
-export type PatchUserResponse = DataSyncEntityResponse<UserObject>;
+export type UpdateUserResponse = DataSyncEntityResponse<UserObject>;
 
 /** Response for removing a user. */
 export type RemoveUserResponse = {
@@ -1069,7 +1150,12 @@ export type RemoveUserResponse = {
  * {@link CreateChannelParameters}; everything that can change over the channel's lifetime is here.
  */
 export type CreateChannelData = {
-  /** Version of the entity class schema. */
+  /**
+   * Version of the entity class schema.
+   *
+   * Stored on the channel as `entityClassVersion` — use that name to address it in
+   * {@link UpdateChannelParameters} patch paths.
+   */
   classVersion: number;
 
   /** Optional lifecycle status. */
@@ -1083,9 +1169,9 @@ export type CreateChannelData = {
  * Channel data properties for update (PUT) requests.
  *
  * The mutable, versioned payload of a channel. `id` lives at the top level of
- * {@link UpdateChannelParameters}.
+ * {@link SetChannelParameters}.
  */
-export type UpdateChannelData = {
+export type SetChannelData = {
   /** Version of the entity class schema. */
   classVersion: number;
 
@@ -1137,6 +1223,28 @@ export type CreateChannelParameters = {
    */
   id?: string;
 
+  /**
+   * Entity class this channel belongs to. Set at creation time and immutable afterward.
+   *
+   * Must be `Channel` or one of its subclasses. Omit to let the service apply the default
+   * (`Channel`).
+   *
+   * Stored on the channel as `entityClass` — the name it carries in responses, in real-time event
+   * payloads, and in {@link UpdateChannelParameters} patch paths (immutable, so never a patch
+   * target).
+   */
+  class?: string;
+
+  /**
+   * Class hierarchy level of the channel's entity class. Set at creation time and immutable
+   * afterward.
+   *
+   * Omit to let the service apply its default.
+   *
+   * Stored on the channel as `entityClassLevel`.
+   */
+  classLevel?: ClassLevel;
+
   /** Mutable, versioned channel data (class version, status, and payload). */
   data: CreateChannelData;
 };
@@ -1144,7 +1252,7 @@ export type CreateChannelParameters = {
 /**
  * Get Channel request parameters.
  */
-export type FetchChannelParameters = {
+export type GetChannelParameters = {
   /** Channel ID. */
   id: string;
 };
@@ -1152,7 +1260,7 @@ export type FetchChannelParameters = {
 /**
  * Get All Channels request parameters.
  */
-export type FetchChannelsParameters = PagedRequestParameters & {
+export type GetChannelsParameters = PagedRequestParameters & {
   /**
    * Entity class version. If not provided, the server returns channels for the latest version.
    */
@@ -1165,14 +1273,14 @@ export type FetchChannelsParameters = PagedRequestParameters & {
 };
 
 /**
- * Update Channel request parameters (full replacement via PUT).
+ * Set Channel request parameters (full replacement via PUT).
  */
-export type UpdateChannelParameters = {
+export type SetChannelParameters = {
   /** Channel ID. */
   id: string;
 
   /** Complete, mutable channel data for replacement. */
-  data: UpdateChannelData;
+  data: SetChannelData;
 
   /**
    * ETag for optimistic concurrency control.
@@ -1181,13 +1289,20 @@ export type UpdateChannelParameters = {
 };
 
 /**
- * Patch Channel request parameters (partial update via JSON Patch RFC 6902).
+ * Update Channel request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+ * Uses `add`, `replace`, and `remove` with dot-notation field paths, which the SDK converts to
+ * JSON Patch operations.
+ *
+ * Patch paths address the channel's **stored property names** — the same keys that come back in
+ * responses and real-time events — not the grouped parameter names used by
+ * {@link CreateChannelParameters}. So the class version is `entityClassVersion` (not
+ * `data.classVersion`), and payload fields keep their `payload.` prefix. `entityClass` and
+ * `entityClassLevel` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
  */
-export type PatchChannelParameters = {
+export type UpdateChannelParameters = {
   /** Channel ID. */
   id: string;
 
@@ -1254,16 +1369,16 @@ export type RemoveChannelParameters = {
 export type CreateChannelResponse = DataSyncEntityResponse<ChannelObject>;
 
 /** Response for getting a single channel. */
-export type FetchChannelResponse = DataSyncEntityResponse<ChannelObject>;
+export type GetChannelResponse = DataSyncEntityResponse<ChannelObject>;
 
 /** Response for listing channels. */
-export type FetchChannelsResponse = DataSyncPagedResponse<ChannelObject>;
+export type GetChannelsResponse = DataSyncPagedResponse<ChannelObject>;
 
 /** Response for updating a channel (PUT). */
-export type UpdateChannelResponse = DataSyncEntityResponse<ChannelObject>;
+export type SetChannelResponse = DataSyncEntityResponse<ChannelObject>;
 
 /** Response for patching a channel (PATCH). */
-export type PatchChannelResponse = DataSyncEntityResponse<ChannelObject>;
+export type UpdateChannelResponse = DataSyncEntityResponse<ChannelObject>;
 
 /** Response for removing a channel. */
 export type RemoveChannelResponse = {
@@ -1283,7 +1398,12 @@ export type RemoveChannelResponse = {
  * that can change over the membership's lifetime is grouped here under `data`.
  */
 export type CreateMembershipData = {
-  /** Version of the Membership relationship class. */
+  /**
+   * Version of the Membership relationship class.
+   *
+   * Stored on the membership as `relationshipClassVersion` — use that name to address it in
+   * {@link UpdateMembershipParameters} patch paths.
+   */
   classVersion: number;
 
   /** Optional lifecycle status. */
@@ -1297,10 +1417,10 @@ export type CreateMembershipData = {
  * Membership data properties for update (PUT) requests.
  *
  * The mutable, versioned payload of a membership. `id`, `userId`, and `channelId` live at the top
- * level of {@link UpdateMembershipParameters}. The server rejects a PUT that omits `classVersion`
- * (`SYN-0004: must not be null`), mirroring {@link UpdateRelationshipData}.
+ * level of {@link SetMembershipParameters}. The server rejects a PUT that omits `classVersion`
+ * (`SYN-0004: must not be null`), mirroring {@link SetRelationshipData}.
  */
-export type UpdateMembershipData = {
+export type SetMembershipData = {
   /** Version of the Membership relationship class. */
   classVersion: number;
 
@@ -1375,7 +1495,7 @@ export type CreateMembershipParameters = {
 /**
  * Get Membership request parameters.
  */
-export type FetchMembershipParameters = {
+export type GetMembershipParameters = {
   /** Membership ID. */
   id: string;
 };
@@ -1383,7 +1503,7 @@ export type FetchMembershipParameters = {
 /**
  * Get All Memberships request parameters.
  */
-export type FetchMembershipsParameters = PagedRequestParameters & {
+export type GetMembershipsParameters = PagedRequestParameters & {
   /** Filter memberships by user ID. */
   userId?: string;
 
@@ -1403,9 +1523,9 @@ export type FetchMembershipsParameters = PagedRequestParameters & {
 };
 
 /**
- * Update Membership request parameters (full replacement via PUT).
+ * Set Membership request parameters (full replacement via PUT).
  */
-export type UpdateMembershipParameters = {
+export type SetMembershipParameters = {
   /** Membership ID. */
   id: string;
 
@@ -1416,7 +1536,7 @@ export type UpdateMembershipParameters = {
   channelId: string;
 
   /** Complete, mutable membership data for replacement. */
-  data: UpdateMembershipData;
+  data: SetMembershipData;
 
   /**
    * ETag for optimistic concurrency control.
@@ -1425,13 +1545,20 @@ export type UpdateMembershipParameters = {
 };
 
 /**
- * Patch Membership request parameters (partial update via JSON Patch RFC 6902).
+ * Update Membership request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+ * Uses `add`, `replace`, and `remove` with dot-notation field paths, which the SDK converts to
+ * JSON Patch operations.
+ *
+ * Patch paths address the membership's **stored property names** — the same keys that come back in
+ * responses and real-time events — not the grouped parameter names used by
+ * {@link CreateMembershipParameters}. So the class version is `relationshipClassVersion` (not
+ * `data.classVersion`), and payload fields keep their `payload.` prefix. `channelId` and `userId`
+ * are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
  */
-export type PatchMembershipParameters = {
+export type UpdateMembershipParameters = {
   /** Membership ID. */
   id: string;
 
@@ -1498,16 +1625,16 @@ export type RemoveMembershipParameters = {
 export type CreateMembershipResponse = DataSyncEntityResponse<MembershipObject>;
 
 /** Response for getting a single membership. */
-export type FetchMembershipResponse = DataSyncEntityResponse<MembershipObject>;
+export type GetMembershipResponse = DataSyncEntityResponse<MembershipObject>;
 
 /** Response for listing memberships. */
-export type FetchMembershipsResponse = DataSyncPagedResponse<MembershipObject>;
+export type GetMembershipsResponse = DataSyncPagedResponse<MembershipObject>;
 
 /** Response for updating a membership (PUT). */
-export type UpdateMembershipResponse = DataSyncEntityResponse<MembershipObject>;
+export type SetMembershipResponse = DataSyncEntityResponse<MembershipObject>;
 
 /** Response for patching a membership (PATCH). */
-export type PatchMembershipResponse = DataSyncEntityResponse<MembershipObject>;
+export type UpdateMembershipResponse = DataSyncEntityResponse<MembershipObject>;
 
 /** Response for removing a membership. */
 export type RemoveMembershipResponse = {

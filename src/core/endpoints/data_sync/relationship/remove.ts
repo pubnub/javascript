@@ -42,7 +42,7 @@ export class RemoveRelationshipRequest<Response extends DataSync.RemoveRelations
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNRemoveRelationshipOperation;
+    return RequestOperation.PNRemoveDataSyncRelationshipOperation;
   }
 
   validate(): string | undefined {

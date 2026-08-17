@@ -42,7 +42,7 @@ export class RemoveMembershipRequest<Response extends DataSync.RemoveMembershipR
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNRemoveMembershipOperation;
+    return RequestOperation.PNRemoveDataSyncMembershipOperation;
   }
 
   validate(): string | undefined {

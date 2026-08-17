@@ -38,6 +38,11 @@ type PermissionPayload = {
   uuids?: Record<string, number>;
 
   /**
+   * Object containing `user` permissions.
+   */
+  users?: Record<string, number>;
+
+  /**
    * Object containing `channel` permissions.
    */
   channels?: Record<string, number>;
@@ -147,19 +152,21 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
     if (!secretKey) return 'Missing Secret Key';
     if (!resources && !patterns && !hasProjections) return 'Missing either Resources or Patterns';
 
-    if (
-      this.isVspPermissions(this.parameters) &&
-      ('channels' in (this.parameters.resources ?? {}) ||
-        'uuids' in (this.parameters.resources ?? {}) ||
-        'groups' in (this.parameters.resources ?? {}) ||
-        'channels' in (this.parameters.patterns ?? {}) ||
-        'uuids' in (this.parameters.patterns ?? {}) ||
-        'groups' in (this.parameters.patterns ?? {}))
-    )
-      return (
-        'Cannot mix `users`, `spaces` and `authorizedUserId` with `uuids`, `channels`,' +
-        ' `groups` and `authorized_uuid`'
-      );
+    // A grant may not carry two synonyms for the same target: `users` / `uuids` both map to the
+    // uuid wire scope, `spaces` / `channels` both map to the channel wire scope, and
+    // `authorizedUserId` / `authorized_uuid` both name the principal. Everything else combines
+    // freely, so a single token can grant DataSync `users`, `channels`, `groups`, and `dataSync`
+    // together. `uuids` / `spaces` / `authorized_uuid` are the deprecated App Context terminology;
+    // prefer `users` / `channels` / `authorizedUserId`.
+    const hasScope = (scope: string) =>
+      scope in (this.parameters.resources ?? {}) || scope in (this.parameters.patterns ?? {});
+
+    if (hasScope('users') && hasScope('uuids'))
+      return 'Cannot mix `users` with `uuids` — `uuids` is deprecated App Context terminology; use `users`';
+    if (hasScope('spaces') && hasScope('channels'))
+      return 'Cannot mix `spaces` with `channels` — `spaces` is deprecated terminology; use `channels`';
+    if ('authorizedUserId' in this.parameters && 'authorized_uuid' in this.parameters)
+      return 'Cannot mix `authorizedUserId` with `authorized_uuid` — use `authorizedUserId`';
 
     let permissionsEmpty = true;
     [this.parameters.resources, this.parameters.patterns].forEach((refPerm) => {
@@ -189,9 +196,11 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
   protected get body(): string {
     const { ttl, meta } = this.parameters;
     const body: Record<string, unknown> = { ...(ttl || ttl === 0 ? { ttl } : {}) };
-    const uuid = this.isVspPermissions(this.parameters)
-      ? this.parameters.authorizedUserId
-      : this.parameters.authorized_uuid;
+    // `authorizedUserId` is the preferred User-terminology principal; `authorized_uuid` is the
+    // legacy App Context name. Either binds the token to a single principal.
+    const uuid =
+      ('authorizedUserId' in this.parameters ? this.parameters.authorizedUserId : undefined) ??
+      ('authorized_uuid' in this.parameters ? this.parameters.authorized_uuid : undefined);
 
     const permissions: Record<string, MetaPayload | string | Record<string, PermissionPayload>> = {};
     const resourcePermissions: PermissionPayload = {};
@@ -212,25 +221,36 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
       let channelsPermissions: Record<string, PAM.ChannelTokenPermissions> = {};
       let channelGroupsPermissions: Record<string, PAM.ChannelGroupTokenPermissions> = {};
       let uuidsPermissions: Record<string, PAM.UuidTokenPermissions> = {};
+      let usersPermissions: Record<string, PAM.UserTokenPermissions> = {};
 
       if (!target.channels) target.channels = {};
       if (!target.groups) target.groups = {};
       if (!target.uuids) target.uuids = {};
-      // @ts-expect-error Not used, needed for api backward compatibility
       if (!target.users) target.users = {};
       // @ts-expect-error Not used, needed for api backward compatibility
       if (!target.spaces) target.spaces = {};
 
       if (refPerm) {
-        // Check whether working with legacy Objects permissions.
-        if ('spaces' in refPerm || 'users' in refPerm) {
-          channelsPermissions = refPerm.spaces ?? {};
-          uuidsPermissions = refPerm.users ?? {};
-        } else if ('channels' in refPerm || 'uuids' in refPerm || 'groups' in refPerm) {
-          channelsPermissions = refPerm.channels ?? {};
-          channelGroupsPermissions = refPerm.groups ?? {};
-          uuidsPermissions = refPerm.uuids ?? {};
-        }
+        // `spaces` (deprecated) still collapses onto the channel wire scope. `users` and `uuids`
+        // are distinct wire keys: `users` maps to `users`, `uuids` maps to `uuids`. Validation
+        // already rejects providing both members of a synonym pair. `spaces` is read intentionally
+        // as the legacy fallback for channels.
+        const legacyRefPerm = refPerm as {
+          channels?: Record<string, PAM.ChannelTokenPermissions>;
+          groups?: Record<string, PAM.ChannelGroupTokenPermissions>;
+          uuids?: Record<string, PAM.UuidTokenPermissions>;
+          users?: Record<string, PAM.UserTokenPermissions>;
+          spaces?: Record<string, PAM.ChannelTokenPermissions>;
+        };
+        channelsPermissions =
+          'channels' in legacyRefPerm
+            ? (legacyRefPerm.channels ?? {})
+            : 'spaces' in legacyRefPerm
+              ? (legacyRefPerm.spaces ?? {})
+              : {};
+        channelGroupsPermissions = 'groups' in legacyRefPerm ? (legacyRefPerm.groups ?? {}) : {};
+        uuidsPermissions = 'uuids' in legacyRefPerm ? (legacyRefPerm.uuids ?? {}) : {};
+        usersPermissions = 'users' in legacyRefPerm ? (legacyRefPerm.users ?? {}) : {};
       }
 
       Object.keys(channelsPermissions).forEach((channel) =>
@@ -243,6 +263,10 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
 
       Object.keys(uuidsPermissions).forEach((uuids) =>
         mapPermissions(uuids, this.extractPermissions(uuidsPermissions[uuids]), 'uuids', target),
+      );
+
+      Object.keys(usersPermissions).forEach((users) =>
+        mapPermissions(users, this.extractPermissions(usersPermissions[users]), 'users', target),
       );
 
       if (refPerm && 'dataSync' in refPerm) this.mapDataSyncPermissions(refPerm.dataSync, target, mapPermissions);
@@ -359,24 +383,5 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
     if ('read' in permissions && permissions.read) permissionsResult |= 1;
 
     return permissionsResult;
-  }
-
-  /**
-   * Check whether provided parameters is part of legacy VSP access token configuration.
-   *
-   * @param parameters - Parameters which should be checked.
-   *
-   * @returns VSP request parameters if it is legacy configuration.
-   */
-  private isVspPermissions(
-    parameters: PAM.GrantTokenParameters | PAM.ObjectsGrantTokenParameters,
-  ): parameters is PAM.ObjectsGrantTokenParameters {
-    return (
-      'authorizedUserId' in parameters ||
-      'spaces' in (parameters.resources ?? {}) ||
-      'users' in (parameters.resources ?? {}) ||
-      'spaces' in (parameters.patterns ?? {}) ||
-      'users' in (parameters.patterns ?? {})
-    );
   }
 }

@@ -41,7 +41,7 @@ export class CreateMembershipRequest<Response extends DataSync.CreateMembershipR
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNCreateMembershipOperation;
+    return RequestOperation.PNCreateDataSyncMembershipOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {

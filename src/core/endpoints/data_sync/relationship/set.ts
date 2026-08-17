@@ -1,11 +1,7 @@
 /**
- * Patch Relationship REST API module.
+ * Set Relationship REST API module.
  *
- * Partial update via JSON Patch (RFC 6902).
- * Accepts `add` and `replace` (dot-notation key-value pairs), `remove`
- * (dot-notation paths), `move` and `copy` (`{ from, path }` dot-notation pairs),
- * and `test` (dot-notation key-value pairs) and converts them to JSON Patch
- * operations on the wire.
+ * Full resource replacement via PUT.
  *
  * @internal
  */
@@ -15,7 +11,6 @@ import { TransportResponse } from '../../../types/transport-response';
 import { AbstractRequest } from '../../../components/request';
 import RequestOperation from '../../../constants/operations';
 import * as DataSync from '../../../types/api/data-sync';
-import { toJsonPatchOperations } from '../../../types/api/data-sync';
 import { KeySet } from '../../../types/api';
 import { encodeString } from '../../../utils';
 
@@ -27,7 +22,7 @@ import { encodeString } from '../../../utils';
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.PatchRelationshipParameters & {
+type RequestParameters = DataSync.SetRelationshipParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -36,20 +31,20 @@ type RequestParameters = DataSync.PatchRelationshipParameters & {
 // endregion
 
 /**
- * Patch Relationship request.
+ * Set Relationship request.
  *
  * @internal
  */
-export class PatchRelationshipRequest<Response extends DataSync.PatchRelationshipResponse> extends AbstractRequest<
+export class SetRelationshipRequest<Response extends DataSync.SetRelationshipResponse> extends AbstractRequest<
   Response,
   Response
 > {
   constructor(private readonly parameters: RequestParameters) {
-    super({ method: TransportMethod.PATCH });
+    super({ method: TransportMethod.PUT });
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNPatchRelationshipOperation;
+    return RequestOperation.PNSetDataSyncRelationshipOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -61,16 +56,10 @@ export class PatchRelationshipRequest<Response extends DataSync.PatchRelationshi
 
   validate(): string | undefined {
     if (!this.parameters.id) return 'Relationship id cannot be empty';
-
-    const { add, replace, remove, move, copy, test } = this.parameters;
-    const hasAdd = add && Object.keys(add).length > 0;
-    const hasReplace = replace && Object.keys(replace).length > 0;
-    const hasRemove = remove && remove.length > 0;
-    const hasMove = move && move.length > 0;
-    const hasCopy = copy && copy.length > 0;
-    const hasTest = test && Object.keys(test).length > 0;
-    if (!hasAdd && !hasReplace && !hasRemove && !hasMove && !hasCopy && !hasTest)
-      return 'At least one of add, replace, remove, move, copy, or test must be provided';
+    if (!this.parameters.entityAId) return 'Entity A id cannot be empty';
+    if (!this.parameters.entityBId) return 'Entity B id cannot be empty';
+    if (!this.parameters.data) return 'Relationship data cannot be empty';
+    if (!this.parameters.data.classVersion) return 'Relationship class version cannot be empty';
   }
 
   protected get headers(): Record<string, string> | undefined {
@@ -80,7 +69,7 @@ export class PatchRelationshipRequest<Response extends DataSync.PatchRelationshi
 
     return {
       ...headers,
-      'Content-Type': 'application/json-patch+json',
+      'Content-Type': 'application/vnd.pubnub.objects.relationship+json;version=1',
     };
   }
 
@@ -94,10 +83,16 @@ export class PatchRelationshipRequest<Response extends DataSync.PatchRelationshi
   }
 
   protected get body(): ArrayBuffer | string | undefined {
-    const { add, replace, remove, move, copy, test } = this.parameters;
+    const { entityAId, entityBId, data } = this.parameters;
 
-    // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
-    const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
-    return JSON.stringify(jsonPatchOps);
+    return JSON.stringify({
+      data: {
+        entityAId,
+        entityBId,
+        relationshipClassVersion: data.classVersion,
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.payload !== undefined ? { payload: data.payload } : {}),
+      },
+    });
   }
 }

@@ -41,7 +41,7 @@ export class CreateUserRequest<Response extends DataSync.CreateUserResponse> ext
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNCreateUserOperation;
+    return RequestOperation.PNCreateDataSyncUserOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -75,12 +75,14 @@ export class CreateUserRequest<Response extends DataSync.CreateUserResponse> ext
   }
 
   protected get body(): ArrayBuffer | string | undefined {
-    const { id, data } = this.parameters;
+    const { id, class: entityClass, classLevel, data } = this.parameters;
 
     return JSON.stringify({
       data: {
         ...(id !== undefined ? { id } : {}),
+        ...(entityClass !== undefined ? { entityClass } : {}),
         entityClassVersion: data.classVersion,
+        ...(classLevel !== undefined ? { entityClassLevel: classLevel } : {}),
         ...(data.status !== undefined ? { status: data.status } : {}),
         ...(data.payload !== undefined ? { payload: data.payload } : {}),
       },

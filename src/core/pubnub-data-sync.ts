@@ -3,35 +3,35 @@
  */
 
 import { CreateUserRequest } from './endpoints/data_sync/user/create';
-import { FetchUsersRequest } from './endpoints/data_sync/user/fetch-all';
-import { UpdateUserRequest } from './endpoints/data_sync/user/update';
+import { GetUsersRequest } from './endpoints/data_sync/user/get-all';
+import { SetUserRequest } from './endpoints/data_sync/user/set';
 import { RemoveUserRequest } from './endpoints/data_sync/user/remove';
-import { PatchUserRequest } from './endpoints/data_sync/user/patch';
-import { FetchUserRequest } from './endpoints/data_sync/user/fetch';
+import { UpdateUserRequest } from './endpoints/data_sync/user/update';
+import { GetUserRequest } from './endpoints/data_sync/user/get';
 import { CreateChannelRequest } from './endpoints/data_sync/channel/create';
-import { FetchChannelsRequest } from './endpoints/data_sync/channel/fetch-all';
-import { UpdateChannelRequest } from './endpoints/data_sync/channel/update';
+import { GetChannelsRequest } from './endpoints/data_sync/channel/get-all';
+import { SetChannelRequest } from './endpoints/data_sync/channel/set';
 import { RemoveChannelRequest } from './endpoints/data_sync/channel/remove';
-import { PatchChannelRequest } from './endpoints/data_sync/channel/patch';
-import { FetchChannelRequest } from './endpoints/data_sync/channel/fetch';
+import { UpdateChannelRequest } from './endpoints/data_sync/channel/update';
+import { GetChannelRequest } from './endpoints/data_sync/channel/get';
 import { CreateMembershipRequest } from './endpoints/data_sync/membership/create';
-import { FetchMembershipsRequest } from './endpoints/data_sync/membership/fetch-all';
-import { UpdateMembershipRequest } from './endpoints/data_sync/membership/update';
+import { GetMembershipsRequest } from './endpoints/data_sync/membership/get-all';
+import { SetMembershipRequest } from './endpoints/data_sync/membership/set';
 import { RemoveMembershipRequest } from './endpoints/data_sync/membership/remove';
-import { PatchMembershipRequest } from './endpoints/data_sync/membership/patch';
-import { FetchMembershipRequest } from './endpoints/data_sync/membership/fetch';
+import { UpdateMembershipRequest } from './endpoints/data_sync/membership/update';
+import { GetMembershipRequest } from './endpoints/data_sync/membership/get';
 import { CreateRelationshipRequest } from './endpoints/data_sync/relationship/create';
-import { FetchRelationshipsRequest } from './endpoints/data_sync/relationship/fetch-all';
-import { UpdateRelationshipRequest } from './endpoints/data_sync/relationship/update';
+import { GetRelationshipsRequest } from './endpoints/data_sync/relationship/get-all';
+import { SetRelationshipRequest } from './endpoints/data_sync/relationship/set';
 import { RemoveRelationshipRequest } from './endpoints/data_sync/relationship/remove';
-import { PatchRelationshipRequest } from './endpoints/data_sync/relationship/patch';
-import { FetchRelationshipRequest } from './endpoints/data_sync/relationship/fetch';
+import { UpdateRelationshipRequest } from './endpoints/data_sync/relationship/update';
+import { GetRelationshipRequest } from './endpoints/data_sync/relationship/get';
 import { CreateEntityRequest } from './endpoints/data_sync/entity/create';
-import { FetchEntitiesRequest } from './endpoints/data_sync/entity/fetch-all';
-import { UpdateEntityRequest } from './endpoints/data_sync/entity/update';
+import { GetEntitiesRequest } from './endpoints/data_sync/entity/get-all';
+import { SetEntityRequest } from './endpoints/data_sync/entity/set';
 import { RemoveEntityRequest } from './endpoints/data_sync/entity/remove';
-import { PatchEntityRequest } from './endpoints/data_sync/entity/patch';
-import { FetchEntityRequest } from './endpoints/data_sync/entity/fetch';
+import { UpdateEntityRequest } from './endpoints/data_sync/entity/update';
+import { GetEntityRequest } from './endpoints/data_sync/entity/get';
 import { KeySet, ResultCallback, SendRequestFunction } from './types/api';
 import { PrivateClientConfiguration } from './interfaces/configuration';
 import * as DataSync from './types/api/data-sync';
@@ -144,94 +144,141 @@ export default class PubNubDataSync {
   }
 
   // endregion
-  // region Fetch Entity
+  // region Get Entity
 
   /**
-   * Fetch a specific Entity.
+   * Get a specific Entity.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public fetchEntity(
-    parameters: DataSync.FetchEntityParameters,
-    callback: ResultCallback<DataSync.FetchEntityResponse>,
+  public getEntity(
+    parameters: DataSync.GetEntityParameters,
+    callback: ResultCallback<DataSync.GetEntityResponse>,
   ): void;
 
   /**
-   * Fetch a specific Entity.
+   * Get a specific Entity.
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous fetch entity response.
+   * @returns Asynchronous get entity response.
    */
-  public async fetchEntity(parameters: DataSync.FetchEntityParameters): Promise<DataSync.FetchEntityResponse>;
+  public async getEntity(parameters: DataSync.GetEntityParameters): Promise<DataSync.GetEntityResponse>;
 
   /**
-   * Fetch a specific Entity.
+   * Get a specific Entity.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous fetch entity response or `void` in case if `callback` provided.
+   * @returns Asynchronous get entity response or `void` in case if `callback` provided.
    */
-  async fetchEntity(
-    parameters: DataSync.FetchEntityParameters,
-    callback?: ResultCallback<DataSync.FetchEntityResponse>,
-  ): Promise<DataSync.FetchEntityResponse | void> {
+  async getEntity(
+    parameters: DataSync.GetEntityParameters,
+    callback?: ResultCallback<DataSync.GetEntityResponse>,
+  ): Promise<DataSync.GetEntityResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Fetch Entity with parameters:',
+      details: 'Get Entity with parameters:',
     }));
 
-    const request = new FetchEntityRequest({ ...parameters, keySet: this.keySet });
+    const request = new GetEntityRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
   }
 
   // endregion
-  // region Fetch Entities
+  // region Get Entities
 
   /**
-   * Fetch a paginated list of Entities for a given Entity Class.
+   * Get a paginated list of Entities for a given Entity Class.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public fetchEntities(
-    parameters: DataSync.FetchEntitiesParameters,
-    callback: ResultCallback<DataSync.FetchEntitiesResponse>,
+  public getEntities(
+    parameters: DataSync.GetEntitiesParameters,
+    callback: ResultCallback<DataSync.GetEntitiesResponse>,
   ): void;
 
   /**
-   * Fetch a paginated list of Entities for a given Entity Class.
+   * Get a paginated list of Entities for a given Entity Class.
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous fetch entities response.
+   * @returns Asynchronous get entities response.
    */
-  public async fetchEntities(parameters: DataSync.FetchEntitiesParameters): Promise<DataSync.FetchEntitiesResponse>;
+  public async getEntities(parameters: DataSync.GetEntitiesParameters): Promise<DataSync.GetEntitiesResponse>;
 
   /**
-   * Fetch a paginated list of Entities for a given Entity Class.
+   * Get a paginated list of Entities for a given Entity Class.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous fetch entities response or `void` in case if `callback` provided.
+   * @returns Asynchronous get entities response or `void` in case if `callback` provided.
    */
-  async fetchEntities(
-    parameters: DataSync.FetchEntitiesParameters,
-    callback?: ResultCallback<DataSync.FetchEntitiesResponse>,
-  ): Promise<DataSync.FetchEntitiesResponse | void> {
+  async getEntities(
+    parameters: DataSync.GetEntitiesParameters,
+    callback?: ResultCallback<DataSync.GetEntitiesResponse>,
+  ): Promise<DataSync.GetEntitiesResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Fetch Entities with parameters:',
+      details: 'Get Entities with parameters:',
     }));
 
-    const request = new FetchEntitiesRequest({ ...parameters, keySet: this.keySet });
+    const request = new GetEntitiesRequest({ ...parameters, keySet: this.keySet });
+
+    if (callback) return this.sendRequest(request, callback);
+    return this.sendRequest(request);
+  }
+
+  // endregion
+  // region Set Entity
+
+  /**
+   * Set an Entity (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   * @param callback - Request completion handler callback.
+   */
+  public setEntity(
+    parameters: DataSync.SetEntityParameters,
+    callback: ResultCallback<DataSync.SetEntityResponse>,
+  ): void;
+
+  /**
+   * Set an Entity (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   *
+   * @returns Asynchronous set entity response.
+   */
+  public async setEntity(parameters: DataSync.SetEntityParameters): Promise<DataSync.SetEntityResponse>;
+
+  /**
+   * Set an Entity (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   * @param [callback] - Request completion handler callback.
+   *
+   * @returns Asynchronous set entity response or `void` in case if `callback` provided.
+   */
+  async setEntity(
+    parameters: DataSync.SetEntityParameters,
+    callback?: ResultCallback<DataSync.SetEntityResponse>,
+  ): Promise<DataSync.SetEntityResponse | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: 'Set Entity with parameters:',
+    }));
+
+    const request = new SetEntityRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -241,7 +288,9 @@ export default class PubNubDataSync {
   // region Update Entity
 
   /**
-   * Update an Entity (full replacement via PUT).
+   * Update an Entity (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -252,7 +301,9 @@ export default class PubNubDataSync {
   ): void;
 
   /**
-   * Update an Entity (full replacement via PUT).
+   * Update an Entity (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -261,7 +312,9 @@ export default class PubNubDataSync {
   public async updateEntity(parameters: DataSync.UpdateEntityParameters): Promise<DataSync.UpdateEntityResponse>;
 
   /**
-   * Update an Entity (full replacement via PUT).
+   * Update an Entity (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -279,59 +332,6 @@ export default class PubNubDataSync {
     }));
 
     const request = new UpdateEntityRequest({ ...parameters, keySet: this.keySet });
-
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
-  }
-
-  // endregion
-  // region Patch Entity
-
-  /**
-   * Patch an Entity (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   * @param callback - Request completion handler callback.
-   */
-  public patchEntity(
-    parameters: DataSync.PatchEntityParameters,
-    callback: ResultCallback<DataSync.PatchEntityResponse>,
-  ): void;
-
-  /**
-   * Patch an Entity (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   *
-   * @returns Asynchronous patch entity response.
-   */
-  public async patchEntity(parameters: DataSync.PatchEntityParameters): Promise<DataSync.PatchEntityResponse>;
-
-  /**
-   * Patch an Entity (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   * @param [callback] - Request completion handler callback.
-   *
-   * @returns Asynchronous patch entity response or `void` in case if `callback` provided.
-   */
-  async patchEntity(
-    parameters: DataSync.PatchEntityParameters,
-    callback?: ResultCallback<DataSync.PatchEntityResponse>,
-  ): Promise<DataSync.PatchEntityResponse | void> {
-    this.logger.debug('PubNub', () => ({
-      messageType: 'object',
-      message: { ...parameters },
-      details: 'Patch Entity with parameters:',
-    }));
-
-    const request = new PatchEntityRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -441,98 +441,147 @@ export default class PubNubDataSync {
   }
 
   // endregion
-  // region Fetch Relationship
+  // region Get Relationship
 
   /**
-   * Fetch a specific Relationship.
+   * Get a specific Relationship.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public fetchRelationship(
-    parameters: DataSync.FetchRelationshipParameters,
-    callback: ResultCallback<DataSync.FetchRelationshipResponse>,
+  public getRelationship(
+    parameters: DataSync.GetRelationshipParameters,
+    callback: ResultCallback<DataSync.GetRelationshipResponse>,
   ): void;
 
   /**
-   * Fetch a specific Relationship.
+   * Get a specific Relationship.
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous fetch relationship response.
+   * @returns Asynchronous get relationship response.
    */
-  public async fetchRelationship(
-    parameters: DataSync.FetchRelationshipParameters,
-  ): Promise<DataSync.FetchRelationshipResponse>;
+  public async getRelationship(
+    parameters: DataSync.GetRelationshipParameters,
+  ): Promise<DataSync.GetRelationshipResponse>;
 
   /**
-   * Fetch a specific Relationship.
+   * Get a specific Relationship.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous fetch relationship response or `void` in case if `callback` provided.
+   * @returns Asynchronous get relationship response or `void` in case if `callback` provided.
    */
-  async fetchRelationship(
-    parameters: DataSync.FetchRelationshipParameters,
-    callback?: ResultCallback<DataSync.FetchRelationshipResponse>,
-  ): Promise<DataSync.FetchRelationshipResponse | void> {
+  async getRelationship(
+    parameters: DataSync.GetRelationshipParameters,
+    callback?: ResultCallback<DataSync.GetRelationshipResponse>,
+  ): Promise<DataSync.GetRelationshipResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Fetch Relationship with parameters:',
+      details: 'Get Relationship with parameters:',
     }));
 
-    const request = new FetchRelationshipRequest({ ...parameters, keySet: this.keySet });
+    const request = new GetRelationshipRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
   }
 
   // endregion
-  // region Fetch Relationships
+  // region Get Relationships
 
   /**
-   * Fetch a paginated list of Relationships.
+   * Get a paginated list of Relationships.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public fetchRelationships(
-    parameters: DataSync.FetchRelationshipsParameters,
-    callback: ResultCallback<DataSync.FetchRelationshipsResponse>,
+  public getRelationships(
+    parameters: DataSync.GetRelationshipsParameters,
+    callback: ResultCallback<DataSync.GetRelationshipsResponse>,
   ): void;
 
   /**
-   * Fetch a paginated list of Relationships.
+   * Get a paginated list of Relationships.
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous fetch relationships response.
+   * @returns Asynchronous get relationships response.
    */
-  public async fetchRelationships(
-    parameters: DataSync.FetchRelationshipsParameters,
-  ): Promise<DataSync.FetchRelationshipsResponse>;
+  public async getRelationships(
+    parameters: DataSync.GetRelationshipsParameters,
+  ): Promise<DataSync.GetRelationshipsResponse>;
 
   /**
-   * Fetch a paginated list of Relationships.
+   * Get a paginated list of Relationships.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous fetch relationships response or `void` in case if `callback` provided.
+   * @returns Asynchronous get relationships response or `void` in case if `callback` provided.
    */
-  async fetchRelationships(
-    parameters: DataSync.FetchRelationshipsParameters,
-    callback?: ResultCallback<DataSync.FetchRelationshipsResponse>,
-  ): Promise<DataSync.FetchRelationshipsResponse | void> {
+  async getRelationships(
+    parameters: DataSync.GetRelationshipsParameters,
+    callback?: ResultCallback<DataSync.GetRelationshipsResponse>,
+  ): Promise<DataSync.GetRelationshipsResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Fetch Relationships with parameters:',
+      details: 'Get Relationships with parameters:',
     }));
 
-    const request = new FetchRelationshipsRequest({ ...parameters, keySet: this.keySet });
+    const request = new GetRelationshipsRequest({ ...parameters, keySet: this.keySet });
+
+    if (callback) return this.sendRequest(request, callback);
+    return this.sendRequest(request);
+  }
+
+  // endregion
+  // region Set Relationship
+
+  /**
+   * Set a Relationship (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   * @param callback - Request completion handler callback.
+   */
+  public setRelationship(
+    parameters: DataSync.SetRelationshipParameters,
+    callback: ResultCallback<DataSync.SetRelationshipResponse>,
+  ): void;
+
+  /**
+   * Set a Relationship (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   *
+   * @returns Asynchronous set relationship response.
+   */
+  public async setRelationship(
+    parameters: DataSync.SetRelationshipParameters,
+  ): Promise<DataSync.SetRelationshipResponse>;
+
+  /**
+   * Set a Relationship (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   * @param [callback] - Request completion handler callback.
+   *
+   * @returns Asynchronous set relationship response or `void` in case if `callback` provided.
+   */
+  async setRelationship(
+    parameters: DataSync.SetRelationshipParameters,
+    callback?: ResultCallback<DataSync.SetRelationshipResponse>,
+  ): Promise<DataSync.SetRelationshipResponse | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: 'Set Relationship with parameters:',
+    }));
+
+    const request = new SetRelationshipRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -542,7 +591,9 @@ export default class PubNubDataSync {
   // region Update Relationship
 
   /**
-   * Update a Relationship (full replacement via PUT).
+   * Update a Relationship (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -553,7 +604,9 @@ export default class PubNubDataSync {
   ): void;
 
   /**
-   * Update a Relationship (full replacement via PUT).
+   * Update a Relationship (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -564,7 +617,9 @@ export default class PubNubDataSync {
   ): Promise<DataSync.UpdateRelationshipResponse>;
 
   /**
-   * Update a Relationship (full replacement via PUT).
+   * Update a Relationship (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -582,61 +637,6 @@ export default class PubNubDataSync {
     }));
 
     const request = new UpdateRelationshipRequest({ ...parameters, keySet: this.keySet });
-
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
-  }
-
-  // endregion
-  // region Patch Relationship
-
-  /**
-   * Patch a Relationship (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   * @param callback - Request completion handler callback.
-   */
-  public patchRelationship(
-    parameters: DataSync.PatchRelationshipParameters,
-    callback: ResultCallback<DataSync.PatchRelationshipResponse>,
-  ): void;
-
-  /**
-   * Patch a Relationship (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   *
-   * @returns Asynchronous patch relationship response.
-   */
-  public async patchRelationship(
-    parameters: DataSync.PatchRelationshipParameters,
-  ): Promise<DataSync.PatchRelationshipResponse>;
-
-  /**
-   * Patch a Relationship (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   * @param [callback] - Request completion handler callback.
-   *
-   * @returns Asynchronous patch relationship response or `void` in case if `callback` provided.
-   */
-  async patchRelationship(
-    parameters: DataSync.PatchRelationshipParameters,
-    callback?: ResultCallback<DataSync.PatchRelationshipResponse>,
-  ): Promise<DataSync.PatchRelationshipResponse | void> {
-    this.logger.debug('PubNub', () => ({
-      messageType: 'object',
-      message: { ...parameters },
-      details: 'Patch Relationship with parameters:',
-    }));
-
-    const request = new PatchRelationshipRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -746,105 +746,143 @@ export default class PubNubDataSync {
   }
 
   // endregion
-  // region Fetch User
+  // region Get User
 
   /**
-   * Fetch a specific User.
+   * Get a specific User.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public fetchUser(
-    parameters: DataSync.FetchUserParameters,
-    callback: ResultCallback<DataSync.FetchUserResponse>,
-  ): void;
+  public getUser(parameters: DataSync.GetUserParameters, callback: ResultCallback<DataSync.GetUserResponse>): void;
 
   /**
-   * Fetch a specific User.
+   * Get a specific User.
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous fetch user response.
+   * @returns Asynchronous get user response.
    */
-  public async fetchUser(parameters: DataSync.FetchUserParameters): Promise<DataSync.FetchUserResponse>;
+  public async getUser(parameters: DataSync.GetUserParameters): Promise<DataSync.GetUserResponse>;
 
   /**
-   * Fetch a specific User.
+   * Get a specific User.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous fetch user response or `void` in case if `callback` provided.
+   * @returns Asynchronous get user response or `void` in case if `callback` provided.
    */
-  async fetchUser(
-    parameters: DataSync.FetchUserParameters,
-    callback?: ResultCallback<DataSync.FetchUserResponse>,
-  ): Promise<DataSync.FetchUserResponse | void> {
+  async getUser(
+    parameters: DataSync.GetUserParameters,
+    callback?: ResultCallback<DataSync.GetUserResponse>,
+  ): Promise<DataSync.GetUserResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Fetch User with parameters:',
+      details: 'Get User with parameters:',
     }));
 
-    const request = new FetchUserRequest({ ...parameters, keySet: this.keySet });
+    const request = new GetUserRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
   }
 
   // endregion
-  // region Fetch Users
+  // region Get Users
 
   /**
-   * Fetch a paginated list of Users.
+   * Get a paginated list of Users.
    *
    * @param callback - Request completion handler callback.
    */
-  public fetchUsers(callback: ResultCallback<DataSync.FetchUsersResponse>): void;
+  public getUsers(callback: ResultCallback<DataSync.GetUsersResponse>): void;
 
   /**
-   * Fetch a paginated list of Users.
+   * Get a paginated list of Users.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public fetchUsers(
-    parameters: DataSync.FetchUsersParameters,
-    callback: ResultCallback<DataSync.FetchUsersResponse>,
-  ): void;
+  public getUsers(parameters: DataSync.GetUsersParameters, callback: ResultCallback<DataSync.GetUsersResponse>): void;
 
   /**
-   * Fetch a paginated list of Users.
+   * Get a paginated list of Users.
    *
    * @param [parameters] - Request configuration parameters.
    *
-   * @returns Asynchronous fetch users response.
+   * @returns Asynchronous get users response.
    */
-  public async fetchUsers(parameters?: DataSync.FetchUsersParameters): Promise<DataSync.FetchUsersResponse>;
+  public async getUsers(parameters?: DataSync.GetUsersParameters): Promise<DataSync.GetUsersResponse>;
 
   /**
-   * Fetch a paginated list of Users.
+   * Get a paginated list of Users.
    *
    * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous fetch users response or `void` in case if `callback` provided.
+   * @returns Asynchronous get users response or `void` in case if `callback` provided.
    */
-  async fetchUsers(
-    parametersOrCallback?: DataSync.FetchUsersParameters | ResultCallback<DataSync.FetchUsersResponse>,
-    callback?: ResultCallback<DataSync.FetchUsersResponse>,
-  ): Promise<DataSync.FetchUsersResponse | void> {
-    const parameters: DataSync.FetchUsersParameters =
+  async getUsers(
+    parametersOrCallback?: DataSync.GetUsersParameters | ResultCallback<DataSync.GetUsersResponse>,
+    callback?: ResultCallback<DataSync.GetUsersResponse>,
+  ): Promise<DataSync.GetUsersResponse | void> {
+    const parameters: DataSync.GetUsersParameters =
       parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
 
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Fetch Users with parameters:',
+      details: 'Get Users with parameters:',
     }));
 
-    const request = new FetchUsersRequest({ ...parameters, keySet: this.keySet });
+    const request = new GetUsersRequest({ ...parameters, keySet: this.keySet });
+
+    if (callback) return this.sendRequest(request, callback);
+    return this.sendRequest(request);
+  }
+
+  // endregion
+  // region Set User
+
+  /**
+   * Set a User (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   * @param callback - Request completion handler callback.
+   */
+  public setUser(parameters: DataSync.SetUserParameters, callback: ResultCallback<DataSync.SetUserResponse>): void;
+
+  /**
+   * Set a User (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   *
+   * @returns Asynchronous set user response.
+   */
+  public async setUser(parameters: DataSync.SetUserParameters): Promise<DataSync.SetUserResponse>;
+
+  /**
+   * Set a User (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   * @param [callback] - Request completion handler callback.
+   *
+   * @returns Asynchronous set user response or `void` in case if `callback` provided.
+   */
+  async setUser(
+    parameters: DataSync.SetUserParameters,
+    callback?: ResultCallback<DataSync.SetUserResponse>,
+  ): Promise<DataSync.SetUserResponse | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: 'Set User with parameters:',
+    }));
+
+    const request = new SetUserRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -854,7 +892,9 @@ export default class PubNubDataSync {
   // region Update User
 
   /**
-   * Update a User (full replacement via PUT).
+   * Update a User (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -865,7 +905,9 @@ export default class PubNubDataSync {
   ): void;
 
   /**
-   * Update a User (full replacement via PUT).
+   * Update a User (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -874,7 +916,9 @@ export default class PubNubDataSync {
   public async updateUser(parameters: DataSync.UpdateUserParameters): Promise<DataSync.UpdateUserResponse>;
 
   /**
-   * Update a User (full replacement via PUT).
+   * Update a User (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -892,59 +936,6 @@ export default class PubNubDataSync {
     }));
 
     const request = new UpdateUserRequest({ ...parameters, keySet: this.keySet });
-
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
-  }
-
-  // endregion
-  // region Patch User
-
-  /**
-   * Patch a User (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   * @param callback - Request completion handler callback.
-   */
-  public patchUser(
-    parameters: DataSync.PatchUserParameters,
-    callback: ResultCallback<DataSync.PatchUserResponse>,
-  ): void;
-
-  /**
-   * Patch a User (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   *
-   * @returns Asynchronous patch user response.
-   */
-  public async patchUser(parameters: DataSync.PatchUserParameters): Promise<DataSync.PatchUserResponse>;
-
-  /**
-   * Patch a User (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   * @param [callback] - Request completion handler callback.
-   *
-   * @returns Asynchronous patch user response or `void` in case if `callback` provided.
-   */
-  async patchUser(
-    parameters: DataSync.PatchUserParameters,
-    callback?: ResultCallback<DataSync.PatchUserResponse>,
-  ): Promise<DataSync.PatchUserResponse | void> {
-    this.logger.debug('PubNub', () => ({
-      messageType: 'object',
-      message: { ...parameters },
-      details: 'Patch User with parameters:',
-    }));
-
-    const request = new PatchUserRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -1052,105 +1043,152 @@ export default class PubNubDataSync {
   }
 
   // endregion
-  // region Fetch Channel
+  // region Get Channel
 
   /**
-   * Fetch a specific Channel.
+   * Get a specific Channel.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public fetchChannel(
-    parameters: DataSync.FetchChannelParameters,
-    callback: ResultCallback<DataSync.FetchChannelResponse>,
+  public getChannel(
+    parameters: DataSync.GetChannelParameters,
+    callback: ResultCallback<DataSync.GetChannelResponse>,
   ): void;
 
   /**
-   * Fetch a specific Channel.
+   * Get a specific Channel.
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous fetch channel response.
+   * @returns Asynchronous get channel response.
    */
-  public async fetchChannel(parameters: DataSync.FetchChannelParameters): Promise<DataSync.FetchChannelResponse>;
+  public async getChannel(parameters: DataSync.GetChannelParameters): Promise<DataSync.GetChannelResponse>;
 
   /**
-   * Fetch a specific Channel.
+   * Get a specific Channel.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous fetch channel response or `void` in case if `callback` provided.
+   * @returns Asynchronous get channel response or `void` in case if `callback` provided.
    */
-  async fetchChannel(
-    parameters: DataSync.FetchChannelParameters,
-    callback?: ResultCallback<DataSync.FetchChannelResponse>,
-  ): Promise<DataSync.FetchChannelResponse | void> {
+  async getChannel(
+    parameters: DataSync.GetChannelParameters,
+    callback?: ResultCallback<DataSync.GetChannelResponse>,
+  ): Promise<DataSync.GetChannelResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Fetch Channel with parameters:',
+      details: 'Get Channel with parameters:',
     }));
 
-    const request = new FetchChannelRequest({ ...parameters, keySet: this.keySet });
+    const request = new GetChannelRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
   }
 
   // endregion
-  // region Fetch Channels
+  // region Get Channels
 
   /**
-   * Fetch a paginated list of Channels.
+   * Get a paginated list of Channels.
    *
    * @param callback - Request completion handler callback.
    */
-  public fetchChannels(callback: ResultCallback<DataSync.FetchChannelsResponse>): void;
+  public getChannels(callback: ResultCallback<DataSync.GetChannelsResponse>): void;
 
   /**
-   * Fetch a paginated list of Channels.
+   * Get a paginated list of Channels.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public fetchChannels(
-    parameters: DataSync.FetchChannelsParameters,
-    callback: ResultCallback<DataSync.FetchChannelsResponse>,
+  public getChannels(
+    parameters: DataSync.GetChannelsParameters,
+    callback: ResultCallback<DataSync.GetChannelsResponse>,
   ): void;
 
   /**
-   * Fetch a paginated list of Channels.
+   * Get a paginated list of Channels.
    *
    * @param [parameters] - Request configuration parameters.
    *
-   * @returns Asynchronous fetch channels response.
+   * @returns Asynchronous get channels response.
    */
-  public async fetchChannels(parameters?: DataSync.FetchChannelsParameters): Promise<DataSync.FetchChannelsResponse>;
+  public async getChannels(parameters?: DataSync.GetChannelsParameters): Promise<DataSync.GetChannelsResponse>;
 
   /**
-   * Fetch a paginated list of Channels.
+   * Get a paginated list of Channels.
    *
    * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous fetch channels response or `void` in case if `callback` provided.
+   * @returns Asynchronous get channels response or `void` in case if `callback` provided.
    */
-  async fetchChannels(
-    parametersOrCallback?: DataSync.FetchChannelsParameters | ResultCallback<DataSync.FetchChannelsResponse>,
-    callback?: ResultCallback<DataSync.FetchChannelsResponse>,
-  ): Promise<DataSync.FetchChannelsResponse | void> {
-    const parameters: DataSync.FetchChannelsParameters =
+  async getChannels(
+    parametersOrCallback?: DataSync.GetChannelsParameters | ResultCallback<DataSync.GetChannelsResponse>,
+    callback?: ResultCallback<DataSync.GetChannelsResponse>,
+  ): Promise<DataSync.GetChannelsResponse | void> {
+    const parameters: DataSync.GetChannelsParameters =
       parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
 
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Fetch Channels with parameters:',
+      details: 'Get Channels with parameters:',
     }));
 
-    const request = new FetchChannelsRequest({ ...parameters, keySet: this.keySet });
+    const request = new GetChannelsRequest({ ...parameters, keySet: this.keySet });
+
+    if (callback) return this.sendRequest(request, callback);
+    return this.sendRequest(request);
+  }
+
+  // endregion
+  // region Set Channel
+
+  /**
+   * Set a Channel (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   * @param callback - Request completion handler callback.
+   */
+  public setChannel(
+    parameters: DataSync.SetChannelParameters,
+    callback: ResultCallback<DataSync.SetChannelResponse>,
+  ): void;
+
+  /**
+   * Set a Channel (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   *
+   * @returns Asynchronous set channel response.
+   */
+  public async setChannel(parameters: DataSync.SetChannelParameters): Promise<DataSync.SetChannelResponse>;
+
+  /**
+   * Set a Channel (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   * @param [callback] - Request completion handler callback.
+   *
+   * @returns Asynchronous set channel response or `void` in case if `callback` provided.
+   */
+  async setChannel(
+    parameters: DataSync.SetChannelParameters,
+    callback?: ResultCallback<DataSync.SetChannelResponse>,
+  ): Promise<DataSync.SetChannelResponse | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: 'Set Channel with parameters:',
+    }));
+
+    const request = new SetChannelRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -1160,7 +1198,9 @@ export default class PubNubDataSync {
   // region Update Channel
 
   /**
-   * Update a Channel (full replacement via PUT).
+   * Update a Channel (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -1171,7 +1211,9 @@ export default class PubNubDataSync {
   ): void;
 
   /**
-   * Update a Channel (full replacement via PUT).
+   * Update a Channel (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -1180,7 +1222,9 @@ export default class PubNubDataSync {
   public async updateChannel(parameters: DataSync.UpdateChannelParameters): Promise<DataSync.UpdateChannelResponse>;
 
   /**
-   * Update a Channel (full replacement via PUT).
+   * Update a Channel (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -1198,59 +1242,6 @@ export default class PubNubDataSync {
     }));
 
     const request = new UpdateChannelRequest({ ...parameters, keySet: this.keySet });
-
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
-  }
-
-  // endregion
-  // region Patch Channel
-
-  /**
-   * Patch a Channel (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   * @param callback - Request completion handler callback.
-   */
-  public patchChannel(
-    parameters: DataSync.PatchChannelParameters,
-    callback: ResultCallback<DataSync.PatchChannelResponse>,
-  ): void;
-
-  /**
-   * Patch a Channel (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   *
-   * @returns Asynchronous patch channel response.
-   */
-  public async patchChannel(parameters: DataSync.PatchChannelParameters): Promise<DataSync.PatchChannelResponse>;
-
-  /**
-   * Patch a Channel (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   * @param [callback] - Request completion handler callback.
-   *
-   * @returns Asynchronous patch channel response or `void` in case if `callback` provided.
-   */
-  async patchChannel(
-    parameters: DataSync.PatchChannelParameters,
-    callback?: ResultCallback<DataSync.PatchChannelResponse>,
-  ): Promise<DataSync.PatchChannelResponse | void> {
-    this.logger.debug('PubNub', () => ({
-      messageType: 'object',
-      message: { ...parameters },
-      details: 'Patch Channel with parameters:',
-    }));
-
-    const request = new PatchChannelRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -1360,109 +1351,152 @@ export default class PubNubDataSync {
   }
 
   // endregion
-  // region Fetch Membership
+  // region Get Membership
 
   /**
-   * Fetch a specific Membership.
+   * Get a specific Membership.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public fetchMembership(
-    parameters: DataSync.FetchMembershipParameters,
-    callback: ResultCallback<DataSync.FetchMembershipResponse>,
+  public getMembership(
+    parameters: DataSync.GetMembershipParameters,
+    callback: ResultCallback<DataSync.GetMembershipResponse>,
   ): void;
 
   /**
-   * Fetch a specific Membership.
+   * Get a specific Membership.
    *
    * @param parameters - Request configuration parameters.
    *
-   * @returns Asynchronous fetch membership response.
+   * @returns Asynchronous get membership response.
    */
-  public async fetchMembership(
-    parameters: DataSync.FetchMembershipParameters,
-  ): Promise<DataSync.FetchMembershipResponse>;
+  public async getMembership(parameters: DataSync.GetMembershipParameters): Promise<DataSync.GetMembershipResponse>;
 
   /**
-   * Fetch a specific Membership.
+   * Get a specific Membership.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous fetch membership response or `void` in case if `callback` provided.
+   * @returns Asynchronous get membership response or `void` in case if `callback` provided.
    */
-  async fetchMembership(
-    parameters: DataSync.FetchMembershipParameters,
-    callback?: ResultCallback<DataSync.FetchMembershipResponse>,
-  ): Promise<DataSync.FetchMembershipResponse | void> {
+  async getMembership(
+    parameters: DataSync.GetMembershipParameters,
+    callback?: ResultCallback<DataSync.GetMembershipResponse>,
+  ): Promise<DataSync.GetMembershipResponse | void> {
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Fetch Membership with parameters:',
+      details: 'Get Membership with parameters:',
     }));
 
-    const request = new FetchMembershipRequest({ ...parameters, keySet: this.keySet });
+    const request = new GetMembershipRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
   }
 
   // endregion
-  // region Fetch Memberships
+  // region Get Memberships
 
   /**
-   * Fetch a paginated list of Memberships.
+   * Get a paginated list of Memberships.
    *
    * @param callback - Request completion handler callback.
    */
-  public fetchMemberships(callback: ResultCallback<DataSync.FetchMembershipsResponse>): void;
+  public getMemberships(callback: ResultCallback<DataSync.GetMembershipsResponse>): void;
 
   /**
-   * Fetch a paginated list of Memberships.
+   * Get a paginated list of Memberships.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
-  public fetchMemberships(
-    parameters: DataSync.FetchMembershipsParameters,
-    callback: ResultCallback<DataSync.FetchMembershipsResponse>,
+  public getMemberships(
+    parameters: DataSync.GetMembershipsParameters,
+    callback: ResultCallback<DataSync.GetMembershipsResponse>,
   ): void;
 
   /**
-   * Fetch a paginated list of Memberships.
+   * Get a paginated list of Memberships.
    *
    * @param [parameters] - Request configuration parameters.
    *
-   * @returns Asynchronous fetch memberships response.
+   * @returns Asynchronous get memberships response.
    */
-  public async fetchMemberships(
-    parameters?: DataSync.FetchMembershipsParameters,
-  ): Promise<DataSync.FetchMembershipsResponse>;
+  public async getMemberships(parameters?: DataSync.GetMembershipsParameters): Promise<DataSync.GetMembershipsResponse>;
 
   /**
-   * Fetch a paginated list of Memberships.
+   * Get a paginated list of Memberships.
    *
    * @param [parametersOrCallback] - Request configuration parameters or callback from overload.
    * @param [callback] - Request completion handler callback.
    *
-   * @returns Asynchronous fetch memberships response or `void` in case if `callback` provided.
+   * @returns Asynchronous get memberships response or `void` in case if `callback` provided.
    */
-  async fetchMemberships(
-    parametersOrCallback?: DataSync.FetchMembershipsParameters | ResultCallback<DataSync.FetchMembershipsResponse>,
-    callback?: ResultCallback<DataSync.FetchMembershipsResponse>,
-  ): Promise<DataSync.FetchMembershipsResponse | void> {
-    const parameters: DataSync.FetchMembershipsParameters =
+  async getMemberships(
+    parametersOrCallback?: DataSync.GetMembershipsParameters | ResultCallback<DataSync.GetMembershipsResponse>,
+    callback?: ResultCallback<DataSync.GetMembershipsResponse>,
+  ): Promise<DataSync.GetMembershipsResponse | void> {
+    const parameters: DataSync.GetMembershipsParameters =
       parametersOrCallback && typeof parametersOrCallback !== 'function' ? parametersOrCallback : {};
     callback ??= typeof parametersOrCallback === 'function' ? parametersOrCallback : undefined;
 
     this.logger.debug('PubNub', () => ({
       messageType: 'object',
       message: { ...parameters },
-      details: 'Fetch Memberships with parameters:',
+      details: 'Get Memberships with parameters:',
     }));
 
-    const request = new FetchMembershipsRequest({ ...parameters, keySet: this.keySet });
+    const request = new GetMembershipsRequest({ ...parameters, keySet: this.keySet });
+
+    if (callback) return this.sendRequest(request, callback);
+    return this.sendRequest(request);
+  }
+
+  // endregion
+  // region Set Membership
+
+  /**
+   * Set a Membership (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   * @param callback - Request completion handler callback.
+   */
+  public setMembership(
+    parameters: DataSync.SetMembershipParameters,
+    callback: ResultCallback<DataSync.SetMembershipResponse>,
+  ): void;
+
+  /**
+   * Set a Membership (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   *
+   * @returns Asynchronous set membership response.
+   */
+  public async setMembership(parameters: DataSync.SetMembershipParameters): Promise<DataSync.SetMembershipResponse>;
+
+  /**
+   * Set a Membership (full replacement via PUT).
+   *
+   * @param parameters - Request configuration parameters.
+   * @param [callback] - Request completion handler callback.
+   *
+   * @returns Asynchronous set membership response or `void` in case if `callback` provided.
+   */
+  async setMembership(
+    parameters: DataSync.SetMembershipParameters,
+    callback?: ResultCallback<DataSync.SetMembershipResponse>,
+  ): Promise<DataSync.SetMembershipResponse | void> {
+    this.logger.debug('PubNub', () => ({
+      messageType: 'object',
+      message: { ...parameters },
+      details: 'Set Membership with parameters:',
+    }));
+
+    const request = new SetMembershipRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);
@@ -1472,7 +1506,9 @@ export default class PubNubDataSync {
   // region Update Membership
 
   /**
-   * Update a Membership (full replacement via PUT).
+   * Update a Membership (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -1483,7 +1519,9 @@ export default class PubNubDataSync {
   ): void;
 
   /**
-   * Update a Membership (full replacement via PUT).
+   * Update a Membership (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -1494,7 +1532,9 @@ export default class PubNubDataSync {
   ): Promise<DataSync.UpdateMembershipResponse>;
 
   /**
-   * Update a Membership (full replacement via PUT).
+   * Update a Membership (partial update via JSON Patch RFC 6902).
+   *
+   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -1512,61 +1552,6 @@ export default class PubNubDataSync {
     }));
 
     const request = new UpdateMembershipRequest({ ...parameters, keySet: this.keySet });
-
-    if (callback) return this.sendRequest(request, callback);
-    return this.sendRequest(request);
-  }
-
-  // endregion
-  // region Patch Membership
-
-  /**
-   * Patch a Membership (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   * @param callback - Request completion handler callback.
-   */
-  public patchMembership(
-    parameters: DataSync.PatchMembershipParameters,
-    callback: ResultCallback<DataSync.PatchMembershipResponse>,
-  ): void;
-
-  /**
-   * Patch a Membership (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   *
-   * @returns Asynchronous patch membership response.
-   */
-  public async patchMembership(
-    parameters: DataSync.PatchMembershipParameters,
-  ): Promise<DataSync.PatchMembershipResponse>;
-
-  /**
-   * Patch a Membership (partial update via JSON Patch RFC 6902).
-   *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-   *
-   * @param parameters - Request configuration parameters.
-   * @param [callback] - Request completion handler callback.
-   *
-   * @returns Asynchronous patch membership response or `void` in case if `callback` provided.
-   */
-  async patchMembership(
-    parameters: DataSync.PatchMembershipParameters,
-    callback?: ResultCallback<DataSync.PatchMembershipResponse>,
-  ): Promise<DataSync.PatchMembershipResponse | void> {
-    this.logger.debug('PubNub', () => ({
-      messageType: 'object',
-      message: { ...parameters },
-      details: 'Patch Membership with parameters:',
-    }));
-
-    const request = new PatchMembershipRequest({ ...parameters, keySet: this.keySet });
 
     if (callback) return this.sendRequest(request, callback);
     return this.sendRequest(request);

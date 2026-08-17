@@ -1,5 +1,5 @@
 /**
- * Fetch Channel REST API module.
+ * Get Relationship REST API module.
  *
  * @internal
  */
@@ -19,7 +19,7 @@ import { encodeString } from '../../../utils';
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.FetchChannelParameters & {
+type RequestParameters = DataSync.GetRelationshipParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -28,11 +28,11 @@ type RequestParameters = DataSync.FetchChannelParameters & {
 // endregion
 
 /**
- * Fetch Channel request.
+ * Get Relationship request.
  *
  * @internal
  */
-export class FetchChannelRequest<Response extends DataSync.FetchChannelResponse> extends AbstractRequest<
+export class GetRelationshipRequest<Response extends DataSync.GetRelationshipResponse> extends AbstractRequest<
   Response,
   Response
 > {
@@ -41,7 +41,7 @@ export class FetchChannelRequest<Response extends DataSync.FetchChannelResponse>
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNFetchChannelOperation;
+    return RequestOperation.PNGetDataSyncRelationshipOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -52,7 +52,7 @@ export class FetchChannelRequest<Response extends DataSync.FetchChannelResponse>
   }
 
   validate(): string | undefined {
-    if (!this.parameters.id) return 'Channel id cannot be empty';
+    if (!this.parameters.id) return 'Relationship id cannot be empty';
   }
 
   protected get path(): string {
@@ -61,6 +61,6 @@ export class FetchChannelRequest<Response extends DataSync.FetchChannelResponse>
       id,
     } = this.parameters;
 
-    return `/v1/datasync/subkeys/${subscribeKey}/channels/${encodeString(id)}`;
+    return `/v1/datasync/subkeys/${subscribeKey}/relationships/${encodeString(id)}`;
   }
 }

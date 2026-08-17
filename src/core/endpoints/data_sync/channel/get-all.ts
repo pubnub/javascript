@@ -1,5 +1,5 @@
 /**
- * Fetch Entities REST API module.
+ * Get Channels REST API module.
  *
  * @internal
  */
@@ -29,7 +29,7 @@ const DEFAULT_LIMIT = 20;
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.FetchEntitiesParameters & {
+type RequestParameters = DataSync.GetChannelsParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -38,11 +38,11 @@ type RequestParameters = DataSync.FetchEntitiesParameters & {
 // endregion
 
 /**
- * Fetch Entities request.
+ * Get Channels request.
  *
  * @internal
  */
-export class FetchEntitiesRequest<Response extends DataSync.FetchEntitiesResponse> extends AbstractRequest<
+export class GetChannelsRequest<Response extends DataSync.GetChannelsResponse> extends AbstractRequest<
   Response,
   Response
 > {
@@ -54,7 +54,7 @@ export class FetchEntitiesRequest<Response extends DataSync.FetchEntitiesRespons
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNFetchEntitiesOperation;
+    return RequestOperation.PNGetDataSyncChannelsOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -64,20 +64,15 @@ export class FetchEntitiesRequest<Response extends DataSync.FetchEntitiesRespons
     return { ...parsed, status: response.status } as Response;
   }
 
-  validate(): string | undefined {
-    if (!this.parameters.entityClass) return 'Entity class cannot be empty';
-  }
-
   protected get path(): string {
-    return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/entities`;
+    return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/channels`;
   }
 
   protected get queryParameters(): Query {
-    const { entityClass, entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+    const { entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
     const sorting = DataSync.serializeDataSyncSort(sort);
 
     return {
-      entity_class: entityClass,
       ...(entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {}),
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),

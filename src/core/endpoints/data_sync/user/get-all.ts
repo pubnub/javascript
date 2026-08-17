@@ -1,5 +1,5 @@
 /**
- * Fetch Users REST API module.
+ * Get Users REST API module.
  *
  * @internal
  */
@@ -29,7 +29,7 @@ const DEFAULT_LIMIT = 20;
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.FetchUsersParameters & {
+type RequestParameters = DataSync.GetUsersParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -38,14 +38,11 @@ type RequestParameters = DataSync.FetchUsersParameters & {
 // endregion
 
 /**
- * Fetch Users request.
+ * Get Users request.
  *
  * @internal
  */
-export class FetchUsersRequest<Response extends DataSync.FetchUsersResponse> extends AbstractRequest<
-  Response,
-  Response
-> {
+export class GetUsersRequest<Response extends DataSync.GetUsersResponse> extends AbstractRequest<Response, Response> {
   constructor(private readonly parameters: RequestParameters) {
     super();
 
@@ -54,7 +51,7 @@ export class FetchUsersRequest<Response extends DataSync.FetchUsersResponse> ext
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNFetchUsersOperation;
+    return RequestOperation.PNGetDataSyncUsersOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {

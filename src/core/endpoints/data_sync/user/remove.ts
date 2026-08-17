@@ -42,7 +42,7 @@ export class RemoveUserRequest<Response extends DataSync.RemoveUserResponse> ext
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNRemoveUserOperation;
+    return RequestOperation.PNRemoveDataSyncUserOperation;
   }
 
   validate(): string | undefined {

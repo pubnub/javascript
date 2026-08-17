@@ -1,7 +1,11 @@
 /**
  * Update Relationship REST API module.
  *
- * Full resource replacement via PUT.
+ * Partial update via JSON Patch (RFC 6902).
+ * Accepts `add` and `replace` (dot-notation key-value pairs), `remove`
+ * (dot-notation paths), `move` and `copy` (`{ from, path }` dot-notation pairs),
+ * and `test` (dot-notation key-value pairs) and converts them to JSON Patch
+ * operations.
  *
  * @internal
  */
@@ -11,6 +15,7 @@ import { TransportResponse } from '../../../types/transport-response';
 import { AbstractRequest } from '../../../components/request';
 import RequestOperation from '../../../constants/operations';
 import * as DataSync from '../../../types/api/data-sync';
+import { toJsonPatchOperations } from '../../../types/api/data-sync';
 import { KeySet } from '../../../types/api';
 import { encodeString } from '../../../utils';
 
@@ -40,11 +45,11 @@ export class UpdateRelationshipRequest<Response extends DataSync.UpdateRelations
   Response
 > {
   constructor(private readonly parameters: RequestParameters) {
-    super({ method: TransportMethod.PUT });
+    super({ method: TransportMethod.PATCH });
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNUpdateRelationshipOperation;
+    return RequestOperation.PNUpdateDataSyncRelationshipOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {
@@ -56,10 +61,16 @@ export class UpdateRelationshipRequest<Response extends DataSync.UpdateRelations
 
   validate(): string | undefined {
     if (!this.parameters.id) return 'Relationship id cannot be empty';
-    if (!this.parameters.entityAId) return 'Entity A id cannot be empty';
-    if (!this.parameters.entityBId) return 'Entity B id cannot be empty';
-    if (!this.parameters.data) return 'Relationship data cannot be empty';
-    if (!this.parameters.data.classVersion) return 'Relationship class version cannot be empty';
+
+    const { add, replace, remove, move, copy, test } = this.parameters;
+    const hasAdd = add && Object.keys(add).length > 0;
+    const hasReplace = replace && Object.keys(replace).length > 0;
+    const hasRemove = remove && remove.length > 0;
+    const hasMove = move && move.length > 0;
+    const hasCopy = copy && copy.length > 0;
+    const hasTest = test && Object.keys(test).length > 0;
+    if (!hasAdd && !hasReplace && !hasRemove && !hasMove && !hasCopy && !hasTest)
+      return 'At least one of add, replace, remove, move, copy, or test must be provided';
   }
 
   protected get headers(): Record<string, string> | undefined {
@@ -69,7 +80,7 @@ export class UpdateRelationshipRequest<Response extends DataSync.UpdateRelations
 
     return {
       ...headers,
-      'Content-Type': 'application/vnd.pubnub.objects.relationship+json;version=1',
+      'Content-Type': 'application/json-patch+json',
     };
   }
 
@@ -83,16 +94,10 @@ export class UpdateRelationshipRequest<Response extends DataSync.UpdateRelations
   }
 
   protected get body(): ArrayBuffer | string | undefined {
-    const { entityAId, entityBId, data } = this.parameters;
+    const { add, replace, remove, move, copy, test } = this.parameters;
 
-    return JSON.stringify({
-      data: {
-        entityAId,
-        entityBId,
-        relationshipClassVersion: data.classVersion,
-        ...(data.status !== undefined ? { status: data.status } : {}),
-        ...(data.payload !== undefined ? { payload: data.payload } : {}),
-      },
-    });
+    // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
+    const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
+    return JSON.stringify(jsonPatchOps);
   }
 }

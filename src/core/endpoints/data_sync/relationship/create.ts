@@ -41,7 +41,7 @@ export class CreateRelationshipRequest<Response extends DataSync.CreateRelations
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNCreateRelationshipOperation;
+    return RequestOperation.PNCreateDataSyncRelationshipOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {

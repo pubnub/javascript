@@ -1,5 +1,5 @@
 /**
- * Fetch Entity REST API module.
+ * Get Entity REST API module.
  *
  * @internal
  */
@@ -19,7 +19,7 @@ import { encodeString } from '../../../utils';
 /**
  * Request configuration parameters.
  */
-type RequestParameters = DataSync.FetchEntityParameters & {
+type RequestParameters = DataSync.GetEntityParameters & {
   /**
    * PubNub REST API access key set.
    */
@@ -28,20 +28,17 @@ type RequestParameters = DataSync.FetchEntityParameters & {
 // endregion
 
 /**
- * Fetch Entity request.
+ * Get Entity request.
  *
  * @internal
  */
-export class FetchEntityRequest<Response extends DataSync.FetchEntityResponse> extends AbstractRequest<
-  Response,
-  Response
-> {
+export class GetEntityRequest<Response extends DataSync.GetEntityResponse> extends AbstractRequest<Response, Response> {
   constructor(private readonly parameters: RequestParameters) {
     super();
   }
 
   operation(): RequestOperation {
-    return RequestOperation.PNFetchEntityOperation;
+    return RequestOperation.PNGetDataSyncEntityOperation;
   }
 
   async parse(response: TransportResponse): Promise<Response> {

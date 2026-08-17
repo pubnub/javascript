@@ -21,6 +21,14 @@ export type ChannelTokenPermissions = {
   write?: boolean;
 
   /**
+   * Whether `create` operations are permitted for corresponding level or not.
+   *
+   * Used by DataSync `Channel` grants (a DataSync Channel is an entity, granted through the reused
+   * `channels` scope). Ignored for classic messaging channels.
+   */
+  create?: boolean;
+
+  /**
    * Whether `get` operations are permitted for corresponding level or not.
    */
   get?: boolean;
@@ -71,6 +79,14 @@ export type ChannelGroupTokenPermissions = {
  */
 export type UuidTokenPermissions = {
   /**
+   * Whether `create` operations are permitted for corresponding level or not.
+   *
+   * Used by DataSync `User` grants (a DataSync User is an entity, granted through the reused
+   * `users` / `uuids` scope). Ignored for App Context UUID-metadata grants.
+   */
+  create?: boolean;
+
+  /**
    * Whether `get` operations are permitted for corresponding level or not.
    */
   get?: boolean;
@@ -89,7 +105,7 @@ export type UuidTokenPermissions = {
 /**
  * User-specific token permissions.
  */
-type UserTokenPermissions = UuidTokenPermissions;
+export type UserTokenPermissions = UuidTokenPermissions;
 
 /**
  * DataSync entity-level token permissions.
@@ -269,7 +285,19 @@ export type GrantTokenParameters = {
    */
   resources?: {
     /**
+     * Object containing `user` permissions.
+     *
+     * Preferred DataSync terminology for granting permissions on `User` resources (create / get /
+     * update / delete). Serialized to the same wire scope as {@link uuids}; may be combined with
+     * `channels`, `groups`, `uuids`, and `dataSync` in a single grant.
+     */
+    users?: Record<string, UserTokenPermissions>;
+
+    /**
      * Object containing `uuid` metadata permissions.
+     *
+     * @deprecated Legacy App Context terminology. For DataSync `User` grants prefer {@link users}.
+     * `uuids` remains for App Context UUID-metadata permissions.
      */
     uuids?: Record<string, UuidTokenPermissions>;
 
@@ -294,8 +322,19 @@ export type GrantTokenParameters = {
    */
   patterns?: {
     /**
+     * Object containing `user` permissions to apply to all `users` matching the RegEx pattern.
+     *
+     * Preferred DataSync terminology for granting permissions on `User` resources. Serialized to the
+     * same wire scope as {@link uuids}; may be combined with `channels`, `groups`, `uuids`, and
+     * `dataSync`.
+     */
+    users?: Record<string, UserTokenPermissions>;
+
+    /**
      * Object containing `uuid` metadata permissions to apply to all `uuids` matching the RegEx
      * pattern.
+     *
+     * @deprecated Legacy App Context terminology. For DataSync `User` grants prefer {@link users}.
      */
     uuids?: Record<string, UuidTokenPermissions>;
 
