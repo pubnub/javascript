@@ -2,10 +2,10 @@
  * Update Relationship REST API module.
  *
  * Partial update via JSON Patch (RFC 6902).
- * Accepts `add` and `replace` (dot-notation key-value pairs), `remove`
- * (dot-notation paths), `move` and `copy` (`{ from, path }` dot-notation pairs),
- * and `test` (dot-notation key-value pairs) and converts them to JSON Patch
- * operations.
+ * Accepts `add` and `replace` (JSON Pointer key-value pairs), `remove`
+ * (JSON Pointer paths), `move` and `copy` (`{ from, path }` JSON Pointer pairs),
+ * and `test` (JSON Pointer key-value pairs) and converts them to JSON Patch
+ * operations. Paths are sent verbatim.
  *
  * @internal
  */
@@ -96,7 +96,6 @@ export class UpdateRelationshipRequest<Response extends DataSync.UpdateRelations
   protected get body(): ArrayBuffer | string | undefined {
     const { add, replace, remove, move, copy, test } = this.parameters;
 
-    // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
     const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
     return JSON.stringify(jsonPatchOps);
   }

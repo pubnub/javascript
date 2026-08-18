@@ -2,9 +2,9 @@
  * Update Entity REST API module.
  *
  * Partial update via JSON Patch (RFC 6902).
- * Accepts `add`/`replace`/`test` (dot-notation key-value pairs), `remove`
- * (dot-notation paths), and `move`/`copy` (dot-notation from/path pairs), and
- * converts them to JSON Patch operations.
+ * Accepts `add`/`replace`/`test` (JSON Pointer key-value pairs), `remove`
+ * (JSON Pointer paths), and `move`/`copy` (JSON Pointer from/path pairs), and
+ * converts them to JSON Patch operations. Paths are sent verbatim.
  *
  * @internal
  */
@@ -95,7 +95,6 @@ export class UpdateEntityRequest<Response extends DataSync.UpdateEntityResponse>
   protected get body(): ArrayBuffer | string | undefined {
     const { add, replace, remove, move, copy, test } = this.parameters;
 
-    // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
     const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
     return JSON.stringify(jsonPatchOps);
   }

@@ -102,6 +102,10 @@ export default class PubNubDataSync {
   /**
    * Create a new Entity.
    *
+   * To change a field later with `updateEntity`, address it by its JSON Pointer: `classVersion` is
+   * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+   * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+   *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
@@ -113,6 +117,10 @@ export default class PubNubDataSync {
   /**
    * Create a new Entity.
    *
+   * To change a field later with `updateEntity`, address it by its JSON Pointer: `classVersion` is
+   * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+   * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+   *
    * @param parameters - Request configuration parameters.
    *
    * @returns Asynchronous create entity response.
@@ -121,6 +129,10 @@ export default class PubNubDataSync {
 
   /**
    * Create a new Entity.
+   *
+   * To change a field later with `updateEntity`, address it by its JSON Pointer: `classVersion` is
+   * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+   * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -290,7 +302,7 @@ export default class PubNubDataSync {
   /**
    * Update an Entity (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -303,7 +315,7 @@ export default class PubNubDataSync {
   /**
    * Update an Entity (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -314,7 +326,7 @@ export default class PubNubDataSync {
   /**
    * Update an Entity (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -397,6 +409,11 @@ export default class PubNubDataSync {
   /**
    * Create a new Relationship.
    *
+   * To change a field later with `updateRelationship`, address it by its JSON Pointer:
+   * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+   * fields as `/payload/<fieldName>`. `class`, `entityAId`, and `entityBId` are immutable and
+   * cannot be patched.
+   *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
@@ -408,6 +425,11 @@ export default class PubNubDataSync {
   /**
    * Create a new Relationship.
    *
+   * To change a field later with `updateRelationship`, address it by its JSON Pointer:
+   * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+   * fields as `/payload/<fieldName>`. `class`, `entityAId`, and `entityBId` are immutable and
+   * cannot be patched.
+   *
    * @param parameters - Request configuration parameters.
    *
    * @returns Asynchronous create relationship response.
@@ -418,6 +440,11 @@ export default class PubNubDataSync {
 
   /**
    * Create a new Relationship.
+   *
+   * To change a field later with `updateRelationship`, address it by its JSON Pointer:
+   * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+   * fields as `/payload/<fieldName>`. `class`, `entityAId`, and `entityBId` are immutable and
+   * cannot be patched.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -593,7 +620,7 @@ export default class PubNubDataSync {
   /**
    * Update a Relationship (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -606,7 +633,7 @@ export default class PubNubDataSync {
   /**
    * Update a Relationship (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -619,7 +646,7 @@ export default class PubNubDataSync {
   /**
    * Update a Relationship (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -704,6 +731,10 @@ export default class PubNubDataSync {
   /**
    * Create a new User.
    *
+   * To change a field later with `updateUser`, address it by its JSON Pointer: `classVersion` is
+   * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+   * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+   *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
@@ -715,6 +746,10 @@ export default class PubNubDataSync {
   /**
    * Create a new User.
    *
+   * To change a field later with `updateUser`, address it by its JSON Pointer: `classVersion` is
+   * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+   * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+   *
    * @param parameters - Request configuration parameters.
    *
    * @returns Asynchronous create user response.
@@ -723,6 +758,10 @@ export default class PubNubDataSync {
 
   /**
    * Create a new User.
+   *
+   * To change a field later with `updateUser`, address it by its JSON Pointer: `classVersion` is
+   * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+   * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -894,7 +933,7 @@ export default class PubNubDataSync {
   /**
    * Update a User (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -907,7 +946,7 @@ export default class PubNubDataSync {
   /**
    * Update a User (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -918,7 +957,7 @@ export default class PubNubDataSync {
   /**
    * Update a User (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -1001,6 +1040,10 @@ export default class PubNubDataSync {
   /**
    * Create a new Channel.
    *
+   * To change a field later with `updateChannel`, address it by its JSON Pointer: `classVersion`
+   * is patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+   * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+   *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
@@ -1012,6 +1055,10 @@ export default class PubNubDataSync {
   /**
    * Create a new Channel.
    *
+   * To change a field later with `updateChannel`, address it by its JSON Pointer: `classVersion`
+   * is patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+   * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+   *
    * @param parameters - Request configuration parameters.
    *
    * @returns Asynchronous create channel response.
@@ -1020,6 +1067,10 @@ export default class PubNubDataSync {
 
   /**
    * Create a new Channel.
+   *
+   * To change a field later with `updateChannel`, address it by its JSON Pointer: `classVersion`
+   * is patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+   * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -1200,7 +1251,7 @@ export default class PubNubDataSync {
   /**
    * Update a Channel (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -1213,7 +1264,7 @@ export default class PubNubDataSync {
   /**
    * Update a Channel (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -1224,7 +1275,7 @@ export default class PubNubDataSync {
   /**
    * Update a Channel (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -1307,6 +1358,10 @@ export default class PubNubDataSync {
   /**
    * Create a new Membership (associates a User with a Channel).
    *
+   * To change a field later with `updateMembership`, address it by its JSON Pointer:
+   * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+   * fields as `/payload/<fieldName>`. `userId` and `channelId` are immutable and cannot be patched.
+   *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
    */
@@ -1318,6 +1373,10 @@ export default class PubNubDataSync {
   /**
    * Create a new Membership (associates a User with a Channel).
    *
+   * To change a field later with `updateMembership`, address it by its JSON Pointer:
+   * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+   * fields as `/payload/<fieldName>`. `userId` and `channelId` are immutable and cannot be patched.
+   *
    * @param parameters - Request configuration parameters.
    *
    * @returns Asynchronous create membership response.
@@ -1328,6 +1387,10 @@ export default class PubNubDataSync {
 
   /**
    * Create a new Membership (associates a User with a Channel).
+   *
+   * To change a field later with `updateMembership`, address it by its JSON Pointer:
+   * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+   * fields as `/payload/<fieldName>`. `userId` and `channelId` are immutable and cannot be patched.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -1508,7 +1571,7 @@ export default class PubNubDataSync {
   /**
    * Update a Membership (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -1521,7 +1584,7 @@ export default class PubNubDataSync {
   /**
    * Update a Membership (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    *
@@ -1534,7 +1597,7 @@ export default class PubNubDataSync {
   /**
    * Update a Membership (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.

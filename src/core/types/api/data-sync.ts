@@ -170,9 +170,9 @@ type DataSyncPagedResponse<T> = {
 /**
  * JSON Patch operation as defined by RFC 6902.
  *
- * Internal request format. Developers use `add`/`replace`/`remove`/`move`/`copy`/`test` with dot
- * notation instead. `from` is the source location for `move`/`copy`; `value` carries the operand
- * for `add`/`replace`/`test`.
+ * Internal request format. Developers use `add`/`replace`/`remove`/`move`/`copy`/`test` keyed by
+ * JSON Pointer instead. `from` is the source location for `move`/`copy`; `value` carries the
+ * operand for `add`/`replace`/`test`.
  *
  * @internal
  */
@@ -184,29 +184,29 @@ export type JsonPatchOperation = {
 };
 
 /**
- * A source → destination path pair (dot notation) for JSON Patch `move` and `copy` operations.
+ * A source → destination path pair (JSON Pointer) for JSON Patch `move` and `copy` operations.
  */
 export type PatchMovePath = {
-  /** Dot-notation source path (RFC 6902 `from`). */
+  /** JSON Pointer source path, used verbatim (RFC 6902 `from`). */
   from: string;
 
-  /** Dot-notation destination path (RFC 6902 `path`). */
+  /** JSON Pointer destination path, used verbatim (RFC 6902 `path`). */
   path: string;
 };
 
 /**
- * User-friendly JSON Patch input (dot notation), converted to RFC 6902 operations before sending.
+ * JSON Patch input keyed by JSON Pointer, converted to RFC 6902 operations before sending.
  *
  * @internal
  */
 export type JsonPatchInput = {
-  /** Fields to add (dot path → value). */
+  /** Fields to add (JSON Pointer → value). */
   add?: Record<string, unknown>;
 
-  /** Fields to replace (dot path → value). */
+  /** Fields to replace (JSON Pointer → value). */
   replace?: Record<string, unknown>;
 
-  /** Dot-notation paths to remove. */
+  /** JSON Pointer paths to remove. */
   remove?: string[];
 
   /** Source → destination path pairs to move. */
@@ -215,24 +215,18 @@ export type JsonPatchInput = {
   /** Source → destination path pairs to copy. */
   copy?: PatchMovePath[];
 
-  /** Fields to test (dot path → expected value). */
+  /** Fields to test (JSON Pointer → expected value). */
   test?: Record<string, unknown>;
 };
 
 /**
- * Convert dot-notation path to JSON Pointer (RFC 6901).
+ * Convert user-friendly patch input to JSON Patch operations (request format).
  *
- * "config.ttlSec"           → "/config/ttlSec"
- * "filterableFields.0.name" → "/filterableFields/0/name"
- *
- * @internal
- */
-export function toJsonPointer(dotPath: string): string {
-  return '/' + dotPath.split('.').join('/');
-}
-
-/**
- * Convert user-friendly dot-notation patch input to JSON Patch operations (request format).
+ * Paths are passed through **verbatim**: the SDK does not translate `.` to `/`, nor prefix a
+ * leading `/`. Callers provide the exact RFC 6901 JSON Pointer they want on the wire (e.g.
+ * `/payload/creditScore`). This keeps field names that themselves contain `.` addressable —
+ * a path such as `/payload/user.name` targets the literal key `user.name`, which dot-notation
+ * translation would have split into two segments.
  *
  * - Each key in `add` becomes an "add" operation.
  * - Each key in `replace` becomes a "replace" operation.
@@ -248,38 +242,38 @@ export function toJsonPatchOperations(input: JsonPatchInput): JsonPatchOperation
   const ops: JsonPatchOperation[] = [];
 
   if (add) {
-    for (const [dotPath, value] of Object.entries(add)) {
-      ops.push({ op: 'add', path: toJsonPointer(dotPath), value });
+    for (const [path, value] of Object.entries(add)) {
+      ops.push({ op: 'add', path, value });
     }
   }
 
   if (replace) {
-    for (const [dotPath, value] of Object.entries(replace)) {
-      ops.push({ op: 'replace', path: toJsonPointer(dotPath), value });
+    for (const [path, value] of Object.entries(replace)) {
+      ops.push({ op: 'replace', path, value });
     }
   }
 
   if (remove) {
-    for (const dotPath of remove) {
-      ops.push({ op: 'remove', path: toJsonPointer(dotPath) });
+    for (const path of remove) {
+      ops.push({ op: 'remove', path });
     }
   }
 
   if (move) {
     for (const { from, path } of move) {
-      ops.push({ op: 'move', from: toJsonPointer(from), path: toJsonPointer(path) });
+      ops.push({ op: 'move', from, path });
     }
   }
 
   if (copy) {
     for (const { from, path } of copy) {
-      ops.push({ op: 'copy', from: toJsonPointer(from), path: toJsonPointer(path) });
+      ops.push({ op: 'copy', from, path });
     }
   }
 
   if (test) {
-    for (const [dotPath, value] of Object.entries(test)) {
-      ops.push({ op: 'test', path: toJsonPointer(dotPath), value });
+    for (const [path, value] of Object.entries(test)) {
+      ops.push({ op: 'test', path, value });
     }
   }
 
@@ -296,20 +290,62 @@ export function toJsonPatchOperations(input: JsonPatchInput): JsonPatchOperation
  * The mutable, versioned payload of an entity. `class` (immutable) and `id` live at the
  * top level of {@link CreateEntityParameters}; everything that can change over the entity's
  * lifetime is grouped here under `data`.
+ *
+ * Each field below documents the JSON Pointer to use when changing it later with
+ * `updateEntity` ({@link UpdateEntityParameters}) — the create-time parameter name and the
+ * patch path are not always the same.
  */
 export type CreateEntityData = {
   /**
    * Version of the entity class schema.
    *
-   * Stored on the entity as `entityClassVersion` — use that name to address it in
-   * {@link UpdateEntityParameters} patch paths.
+   * To change this later, patch `/entityClassVersion` — the stored property name, which is what
+   * responses and real-time events carry. It is *not* `/data/classVersion`.
+   *
+   * @example
+   * ```typescript
+   * // create
+   * await pubnub.dataSync.createEntity({ class: 'Customer', data: { classVersion: 1 } });
+   * // later: bump the version
+   * await pubnub.dataSync.updateEntity({ id, replace: { '/entityClassVersion': 2 } });
+   * ```
    */
   classVersion: number;
 
-  /** Optional lifecycle status. */
+  /**
+   * Optional lifecycle status.
+   *
+   * To change this later, patch `/status`.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateEntity({ id, replace: { '/status': 'inactive' } });
+   * ```
+   */
   status?: string;
 
-  /** User-defined JSON payload conforming to the entity class schema. */
+  /**
+   * User-defined JSON payload conforming to the entity class schema.
+   *
+   * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+   * Field names are used literally, so a key that itself contains `.` is addressed as-is.
+   *
+   * @example
+   * ```typescript
+   * // create
+   * await pubnub.dataSync.createEntity({
+   *   class: 'Customer',
+   *   data: { classVersion: 1, payload: { creditScore: 720, address: { city: 'Pune' } } },
+   * });
+   * // later: one top-level field, one nested field, one field whose name contains a dot
+   * await pubnub.dataSync.updateEntity({
+   *   id,
+   *   replace: { '/payload/creditScore': 810, '/payload/address/city': 'Mumbai' },
+   *   add: { '/payload/user.name': 'Alice' },
+   *   remove: ['/payload/address/line2'],
+   * });
+   * ```
+   */
   payload?: Record<string, unknown>;
 };
 
@@ -321,7 +357,11 @@ export type CreateEntityData = {
  * has no place in updates.
  */
 export type SetEntityData = {
-  /** Version of the entity class schema. */
+  /**
+   * Version of the entity class schema.
+   *
+   * With `updateEntity` (PATCH) the same value is addressed as `/entityClassVersion`.
+   */
   classVersion: number;
 
   /** Optional lifecycle status. */
@@ -378,9 +418,8 @@ export type CreateEntityParameters = {
   /**
    * Entity class this entity belongs to. Set at creation time and immutable afterward.
    *
-   * Stored on the entity as `entityClass` — the name it carries in responses, in real-time event
-   * payloads, and in {@link UpdateEntityParameters} patch paths (immutable, so never a patch
-   * target).
+   * Stored on the entity as `entityClass` — the name it carries in responses and real-time event
+   * payloads. Immutable, so it cannot be patched: `updateEntity` rejects `/entityClass`.
    */
   class: string;
 
@@ -389,7 +428,7 @@ export type CreateEntityParameters = {
    *
    * Omit to let the service apply its default.
    *
-   * Stored on the entity as `entityClassLevel`.
+   * Stored on the entity as `entityClassLevel`. Immutable, so it cannot be patched.
    */
   classLevel?: ClassLevel;
 
@@ -457,13 +496,13 @@ export type SetEntityParameters = {
 /**
  * Update Entity request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with dot-notation field paths, which the SDK converts to
- * JSON Patch operations.
+ * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, which the SDK
+ * sends verbatim as JSON Patch operations — no `.` → `/` translation and no leading `/` added.
  *
  * Patch paths address the entity's **stored property names** — the same keys that come back in
  * responses and real-time events — not the grouped parameter names used by
- * {@link CreateEntityParameters}. So the class version is `entityClassVersion` (not
- * `data.classVersion`), and payload fields keep their `payload.` prefix. `entityClass` and
+ * {@link CreateEntityParameters}. So the class version is `/entityClassVersion` (not
+ * `/data/classVersion`), and payload fields keep their `/payload` prefix. `entityClass` and
  * `entityClassLevel` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
@@ -473,45 +512,45 @@ export type UpdateEntityParameters = {
   id: string;
 
   /**
-   * Fields to add, using dot-notation keys.
+   * Fields to add, keyed by JSON Pointer.
    *
-   * Each key is a dot-delimited path to the target field.
+   * Each key is a JSON Pointer to the target field, used exactly as provided.
    * The SDK converts these to JSON Patch "add" operations.
    *
    * @example
    * ```typescript
    * add: {
-   *   'payload.tags.0': 'priority',
-   *   'payload.profile.displayName': 'Alice',
+   *   '/payload/tags/0': 'priority',
+   *   '/payload/profile/displayName': 'Alice',
    * }
    * ```
    */
   add?: Record<string, unknown>;
 
   /**
-   * Fields to replace, using dot-notation keys.
+   * Fields to replace, keyed by JSON Pointer.
    *
-   * Each key is a dot-delimited path to the target field.
+   * Each key is a JSON Pointer to the target field, used exactly as provided.
    * The SDK converts these to JSON Patch "replace" operations.
    *
    * @example
    * ```typescript
    * replace: {
-   *   'status': 'active',
-   *   'payload.score': 300,
+   *   '/status': 'active',
+   *   '/payload/score': 300,
    * }
    * ```
    */
   replace?: Record<string, unknown>;
 
   /**
-   * Array of dot-notation field paths to remove.
+   * Array of JSON Pointer field paths to remove.
    *
    * The SDK converts these to JSON Patch "remove" operations.
    *
    * @example
    * ```typescript
-   * remove: ['payload.tempFlag', 'payload.legacyField']
+   * remove: ['/payload/tempFlag', '/payload/legacyField']
    * ```
    */
   remove?: string[];
@@ -519,12 +558,12 @@ export type UpdateEntityParameters = {
   /**
    * Source → destination path pairs to move (RFC 6902 "move").
    *
-   * The value at each `from` is removed and re-added at `path`. Both are dot-notation paths used
-   * exactly as provided (prefix with `payload.` to target payload fields).
+   * The value at each `from` is removed and re-added at `path`. Both are JSON Pointers used
+   * exactly as provided (prefix with `/payload` to target payload fields).
    *
    * @example
    * ```typescript
-   * move: [{ from: 'payload.legacyName', path: 'payload.displayName' }]
+   * move: [{ from: '/payload/legacyName', path: '/payload/displayName' }]
    * ```
    */
   move?: PatchMovePath[];
@@ -532,25 +571,25 @@ export type UpdateEntityParameters = {
   /**
    * Source → destination path pairs to copy (RFC 6902 "copy").
    *
-   * The value at each `from` is duplicated to `path`. Both are dot-notation paths used exactly as
-   * provided (prefix with `payload.` to target payload fields).
+   * The value at each `from` is duplicated to `path`. Both are JSON Pointers used exactly as
+   * provided (prefix with `/payload` to target payload fields).
    *
    * @example
    * ```typescript
-   * copy: [{ from: 'payload.displayName', path: 'payload.previousName' }]
+   * copy: [{ from: '/payload/displayName', path: '/payload/previousName' }]
    * ```
    */
   copy?: PatchMovePath[];
 
   /**
-   * Fields to test (dot-notation keys → expected value; RFC 6902 "test").
+   * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test").
    *
    * The patch fails if the value at any path does not equal the expected value. Keys are used
-   * exactly as provided (prefix with `payload.` for payload fields).
+   * exactly as provided (prefix with `/payload` for payload fields).
    *
    * @example
    * ```typescript
-   * test: { 'status': 'active' }
+   * test: { '/status': 'active' }
    * ```
    */
   test?: Record<string, unknown>;
@@ -609,20 +648,53 @@ export type RemoveEntityResponse = {
  * The mutable, versioned payload of a relationship. `id`, `class`, `entityAId`, and `entityBId`
  * live at the top level of {@link CreateRelationshipParameters} (identity + immutable structure);
  * everything that can change over the relationship's lifetime is grouped here under `data`.
+ *
+ * Each field below documents the JSON Pointer to use when changing it later with
+ * `updateRelationship` ({@link UpdateRelationshipParameters}) — the create-time parameter name
+ * and the patch path are not always the same.
  */
 export type CreateRelationshipData = {
   /**
    * Version of the relationship class schema.
    *
-   * Stored on the relationship as `relationshipClassVersion` — use that name to address it in
-   * {@link UpdateRelationshipParameters} patch paths.
+   * To change this later, patch `/relationshipClassVersion` — the stored property name, which is
+   * what responses and real-time events carry. It is *not* `/data/classVersion`.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateRelationship({ id, replace: { '/relationshipClassVersion': 2 } });
+   * ```
    */
   classVersion: number;
 
-  /** Optional lifecycle status. */
+  /**
+   * Optional lifecycle status.
+   *
+   * To change this later, patch `/status`.
+   */
   status?: string;
 
-  /** User-defined JSON payload. */
+  /**
+   * User-defined JSON payload.
+   *
+   * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+   * Field names are used literally, so a key that itself contains `.` is addressed as-is.
+   *
+   * @example
+   * ```typescript
+   * // create
+   * await pubnub.dataSync.createRelationship({
+   *   class: 'RequestedBy', entityAId, entityBId,
+   *   data: { classVersion: 1, payload: { label: 'primary', linkedAt: '2026-07-06T10:00:00.000Z' } },
+   * });
+   * // later
+   * await pubnub.dataSync.updateRelationship({
+   *   id,
+   *   replace: { '/payload/label': 'secondary' },
+   *   move: [{ from: '/payload/linkedAt', path: '/payload/linkedOn' }],
+   * });
+   * ```
+   */
   payload?: Record<string, unknown>;
 };
 
@@ -634,7 +706,11 @@ export type CreateRelationshipData = {
  * and therefore has no place in updates. The server rejects a PUT that omits `classVersion`.
  */
 export type SetRelationshipData = {
-  /** Version of the relationship class schema. */
+  /**
+   * Version of the relationship class schema.
+   *
+   * With `updateRelationship` (PATCH) the same value is addressed as `/relationshipClassVersion`.
+   */
   classVersion: number;
 
   /** Optional lifecycle status. */
@@ -697,16 +773,15 @@ export type CreateRelationshipParameters = {
   /**
    * Relationship class this relationship belongs to. Set at creation time and immutable afterward.
    *
-   * Stored on the relationship as `relationshipClass` — the name it carries in responses, in
-   * real-time event payloads, and in {@link UpdateRelationshipParameters} patch paths (immutable,
-   * so never a patch target).
+   * Stored on the relationship as `relationshipClass` — the name it carries in responses and
+   * real-time event payloads. Immutable, so it cannot be patched.
    */
   class: string;
 
-  /** First entity ID in the relationship. */
+  /** First entity ID in the relationship. Immutable after creation, so it cannot be patched. */
   entityAId: string;
 
-  /** Second entity ID in the relationship. */
+  /** Second entity ID in the relationship. Immutable after creation, so it cannot be patched. */
   entityBId: string;
 
   /** Mutable, versioned relationship data (class version, status, and payload). */
@@ -772,13 +847,13 @@ export type SetRelationshipParameters = {
 /**
  * Update Relationship request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with dot-notation field paths, which the SDK converts to
- * JSON Patch operations.
+ * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, which the SDK
+ * sends verbatim as JSON Patch operations — no `.` → `/` translation and no leading `/` added.
  *
  * Patch paths address the relationship's **stored property names** — the same keys that come back in
  * responses and real-time events — not the grouped parameter names used by
  * {@link CreateRelationshipParameters}. So the class version is `relationshipClassVersion` (not
- * `data.classVersion`), and payload fields keep their `payload.` prefix. `relationshipClass`,
+ * `/data/classVersion`), and payload fields keep their `/payload` prefix. `relationshipClass`,
  * `entityAId`, and `entityBId` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
@@ -788,65 +863,65 @@ export type UpdateRelationshipParameters = {
   id: string;
 
   /**
-   * Fields to add, using dot-notation keys.
+   * Fields to add, keyed by JSON Pointer.
    *
-   * Each key is a dot-delimited path to the target field (prefix with `payload.` to target payload fields).
-   * The SDK converts these to JSON Patch "add" operations.
+   * Each key is a JSON Pointer to the target field, used exactly as provided (prefix with
+   * `/payload` to target payload fields). The SDK converts these to JSON Patch "add" operations.
    *
    * @example
    * ```typescript
    * add: {
-   *   'payload.tags.0': 'mentor',
+   *   '/payload/tags/0': 'mentor',
    * }
    * ```
    */
   add?: Record<string, unknown>;
 
   /**
-   * Fields to replace, using dot-notation keys.
+   * Fields to replace, keyed by JSON Pointer.
    *
-   * Each key is a dot-delimited path to the target field (prefix with `payload.` to target payload fields).
-   * The SDK converts these to JSON Patch "replace" operations.
+   * Each key is a JSON Pointer to the target field, used exactly as provided (prefix with
+   * `/payload` to target payload fields). The SDK converts these to JSON Patch "replace" operations.
    *
    * @example
    * ```typescript
    * replace: {
-   *   'payload.role': 'admin',
-   *   'payload.permissions.read': true,
+   *   '/payload/role': 'admin',
+   *   '/payload/permissions/read': true,
    * }
    * ```
    */
   replace?: Record<string, unknown>;
 
   /**
-   * Array of dot-notation field paths to remove.
+   * Array of JSON Pointer field paths to remove.
    *
    * The SDK converts these to JSON Patch "remove" operations.
    *
    * @example
    * ```typescript
-   * remove: ['payload.tempFlag', 'payload.legacyField']
+   * remove: ['/payload/tempFlag', '/payload/legacyField']
    * ```
    */
   remove?: string[];
 
   /**
-   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+   * as provided (prefix with `/payload` to target payload fields); the value at `from` is
    * removed and re-added at `path`.
    */
   move?: PatchMovePath[];
 
   /**
-   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+   * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
    */
   copy?: PatchMovePath[];
 
   /**
-   * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+   * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
    * value at any path does not equal the expected value. Keys are used as provided (prefix with
-   * `payload.` for payload fields).
+   * `/payload` for payload fields).
    */
   test?: Record<string, unknown>;
 
@@ -903,20 +978,52 @@ export type RemoveRelationshipResponse = {
  *
  * The mutable, versioned payload of a user. `id` lives at the top level of
  * {@link CreateUserParameters}; everything that can change over the user's lifetime is here.
+ *
+ * Each field below documents the JSON Pointer to use when changing it later with `updateUser`
+ * ({@link UpdateUserParameters}) — the create-time parameter name and the patch path are not
+ * always the same.
  */
 export type CreateUserData = {
   /**
    * Version of the entity class schema.
    *
-   * Stored on the user as `entityClassVersion` — use that name to address it in
-   * {@link UpdateUserParameters} patch paths.
+   * To change this later, patch `/entityClassVersion` — the stored property name, which is what
+   * responses and real-time events carry. It is *not* `/data/classVersion`.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateUser({ id, replace: { '/entityClassVersion': 2 } });
+   * ```
    */
   classVersion: number;
 
-  /** Optional lifecycle status. */
+  /**
+   * Optional lifecycle status.
+   *
+   * To change this later, patch `/status`.
+   */
   status?: string;
 
-  /** User-defined JSON payload conforming to the entity class schema. */
+  /**
+   * User-defined JSON payload conforming to the entity class schema.
+   *
+   * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+   * Field names are used literally, so a key that itself contains `.` is addressed as-is.
+   *
+   * @example
+   * ```typescript
+   * // create
+   * await pubnub.dataSync.createUser({
+   *   data: { classVersion: 1, payload: { email: 'alice@acme.test', isActive: true } },
+   * });
+   * // later
+   * await pubnub.dataSync.updateUser({
+   *   id,
+   *   replace: { '/payload/email': 'alice.v@acme.test' },
+   *   remove: ['/payload/isActive'],
+   * });
+   * ```
+   */
   payload?: Record<string, unknown>;
 };
 
@@ -966,8 +1073,8 @@ export type CreateUserParameters = {
    *
    * Must be `User` or one of its subclasses. Omit to let the service apply the default (`User`).
    *
-   * Stored on the user as `entityClass` — the name it carries in responses, in real-time event
-   * payloads, and in {@link UpdateUserParameters} patch paths (immutable, so never a patch target).
+   * Stored on the user as `entityClass` — the name it carries in responses and real-time event
+   * payloads. Immutable, so it cannot be patched: `updateUser` rejects `/entityClass`.
    */
   class?: string;
 
@@ -976,7 +1083,7 @@ export type CreateUserParameters = {
    *
    * Omit to let the service apply its default.
    *
-   * Stored on the user as `entityClassLevel`.
+   * Stored on the user as `entityClassLevel`. Immutable, so it cannot be patched.
    */
   classLevel?: ClassLevel;
 
@@ -991,7 +1098,11 @@ export type CreateUserParameters = {
  * {@link SetUserParameters}.
  */
 export type SetUserData = {
-  /** Version of the entity class schema. */
+  /**
+   * Version of the entity class schema.
+   *
+   * With `updateUser` (PATCH) the same value is addressed as `/entityClassVersion`.
+   */
   classVersion: number;
 
   /** Optional lifecycle status. */
@@ -1044,13 +1155,13 @@ export type SetUserParameters = {
 /**
  * Update User request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with dot-notation field paths, which the SDK converts to
- * JSON Patch operations.
+ * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, which the SDK
+ * sends verbatim as JSON Patch operations — no `.` → `/` translation and no leading `/` added.
  *
  * Patch paths address the user's **stored property names** — the same keys that come back in
  * responses and real-time events — not the grouped parameter names used by
  * {@link CreateUserParameters}. So the class version is `entityClassVersion` (not
- * `data.classVersion`), and payload fields keep their `payload.` prefix. `entityClass` and
+ * `/data/classVersion`), and payload fields keep their `/payload` prefix. `entityClass` and
  * `entityClassLevel` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
@@ -1060,40 +1171,40 @@ export type UpdateUserParameters = {
   id: string;
 
   /**
-   * Fields to add, using dot-notation keys.
+   * Fields to add, keyed by JSON Pointer (used exactly as provided).
    * The SDK converts these to JSON Patch "add" operations.
    */
   add?: Record<string, unknown>;
 
   /**
-   * Fields to replace, using dot-notation keys.
+   * Fields to replace, keyed by JSON Pointer (used exactly as provided).
    * The SDK converts these to JSON Patch "replace" operations.
    */
   replace?: Record<string, unknown>;
 
   /**
-   * Array of dot-notation field paths to remove.
+   * Array of JSON Pointer field paths to remove (used exactly as provided).
    * The SDK converts these to JSON Patch "remove" operations.
    */
   remove?: string[];
 
   /**
-   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+   * as provided (prefix with `/payload` to target payload fields); the value at `from` is
    * removed and re-added at `path`.
    */
   move?: PatchMovePath[];
 
   /**
-   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+   * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
    */
   copy?: PatchMovePath[];
 
   /**
-   * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+   * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
    * value at any path does not equal the expected value. Keys are used as provided (prefix with
-   * `payload.` for payload fields).
+   * `/payload` for payload fields).
    */
   test?: Record<string, unknown>;
 
@@ -1148,20 +1259,52 @@ export type RemoveUserResponse = {
  *
  * The mutable, versioned payload of a channel. `id` lives at the top level of
  * {@link CreateChannelParameters}; everything that can change over the channel's lifetime is here.
+ *
+ * Each field below documents the JSON Pointer to use when changing it later with `updateChannel`
+ * ({@link UpdateChannelParameters}) — the create-time parameter name and the patch path are not
+ * always the same.
  */
 export type CreateChannelData = {
   /**
    * Version of the entity class schema.
    *
-   * Stored on the channel as `entityClassVersion` — use that name to address it in
-   * {@link UpdateChannelParameters} patch paths.
+   * To change this later, patch `/entityClassVersion` — the stored property name, which is what
+   * responses and real-time events carry. It is *not* `/data/classVersion`.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateChannel({ id, replace: { '/entityClassVersion': 2 } });
+   * ```
    */
   classVersion: number;
 
-  /** Optional lifecycle status. */
+  /**
+   * Optional lifecycle status.
+   *
+   * To change this later, patch `/status`.
+   */
   status?: string;
 
-  /** User-defined JSON payload conforming to the entity class schema. */
+  /**
+   * User-defined JSON payload conforming to the entity class schema.
+   *
+   * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+   * Field names are used literally, so a key that itself contains `.` is addressed as-is.
+   *
+   * @example
+   * ```typescript
+   * // create
+   * await pubnub.dataSync.createChannel({
+   *   data: { classVersion: 1, payload: { name: 'engineering', memberCount: 1 } },
+   * });
+   * // later
+   * await pubnub.dataSync.updateChannel({
+   *   id,
+   *   replace: { '/payload/memberCount': 42 },
+   *   add: { '/payload/category': 'general' },
+   * });
+   * ```
+   */
   payload?: Record<string, unknown>;
 };
 
@@ -1172,7 +1315,11 @@ export type CreateChannelData = {
  * {@link SetChannelParameters}.
  */
 export type SetChannelData = {
-  /** Version of the entity class schema. */
+  /**
+   * Version of the entity class schema.
+   *
+   * With `updateChannel` (PATCH) the same value is addressed as `/entityClassVersion`.
+   */
   classVersion: number;
 
   /** Optional lifecycle status. */
@@ -1229,9 +1376,8 @@ export type CreateChannelParameters = {
    * Must be `Channel` or one of its subclasses. Omit to let the service apply the default
    * (`Channel`).
    *
-   * Stored on the channel as `entityClass` — the name it carries in responses, in real-time event
-   * payloads, and in {@link UpdateChannelParameters} patch paths (immutable, so never a patch
-   * target).
+   * Stored on the channel as `entityClass` — the name it carries in responses and real-time event
+   * payloads. Immutable, so it cannot be patched: `updateChannel` rejects `/entityClass`.
    */
   class?: string;
 
@@ -1241,7 +1387,7 @@ export type CreateChannelParameters = {
    *
    * Omit to let the service apply its default.
    *
-   * Stored on the channel as `entityClassLevel`.
+   * Stored on the channel as `entityClassLevel`. Immutable, so it cannot be patched.
    */
   classLevel?: ClassLevel;
 
@@ -1291,13 +1437,13 @@ export type SetChannelParameters = {
 /**
  * Update Channel request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with dot-notation field paths, which the SDK converts to
- * JSON Patch operations.
+ * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, which the SDK
+ * sends verbatim as JSON Patch operations — no `.` → `/` translation and no leading `/` added.
  *
  * Patch paths address the channel's **stored property names** — the same keys that come back in
  * responses and real-time events — not the grouped parameter names used by
  * {@link CreateChannelParameters}. So the class version is `entityClassVersion` (not
- * `data.classVersion`), and payload fields keep their `payload.` prefix. `entityClass` and
+ * `/data/classVersion`), and payload fields keep their `/payload` prefix. `entityClass` and
  * `entityClassLevel` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
@@ -1307,40 +1453,40 @@ export type UpdateChannelParameters = {
   id: string;
 
   /**
-   * Fields to add, using dot-notation keys.
+   * Fields to add, keyed by JSON Pointer (used exactly as provided).
    * The SDK converts these to JSON Patch "add" operations.
    */
   add?: Record<string, unknown>;
 
   /**
-   * Fields to replace, using dot-notation keys.
+   * Fields to replace, keyed by JSON Pointer (used exactly as provided).
    * The SDK converts these to JSON Patch "replace" operations.
    */
   replace?: Record<string, unknown>;
 
   /**
-   * Array of dot-notation field paths to remove.
+   * Array of JSON Pointer field paths to remove (used exactly as provided).
    * The SDK converts these to JSON Patch "remove" operations.
    */
   remove?: string[];
 
   /**
-   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+   * as provided (prefix with `/payload` to target payload fields); the value at `from` is
    * removed and re-added at `path`.
    */
   move?: PatchMovePath[];
 
   /**
-   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+   * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
    */
   copy?: PatchMovePath[];
 
   /**
-   * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+   * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
    * value at any path does not equal the expected value. Keys are used as provided (prefix with
-   * `payload.` for payload fields).
+   * `/payload` for payload fields).
    */
   test?: Record<string, unknown>;
 
@@ -1396,20 +1542,53 @@ export type RemoveChannelResponse = {
  * The mutable, versioned payload of a membership. `id`, `userId`, and `channelId` live at the
  * top level of {@link CreateMembershipParameters} (identity + immutable structure); everything
  * that can change over the membership's lifetime is grouped here under `data`.
+ *
+ * Each field below documents the JSON Pointer to use when changing it later with
+ * `updateMembership` ({@link UpdateMembershipParameters}) — the create-time parameter name and
+ * the patch path are not always the same.
  */
 export type CreateMembershipData = {
   /**
    * Version of the Membership relationship class.
    *
-   * Stored on the membership as `relationshipClassVersion` — use that name to address it in
-   * {@link UpdateMembershipParameters} patch paths.
+   * To change this later, patch `/relationshipClassVersion` — the stored property name, which is
+   * what responses and real-time events carry. It is *not* `/data/classVersion`.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateMembership({ id, replace: { '/relationshipClassVersion': 2 } });
+   * ```
    */
   classVersion: number;
 
-  /** Optional lifecycle status. */
+  /**
+   * Optional lifecycle status.
+   *
+   * To change this later, patch `/status`.
+   */
   status?: string;
 
-  /** User-defined JSON payload. */
+  /**
+   * User-defined JSON payload.
+   *
+   * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+   * Field names are used literally, so a key that itself contains `.` is addressed as-is.
+   *
+   * @example
+   * ```typescript
+   * // create
+   * await pubnub.dataSync.createMembership({
+   *   userId, channelId,
+   *   data: { classVersion: 1, payload: { role: 'member', notificationsEnabled: true } },
+   * });
+   * // later
+   * await pubnub.dataSync.updateMembership({
+   *   id,
+   *   replace: { '/payload/role': 'moderator' },
+   *   remove: ['/payload/notificationsEnabled'],
+   * });
+   * ```
+   */
   payload?: Record<string, unknown>;
 };
 
@@ -1421,7 +1600,11 @@ export type CreateMembershipData = {
  * (`SYN-0004: must not be null`), mirroring {@link SetRelationshipData}.
  */
 export type SetMembershipData = {
-  /** Version of the Membership relationship class. */
+  /**
+   * Version of the Membership relationship class.
+   *
+   * With `updateMembership` (PATCH) the same value is addressed as `/relationshipClassVersion`.
+   */
   classVersion: number;
 
   /** Optional lifecycle status. */
@@ -1482,10 +1665,10 @@ export type CreateMembershipParameters = {
    */
   id?: string;
 
-  /** User ID reference. */
+  /** User ID reference. Immutable after creation, so it cannot be patched. */
   userId: string;
 
-  /** Channel ID reference. */
+  /** Channel ID reference. Immutable after creation, so it cannot be patched. */
   channelId: string;
 
   /** Mutable, versioned membership data (class version, status, and payload). */
@@ -1547,13 +1730,13 @@ export type SetMembershipParameters = {
 /**
  * Update Membership request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with dot-notation field paths, which the SDK converts to
- * JSON Patch operations.
+ * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, which the SDK
+ * sends verbatim as JSON Patch operations — no `.` → `/` translation and no leading `/` added.
  *
  * Patch paths address the membership's **stored property names** — the same keys that come back in
  * responses and real-time events — not the grouped parameter names used by
  * {@link CreateMembershipParameters}. So the class version is `relationshipClassVersion` (not
- * `data.classVersion`), and payload fields keep their `payload.` prefix. `channelId` and `userId`
+ * `/data/classVersion`), and payload fields keep their `/payload` prefix. `channelId` and `userId`
  * are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
@@ -1563,40 +1746,40 @@ export type UpdateMembershipParameters = {
   id: string;
 
   /**
-   * Fields to add, using dot-notation keys.
+   * Fields to add, keyed by JSON Pointer (used exactly as provided).
    * The SDK converts these to JSON Patch "add" operations.
    */
   add?: Record<string, unknown>;
 
   /**
-   * Fields to replace, using dot-notation keys.
+   * Fields to replace, keyed by JSON Pointer (used exactly as provided).
    * The SDK converts these to JSON Patch "replace" operations.
    */
   replace?: Record<string, unknown>;
 
   /**
-   * Array of dot-notation field paths to remove.
+   * Array of JSON Pointer field paths to remove (used exactly as provided).
    * The SDK converts these to JSON Patch "remove" operations.
    */
   remove?: string[];
 
   /**
-   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+   * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+   * as provided (prefix with `/payload` to target payload fields); the value at `from` is
    * removed and re-added at `path`.
    */
   move?: PatchMovePath[];
 
   /**
-   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
-   * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+   * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+   * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
    */
   copy?: PatchMovePath[];
 
   /**
-   * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+   * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
    * value at any path does not equal the expected value. Keys are used as provided (prefix with
-   * `payload.` for payload fields).
+   * `/payload` for payload fields).
    */
   test?: Record<string, unknown>;
 
