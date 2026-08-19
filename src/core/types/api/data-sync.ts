@@ -222,11 +222,9 @@ export type JsonPatchInput = {
 /**
  * Convert user-friendly patch input to JSON Patch operations (request format).
  *
- * Paths are passed through **verbatim**: the SDK does not translate `.` to `/`, nor prefix a
- * leading `/`. Callers provide the exact RFC 6901 JSON Pointer they want on the wire (e.g.
- * `/payload/creditScore`). This keeps field names that themselves contain `.` addressable —
- * a path such as `/payload/user.name` targets the literal key `user.name`, which dot-notation
- * translation would have split into two segments.
+ * `path`/`from` are passed through verbatim — callers supply the exact RFC 6901 pointer. Do not
+ * reintroduce dot-notation translation here: splitting on `.` makes stored field names that
+ * contain a `.` unaddressable.
  *
  * - Each key in `add` becomes an "add" operation.
  * - Each key in `replace` becomes a "replace" operation.
@@ -328,7 +326,7 @@ export type CreateEntityData = {
    * User-defined JSON payload conforming to the entity class schema.
    *
    * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
-   * Field names are used literally, so a key that itself contains `.` is addressed as-is.
+   * A field name that contains a `.` is written as-is (`/payload/user.name`).
    *
    * @example
    * ```typescript
@@ -496,14 +494,18 @@ export type SetEntityParameters = {
 /**
  * Update Entity request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, which the SDK
- * sends verbatim as JSON Patch operations — no `.` → `/` translation and no leading `/` added.
+ * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
  *
- * Patch paths address the entity's **stored property names** — the same keys that come back in
- * responses and real-time events — not the grouped parameter names used by
- * {@link CreateEntityParameters}. So the class version is `/entityClassVersion` (not
- * `/data/classVersion`), and payload fields keep their `/payload` prefix. `entityClass` and
- * `entityClassLevel` are immutable and cannot be patched.
+ * Patch paths address the entity's **stored property names** — the same keys that come
+ * back in responses and real-time events — not the grouped parameter names used by
+ * {@link CreateEntityParameters}:
+ *
+ * - `classVersion` → `/entityClassVersion` (not `/data/classVersion`)
+ * - `status` → `/status`
+ * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+ *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+ *
+ * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
  */
@@ -678,7 +680,7 @@ export type CreateRelationshipData = {
    * User-defined JSON payload.
    *
    * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
-   * Field names are used literally, so a key that itself contains `.` is addressed as-is.
+   * A field name that contains a `.` is written as-is (`/payload/user.name`).
    *
    * @example
    * ```typescript
@@ -847,14 +849,18 @@ export type SetRelationshipParameters = {
 /**
  * Update Relationship request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, which the SDK
- * sends verbatim as JSON Patch operations — no `.` → `/` translation and no leading `/` added.
+ * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
  *
- * Patch paths address the relationship's **stored property names** — the same keys that come back in
- * responses and real-time events — not the grouped parameter names used by
- * {@link CreateRelationshipParameters}. So the class version is `relationshipClassVersion` (not
- * `/data/classVersion`), and payload fields keep their `/payload` prefix. `relationshipClass`,
- * `entityAId`, and `entityBId` are immutable and cannot be patched.
+ * Patch paths address the relationship's **stored property names** — the same keys that come
+ * back in responses and real-time events — not the grouped parameter names used by
+ * {@link CreateRelationshipParameters}:
+ *
+ * - `classVersion` → `/relationshipClassVersion` (not `/data/classVersion`)
+ * - `status` → `/status`
+ * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+ *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+ *
+ * `relationshipClass`, `entityAId`, and `entityBId` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
  */
@@ -1008,7 +1014,7 @@ export type CreateUserData = {
    * User-defined JSON payload conforming to the entity class schema.
    *
    * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
-   * Field names are used literally, so a key that itself contains `.` is addressed as-is.
+   * A field name that contains a `.` is written as-is (`/payload/user.name`).
    *
    * @example
    * ```typescript
@@ -1155,14 +1161,18 @@ export type SetUserParameters = {
 /**
  * Update User request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, which the SDK
- * sends verbatim as JSON Patch operations — no `.` → `/` translation and no leading `/` added.
+ * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
  *
- * Patch paths address the user's **stored property names** — the same keys that come back in
- * responses and real-time events — not the grouped parameter names used by
- * {@link CreateUserParameters}. So the class version is `entityClassVersion` (not
- * `/data/classVersion`), and payload fields keep their `/payload` prefix. `entityClass` and
- * `entityClassLevel` are immutable and cannot be patched.
+ * Patch paths address the user's **stored property names** — the same keys that come
+ * back in responses and real-time events — not the grouped parameter names used by
+ * {@link CreateUserParameters}:
+ *
+ * - `classVersion` → `/entityClassVersion` (not `/data/classVersion`)
+ * - `status` → `/status`
+ * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+ *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+ *
+ * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
  */
@@ -1289,7 +1299,7 @@ export type CreateChannelData = {
    * User-defined JSON payload conforming to the entity class schema.
    *
    * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
-   * Field names are used literally, so a key that itself contains `.` is addressed as-is.
+   * A field name that contains a `.` is written as-is (`/payload/user.name`).
    *
    * @example
    * ```typescript
@@ -1437,14 +1447,18 @@ export type SetChannelParameters = {
 /**
  * Update Channel request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, which the SDK
- * sends verbatim as JSON Patch operations — no `.` → `/` translation and no leading `/` added.
+ * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
  *
- * Patch paths address the channel's **stored property names** — the same keys that come back in
- * responses and real-time events — not the grouped parameter names used by
- * {@link CreateChannelParameters}. So the class version is `entityClassVersion` (not
- * `/data/classVersion`), and payload fields keep their `/payload` prefix. `entityClass` and
- * `entityClassLevel` are immutable and cannot be patched.
+ * Patch paths address the channel's **stored property names** — the same keys that come
+ * back in responses and real-time events — not the grouped parameter names used by
+ * {@link CreateChannelParameters}:
+ *
+ * - `classVersion` → `/entityClassVersion` (not `/data/classVersion`)
+ * - `status` → `/status`
+ * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+ *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+ *
+ * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
  */
@@ -1572,7 +1586,7 @@ export type CreateMembershipData = {
    * User-defined JSON payload.
    *
    * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
-   * Field names are used literally, so a key that itself contains `.` is addressed as-is.
+   * A field name that contains a `.` is written as-is (`/payload/user.name`).
    *
    * @example
    * ```typescript
@@ -1730,14 +1744,18 @@ export type SetMembershipParameters = {
 /**
  * Update Membership request parameters (partial update via JSON Patch RFC 6902).
  *
- * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, which the SDK
- * sends verbatim as JSON Patch operations — no `.` → `/` translation and no leading `/` added.
+ * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
  *
- * Patch paths address the membership's **stored property names** — the same keys that come back in
- * responses and real-time events — not the grouped parameter names used by
- * {@link CreateMembershipParameters}. So the class version is `relationshipClassVersion` (not
- * `/data/classVersion`), and payload fields keep their `/payload` prefix. `channelId` and `userId`
- * are immutable and cannot be patched.
+ * Patch paths address the membership's **stored property names** — the same keys that come
+ * back in responses and real-time events — not the grouped parameter names used by
+ * {@link CreateMembershipParameters}:
+ *
+ * - `classVersion` → `/relationshipClassVersion` (not `/data/classVersion`)
+ * - `status` → `/status`
+ * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+ *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+ *
+ * `userId` and `channelId` are immutable and cannot be patched.
  *
  * At least one of `add`, `replace`, or `remove` must be provided.
  */

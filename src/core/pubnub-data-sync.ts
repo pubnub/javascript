@@ -302,7 +302,25 @@ export default class PubNubDataSync {
   /**
    * Update an Entity (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name an entity carries in responses and real-time events:
+   *
+   * - `classVersion` → `/entityClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateEntity({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/creditScore': 810 },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -315,7 +333,25 @@ export default class PubNubDataSync {
   /**
    * Update an Entity (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name an entity carries in responses and real-time events:
+   *
+   * - `classVersion` → `/entityClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateEntity({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/creditScore': 810 },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    *
@@ -326,7 +362,25 @@ export default class PubNubDataSync {
   /**
    * Update an Entity (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name an entity carries in responses and real-time events:
+   *
+   * - `classVersion` → `/entityClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateEntity({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/creditScore': 810 },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -620,7 +674,25 @@ export default class PubNubDataSync {
   /**
    * Update a Relationship (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a relationship carries in responses and real-time events:
+   *
+   * - `classVersion` → `/relationshipClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `relationshipClass`, `entityAId`, and `entityBId` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateRelationship({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/label': 'primary' },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -633,7 +705,25 @@ export default class PubNubDataSync {
   /**
    * Update a Relationship (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a relationship carries in responses and real-time events:
+   *
+   * - `classVersion` → `/relationshipClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `relationshipClass`, `entityAId`, and `entityBId` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateRelationship({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/label': 'primary' },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    *
@@ -646,7 +736,25 @@ export default class PubNubDataSync {
   /**
    * Update a Relationship (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a relationship carries in responses and real-time events:
+   *
+   * - `classVersion` → `/relationshipClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `relationshipClass`, `entityAId`, and `entityBId` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateRelationship({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/label': 'primary' },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -933,7 +1041,25 @@ export default class PubNubDataSync {
   /**
    * Update a User (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a user carries in responses and real-time events:
+   *
+   * - `classVersion` → `/entityClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateUser({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/email': 'alice.v@acme.test' },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -946,7 +1072,25 @@ export default class PubNubDataSync {
   /**
    * Update a User (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a user carries in responses and real-time events:
+   *
+   * - `classVersion` → `/entityClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateUser({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/email': 'alice.v@acme.test' },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    *
@@ -957,7 +1101,25 @@ export default class PubNubDataSync {
   /**
    * Update a User (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a user carries in responses and real-time events:
+   *
+   * - `classVersion` → `/entityClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateUser({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/email': 'alice.v@acme.test' },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -1251,7 +1413,25 @@ export default class PubNubDataSync {
   /**
    * Update a Channel (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a channel carries in responses and real-time events:
+   *
+   * - `classVersion` → `/entityClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateChannel({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/memberCount': 42 },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -1264,7 +1444,25 @@ export default class PubNubDataSync {
   /**
    * Update a Channel (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a channel carries in responses and real-time events:
+   *
+   * - `classVersion` → `/entityClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateChannel({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/memberCount': 42 },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    *
@@ -1275,7 +1473,25 @@ export default class PubNubDataSync {
   /**
    * Update a Channel (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a channel carries in responses and real-time events:
+   *
+   * - `classVersion` → `/entityClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateChannel({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/memberCount': 42 },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
@@ -1571,7 +1787,25 @@ export default class PubNubDataSync {
   /**
    * Update a Membership (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a membership carries in responses and real-time events:
+   *
+   * - `classVersion` → `/relationshipClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `userId` and `channelId` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateMembership({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/role': 'moderator' },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    * @param callback - Request completion handler callback.
@@ -1584,7 +1818,25 @@ export default class PubNubDataSync {
   /**
    * Update a Membership (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a membership carries in responses and real-time events:
+   *
+   * - `classVersion` → `/relationshipClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `userId` and `channelId` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateMembership({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/role': 'moderator' },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    *
@@ -1597,7 +1849,25 @@ export default class PubNubDataSync {
   /**
    * Update a Membership (partial update via JSON Patch RFC 6902).
    *
-   * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths, sent verbatim.
+   * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+   * is the name a membership carries in responses and real-time events:
+   *
+   * - `classVersion` → `/relationshipClassVersion`
+   * - `status` → `/status`
+   * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+   *   `/payload/address/city`. A field name that contains a `.` is written as-is
+   *   (`/payload/user.name`).
+   *
+   * `userId` and `channelId` are immutable and cannot be patched.
+   *
+   * @example
+   * ```typescript
+   * await pubnub.dataSync.updateMembership({
+   *   id,
+   *   replace: { '/status': 'inactive', '/payload/role': 'moderator' },
+   *   remove: ['/payload/legacyField'],
+   * });
+   * ```
    *
    * @param parameters - Request configuration parameters.
    * @param [callback] - Request completion handler callback.
