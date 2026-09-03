@@ -327,7 +327,9 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
    * Build the `pn-projections` meta payload from DataSync projection parameters.
    *
    * Each projection scope is encoded into a flat composite key (`datasync:<type>:<id>`) mapped to
-   * the projection name. The `res` / `pat` sub-objects are omitted when empty.
+   * the projection name. Every DataSync resource kind uses the `datasync:` prefix here — including
+   * `users` and `channels`, whose *permissions* are carried by the un-prefixed grant scopes. The
+   * `res` / `pat` sub-objects are omitted when empty.
    *
    * @returns Encoded projections payload, or `undefined` when no projections are set.
    */
@@ -339,7 +341,7 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
       const encoded: Record<string, string> = {};
       if (!scope) return encoded;
 
-      (['entities', 'relationships', 'memberships'] as const).forEach((type) => {
+      (['entities', 'relationships', 'users', 'channels', 'memberships'] as const).forEach((type) => {
         const assignments = scope[type];
         if (assignments)
           Object.keys(assignments).forEach((id) => (encoded[`datasync:${type}:${id}`] = assignments[id]));

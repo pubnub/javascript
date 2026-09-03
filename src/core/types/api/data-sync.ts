@@ -36,36 +36,36 @@ export type FilterableField = {
 
 /**
  * Cursor-based pagination metadata returned by the server.
+ *
+ * Forward pagination details.
+ * `has_next` is the only field the service
+ * guarantees, while `next_cursor` and `limit` are optional. Pagination is forward-only — there is
+ * no previous-page cursor.
  */
 export type DataSyncPageMeta = {
-  /** Opaque cursor for the next page. Null if no more results. */
-  next_cursor: string | null;
-
-  /** Opaque cursor for the previous page. Null if first page. */
-  prev_cursor: string | null;
-
   /** Whether there are more results after this page. */
   has_next: boolean;
 
-  /** Whether there are results before this page. */
-  has_prev: boolean;
+  /**
+   * cursor for the next page, passed back as the `cursor` request parameter.
+   *
+   * `null` when there are no more results (`has_next` is `false`).
+   */
+  next_cursor?: string | null;
 
-  /** The limit applied to this page. */
-  limit: number;
+  /** The limit applied to this page (may differ from the requested `limit`). */
+  limit?: number;
 };
 
 /**
- * HATEOAS navigation links.
+ * navigation links.
  */
 export type DataSyncLinks = {
-  /** Link to the current page. */
+  /** Link to the current page, with all query parameters applied. */
   self: string;
 
-  /** Link to the next page, if available. */
+  /** Link to the next page, including its cursor. `null` when there are no more results. */
   next?: string | null;
-
-  /** Link to the previous page, if available. */
-  prev?: string | null;
 
   /** Additional links for related resources. */
   [key: string]: string | null | undefined;
@@ -131,6 +131,9 @@ export function serializeDataSyncSort(sort?: DataSyncSort): string | string[] {
 
 /**
  * Single-entity response envelope.
+ *
+ * `status` is the HTTP status code added by the SDK; `data`, `links` and `meta` come from the
+ *  service response and are passed through verbatim.
  */
 type DataSyncEntityResponse<T> = {
   /** HTTP status code. */
@@ -139,15 +142,19 @@ type DataSyncEntityResponse<T> = {
   /** Response data. */
   data: T;
 
-  /** HATEOAS links. */
+  /** HATEOAS links, when the service provides them for the resource. */
   links?: DataSyncLinks;
 
-  /** Response metadata. */
+  /** Response metadata, when the service provides it for the resource. */
   meta?: DataSyncPageMeta;
 };
 
 /**
  * Paged list response envelope.
+ *
+ * `status` is the HTTP status code added by the SDK; `data`, `links` and `meta` come from the
+ * service and are passed through verbatim. Use
+ * `meta.has_next` / `meta.next_cursor` to page forward by feeding the cursor back in as `cursor`.
  */
 type DataSyncPagedResponse<T> = {
   /** HTTP status code. */
@@ -156,7 +163,7 @@ type DataSyncPagedResponse<T> = {
   /** Array of response items. */
   data: T[];
 
-  /** HATEOAS links for pagination. */
+  /** HATEOAS links for pagination (`self`, `next`, plus any related-resource links). */
   links?: DataSyncLinks;
 
   /** Cursor-based pagination metadata. */
@@ -1631,6 +1638,8 @@ export type SetMembershipData = {
 /**
  * Membership resource as returned from the server.
  *
+ * A membership is a `Membership`-class relationship between a channel (`entityAId`) and a user
+ * (`entityBId`), exposed on the REST response as `channelId` / `userId`.
  */
 export type MembershipObject = {
   /** Unique identifier. */
@@ -1642,8 +1651,13 @@ export type MembershipObject = {
   /** User ID reference. */
   userId: string;
 
-  /** Relationship class. */
-  relationshipClass?: string;
+  /**
+   * Relationship class this membership belongs to — `Membership`, or one of its descendant classes.
+   *
+   * Server-assigned: the create/set endpoints take no class parameter, so it is never chosen by
+   * the caller.
+   */
+  relationshipClass: string;
 
   /** Version of the relationship class schema. */
   relationshipClassVersion: number;

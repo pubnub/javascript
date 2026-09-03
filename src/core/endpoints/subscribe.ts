@@ -75,6 +75,22 @@ export enum PubNubEventType {
 }
 
 /**
+ * Event types which this SDK version knows how to parse.
+ *
+ * Events with any other `e` value are ignored: they most likely originate from a service release newer than
+ * the SDK
+ */
+const KNOWN_EVENT_TYPES: ReadonlySet<PubNubEventType> = new Set([
+  PubNubEventType.Presence,
+  PubNubEventType.Message,
+  PubNubEventType.Signal,
+  PubNubEventType.AppContext,
+  PubNubEventType.MessageAction,
+  PubNubEventType.Files,
+  PubNubEventType.DataSync,
+]);
+
+/**
  * Time cursor.
  *
  * Cursor used by subscription loop to identify point in time after which updates will be
@@ -871,12 +887,24 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       .map((envelope) => {
         let { e: eventType } = envelope;
 
+        // Events delivered on a presence channel are always presence events: the `-pnpres` suffix wins over
+        // the service-reported type. `envelope.c` is the actual channel (`envelope.b` is the channel group
+        // name), so this also covers presence delivered through a subscribed channel group.
+        if (envelope.c.endsWith('-pnpres')) eventType = PubNubEventType.Presence;
         // Resolve missing event type.
-        eventType ??= envelope.c.endsWith('-pnpres') ? PubNubEventType.Presence : PubNubEventType.Message;
+        else eventType ??= PubNubEventType.Message;
+
+        // Ignore an event type this SDK version cannot parse rather than delivering an unexpected payload.
+        if (!KNOWN_EVENT_TYPES.has(eventType)) return undefined;
+
         const pn_mfp = messageFingerprint(envelope.d);
 
         // Check whether payload is string (potentially encrypted data).
-        if (eventType != PubNubEventType.Signal && typeof envelope.d === 'string') {
+        if (
+          eventType != PubNubEventType.Presence &&
+          eventType != PubNubEventType.Signal &&
+          typeof envelope.d === 'string'
+        ) {
           if (eventType == PubNubEventType.Message) {
             return {
               type: PubNubEventType.Message,
@@ -929,12 +957,14 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
           return { type: PubNubEventType.Message, data: this.messageFromEnvelope(envelope), pn_mfp };
         }
 
+        // The only known event type left is a file event.
         return {
           type: PubNubEventType.Files,
           data: this.fileFromEnvelope(envelope),
           pn_mfp,
         };
-      });
+      })
+      .filter((event): event is Subscription.SubscriptionResponse['messages'][number] => event !== undefined);
 
     return {
       cursor: { timetoken: serviceResponse.t.t, region: serviceResponse.t.r },
@@ -962,14 +992,29 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     const actualChannel = subscription !== null ? trimmedChannel : null;
     const subscribedChannel = subscription !== null ? subscription : trimmedChannel;
 
-    if (typeof payload !== 'string') {
-      if ('data' in payload) {
+    // Presence payloads are objects. A string can only reach here when a non-presence payload has been published
+    // on a `-pnpres` channel: try to read it as JSON and never spread a string (which would add character-indexed
+    // keys to the event).
+    let presenceData: PresenceData | undefined;
+
+    if (typeof payload === 'string') {
+      try {
+        const parsed: unknown = JSON.parse(payload);
+        if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed))
+          presenceData = parsed as PresenceData;
+      } catch {
+        // Not JSON (encrypted or plain-text publish): payload contributes no presence fields.
+      }
+    } else presenceData = payload as PresenceData;
+
+    if (presenceData) {
+      if ('data' in presenceData) {
         // @ts-expect-error This is `state-change` object which should have `state` field.
-        payload['state'] = payload.data;
-        delete payload.data;
-      } else if ('action' in payload && payload.action === 'interval') {
-        payload.hereNowRefresh = payload.here_now_refresh ?? false;
-        delete payload.here_now_refresh;
+        presenceData['state'] = presenceData.data;
+        delete presenceData.data;
+      } else if ('action' in presenceData && presenceData.action === 'interval') {
+        presenceData.hereNowRefresh = presenceData.here_now_refresh ?? false;
+        delete presenceData.here_now_refresh;
       }
     }
 
@@ -979,8 +1024,9 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       actualChannel,
       subscribedChannel,
       timetoken: envelope.p.t,
-      ...(payload as PresenceData),
-    };
+      ...(presenceData ?? {}),
+      // Cast: presence fields are absent when the payload could not be read as an object.
+    } as Subscription.Presence;
   }
 
   private messageFromEnvelope(envelope: Envelope): Subscription.Message {

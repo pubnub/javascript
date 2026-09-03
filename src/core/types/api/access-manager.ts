@@ -193,6 +193,8 @@ export type DataSyncTokenScopes = {
  *
  * Each id maps to the single projection name the principal is "looking through" for that resource
  * (use `__default__` for the base projection).
+ *
+ * Covers every DataSync resource kind — entities, relationships, users, channels, and memberships.
  */
 export type DataSyncProjectionScope = {
   /**
@@ -207,6 +209,22 @@ export type DataSyncProjectionScope = {
    * Relationship id -> projection name.
    */
   relationships?: Record<string, string>;
+
+  /**
+   * DataSync `User` id -> projection name.
+   *
+   * Projections for DataSync Users are keyed by `datasync:users:<id>` on the wire, unlike the
+   * `User` *permissions*, which reuse the un-prefixed `users` grant scope.
+   */
+  users?: Record<string, string>;
+
+  /**
+   * DataSync `Channel` id -> projection name.
+   *
+   * Projections for DataSync Channels are keyed by `datasync:channels:<id>` on the wire, unlike the
+   * `Channel` *permissions*, which reuse the un-prefixed `channels` grant scope.
+   */
+  channels?: Record<string, string>;
 
   /**
    * Membership id -> projection name.
