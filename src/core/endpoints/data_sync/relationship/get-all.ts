@@ -81,8 +81,8 @@ export class GetRelationshipsRequest<Response extends DataSync.GetRelationshipsR
       cursor,
       limit,
       filter,
+      filterFast,
       sort,
-      filterAdvanced,
     } = this.parameters;
     const sorting = DataSync.serializeDataSyncSort(sort);
 
@@ -94,8 +94,8 @@ export class GetRelationshipsRequest<Response extends DataSync.GetRelationshipsR
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),
+      ...(filterFast ? { filter_fast: filterFast } : {}),
       ...(sorting.length ? { sort: sorting } : {}),
-      ...(filterAdvanced ? { filter_advanced: filterAdvanced } : {}),
     };
   }
 }

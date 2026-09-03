@@ -73,7 +73,7 @@ export class GetEntitiesRequest<Response extends DataSync.GetEntitiesResponse> e
   }
 
   protected get queryParameters(): Query {
-    const { entityClass, entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+    const { entityClass, entityClassVersion, cursor, limit, filter, filterFast, sort } = this.parameters;
     const sorting = DataSync.serializeDataSyncSort(sort);
 
     return {
@@ -82,8 +82,8 @@ export class GetEntitiesRequest<Response extends DataSync.GetEntitiesResponse> e
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),
+      ...(filterFast ? { filter_fast: filterFast } : {}),
       ...(sorting.length ? { sort: sorting } : {}),
-      ...(filterAdvanced ? { filter_advanced: filterAdvanced } : {}),
     };
   }
 }

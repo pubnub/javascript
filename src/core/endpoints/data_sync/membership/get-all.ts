@@ -69,8 +69,7 @@ export class GetMembershipsRequest<Response extends DataSync.GetMembershipsRespo
   }
 
   protected get queryParameters(): Query {
-    const { userId, channelId, relationshipClassVersion, cursor, limit, filter, sort, filterAdvanced } =
-      this.parameters;
+    const { userId, channelId, relationshipClassVersion, cursor, limit, filter, filterFast, sort } = this.parameters;
     const sorting = DataSync.serializeDataSyncSort(sort);
 
     return {
@@ -80,8 +79,8 @@ export class GetMembershipsRequest<Response extends DataSync.GetMembershipsRespo
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),
+      ...(filterFast ? { filter_fast: filterFast } : {}),
       ...(sorting.length ? { sort: sorting } : {}),
-      ...(filterAdvanced ? { filter_advanced: filterAdvanced } : {}),
     };
   }
 }

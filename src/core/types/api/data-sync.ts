@@ -85,8 +85,21 @@ type PagedRequestParameters = {
    */
   limit?: number;
 
-  /** Filter expression for results. */
+  /**
+   *
+   * Supports the full expression grammar (logical operators and nested conditions), so an object
+   * written moments earlier may not be matched yet. Use {@link filterFast} when the query must see
+   * the latest writes.
+   */
   filter?: string;
+
+  /**
+   * Filter expression evaluated against strongly consistent storage.
+   *
+   * Reflects the latest writes, but accepts only a limited number of conditions. Use {@link filter}
+   * for complex queries.
+   */
+  filterFast?: string;
 
   /**
    * Sort expression.
@@ -468,14 +481,6 @@ export type GetEntitiesParameters = PagedRequestParameters & {
    * Entity class version. If not provided, the server returns entities for the latest version.
    */
   entityClassVersion?: number;
-
-  /**
-   * Advanced filter expression for complex queries.
-   *
-   * Supports logical operators and nested conditions for sophisticated filtering
-   * beyond what the basic `filter` parameter provides.
-   */
-  filterAdvanced?: string;
 };
 
 /**
@@ -820,14 +825,6 @@ export type GetRelationshipsParameters = PagedRequestParameters & {
 
   /** Filter relationships by second entity ID. */
   entityBId?: string;
-
-  /**
-   * Advanced filter expression for complex queries.
-   *
-   * Supports logical operators and nested conditions for sophisticated filtering
-   * beyond what the basic `filter` parameter provides.
-   */
-  filterAdvanced?: string;
 };
 
 /**
@@ -1141,11 +1138,6 @@ export type GetUsersParameters = PagedRequestParameters & {
    * Entity class version. If not provided, the server returns users for the latest version.
    */
   entityClassVersion?: number;
-
-  /**
-   * Advanced filter expression for complex queries.
-   */
-  filterAdvanced?: string;
 };
 
 /**
@@ -1428,11 +1420,6 @@ export type GetChannelsParameters = PagedRequestParameters & {
    * Entity class version. If not provided, the server returns channels for the latest version.
    */
   entityClassVersion?: number;
-
-  /**
-   * Advanced filter expression for complex queries.
-   */
-  filterAdvanced?: string;
 };
 
 /**
@@ -1726,11 +1713,6 @@ export type GetMembershipsParameters = PagedRequestParameters & {
    * If not provided, the server uses the latest version.
    */
   relationshipClassVersion?: number;
-
-  /**
-   * Advanced filter expression for complex queries.
-   */
-  filterAdvanced?: string;
 };
 
 /**
