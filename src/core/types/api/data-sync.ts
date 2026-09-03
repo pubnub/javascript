@@ -104,10 +104,12 @@ type PagedRequestParameters = {
   /**
    * Sort expression.
    *
-   * Either a raw string (comma-separated fields, optionally prefixed with + (asc) or - (desc),
-   * e.g. `"+name,-createdAt"`), or a map of field → direction that is serialized to the
+   * Comma-separated list of property names to sort by, each optionally
+   * suffixed with `:desc` (ascending by default). Only payload properties
+   * with `filtering` other than `none` in the class definition are
+   * accepted.
+   * e.g. `"+name,-reatedAt"`), or a map of field → direction that is serialized to the
    * `field:order` form the service expects (e.g. `{ firstName: 'desc' }` → `firstName:desc`).
-   * Specify `null` as the direction for the service default (ascending).
    */
   sort?: DataSyncSort;
 };
