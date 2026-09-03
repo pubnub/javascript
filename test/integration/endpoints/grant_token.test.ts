@@ -424,6 +424,85 @@ describe('grant token endpoint', () => {
         });
       });
 
+      it('should encode projections for every DataSync resource kind', async () => {
+        const { scope, body } = mockGrant();
+
+        await pubnub.grantToken({
+          ttl: 1440,
+          dataSyncProjections: {
+            resources: {
+              entities: { 'school-greenwood-001': 'admin' },
+              relationships: { 'student-alice-042:school-greenwood-001': 'admin' },
+              users: { 'user-alice-042': 'self-view' },
+              channels: { 'channel-engineering-001': 'public-profile' },
+              memberships: { 'membership.engineering-001': 'member-basic' },
+            },
+          },
+        });
+
+        assert.strictEqual(scope.isDone(), true);
+        // `users` / `channels` projections carry the `datasync:` prefix even though their
+        // permissions ride the un-prefixed grant scopes.
+        assert.deepEqual(body().permissions.meta, {
+          'pn-projections': {
+            res: {
+              'datasync:entities:school-greenwood-001': 'admin',
+              'datasync:relationships:student-alice-042:school-greenwood-001': 'admin',
+              'datasync:users:user-alice-042': 'self-view',
+              'datasync:channels:channel-engineering-001': 'public-profile',
+              'datasync:memberships:membership.engineering-001': 'member-basic',
+            },
+          },
+        });
+      });
+
+      it('should encode `users`, `channels` and `memberships` projection patterns', async () => {
+        const { scope, body } = mockGrant();
+
+        await pubnub.grantToken({
+          ttl: 1440,
+          dataSyncProjections: {
+            patterns: {
+              users: { 'student-*': 'public-profile' },
+              channels: { 'channel-*': 'admin' },
+              memberships: { 'membership.student-*': '__default__' },
+            },
+          },
+        });
+
+        assert.strictEqual(scope.isDone(), true);
+        assert.deepEqual(body().permissions.meta, {
+          'pn-projections': {
+            pat: {
+              'datasync:users:student-*': 'public-profile',
+              'datasync:channels:channel-*': 'admin',
+              'datasync:memberships:membership.student-*': '__default__',
+            },
+          },
+        });
+      });
+
+      it('should accept a grant which carries only `users` / `channels` projections', async () => {
+        const { scope, body } = mockGrant();
+
+        const token = await pubnub.grantToken({
+          ttl: 1440,
+          dataSyncProjections: {
+            resources: { users: { 'user.A': 'self-view' } },
+            patterns: { channels: { 'chan.*': 'admin' } },
+          },
+        });
+
+        assert.strictEqual(token, 'token');
+        assert.strictEqual(scope.isDone(), true);
+        assert.deepEqual(body().permissions.meta, {
+          'pn-projections': {
+            res: { 'datasync:users:user.A': 'self-view' },
+            pat: { 'datasync:channels:chan.*': 'admin' },
+          },
+        });
+      });
+
       it('should omit `pn-projections` when no projections are set', async () => {
         const { scope, body } = mockGrant();
 

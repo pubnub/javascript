@@ -2,6 +2,22 @@ import type { PubNubCore as PubNub } from '../../core/pubnub-common';
 import { SubscriptionCapable } from './subscription-capable';
 
 /**
+ * Known subscribable entity types.
+ *
+ * @internal
+ */
+export type EntityType =
+  | 'Channel'
+  | 'ChannelGroups'
+  | 'ChannelMetadata'
+  | 'UserMetadata'
+  | 'DataSyncUser'
+  | 'DataSyncChannel'
+  | 'DataSyncMembership'
+  | 'DataSyncEntity'
+  | 'DataSyncRelationship';
+
+/**
  * Common entity interface.
  */
 export interface EntityInterface extends SubscriptionCapable {
@@ -17,15 +33,9 @@ export interface EntityInterface extends SubscriptionCapable {
   /**
    * Retrieve entity type.
    *
-   * There is four types:
-   * - Channel
-   * - ChannelGroups
-   * - ChannelMetadata
-   * - UserMetadata
-   *
-   * @return One of known entity types.
+   * @return One of known {@link EntityType entity types}.
    *
    * @internal
    */
-  entityType: 'Channel' | 'ChannelGroups' | 'ChannelMetadata' | 'UserMetadata';
+  entityType: EntityType;
 }

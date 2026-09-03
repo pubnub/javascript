@@ -98,9 +98,14 @@ import {
 } from '../entities/interfaces/subscription-capable';
 import { EventEmitCapable } from '../entities/interfaces/event-emit-capable';
 import { EntityInterface } from '../entities/interfaces/entity-interface';
+import { DataSyncRelationship } from '../entities/data-sync-relationship';
+import { DataSyncMembership } from '../entities/data-sync-membership';
+import { DataSyncChannel } from '../entities/data-sync-channel';
+import { DataSyncEntity } from '../entities/data-sync-entity';
 import { SubscriptionBase } from '../entities/subscription-base';
 import { ChannelMetadata } from '../entities/channel-metadata';
 import { SubscriptionSet } from '../entities/subscription-set';
+import { DataSyncUser } from '../entities/data-sync-user';
 import { ChannelGroup } from '../entities/channel-group';
 import { UserMetadata } from '../entities/user-metadata';
 import { Channel } from '../entities/channel';
@@ -1014,6 +1019,100 @@ export class PubNubCore<
     if (!metadata) metadata = this.entities[`${id}_um`] = new UserMetadata(id, this);
 
     return metadata as UserMetadata;
+  }
+
+  /**
+   * Create a `DataSyncUser` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `User` object identifier (used verbatim, so wildcard identifiers
+   * like `user.*` are supported).
+   * @returns `DataSyncUser` entity.
+   */
+  public dataSyncUser(id: string): DataSyncUser {
+    let entity = this.entities[`${id}_dsu`];
+    if (!entity) entity = this.entities[`${id}_dsu`] = new DataSyncUser(id, this);
+
+    return entity as DataSyncUser;
+  }
+
+  /**
+   * Create a `DataSyncChannel` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `Channel` object identifier (used verbatim, so wildcard identifiers
+   * like `channel.*` are supported).
+   * @returns `DataSyncChannel` entity.
+   */
+  public dataSyncChannel(id: string): DataSyncChannel {
+    let entity = this.entities[`${id}_dsc`];
+    if (!entity) entity = this.entities[`${id}_dsc`] = new DataSyncChannel(id, this);
+
+    return entity as DataSyncChannel;
+  }
+
+  /**
+   * Create a `DataSyncMembership` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * **Important:** Membership changes are delivered on the data channels of both linked entities
+   * (the user and the channel identifier), not on the membership identifier — use
+   * {@link PubNubCore#dataSyncUser dataSyncUser} / {@link PubNubCore#dataSyncChannel
+   * dataSyncChannel} to observe them.
+   *
+   * @param id - Unique DataSync `Membership` object identifier (`{userId}:{channelId}`, used
+   * verbatim, so wildcard identifiers like `user-123:*` are supported).
+   * @returns `DataSyncMembership` entity.
+   */
+  public dataSyncMembership(id: string): DataSyncMembership {
+    let entity = this.entities[`${id}_dsm`];
+    if (!entity) entity = this.entities[`${id}_dsm`] = new DataSyncMembership(id, this);
+
+    return entity as DataSyncMembership;
+  }
+
+  /**
+   * Create a `DataSyncEntity` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `Entity` object identifier (used verbatim, so wildcard identifiers
+   * like `customer.*` are supported).
+   * @returns `DataSyncEntity` entity.
+   */
+  public dataSyncEntity(id: string): DataSyncEntity {
+    let entity = this.entities[`${id}_dse`];
+    if (!entity) entity = this.entities[`${id}_dse`] = new DataSyncEntity(id, this);
+
+    return entity as DataSyncEntity;
+  }
+
+  /**
+   * Create a `DataSyncRelationship` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * **Important:** Relationship changes are delivered on the data channels of both linked entities
+   * (`entityAId` and `entityBId`), not on the relationship identifier — use
+   * {@link PubNubCore#dataSyncEntity dataSyncEntity} to observe them.
+   *
+   * @param id - Unique DataSync `Relationship` object identifier (used verbatim, so wildcard
+   * identifiers like `owns.*` are supported).
+   * @returns `DataSyncRelationship` entity.
+   */
+  public dataSyncRelationship(id: string): DataSyncRelationship {
+    let entity = this.entities[`${id}_dsr`];
+    if (!entity) entity = this.entities[`${id}_dsr`] = new DataSyncRelationship(id, this);
+
+    return entity as DataSyncRelationship;
   }
 
   /**
