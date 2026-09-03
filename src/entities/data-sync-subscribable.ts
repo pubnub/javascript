@@ -179,7 +179,13 @@ export abstract class DataSyncSubscribable extends Entity {
     if (projection === this._projection) return this;
 
     // Register the receiver in the shared registry, so that it can be resolved back from siblings.
-    const variants = (this.variants ??= { [this._projection ?? BASE_PROJECTION_KEY]: this });
+    //
+    // Note: the receiver is added with an element assignment and never as part of an object literal
+    // which is assigned to `variants`. Declaration files for this module are inferred from the
+    // compiled JavaScript (`allowJs`), where a `this.variants = { ...: this }` statement would make
+    // the inferred member type reference the inaccessible polymorphic `this` type (TS2527).
+    const variants = (this.variants ??= {});
+    variants[this._projection ?? BASE_PROJECTION_KEY] ??= this;
     const key = projection ?? BASE_PROJECTION_KEY;
 
     let entity = variants[key];
