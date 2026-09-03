@@ -63,7 +63,7 @@
     "fast-text-encoding": "^1.0.6",
     "fflate": "^0.8.2",
     "lil-uuid": "^0.1.1",
-    "undici": "^7.28.0"
+    "undici": "^7.29.0"
   },
   "peerDependencies": {
     "react-native-url-polyfill": "^2.0.0"
