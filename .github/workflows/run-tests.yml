@@ -16,6 +16,10 @@ env:
   PAM_SECRET_KEY: ${{ secrets.SDK_PAM_SEC_KEY }}
   SUBSCRIBE_KEY: ${{ secrets.SDK_SUB_KEY }}
   PUBLISH_KEY: ${{ secrets.SDK_PUB_KEY }}
+  DS_SUBSCRIBE_KEY: ${{ secrets.SDK_DS_SUB_KEY }}
+  DS_PUBLISH_KEY: ${{ secrets.SDK_DS_PUB_KEY }}
+  DS_SECRET_KEY: ${{ secrets.SDK_DS_SEC_KEY }}
+  DS_ORIGIN: ${{ secrets.SDK_DS_ORIGIN }}
 
 jobs:
   tests:

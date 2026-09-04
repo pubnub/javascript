@@ -152,10 +152,7 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
     if (!secretKey) return 'Missing Secret Key';
     if (!resources && !patterns && !hasProjections) return 'Missing either Resources or Patterns';
 
-    // A grant may not carry two synonyms for the same target: `users` / `uuids` both map to the
-    // uuid wire scope, `spaces` / `channels` both map to the channel wire scope, and
-    // `authorizedUserId` / `authorized_uuid` both name the principal. Everything else combines
-    // freely, so a single token can grant DataSync `users`, `channels`, `groups`, and `dataSync`
+    // A single token can grant DataSync `users`, `channels`, `groups`, and `dataSync` together.
     // together. `uuids` / `spaces` / `authorized_uuid` are the deprecated App Context terminology;
     // prefer `users` / `channels` / `authorizedUserId`.
     const hasScope = (scope: string) =>
