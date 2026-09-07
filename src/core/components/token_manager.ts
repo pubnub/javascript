@@ -154,7 +154,7 @@ export class TokenManager {
 
         if (userResources) {
           const users: typeof result.resources.users = (result.resources.users = {});
-          userResourcePermissions.forEach((id) => (users[id] = this.extractUserPermissions(parsed.res.usr![id])));
+          userResourcePermissions.forEach((id) => (users[id] = this.extractCrudPermissions(parsed.res.usr![id])));
         }
 
         if (channelResources) {
@@ -186,7 +186,7 @@ export class TokenManager {
 
         if (userPatterns) {
           const users: typeof result.patterns.users = (result.patterns.users = {});
-          userPatternPermissions.forEach((id) => (users[id] = this.extractUserPermissions(parsed.pat.usr![id])));
+          userPatternPermissions.forEach((id) => (users[id] = this.extractCrudPermissions(parsed.pat.usr![id])));
         }
 
         if (channelPatterns) {
@@ -241,25 +241,6 @@ export class TokenManager {
   }
 
   /**
-   * Extract `User` scope access permission information.
-   *
-   * Permissions granted through the `users` scope only carry the CRUD operations, so the same bits
-   * as DataSync resources are decoded.
-   *
-   * @param permissions - Bit-encoded resource permissions.
-   *
-   * @returns Human-readable `User` resource permissions.
-   */
-  private extractUserPermissions(permissions: number): PAM.UserScopePermissions {
-    return {
-      create: (permissions & 16) === 16,
-      get: (permissions & 32) === 32,
-      update: (permissions & 64) === 64,
-      delete: (permissions & 8) === 8,
-    };
-  }
-
-  /**
    * Extract DataSync permission scopes from a token permissions section.
    *
    * The `datasync:*` wire keys are only present for tokens which granted DataSync permissions, so a
@@ -286,20 +267,24 @@ export class TokenManager {
       if (ids.length === 0) return;
 
       const scopeResult: Record<string, PAM.DataSyncPermissions> = ((result ??= {})[scope] = {});
-      ids.forEach((id) => (scopeResult[id] = this.extractDataSyncPermissions(permissions[id])));
+      ids.forEach((id) => (scopeResult[id] = this.extractCrudPermissions(permissions[id])));
     });
 
     return result;
   }
 
   /**
-   * Extract DataSync resource access permission information.
+   * Extract CRUD-only access permission information.
+   *
+   * Shared by the `usr` wire key (which backs the `users` grant scope) and the `datasync:*` wire
+   * keys — both carry the same CRUD bit layout and none of the `read` / `write` / `manage` / `join`
+   * bits decoded by {@link extractPermissions}.
    *
    * @param permissions - Bit-encoded resource permissions.
    *
-   * @returns Human-readable DataSync resource permissions.
+   * @returns Human-readable CRUD resource permissions.
    */
-  private extractDataSyncPermissions(permissions: number): PAM.DataSyncPermissions {
+  private extractCrudPermissions(permissions: number): PAM.DataSyncPermissions {
     return {
       create: (permissions & 16) === 16,
       get: (permissions & 32) === 32,

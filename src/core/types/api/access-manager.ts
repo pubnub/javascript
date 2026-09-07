@@ -597,33 +597,14 @@ export type Permissions = {
  * {@link UserTokenPermissions}: only the CRUD-relevant operations apply, so `read` / `write` /
  * `manage` / `join` are intentionally not part of this type.
  */
-export type UserScopePermissions = {
-  /**
-   * Resource `create` permission.
-   */
-  create: boolean;
-
-  /**
-   * Resource `get` permission.
-   */
-  get: boolean;
-
-  /**
-   * Resource `update` permission.
-   */
-  update: boolean;
-
-  /**
-   * Resource `delete` permission.
-   */
-  delete: boolean;
-};
+export type UserScopePermissions = DataSyncPermissions;
 
 /**
  * Granted DataSync entity-level permissions.
  *
- * Applies to parsed DataSync entities, relationships, and memberships. Only the CRUD-relevant
- * operations are exposed.
+ * Applies to parsed DataSync entities, relationships, memberships, and — as
+ * {@link UserScopePermissions} — `User` resources granted through the `users` scope. Only the
+ * CRUD-relevant operations are exposed.
  */
 export type DataSyncPermissions = {
   /**

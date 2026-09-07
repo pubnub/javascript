@@ -162,6 +162,10 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
       return 'Cannot mix `users` with `uuids` — `uuids` is deprecated App Context terminology; use `users`';
     if (hasScope('spaces') && hasScope('channels'))
       return 'Cannot mix `spaces` with `channels` — `spaces` is deprecated terminology; use `channels`';
+    // `spaces` belongs to the deprecated VSP vocabulary, `uuids` to the deprecated App Context one.
+    // They target different resources, but pairing them mixes two vocabularies in a single grant.
+    if (hasScope('spaces') && hasScope('uuids'))
+      return 'Cannot mix `spaces` with `uuids` — mixed deprecated terminology; use `channels` with `users`';
     if ('authorizedUserId' in this.parameters && 'authorized_uuid' in this.parameters)
       return 'Cannot mix `authorizedUserId` with `authorized_uuid` — use `authorizedUserId`';
 
