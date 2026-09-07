@@ -199,6 +199,32 @@ describe('grant token endpoint', () => {
         );
       });
 
+      it('should reject mixing `spaces` with `uuids`', async () => {
+        // Different targets, but `spaces` is deprecated VSP terminology and `uuids` deprecated App
+        // Context terminology — a single grant shouldn't mix the two vocabularies.
+        await assertRejects(
+          {
+            ttl: 1440,
+            resources: {
+              spaces: { space1: { read: true } },
+              uuids: { 'appctx-uuid': { get: true } },
+            },
+          },
+          'Cannot mix `spaces` with `uuids` — mixed deprecated terminology; use `channels` with `users`',
+        );
+      });
+
+      it('should reject mixing `spaces` in resources with `uuids` in patterns', async () => {
+        await assertRejects(
+          {
+            ttl: 1440,
+            resources: { spaces: { space1: { read: true } } },
+            patterns: { uuids: { 'appctx-.*': { get: true } } },
+          },
+          'Cannot mix `spaces` with `uuids` — mixed deprecated terminology; use `channels` with `users`',
+        );
+      });
+
       it('should reject mixing `authorizedUserId` with `authorized_uuid`', async () => {
         await assertRejects(
           {

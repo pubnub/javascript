@@ -205,6 +205,62 @@ describe('GrantTokenRequest', () => {
       );
     });
 
+    it('should reject mixing `spaces` with `uuids` (mixed deprecated terminology)', () => {
+      const mixedRequest = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        resources: {
+          spaces: {
+            space1: { read: true },
+          },
+          uuids: {
+            'appctx-uuid': { get: true },
+          },
+        },
+      } as any); // Type assertion for legacy `spaces`
+      assert.equal(
+        mixedRequest.validate(),
+        'Cannot mix `spaces` with `uuids` — mixed deprecated terminology; use `channels` with `users`'
+      );
+    });
+
+    it('should reject mixing `spaces` with `uuids` across resources and patterns', () => {
+      const mixedRequest = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        resources: {
+          spaces: {
+            space1: { read: true },
+          },
+        },
+        patterns: {
+          uuids: {
+            'appctx-*': { get: true },
+          },
+        },
+      } as any); // Type assertion for legacy `spaces`
+      assert.equal(
+        mixedRequest.validate(),
+        'Cannot mix `spaces` with `uuids` — mixed deprecated terminology; use `channels` with `users`'
+      );
+    });
+
+    it('should allow `spaces` with `users` (consistent VSP terminology)', () => {
+      const vspRequest = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        resources: {
+          spaces: {
+            space1: { read: true },
+          },
+          users: {
+            'user-alice-042': { get: true },
+          },
+        },
+      } as any); // Type assertion for legacy `spaces`
+      assert.equal(vspRequest.validate(), undefined);
+    });
+
     it('should reject mixing `authorizedUserId` with `authorized_uuid`', () => {
       const mixedRequest = new GrantTokenRequest({
         keySet: defaultKeySet,
