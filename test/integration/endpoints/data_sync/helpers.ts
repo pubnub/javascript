@@ -13,17 +13,16 @@ export const DATA_SYNC_KEYSET = {
   subscribeKey: process.env.DS_SUBSCRIBE_KEY ?? '',
   publishKey: process.env.DS_PUBLISH_KEY ?? '',
   secretKey: process.env.DS_SECRET_KEY ?? '',
-  origin: process.env.DS_ORIGIN ?? '',
   userId: 'dsjs',
-};
+} as const;
 
 /** Entity/relationship class schema version provisioned on this subkey. */
 export const CLASS_VERSION = 1;
 
-/** Provisioned class names on this subkey (verified 2026-07-22). */
-export const ENTITY_CLASS_CUSTOMER = 'Customer';
-export const ENTITY_CLASS_LOAN_QUOTE = 'LoanQuote';
-export const RELATIONSHIP_CLASS_REQUESTED_BY = 'REQUESTED_BY';
+/** Provisioned class names on this subkey — `JS`-prefixed, so this SDK's classes stay its own. */
+export const ENTITY_CLASS_CUSTOMER = 'JSCustomer';
+export const ENTITY_CLASS_LOAN_QUOTE = 'JSLoanQuote';
+export const RELATIONSHIP_CLASS_REQUESTED_BY = 'JSREQUESTED_BY';
 
 /** Class the service pins for the typed `/memberships` endpoints (never sent by the client). */
 export const RELATIONSHIP_CLASS_MEMBERSHIP = 'Membership';

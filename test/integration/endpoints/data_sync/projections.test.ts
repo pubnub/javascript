@@ -10,9 +10,9 @@
  *
  *   | class          | `__default__` payload fields                             | `admin` payload fields |
  *   |----------------|----------------------------------------------------------|------------------------|
- *   | `Customer`     | customerId, firstName, lastName, email, creditScore, city | same **minus** `email`, **plus** `private` |
- *   | `LoanQuote`    | quoteId, make, model, price                              | quoteId, `private`     |
- *   | `REQUESTED_BY` | linkedAt                                                 | linkedAt, `private`    |
+ *   | `JSCustomer`     | customerId, firstName, lastName, email, creditScore, city | same **minus** `email`, **plus** `private` |
+ *   | `JSLoanQuote`    | quoteId, make, model, price                              | quoteId, `private`     |
+ *   | `JSREQUESTED_BY` | linkedAt                                                 | linkedAt, `private`    |
  *
  */
 
@@ -74,9 +74,9 @@ const LINKED_AT = '2026-07-06T10:00:00.000Z';
 const TOKEN_TTL = 60;
 
 /**
- * Real-time eventing was only observed for `Customer` on this subkey — probed 2026-08-25: creating a
- * `LoanQuote` entity and a `REQUESTED_BY` relationship emitted nothing within 10s on either the id
- * channel or the `__admin__…` mirror, while an identical `Customer` create emitted on both. The REST
+ * Real-time eventing was only observed for `JSCustomer` on this subkey — probed 2026-08-25: creating a
+ * `JSLoanQuote` entity and a `JSREQUESTED_BY` relationship emitted nothing within 10s on either the id
+ * channel or the `__admin__…` mirror, while an identical `JSCustomer` create emitted on both. The REST
  * projection coverage for those two classes unaffected and always runs. Flip this
  * to `true` once the backend confirms those classes emit, and the mirror-channel assertions for them
  * come along with it.
@@ -169,6 +169,36 @@ function assertPayloadFields(
 const payloadOf = (obj: { payload?: unknown }): Record<string, unknown> | undefined =>
   obj.payload as Record<string, unknown> | undefined;
 
+/** Shape of a rejected DataSync REST call: generic message, service detail under `status`. */
+type RestRejection = {
+  message: string;
+  status: { statusCode: number; category?: string; errorData?: { errors?: Array<{ errorCode?: string }> } };
+};
+
+/**
+ * `assert.rejects` matcher for a service error code. The SDK's `PubNubError.message` is always the
+ * generic `REST API request processing error, check status for details` — the DataSync `errors[]`
+ * envelope (and therefore the `DS-xxxx` code) is only reachable through `status.errorData`, so a
+ * regex against the error string can never see the code.
+ */
+function rejectsWithDataSyncError(expected: {
+  statusCode: number;
+  category?: string;
+  errorCode: string;
+}): (error: RestRejection) => true {
+  return (error: RestRejection) => {
+    assert.strictEqual(error.message, 'REST API request processing error, check status for details', 'error message');
+    assert.strictEqual(error.status.statusCode, expected.statusCode, 'status code surfaced');
+    if (expected.category !== undefined) assert.strictEqual(error.status.category, expected.category, 'category');
+    assert.deepStrictEqual(
+      error.status.errorData?.errors?.map((entry) => entry.errorCode),
+      [expected.errorCode],
+      'service error code surfaced through status.errorData.errors',
+    );
+    return true;
+  };
+}
+
 /** Entity / set subscription — the surface `dataSyncEntity(id).subscription()` returns. */
 type EntitySubscription = {
   addListener(listener: { dataSync?: (event: Subscription.DataSyncObject) => void }): void;
@@ -192,19 +222,26 @@ function adminProjection(reader: PubNub, id: string): EntitySubscription {
 }
 
 /**
- * Subscribe via the entity API, let the connection settle, run `trigger`, and resolve once
- * `expectedCount` matching DataSync events have arrived. A single mutation fans out to both the
- * id channel and its `__admin__…` mirror, so tests here wait for 2.
+ * Subscribe via the entity API, run `trigger` once the subscription is actually connected, and
+ * resolve when `expectedCount` matching DataSync events have arrived. A single mutation fans out to
+ * both the id channel and its `__admin__…` mirror, so tests here wait for 2.
+ *
+ * The trigger must not fire before the handshake completes: DataSync events are only delivered from
+ * the handshake timetoken onward, so a mutation published while the subscribe is still in flight is
+ * lost for good. A fixed settle delay is a race (handshake retries routinely exceed it) — so gate on
+ * the connect status and keep the delay only as a small post-connect grace period.
  */
 function captureEvents(
+  pn: PubNub,
   subscription: EntitySubscription,
   predicate: (event: Subscription.DataSyncObject) => boolean,
   expectedCount: number,
   trigger: () => Promise<void>,
-  opts: { settleMs?: number; timeoutMs?: number } = {},
+  opts: { graceMs?: number; connectTimeoutMs?: number; timeoutMs?: number } = {},
 ): Promise<Subscription.DataSyncObject[]> {
-  const settleMs = opts.settleMs ?? 4000;
-  const timeoutMs = opts.timeoutMs ?? 25000;
+  const graceMs = opts.graceMs ?? 1000;
+  const connectTimeoutMs = opts.connectTimeoutMs ?? 20000;
+  const timeoutMs = opts.timeoutMs ?? 45000;
 
   return new Promise<Subscription.DataSyncObject[]>((resolve, reject) => {
     const collected: Subscription.DataSyncObject[] = [];
@@ -220,6 +257,32 @@ function captureEvents(
         resolve(collected);
       },
     };
+
+    /** Resolves on the first connect status; rejects if the subscribe never comes up. */
+    const connected = new Promise<void>((onConnected, onConnectFailure) => {
+      const statusListener = {
+        status: (status: Status | StatusEvent) => {
+          if (
+            status.category !== PubNub.CATEGORIES.PNConnectedCategory &&
+            status.category !== PubNub.CATEGORIES.PNSubscriptionChangedCategory
+          )
+            return;
+          done();
+          onConnected();
+        },
+      };
+      const connectTimer = setTimeout(() => {
+        done();
+        onConnectFailure(new Error(`Subscription did not connect within ${connectTimeoutMs}ms.`));
+      }, connectTimeoutMs);
+
+      function done(): void {
+        clearTimeout(connectTimer);
+        pn.removeListener(statusListener);
+      }
+
+      pn.addListener(statusListener);
+    });
 
     const timer = setTimeout(() => {
       if (settled) return;
@@ -242,7 +305,8 @@ function captureEvents(
     subscription.addListener(listener);
     subscription.subscribe();
 
-    delay(settleMs)
+    connected
+      .then(() => delay(graceMs))
       .then(trigger)
       .catch((error) => {
         if (settled) return;
@@ -538,10 +602,14 @@ describe('DataSync projections admin vs __default__', function () {
       );
 
       // The token itself mints fine — it is only rejected when a read tries to resolve the name.
+      // An unknown projection name must fail the read, not silently fall back to `__default__`.
       await assert.rejects(
         () => reader.dataSync.getEntity({ id: customerId }),
-        /DS-0202/,
-        'unknown projection name must fail the read, not silently fall back to __default__',
+        rejectsWithDataSyncError({
+          statusCode: 403,
+          category: PubNub.CATEGORIES.PNAccessDeniedCategory,
+          errorCode: 'DS-0202',
+        }),
       );
     });
 
@@ -552,10 +620,14 @@ describe('DataSync projections admin vs __default__', function () {
         }),
       );
 
+      // `__admin__` is the channel prefix, never the projection name — so it resolves to nothing.
       await assert.rejects(
         () => reader.dataSync.getEntity({ id: customerId }),
-        /DS-0202/,
-        '`__admin__` is the channel prefix, never the projection name',
+        rejectsWithDataSyncError({
+          statusCode: 403,
+          category: PubNub.CATEGORIES.PNAccessDeniedCategory,
+          errorCode: 'DS-0202',
+        }),
       );
     });
 
@@ -661,6 +733,7 @@ describe('DataSync projections admin vs __default__', function () {
       reader = await readerWithToken(pnPam, 'proj-rt-both', { channelPatterns: bothChannelPatterns });
 
       const events = await captureEvents(
+        reader,
         bothProjections(reader, 'customer.*'),
         (e) => e.message.event === 'create' && (e.message.data as { id?: string }).id === customerId,
         2,
@@ -701,6 +774,7 @@ describe('DataSync projections admin vs __default__', function () {
       reader = await readerWithToken(pnPam, 'proj-rt-no-projection', { channelPatterns: bothChannelPatterns });
 
       const events = await captureEvents(
+        reader,
         bothProjections(reader, 'customer.*'),
         (e) => e.message.event === 'create' && (e.message.data as { id?: string }).id === customerId,
         2,
@@ -722,6 +796,7 @@ describe('DataSync projections admin vs __default__', function () {
       reader = await readerWithToken(pnPam, 'proj-rt-unanchored', { channelPatterns: ['customer.*'] });
 
       const events = await captureEvents(
+        reader,
         adminProjection(reader, customerId),
         (e) => e.message.event === 'create' && (e.message.data as { id?: string }).id === customerId,
         1,
@@ -763,6 +838,7 @@ describe('DataSync projections admin vs __default__', function () {
       await seedCustomer(pnPam, customerId);
 
       const events = await captureEvents(
+        reader,
         bothProjections(reader, 'customer.*'),
         (e) => e.message.event === 'update' && (e.message.data as { id?: string }).id === customerId,
         2,
@@ -789,6 +865,7 @@ describe('DataSync projections admin vs __default__', function () {
       await seedCustomer(pnPam, customerId);
 
       const events = await captureEvents(
+        reader,
         bothProjections(reader, 'customer.*'),
         (e) => e.message.event === 'delete' && (e.message.data as { id?: string }).id === customerId,
         2,
@@ -844,6 +921,7 @@ describe('DataSync projections admin vs __default__', function () {
       });
 
       const events = await captureEvents(
+        reader,
         bothProjections(reader, 'loanquote.*'),
         (e) => e.message.event === 'create' && (e.message.data as { id?: string }).id === loanQuoteId,
         2,
@@ -882,6 +960,7 @@ describe('DataSync projections admin vs __default__', function () {
       subscription.addSubscription(quote.subscription({ projection: PROJECTION_ADMIN }));
 
       const events = await captureEvents(
+        reader,
         subscription,
         (e) => e.message.event === 'create' && (e.message.data as { id?: string }).id === relationshipId,
         2,

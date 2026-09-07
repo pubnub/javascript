@@ -540,7 +540,7 @@ describe('DataSync Membership Endpoints', () => {
           data: { payload: {} },
         }),
       (error: { status: { message: string } }) => {
-        assert.strictEqual(error.status.message, 'Relationship class version cannot be empty');
+        assert.strictEqual(error.status.message, 'Membership class version cannot be empty');
         return true;
       },
     );
