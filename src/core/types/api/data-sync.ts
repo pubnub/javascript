@@ -420,7 +420,7 @@ export type EntityObject = {
   eTag: string;
 
   /** Auto-deletion timestamp (ISO 8601). Entities expire at this time. */
-  expiresAt?: string;
+  expiresAt: string;
 };
 
 // ----- Entity Request Parameters -----
@@ -483,6 +483,13 @@ export type GetEntitiesParameters = PagedRequestParameters & {
    * Entity class version. If not provided, the server returns entities for the latest version.
    */
   entityClassVersion?: number;
+
+  /**
+   * Level of the entity class, used to disambiguate a class name defined at both levels.
+   *
+   * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
+   */
+  entityClassLevel?: ClassLevel;
 };
 
 /**
@@ -771,7 +778,7 @@ export type RelationshipObject = {
   eTag: string;
 
   /** Auto-deletion timestamp (ISO 8601). */
-  expiresAt?: string;
+  expiresAt: string;
 };
 
 // ----- Relationship Request Parameters -----
@@ -1065,7 +1072,7 @@ export type UserObject = {
   eTag: string;
 
   /** Auto-deletion timestamp (ISO 8601). Users expire at this time. */
-  expiresAt?: string;
+  expiresAt: string;
 };
 
 // ----- User Request Parameters -----
@@ -1137,9 +1144,24 @@ export type GetUserParameters = {
  */
 export type GetUsersParameters = PagedRequestParameters & {
   /**
+   * Entity class name to filter by.
+   *
+   * Optional — unlike {@link GetEntitiesParameters.entityClass}, users are listed across every user
+   * class when omitted.
+   */
+  entityClass?: string;
+
+  /**
    * Entity class version. If not provided, the server returns users for the latest version.
    */
   entityClassVersion?: number;
+
+  /**
+   * Level of the entity class, used to disambiguate a class name defined at both levels.
+   *
+   * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
+   */
+  entityClassLevel?: ClassLevel;
 };
 
 /**
@@ -1366,7 +1388,7 @@ export type ChannelObject = {
   eTag: string;
 
   /** Auto-deletion timestamp (ISO 8601). Channels expire at this time. */
-  expiresAt?: string;
+  expiresAt: string;
 };
 
 // ----- Channel Request Parameters -----
@@ -1419,9 +1441,24 @@ export type GetChannelParameters = {
  */
 export type GetChannelsParameters = PagedRequestParameters & {
   /**
+   * Entity class name to filter by.
+   *
+   * Optional — unlike {@link GetEntitiesParameters.entityClass}, channels are listed across every
+   * channel class when omitted.
+   */
+  entityClass?: string;
+
+  /**
    * Entity class version. If not provided, the server returns channels for the latest version.
    */
   entityClassVersion?: number;
+
+  /**
+   * Level of the entity class, used to disambiguate a class name defined at both levels.
+   *
+   * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
+   */
+  entityClassLevel?: ClassLevel;
 };
 
 /**
@@ -1667,7 +1704,7 @@ export type MembershipObject = {
   eTag: string;
 
   /** Auto-deletion timestamp (ISO 8601). */
-  expiresAt?: string;
+  expiresAt: string;
 };
 
 // ----- Membership Request Parameters -----
