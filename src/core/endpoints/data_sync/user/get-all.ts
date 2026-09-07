@@ -66,11 +66,14 @@ export class GetUsersRequest<Response extends DataSync.GetUsersResponse> extends
   }
 
   protected get queryParameters(): Query {
-    const { entityClassVersion, cursor, limit, filter, filterFast, sort } = this.parameters;
+    const { entityClass, entityClassVersion, entityClassLevel, cursor, limit, filter, filterFast, sort } =
+      this.parameters;
     const sorting = DataSync.serializeDataSyncSort(sort);
 
     return {
+      ...(entityClass ? { entity_class: entityClass } : {}),
       ...(entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {}),
+      ...(entityClassLevel ? { entity_class_level: entityClassLevel } : {}),
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),

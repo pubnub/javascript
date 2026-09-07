@@ -55,7 +55,7 @@ export class CreateMembershipRequest<Response extends DataSync.CreateMembershipR
     if (!this.parameters.userId) return 'User id cannot be empty';
     if (!this.parameters.channelId) return 'Channel id cannot be empty';
     if (!this.parameters.data) return 'Membership data cannot be empty';
-    if (!this.parameters.data.classVersion) return 'Relationship class version cannot be empty';
+    if (!this.parameters.data.classVersion) return 'Membership class version cannot be empty';
   }
 
   protected get headers(): Record<string, string> | undefined {
