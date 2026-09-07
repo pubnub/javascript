@@ -3365,24 +3365,6 @@
 	                                errorData = errorResponse;
 	                                status = errorResponse.status;
 	                            }
-	                            else if ('errors' in errorResponse &&
-	                                Array.isArray(errorResponse.errors) &&
-	                                errorResponse.errors.length > 0) {
-	                                // Handle DataSync-style structured error responses:
-	                                // { errors: [{ errorCode: "SYN-0008", message: "...", path: "/id" }] }
-	                                errorData = errorResponse;
-	                                const errors = errorResponse.errors;
-	                                message = errors
-	                                    .map((e) => {
-	                                    const parts = [];
-	                                    if (e.errorCode)
-	                                        parts.push(e.errorCode);
-	                                    if (e.message)
-	                                        parts.push(e.message);
-	                                    return parts.join(': ');
-	                                })
-	                                    .join('; ');
-	                            }
 	                            else
 	                                errorData = errorResponse;
 	                            if ('error' in errorResponse && errorResponse.error instanceof Error)
@@ -3462,30 +3444,6 @@
 	                return JSON.stringify(Object.assign(Object.assign({}, status), { errorData: normalizedErrorData }));
 	            },
 	        };
-	    }
-	    /**
-	     * Format a user-facing error message for this API error.
-	     *
-	     * When the error contains structured details extracted from the service response
-	     * (e.g., DataSync `errors` array), those details are included in the message.
-	     * Otherwise, falls back to a generic description.
-	     *
-	     * @param operation - Request operation during which error happened.
-	     *
-	     * @returns Formatted error message string.
-	     */
-	    toFormattedMessage(operation) {
-	        const fallback = 'REST API request processing error, check status for details';
-	        // When errorData contains a structured `errors` array, `this.message` was already
-	        // constructed from it in `createFromServiceResponse` — prefer it over the generic fallback.
-	        if (this.errorData &&
-	            typeof this.errorData === 'object' &&
-	            !('name' in this.errorData && 'message' in this.errorData && 'stack' in this.errorData) &&
-	            'errors' in this.errorData &&
-	            Array.isArray(this.errorData.errors)) {
-	            return `${operation}: ${this.message}`;
-	        }
-	        return fallback;
 	    }
 	    /**
 	     * Convert API error object to PubNub client error object.
@@ -5047,6 +5005,12 @@
 	 */
 	ConsoleLogger.decoder = new TextDecoder();
 
+	/**
+	 * HTTP status codes which represent definitive client-side outcomes and shouldn't be retried.
+	 *
+	 * @internal
+	 */
+	const NON_RETRIABLE_STATUS_CODES = [404, 409];
 	// --------------------------------------------------------
 	// ------------------------ Types -------------------------
 	// --------------------------------------------------------
@@ -5164,7 +5128,7 @@
 	class RetryPolicy {
 	    static None() {
 	        return {
-	            shouldRetry(_request, _response, _errorCategory, _attempt) {
+	            shouldRetry(_request, _response, _errorCategory, _attempt, _statusCode) {
 	                return false;
 	            },
 	            getDelay(_attempt, _response) {
@@ -5181,8 +5145,8 @@
 	            delay: configuration.delay,
 	            maximumRetry: configuration.maximumRetry,
 	            excluded: (_a = configuration.excluded) !== null && _a !== void 0 ? _a : [],
-	            shouldRetry(request, response, error, attempt) {
-	                return isRetriableRequest(request, response, error, attempt !== null && attempt !== void 0 ? attempt : 0, this.maximumRetry, this.excluded);
+	            shouldRetry(request, response, error, attempt, statusCode) {
+	                return isRetriableRequest(request, response, error, attempt !== null && attempt !== void 0 ? attempt : 0, this.maximumRetry, this.excluded, statusCode);
 	            },
 	            getDelay(_, response) {
 	                let delay = -1;
@@ -5205,8 +5169,8 @@
 	            maximumDelay: configuration.maximumDelay,
 	            maximumRetry: configuration.maximumRetry,
 	            excluded: (_a = configuration.excluded) !== null && _a !== void 0 ? _a : [],
-	            shouldRetry(request, response, error, attempt) {
-	                return isRetriableRequest(request, response, error, attempt !== null && attempt !== void 0 ? attempt : 0, this.maximumRetry, this.excluded);
+	            shouldRetry(request, response, error, attempt, statusCode) {
+	                return isRetriableRequest(request, response, error, attempt !== null && attempt !== void 0 ? attempt : 0, this.maximumRetry, this.excluded, statusCode);
 	            },
 	            getDelay(attempt, response) {
 	                let delay = -1;
@@ -5232,12 +5196,15 @@
 	 * @param retryAttempt - Current retry attempt.
 	 * @param maximumRetry - Maximum retry attempts count according to the retry policy.
 	 * @param excluded - List of endpoints for which retry policy won't be applied.
+	 * @param statusCode - Response HTTP status code (available when request failed with an error and hence there is no
+	 * `res`).
 	 *
 	 * @return `true` if request can be retried.
 	 *
 	 * @internal
 	 */
-	const isRetriableRequest = (req, res, errorCategory, retryAttempt, maximumRetry, excluded) => {
+	const isRetriableRequest = (req, res, errorCategory, retryAttempt, maximumRetry, excluded, statusCode) => {
+	    var _a;
 	    if (errorCategory) {
 	        if (errorCategory === StatusCategory$1.PNCancelledCategory ||
 	            errorCategory === StatusCategory$1.PNBadRequestCategory ||
@@ -5247,6 +5214,10 @@
 	    if (isExcludedRequest(req, excluded))
 	        return false;
 	    else if (retryAttempt > maximumRetry)
+	        return false;
+	    // Status code is reported separately from the `res` when the request failed with an error.
+	    const status = (_a = res === null || res === void 0 ? void 0 : res.status) !== null && _a !== void 0 ? _a : statusCode;
+	    if (status !== undefined && NON_RETRIABLE_STATUS_CODES.includes(status))
 	        return false;
 	    return res ? res.status === 429 || res.status >= 500 : true;
 	};
@@ -5759,9 +5730,11 @@
 	        const parsed = this.cbor.decodeToken(tokenString);
 	        if (parsed !== undefined) {
 	            const uuidResourcePermissions = parsed.res.uuid ? Object.keys(parsed.res.uuid) : [];
+	            const userResourcePermissions = parsed.res.usr ? Object.keys(parsed.res.usr) : [];
 	            const channelResourcePermissions = Object.keys(parsed.res.chan);
 	            const groupResourcePermissions = Object.keys(parsed.res.grp);
 	            const uuidPatternPermissions = parsed.pat.uuid ? Object.keys(parsed.pat.uuid) : [];
+	            const userPatternPermissions = parsed.pat.usr ? Object.keys(parsed.pat.usr) : [];
 	            const channelPatternPermissions = Object.keys(parsed.pat.chan);
 	            const groupPatternPermissions = Object.keys(parsed.pat.grp);
 	            const result = {
@@ -5772,13 +5745,18 @@
 	                signature: parsed.sig,
 	            };
 	            const uuidResources = uuidResourcePermissions.length > 0;
+	            const userResources = userResourcePermissions.length > 0;
 	            const channelResources = channelResourcePermissions.length > 0;
 	            const groupResources = groupResourcePermissions.length > 0;
-	            if (uuidResources || channelResources || groupResources) {
+	            if (uuidResources || userResources || channelResources || groupResources) {
 	                result.resources = {};
 	                if (uuidResources) {
 	                    const uuids = (result.resources.uuids = {});
 	                    uuidResourcePermissions.forEach((id) => (uuids[id] = this.extractPermissions(parsed.res.uuid[id])));
+	                }
+	                if (userResources) {
+	                    const users = (result.resources.users = {});
+	                    userResourcePermissions.forEach((id) => (users[id] = this.extractCrudPermissions(parsed.res.usr[id])));
 	                }
 	                if (channelResources) {
 	                    const channels = (result.resources.channels = {});
@@ -5793,13 +5771,18 @@
 	            if (resourceDataSync)
 	                ((_a = result.resources) !== null && _a !== void 0 ? _a : (result.resources = {})).dataSync = resourceDataSync;
 	            const uuidPatterns = uuidPatternPermissions.length > 0;
+	            const userPatterns = userPatternPermissions.length > 0;
 	            const channelPatterns = channelPatternPermissions.length > 0;
 	            const groupPatterns = groupPatternPermissions.length > 0;
-	            if (uuidPatterns || channelPatterns || groupPatterns) {
+	            if (uuidPatterns || userPatterns || channelPatterns || groupPatterns) {
 	                result.patterns = {};
 	                if (uuidPatterns) {
 	                    const uuids = (result.patterns.uuids = {});
 	                    uuidPatternPermissions.forEach((id) => (uuids[id] = this.extractPermissions(parsed.pat.uuid[id])));
+	                }
+	                if (userPatterns) {
+	                    const users = (result.patterns.users = {});
+	                    userPatternPermissions.forEach((id) => (users[id] = this.extractCrudPermissions(parsed.pat.usr[id])));
 	                }
 	                if (channelPatterns) {
 	                    const channels = (result.patterns.channels = {});
@@ -5877,18 +5860,22 @@
 	            if (ids.length === 0)
 	                return;
 	            const scopeResult = ((result !== null && result !== void 0 ? result : (result = {}))[scope] = {});
-	            ids.forEach((id) => (scopeResult[id] = this.extractDataSyncPermissions(permissions[id])));
+	            ids.forEach((id) => (scopeResult[id] = this.extractCrudPermissions(permissions[id])));
 	        });
 	        return result;
 	    }
 	    /**
-	     * Extract DataSync resource access permission information.
+	     * Extract CRUD-only access permission information.
+	     *
+	     * Shared by the `usr` wire key (which backs the `users` grant scope) and the `datasync:*` wire
+	     * keys — both carry the same CRUD bit layout and none of the `read` / `write` / `manage` / `join`
+	     * bits decoded by {@link extractPermissions}.
 	     *
 	     * @param permissions - Bit-encoded resource permissions.
 	     *
-	     * @returns Human-readable DataSync resource permissions.
+	     * @returns Human-readable CRUD resource permissions.
 	     */
-	    extractDataSyncPermissions(permissions) {
+	    extractCrudPermissions(permissions) {
 	        return {
 	            create: (permissions & 16) === 16,
 	            get: (permissions & 32) === 32,
@@ -5938,10 +5925,6 @@
 	 *
 	 * @internal
 	 */
-	/**
-	 * HTTP status codes that represent definitive client outcomes and must not be retried.
-	 */
-	const NON_RETRIABLE_STATUS_CODES = [404, 409];
 	/**
 	 * Request signature generator.
 	 *
@@ -6054,13 +6037,10 @@
 	                    const [attemptPromise, attemptCancellation] = transport.makeSendable(this.request(req));
 	                    activeCancellation = attemptCancellation;
 	                    const responseHandler = (res, error) => {
-	                        const retriableError = !error || error.category !== StatusCategory$1.PNCancelledCategory;
-	                        const statusCode = error === null || error === void 0 ? void 0 : error.statusCode;
-	                        const retriableStatusCode = (!res || res.status >= 400) && !NON_RETRIABLE_STATUS_CODES.includes(statusCode);
 	                        let delay = -1;
-	                        if (retriableError &&
-	                            retriableStatusCode &&
-	                            retryPolicy.shouldRetry(req, res, error === null || error === void 0 ? void 0 : error.category, attempt + 1))
+	                        // Retry ability (error category, HTTP status code, excluded endpoints and attempts count) is entirely
+	                        // decided by the retry policy.
+	                        if (retryPolicy.shouldRetry(req, res, error === null || error === void 0 ? void 0 : error.category, attempt + 1, error === null || error === void 0 ? void 0 : error.statusCode))
 	                            delay = retryPolicy.getDelay(attempt, res);
 	                        if (delay > 0) {
 	                            attempt++;
@@ -6764,6 +6744,21 @@
 	    PubNubEventType[PubNubEventType["DataSync"] = 5] = "DataSync";
 	})(PubNubEventType || (PubNubEventType = {}));
 	/**
+	 * Event types which this SDK version knows how to parse.
+	 *
+	 * Events with any other `e` value are ignored: they most likely originate from a service release newer than
+	 * the SDK
+	 */
+	const KNOWN_EVENT_TYPES = new Set([
+	    PubNubEventType.Presence,
+	    PubNubEventType.Message,
+	    PubNubEventType.Signal,
+	    PubNubEventType.AppContext,
+	    PubNubEventType.MessageAction,
+	    PubNubEventType.Files,
+	    PubNubEventType.DataSync,
+	]);
+	/**
 	 * Reserved DataSync system class names (lower-cased) → normalized object type.
 	 *
 	 * Only consulted for classes the service marks as `Global` (see {@link DataSyncClassLevel}), so a
@@ -6831,11 +6826,22 @@
 	            })
 	                .map((envelope) => {
 	                let { e: eventType } = envelope;
+	                // Events delivered on a presence channel are always presence events: the `-pnpres` suffix wins over
+	                // the service-reported type. `envelope.c` is the actual channel (`envelope.b` is the channel group
+	                // name), so this also covers presence delivered through a subscribed channel group.
+	                if (envelope.c.endsWith('-pnpres'))
+	                    eventType = PubNubEventType.Presence;
 	                // Resolve missing event type.
-	                eventType !== null && eventType !== void 0 ? eventType : (eventType = envelope.c.endsWith('-pnpres') ? PubNubEventType.Presence : PubNubEventType.Message);
+	                else
+	                    eventType !== null && eventType !== void 0 ? eventType : (eventType = PubNubEventType.Message);
+	                // Ignore an event type this SDK version cannot parse rather than delivering an unexpected payload.
+	                if (!KNOWN_EVENT_TYPES.has(eventType))
+	                    return undefined;
 	                const pn_mfp = messageFingerprint(envelope.d);
 	                // Check whether payload is string (potentially encrypted data).
-	                if (eventType != PubNubEventType.Signal && typeof envelope.d === 'string') {
+	                if (eventType != PubNubEventType.Presence &&
+	                    eventType != PubNubEventType.Signal &&
+	                    typeof envelope.d === 'string') {
 	                    if (eventType == PubNubEventType.Message) {
 	                        return {
 	                            type: PubNubEventType.Message,
@@ -6891,12 +6897,14 @@
 	                        return { type: PubNubEventType.DataSync, data: dataSync, pn_mfp };
 	                    return { type: PubNubEventType.Message, data: this.messageFromEnvelope(envelope), pn_mfp };
 	                }
+	                // The only known event type left is a file event.
 	                return {
 	                    type: PubNubEventType.Files,
 	                    data: this.fileFromEnvelope(envelope),
 	                    pn_mfp,
 	                };
-	            });
+	            })
+	                .filter((event) => event !== undefined);
 	            return {
 	                cursor: { timetoken: serviceResponse.t.t, region: serviceResponse.t.r },
 	                messages: events,
@@ -6920,20 +6928,36 @@
 	        // Backward compatibility with deprecated properties.
 	        const actualChannel = subscription !== null ? trimmedChannel : null;
 	        const subscribedChannel = subscription !== null ? subscription : trimmedChannel;
-	        if (typeof payload !== 'string') {
-	            if ('data' in payload) {
-	                // @ts-expect-error This is `state-change` object which should have `state` field.
-	                payload['state'] = payload.data;
-	                delete payload.data;
+	        // Presence payloads are objects. A string can only reach here when a non-presence payload has been published
+	        // on a `-pnpres` channel: try to read it as JSON and never spread a string (which would add character-indexed
+	        // keys to the event).
+	        let presenceData;
+	        if (typeof payload === 'string') {
+	            try {
+	                const parsed = JSON.parse(payload);
+	                if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed))
+	                    presenceData = parsed;
 	            }
-	            else if ('action' in payload && payload.action === 'interval') {
-	                payload.hereNowRefresh = (_a = payload.here_now_refresh) !== null && _a !== void 0 ? _a : false;
-	                delete payload.here_now_refresh;
+	            catch (_b) {
+	                // Not JSON (encrypted or plain-text publish): payload contributes no presence fields.
+	            }
+	        }
+	        else
+	            presenceData = payload;
+	        if (presenceData) {
+	            if ('data' in presenceData) {
+	                // @ts-expect-error This is `state-change` object which should have `state` field.
+	                presenceData['state'] = presenceData.data;
+	                delete presenceData.data;
+	            }
+	            else if ('action' in presenceData && presenceData.action === 'interval') {
+	                presenceData.hereNowRefresh = (_a = presenceData.here_now_refresh) !== null && _a !== void 0 ? _a : false;
+	                delete presenceData.here_now_refresh;
 	            }
 	        }
 	        return Object.assign({ channel: trimmedChannel, subscription,
 	            actualChannel,
-	            subscribedChannel, timetoken: envelope.p.t }, payload);
+	            subscribedChannel, timetoken: envelope.p.t }, (presenceData !== null && presenceData !== void 0 ? presenceData : {}));
 	    }
 	    messageFromEnvelope(envelope) {
 	        const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
@@ -13013,13 +13037,7 @@
 	    /**
 	     * Retrieve entity type.
 	     *
-	     * There is four types:
-	     * - Channel
-	     * - ChannelGroups
-	     * - ChannelMetadata
-	     * - UserMetadata
-	     *
-	     * @return One of known entity types.
+	     * @return One of known {@link EntityType entity types}.
 	     *
 	     * @internal
 	     */
@@ -13125,17 +13143,314 @@
 	}
 
 	/**
+	 * Projection names which are observed on the object's base (un-prefixed) data channel.
+	 *
+	 * @internal
+	 */
+	const BASE_PROJECTIONS = ['default', '__default__'];
+	/**
+	 * Key under which the base (un-prefixed) projection is stored in the variants registry.
+	 *
+	 * @internal
+	 */
+	const BASE_PROJECTION_KEY = '';
+	/**
+	 * Normalize a user-provided DataSync projection name.
+	 *
+	 * **Note:** Only the projection name is normalized. A DataSync object identifier is always used
+	 * verbatim (so wildcard identifiers keep working by construction).
+	 *
+	 * @param [projection] - Projection name as provided by the user.
+	 *
+	 * @returns Trimmed projection name or `undefined` when the base projection is requested.
+	 *
+	 * @internal
+	 */
+	const normalizedProjection = (projection) => {
+	    if (!projection)
+	        return undefined;
+	    const trimmed = projection.trim();
+	    if (trimmed.length === 0 || BASE_PROJECTIONS.includes(trimmed.toLowerCase()))
+	        return undefined;
+	    return trimmed;
+	};
+	/**
+	 * Base class for DataSync objects which can be observed with the subscribe REST API.
+	 *
+	 * A DataSync object is observed on a data channel named after its identifier, optionally prefixed
+	 * with the name of an observed projection: `__{projection}__{id}`.
+	 *
+	 * **Note:** The identifier is used verbatim, so an identifier which already looks prefixed
+	 * (`__admin__u1`) will be prefixed again when a projection is requested (`__admin____admin__u1`).
+	 */
+	class DataSyncSubscribable extends Entity {
+	    /**
+	     * Create a DataSync object entity.
+	     *
+	     * @param nameOrId - Unique DataSync object identifier (used verbatim).
+	     * @param client - PubNub instance which has been used to create this entity.
+	     * @param [projection] - Name of the projection which should be observed by this entity.
+	     *
+	     * @internal
+	     */
+	    constructor(nameOrId, client, projection) {
+	        super(nameOrId, client);
+	        this._projection = normalizedProjection(projection);
+	    }
+	    /**
+	     * Get unique DataSync object identifier.
+	     *
+	     * @returns DataSync object identifier.
+	     */
+	    get id() {
+	        return this._nameOrId;
+	    }
+	    /**
+	     * Get the name of the projection which is observed by this entity.
+	     *
+	     * **Note:** A projection is chosen per subscription
+	     * ({@link DataSyncSubscriptionOptions#projection}), so an entity created by the PubNub client
+	     * always reports `undefined` here: it is the base-projection entity, and the entities bound to
+	     * other projections are internal to it.
+	     *
+	     * @returns Observed projection name or `undefined` when the object is observed through its base
+	     * projection.
+	     */
+	    get projection() {
+	        return this._projection;
+	    }
+	    /**
+	     * Name of the data channel which is used with multiplexed subscribe REST API calls.
+	     *
+	     * @returns Name of the observed data channel.
+	     *
+	     * @internal
+	     */
+	    get subscriptionChannel() {
+	        return this._projection ? `__${this._projection}__${this._nameOrId}` : this._nameOrId;
+	    }
+	    /**
+	     * Names for an object to be used in subscription.
+	     *
+	     * **Note:** A DataSync object is observed on a single data channel; presence events are not
+	     * supported for it and `_receivePresenceEvents` is ignored.
+	     *
+	     * @param _receivePresenceEvents - Whether presence events should be observed or not.
+	     *
+	     * @returns List of names with multiplexed subscribe REST API calls.
+	     *
+	     * @internal
+	     */
+	    subscriptionNames(_receivePresenceEvents) {
+	        return [this.subscriptionChannel];
+	    }
+	    /**
+	     * Create a DataSync object's subscription object for real-time updates.
+	     *
+	     * @param [subscriptionOptions] - Subscription object behavior customization options.
+	     *
+	     * @returns Configured and ready to use DataSync object's subscription object.
+	     *
+	     * @example
+	     * ```typescript
+	     * // Observe the object itself.
+	     * pubnub.dataSyncUser('u1').subscription().subscribe();
+	     *
+	     * // Observe the `admin` projection of the object (the `__admin__u1` data channel).
+	     * pubnub.dataSyncUser('u1').subscription({ projection: 'admin' }).subscribe();
+	     * ```
+	     */
+	    subscription(subscriptionOptions) {
+	        {
+	            const entity = this.entityForProjection(normalizedProjection(subscriptionOptions === null || subscriptionOptions === void 0 ? void 0 : subscriptionOptions.projection));
+	            // Each projection is observed on its own data channel, so it must be represented by its own
+	            // entity instance (see `variants`). Let the entity which owns the requested projection create
+	            // the subscription object for itself: it resolves that same projection to itself, so this
+	            // delegation is always a single hop.
+	            if (entity !== this)
+	                return entity.subscription(subscriptionOptions);
+	            return super.subscription(subscriptionOptions);
+	        }
+	    }
+	    /**
+	     * Resolve the entity which observes the same DataSync object through `projection`.
+	     *
+	     * @param [projection] - Normalized name of the projection to observe.
+	     *
+	     * @returns Receiver itself, or the memoized sibling entity bound to `projection`.
+	     *
+	     * @internal
+	     */
+	    entityForProjection(projection) {
+	        var _a, _b, _c;
+	        var _d;
+	        if (projection === this._projection)
+	            return this;
+	        // Register the receiver in the shared registry, so that it can be resolved back from siblings.
+	        //
+	        // Note: the receiver is added with an element assignment and never as part of an object literal
+	        // which is assigned to `variants`. Declaration files for this module are inferred from the
+	        // compiled JavaScript (`allowJs`), where a `this.variants = { ...: this }` statement would make
+	        // the inferred member type reference the inaccessible polymorphic `this` type (TS2527).
+	        const variants = ((_a = this.variants) !== null && _a !== void 0 ? _a : (this.variants = {}));
+	        (_c = variants[_d = (_b = this._projection) !== null && _b !== void 0 ? _b : BASE_PROJECTION_KEY]) !== null && _c !== void 0 ? _c : (variants[_d] = this);
+	        const key = projection !== null && projection !== void 0 ? projection : BASE_PROJECTION_KEY;
+	        let entity = variants[key];
+	        if (!entity) {
+	            entity = variants[key] = this.withProjection(projection);
+	            entity.variants = variants;
+	        }
+	        return entity;
+	    }
+	    /**
+	     * Stringify entity object.
+	     *
+	     * @returns Serialized entity object.
+	     */
+	    toString() {
+	        var _a;
+	        return (`${this.entityType} { id: ${this._nameOrId}, projection: ${(_a = this._projection) !== null && _a !== void 0 ? _a : 'none'}, ` +
+	            `channel: ${this.subscriptionChannel}, subscriptionsCount: ${this.subscriptionsCount} }`);
+	    }
+	}
+
+	/**
+	 * First-class object which provides access to the real-time updates of a DataSync `Relationship`
+	 * object.
+	 *
+	 * **Important:** The service delivers relationship changes on the data channels of **both linked
+	 * entities** (`entityAId` and `entityBId`), and never on the relationship's own identifier. Observe
+	 * `pubnub.dataSyncEntity(...)` for the linked entities to receive relationship updates; this entity
+	 * is only useful if a key set is configured to publish relationship changes on the relationship
+	 * identifier itself.
+	 */
+	class DataSyncRelationship extends DataSyncSubscribable {
+	    /**
+	     * Retrieve entity type.
+	     *
+	     * @return One of known entity types.
+	     *
+	     * @internal
+	     */
+	    get entityType() {
+	        return 'DataSyncRelationship';
+	    }
+	    /**
+	     * Create a copy of the receiver which observes `projection` of the same DataSync `Relationship`
+	     * object.
+	     *
+	     * @param [projection] - Normalized name of the projection to observe.
+	     *
+	     * @returns `DataSyncRelationship` entity bound to `projection`.
+	     *
+	     * @internal
+	     */
+	    withProjection(projection) {
+	        return new DataSyncRelationship(this._nameOrId, this.client, projection);
+	    }
+	}
+
+	/**
+	 * First-class object which provides access to the real-time updates of a DataSync `Membership`
+	 * object.
+	 *
+	 * **Note:** A membership identifier is composite (`{userId}:{channelId}`) and is used verbatim as
+	 * the name of the observed data channel.
+	 *
+	 * **Important:** The service delivers membership changes on the data channels of **both linked
+	 * entities** (the user identifier and the channel identifier), and never on the membership's own
+	 * identifier. Observe `pubnub.dataSyncUser(...)` and/or `pubnub.dataSyncChannel(...)` to receive
+	 * membership updates; this entity is only useful if a key set is configured to publish membership
+	 * changes on the membership identifier itself.
+	 */
+	class DataSyncMembership extends DataSyncSubscribable {
+	    /**
+	     * Retrieve entity type.
+	     *
+	     * @return One of known entity types.
+	     *
+	     * @internal
+	     */
+	    get entityType() {
+	        return 'DataSyncMembership';
+	    }
+	    /**
+	     * Create a copy of the receiver which observes `projection` of the same DataSync `Membership`
+	     * object.
+	     *
+	     * @param [projection] - Normalized name of the projection to observe.
+	     *
+	     * @returns `DataSyncMembership` entity bound to `projection`.
+	     *
+	     * @internal
+	     */
+	    withProjection(projection) {
+	        return new DataSyncMembership(this._nameOrId, this.client, projection);
+	    }
+	}
+
+	/**
+	 * First-class object which provides access to the real-time updates of a DataSync `Channel` object.
+	 */
+	class DataSyncChannel extends DataSyncSubscribable {
+	    /**
+	     * Retrieve entity type.
+	     *
+	     * @return One of known entity types.
+	     *
+	     * @internal
+	     */
+	    get entityType() {
+	        return 'DataSyncChannel';
+	    }
+	    /**
+	     * Create a copy of the receiver which observes `projection` of the same DataSync `Channel` object.
+	     *
+	     * @param [projection] - Normalized name of the projection to observe.
+	     *
+	     * @returns `DataSyncChannel` entity bound to `projection`.
+	     *
+	     * @internal
+	     */
+	    withProjection(projection) {
+	        return new DataSyncChannel(this._nameOrId, this.client, projection);
+	    }
+	}
+
+	/**
+	 * First-class object which provides access to the real-time updates of a DataSync `Entity` object.
+	 */
+	class DataSyncEntity extends DataSyncSubscribable {
+	    /**
+	     * Retrieve entity type.
+	     *
+	     * @return One of known entity types.
+	     *
+	     * @internal
+	     */
+	    get entityType() {
+	        return 'DataSyncEntity';
+	    }
+	    /**
+	     * Create a copy of the receiver which observes `projection` of the same DataSync `Entity` object.
+	     *
+	     * @param [projection] - Normalized name of the projection to observe.
+	     *
+	     * @returns `DataSyncEntity` entity bound to `projection`.
+	     *
+	     * @internal
+	     */
+	    withProjection(projection) {
+	        return new DataSyncEntity(this._nameOrId, this.client, projection);
+	    }
+	}
+
+	/**
 	 * First-class objects which provides access to the channel app context object-specific APIs.
 	 */
 	class ChannelMetadata extends Entity {
 	    /**
 	     * Retrieve entity type.
-	     *
-	     * There is four types:
-	     * - Channel
-	     * - ChannelGroups
-	     * - ChannelMetadata
-	     * - UserMetadata
 	     *
 	     * @return One of known entity types.
 	     *
@@ -13170,17 +13485,39 @@
 	}
 
 	/**
+	 * First-class object which provides access to the real-time updates of a DataSync `User` object.
+	 */
+	class DataSyncUser extends DataSyncSubscribable {
+	    /**
+	     * Retrieve entity type.
+	     *
+	     * @return One of known entity types.
+	     *
+	     * @internal
+	     */
+	    get entityType() {
+	        return 'DataSyncUser';
+	    }
+	    /**
+	     * Create a copy of the receiver which observes `projection` of the same DataSync `User` object.
+	     *
+	     * @param [projection] - Normalized name of the projection to observe.
+	     *
+	     * @returns `DataSyncUser` entity bound to `projection`.
+	     *
+	     * @internal
+	     */
+	    withProjection(projection) {
+	        return new DataSyncUser(this._nameOrId, this.client, projection);
+	    }
+	}
+
+	/**
 	 * First-class objects which provides access to the channel group-specific APIs.
 	 */
 	class ChannelGroup extends Entity {
 	    /**
 	     * Retrieve entity type.
-	     *
-	     * There is four types:
-	     * - Channel
-	     * - ChannelGroups
-	     * - ChannelMetadata
-	     * - UserMetadata
 	     *
 	     * @return One of known entity types.
 	     *
@@ -13217,12 +13554,6 @@
 	class UserMetadata extends Entity {
 	    /**
 	     * Retrieve entity type.
-	     *
-	     * There is four types:
-	     * - Channel
-	     * - ChannelGroups
-	     * - ChannelMetadata
-	     * - UserMetadata
 	     *
 	     * @return One of known entity types.
 	     *
@@ -13262,12 +13593,6 @@
 	class Channel extends Entity {
 	    /**
 	     * Retrieve entity type.
-	     *
-	     * There is four types:
-	     * - Channel
-	     * - ChannelGroups
-	     * - ChannelMetadata
-	     * - UserMetadata
 	     *
 	     * @return One of known entity types.
 	     *
@@ -15706,9 +16031,9 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/users`;
 	    }
 	    get body() {
-	        const { id, classLevel, data } = this.parameters;
+	        const { id, class: entityClass, classLevel, data } = this.parameters;
 	        return JSON.stringify({
-	            data: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (id !== undefined ? { id } : {})), { entityClassVersion: data.classVersion }), (classLevel !== undefined ? { entityClassLevel: classLevel } : {})), (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	            data: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (id !== undefined ? { id } : {})), (entityClass !== undefined ? { entityClass } : {})), { entityClassVersion: data.classVersion }), (classLevel !== undefined ? { entityClassLevel: classLevel } : {})), (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
 	        });
 	    }
 	}
@@ -15733,18 +16058,11 @@
 	    return Object.entries(sort !== null && sort !== void 0 ? sort : {}).map(([option, order]) => (order !== null ? `${option}:${order}` : option));
 	}
 	/**
-	 * Convert dot-notation path to JSON Pointer (RFC 6901).
+	 * Convert user-friendly patch input to JSON Patch operations (request format).
 	 *
-	 * "config.ttlSec"           → "/config/ttlSec"
-	 * "filterableFields.0.name" → "/filterableFields/0/name"
-	 *
-	 * @internal
-	 */
-	function toJsonPointer(dotPath) {
-	    return '/' + dotPath.split('.').join('/');
-	}
-	/**
-	 * Convert user-friendly dot-notation patch input to JSON Patch operations (wire format).
+	 * `path`/`from` are passed through verbatim — callers supply the exact RFC 6901 pointer. Do not
+	 * reintroduce dot-notation translation here: splitting on `.` makes stored field names that
+	 * contain a `.` unaddressable.
 	 *
 	 * - Each key in `add` becomes an "add" operation.
 	 * - Each key in `replace` becomes a "replace" operation.
@@ -15759,33 +16077,33 @@
 	    const { add, replace, remove, move, copy, test } = input;
 	    const ops = [];
 	    if (add) {
-	        for (const [dotPath, value] of Object.entries(add)) {
-	            ops.push({ op: 'add', path: toJsonPointer(dotPath), value });
+	        for (const [path, value] of Object.entries(add)) {
+	            ops.push({ op: 'add', path, value });
 	        }
 	    }
 	    if (replace) {
-	        for (const [dotPath, value] of Object.entries(replace)) {
-	            ops.push({ op: 'replace', path: toJsonPointer(dotPath), value });
+	        for (const [path, value] of Object.entries(replace)) {
+	            ops.push({ op: 'replace', path, value });
 	        }
 	    }
 	    if (remove) {
-	        for (const dotPath of remove) {
-	            ops.push({ op: 'remove', path: toJsonPointer(dotPath) });
+	        for (const path of remove) {
+	            ops.push({ op: 'remove', path });
 	        }
 	    }
 	    if (move) {
 	        for (const { from, path } of move) {
-	            ops.push({ op: 'move', from: toJsonPointer(from), path: toJsonPointer(path) });
+	            ops.push({ op: 'move', from, path });
 	        }
 	    }
 	    if (copy) {
 	        for (const { from, path } of copy) {
-	            ops.push({ op: 'copy', from: toJsonPointer(from), path: toJsonPointer(path) });
+	            ops.push({ op: 'copy', from, path });
 	        }
 	    }
 	    if (test) {
-	        for (const [dotPath, value] of Object.entries(test)) {
-	            ops.push({ op: 'test', path: toJsonPointer(dotPath), value });
+	        for (const [path, value] of Object.entries(test)) {
+	            ops.push({ op: 'test', path, value });
 	        }
 	    }
 	    return ops;
@@ -15833,9 +16151,9 @@
 	        return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/users`;
 	    }
 	    get queryParameters() {
-	        const { entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+	        const { entityClass, entityClassVersion, entityClassLevel, cursor, limit, filter, filterFast, sort } = this.parameters;
 	        const sorting = serializeDataSyncSort(sort);
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sorting.length ? { sort: sorting } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClass ? { entity_class: entityClass } : {})), (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (entityClassLevel ? { entity_class_level: entityClassLevel } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
 	}
 
@@ -15940,9 +16258,9 @@
 	 * Update User REST API module.
 	 *
 	 * Partial update via JSON Patch (RFC 6902).
-	 * Accepts `add`/`replace`/`test` (dot-notation key-value pairs), `remove`
-	 * (dot-notation paths), and `move`/`copy` (dot-notation `{ from, path }` pairs)
-	 * and converts them to JSON Patch operations on the wire.
+	 * Accepts `add`/`replace`/`test` (JSON Pointer key-value pairs), `remove`
+	 * (JSON Pointer paths), and `move`/`copy` (JSON Pointer `{ from, path }` pairs)
+	 * and converts them to JSON Patch operations. Paths are sent verbatim.
 	 *
 	 * @internal
 	 */
@@ -15994,7 +16312,6 @@
 	    }
 	    get body() {
 	        const { add, replace, remove, move, copy, test } = this.parameters;
-	        // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
 	        const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
 	        return JSON.stringify(jsonPatchOps);
 	    }
@@ -16080,9 +16397,9 @@
 	        return `/v1/datasync/subkeys/${subscribeKey}/channels`;
 	    }
 	    get body() {
-	        const { id, classLevel, data } = this.parameters;
+	        const { id, class: entityClass, classLevel, data } = this.parameters;
 	        return JSON.stringify({
-	            data: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (id !== undefined ? { id } : {})), { entityClassVersion: data.classVersion }), (classLevel !== undefined ? { entityClassLevel: classLevel } : {})), (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
+	            data: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (id !== undefined ? { id } : {})), (entityClass !== undefined ? { entityClass } : {})), { entityClassVersion: data.classVersion }), (classLevel !== undefined ? { entityClassLevel: classLevel } : {})), (data.status !== undefined ? { status: data.status } : {})), (data.payload !== undefined ? { payload: data.payload } : {})),
 	        });
 	    }
 	}
@@ -16129,9 +16446,9 @@
 	        return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/channels`;
 	    }
 	    get queryParameters() {
-	        const { entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+	        const { entityClass, entityClassVersion, entityClassLevel, cursor, limit, filter, filterFast, sort } = this.parameters;
 	        const sorting = serializeDataSyncSort(sort);
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sorting.length ? { sort: sorting } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClass ? { entity_class: entityClass } : {})), (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (entityClassLevel ? { entity_class_level: entityClassLevel } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
 	}
 
@@ -16236,9 +16553,9 @@
 	 * Update Channel REST API module.
 	 *
 	 * Partial update via JSON Patch (RFC 6902).
-	 * Accepts `add`/`replace`/`test` (dot-notation key-value pairs), `remove`
-	 * (dot-notation paths), and `move`/`copy` (dot-notation from → path pairs),
-	 * converting them to JSON Patch operations on the wire.
+	 * Accepts `add`/`replace`/`test` (JSON Pointer key-value pairs), `remove`
+	 * (JSON Pointer paths), and `move`/`copy` (JSON Pointer from → path pairs),
+	 * converting them to JSON Patch operations. Paths are sent verbatim.
 	 *
 	 * @internal
 	 */
@@ -16290,7 +16607,6 @@
 	    }
 	    get body() {
 	        const { add, replace, remove, move, copy, test } = this.parameters;
-	        // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
 	        const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
 	        return JSON.stringify(jsonPatchOps);
 	    }
@@ -16368,7 +16684,7 @@
 	        if (!this.parameters.data)
 	            return 'Membership data cannot be empty';
 	        if (!this.parameters.data.classVersion)
-	            return 'Relationship class version cannot be empty';
+	            return 'Membership class version cannot be empty';
 	    }
 	    get headers() {
 	        var _a;
@@ -16430,9 +16746,9 @@
 	        return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/memberships`;
 	    }
 	    get queryParameters() {
-	        const { userId, channelId, relationshipClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+	        const { userId, channelId, relationshipClassVersion, cursor, limit, filter, filterFast, sort } = this.parameters;
 	        const sorting = serializeDataSyncSort(sort);
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (userId ? { user_id: userId } : {})), (channelId ? { channel_id: channelId } : {})), (relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sorting.length ? { sort: sorting } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (userId ? { user_id: userId } : {})), (channelId ? { channel_id: channelId } : {})), (relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
 	}
 
@@ -16475,7 +16791,7 @@
 	        if (!this.parameters.data)
 	            return 'Membership data cannot be empty';
 	        if (!this.parameters.data.classVersion)
-	            return 'Relationship class version cannot be empty';
+	            return 'Membership class version cannot be empty';
 	    }
 	    get headers() {
 	        var _a;
@@ -16542,9 +16858,9 @@
 	 * Update Membership REST API module.
 	 *
 	 * Partial update via JSON Patch (RFC 6902).
-	 * Accepts `add`/`replace`/`test` (dot-notation key-value pairs), `remove`
-	 * (dot-notation paths), and `move`/`copy` (dot-notation `{ from, path }` pairs)
-	 * and converts them to JSON Patch operations on the wire.
+	 * Accepts `add`/`replace`/`test` (JSON Pointer key-value pairs), `remove`
+	 * (JSON Pointer paths), and `move`/`copy` (JSON Pointer `{ from, path }` pairs)
+	 * and converts them to JSON Patch operations. Paths are sent verbatim.
 	 *
 	 * @internal
 	 */
@@ -16596,7 +16912,6 @@
 	    }
 	    get body() {
 	        const { add, replace, remove, move, copy, test } = this.parameters;
-	        // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
 	        const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
 	        return JSON.stringify(jsonPatchOps);
 	    }
@@ -16743,9 +17058,9 @@
 	        return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/relationships`;
 	    }
 	    get queryParameters() {
-	        const { relationshipClass, relationshipClassVersion, entityAId, entityBId, cursor, limit, filter, sort, filterAdvanced, } = this.parameters;
+	        const { relationshipClass, relationshipClassVersion, entityAId, entityBId, cursor, limit, filter, filterFast, sort, } = this.parameters;
 	        const sorting = serializeDataSyncSort(sort);
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ relationship_class: relationshipClass }, (relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {})), (entityAId ? { entity_a_id: entityAId } : {})), (entityBId ? { entity_b_id: entityBId } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sorting.length ? { sort: sorting } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ relationship_class: relationshipClass }, (relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {})), (entityAId ? { entity_a_id: entityAId } : {})), (entityBId ? { entity_b_id: entityBId } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
 	}
 
@@ -16855,10 +17170,10 @@
 	 * Update Relationship REST API module.
 	 *
 	 * Partial update via JSON Patch (RFC 6902).
-	 * Accepts `add` and `replace` (dot-notation key-value pairs), `remove`
-	 * (dot-notation paths), `move` and `copy` (`{ from, path }` dot-notation pairs),
-	 * and `test` (dot-notation key-value pairs) and converts them to JSON Patch
-	 * operations on the wire.
+	 * Accepts `add` and `replace` (JSON Pointer key-value pairs), `remove`
+	 * (JSON Pointer paths), `move` and `copy` (`{ from, path }` JSON Pointer pairs),
+	 * and `test` (JSON Pointer key-value pairs) and converts them to JSON Patch
+	 * operations. Paths are sent verbatim.
 	 *
 	 * @internal
 	 */
@@ -16910,7 +17225,6 @@
 	    }
 	    get body() {
 	        const { add, replace, remove, move, copy, test } = this.parameters;
-	        // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
 	        const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
 	        return JSON.stringify(jsonPatchOps);
 	    }
@@ -17051,9 +17365,9 @@
 	        return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/entities`;
 	    }
 	    get queryParameters() {
-	        const { entityClass, entityClassVersion, cursor, limit, filter, sort, filterAdvanced } = this.parameters;
+	        const { entityClass, entityClassVersion, entityClassLevel, cursor, limit, filter, filterFast, sort } = this.parameters;
 	        const sorting = serializeDataSyncSort(sort);
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ entity_class: entityClass }, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (sorting.length ? { sort: sorting } : {})), (filterAdvanced ? { filter_advanced: filterAdvanced } : {}));
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ entity_class: entityClass }, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (entityClassLevel ? { entity_class_level: entityClassLevel } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
 	}
 
@@ -17159,9 +17473,9 @@
 	 * Update Entity REST API module.
 	 *
 	 * Partial update via JSON Patch (RFC 6902).
-	 * Accepts `add`/`replace`/`test` (dot-notation key-value pairs), `remove`
-	 * (dot-notation paths), and `move`/`copy` (dot-notation from/path pairs), and
-	 * converts them to JSON Patch operations on the wire.
+	 * Accepts `add`/`replace`/`test` (JSON Pointer key-value pairs), `remove`
+	 * (JSON Pointer paths), and `move`/`copy` (JSON Pointer from/path pairs), and
+	 * converts them to JSON Patch operations. Paths are sent verbatim.
 	 *
 	 * @internal
 	 */
@@ -17213,7 +17527,6 @@
 	    }
 	    get body() {
 	        const { add, replace, remove, move, copy, test } = this.parameters;
-	        // Paths are used exactly as provided by the caller (dot notation -> JSON Pointer). The SDK
 	        const jsonPatchOps = toJsonPatchOperations({ add, replace, remove, move, copy, test });
 	        return JSON.stringify(jsonPatchOps);
 	    }
@@ -17290,6 +17603,10 @@
 	    }
 	    /**
 	     * Create a new Entity.
+	     *
+	     * To change a field later with `updateEntity`, address it by its JSON Pointer: `classVersion` is
+	     * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+	     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17375,7 +17692,25 @@
 	    /**
 	     * Update an Entity (partial update via JSON Patch RFC 6902).
 	     *
-	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+	     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+	     * is the name an entity carries in responses and real-time events:
+	     *
+	     * - `classVersion` → `/entityClassVersion`
+	     * - `status` → `/status`
+	     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+	     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+	     *   (`/payload/user.name`).
+	     *
+	     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+	     *
+	     * @example
+	     * ```typescript
+	     * await pubnub.dataSync.updateEntity({
+	     *   id,
+	     *   replace: { '/status': 'inactive', '/payload/creditScore': 810 },
+	     *   remove: ['/payload/legacyField'],
+	     * });
+	     * ```
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17418,6 +17753,11 @@
 	    }
 	    /**
 	     * Create a new Relationship.
+	     *
+	     * To change a field later with `updateRelationship`, address it by its JSON Pointer:
+	     * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+	     * fields as `/payload/<fieldName>`. `class`, `entityAId`, and `entityBId` are immutable and
+	     * cannot be patched.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17503,7 +17843,25 @@
 	    /**
 	     * Update a Relationship (partial update via JSON Patch RFC 6902).
 	     *
-	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+	     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+	     * is the name a relationship carries in responses and real-time events:
+	     *
+	     * - `classVersion` → `/relationshipClassVersion`
+	     * - `status` → `/status`
+	     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+	     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+	     *   (`/payload/user.name`).
+	     *
+	     * `relationshipClass`, `entityAId`, and `entityBId` are immutable and cannot be patched.
+	     *
+	     * @example
+	     * ```typescript
+	     * await pubnub.dataSync.updateRelationship({
+	     *   id,
+	     *   replace: { '/status': 'inactive', '/payload/label': 'primary' },
+	     *   remove: ['/payload/legacyField'],
+	     * });
+	     * ```
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17546,6 +17904,10 @@
 	    }
 	    /**
 	     * Create a new User.
+	     *
+	     * To change a field later with `updateUser`, address it by its JSON Pointer: `classVersion` is
+	     * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+	     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17633,7 +17995,25 @@
 	    /**
 	     * Update a User (partial update via JSON Patch RFC 6902).
 	     *
-	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+	     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+	     * is the name a user carries in responses and real-time events:
+	     *
+	     * - `classVersion` → `/entityClassVersion`
+	     * - `status` → `/status`
+	     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+	     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+	     *   (`/payload/user.name`).
+	     *
+	     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+	     *
+	     * @example
+	     * ```typescript
+	     * await pubnub.dataSync.updateUser({
+	     *   id,
+	     *   replace: { '/status': 'inactive', '/payload/email': 'alice.v@acme.test' },
+	     *   remove: ['/payload/legacyField'],
+	     * });
+	     * ```
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17676,6 +18056,10 @@
 	    }
 	    /**
 	     * Create a new Channel.
+	     *
+	     * To change a field later with `updateChannel`, address it by its JSON Pointer: `classVersion`
+	     * is patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+	     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17763,7 +18147,25 @@
 	    /**
 	     * Update a Channel (partial update via JSON Patch RFC 6902).
 	     *
-	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+	     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+	     * is the name a channel carries in responses and real-time events:
+	     *
+	     * - `classVersion` → `/entityClassVersion`
+	     * - `status` → `/status`
+	     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+	     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+	     *   (`/payload/user.name`).
+	     *
+	     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+	     *
+	     * @example
+	     * ```typescript
+	     * await pubnub.dataSync.updateChannel({
+	     *   id,
+	     *   replace: { '/status': 'inactive', '/payload/memberCount': 42 },
+	     *   remove: ['/payload/legacyField'],
+	     * });
+	     * ```
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17806,6 +18208,10 @@
 	    }
 	    /**
 	     * Create a new Membership (associates a User with a Channel).
+	     *
+	     * To change a field later with `updateMembership`, address it by its JSON Pointer:
+	     * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+	     * fields as `/payload/<fieldName>`. `userId` and `channelId` are immutable and cannot be patched.
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -17893,7 +18299,25 @@
 	    /**
 	     * Update a Membership (partial update via JSON Patch RFC 6902).
 	     *
-	     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+	     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+	     * is the name a membership carries in responses and real-time events:
+	     *
+	     * - `classVersion` → `/relationshipClassVersion`
+	     * - `status` → `/status`
+	     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+	     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+	     *   (`/payload/user.name`).
+	     *
+	     * `userId` and `channelId` are immutable and cannot be patched.
+	     *
+	     * @example
+	     * ```typescript
+	     * await pubnub.dataSync.updateMembership({
+	     *   id,
+	     *   replace: { '/status': 'inactive', '/payload/role': 'moderator' },
+	     *   remove: ['/payload/legacyField'],
+	     * });
+	     * ```
 	     *
 	     * @param parameters - Request configuration parameters.
 	     * @param [callback] - Request completion handler callback.
@@ -18596,6 +19020,95 @@
 	        return metadata;
 	    }
 	    /**
+	     * Create a `DataSyncUser` entity.
+	     *
+	     * Entity can be used for the interaction with the following API:
+	     * - `subscribe`
+	     *
+	     * @param id - Unique DataSync `User` object identifier (used verbatim, so wildcard identifiers
+	     * like `user.*` are supported).
+	     * @returns `DataSyncUser` entity.
+	     */
+	    dataSyncUser(id) {
+	        let entity = this.entities[`${id}_dsu`];
+	        if (!entity)
+	            entity = this.entities[`${id}_dsu`] = new DataSyncUser(id, this);
+	        return entity;
+	    }
+	    /**
+	     * Create a `DataSyncChannel` entity.
+	     *
+	     * Entity can be used for the interaction with the following API:
+	     * - `subscribe`
+	     *
+	     * @param id - Unique DataSync `Channel` object identifier (used verbatim, so wildcard identifiers
+	     * like `channel.*` are supported).
+	     * @returns `DataSyncChannel` entity.
+	     */
+	    dataSyncChannel(id) {
+	        let entity = this.entities[`${id}_dsc`];
+	        if (!entity)
+	            entity = this.entities[`${id}_dsc`] = new DataSyncChannel(id, this);
+	        return entity;
+	    }
+	    /**
+	     * Create a `DataSyncMembership` entity.
+	     *
+	     * Entity can be used for the interaction with the following API:
+	     * - `subscribe`
+	     *
+	     * **Important:** Membership changes are delivered on the data channels of both linked entities
+	     * (the user and the channel identifier), not on the membership identifier — use
+	     * {@link PubNubCore#dataSyncUser dataSyncUser} / {@link PubNubCore#dataSyncChannel
+	     * dataSyncChannel} to observe them.
+	     *
+	     * @param id - Unique DataSync `Membership` object identifier (`{userId}:{channelId}`, used
+	     * verbatim, so wildcard identifiers like `user-123:*` are supported).
+	     * @returns `DataSyncMembership` entity.
+	     */
+	    dataSyncMembership(id) {
+	        let entity = this.entities[`${id}_dsm`];
+	        if (!entity)
+	            entity = this.entities[`${id}_dsm`] = new DataSyncMembership(id, this);
+	        return entity;
+	    }
+	    /**
+	     * Create a `DataSyncEntity` entity.
+	     *
+	     * Entity can be used for the interaction with the following API:
+	     * - `subscribe`
+	     *
+	     * @param id - Unique DataSync `Entity` object identifier (used verbatim, so wildcard identifiers
+	     * like `customer.*` are supported).
+	     * @returns `DataSyncEntity` entity.
+	     */
+	    dataSyncEntity(id) {
+	        let entity = this.entities[`${id}_dse`];
+	        if (!entity)
+	            entity = this.entities[`${id}_dse`] = new DataSyncEntity(id, this);
+	        return entity;
+	    }
+	    /**
+	     * Create a `DataSyncRelationship` entity.
+	     *
+	     * Entity can be used for the interaction with the following API:
+	     * - `subscribe`
+	     *
+	     * **Important:** Relationship changes are delivered on the data channels of both linked entities
+	     * (`entityAId` and `entityBId`), not on the relationship identifier — use
+	     * {@link PubNubCore#dataSyncEntity dataSyncEntity} to observe them.
+	     *
+	     * @param id - Unique DataSync `Relationship` object identifier (used verbatim, so wildcard
+	     * identifiers like `owns.*` are supported).
+	     * @returns `DataSyncRelationship` entity.
+	     */
+	    dataSyncRelationship(id) {
+	        let entity = this.entities[`${id}_dsr`];
+	        if (!entity)
+	            entity = this.entities[`${id}_dsr`] = new DataSyncRelationship(id, this);
+	        return entity;
+	    }
+	    /**
 	     * Create subscriptions set object.
 	     *
 	     * @param parameters - Subscriptions set configuration parameters.
@@ -18689,18 +19202,17 @@
 	            })
 	                .catch((error) => {
 	                const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
-	                const errorMessage = apiError.toFormattedMessage(operation);
 	                // Notify callback (if possible).
 	                if (callback) {
 	                    if (apiError.category !== StatusCategory$1.PNCancelledCategory) {
 	                        this.logger.error('PubNub', () => ({
 	                            messageType: 'error',
-	                            message: apiError.toPubNubError(operation, errorMessage),
+	                            message: apiError.toPubNubError(operation, 'REST API request processing error, check status for details'),
 	                        }));
 	                    }
 	                    return callback(apiError.toStatus(operation), null);
 	                }
-	                const pubNubError = apiError.toPubNubError(operation, errorMessage);
+	                const pubNubError = apiError.toPubNubError(operation, 'REST API request processing error, check status for details');
 	                if (apiError.category !== StatusCategory$1.PNCancelledCategory)
 	                    this.logger.error('PubNub', () => ({ messageType: 'error', message: pubNubError }));
 	                throw pubNubError;

@@ -45,7 +45,7 @@ describe('DataSync events — User', function () {
       .createUser({ id, data: { classVersion: CLASS_VERSION, status: 'active', payload } })
       .then(() => undefined);
 
-  it('EU-1: user create → "create" event (objectType "user")', async () => {
+  it('user create → "create" event (objectType "user")', async () => {
     const id = freshId('user');
     const event = await captureEvent(
       pubnub,
@@ -70,7 +70,7 @@ describe('DataSync events — User', function () {
     });
   });
 
-  it('EU-2: user update (PUT) → "update" event', async () => {
+  it('user update (PUT) → "update" event', async () => {
     const id = freshId('user');
     await createUser(id);
 
@@ -103,7 +103,7 @@ describe('DataSync events — User', function () {
     });
   });
 
-  it('EU-3: user update → "update" event', async () => {
+  it('user update → "update" event', async () => {
     const id = freshId('user');
     // Seed `level` first — the service rejects update-replace of a property that does not already
     // exist (`SYN-0006: Property does not exist`).
@@ -131,7 +131,7 @@ describe('DataSync events — User', function () {
     });
   });
 
-  it('EU-4: user delete → "delete" event with only {id, deletedAt}', async () => {
+  it('user delete → "delete" event with only {id, deletedAt}', async () => {
     const id = freshId('user');
     await createUser(id);
 

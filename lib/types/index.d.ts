@@ -1,6 +1,5 @@
 import { Readable } from 'stream';
 import { Buffer } from 'buffer';
-import { ProxyAgentOptions } from 'proxy-agent';
 
 /**
  * PubNub client for Node.js platform.
@@ -307,6 +306,70 @@ declare class PubNubCore<
    * @returns `UserMetadata` entity.
    */
   userMetadata(id: string): PubNub.UserMetadata;
+  /**
+   * Create a `DataSyncUser` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `User` object identifier (used verbatim, so wildcard identifiers
+   * like `user.*` are supported).
+   * @returns `DataSyncUser` entity.
+   */
+  dataSyncUser(id: string): PubNub.DataSyncUser;
+  /**
+   * Create a `DataSyncChannel` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `Channel` object identifier (used verbatim, so wildcard identifiers
+   * like `channel.*` are supported).
+   * @returns `DataSyncChannel` entity.
+   */
+  dataSyncChannel(id: string): PubNub.DataSyncChannel;
+  /**
+   * Create a `DataSyncMembership` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * **Important:** Membership changes are delivered on the data channels of both linked entities
+   * (the user and the channel identifier), not on the membership identifier — use
+   * {@link PubNubCore#dataSyncUser dataSyncUser} / {@link PubNubCore#dataSyncChannel
+   * dataSyncChannel} to observe them.
+   *
+   * @param id - Unique DataSync `Membership` object identifier (`{userId}:{channelId}`, used
+   * verbatim, so wildcard identifiers like `user-123:*` are supported).
+   * @returns `DataSyncMembership` entity.
+   */
+  dataSyncMembership(id: string): PubNub.DataSyncMembership;
+  /**
+   * Create a `DataSyncEntity` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `Entity` object identifier (used verbatim, so wildcard identifiers
+   * like `customer.*` are supported).
+   * @returns `DataSyncEntity` entity.
+   */
+  dataSyncEntity(id: string): PubNub.DataSyncEntity;
+  /**
+   * Create a `DataSyncRelationship` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * **Important:** Relationship changes are delivered on the data channels of both linked entities
+   * (`entityAId` and `entityBId`), not on the relationship identifier — use
+   * {@link PubNubCore#dataSyncEntity dataSyncEntity} to observe them.
+   *
+   * @param id - Unique DataSync `Relationship` object identifier (used verbatim, so wildcard
+   * identifiers like `owns.*` are supported).
+   * @returns `DataSyncRelationship` entity.
+   */
+  dataSyncRelationship(id: string): PubNub.DataSyncRelationship;
   /**
    * Create subscriptions set object.
    *
@@ -3095,6 +3158,8 @@ declare namespace PubNub {
      * @param [response] - Service response (if available)
      * @param [errorCategory] - Request processing error category.
      * @param [attempt] - Number of sequential failure.
+     * @param [statusCode] - Response HTTP status code (available when request failed with an error and hence there is
+     * no `response`).
      *
      * @returns `true` if another request retry attempt can be done.
      */
@@ -3103,6 +3168,7 @@ declare namespace PubNub {
       response?: TransportResponse,
       errorCategory?: StatusCategory,
       attempt?: number,
+      statusCode?: number,
     ): boolean;
     /**
      * Computed delay for next request retry attempt.
@@ -4816,6 +4882,21 @@ declare namespace PubNub {
   };
 
   /**
+   * PubNub DataSync entity subscription configuration options.
+   */
+  export type DataSyncSubscriptionOptions = SubscriptionOptions & {
+    /**
+     * Name of the DataSync projection which should be observed.
+     *
+     * A projection is observed on its own `__{projection}__{id}` data channel, so the projection name
+     * is part of the subscription identity: two subscriptions of the same object with different
+     * projections receive their own real-time updates.
+     *
+     */
+    projection?: string;
+  };
+
+  /**
    * Common interface for entities which can be used in subscription.
    */
   export interface SubscriptionCapable {
@@ -4894,32 +4975,62 @@ declare namespace PubNub {
   }
 
   /**
-   * First-class objects which provides access to the channel app context object-specific APIs.
+   * First-class object which provides access to the real-time updates of a DataSync `Relationship`
+   * object.
+   *
+   * **Important:** The service delivers relationship changes on the data channels of **both linked
+   * entities** (`entityAId` and `entityBId`), and never on the relationship's own identifier. Observe
+   * `pubnub.dataSyncEntity(...)` for the linked entities to receive relationship updates; this entity
+   * is only useful if a key set is configured to publish relationship changes on the relationship
+   * identifier itself.
    */
-  export class ChannelMetadata extends Entity {
-    /**
-     * Get unique channel metadata object identifier.
-     *
-     * @returns Channel metadata identifier.
-     */
-    get id(): string;
-  }
+  export class DataSyncRelationship extends DataSyncSubscribable {}
 
   /**
-   * Common entity interface.
+   * Base class for DataSync objects which can be observed with the subscribe REST API.
+   *
+   * A DataSync object is observed on a data channel named after its identifier, optionally prefixed
+   * with the name of an observed projection: `__{projection}__{id}`.
+   *
+   * **Note:** The identifier is used verbatim, so an identifier which already looks prefixed
+   * (`__admin__u1`) will be prefixed again when a projection is requested (`__admin____admin__u1`).
    */
-  export abstract class Entity implements EntityInterface, SubscriptionCapable {
+  export abstract class DataSyncSubscribable extends Entity {
     /**
-     * Create a subscribable's subscription object for real-time updates.
+     * Get unique DataSync object identifier.
      *
-     * Create a subscription object which can be used to subscribe to the real-time updates sent to the specific data
-     * stream.
+     * @returns DataSync object identifier.
+     */
+    get id(): string;
+    /**
+     * Get the name of the projection which is observed by this entity.
+     *
+     * **Note:** A projection is chosen per subscription
+     * ({@link DataSyncSubscriptionOptions#projection}), so an entity created by the PubNub client
+     * always reports `undefined` here: it is the base-projection entity, and the entities bound to
+     * other projections are internal to it.
+     *
+     * @returns Observed projection name or `undefined` when the object is observed through its base
+     * projection.
+     */
+    get projection(): string | undefined;
+    /**
+     * Create a DataSync object's subscription object for real-time updates.
      *
      * @param [subscriptionOptions] - Subscription object behavior customization options.
      *
-     * @returns Configured and ready to use subscribable's subscription object.
+     * @returns Configured and ready to use DataSync object's subscription object.
+     *
+     * @example
+     * ```typescript
+     * // Observe the object itself.
+     * pubnub.dataSyncUser('u1').subscription().subscribe();
+     *
+     * // Observe the `admin` projection of the object (the `__admin__u1` data channel).
+     * pubnub.dataSyncUser('u1').subscription({ projection: 'admin' }).subscribe();
+     * ```
      */
-    subscription(subscriptionOptions?: SubscriptionOptions): Subscription;
+    subscription(subscriptionOptions?: DataSyncSubscriptionOptions): Subscription;
     /**
      * Stringify entity object.
      *
@@ -4927,11 +5038,6 @@ declare namespace PubNub {
      */
     toString(): string;
   }
-
-  /**
-   * Common entity interface.
-   */
-  export interface EntityInterface extends SubscriptionCapable {}
 
   /**
    * Single-entity subscription object which can be used to receive and handle real-time updates.
@@ -5200,6 +5306,76 @@ declare namespace PubNub {
      */
     toString(): string;
   }
+
+  /**
+   * Common entity interface.
+   */
+  export abstract class Entity implements EntityInterface, SubscriptionCapable {
+    /**
+     * Create a subscribable's subscription object for real-time updates.
+     *
+     * Create a subscription object which can be used to subscribe to the real-time updates sent to the specific data
+     * stream.
+     *
+     * @param [subscriptionOptions] - Subscription object behavior customization options.
+     *
+     * @returns Configured and ready to use subscribable's subscription object.
+     */
+    subscription(subscriptionOptions?: SubscriptionOptions): Subscription;
+    /**
+     * Stringify entity object.
+     *
+     * @returns Serialized entity object.
+     */
+    toString(): string;
+  }
+
+  /**
+   * Common entity interface.
+   */
+  export interface EntityInterface extends SubscriptionCapable {}
+
+  /**
+   * First-class object which provides access to the real-time updates of a DataSync `Membership`
+   * object.
+   *
+   * **Note:** A membership identifier is composite (`{userId}:{channelId}`) and is used verbatim as
+   * the name of the observed data channel.
+   *
+   * **Important:** The service delivers membership changes on the data channels of **both linked
+   * entities** (the user identifier and the channel identifier), and never on the membership's own
+   * identifier. Observe `pubnub.dataSyncUser(...)` and/or `pubnub.dataSyncChannel(...)` to receive
+   * membership updates; this entity is only useful if a key set is configured to publish membership
+   * changes on the membership identifier itself.
+   */
+  export class DataSyncMembership extends DataSyncSubscribable {}
+
+  /**
+   * First-class object which provides access to the real-time updates of a DataSync `Channel` object.
+   */
+  export class DataSyncChannel extends DataSyncSubscribable {}
+
+  /**
+   * First-class object which provides access to the real-time updates of a DataSync `Entity` object.
+   */
+  export class DataSyncEntity extends DataSyncSubscribable {}
+
+  /**
+   * First-class objects which provides access to the channel app context object-specific APIs.
+   */
+  export class ChannelMetadata extends Entity {
+    /**
+     * Get unique channel metadata object identifier.
+     *
+     * @returns Channel metadata identifier.
+     */
+    get id(): string;
+  }
+
+  /**
+   * First-class object which provides access to the real-time updates of a DataSync `User` object.
+   */
+  export class DataSyncUser extends DataSyncSubscribable {}
 
   /**
    * First-class objects which provides access to the channel group-specific APIs.
@@ -5814,6 +5990,10 @@ declare namespace PubNub {
     /**
      * Create a new Entity.
      *
+     * To change a field later with `updateEntity`, address it by its JSON Pointer: `classVersion` is
+     * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+     *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
@@ -5823,6 +6003,10 @@ declare namespace PubNub {
     ): void;
     /**
      * Create a new Entity.
+     *
+     * To change a field later with `updateEntity`, address it by its JSON Pointer: `classVersion` is
+     * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
      *
      * @param parameters - Request configuration parameters.
      *
@@ -5880,7 +6064,25 @@ declare namespace PubNub {
     /**
      * Update an Entity (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name an entity carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateEntity({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/creditScore': 810 },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -5892,7 +6094,25 @@ declare namespace PubNub {
     /**
      * Update an Entity (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name an entity carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateEntity({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/creditScore': 810 },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
      *
      * @param parameters - Request configuration parameters.
      *
@@ -5920,6 +6140,11 @@ declare namespace PubNub {
     /**
      * Create a new Relationship.
      *
+     * To change a field later with `updateRelationship`, address it by its JSON Pointer:
+     * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+     * fields as `/payload/<fieldName>`. `class`, `entityAId`, and `entityBId` are immutable and
+     * cannot be patched.
+     *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
@@ -5929,6 +6154,11 @@ declare namespace PubNub {
     ): void;
     /**
      * Create a new Relationship.
+     *
+     * To change a field later with `updateRelationship`, address it by its JSON Pointer:
+     * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+     * fields as `/payload/<fieldName>`. `class`, `entityAId`, and `entityBId` are immutable and
+     * cannot be patched.
      *
      * @param parameters - Request configuration parameters.
      *
@@ -5992,7 +6222,25 @@ declare namespace PubNub {
     /**
      * Update a Relationship (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a relationship carries in responses and real-time events:
+     *
+     * - `classVersion` → `/relationshipClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `relationshipClass`, `entityAId`, and `entityBId` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateRelationship({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/label': 'primary' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -6004,7 +6252,25 @@ declare namespace PubNub {
     /**
      * Update a Relationship (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a relationship carries in responses and real-time events:
+     *
+     * - `classVersion` → `/relationshipClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `relationshipClass`, `entityAId`, and `entityBId` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateRelationship({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/label': 'primary' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
      *
      * @param parameters - Request configuration parameters.
      *
@@ -6032,12 +6298,20 @@ declare namespace PubNub {
     /**
      * Create a new User.
      *
+     * To change a field later with `updateUser`, address it by its JSON Pointer: `classVersion` is
+     * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+     *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
     createUser(parameters: DataSync.CreateUserParameters, callback: ResultCallback<DataSync.CreateUserResponse>): void;
     /**
      * Create a new User.
+     *
+     * To change a field later with `updateUser`, address it by its JSON Pointer: `classVersion` is
+     * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
      *
      * @param parameters - Request configuration parameters.
      *
@@ -6098,7 +6372,25 @@ declare namespace PubNub {
     /**
      * Update a User (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a user carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateUser({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/email': 'alice.v@acme.test' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -6107,7 +6399,25 @@ declare namespace PubNub {
     /**
      * Update a User (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a user carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateUser({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/email': 'alice.v@acme.test' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
      *
      * @param parameters - Request configuration parameters.
      *
@@ -6132,6 +6442,10 @@ declare namespace PubNub {
     /**
      * Create a new Channel.
      *
+     * To change a field later with `updateChannel`, address it by its JSON Pointer: `classVersion`
+     * is patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+     *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
@@ -6141,6 +6455,10 @@ declare namespace PubNub {
     ): void;
     /**
      * Create a new Channel.
+     *
+     * To change a field later with `updateChannel`, address it by its JSON Pointer: `classVersion`
+     * is patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
      *
      * @param parameters - Request configuration parameters.
      *
@@ -6204,7 +6522,25 @@ declare namespace PubNub {
     /**
      * Update a Channel (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a channel carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateChannel({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/memberCount': 42 },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -6216,7 +6552,25 @@ declare namespace PubNub {
     /**
      * Update a Channel (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a channel carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateChannel({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/memberCount': 42 },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
      *
      * @param parameters - Request configuration parameters.
      *
@@ -6244,6 +6598,10 @@ declare namespace PubNub {
     /**
      * Create a new Membership (associates a User with a Channel).
      *
+     * To change a field later with `updateMembership`, address it by its JSON Pointer:
+     * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+     * fields as `/payload/<fieldName>`. `userId` and `channelId` are immutable and cannot be patched.
+     *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
      */
@@ -6253,6 +6611,10 @@ declare namespace PubNub {
     ): void;
     /**
      * Create a new Membership (associates a User with a Channel).
+     *
+     * To change a field later with `updateMembership`, address it by its JSON Pointer:
+     * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+     * fields as `/payload/<fieldName>`. `userId` and `channelId` are immutable and cannot be patched.
      *
      * @param parameters - Request configuration parameters.
      *
@@ -6322,7 +6684,25 @@ declare namespace PubNub {
     /**
      * Update a Membership (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a membership carries in responses and real-time events:
+     *
+     * - `classVersion` → `/relationshipClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `userId` and `channelId` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateMembership({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/role': 'moderator' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
      *
      * @param parameters - Request configuration parameters.
      * @param callback - Request completion handler callback.
@@ -6334,7 +6714,25 @@ declare namespace PubNub {
     /**
      * Update a Membership (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a membership carries in responses and real-time events:
+     *
+     * - `classVersion` → `/relationshipClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `userId` and `channelId` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateMembership({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/role': 'moderator' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
      *
      * @param parameters - Request configuration parameters.
      *
@@ -9292,8 +9690,28 @@ declare namespace PubNub {
 
     /**
      * User-specific token permissions.
+     *
+     * DataSync `User` resources only support the CRUD operations; `read` / `write` / `manage` / `join`
+     * remain classic messaging concepts and are intentionally not part of this type.
      */
-    export type UserTokenPermissions = UuidTokenPermissions;
+    export type UserTokenPermissions = {
+      /**
+       * Whether `create` operations are permitted for corresponding level or not.
+       */
+      create?: boolean;
+      /**
+       * Whether `get` operations are permitted for corresponding level or not.
+       */
+      get?: boolean;
+      /**
+       * Whether `update` operations are permitted for corresponding level or not.
+       */
+      update?: boolean;
+      /**
+       * Whether `delete` operations are permitted for corresponding level or not.
+       */
+      delete?: boolean;
+    };
 
     /**
      * DataSync entity-level token permissions.
@@ -9353,6 +9771,8 @@ declare namespace PubNub {
      *
      * Each id maps to the single projection name the principal is "looking through" for that resource
      * (use `__default__` for the base projection).
+     *
+     * Covers every DataSync resource kind — entities, relationships, users, channels, and memberships.
      */
     export type DataSyncProjectionScope = {
       /**
@@ -9366,6 +9786,20 @@ declare namespace PubNub {
        * Relationship id -> projection name.
        */
       relationships?: Record<string, string>;
+      /**
+       * DataSync `User` id -> projection name.
+       *
+       * Projections for DataSync Users are keyed by `datasync:users:<id>` on the wire, unlike the
+       * `User` *permissions*, which reuse the un-prefixed `users` grant scope.
+       */
+      users?: Record<string, string>;
+      /**
+       * DataSync `Channel` id -> projection name.
+       *
+       * Projections for DataSync Channels are keyed by `datasync:channels:<id>` on the wire, unlike the
+       * `Channel` *permissions*, which reuse the un-prefixed `channels` grant scope.
+       */
+      channels?: Record<string, string>;
       /**
        * Membership id -> projection name.
        */
@@ -9441,6 +9875,60 @@ declare namespace PubNub {
     };
 
     /**
+     * Grant scopes which may appear in both the `resources` and `patterns` sections.
+     *
+     * Keys are concrete resource ids for `resources` and RegEx patterns for `patterns`.
+     */
+    type CommonGrantScopes = {
+      /**
+       * Object containing `channel` permissions.
+       */
+      channels?: Record<string, ChannelTokenPermissions>;
+      /**
+       * Object containing `channel group` permissions.
+       */
+      groups?: Record<string, ChannelGroupTokenPermissions>;
+      /**
+       * Object containing DataSync entity-level permissions.
+       */
+      dataSync?: DataSyncTokenScopes;
+    };
+
+    /**
+     * Principal grant scope.
+     *
+     * `users` and `uuids` name the same underlying target, so only one of them may be supplied in a
+     * single grant — providing both is a compile-time error (and is rejected at runtime as well).
+     */
+    type PrincipalGrantScopes =
+      | {
+          /**
+           * Object containing `user` permissions.
+           *
+           * Preferred DataSync terminology for granting permissions on `User` resources (create / get /
+           * update / delete). May be combined with `channels`, `groups`, and `dataSync` in a single
+           * grant, but not with the deprecated {@link PrincipalGrantScopes.uuids | uuids} scope.
+           */
+          users?: Record<string, UserTokenPermissions>;
+          uuids?: never;
+        }
+      | {
+          /**
+           * Object containing `uuid` metadata permissions.
+           *
+           * @deprecated Legacy App Context terminology. For DataSync `User` grants prefer `users`.
+           * `uuids` remains for App Context UUID-metadata permissions.
+           */
+          uuids?: Record<string, UuidTokenPermissions>;
+          users?: never;
+        };
+
+    /**
+     * Permission scopes accepted by the `resources` and `patterns` sections of a grant.
+     */
+    export type GrantScopes = CommonGrantScopes & PrincipalGrantScopes;
+
+    /**
      * Generate token with permissions.
      *
      * Generate time-limited access token with required permissions for resources.
@@ -9455,71 +9943,16 @@ declare namespace PubNub {
       ttl: number;
       /**
        * Object containing resource permissions.
+       *
+       * Keys within each scope are concrete resource ids. `users` and `uuids` are mutually exclusive.
        */
-      resources?: {
-        /**
-         * Object containing `user` permissions.
-         *
-         * Preferred DataSync terminology for granting permissions on `User` resources (create / get /
-         * update / delete). Serialized to the same wire scope as {@link uuids}; may be combined with
-         * `channels`, `groups`, `uuids`, and `dataSync` in a single grant.
-         */
-        users?: Record<string, UserTokenPermissions>;
-        /**
-         * Object containing `uuid` metadata permissions.
-         *
-         * @deprecated Legacy App Context terminology. For DataSync `User` grants prefer {@link users}.
-         * `uuids` remains for App Context UUID-metadata permissions.
-         */
-        uuids?: Record<string, UuidTokenPermissions>;
-        /**
-         * Object containing `channel` permissions.
-         */
-        channels?: Record<string, ChannelTokenPermissions>;
-        /**
-         * Object containing `channel group` permissions.
-         */
-        groups?: Record<string, ChannelGroupTokenPermissions>;
-        /**
-         * Object containing DataSync entity-level permissions.
-         */
-        dataSync?: DataSyncTokenScopes;
-      };
+      resources?: GrantScopes;
       /**
        * Object containing permissions to multiple resources specified by a RegEx pattern.
+       *
+       * Keys within each scope are RegEx patterns. `users` and `uuids` are mutually exclusive.
        */
-      patterns?: {
-        /**
-         * Object containing `user` permissions to apply to all `users` matching the RegEx pattern.
-         *
-         * Preferred DataSync terminology for granting permissions on `User` resources. Serialized to the
-         * same wire scope as {@link uuids}; may be combined with `channels`, `groups`, `uuids`, and
-         * `dataSync`.
-         */
-        users?: Record<string, UserTokenPermissions>;
-        /**
-         * Object containing `uuid` metadata permissions to apply to all `uuids` matching the RegEx
-         * pattern.
-         *
-         * @deprecated Legacy App Context terminology. For DataSync `User` grants prefer {@link users}.
-         */
-        uuids?: Record<string, UuidTokenPermissions>;
-        /**
-         * Object containing `channel` permissions to apply to all `channels` matching the RegEx
-         * pattern.
-         */
-        channels?: Record<string, ChannelTokenPermissions>;
-        /**
-         * Object containing `channel group` permissions to apply to all `channel groups` matching the
-         * RegEx pattern.
-         */
-        groups?: Record<string, ChannelGroupTokenPermissions>;
-        /**
-         * Object containing DataSync entity-level permissions to apply to all DataSync resources
-         * matching the RegEx pattern.
-         */
-        dataSync?: DataSyncTokenScopes;
-      };
+      patterns?: GrantScopes;
       /**
        * Extra metadata to be published with the request.
        *
@@ -9574,6 +10007,10 @@ declare namespace PubNub {
        */
       resources?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>> & {
         /**
+         * Permissions granted to specific `User` resources through the `users` scope.
+         */
+        users?: Record<string, UserScopePermissions | undefined>;
+        /**
          * DataSync entity-level permissions granted to specific resources.
          */
         dataSync?: DataSyncScopePermissions;
@@ -9582,6 +10019,11 @@ declare namespace PubNub {
        * Permissions granted to resources which match specified regular expression.
        */
       patterns?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>> & {
+        /**
+         * Permissions granted through the `users` scope to `User` resources which match specified
+         * regular expression.
+         */
+        users?: Record<string, UserScopePermissions | undefined>;
         /**
          * DataSync entity-level permissions granted to resources which match specified regular expression.
          */
@@ -9684,10 +10126,20 @@ declare namespace PubNub {
     };
 
     /**
+     * Granted `User` scope permissions.
+     *
+     * Decoded from the token `res` / `pat` wire key `usr`, which backs the `users` grant scope. Mirrors
+     * {@link UserTokenPermissions}: only the CRUD-relevant operations apply, so `read` / `write` /
+     * `manage` / `join` are intentionally not part of this type.
+     */
+    export type UserScopePermissions = DataSyncPermissions;
+
+    /**
      * Granted DataSync entity-level permissions.
      *
-     * Applies to parsed DataSync entities, relationships, and memberships. Only the CRUD-relevant
-     * operations are exposed.
+     * Applies to parsed DataSync entities, relationships, memberships, and — as
+     * {@link UserScopePermissions} — `User` resources granted through the `users` scope. Only the
+     * CRUD-relevant operations are exposed.
      */
     export type DataSyncPermissions = {
       /**
@@ -10054,30 +10506,33 @@ declare namespace PubNub {
 
     /**
      * Cursor-based pagination metadata returned by the server.
+     *
+     * Forward pagination details.
+     * `has_next` is the only field the service
+     * guarantees, while `next_cursor` and `limit` are optional. Pagination is forward-only — there is
+     * no previous-page cursor.
      */
     export type DataSyncPageMeta = {
-      /** Opaque cursor for the next page. Null if no more results. */
-      next_cursor: string | null;
-      /** Opaque cursor for the previous page. Null if first page. */
-      prev_cursor: string | null;
       /** Whether there are more results after this page. */
       has_next: boolean;
-      /** Whether there are results before this page. */
-      has_prev: boolean;
-      /** The limit applied to this page. */
-      limit: number;
+      /**
+       * cursor for the next page, passed back as the `cursor` request parameter.
+       *
+       * `null` when there are no more results (`has_next` is `false`).
+       */
+      next_cursor?: string | null;
+      /** The limit applied to this page (may differ from the requested `limit`). */
+      limit?: number;
     };
 
     /**
-     * HATEOAS navigation links.
+     * navigation links.
      */
     export type DataSyncLinks = {
-      /** Link to the current page. */
+      /** Link to the current page, with all query parameters applied. */
       self: string;
-      /** Link to the next page, if available. */
+      /** Link to the next page, including its cursor. `null` when there are no more results. */
       next?: string | null;
-      /** Link to the previous page, if available. */
-      prev?: string | null;
       /** Additional links for related resources. */
       [key: string]: string | null | undefined;
     };
@@ -10094,15 +10549,29 @@ declare namespace PubNub {
        * @max 100
        */
       limit?: number;
-      /** Filter expression for results. */
+      /**
+       *
+       * Supports the full expression grammar (logical operators and nested conditions), so an object
+       * written moments earlier may not be matched yet. Use {@link filterFast} when the query must see
+       * the latest writes.
+       */
       filter?: string;
+      /**
+       * Filter expression evaluated against strongly consistent storage.
+       *
+       * Reflects the latest writes, but accepts only a limited number of conditions. Use {@link filter}
+       * for complex queries.
+       */
+      filterFast?: string;
       /**
        * Sort expression.
        *
-       * Either a raw string (comma-separated fields, optionally prefixed with + (asc) or - (desc),
-       * e.g. `"+name,-createdAt"`), or a map of field → direction that is serialized to the
+       * Comma-separated list of property names to sort by, each optionally
+       * suffixed with `:desc` (ascending by default). Only payload properties
+       * with `filtering` other than `none` in the class definition are
+       * accepted.
+       * e.g. `"+name,-reatedAt"`), or a map of field → direction that is serialized to the
        * `field:order` form the service expects (e.g. `{ firstName: 'desc' }` → `firstName:desc`).
-       * Specify `null` as the direction for the service default (ascending).
        */
       sort?: DataSyncSort;
     };
@@ -10125,39 +10594,46 @@ declare namespace PubNub {
 
     /**
      * Single-entity response envelope.
+     *
+     * `status` is the HTTP status code added by the SDK; `data`, `links` and `meta` come from the
+     *  service response and are passed through verbatim.
      */
     type DataSyncEntityResponse<T> = {
       /** HTTP status code. */
       status: number;
       /** Response data. */
       data: T;
-      /** HATEOAS links. */
+      /** HATEOAS links, when the service provides them for the resource. */
       links?: DataSyncLinks;
-      /** Response metadata. */
+      /** Response metadata, when the service provides it for the resource. */
       meta?: DataSyncPageMeta;
     };
 
     /**
      * Paged list response envelope.
+     *
+     * `status` is the HTTP status code added by the SDK; `data`, `links` and `meta` come from the
+     * service and are passed through verbatim. Use
+     * `meta.has_next` / `meta.next_cursor` to page forward by feeding the cursor back in as `cursor`.
      */
     type DataSyncPagedResponse<T> = {
       /** HTTP status code. */
       status: number;
       /** Array of response items. */
       data: T[];
-      /** HATEOAS links for pagination. */
+      /** HATEOAS links for pagination (`self`, `next`, plus any related-resource links). */
       links?: DataSyncLinks;
       /** Cursor-based pagination metadata. */
       meta?: DataSyncPageMeta;
     };
 
     /**
-     * A source → destination path pair (dot notation) for JSON Patch `move` and `copy` operations.
+     * A source → destination path pair (JSON Pointer) for JSON Patch `move` and `copy` operations.
      */
     export type PatchMovePath = {
-      /** Dot-notation source path (RFC 6902 `from`). */
+      /** JSON Pointer source path, used verbatim (RFC 6902 `from`). */
       from: string;
-      /** Dot-notation destination path (RFC 6902 `path`). */
+      /** JSON Pointer destination path, used verbatim (RFC 6902 `path`). */
       path: string;
     };
 
@@ -10167,13 +10643,60 @@ declare namespace PubNub {
      * The mutable, versioned payload of an entity. `class` (immutable) and `id` live at the
      * top level of {@link CreateEntityParameters}; everything that can change over the entity's
      * lifetime is grouped here under `data`.
+     *
+     * Each field below documents the JSON Pointer to use when changing it later with
+     * `updateEntity` ({@link UpdateEntityParameters}) — the create-time parameter name and the
+     * patch path are not always the same.
      */
     export type CreateEntityData = {
-      /** Version of the entity class schema. */
+      /**
+       * Version of the entity class schema.
+       *
+       * To change this later, patch `/entityClassVersion` — the stored property name, which is what
+       * responses and real-time events carry. It is *not* `/data/classVersion`.
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createEntity({ class: 'Customer', data: { classVersion: 1 } });
+       * // later: bump the version
+       * await pubnub.dataSync.updateEntity({ id, replace: { '/entityClassVersion': 2 } });
+       * ```
+       */
       classVersion: number;
-      /** Optional lifecycle status. */
+      /**
+       * Optional lifecycle status.
+       *
+       * To change this later, patch `/status`.
+       *
+       * @example
+       * ```typescript
+       * await pubnub.dataSync.updateEntity({ id, replace: { '/status': 'inactive' } });
+       * ```
+       */
       status?: string;
-      /** User-defined JSON payload conforming to the entity class schema. */
+      /**
+       * User-defined JSON payload conforming to the entity class schema.
+       *
+       * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+       * A field name that contains a `.` is written as-is (`/payload/user.name`).
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createEntity({
+       *   class: 'Customer',
+       *   data: { classVersion: 1, payload: { creditScore: 720, address: { city: 'Pune' } } },
+       * });
+       * // later: one top-level field, one nested field, one field whose name contains a dot
+       * await pubnub.dataSync.updateEntity({
+       *   id,
+       *   replace: { '/payload/creditScore': 810, '/payload/address/city': 'Mumbai' },
+       *   add: { '/payload/user.name': 'Alice' },
+       *   remove: ['/payload/address/line2'],
+       * });
+       * ```
+       */
       payload?: Record<string, unknown>;
     };
 
@@ -10185,7 +10708,11 @@ declare namespace PubNub {
      * has no place in updates.
      */
     export type SetEntityData = {
-      /** Version of the entity class schema. */
+      /**
+       * Version of the entity class schema.
+       *
+       * With `updateEntity` (PATCH) the same value is addressed as `/entityClassVersion`.
+       */
       classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
@@ -10214,7 +10741,7 @@ declare namespace PubNub {
       /** Content fingerprint for optimistic concurrency control. */
       eTag: string;
       /** Auto-deletion timestamp (ISO 8601). Entities expire at this time. */
-      expiresAt?: string;
+      expiresAt: string;
     };
 
     /**
@@ -10226,12 +10753,19 @@ declare namespace PubNub {
        * Server auto-generates a UUID if not provided.
        */
       id?: string;
-      /** Entity class this entity belongs to. Set at creation time and immutable afterward. */
+      /**
+       * Entity class this entity belongs to. Set at creation time and immutable afterward.
+       *
+       * Stored on the entity as `entityClass` — the name it carries in responses and real-time event
+       * payloads. Immutable, so it cannot be patched: `updateEntity` rejects `/entityClass`.
+       */
       class: string;
       /**
        * Class hierarchy level of `class`. Set at creation time and immutable afterward.
        *
        * Omit to let the service apply its default.
+       *
+       * Stored on the entity as `entityClassLevel`. Immutable, so it cannot be patched.
        */
       classLevel?: ClassLevel;
       /**
@@ -10265,12 +10799,11 @@ declare namespace PubNub {
        */
       entityClassVersion?: number;
       /**
-       * Advanced filter expression for complex queries.
+       * Level of the entity class, used to disambiguate a class name defined at both levels.
        *
-       * Supports logical operators and nested conditions for sophisticated filtering
-       * beyond what the basic `filter` parameter provides.
+       * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
        */
-      filterAdvanced?: string;
+      entityClassLevel?: ClassLevel;
     };
 
     /**
@@ -10294,8 +10827,18 @@ declare namespace PubNub {
     /**
      * Update Entity request parameters (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     * The SDK converts these to JSON Patch operations on the wire.
+     * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
+     *
+     * Patch paths address the entity's **stored property names** — the same keys that come
+     * back in responses and real-time events — not the grouped parameter names used by
+     * {@link CreateEntityParameters}:
+     *
+     * - `classVersion` → `/entityClassVersion` (not `/data/classVersion`)
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+     *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
      *
      * At least one of `add`, `replace`, or `remove` must be provided.
      */
@@ -10303,79 +10846,79 @@ declare namespace PubNub {
       /** Entity ID. */
       id: string;
       /**
-       * Fields to add, using dot-notation keys.
+       * Fields to add, keyed by JSON Pointer.
        *
-       * Each key is a dot-delimited path to the target field.
+       * Each key is a JSON Pointer to the target field, used exactly as provided.
        * The SDK converts these to JSON Patch "add" operations.
        *
        * @example
        * ```typescript
        * add: {
-       *   'payload.tags.0': 'priority',
-       *   'payload.profile.displayName': 'Alice',
+       *   '/payload/tags/0': 'priority',
+       *   '/payload/profile/displayName': 'Alice',
        * }
        * ```
        */
       add?: Record<string, unknown>;
       /**
-       * Fields to replace, using dot-notation keys.
+       * Fields to replace, keyed by JSON Pointer.
        *
-       * Each key is a dot-delimited path to the target field.
+       * Each key is a JSON Pointer to the target field, used exactly as provided.
        * The SDK converts these to JSON Patch "replace" operations.
        *
        * @example
        * ```typescript
        * replace: {
-       *   'status': 'active',
-       *   'payload.score': 300,
+       *   '/status': 'active',
+       *   '/payload/score': 300,
        * }
        * ```
        */
       replace?: Record<string, unknown>;
       /**
-       * Array of dot-notation field paths to remove.
+       * Array of JSON Pointer field paths to remove.
        *
        * The SDK converts these to JSON Patch "remove" operations.
        *
        * @example
        * ```typescript
-       * remove: ['payload.tempFlag', 'payload.legacyField']
+       * remove: ['/payload/tempFlag', '/payload/legacyField']
        * ```
        */
       remove?: string[];
       /**
        * Source → destination path pairs to move (RFC 6902 "move").
        *
-       * The value at each `from` is removed and re-added at `path`. Both are dot-notation paths used
-       * exactly as provided (prefix with `payload.` to target payload fields).
+       * The value at each `from` is removed and re-added at `path`. Both are JSON Pointers used
+       * exactly as provided (prefix with `/payload` to target payload fields).
        *
        * @example
        * ```typescript
-       * move: [{ from: 'payload.legacyName', path: 'payload.displayName' }]
+       * move: [{ from: '/payload/legacyName', path: '/payload/displayName' }]
        * ```
        */
       move?: PatchMovePath[];
       /**
        * Source → destination path pairs to copy (RFC 6902 "copy").
        *
-       * The value at each `from` is duplicated to `path`. Both are dot-notation paths used exactly as
-       * provided (prefix with `payload.` to target payload fields).
+       * The value at each `from` is duplicated to `path`. Both are JSON Pointers used exactly as
+       * provided (prefix with `/payload` to target payload fields).
        *
        * @example
        * ```typescript
-       * copy: [{ from: 'payload.displayName', path: 'payload.previousName' }]
+       * copy: [{ from: '/payload/displayName', path: '/payload/previousName' }]
        * ```
        */
       copy?: PatchMovePath[];
       /**
-       * Fields to test (dot-notation keys → expected value; RFC 6902 "test").
+       * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test").
        *
        * The patch fails if the value at any path does not equal the expected value. Keys are used
-       * exactly as provided (prefix with `payload.` for payload fields).
+       * exactly as provided (prefix with `/payload` for payload fields).
        *
        * @example
        * ```typescript
-       * test: { 'status': 'active' }
+       * test: { '/status': 'active' }
        * ```
        */
       test?: Record<string, unknown>;
@@ -10426,13 +10969,51 @@ declare namespace PubNub {
      * The mutable, versioned payload of a relationship. `id`, `class`, `entityAId`, and `entityBId`
      * live at the top level of {@link CreateRelationshipParameters} (identity + immutable structure);
      * everything that can change over the relationship's lifetime is grouped here under `data`.
+     *
+     * Each field below documents the JSON Pointer to use when changing it later with
+     * `updateRelationship` ({@link UpdateRelationshipParameters}) — the create-time parameter name
+     * and the patch path are not always the same.
      */
     export type CreateRelationshipData = {
-      /** Version of the relationship class schema. */
+      /**
+       * Version of the relationship class schema.
+       *
+       * To change this later, patch `/relationshipClassVersion` — the stored property name, which is
+       * what responses and real-time events carry. It is *not* `/data/classVersion`.
+       *
+       * @example
+       * ```typescript
+       * await pubnub.dataSync.updateRelationship({ id, replace: { '/relationshipClassVersion': 2 } });
+       * ```
+       */
       classVersion: number;
-      /** Optional lifecycle status. */
+      /**
+       * Optional lifecycle status.
+       *
+       * To change this later, patch `/status`.
+       */
       status?: string;
-      /** User-defined JSON payload. */
+      /**
+       * User-defined JSON payload.
+       *
+       * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+       * A field name that contains a `.` is written as-is (`/payload/user.name`).
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createRelationship({
+       *   class: 'RequestedBy', entityAId, entityBId,
+       *   data: { classVersion: 1, payload: { label: 'primary', linkedAt: '2026-07-06T10:00:00.000Z' } },
+       * });
+       * // later
+       * await pubnub.dataSync.updateRelationship({
+       *   id,
+       *   replace: { '/payload/label': 'secondary' },
+       *   move: [{ from: '/payload/linkedAt', path: '/payload/linkedOn' }],
+       * });
+       * ```
+       */
       payload?: Record<string, unknown>;
     };
 
@@ -10444,7 +11025,11 @@ declare namespace PubNub {
      * and therefore has no place in updates. The server rejects a PUT that omits `classVersion`.
      */
     export type SetRelationshipData = {
-      /** Version of the relationship class schema. */
+      /**
+       * Version of the relationship class schema.
+       *
+       * With `updateRelationship` (PATCH) the same value is addressed as `/relationshipClassVersion`.
+       */
       classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
@@ -10477,7 +11062,7 @@ declare namespace PubNub {
       /** Content fingerprint for optimistic concurrency control. */
       eTag: string;
       /** Auto-deletion timestamp (ISO 8601). */
-      expiresAt?: string;
+      expiresAt: string;
     };
 
     /**
@@ -10489,11 +11074,16 @@ declare namespace PubNub {
        * Server auto-generates a UUID if not provided.
        */
       id?: string;
-      /** Relationship class this relationship belongs to. Set at creation time and immutable afterward. */
+      /**
+       * Relationship class this relationship belongs to. Set at creation time and immutable afterward.
+       *
+       * Stored on the relationship as `relationshipClass` — the name it carries in responses and
+       * real-time event payloads. Immutable, so it cannot be patched.
+       */
       class: string;
-      /** First entity ID in the relationship. */
+      /** First entity ID in the relationship. Immutable after creation, so it cannot be patched. */
       entityAId: string;
-      /** Second entity ID in the relationship. */
+      /** Second entity ID in the relationship. Immutable after creation, so it cannot be patched. */
       entityBId: string;
       /** Mutable, versioned relationship data (class version, status, and payload). */
       data: CreateRelationshipData;
@@ -10519,13 +11109,6 @@ declare namespace PubNub {
       entityAId?: string;
       /** Filter relationships by second entity ID. */
       entityBId?: string;
-      /**
-       * Advanced filter expression for complex queries.
-       *
-       * Supports logical operators and nested conditions for sophisticated filtering
-       * beyond what the basic `filter` parameter provides.
-       */
-      filterAdvanced?: string;
     };
 
     /**
@@ -10550,8 +11133,18 @@ declare namespace PubNub {
     /**
      * Update Relationship request parameters (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     * The SDK converts these to JSON Patch operations on the wire.
+     * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
+     *
+     * Patch paths address the relationship's **stored property names** — the same keys that come
+     * back in responses and real-time events — not the grouped parameter names used by
+     * {@link CreateRelationshipParameters}:
+     *
+     * - `classVersion` → `/relationshipClassVersion` (not `/data/classVersion`)
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+     *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+     *
+     * `relationshipClass`, `entityAId`, and `entityBId` are immutable and cannot be patched.
      *
      * At least one of `add`, `replace`, or `remove` must be provided.
      */
@@ -10559,60 +11152,60 @@ declare namespace PubNub {
       /** Relationship ID. */
       id: string;
       /**
-       * Fields to add, using dot-notation keys.
+       * Fields to add, keyed by JSON Pointer.
        *
-       * Each key is a dot-delimited path to the target field (prefix with `payload.` to target payload fields).
-       * The SDK converts these to JSON Patch "add" operations.
+       * Each key is a JSON Pointer to the target field, used exactly as provided (prefix with
+       * `/payload` to target payload fields). The SDK converts these to JSON Patch "add" operations.
        *
        * @example
        * ```typescript
        * add: {
-       *   'payload.tags.0': 'mentor',
+       *   '/payload/tags/0': 'mentor',
        * }
        * ```
        */
       add?: Record<string, unknown>;
       /**
-       * Fields to replace, using dot-notation keys.
+       * Fields to replace, keyed by JSON Pointer.
        *
-       * Each key is a dot-delimited path to the target field (prefix with `payload.` to target payload fields).
-       * The SDK converts these to JSON Patch "replace" operations.
+       * Each key is a JSON Pointer to the target field, used exactly as provided (prefix with
+       * `/payload` to target payload fields). The SDK converts these to JSON Patch "replace" operations.
        *
        * @example
        * ```typescript
        * replace: {
-       *   'payload.role': 'admin',
-       *   'payload.permissions.read': true,
+       *   '/payload/role': 'admin',
+       *   '/payload/permissions/read': true,
        * }
        * ```
        */
       replace?: Record<string, unknown>;
       /**
-       * Array of dot-notation field paths to remove.
+       * Array of JSON Pointer field paths to remove.
        *
        * The SDK converts these to JSON Patch "remove" operations.
        *
        * @example
        * ```typescript
-       * remove: ['payload.tempFlag', 'payload.legacyField']
+       * remove: ['/payload/tempFlag', '/payload/legacyField']
        * ```
        */
       remove?: string[];
       /**
-       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is
        * removed and re-added at `path`.
        */
       move?: PatchMovePath[];
       /**
-       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
-       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
        */
       copy?: PatchMovePath[];
       /**
-       * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+       * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
        * value at any path does not equal the expected value. Keys are used as provided (prefix with
-       * `payload.` for payload fields).
+       * `/payload` for payload fields).
        */
       test?: Record<string, unknown>;
       /**
@@ -10661,13 +11254,50 @@ declare namespace PubNub {
      *
      * The mutable, versioned payload of a user. `id` lives at the top level of
      * {@link CreateUserParameters}; everything that can change over the user's lifetime is here.
+     *
+     * Each field below documents the JSON Pointer to use when changing it later with `updateUser`
+     * ({@link UpdateUserParameters}) — the create-time parameter name and the patch path are not
+     * always the same.
      */
     export type CreateUserData = {
-      /** Version of the entity class schema. */
+      /**
+       * Version of the entity class schema.
+       *
+       * To change this later, patch `/entityClassVersion` — the stored property name, which is what
+       * responses and real-time events carry. It is *not* `/data/classVersion`.
+       *
+       * @example
+       * ```typescript
+       * await pubnub.dataSync.updateUser({ id, replace: { '/entityClassVersion': 2 } });
+       * ```
+       */
       classVersion: number;
-      /** Optional lifecycle status. */
+      /**
+       * Optional lifecycle status.
+       *
+       * To change this later, patch `/status`.
+       */
       status?: string;
-      /** User-defined JSON payload conforming to the entity class schema. */
+      /**
+       * User-defined JSON payload conforming to the entity class schema.
+       *
+       * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+       * A field name that contains a `.` is written as-is (`/payload/user.name`).
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createUser({
+       *   data: { classVersion: 1, payload: { email: 'alice@acme.test', isActive: true } },
+       * });
+       * // later
+       * await pubnub.dataSync.updateUser({
+       *   id,
+       *   replace: { '/payload/email': 'alice.v@acme.test' },
+       *   remove: ['/payload/isActive'],
+       * });
+       * ```
+       */
       payload?: Record<string, unknown>;
     };
 
@@ -10690,7 +11320,7 @@ declare namespace PubNub {
       /** Content fingerprint for optimistic concurrency control. */
       eTag: string;
       /** Auto-deletion timestamp (ISO 8601). Users expire at this time. */
-      expiresAt?: string;
+      expiresAt: string;
     };
 
     /**
@@ -10703,9 +11333,20 @@ declare namespace PubNub {
        */
       id?: string;
       /**
+       * Entity class this user belongs to. Set at creation time and immutable afterward.
+       *
+       * Must be `User` or one of its subclasses. Omit to let the service apply the default (`User`).
+       *
+       * Stored on the user as `entityClass` — the name it carries in responses and real-time event
+       * payloads. Immutable, so it cannot be patched: `updateUser` rejects `/entityClass`.
+       */
+      class?: string;
+      /**
        * Class hierarchy level of the user's entity class. Set at creation time and immutable afterward.
        *
        * Omit to let the service apply its default.
+       *
+       * Stored on the user as `entityClassLevel`. Immutable, so it cannot be patched.
        */
       classLevel?: ClassLevel;
       /** Mutable, versioned user data (class version, status, and payload). */
@@ -10719,7 +11360,11 @@ declare namespace PubNub {
      * {@link SetUserParameters}.
      */
     export type SetUserData = {
-      /** Version of the entity class schema. */
+      /**
+       * Version of the entity class schema.
+       *
+       * With `updateUser` (PATCH) the same value is addressed as `/entityClassVersion`.
+       */
       classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
@@ -10740,13 +11385,22 @@ declare namespace PubNub {
      */
     export type GetUsersParameters = PagedRequestParameters & {
       /**
+       * Entity class name to filter by.
+       *
+       * Optional — unlike {@link GetEntitiesParameters.entityClass}, users are listed across every user
+       * class when omitted.
+       */
+      entityClass?: string;
+      /**
        * Entity class version. If not provided, the server returns users for the latest version.
        */
       entityClassVersion?: number;
       /**
-       * Advanced filter expression for complex queries.
+       * Level of the entity class, used to disambiguate a class name defined at both levels.
+       *
+       * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
        */
-      filterAdvanced?: string;
+      entityClassLevel?: ClassLevel;
     };
 
     /**
@@ -10767,8 +11421,18 @@ declare namespace PubNub {
     /**
      * Update User request parameters (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
-     * The SDK converts these to JSON Patch operations on the wire.
+     * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
+     *
+     * Patch paths address the user's **stored property names** — the same keys that come
+     * back in responses and real-time events — not the grouped parameter names used by
+     * {@link CreateUserParameters}:
+     *
+     * - `classVersion` → `/entityClassVersion` (not `/data/classVersion`)
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+     *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
      *
      * At least one of `add`, `replace`, or `remove` must be provided.
      */
@@ -10776,35 +11440,35 @@ declare namespace PubNub {
       /** User ID. */
       id: string;
       /**
-       * Fields to add, using dot-notation keys.
+       * Fields to add, keyed by JSON Pointer (used exactly as provided).
        * The SDK converts these to JSON Patch "add" operations.
        */
       add?: Record<string, unknown>;
       /**
-       * Fields to replace, using dot-notation keys.
+       * Fields to replace, keyed by JSON Pointer (used exactly as provided).
        * The SDK converts these to JSON Patch "replace" operations.
        */
       replace?: Record<string, unknown>;
       /**
-       * Array of dot-notation field paths to remove.
+       * Array of JSON Pointer field paths to remove (used exactly as provided).
        * The SDK converts these to JSON Patch "remove" operations.
        */
       remove?: string[];
       /**
-       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is
        * removed and re-added at `path`.
        */
       move?: PatchMovePath[];
       /**
-       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
-       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
        */
       copy?: PatchMovePath[];
       /**
-       * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+       * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
        * value at any path does not equal the expected value. Keys are used as provided (prefix with
-       * `payload.` for payload fields).
+       * `/payload` for payload fields).
        */
       test?: Record<string, unknown>;
       /**
@@ -10851,13 +11515,50 @@ declare namespace PubNub {
      *
      * The mutable, versioned payload of a channel. `id` lives at the top level of
      * {@link CreateChannelParameters}; everything that can change over the channel's lifetime is here.
+     *
+     * Each field below documents the JSON Pointer to use when changing it later with `updateChannel`
+     * ({@link UpdateChannelParameters}) — the create-time parameter name and the patch path are not
+     * always the same.
      */
     export type CreateChannelData = {
-      /** Version of the entity class schema. */
+      /**
+       * Version of the entity class schema.
+       *
+       * To change this later, patch `/entityClassVersion` — the stored property name, which is what
+       * responses and real-time events carry. It is *not* `/data/classVersion`.
+       *
+       * @example
+       * ```typescript
+       * await pubnub.dataSync.updateChannel({ id, replace: { '/entityClassVersion': 2 } });
+       * ```
+       */
       classVersion: number;
-      /** Optional lifecycle status. */
+      /**
+       * Optional lifecycle status.
+       *
+       * To change this later, patch `/status`.
+       */
       status?: string;
-      /** User-defined JSON payload conforming to the entity class schema. */
+      /**
+       * User-defined JSON payload conforming to the entity class schema.
+       *
+       * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+       * A field name that contains a `.` is written as-is (`/payload/user.name`).
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createChannel({
+       *   data: { classVersion: 1, payload: { name: 'engineering', memberCount: 1 } },
+       * });
+       * // later
+       * await pubnub.dataSync.updateChannel({
+       *   id,
+       *   replace: { '/payload/memberCount': 42 },
+       *   add: { '/payload/category': 'general' },
+       * });
+       * ```
+       */
       payload?: Record<string, unknown>;
     };
 
@@ -10868,7 +11569,11 @@ declare namespace PubNub {
      * {@link SetChannelParameters}.
      */
     export type SetChannelData = {
-      /** Version of the entity class schema. */
+      /**
+       * Version of the entity class schema.
+       *
+       * With `updateChannel` (PATCH) the same value is addressed as `/entityClassVersion`.
+       */
       classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
@@ -10895,7 +11600,7 @@ declare namespace PubNub {
       /** Content fingerprint for optimistic concurrency control. */
       eTag: string;
       /** Auto-deletion timestamp (ISO 8601). Channels expire at this time. */
-      expiresAt?: string;
+      expiresAt: string;
     };
 
     /**
@@ -10908,10 +11613,22 @@ declare namespace PubNub {
        */
       id?: string;
       /**
+       * Entity class this channel belongs to. Set at creation time and immutable afterward.
+       *
+       * Must be `Channel` or one of its subclasses. Omit to let the service apply the default
+       * (`Channel`).
+       *
+       * Stored on the channel as `entityClass` — the name it carries in responses and real-time event
+       * payloads. Immutable, so it cannot be patched: `updateChannel` rejects `/entityClass`.
+       */
+      class?: string;
+      /**
        * Class hierarchy level of the channel's entity class. Set at creation time and immutable
        * afterward.
        *
        * Omit to let the service apply its default.
+       *
+       * Stored on the channel as `entityClassLevel`. Immutable, so it cannot be patched.
        */
       classLevel?: ClassLevel;
       /** Mutable, versioned channel data (class version, status, and payload). */
@@ -10931,13 +11648,22 @@ declare namespace PubNub {
      */
     export type GetChannelsParameters = PagedRequestParameters & {
       /**
+       * Entity class name to filter by.
+       *
+       * Optional — unlike {@link GetEntitiesParameters.entityClass}, channels are listed across every
+       * channel class when omitted.
+       */
+      entityClass?: string;
+      /**
        * Entity class version. If not provided, the server returns channels for the latest version.
        */
       entityClassVersion?: number;
       /**
-       * Advanced filter expression for complex queries.
+       * Level of the entity class, used to disambiguate a class name defined at both levels.
+       *
+       * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
        */
-      filterAdvanced?: string;
+      entityClassLevel?: ClassLevel;
     };
 
     /**
@@ -10957,7 +11683,18 @@ declare namespace PubNub {
     /**
      * Update Channel request parameters (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
+     *
+     * Patch paths address the channel's **stored property names** — the same keys that come
+     * back in responses and real-time events — not the grouped parameter names used by
+     * {@link CreateChannelParameters}:
+     *
+     * - `classVersion` → `/entityClassVersion` (not `/data/classVersion`)
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+     *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
      *
      * At least one of `add`, `replace`, or `remove` must be provided.
      */
@@ -10965,35 +11702,35 @@ declare namespace PubNub {
       /** Channel ID. */
       id: string;
       /**
-       * Fields to add, using dot-notation keys.
+       * Fields to add, keyed by JSON Pointer (used exactly as provided).
        * The SDK converts these to JSON Patch "add" operations.
        */
       add?: Record<string, unknown>;
       /**
-       * Fields to replace, using dot-notation keys.
+       * Fields to replace, keyed by JSON Pointer (used exactly as provided).
        * The SDK converts these to JSON Patch "replace" operations.
        */
       replace?: Record<string, unknown>;
       /**
-       * Array of dot-notation field paths to remove.
+       * Array of JSON Pointer field paths to remove (used exactly as provided).
        * The SDK converts these to JSON Patch "remove" operations.
        */
       remove?: string[];
       /**
-       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is
        * removed and re-added at `path`.
        */
       move?: PatchMovePath[];
       /**
-       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
-       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
        */
       copy?: PatchMovePath[];
       /**
-       * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+       * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
        * value at any path does not equal the expected value. Keys are used as provided (prefix with
-       * `payload.` for payload fields).
+       * `/payload` for payload fields).
        */
       test?: Record<string, unknown>;
       /**
@@ -11041,13 +11778,51 @@ declare namespace PubNub {
      * The mutable, versioned payload of a membership. `id`, `userId`, and `channelId` live at the
      * top level of {@link CreateMembershipParameters} (identity + immutable structure); everything
      * that can change over the membership's lifetime is grouped here under `data`.
+     *
+     * Each field below documents the JSON Pointer to use when changing it later with
+     * `updateMembership` ({@link UpdateMembershipParameters}) — the create-time parameter name and
+     * the patch path are not always the same.
      */
     export type CreateMembershipData = {
-      /** Version of the Membership relationship class. */
+      /**
+       * Version of the Membership relationship class.
+       *
+       * To change this later, patch `/relationshipClassVersion` — the stored property name, which is
+       * what responses and real-time events carry. It is *not* `/data/classVersion`.
+       *
+       * @example
+       * ```typescript
+       * await pubnub.dataSync.updateMembership({ id, replace: { '/relationshipClassVersion': 2 } });
+       * ```
+       */
       classVersion: number;
-      /** Optional lifecycle status. */
+      /**
+       * Optional lifecycle status.
+       *
+       * To change this later, patch `/status`.
+       */
       status?: string;
-      /** User-defined JSON payload. */
+      /**
+       * User-defined JSON payload.
+       *
+       * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+       * A field name that contains a `.` is written as-is (`/payload/user.name`).
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createMembership({
+       *   userId, channelId,
+       *   data: { classVersion: 1, payload: { role: 'member', notificationsEnabled: true } },
+       * });
+       * // later
+       * await pubnub.dataSync.updateMembership({
+       *   id,
+       *   replace: { '/payload/role': 'moderator' },
+       *   remove: ['/payload/notificationsEnabled'],
+       * });
+       * ```
+       */
       payload?: Record<string, unknown>;
     };
 
@@ -11059,7 +11834,11 @@ declare namespace PubNub {
      * (`SYN-0004: must not be null`), mirroring {@link SetRelationshipData}.
      */
     export type SetMembershipData = {
-      /** Version of the Membership relationship class. */
+      /**
+       * Version of the Membership relationship class.
+       *
+       * With `updateMembership` (PATCH) the same value is addressed as `/relationshipClassVersion`.
+       */
       classVersion: number;
       /** Optional lifecycle status. */
       status?: string;
@@ -11070,6 +11849,8 @@ declare namespace PubNub {
     /**
      * Membership resource as returned from the server.
      *
+     * A membership is a `Membership`-class relationship between a channel (`entityAId`) and a user
+     * (`entityBId`), exposed on the REST response as `channelId` / `userId`.
      */
     export type MembershipObject = {
       /** Unique identifier. */
@@ -11078,8 +11859,13 @@ declare namespace PubNub {
       channelId: string;
       /** User ID reference. */
       userId: string;
-      /** Relationship class. */
-      relationshipClass?: string;
+      /**
+       * Relationship class this membership belongs to — `Membership`, or one of its descendant classes.
+       *
+       * Server-assigned: the create/set endpoints take no class parameter, so it is never chosen by
+       * the caller.
+       */
+      relationshipClass: string;
       /** Version of the relationship class schema. */
       relationshipClassVersion: number;
       /** Lifecycle status. */
@@ -11093,7 +11879,7 @@ declare namespace PubNub {
       /** Content fingerprint for optimistic concurrency control. */
       eTag: string;
       /** Auto-deletion timestamp (ISO 8601). */
-      expiresAt?: string;
+      expiresAt: string;
     };
 
     /**
@@ -11105,9 +11891,9 @@ declare namespace PubNub {
        * Server auto-generates a UUID if not provided.
        */
       id?: string;
-      /** User ID reference. */
+      /** User ID reference. Immutable after creation, so it cannot be patched. */
       userId: string;
-      /** Channel ID reference. */
+      /** Channel ID reference. Immutable after creation, so it cannot be patched. */
       channelId: string;
       /** Mutable, versioned membership data (class version, status, and payload). */
       data: CreateMembershipData;
@@ -11134,10 +11920,6 @@ declare namespace PubNub {
        * If not provided, the server uses the latest version.
        */
       relationshipClassVersion?: number;
-      /**
-       * Advanced filter expression for complex queries.
-       */
-      filterAdvanced?: string;
     };
 
     /**
@@ -11161,7 +11943,18 @@ declare namespace PubNub {
     /**
      * Update Membership request parameters (partial update via JSON Patch RFC 6902).
      *
-     * Uses `add`, `replace`, and `remove` with dot-notation field paths.
+     * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
+     *
+     * Patch paths address the membership's **stored property names** — the same keys that come
+     * back in responses and real-time events — not the grouped parameter names used by
+     * {@link CreateMembershipParameters}:
+     *
+     * - `classVersion` → `/relationshipClassVersion` (not `/data/classVersion`)
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+     *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+     *
+     * `userId` and `channelId` are immutable and cannot be patched.
      *
      * At least one of `add`, `replace`, or `remove` must be provided.
      */
@@ -11169,35 +11962,35 @@ declare namespace PubNub {
       /** Membership ID. */
       id: string;
       /**
-       * Fields to add, using dot-notation keys.
+       * Fields to add, keyed by JSON Pointer (used exactly as provided).
        * The SDK converts these to JSON Patch "add" operations.
        */
       add?: Record<string, unknown>;
       /**
-       * Fields to replace, using dot-notation keys.
+       * Fields to replace, keyed by JSON Pointer (used exactly as provided).
        * The SDK converts these to JSON Patch "replace" operations.
        */
       replace?: Record<string, unknown>;
       /**
-       * Array of dot-notation field paths to remove.
+       * Array of JSON Pointer field paths to remove (used exactly as provided).
        * The SDK converts these to JSON Patch "remove" operations.
        */
       remove?: string[];
       /**
-       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are dot-notation and
-       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is
        * removed and re-added at `path`.
        */
       move?: PatchMovePath[];
       /**
-       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are dot-notation and
-       * used as provided (prefix with `payload.` to target payload fields); the value at `from` is duplicated to `path`.
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
        */
       copy?: PatchMovePath[];
       /**
-       * Fields to test (dot-notation keys → expected value; RFC 6902 "test"). The patch fails if the
+       * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
        * value at any path does not equal the expected value. Keys are used as provided (prefix with
-       * `payload.` for payload fields).
+       * `/payload` for payload fields).
        */
       test?: Record<string, unknown>;
       /**
