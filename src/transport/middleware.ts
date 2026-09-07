@@ -10,15 +10,9 @@ import { TransportResponse } from '../core/types/transport-response';
 import { LoggerManager } from '../core/components/logger-manager';
 import { TokenManager } from '../core/components/token_manager';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
-import StatusCategory from '../core/constants/categories';
 import { Transport } from '../core/interfaces/transport';
 import { encodeString } from '../core/utils';
 import { Query } from '../core/types/api';
-
-/**
- * HTTP status codes that represent definitive client outcomes and must not be retried.
- */
-const NON_RETRIABLE_STATUS_CODES = [404, 409];
 
 /**
  * Transport middleware configuration options.
@@ -177,17 +171,11 @@ export class PubNubMiddleware implements Transport {
           activeCancellation = attemptCancellation;
 
           const responseHandler = (res?: TransportResponse, error?: PubNubAPIError) => {
-            const retriableError = !error || error.category !== StatusCategory.PNCancelledCategory;
-            const statusCode = error?.statusCode;
-            const retriableStatusCode =
-              (!res || res.status >= 400) && !NON_RETRIABLE_STATUS_CODES.includes(statusCode as number);
             let delay = -1;
 
-            if (
-              retriableError &&
-              retriableStatusCode &&
-              retryPolicy.shouldRetry(req, res, error?.category, attempt + 1)
-            )
+            // Retry ability (error category, HTTP status code, excluded endpoints and attempts count) is entirely
+            // decided by the retry policy.
+            if (retryPolicy.shouldRetry(req, res, error?.category, attempt + 1, error?.statusCode))
               delay = retryPolicy.getDelay(attempt, res);
 
             if (delay > 0) {

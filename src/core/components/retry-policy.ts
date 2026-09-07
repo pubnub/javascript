@@ -5,6 +5,13 @@ import { TransportResponse } from '../types/transport-response';
 import { TransportRequest } from '../types/transport-request';
 import StatusCategory from '../constants/categories';
 
+/**
+ * HTTP status codes which represent definitive client-side outcomes and shouldn't be retried.
+ *
+ * @internal
+ */
+const NON_RETRIABLE_STATUS_CODES = [404, 409];
+
 // --------------------------------------------------------
 // ------------------------ Types -------------------------
 // --------------------------------------------------------
@@ -136,6 +143,8 @@ export type RequestRetryPolicy = {
    * @param [response] - Service response (if available)
    * @param [errorCategory] - Request processing error category.
    * @param [attempt] - Number of sequential failure.
+   * @param [statusCode] - Response HTTP status code (available when request failed with an error and hence there is
+   * no `response`).
    *
    * @returns `true` if another request retry attempt can be done.
    */
@@ -144,6 +153,7 @@ export type RequestRetryPolicy = {
     response?: TransportResponse,
     errorCategory?: StatusCategory,
     attempt?: number,
+    statusCode?: number,
   ): boolean;
 
   /**
@@ -219,7 +229,7 @@ export type ExponentialRetryPolicyConfiguration = {
 export class RetryPolicy {
   static None(): RequestRetryPolicy {
     return {
-      shouldRetry(_request, _response, _errorCategory, _attempt): boolean {
+      shouldRetry(_request, _response, _errorCategory, _attempt, _statusCode): boolean {
         return false;
       },
       getDelay(_attempt, _response): number {
@@ -239,8 +249,8 @@ export class RetryPolicy {
       maximumRetry: configuration.maximumRetry,
       excluded: configuration.excluded ?? [],
 
-      shouldRetry(request, response, error, attempt) {
-        return isRetriableRequest(request, response, error, attempt ?? 0, this.maximumRetry, this.excluded);
+      shouldRetry(request, response, error, attempt, statusCode) {
+        return isRetriableRequest(request, response, error, attempt ?? 0, this.maximumRetry, this.excluded, statusCode);
       },
 
       getDelay(_, response) {
@@ -267,8 +277,8 @@ export class RetryPolicy {
       maximumRetry: configuration.maximumRetry,
       excluded: configuration.excluded ?? [],
 
-      shouldRetry(request, response, error, attempt) {
-        return isRetriableRequest(request, response, error, attempt ?? 0, this.maximumRetry, this.excluded);
+      shouldRetry(request, response, error, attempt, statusCode) {
+        return isRetriableRequest(request, response, error, attempt ?? 0, this.maximumRetry, this.excluded, statusCode);
       },
 
       getDelay(attempt, response) {
@@ -296,6 +306,8 @@ export class RetryPolicy {
  * @param retryAttempt - Current retry attempt.
  * @param maximumRetry - Maximum retry attempts count according to the retry policy.
  * @param excluded - List of endpoints for which retry policy won't be applied.
+ * @param statusCode - Response HTTP status code (available when request failed with an error and hence there is no
+ * `res`).
  *
  * @return `true` if request can be retried.
  *
@@ -308,6 +320,7 @@ const isRetriableRequest = (
   retryAttempt: number,
   maximumRetry: number,
   excluded?: Endpoint[],
+  statusCode?: number,
 ) => {
   if (errorCategory) {
     if (
@@ -319,6 +332,10 @@ const isRetriableRequest = (
   }
   if (isExcludedRequest(req, excluded)) return false;
   else if (retryAttempt > maximumRetry) return false;
+
+  // Status code is reported separately from the `res` when the request failed with an error.
+  const status = res?.status ?? statusCode;
+  if (status !== undefined && NON_RETRIABLE_STATUS_CODES.includes(status)) return false;
 
   return res ? res.status === 429 || res.status >= 500 : true;
 };
