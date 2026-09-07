@@ -10,9 +10,9 @@ import type { Status, StatusEvent } from '../../../../src/core/types/api';
 // --------------------------------------------------------
 
 export const DATA_SYNC_KEYSET = {
-  subscribeKey: process.env.SDK_DS_SUB_KEY ?? '',
-  publishKey: process.env.SDK_DS_PUB_KEY ?? '',
-  secretKey: process.env.SDK_DS_SEC_KEY ?? '',
+  subscribeKey: process.env.DS_SUBSCRIBE_KEY ?? '',
+  publishKey: process.env.DS_PUBLISH_KEY ?? '',
+  secretKey: process.env.DS_SECRET_KEY ?? '',
   userId: 'dsjs',
 } as const;
 
