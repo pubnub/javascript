@@ -17,6 +17,7 @@
  */
 
 import assert from 'assert';
+import nock from 'nock';
 
 import PubNub from '../../../../src/node/index';
 import type * as PAM from '../../../../src/core/types/api/access-manager';
@@ -94,7 +95,7 @@ const itWhenAllClassesEmit = LOAN_QUOTE_AND_RELATIONSHIP_EVENTS_ENABLED ? it : i
  * `-`, which no wildcard matches.)
  */
 function projectionId(prefix: string): string {
-  return `${prefix}.p${Math.floor(Math.random() * 90000) + 10000}`;
+  return `${prefix}.p${Date.now().toString(36)}${Math.floor(Math.random() * 90000) + 10000}`;
 }
 
 /** Token-only client: same keyset as `freshPubNub()` but deliberately **without** `secretKey`. */
@@ -237,11 +238,19 @@ function captureEvents(
   predicate: (event: Subscription.DataSyncObject) => boolean,
   expectedCount: number,
   trigger: () => Promise<void>,
-  opts: { graceMs?: number; connectTimeoutMs?: number; timeoutMs?: number } = {},
+  opts: {
+    graceMs?: number;
+    connectTimeoutMs?: number;
+    timeoutMs?: number;
+    /** When set, wins over `expectedCount` — used when fan-out order is not stable. */
+    completeWhen?: (events: Subscription.DataSyncObject[]) => boolean;
+  } = {},
 ): Promise<Subscription.DataSyncObject[]> {
   const graceMs = opts.graceMs ?? 1000;
   const connectTimeoutMs = opts.connectTimeoutMs ?? 20000;
   const timeoutMs = opts.timeoutMs ?? 45000;
+  const isComplete = (events: Subscription.DataSyncObject[]): boolean =>
+    opts.completeWhen ? opts.completeWhen(events) : events.length >= expectedCount;
 
   return new Promise<Subscription.DataSyncObject[]>((resolve, reject) => {
     const collected: Subscription.DataSyncObject[] = [];
@@ -251,7 +260,7 @@ function captureEvents(
       dataSync: (event: Subscription.DataSyncObject) => {
         if (settled || !predicate(event)) return;
         collected.push(event);
-        if (collected.length < expectedCount) return;
+        if (!isComplete(collected)) return;
         settled = true;
         cleanup();
         resolve(collected);
@@ -290,7 +299,8 @@ function captureEvents(
       cleanup();
       reject(
         new Error(
-          `Timed out waiting for ${expectedCount} DataSync event(s); ` +
+          `Timed out waiting for DataSync event(s)` +
+            `${opts.completeWhen ? '' : ` (expected ${expectedCount})`}; ` +
             `got ${collected.length} on [${collected.map((e) => e.channel).join(', ')}].`,
         ),
       );
@@ -406,6 +416,13 @@ async function seedRequestedBy(pnPam: PubNub, id: string, customerId: string, lo
 
 describe('DataSync projections admin vs __default__', function () {
   this.timeout(120000);
+
+  // Earlier nocked Data Sync files call `disableNetConnect()` and never re-enable it. This suite
+  // talks to the live service, so lift that block before any REST / subscribe call.
+  before(() => {
+    nock.cleanAll();
+    nock.enableNetConnect();
+  });
 
   // ======================================================
   // grantToken / parseToken encoding
@@ -941,8 +958,15 @@ describe('DataSync projections admin vs __default__', function () {
       // so observe `dataSyncEntity` for each endpoint — not `dataSyncRelationship`.
       await seedCustomer(pnPam, customerId);
       await seedLoanQuote(pnPam, loanQuoteId);
+      // Confirm both endpoints are readable before linking them — a missing entity fails the
+      // relationship create and looks like a projection/event timeout.
+      await pnPam.dataSync.getEntity({ id: customerId });
+      await pnPam.dataSync.getEntity({ id: loanQuoteId });
 
-      reader = await readerWithToken(pnPam, 'proj-rt-rel', {
+      const plainChannels = [customerId, loanQuoteId];
+      const mirrorChannels = [adminChannel(customerId), adminChannel(loanQuoteId)];
+
+      reader = await readerWithToken(pnPam, projectionId('proj-rt-rel'), {
         channelPatterns: [
           'customer.*',
           'loanquote.*',
@@ -959,18 +983,25 @@ describe('DataSync projections admin vs __default__', function () {
       subscription.addSubscription(quote.subscription());
       subscription.addSubscription(quote.subscription({ projection: PROJECTION_ADMIN }));
 
+      // One create fans out onto 4 channels (2 endpoints × default/admin). Arrival order is not
+      // stable — resolving after any 2 events flakes when both land on the same projection.
       const events = await captureEvents(
         reader,
         subscription,
         (e) => e.message.event === 'create' && (e.message.data as { id?: string }).id === relationshipId,
-        2,
+        4,
         () => seedRequestedBy(pnPam, relationshipId, customerId, loanQuoteId),
+        {
+          completeWhen: (received) => {
+            const hasPlain = received.some((e) => plainChannels.includes(e.channel));
+            const hasMirror = received.some((e) => mirrorChannels.includes(e.channel));
+            return hasPlain && hasMirror;
+          },
+        },
       );
 
-      const plainEvents = events.filter((e) => e.channel === customerId || e.channel === loanQuoteId);
-      const mirrorEvents = events.filter(
-        (e) => e.channel === adminChannel(customerId) || e.channel === adminChannel(loanQuoteId),
-      );
+      const plainEvents = events.filter((e) => plainChannels.includes(e.channel));
+      const mirrorEvents = events.filter((e) => mirrorChannels.includes(e.channel));
       assert.ok(plainEvents.length >= 1, 'relationship event on at least one endpoint id channel');
       assert.ok(mirrorEvents.length >= 1, 'relationship event on at least one endpoint mirror channel');
 
