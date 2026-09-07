@@ -1258,21 +1258,23 @@ export class PubNubCore<
       })
       .catch((error: Error) => {
         const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
-        const errorMessage = apiError.toFormattedMessage(operation);
 
         // Notify callback (if possible).
         if (callback) {
           if (apiError.category !== Categories.PNCancelledCategory) {
             this.logger.error('PubNub', () => ({
               messageType: 'error',
-              message: apiError.toPubNubError(operation, errorMessage),
+              message: apiError.toPubNubError(operation, 'REST API request processing error, check status for details'),
             }));
           }
 
           return callback(apiError.toStatus(operation), null);
         }
 
-        const pubNubError = apiError.toPubNubError(operation, errorMessage);
+        const pubNubError = apiError.toPubNubError(
+          operation,
+          'REST API request processing error, check status for details',
+        );
 
         if (apiError.category !== Categories.PNCancelledCategory)
           this.logger.error('PubNub', () => ({ messageType: 'error', message: pubNubError }));
