@@ -448,8 +448,11 @@ type DataSyncEventName = 'create' | 'update' | 'delete';
 
 /**
  * DataSync object kinds carried on the wire (raw service value).
+ *
+ * The service reports the semantic kind for its own built-in classes (`user` / `channel` /
+ * `membership`) and the generic storage kind for developer-defined ones (`entity` / `relationship`).
  */
-type DataSyncObjectType = 'entity' | 'relationship';
+export type DataSyncObjectType = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
 
 /**
  * Scope of the class definition a DataSync object belongs to.
@@ -462,17 +465,18 @@ export type DataSyncClassLevel = 'Global' | 'SubKey';
 /**
  * Normalized DataSync object kind.
  *
- * Users and Channels are backed by entity classes; Memberships by a relationship class. This
- * discriminator lets consumers branch on the semantic kind in a `dataSync` listener without matching
- * class-name strings. Falls back to the raw wire {@link DataSyncObjectType} for developer-defined
- * classes.
+ * This discriminator lets consumers branch on the semantic kind in a `dataSync` listener without
+ * matching class-name strings. The service already reports it as the wire
+ * {@link DataSyncObjectType}; for a service which still sends the generic `entity` / `relationship`
+ * kind for its built-in classes it is derived from the class identity instead.
  */
-export type DataSyncNormalizedType = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
+export type DataSyncNormalizedType = DataSyncObjectType;
 
 /**
  * Reserved DataSync system class names (lower-cased) → normalized object type.
  *
- * Only consulted for classes the service marks as `Global` (see {@link DataSyncClassLevel}), so a
+ * Only consulted when the wire {@link DataSyncObjectType} is the generic `entity` / `relationship`
+ * kind, and only for classes the service marks as `Global` (see {@link DataSyncClassLevel}) — so a
  * developer-defined class which happens to share one of these names is not mistaken for a typed
  * resource. Keys are compared case-insensitively.
  *
@@ -537,17 +541,33 @@ export type DataSyncEntityData = {
 export type DataSyncRelationshipData = DataSyncEntityData & {
   /**
    * First entity id in the relationship.
-   *
-   * For a membership this is the channel id.
    */
   entityAId?: string;
 
   /**
    * Second entity id in the relationship.
-   *
-   * For a membership this is the user id.
    */
   entityBId?: string;
+};
+
+/**
+ * DataSync membership change payload (create / update).
+ *
+ * A membership is stored as a relationship, but the service names its endpoints semantically —
+ * `channelId` / `userId` instead of `entityAId` / `entityBId` — matching the REST
+ * `MembershipObject`. Class identity is not repeated here: it is reported once on the event itself as
+ * {@link DataSyncData.className} / {@link DataSyncData.classLevel} / {@link DataSyncData.classVersion}.
+ */
+export type DataSyncMembershipData = DataSyncEntityData & {
+  /**
+   * Id of the channel the membership joins.
+   */
+  channelId?: string;
+
+  /**
+   * Id of the user the membership joins.
+   */
+  userId?: string;
 };
 
 /**
@@ -593,8 +613,12 @@ export type DataSyncData = {
    * Normalized DataSync object kind.
    *
    * The built-in `User` / `Channel` / `Membership` classes map to `'user'` / `'channel'` /
-   * `'membership'`; developer-defined classes fall back to the raw wire {@link type} (`'entity'` /
-   * `'relationship'`). Use this to discriminate typed resources without knowing class-name strings.
+   * `'membership'`; developer-defined classes to `'entity'` / `'relationship'`. Use this to
+   * discriminate typed resources without knowing class-name strings.
+   *
+   * Normally identical to the wire {@link type}; it differs only for a service which still reports
+   * the built-in classes under the generic `'entity'` / `'relationship'` kind, where it is derived
+   * from {@link className} / {@link classLevel} instead.
    */
   objectType: DataSyncNormalizedType;
 
@@ -619,7 +643,7 @@ export type DataSyncData = {
    *
    * For `delete` events only `{ id, deletedAt }` is populated.
    */
-  data: DataSyncEntityData | DataSyncRelationshipData | DataSyncDeleteData;
+  data: DataSyncEntityData | DataSyncRelationshipData | DataSyncMembershipData | DataSyncDeleteData;
 };
 
 /**
@@ -1121,8 +1145,12 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     // When it is absent (service predating the field) fall back to the legacy positional heuristic,
     // where the system class was the first segment.
     const systemClass = classLevel === undefined ? classSegments[0] : classLevel === 'Global' ? className : undefined;
-    const objectType: DataSyncNormalizedType =
-      (systemClass && DATA_SYNC_RESERVED_CLASSES[systemClass.toLowerCase()]) || metadata.type;
+    // The service reports the semantic kind directly; the class-name lookup only fills it in for a
+    // service which still sends the built-in classes under the generic `entity` / `relationship` kind.
+    const genericType = metadata.type === 'entity' || metadata.type === 'relationship';
+    const objectType: DataSyncNormalizedType = genericType
+      ? (systemClass && DATA_SYNC_RESERVED_CLASSES[systemClass.toLowerCase()]) || metadata.type
+      : metadata.type;
     const parsedVersion = metadata.classVersion !== undefined ? Number.parseInt(`${metadata.classVersion}`, 10) : NaN;
     const classVersion = Number.isNaN(parsedVersion) ? undefined : parsedVersion;
     const raw = (payload.data ?? {}) as Record<string, unknown>;
@@ -1130,7 +1158,8 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     // `data` mirrors the object as sent by the service; class identity is reported once, on the event.
     let data: DataSyncData['data'];
     if (metadata.event === 'delete') data = { id: raw.id as string, deletedAt: raw.deletedAt as string | undefined };
-    else if (metadata.type === 'relationship') data = { ...raw } as DataSyncRelationshipData;
+    else if (objectType === 'membership') data = { ...raw } as DataSyncMembershipData;
+    else if (objectType === 'relationship') data = { ...raw } as DataSyncRelationshipData;
     else data = { ...raw } as DataSyncEntityData;
 
     return {

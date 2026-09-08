@@ -4,12 +4,6 @@
  * `classLevel` disambiguates two classes that share a name at different hierarchy levels. It is set
  * at creation time and immutable afterward, so it lives at the top level of the create parameters
  * (alongside `id` / `class`) rather than inside `data`, and maps to `entityClassLevel` in the request
- * body per `openapi/v4-data.yaml` (`EntityProperties`, `CreateUserRequestData`,
- * `CreateChannelRequestData`).
- *
- * Run:
- *   TS_NODE_PROJECT='./tsconfig.json' npx mocha --project tsconfig.mocha.json \
- *     'test/unit/data_sync/create-class-level.test.ts'
  */
 
 import assert from 'assert';

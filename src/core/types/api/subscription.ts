@@ -13,10 +13,12 @@ import {
 
 export type {
   DataSyncData,
+  DataSyncObjectType,
   DataSyncNormalizedType,
   DataSyncClassLevel,
   DataSyncEntityData,
   DataSyncRelationshipData,
+  DataSyncMembershipData,
   DataSyncDeleteData,
 } from '../../endpoints/subscribe';
 import { AbortSignal } from '../../components/abort_signal';

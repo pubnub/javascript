@@ -151,7 +151,7 @@ describe('subscribe event categorisation', () => {
           metadata: {
             event: 'create',
             source: 'data-sync',
-            type: 'entity',
+            type: 'user',
             className: 'User',
             classLevel: 'Global',
             classVersion: 1,
@@ -313,7 +313,7 @@ describe('subscribe event categorisation', () => {
             metadata: {
               event: 'create',
               source: 'data-sync',
-              type: 'entity',
+              type: 'user',
               className: 'User',
               classLevel: 'Global',
               classVersion: 1,

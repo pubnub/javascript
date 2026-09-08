@@ -1,11 +1,11 @@
 /**
  * DataSync real-time event tests — typed Membership.
  *
- * ROUTING RULE: memberships ride the wire as `type: 'relationship'` and are delivered on BOTH the
- * channel-id channel AND the user-id channel (entityAId === channelId, entityBId === userId), NEVER on
- * the membership's own id. We subscribe to `[channelId, userId]` and assert `channel ∈` that set.
- * Wire `className: 'Membership'` / `classLevel: 'Global'`; the parser normalizes to
- * `objectType: 'membership'`.
+ * ROUTING RULE: memberships ride the wire as `type: 'membership'` and are delivered on BOTH the
+ * channel-id channel AND the user-id channel, NEVER on the membership's own id. We subscribe to
+ * `[channelId, userId]` and assert `channel ∈` that set. Wire `className: 'Membership'` /
+ * `classLevel: 'Global'`, and the event body names the endpoints semantically — `channelId` /
+ * `userId`, not the relationship's `entityAId` / `entityBId`.
  */
 
 import assert from 'assert';
@@ -17,7 +17,7 @@ import {
   CLASS_VERSION,
   assertEventCommon,
   assertEventDeleteData,
-  assertEventRelationshipData,
+  assertEventMembershipData,
   captureEvent,
   channelPayload,
   freshId,
@@ -88,17 +88,17 @@ describe('DataSync events — Membership', function () {
 
     assertEventCommon(event, {
       event: 'create',
-      type: 'relationship',
+      type: 'membership',
       objectType: 'membership',
       id,
       channelOneOf: [channelId, userId],
       className: 'Membership',
       classLevel: 'Global',
     });
-    assertEventRelationshipData(event.message.data as Subscription.DataSyncRelationshipData, {
+    assertEventMembershipData(event.message.data as Subscription.DataSyncMembershipData, {
       id,
-      entityAId: channelId,
-      entityBId: userId,
+      channelId,
+      userId,
       status: 'active',
       payload: { role: 'member' },
     });
@@ -130,17 +130,17 @@ describe('DataSync events — Membership', function () {
 
     assertEventCommon(event, {
       event: 'update',
-      type: 'relationship',
+      type: 'membership',
       objectType: 'membership',
       id,
       channelOneOf: [channelId, userId],
       className: 'Membership',
       classLevel: 'Global',
     });
-    assertEventRelationshipData(event.message.data as Subscription.DataSyncRelationshipData, {
+    assertEventMembershipData(event.message.data as Subscription.DataSyncMembershipData, {
       id,
-      entityAId: channelId,
-      entityBId: userId,
+      channelId,
+      userId,
       payload: { role: 'moderator' },
     });
   });
@@ -159,17 +159,17 @@ describe('DataSync events — Membership', function () {
 
     assertEventCommon(event, {
       event: 'update',
-      type: 'relationship',
+      type: 'membership',
       objectType: 'membership',
       id,
       channelOneOf: [channelId, userId],
       className: 'Membership',
       classLevel: 'Global',
     });
-    assertEventRelationshipData(event.message.data as Subscription.DataSyncRelationshipData, {
+    assertEventMembershipData(event.message.data as Subscription.DataSyncMembershipData, {
       id,
-      entityAId: channelId,
-      entityBId: userId,
+      channelId,
+      userId,
       payload: { role: 'admin' },
     });
   });
@@ -188,7 +188,7 @@ describe('DataSync events — Membership', function () {
 
     assertEventCommon(event, {
       event: 'delete',
-      type: 'relationship',
+      type: 'membership',
       objectType: 'membership',
       id,
       channelOneOf: [channelId, userId],

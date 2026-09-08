@@ -1,8 +1,8 @@
 /**
  * DataSync real-time event tests — typed User.
  *
- * Users ride the wire as `type: 'entity'` with `className: 'User'` / `classLevel: 'Global'`; the
- * parser normalizes them to `objectType: 'user'`. Delivered on `channel === id`.
+ * Users ride the wire as `type: 'user'` with `className: 'User'` / `classLevel: 'Global'`, so
+ * `objectType` matches the wire type. Delivered on `channel === id`.
  */
 
 import nock from 'nock';
@@ -56,7 +56,7 @@ describe('DataSync events — User', function () {
 
     assertEventCommon(event, {
       event: 'create',
-      type: 'entity',
+      type: 'user',
       objectType: 'user',
       id,
       channelOneOf: [id],
@@ -89,7 +89,7 @@ describe('DataSync events — User', function () {
 
     assertEventCommon(event, {
       event: 'update',
-      type: 'entity',
+      type: 'user',
       objectType: 'user',
       id,
       channelOneOf: [id],
@@ -118,7 +118,7 @@ describe('DataSync events — User', function () {
 
     assertEventCommon(event, {
       event: 'update',
-      type: 'entity',
+      type: 'user',
       objectType: 'user',
       id,
       channelOneOf: [id],
@@ -144,7 +144,7 @@ describe('DataSync events — User', function () {
 
     assertEventCommon(event, {
       event: 'delete',
-      type: 'entity',
+      type: 'user',
       objectType: 'user',
       id,
       channelOneOf: [id],

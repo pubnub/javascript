@@ -1,8 +1,8 @@
 /**
  * DataSync real-time event tests — typed Channel.
  *
- * Channels ride the wire as `type: 'entity'` with `className: 'Channel'` / `classLevel: 'Global'`;
- * the parser normalizes them to `objectType: 'channel'`. Delivered on `channel === id`.
+ * Channels ride the wire as `type: 'channel'` with `className: 'Channel'` / `classLevel: 'Global'`,
+ * so `objectType` matches the wire type. Delivered on `channel === id`.
  *
  */
 
@@ -57,7 +57,7 @@ describe('DataSync events — Channel', function () {
 
     assertEventCommon(event, {
       event: 'create',
-      type: 'entity',
+      type: 'channel',
       objectType: 'channel',
       id,
       channelOneOf: [id],
@@ -94,7 +94,7 @@ describe('DataSync events — Channel', function () {
 
     assertEventCommon(event, {
       event: 'update',
-      type: 'entity',
+      type: 'channel',
       objectType: 'channel',
       id,
       channelOneOf: [id],
@@ -123,7 +123,7 @@ describe('DataSync events — Channel', function () {
 
     assertEventCommon(event, {
       event: 'update',
-      type: 'entity',
+      type: 'channel',
       objectType: 'channel',
       id,
       channelOneOf: [id],
@@ -149,7 +149,7 @@ describe('DataSync events — Channel', function () {
 
     assertEventCommon(event, {
       event: 'delete',
-      type: 'entity',
+      type: 'channel',
       objectType: 'channel',
       id,
       channelOneOf: [id],

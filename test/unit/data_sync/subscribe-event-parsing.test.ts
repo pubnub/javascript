@@ -68,6 +68,11 @@ function assertNoDuplicatedClassFields(data: Record<string, unknown>): void {
 // --------------------------------------------------------
 // ------------------ Captured envelopes ------------------
 // --------------------------------------------------------
+// The service reports the semantic kind in `metadata.type` for its built-in classes (`user` /
+// `channel` / `membership`) and the generic storage kind for developer-defined ones (`entity` /
+// `relationship`). A membership's endpoints are named `channelId` / `userId`, matching the REST
+// `MembershipObject`; only a developer-defined relationship uses `entityAId` / `entityBId`. The
+// retired generic-kind wire shape is still exercised under "service compatibility" below.
 
 const TYPED_USER_CREATE: WireEnvelope = {
   e: 5,
@@ -79,7 +84,7 @@ const TYPED_USER_CREATE: WireEnvelope = {
     metadata: {
       event: 'create',
       source: 'data-sync',
-      type: 'entity',
+      type: 'user',
       className: 'User',
       classLevel: 'Global',
       classVersion: 1,
@@ -105,7 +110,7 @@ const TYPED_CHANNEL_UPDATE: WireEnvelope = {
     metadata: {
       event: 'update',
       source: 'data-sync',
-      type: 'entity',
+      type: 'channel',
       className: 'Channel',
       classLevel: 'Global',
       classVersion: 1,
@@ -132,7 +137,7 @@ const TYPED_MEMBERSHIP_CREATE: WireEnvelope = {
     metadata: {
       event: 'create',
       source: 'data-sync',
-      type: 'relationship',
+      type: 'membership',
       className: 'Membership',
       classLevel: 'Global',
       classVersion: 1,
@@ -142,8 +147,8 @@ const TYPED_MEMBERSHIP_CREATE: WireEnvelope = {
       updatedAt: '2026-08-13T03:45:57.918497Z',
       createdAt: '2026-08-13T03:45:57.918497Z',
       eTag: '3w5e112494tzu',
-      entityAId: 'c.mem914058452',
-      entityBId: 'u.mem914058452',
+      channelId: 'c.mem914058452',
+      userId: 'u.mem914058452',
       expiresAt: '2026-09-13T00:00:00Z',
       status: 'active',
       payload: { role: 'member', joinedAt: '2026-07-06T10:00:00.000Z' },
@@ -217,7 +222,7 @@ const TYPED_MEMBERSHIP_DELETE: WireEnvelope = {
     metadata: {
       event: 'delete',
       source: 'data-sync',
-      type: 'relationship',
+      type: 'membership',
       className: 'Membership',
       classLevel: 'Global',
       classVersion: 1,
@@ -238,7 +243,7 @@ describe('DataSync subscribe event parsing', () => {
       assert.strictEqual(message.version, '1.0', 'version');
       assert.strictEqual(message.source, 'data-sync', 'source');
       assert.strictEqual(message.event, 'create', 'event');
-      assert.strictEqual(message.type, 'entity', 'wire type');
+      assert.strictEqual(message.type, 'user', 'wire type');
       assert.strictEqual(message.objectType, 'user', 'objectType');
       assert.strictEqual(message.className, 'User', 'className');
       assert.strictEqual(message.classLevel, 'Global', 'classLevel');
@@ -264,23 +269,26 @@ describe('DataSync subscribe event parsing', () => {
       const message = await parseDataSyncMessage(TYPED_CHANNEL_UPDATE);
 
       assert.strictEqual(message.event, 'update', 'event');
+      assert.strictEqual(message.type, 'channel', 'wire type');
       assert.strictEqual(message.objectType, 'channel', 'objectType');
       assert.strictEqual(message.className, 'Channel', 'className');
       assert.strictEqual(message.classLevel, 'Global', 'classLevel');
       assertNoDuplicatedClassFields(message.data as Record<string, unknown>);
     });
 
-    it('parses a typed Membership create into objectType "membership", keeping entityAId/entityBId', async () => {
+    it('parses a typed Membership create into objectType "membership", keeping channelId/userId', async () => {
       const message = await parseDataSyncMessage(TYPED_MEMBERSHIP_CREATE);
-      const data = message.data as Subscription.DataSyncRelationshipData;
+      const data = message.data as Subscription.DataSyncMembershipData;
 
-      assert.strictEqual(message.type, 'relationship', 'wire type');
+      assert.strictEqual(message.type, 'membership', 'wire type');
       assert.strictEqual(message.objectType, 'membership', 'objectType');
       assert.strictEqual(message.className, 'Membership', 'className');
       assert.strictEqual(message.classLevel, 'Global', 'classLevel');
-      // For a membership entityAId is the channel id and entityBId the user id.
-      assert.strictEqual(data.entityAId, 'c.mem914058452', 'entityAId (channel id)');
-      assert.strictEqual(data.entityBId, 'u.mem914058452', 'entityBId (user id)');
+      // A membership names its endpoints semantically, on the same axis as the REST MembershipObject.
+      assert.strictEqual(data.channelId, 'c.mem914058452', 'channelId');
+      assert.strictEqual(data.userId, 'u.mem914058452', 'userId');
+      assert.ok(!('entityAId' in data), 'no entityAId');
+      assert.ok(!('entityBId' in data), 'no entityBId');
       assertNoDuplicatedClassFields(data as unknown as Record<string, unknown>);
     });
   });
@@ -346,6 +354,48 @@ describe('DataSync subscribe event parsing', () => {
   });
 
   describe('service compatibility', () => {
+    it('still derives objectType from the class identity when the wire type is the generic kind', async () => {
+      const user = await parseDataSyncMessage({
+        ...TYPED_USER_CREATE,
+        d: {
+          version: '1.0',
+          metadata: {
+            event: 'create',
+            source: 'data-sync',
+            type: 'entity',
+            className: 'User',
+            classLevel: 'Global',
+            classVersion: 1,
+          },
+          data: { id: 'u.cl522260' },
+        },
+      });
+      assert.strictEqual(user.type, 'entity', 'generic wire type passed through');
+      assert.strictEqual(user.objectType, 'user', 'objectType derived from the Global class name');
+
+      const membership = await parseDataSyncMessage({
+        ...TYPED_MEMBERSHIP_CREATE,
+        d: {
+          version: '1.0',
+          metadata: {
+            event: 'create',
+            source: 'data-sync',
+            type: 'relationship',
+            className: 'Membership',
+            classLevel: 'Global',
+            classVersion: 1,
+          },
+          data: { id: 'm.mem914058452', entityAId: 'c.mem914058452', entityBId: 'u.mem914058452' },
+        },
+      });
+      const data = membership.data as Subscription.DataSyncRelationshipData;
+      assert.strictEqual(membership.type, 'relationship', 'generic wire type passed through');
+      assert.strictEqual(membership.objectType, 'membership', 'objectType derived from the Global class name');
+      // `data` is a verbatim pass-through, so the retired endpoint axis survives as sent.
+      assert.strictEqual(data.entityAId, 'c.mem914058452', 'entityAId (channel id)');
+      assert.strictEqual(data.entityBId, 'u.mem914058452', 'entityBId (user id)');
+    });
+
     it('derives objectType from the bare className when classLevel is absent', async () => {
       const message = await parseDataSyncMessage({
         ...TYPED_USER_CREATE,

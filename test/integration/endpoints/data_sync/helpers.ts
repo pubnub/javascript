@@ -391,7 +391,7 @@ export function assertEventCommon(
   event: Subscription.DataSyncObject,
   expected: {
     event: 'create' | 'update' | 'delete';
-    type: 'entity' | 'relationship';
+    type: Subscription.DataSyncObjectType;
     objectType: Subscription.DataSyncNormalizedType;
     id: string;
     channelOneOf: string[];
@@ -454,6 +454,36 @@ export function assertEventRelationshipData(
   if (exp.payload) assertPayloadContains(data.payload as Record<string, unknown>, exp.payload);
 }
 
+/**
+ * For create/update: assert the full non-delete membership data body.
+ *
+ * A membership is stored as a relationship, but its event body names the endpoints semantically
+ * (`channelId` / `userId`) — the same axis the REST `MembershipObject` uses.
+ */
+export function assertEventMembershipData(
+  data: Subscription.DataSyncMembershipData,
+  exp: {
+    id: string;
+    channelId: string;
+    userId: string;
+    status?: string;
+    payload?: Record<string, unknown>;
+  },
+): void {
+  assert.strictEqual(data.id, exp.id, 'data.id');
+  assert.strictEqual(data.channelId, exp.channelId, 'channelId');
+  assert.strictEqual(data.userId, exp.userId, 'userId');
+  // The retired relationship axis must not come back alongside the semantic one.
+  assert.ok(!('entityAId' in data), 'no entityAId on a membership event');
+  assert.ok(!('entityBId' in data), 'no entityBId on a membership event');
+  assert.strictEqual(typeof data.createdAt, 'string', 'createdAt');
+  assert.strictEqual(typeof data.updatedAt, 'string', 'updatedAt');
+  assert.strictEqual(typeof data.eTag, 'string', 'eTag');
+  if (exp.status !== undefined) assert.strictEqual(data.status, exp.status, 'status');
+  assertNoDuplicatedClassFields(data);
+  if (exp.payload) assertPayloadContains(data.payload as Record<string, unknown>, exp.payload);
+}
+
 /** Delete body is trimmed to `{ id, deletedAt? }` only. */
 export function assertEventDeleteData(data: Subscription.DataSyncDeleteData, id: string): void {
   assert.strictEqual(data.id, id, 'delete data.id');
@@ -461,6 +491,8 @@ export function assertEventDeleteData(data: Subscription.DataSyncDeleteData, id:
   assert.ok(!('status' in data), 'no status on delete');
   assert.ok(!('entityAId' in data), 'no entityAId on delete');
   assert.ok(!('entityBId' in data), 'no entityBId on delete');
+  assert.ok(!('channelId' in data), 'no channelId on delete');
+  assert.ok(!('userId' in data), 'no userId on delete');
   assert.ok(!('eTag' in data), 'no eTag on delete');
   if (data.deletedAt !== undefined) {
     assert.strictEqual(typeof data.deletedAt, 'string', 'deletedAt is ISO string');
