@@ -374,7 +374,7 @@ describe('DataSync Membership Endpoints', () => {
     const res = await pubnub.dataSync.getMemberships({
       userId,
       channelId,
-      relationshipClassVersion: CLASS_VERSION,
+      classVersion: CLASS_VERSION,
     });
 
     assert.strictEqual(res.data.length, 1, 'a user/channel pair identifies at most one membership');

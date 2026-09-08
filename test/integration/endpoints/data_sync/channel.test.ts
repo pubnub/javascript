@@ -299,7 +299,9 @@ describe('DataSync Channel Endpoints', () => {
       .query({ ...common, limit: '10' })
       .reply(200, { data: listPage1, meta: { has_next: false, limit: 10 } }, JSON_HEADERS);
 
-    const res = await pubnub.dataSync.getChannels({ limit: 10 });
+    const res = await pubnub.dataSync.getChannels({
+      limit: 10,
+    });
 
     assert.ok(Array.isArray(res.data), 'data is an array');
     assert.deepStrictEqual(
@@ -369,7 +371,7 @@ describe('DataSync Channel Endpoints', () => {
     assert.strictEqual(scope.isDone(), true);
   });
 
-  it('getChannels — sends entityClassVersion as `entity_class_version` and defaults limit to 20', async () => {
+  it('getChannels — sends classVersion as `entity_class_version` and defaults limit to 20', async () => {
     const scope = utils
       .createNock()
       // `GetChannelsRequest` applies `limit ??= 20` in its constructor, so an omitted limit still
@@ -378,12 +380,12 @@ describe('DataSync Channel Endpoints', () => {
       .query({ ...common, entity_class_version: `${CLASS_VERSION}`, limit: '20' })
       .reply(200, { data: listPage1, meta: { has_next: false } }, JSON_HEADERS);
 
-    await pubnub.dataSync.getChannels({ entityClassVersion: CLASS_VERSION });
+    await pubnub.dataSync.getChannels({ classVersion: CLASS_VERSION });
 
     assert.strictEqual(scope.isDone(), true);
   });
 
-  it('getChannels — sends entityClass/entityClassLevel as `entity_class`/`entity_class_level`', async () => {
+  it('getChannels — sends class/classLevel as `entity_class`/`entity_class_level`', async () => {
     const scope = utils
       .createNock()
       .get(CHANNELS)
@@ -399,9 +401,9 @@ describe('DataSync Channel Endpoints', () => {
       .reply(200, { data: sortedDescRows, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     const res = await pubnub.dataSync.getChannels({
-      entityClass: 'Channel',
-      entityClassVersion: CLASS_VERSION,
-      entityClassLevel: 'Global',
+      class: 'Channel',
+      classVersion: CLASS_VERSION,
+      classLevel: 'Global',
       limit: 50,
       filterFast: `status == 'active'`,
       sort: { createdAt: 'desc' },

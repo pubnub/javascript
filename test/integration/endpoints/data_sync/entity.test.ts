@@ -328,7 +328,7 @@ describe('DataSync Entity Endpoints', () => {
       .query({ ...common, entity_class: ENTITY_CLASS_CUSTOMER, limit: '50' })
       .reply(200, { data: entityListPage1, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
-    const res = await pubnub.dataSync.getEntities({ entityClass: ENTITY_CLASS_CUSTOMER, limit: 50 });
+    const res = await pubnub.dataSync.getEntities({ class: ENTITY_CLASS_CUSTOMER, limit: 50 });
 
     assert.ok(Array.isArray(res.data), 'data is an array');
     assert.deepStrictEqual(
@@ -361,12 +361,12 @@ describe('DataSync Entity Endpoints', () => {
         JSON_HEADERS,
       );
 
-    const page1 = await pubnub.dataSync.getEntities({ entityClass: ENTITY_CLASS_CUSTOMER, limit: 2 });
+    const page1 = await pubnub.dataSync.getEntities({ class: ENTITY_CLASS_CUSTOMER, limit: 2 });
     assert.strictEqual(page1.data.length, 2, 'page 1 respects limit');
     assert.strictEqual(page1.meta?.next_cursor, ENTITY_CURSOR_PAGE_2, 'cursor surfaced on page 1');
 
     const page2 = await pubnub.dataSync.getEntities({
-      entityClass: ENTITY_CLASS_CUSTOMER,
+      class: ENTITY_CLASS_CUSTOMER,
       limit: 2,
       cursor: page1.meta!.next_cursor!,
     });
@@ -377,7 +377,7 @@ describe('DataSync Entity Endpoints', () => {
     assert.strictEqual(page2Scope.isDone(), true);
   });
 
-  it('getEntities — sends filterFast as `filter_fast` and entityClassVersion as `entity_class_version`', async () => {
+  it('getEntities — sends filterFast as `filter_fast` and classVersion as `entity_class_version`', async () => {
     const scope = utils
       .createNock()
       .get(ENTITIES)
@@ -391,8 +391,8 @@ describe('DataSync Entity Endpoints', () => {
       .reply(200, { data: entityPuneRows, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     const res = await pubnub.dataSync.getEntities({
-      entityClass: ENTITY_CLASS_CUSTOMER,
-      entityClassVersion: CLASS_VERSION,
+      class: ENTITY_CLASS_CUSTOMER,
+      classVersion: CLASS_VERSION,
       filterFast: `city == 'Pune'`,
       limit: 50,
     });
@@ -402,7 +402,7 @@ describe('DataSync Entity Endpoints', () => {
     assert.strictEqual(scope.isDone(), true);
   });
 
-  it('getEntities — sends entityClassLevel as `entity_class_level`', async () => {
+  it('getEntities — sends classLevel as `entity_class_level`', async () => {
     const scope = utils
       .createNock()
       // The provisioned `Customer` class is sub-key scoped, so `SubKey` is what disambiguates it from
@@ -418,9 +418,9 @@ describe('DataSync Entity Endpoints', () => {
       .reply(200, { data: entityListPage1, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     const res = await pubnub.dataSync.getEntities({
-      entityClass: ENTITY_CLASS_CUSTOMER,
-      entityClassVersion: CLASS_VERSION,
-      entityClassLevel: 'SubKey',
+      class: ENTITY_CLASS_CUSTOMER,
+      classVersion: CLASS_VERSION,
+      classLevel: 'SubKey',
       limit: 50,
     });
 
@@ -443,7 +443,7 @@ describe('DataSync Entity Endpoints', () => {
       .reply(200, { data: entityPuneRows, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     await pubnub.dataSync.getEntities({
-      entityClass: ENTITY_CLASS_CUSTOMER,
+      class: ENTITY_CLASS_CUSTOMER,
       filter: `creditScore >= 700 && city == 'Pune'`,
       filterFast: `city == 'Pune'`,
       limit: 50,
@@ -460,7 +460,7 @@ describe('DataSync Entity Endpoints', () => {
       .reply(200, { data: entitySortedDescRows, meta: { has_next: false, limit: 100 } }, JSON_HEADERS);
 
     const res = await pubnub.dataSync.getEntities({
-      entityClass: ENTITY_CLASS_CUSTOMER,
+      class: ENTITY_CLASS_CUSTOMER,
       sort: { firstName: 'desc' },
       limit: 100,
     });
@@ -478,7 +478,7 @@ describe('DataSync Entity Endpoints', () => {
       .query({ ...common, entity_class: ENTITY_CLASS_CUSTOMER, limit: '100', sort: 'firstName' })
       .reply(200, { data: entitySortedDescRows, meta: { has_next: false, limit: 100 } }, JSON_HEADERS);
 
-    await pubnub.dataSync.getEntities({ entityClass: ENTITY_CLASS_CUSTOMER, sort: 'firstName', limit: 100 });
+    await pubnub.dataSync.getEntities({ class: ENTITY_CLASS_CUSTOMER, sort: 'firstName', limit: 100 });
 
     assert.strictEqual(scope.isDone(), true);
   });
@@ -492,7 +492,7 @@ describe('DataSync Entity Endpoints', () => {
       .query({ ...common, entity_class: ENTITY_CLASS_CUSTOMER, limit: '20' })
       .reply(200, { data: entityListPage1, meta: { has_next: false } }, JSON_HEADERS);
 
-    await pubnub.dataSync.getEntities({ entityClass: ENTITY_CLASS_CUSTOMER });
+    await pubnub.dataSync.getEntities({ class: ENTITY_CLASS_CUSTOMER });
 
     assert.strictEqual(scope.isDone(), true);
   });
@@ -512,7 +512,7 @@ describe('DataSync Entity Endpoints', () => {
         JSON_HEADERS,
       );
 
-    const res = await pubnub.dataSync.getEntities({ entityClass: ENTITY_CLASS_CUSTOMER, limit: 2 });
+    const res = await pubnub.dataSync.getEntities({ class: ENTITY_CLASS_CUSTOMER, limit: 2 });
 
     assert.strictEqual(res.meta?.has_next, true);
     assert.strictEqual(res.meta?.limit, 2);
@@ -572,11 +572,11 @@ describe('DataSync Entity Endpoints', () => {
     assert.strictEqual(scope.isDone(), false, 'no request was sent');
   });
 
-  it('getEntities — rejects missing entityClass', async () => {
+  it('getEntities — rejects missing class', async () => {
     const scope = utils.createNock().get(ENTITIES).reply(200, {}, JSON_HEADERS);
 
     await assert.rejects(
-      // @ts-expect-error — intentional omission of `entityClass` to exercise validation.
+      // @ts-expect-error — intentional omission of `class` to exercise validation.
       () => pubnub.dataSync.getEntities({ limit: 10 }),
       (error: { status: { message: string } }) => {
         assert.strictEqual(error.status.message, 'Entity class cannot be empty');

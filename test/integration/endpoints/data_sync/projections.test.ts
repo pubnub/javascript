@@ -655,8 +655,8 @@ describe('DataSync projections admin vs __default__', function () {
       // `customerId` is echoed into the payload by `customerPayload`, so it filters deterministically
       // on a shared subkey.
       const query = {
-        entityClass: ENTITY_CLASS_CUSTOMER,
-        entityClassVersion: CLASS_VERSION,
+        class: ENTITY_CLASS_CUSTOMER,
+        classVersion: CLASS_VERSION,
         filterFast: `customerId == '${customerId}'`,
         limit: 100,
       };

@@ -475,12 +475,12 @@ describe('DataSync User Endpoints', () => {
       .query({ ...common, limit: '50', sort: '-createdAt', entity_class_version: `${CLASS_VERSION}` })
       .reply(200, { data: userSortedDescRows, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
-    await pubnub.dataSync.getUsers({ sort: '-createdAt', entityClassVersion: CLASS_VERSION, limit: 50 });
+    await pubnub.dataSync.getUsers({ sort: '-createdAt', classVersion: CLASS_VERSION, limit: 50 });
 
     assert.strictEqual(scope.isDone(), true);
   });
 
-  it('getUsers — sends entityClass/entityClassLevel as `entity_class`/`entity_class_level`', async () => {
+  it('getUsers — sends class/classLevel as `entity_class`/`entity_class_level`', async () => {
     const scope = utils
       .createNock()
       .get(USERS)
@@ -494,9 +494,9 @@ describe('DataSync User Endpoints', () => {
       .reply(200, { data: userListPage1, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     const res = await pubnub.dataSync.getUsers({
-      entityClass: 'User',
-      entityClassVersion: CLASS_VERSION,
-      entityClassLevel: 'Global',
+      class: 'User',
+      classVersion: CLASS_VERSION,
+      classLevel: 'Global',
       limit: 50,
     });
 

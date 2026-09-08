@@ -69,14 +69,13 @@ export class GetChannelsRequest<Response extends DataSync.GetChannelsResponse> e
   }
 
   protected get queryParameters(): Query {
-    const { entityClass, entityClassVersion, entityClassLevel, cursor, limit, filter, filterFast, sort } =
-      this.parameters;
+    const { class: entityClass, classVersion, classLevel, cursor, limit, filter, filterFast, sort } = this.parameters;
     const sorting = DataSync.serializeDataSyncSort(sort);
 
     return {
       ...(entityClass ? { entity_class: entityClass } : {}),
-      ...(entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {}),
-      ...(entityClassLevel ? { entity_class_level: entityClassLevel } : {}),
+      ...(classVersion !== undefined ? { entity_class_version: `${classVersion}` } : {}),
+      ...(classLevel ? { entity_class_level: classLevel } : {}),
       ...(cursor ? { cursor } : {}),
       ...(limit ? { limit: `${limit}` } : {}),
       ...(filter ? { filter } : {}),

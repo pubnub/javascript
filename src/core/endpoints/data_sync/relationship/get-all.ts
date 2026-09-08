@@ -65,7 +65,7 @@ export class GetRelationshipsRequest<Response extends DataSync.GetRelationshipsR
   }
 
   validate(): string | undefined {
-    if (!this.parameters.relationshipClass) return 'Relationship class cannot be empty';
+    if (!this.parameters.class) return 'Relationship class cannot be empty';
   }
 
   protected get path(): string {
@@ -74,8 +74,8 @@ export class GetRelationshipsRequest<Response extends DataSync.GetRelationshipsR
 
   protected get queryParameters(): Query {
     const {
-      relationshipClass,
-      relationshipClassVersion,
+      class: relationshipClass,
+      classVersion,
       entityAId,
       entityBId,
       cursor,
@@ -88,7 +88,7 @@ export class GetRelationshipsRequest<Response extends DataSync.GetRelationshipsR
 
     return {
       relationship_class: relationshipClass,
-      ...(relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {}),
+      ...(classVersion !== undefined ? { relationship_class_version: `${classVersion}` } : {}),
       ...(entityAId ? { entity_a_id: entityAId } : {}),
       ...(entityBId ? { entity_b_id: entityBId } : {}),
       ...(cursor ? { cursor } : {}),

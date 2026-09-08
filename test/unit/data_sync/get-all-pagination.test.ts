@@ -39,14 +39,14 @@ const endpoints: { name: string; request: (overrides?: PagedOverrides) => ListRe
   {
     name: 'getEntities',
     request: (overrides = {}) =>
-      new GetEntitiesRequest<DataSync.GetEntitiesResponse>({ keySet, entityClass: 'Customer', ...overrides }),
+      new GetEntitiesRequest<DataSync.GetEntitiesResponse>({ keySet, class: 'Customer', ...overrides }),
   },
   {
     name: 'getRelationships',
     request: (overrides = {}) =>
       new GetRelationshipsRequest<DataSync.GetRelationshipsResponse>({
         keySet,
-        relationshipClass: 'MEMBER_OF',
+        class: 'MEMBER_OF',
         ...overrides,
       }),
   },

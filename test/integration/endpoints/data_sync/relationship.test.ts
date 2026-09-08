@@ -428,7 +428,7 @@ describe('DataSync Relationship Endpoints', () => {
       .reply(200, { data: relationshipClassRows, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     const res = await pubnub.dataSync.getRelationships({
-      relationshipClass: RELATIONSHIP_CLASS_REQUESTED_BY,
+      class: RELATIONSHIP_CLASS_REQUESTED_BY,
       limit: 50,
     });
 
@@ -453,7 +453,7 @@ describe('DataSync Relationship Endpoints', () => {
       .query({ ...common, relationship_class: RELATIONSHIP_CLASS_REQUESTED_BY, limit: '20' })
       .reply(200, { data: relationshipClassRows, meta: { has_next: false, limit: 20 } }, JSON_HEADERS);
 
-    await pubnub.dataSync.getRelationships({ relationshipClass: RELATIONSHIP_CLASS_REQUESTED_BY });
+    await pubnub.dataSync.getRelationships({ class: RELATIONSHIP_CLASS_REQUESTED_BY });
 
     assert.strictEqual(scope.isDone(), true);
   });
@@ -483,14 +483,14 @@ describe('DataSync Relationship Endpoints', () => {
       .reply(200, { data: relationshipListPage2, meta: { has_next: false, limit: 2 } }, JSON_HEADERS);
 
     const page1 = await pubnub.dataSync.getRelationships({
-      relationshipClass: RELATIONSHIP_CLASS_REQUESTED_BY,
+      class: RELATIONSHIP_CLASS_REQUESTED_BY,
       limit: 2,
     });
     assert.strictEqual(page1.data.length, 2, 'page 1 respects limit');
     assert.strictEqual(page1.meta?.next_cursor, RELATIONSHIP_CURSOR_PAGE_2, 'cursor surfaced on page 1');
 
     const page2 = await pubnub.dataSync.getRelationships({
-      relationshipClass: RELATIONSHIP_CLASS_REQUESTED_BY,
+      class: RELATIONSHIP_CLASS_REQUESTED_BY,
       limit: 2,
       cursor: page1.meta!.next_cursor!,
     });
@@ -511,7 +511,7 @@ describe('DataSync Relationship Endpoints', () => {
       .reply(200, { data: relationshipsOfEntityA(entityAId), meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     const res = await pubnub.dataSync.getRelationships({
-      relationshipClass: RELATIONSHIP_CLASS_REQUESTED_BY,
+      class: RELATIONSHIP_CLASS_REQUESTED_BY,
       entityAId,
       limit: 50,
     });
@@ -529,7 +529,7 @@ describe('DataSync Relationship Endpoints', () => {
       .reply(200, { data: relationshipsOfEntityB(entityBId), meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     const res = await pubnub.dataSync.getRelationships({
-      relationshipClass: RELATIONSHIP_CLASS_REQUESTED_BY,
+      class: RELATIONSHIP_CLASS_REQUESTED_BY,
       entityBId,
       limit: 50,
     });
@@ -559,8 +559,8 @@ describe('DataSync Relationship Endpoints', () => {
       );
 
     const res = await pubnub.dataSync.getRelationships({
-      relationshipClass: RELATIONSHIP_CLASS_REQUESTED_BY,
-      relationshipClassVersion: CLASS_VERSION,
+      class: RELATIONSHIP_CLASS_REQUESTED_BY,
+      classVersion: CLASS_VERSION,
       entityAId,
       entityBId,
     });
@@ -580,7 +580,7 @@ describe('DataSync Relationship Endpoints', () => {
       .reply(200, { data: relationshipLinkedRows, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     const res = await pubnub.dataSync.getRelationships({
-      relationshipClass: RELATIONSHIP_CLASS_REQUESTED_BY,
+      class: RELATIONSHIP_CLASS_REQUESTED_BY,
       filterFast,
       limit: 50,
     });
@@ -603,7 +603,7 @@ describe('DataSync Relationship Endpoints', () => {
       .reply(200, { data: relationshipLinkedRows, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     await pubnub.dataSync.getRelationships({
-      relationshipClass: RELATIONSHIP_CLASS_REQUESTED_BY,
+      class: RELATIONSHIP_CLASS_REQUESTED_BY,
       filter,
       limit: 50,
     });
@@ -619,7 +619,7 @@ describe('DataSync Relationship Endpoints', () => {
       .reply(200, { data: relationshipSortedDescRows, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     const res = await pubnub.dataSync.getRelationships({
-      relationshipClass: RELATIONSHIP_CLASS_REQUESTED_BY,
+      class: RELATIONSHIP_CLASS_REQUESTED_BY,
       sort: { createdAt: 'desc' },
       limit: 50,
     });
@@ -641,7 +641,7 @@ describe('DataSync Relationship Endpoints', () => {
       .reply(200, { data: relationshipSortedDescRows, meta: { has_next: false, limit: 50 } }, JSON_HEADERS);
 
     await pubnub.dataSync.getRelationships({
-      relationshipClass: RELATIONSHIP_CLASS_REQUESTED_BY,
+      class: RELATIONSHIP_CLASS_REQUESTED_BY,
       sort: '-createdAt',
       limit: 50,
     });
@@ -781,11 +781,11 @@ describe('DataSync Relationship Endpoints', () => {
     assert.strictEqual(scope.isDone(), false, 'no request was sent');
   });
 
-  it('getRelationships — rejects a missing relationshipClass', async () => {
+  it('getRelationships — rejects a missing class', async () => {
     const scope = utils.createNock().get(RELATIONSHIPS).reply(200, {}, JSON_HEADERS);
 
     await assert.rejects(
-      // @ts-expect-error — intentional omission of relationshipClass to exercise validation.
+      // @ts-expect-error — intentional omission of `class` to exercise validation.
       () => pubnub.dataSync.getRelationships({ limit: 50 }),
       (error: { status: { message: string } }) => {
         assert.strictEqual(error.status.message, 'Relationship class cannot be empty');
