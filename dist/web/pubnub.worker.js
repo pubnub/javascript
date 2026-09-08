@@ -1862,6 +1862,10 @@
          */
         TransportMethod["PATCH"] = "PATCH";
         /**
+         * Request will be sent using `PUT` method.
+         */
+        TransportMethod["PUT"] = "PUT";
+        /**
          * Request will be sent using `DELETE` method.
          */
         TransportMethod["DELETE"] = "DELETE";

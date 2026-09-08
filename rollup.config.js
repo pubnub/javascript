@@ -117,6 +117,15 @@ const replaceConfiguration = {
   'process.env.APP_CONTEXT_MODULE': JSON.stringify(process.env.APP_CONTEXT_MODULE ?? 'enabled'),
 
   /**
+   * Module contains functionality related to the DataSync entities, relationships, and their
+   * typed convenience resources (users, channels, memberships).
+   *
+   * Set `DATA_SYNC_MODULE` environment variable to `disabled` during build with Webpack or
+   * roll-up to exclude module during tree-shaking optimization process.
+   */
+  'process.env.DATA_SYNC_MODULE': JSON.stringify(process.env.DATA_SYNC_MODULE ?? 'enabled'),
+
+  /**
    * Module contains functionality related to the file sharing.
    *
    * Set `FILE_SHARING_MODULE` environment variable to `disabled` during build with Webpack or

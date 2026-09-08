@@ -20,6 +20,10 @@ export enum TransportMethod {
    */
   PATCH = 'PATCH',
   /**
+   * Request will be sent using `PUT` method.
+   */
+  PUT = 'PUT',
+  /**
    * Request will be sent using `DELETE` method.
    */
   DELETE = 'DELETE',

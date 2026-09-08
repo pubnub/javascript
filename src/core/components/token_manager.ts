@@ -14,6 +14,20 @@ import { Payload } from '../types/api';
 // region Types
 
 /**
+ * DataSync scope wire keys as stored in the token `res` / `pat` sections.
+ */
+type DataSyncWireKey = 'datasync:entities' | 'datasync:relationships' | 'datasync:memberships';
+
+/**
+ * Raw bit-encoded permissions section (`res` or `pat`) stored in the access token.
+ *
+ * `usr` is the wire key for permissions granted through the `users` scope; it is distinct from the
+ * legacy App Context `uuid` scope.
+ */
+type RawTokenPermissions = Record<'chan' | 'grp' | 'uuid', Record<string, number>> &
+  Partial<Record<'usr' | DataSyncWireKey, Record<string, number>>>;
+
+/**
  * Raw parsed token.
  *
  * Representation of data stored in base64-encoded access token.
@@ -37,12 +51,12 @@ type RawToken = {
   /**
    * Permissions granted to specific resources.
    */
-  res: Record<'chan' | 'grp' | 'uuid', Record<string, number>>;
+  res: RawTokenPermissions;
 
   /**
    * Permissions granted to resources which match specified regular expression.
    */
-  pat: Record<'chan' | 'grp' | 'uuid', Record<string, number>>;
+  pat: RawTokenPermissions;
 
   /**
    * The uuid that is exclusively authorized to use this token to make API requests.
@@ -109,9 +123,11 @@ export class TokenManager {
 
     if (parsed !== undefined) {
       const uuidResourcePermissions = parsed.res.uuid ? Object.keys(parsed.res.uuid) : [];
+      const userResourcePermissions = parsed.res.usr ? Object.keys(parsed.res.usr) : [];
       const channelResourcePermissions = Object.keys(parsed.res.chan);
       const groupResourcePermissions = Object.keys(parsed.res.grp);
       const uuidPatternPermissions = parsed.pat.uuid ? Object.keys(parsed.pat.uuid) : [];
+      const userPatternPermissions = parsed.pat.usr ? Object.keys(parsed.pat.usr) : [];
       const channelPatternPermissions = Object.keys(parsed.pat.chan);
       const groupPatternPermissions = Object.keys(parsed.pat.grp);
 
@@ -124,15 +140,21 @@ export class TokenManager {
       };
 
       const uuidResources = uuidResourcePermissions.length > 0;
+      const userResources = userResourcePermissions.length > 0;
       const channelResources = channelResourcePermissions.length > 0;
       const groupResources = groupResourcePermissions.length > 0;
 
-      if (uuidResources || channelResources || groupResources) {
+      if (uuidResources || userResources || channelResources || groupResources) {
         result.resources = {};
 
         if (uuidResources) {
           const uuids: typeof result.resources.uuids = (result.resources.uuids = {});
           uuidResourcePermissions.forEach((id) => (uuids[id] = this.extractPermissions(parsed.res.uuid[id])));
+        }
+
+        if (userResources) {
+          const users: typeof result.resources.users = (result.resources.users = {});
+          userResourcePermissions.forEach((id) => (users[id] = this.extractCrudPermissions(parsed.res.usr![id])));
         }
 
         if (channelResources) {
@@ -146,16 +168,25 @@ export class TokenManager {
         }
       }
 
+      const resourceDataSync = this.extractDataSyncScopes(parsed.res);
+      if (resourceDataSync) (result.resources ??= {}).dataSync = resourceDataSync;
+
       const uuidPatterns = uuidPatternPermissions.length > 0;
+      const userPatterns = userPatternPermissions.length > 0;
       const channelPatterns = channelPatternPermissions.length > 0;
       const groupPatterns = groupPatternPermissions.length > 0;
 
-      if (uuidPatterns || channelPatterns || groupPatterns) {
+      if (uuidPatterns || userPatterns || channelPatterns || groupPatterns) {
         result.patterns = {};
 
         if (uuidPatterns) {
           const uuids: typeof result.patterns.uuids = (result.patterns.uuids = {});
           uuidPatternPermissions.forEach((id) => (uuids[id] = this.extractPermissions(parsed.pat.uuid[id])));
+        }
+
+        if (userPatterns) {
+          const users: typeof result.patterns.users = (result.patterns.users = {});
+          userPatternPermissions.forEach((id) => (users[id] = this.extractCrudPermissions(parsed.pat.usr![id])));
         }
 
         if (channelPatterns) {
@@ -168,6 +199,9 @@ export class TokenManager {
           groupPatternPermissions.forEach((id) => (groups[id] = this.extractPermissions(parsed.pat.grp[id])));
         }
       }
+
+      const patternDataSync = this.extractDataSyncScopes(parsed.pat);
+      if (patternDataSync) (result.patterns ??= {}).dataSync = patternDataSync;
 
       if (parsed.meta && Object.keys(parsed.meta).length > 0) result.meta = parsed.meta;
 
@@ -204,5 +238,58 @@ export class TokenManager {
     if ((permissions & 1) === 1) permissionsResult.read = true;
 
     return permissionsResult;
+  }
+
+  /**
+   * Extract DataSync permission scopes from a token permissions section.
+   *
+   * The `datasync:*` wire keys are only present for tokens which granted DataSync permissions, so a
+   * result is returned only when at least one scope carries permissions.
+   *
+   * @param section - Raw `res` or `pat` permissions section decoded from the token.
+   *
+   * @returns Human-readable DataSync permission scopes, or `undefined` when none are granted.
+   */
+  private extractDataSyncScopes(section: RawTokenPermissions): PAM.DataSyncScopePermissions | undefined {
+    const dataSyncScopes: [keyof PAM.DataSyncScopePermissions, DataSyncWireKey][] = [
+      ['entities', 'datasync:entities'],
+      ['relationships', 'datasync:relationships'],
+      ['memberships', 'datasync:memberships'],
+    ];
+
+    let result: PAM.DataSyncScopePermissions | undefined;
+
+    dataSyncScopes.forEach(([scope, wireKey]) => {
+      const permissions = section[wireKey];
+      if (!permissions) return;
+
+      const ids = Object.keys(permissions);
+      if (ids.length === 0) return;
+
+      const scopeResult: Record<string, PAM.DataSyncPermissions> = ((result ??= {})[scope] = {});
+      ids.forEach((id) => (scopeResult[id] = this.extractCrudPermissions(permissions[id])));
+    });
+
+    return result;
+  }
+
+  /**
+   * Extract CRUD-only access permission information.
+   *
+   * Shared by the `usr` wire key (which backs the `users` grant scope) and the `datasync:*` wire
+   * keys — both carry the same CRUD bit layout and none of the `read` / `write` / `manage` / `join`
+   * bits decoded by {@link extractPermissions}.
+   *
+   * @param permissions - Bit-encoded resource permissions.
+   *
+   * @returns Human-readable CRUD resource permissions.
+   */
+  private extractCrudPermissions(permissions: number): PAM.DataSyncPermissions {
+    return {
+      create: (permissions & 16) === 16,
+      get: (permissions & 32) === 32,
+      update: (permissions & 64) === 64,
+      delete: (permissions & 8) === 8,
+    };
   }
 }

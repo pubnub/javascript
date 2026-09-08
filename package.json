@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "12.0.3",
+  "version": "13.0.0",
   "author": "PubNub <support@pubnub.com>",
   "description": "Publish & Subscribe Real-time Messaging with PubNub",
   "scripts": {
@@ -63,7 +63,7 @@
     "fast-text-encoding": "^1.0.6",
     "fflate": "^0.8.2",
     "lil-uuid": "^0.1.1",
-    "undici": "^7.28.0"
+    "undici": "^7.29.0"
   },
   "peerDependencies": {
     "react-native-url-polyfill": "^2.0.0"

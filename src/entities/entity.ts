@@ -1,5 +1,5 @@
 import { SubscriptionCapable, SubscriptionType, SubscriptionOptions } from './interfaces/subscription-capable';
-import { EntityInterface } from './interfaces/entity-interface';
+import { EntityInterface, EntityType } from './interfaces/entity-interface';
 import { PubNubCore as PubNub } from '../core/pubnub-common';
 import { Subscription } from './subscription';
 
@@ -46,17 +46,11 @@ export abstract class Entity implements EntityInterface, SubscriptionCapable {
   /**
    * Retrieve entity type.
    *
-   * There is four types:
-   * - Channel
-   * - ChannelGroups
-   * - ChannelMetadata
-   * - UserMetadata
-   *
-   * @return One of known entity types.
+   * @return One of known {@link EntityType entity types}.
    *
    * @internal
    */
-  get entityType(): 'Channel' | 'ChannelGroups' | 'ChannelMetadata' | 'UserMetadata' {
+  get entityType(): EntityType {
     return 'Channel';
   }
 

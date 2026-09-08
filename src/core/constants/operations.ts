@@ -176,6 +176,160 @@ enum RequestOperation {
   PNSetMembershipsOperation = 'PNSetMembershipsOperation',
 
   // --------------------------------------------------------
+  // ------------------- DataSync API ----------------------
+  // --------------------------------------------------------
+
+  /**
+   * Create entity REST API operation.
+   */
+  PNCreateDataSyncEntityOperation = 'PNCreateDataSyncEntityOperation',
+
+  /**
+   * Get entity REST API operation.
+   */
+  PNGetDataSyncEntityOperation = 'PNGetDataSyncEntityOperation',
+
+  /**
+   * Get all entities REST API operation.
+   */
+  PNGetDataSyncEntitiesOperation = 'PNGetDataSyncEntitiesOperation',
+
+  /**
+   * Set entity REST API operation (full replacement via PUT).
+   */
+  PNSetDataSyncEntityOperation = 'PNSetDataSyncEntityOperation',
+
+  /**
+   * Update entity REST API operation (partial update via PATCH).
+   */
+  PNUpdateDataSyncEntityOperation = 'PNUpdateDataSyncEntityOperation',
+
+  /**
+   * Remove entity REST API operation.
+   */
+  PNRemoveDataSyncEntityOperation = 'PNRemoveDataSyncEntityOperation',
+
+  /**
+   * Create relationship REST API operation.
+   */
+  PNCreateDataSyncRelationshipOperation = 'PNCreateDataSyncRelationshipOperation',
+
+  /**
+   * Get relationship REST API operation.
+   */
+  PNGetDataSyncRelationshipOperation = 'PNGetDataSyncRelationshipOperation',
+
+  /**
+   * Get all relationships REST API operation.
+   */
+  PNGetDataSyncRelationshipsOperation = 'PNGetDataSyncRelationshipsOperation',
+
+  /**
+   * Set relationship REST API operation (full replacement via PUT).
+   */
+  PNSetDataSyncRelationshipOperation = 'PNSetDataSyncRelationshipOperation',
+
+  /**
+   * Update relationship REST API operation (partial update via PATCH).
+   */
+  PNUpdateDataSyncRelationshipOperation = 'PNUpdateDataSyncRelationshipOperation',
+
+  /**
+   * Remove relationship REST API operation.
+   */
+  PNRemoveDataSyncRelationshipOperation = 'PNRemoveDataSyncRelationshipOperation',
+
+  /**
+   * Create user REST API operation.
+   */
+  PNCreateDataSyncUserOperation = 'PNCreateDataSyncUserOperation',
+
+  /**
+   * Get user REST API operation.
+   */
+  PNGetDataSyncUserOperation = 'PNGetDataSyncUserOperation',
+
+  /**
+   * Get all users REST API operation.
+   */
+  PNGetDataSyncUsersOperation = 'PNGetDataSyncUsersOperation',
+
+  /**
+   * Set user REST API operation (full replacement via PUT).
+   */
+  PNSetDataSyncUserOperation = 'PNSetDataSyncUserOperation',
+
+  /**
+   * Update user REST API operation (partial update via PATCH).
+   */
+  PNUpdateDataSyncUserOperation = 'PNUpdateDataSyncUserOperation',
+
+  /**
+   * Remove user REST API operation.
+   */
+  PNRemoveDataSyncUserOperation = 'PNRemoveDataSyncUserOperation',
+
+  /**
+   * Create channel REST API operation.
+   */
+  PNCreateDataSyncChannelOperation = 'PNCreateDataSyncChannelOperation',
+
+  /**
+   * Get channel REST API operation.
+   */
+  PNGetDataSyncChannelOperation = 'PNGetDataSyncChannelOperation',
+
+  /**
+   * Get all channels REST API operation.
+   */
+  PNGetDataSyncChannelsOperation = 'PNGetDataSyncChannelsOperation',
+
+  /**
+   * Set channel REST API operation (full replacement via PUT).
+   */
+  PNSetDataSyncChannelOperation = 'PNSetDataSyncChannelOperation',
+
+  /**
+   * Update channel REST API operation (partial update via PATCH).
+   */
+  PNUpdateDataSyncChannelOperation = 'PNUpdateDataSyncChannelOperation',
+
+  /**
+   * Remove channel REST API operation.
+   */
+  PNRemoveDataSyncChannelOperation = 'PNRemoveDataSyncChannelOperation',
+
+  /**
+   * Create membership REST API operation.
+   */
+  PNCreateDataSyncMembershipOperation = 'PNCreateDataSyncMembershipOperation',
+
+  /**
+   * Get membership REST API operation.
+   */
+  PNGetDataSyncMembershipOperation = 'PNGetDataSyncMembershipOperation',
+
+  /**
+   * Get all memberships REST API operation.
+   */
+  PNGetDataSyncMembershipsOperation = 'PNGetDataSyncMembershipsOperation',
+
+  /**
+   * Set membership REST API operation (full replacement via PUT).
+   */
+  PNSetDataSyncMembershipOperation = 'PNSetDataSyncMembershipOperation',
+
+  /**
+   * Update membership REST API operation (partial update via PATCH).
+   */
+  PNUpdateDataSyncMembershipOperation = 'PNUpdateDataSyncMembershipOperation',
+
+  /**
+   * Remove membership REST API operation.
+   */
+  PNRemoveDataSyncMembershipOperation = 'PNRemoveDataSyncMembershipOperation',
+
+  // --------------------------------------------------------
   // -------------------- File Upload API -------------------
   // --------------------------------------------------------
 

@@ -10,7 +10,6 @@ import { TransportResponse } from '../core/types/transport-response';
 import { LoggerManager } from '../core/components/logger-manager';
 import { TokenManager } from '../core/components/token_manager';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
-import StatusCategory from '../core/constants/categories';
 import { Transport } from '../core/interfaces/transport';
 import { encodeString } from '../core/utils';
 import { Query } from '../core/types/api';
@@ -66,7 +65,7 @@ class RequestSignature {
     const method = req.path.startsWith('/publish') ? TransportMethod.GET : req.method;
 
     let signatureInput = `${method}\n${this.publishKey}\n${req.path}\n${this.queryParameters(req.queryParameters!)}\n`;
-    if (method === TransportMethod.POST || method === TransportMethod.PATCH) {
+    if (method === TransportMethod.POST || method === TransportMethod.PATCH || method === TransportMethod.PUT) {
       const body = req.body;
       let payload: string | undefined;
 
@@ -172,15 +171,11 @@ export class PubNubMiddleware implements Transport {
           activeCancellation = attemptCancellation;
 
           const responseHandler = (res?: TransportResponse, error?: PubNubAPIError) => {
-            const retriableError = error ? error.category !== StatusCategory.PNCancelledCategory : true;
-            const retriableStatusCode = (!res || res.status >= 400) && error?.statusCode !== 404;
             let delay = -1;
 
-            if (
-              retriableError &&
-              retriableStatusCode &&
-              retryPolicy.shouldRetry(req, res, error?.category, attempt + 1)
-            )
+            // Retry ability (error category, HTTP status code, excluded endpoints and attempts count) is entirely
+            // decided by the retry policy.
+            if (retryPolicy.shouldRetry(req, res, error?.category, attempt + 1, error?.statusCode))
               delay = retryPolicy.getDelay(attempt, res);
 
             if (delay > 0) {

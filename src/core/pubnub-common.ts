@@ -98,9 +98,14 @@ import {
 } from '../entities/interfaces/subscription-capable';
 import { EventEmitCapable } from '../entities/interfaces/event-emit-capable';
 import { EntityInterface } from '../entities/interfaces/entity-interface';
+import { DataSyncRelationship } from '../entities/data-sync-relationship';
+import { DataSyncMembership } from '../entities/data-sync-membership';
+import { DataSyncChannel } from '../entities/data-sync-channel';
+import { DataSyncEntity } from '../entities/data-sync-entity';
 import { SubscriptionBase } from '../entities/subscription-base';
 import { ChannelMetadata } from '../entities/channel-metadata';
 import { SubscriptionSet } from '../entities/subscription-set';
+import { DataSyncUser } from '../entities/data-sync-user';
 import { ChannelGroup } from '../entities/channel-group';
 import { UserMetadata } from '../entities/user-metadata';
 import { Channel } from '../entities/channel';
@@ -114,6 +119,9 @@ import PubNubPushNotifications from './pubnub-push';
 // region App Context
 import * as AppContext from './types/api/app-context';
 import PubNubObjects from './pubnub-objects';
+// endregion
+// region DataSync
+import PubNubDataSync from './pubnub-data-sync';
 // endregion
 // region Time
 import * as Time from './endpoints/time';
@@ -316,6 +324,14 @@ export class PubNubCore<
   private readonly _objects: PubNubObjects;
 
   /**
+   * PubNub DataSync REST API entry point.
+   *
+   * @internal
+   */
+  // @ts-expect-error Allowed to simplify interface when module can be disabled.
+  private readonly _dataSync: PubNubDataSync;
+
+  /**
    * PubNub Channel Group REST API entry point.
    *
    * @internal
@@ -433,6 +449,8 @@ export class PubNubCore<
     // API group entry points initialization.
     if (process.env.APP_CONTEXT_MODULE !== 'disabled')
       this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
+    if (process.env.DATA_SYNC_MODULE !== 'disabled')
+      this._dataSync = new PubNubDataSync(this._configuration, this.sendRequest.bind(this));
     if (process.env.CHANNEL_GROUPS_MODULE !== 'disabled')
       this._channelGroups = new PubNubChannelGroups(
         this._configuration.logger(),
@@ -1001,6 +1019,100 @@ export class PubNubCore<
     if (!metadata) metadata = this.entities[`${id}_um`] = new UserMetadata(id, this);
 
     return metadata as UserMetadata;
+  }
+
+  /**
+   * Create a `DataSyncUser` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `User` object identifier (used verbatim, so wildcard identifiers
+   * like `user.*` are supported).
+   * @returns `DataSyncUser` entity.
+   */
+  public dataSyncUser(id: string): DataSyncUser {
+    let entity = this.entities[`${id}_dsu`];
+    if (!entity) entity = this.entities[`${id}_dsu`] = new DataSyncUser(id, this);
+
+    return entity as DataSyncUser;
+  }
+
+  /**
+   * Create a `DataSyncChannel` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `Channel` object identifier (used verbatim, so wildcard identifiers
+   * like `channel.*` are supported).
+   * @returns `DataSyncChannel` entity.
+   */
+  public dataSyncChannel(id: string): DataSyncChannel {
+    let entity = this.entities[`${id}_dsc`];
+    if (!entity) entity = this.entities[`${id}_dsc`] = new DataSyncChannel(id, this);
+
+    return entity as DataSyncChannel;
+  }
+
+  /**
+   * Create a `DataSyncMembership` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * **Important:** Membership changes are delivered on the data channels of both linked entities
+   * (the user and the channel identifier), not on the membership identifier — use
+   * {@link PubNubCore#dataSyncUser dataSyncUser} / {@link PubNubCore#dataSyncChannel
+   * dataSyncChannel} to observe them.
+   *
+   * @param id - Unique DataSync `Membership` object identifier (`{userId}:{channelId}`, used
+   * verbatim, so wildcard identifiers like `user-123:*` are supported).
+   * @returns `DataSyncMembership` entity.
+   */
+  public dataSyncMembership(id: string): DataSyncMembership {
+    let entity = this.entities[`${id}_dsm`];
+    if (!entity) entity = this.entities[`${id}_dsm`] = new DataSyncMembership(id, this);
+
+    return entity as DataSyncMembership;
+  }
+
+  /**
+   * Create a `DataSyncEntity` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `Entity` object identifier (used verbatim, so wildcard identifiers
+   * like `customer.*` are supported).
+   * @returns `DataSyncEntity` entity.
+   */
+  public dataSyncEntity(id: string): DataSyncEntity {
+    let entity = this.entities[`${id}_dse`];
+    if (!entity) entity = this.entities[`${id}_dse`] = new DataSyncEntity(id, this);
+
+    return entity as DataSyncEntity;
+  }
+
+  /**
+   * Create a `DataSyncRelationship` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * **Important:** Relationship changes are delivered on the data channels of both linked entities
+   * (`entityAId` and `entityBId`), not on the relationship identifier — use
+   * {@link PubNubCore#dataSyncEntity dataSyncEntity} to observe them.
+   *
+   * @param id - Unique DataSync `Relationship` object identifier (used verbatim, so wildcard
+   * identifiers like `owns.*` are supported).
+   * @returns `DataSyncRelationship` entity.
+   */
+  public dataSyncRelationship(id: string): DataSyncRelationship {
+    let entity = this.entities[`${id}_dsr`];
+    if (!entity) entity = this.entities[`${id}_dsr`] = new DataSyncRelationship(id, this);
+
+    return entity as DataSyncRelationship;
   }
 
   /**
@@ -3230,6 +3342,20 @@ export class PubNubCore<
     return this._objects;
   }
 
+  // --------------------------------------------------------
+  // -------------------- DataSync API ---------------------
+  // --------------------------------------------------------
+  // region DataSync API
+
+  /**
+   * PubNub DataSync API group.
+   */
+  get dataSync(): PubNubDataSync {
+    return this._dataSync;
+  }
+
+  // endregion
+
   // region Deprecated API
   /**
    * Fetch a paginated list of User objects.
@@ -4717,6 +4843,18 @@ export class PubNubCore<
   set onFile(listener: ((event: Subscription.File) => void) | undefined) {
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
       if (this.eventDispatcher) this.eventDispatcher.onFile = listener;
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
+   * Set a new DataSync event handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new
+   * DataSync event is received from the real-time network.
+   */
+  set onDataSync(listener: ((event: Subscription.DataSyncObject) => void) | undefined) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.onDataSync = listener;
     } else throw new Error('Listener error: subscription module disabled');
   }
 

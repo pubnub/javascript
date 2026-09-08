@@ -7,7 +7,18 @@ import {
   SpaceObjectData,
   UserObjectData,
   PresenceData,
+  DataSyncData,
   FileData,
+} from '../../endpoints/subscribe';
+
+export type {
+  DataSyncData,
+  DataSyncObjectType,
+  DataSyncClassLevel,
+  DataSyncEntityData,
+  DataSyncRelationshipData,
+  DataSyncMembershipData,
+  DataSyncDeleteData,
 } from '../../endpoints/subscribe';
 import { AbortSignal } from '../../components/abort_signal';
 import { Payload } from './index';
@@ -515,6 +526,37 @@ type FileEvent = {
   pn_mfp: string;
 };
 // endregion
+
+// region DataSync event
+/**
+ * DataSync object change real-time event.
+ */
+export type DataSyncObject = Event & {
+  /**
+   * Parsed DataSync change payload.
+   */
+  message: DataSyncData;
+};
+
+/**
+ * Extended DataSync change real-time event.
+ *
+ * Type extended for listener manager support.
+ *
+ * @internal
+ */
+type DataSyncEvent = {
+  type: PubNubEventType.DataSync;
+  data: DataSyncObject;
+
+  /**
+   * Received DataSync event fingerprint.
+   *
+   * @internal
+   */
+  pn_mfp: string;
+};
+// endregion
 // endregion
 
 // --------------------------------------------------------
@@ -596,6 +638,14 @@ export type SubscribeParameters = {
  */
 export type SubscriptionResponse = {
   cursor: SubscriptionCursor;
-  messages: (PresenceEvent | MessageEvent | SignalEvent | MessageActionEvent | AppContextEvent | FileEvent)[];
+  messages: (
+    | PresenceEvent
+    | MessageEvent
+    | SignalEvent
+    | MessageActionEvent
+    | AppContextEvent
+    | FileEvent
+    | DataSyncEvent
+  )[];
 };
 // endregion

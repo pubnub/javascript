@@ -1,3 +1,13 @@
+## v13.0.0
+September 08 2026
+
+#### Added
+- Added dataSync feature support.
+
+#### Fixed
+- No listener callback will be triggered for event with unknown event types.
+- All events from the presence channels will be categorised as presence event.
+
 ## v12.0.3
 July 27 2026
 

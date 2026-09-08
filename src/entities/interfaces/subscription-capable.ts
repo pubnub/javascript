@@ -42,6 +42,21 @@ export type SubscriptionOptions = {
 };
 
 /**
+ * PubNub DataSync entity subscription configuration options.
+ */
+export type DataSyncSubscriptionOptions = SubscriptionOptions & {
+  /**
+   * Name of the DataSync projection which should be observed.
+   *
+   * A projection is observed on its own `__{projection}__{id}` data channel, so the projection name
+   * is part of the subscription identity: two subscriptions of the same object with different
+   * projections receive their own real-time updates.
+   *
+   */
+  projection?: string;
+};
+
+/**
  * Common interface for entities which can be used in subscription.
  */
 export interface SubscriptionCapable {

@@ -21,6 +21,14 @@ export type ChannelTokenPermissions = {
   write?: boolean;
 
   /**
+   * Whether `create` operations are permitted for corresponding level or not.
+   *
+   * Used by DataSync `Channel` grants (a DataSync Channel is an entity, granted through the reused
+   * `channels` scope). Ignored for classic messaging channels.
+   */
+  create?: boolean;
+
+  /**
    * Whether `get` operations are permitted for corresponding level or not.
    */
   get?: boolean;
@@ -71,6 +79,14 @@ export type ChannelGroupTokenPermissions = {
  */
 export type UuidTokenPermissions = {
   /**
+   * Whether `create` operations are permitted for corresponding level or not.
+   *
+   * Used by DataSync `User` grants (a DataSync User is an entity, granted through the reused
+   * `users` / `uuids` scope). Ignored for App Context UUID-metadata grants.
+   */
+  create?: boolean;
+
+  /**
    * Whether `get` operations are permitted for corresponding level or not.
    */
   get?: boolean;
@@ -88,8 +104,151 @@ export type UuidTokenPermissions = {
 
 /**
  * User-specific token permissions.
+ *
+ * DataSync `User` resources only support the CRUD operations; `read` / `write` / `manage` / `join`
+ * remain classic messaging concepts and are intentionally not part of this type.
  */
-type UserTokenPermissions = UuidTokenPermissions;
+export type UserTokenPermissions = {
+  /**
+   * Whether `create` operations are permitted for corresponding level or not.
+   */
+  create?: boolean;
+
+  /**
+   * Whether `get` operations are permitted for corresponding level or not.
+   */
+  get?: boolean;
+
+  /**
+   * Whether `update` operations are permitted for corresponding level or not.
+   */
+  update?: boolean;
+
+  /**
+   * Whether `delete` operations are permitted for corresponding level or not.
+   */
+  delete?: boolean;
+};
+
+/**
+ * DataSync entity-level token permissions.
+ *
+ * Applies to DataSync entities, relationships, and memberships. Only the CRUD-relevant operations
+ * are exposed.
+ */
+export type DataSyncTokenPermissions = {
+  /**
+   * Whether `create` operations are permitted for corresponding level or not.
+   */
+  create?: boolean;
+
+  /**
+   * Whether `get` operations are permitted for corresponding level or not.
+   */
+  get?: boolean;
+
+  /**
+   * Whether `update` operations are permitted for corresponding level or not.
+   */
+  update?: boolean;
+
+  /**
+   * Whether `delete` operations are permitted for corresponding level or not.
+   */
+  delete?: boolean;
+};
+
+/**
+ * DataSync permission scopes.
+ *
+ * Carried in the grant token `resources` / `patterns` sections and serialized to the wire keys
+ * `datasync:entities` / `datasync:relationships` / `datasync:memberships`.
+ */
+export type DataSyncTokenScopes = {
+  /**
+   * Object containing DataSync `entity` permissions.
+   *
+   * Keys are concrete entity ids (e.g. `order-456`) for `resources` or RegEx patterns
+   * (e.g. `order-*`) for `patterns`.
+   */
+  entities?: Record<string, DataSyncTokenPermissions>;
+
+  /**
+   * Object containing DataSync `relationship` permissions.
+   *
+   * Keys are composite relationship ids (e.g. `user.A:channel.X`).
+   */
+  relationships?: Record<string, DataSyncTokenPermissions>;
+
+  /**
+   * Object containing DataSync `membership` permissions.
+   *
+   * Keys are composite membership ids (e.g. `user-123:channel-X`).
+   */
+  memberships?: Record<string, DataSyncTokenPermissions>;
+};
+
+/**
+ * Per-resource DataSync projection assignment.
+ *
+ * Each id maps to the single projection name the principal is "looking through" for that resource
+ * (use `__default__` for the base projection).
+ *
+ * Covers every DataSync resource kind — entities, relationships, users, channels, and memberships.
+ */
+export type DataSyncProjectionScope = {
+  /**
+   * Entity id -> projection name.
+   *
+   * Keys are concrete entity ids (e.g. `user.A`) for `resources` or RegEx patterns
+   * (e.g. `user.*`) for `patterns`.
+   */
+  entities?: Record<string, string>;
+
+  /**
+   * Relationship id -> projection name.
+   */
+  relationships?: Record<string, string>;
+
+  /**
+   * DataSync `User` id -> projection name.
+   *
+   * Projections for DataSync Users are keyed by `datasync:users:<id>` on the wire, unlike the
+   * `User` *permissions*, which reuse the un-prefixed `users` grant scope.
+   */
+  users?: Record<string, string>;
+
+  /**
+   * DataSync `Channel` id -> projection name.
+   *
+   * Projections for DataSync Channels are keyed by `datasync:channels:<id>` on the wire, unlike the
+   * `Channel` *permissions*, which reuse the un-prefixed `channels` grant scope.
+   */
+  channels?: Record<string, string>;
+
+  /**
+   * Membership id -> projection name.
+   */
+  memberships?: Record<string, string>;
+};
+
+/**
+ * DataSync projection permissions for grant token requests.
+ *
+ * Encoded into the `pn-projections` key within the token's `meta` section. Exact (`res`) match
+ * takes priority over pattern (`pat`) match.
+ */
+export type DataSyncProjections = {
+  /**
+   * Projection assignments for concrete resources.
+   */
+  resources?: DataSyncProjectionScope;
+
+  /**
+   * Projection assignments for resources which match a RegEx pattern.
+   */
+  patterns?: DataSyncProjectionScope;
+};
 
 /**
  * Generate access token with permissions.
@@ -149,6 +308,64 @@ export type ObjectsGrantTokenParameters = {
 };
 
 /**
+ * Grant scopes which may appear in both the `resources` and `patterns` sections.
+ *
+ * Keys are concrete resource ids for `resources` and RegEx patterns for `patterns`.
+ */
+type CommonGrantScopes = {
+  /**
+   * Object containing `channel` permissions.
+   */
+  channels?: Record<string, ChannelTokenPermissions>;
+
+  /**
+   * Object containing `channel group` permissions.
+   */
+  groups?: Record<string, ChannelGroupTokenPermissions>;
+
+  /**
+   * Object containing DataSync entity-level permissions.
+   */
+  dataSync?: DataSyncTokenScopes;
+};
+
+/**
+ * Principal grant scope.
+ *
+ * `users` and `uuids` name the same underlying target, so only one of them may be supplied in a
+ * single grant — providing both is a compile-time error (and is rejected at runtime as well).
+ */
+type PrincipalGrantScopes =
+  | {
+      /**
+       * Object containing `user` permissions.
+       *
+       * Preferred DataSync terminology for granting permissions on `User` resources (create / get /
+       * update / delete). May be combined with `channels`, `groups`, and `dataSync` in a single
+       * grant, but not with the deprecated {@link PrincipalGrantScopes.uuids | uuids} scope.
+       */
+      users?: Record<string, UserTokenPermissions>;
+
+      uuids?: never;
+    }
+  | {
+      /**
+       * Object containing `uuid` metadata permissions.
+       *
+       * @deprecated Legacy App Context terminology. For DataSync `User` grants prefer `users`.
+       * `uuids` remains for App Context UUID-metadata permissions.
+       */
+      uuids?: Record<string, UuidTokenPermissions>;
+
+      users?: never;
+    };
+
+/**
+ * Permission scopes accepted by the `resources` and `patterns` sections of a grant.
+ */
+export type GrantScopes = CommonGrantScopes & PrincipalGrantScopes;
+
+/**
  * Generate token with permissions.
  *
  * Generate time-limited access token with required permissions for resources.
@@ -164,46 +381,17 @@ export type GrantTokenParameters = {
 
   /**
    * Object containing resource permissions.
+   *
+   * Keys within each scope are concrete resource ids. `users` and `uuids` are mutually exclusive.
    */
-  resources?: {
-    /**
-     * Object containing `uuid` metadata permissions.
-     */
-    uuids?: Record<string, UuidTokenPermissions>;
-
-    /**
-     * Object containing `channel` permissions.
-     */
-    channels?: Record<string, ChannelTokenPermissions>;
-
-    /**
-     * Object containing `channel group` permissions.
-     */
-    groups?: Record<string, ChannelGroupTokenPermissions>;
-  };
+  resources?: GrantScopes;
 
   /**
    * Object containing permissions to multiple resources specified by a RegEx pattern.
+   *
+   * Keys within each scope are RegEx patterns. `users` and `uuids` are mutually exclusive.
    */
-  patterns?: {
-    /**
-     * Object containing `uuid` metadata permissions to apply to all `uuids` matching the RegEx
-     * pattern.
-     */
-    uuids?: Record<string, UuidTokenPermissions>;
-
-    /**
-     * Object containing `channel` permissions to apply to all `channels` matching the RegEx
-     * pattern.
-     */
-    channels?: Record<string, ChannelTokenPermissions>;
-
-    /**
-     * Object containing `channel group` permissions to apply to all `channel groups` matching the
-     * RegEx pattern.
-     */
-    groups?: Record<string, ChannelGroupTokenPermissions>;
-  };
+  patterns?: GrantScopes;
 
   /**
    * Extra metadata to be published with the request.
@@ -211,6 +399,13 @@ export type GrantTokenParameters = {
    * **Important:** Values must be scalar only; `arrays` or `objects` aren't supported.
    */
   meta?: Metadata;
+
+  /**
+   * DataSync projection permissions.
+   *
+   * Encoded into the `pn-projections` key within the token's `meta` section.
+   */
+  dataSyncProjections?: DataSyncProjections;
 
   /**
    * Single `uuid` which is authorized to use the token to make API requests to PubNub.
@@ -263,12 +458,33 @@ export type Token = {
   /**
    * Permissions granted to specific resources.
    */
-  resources?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>>;
+  resources?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>> & {
+    /**
+     * Permissions granted to specific `User` resources through the `users` scope.
+     */
+    users?: Record<string, UserScopePermissions | undefined>;
+
+    /**
+     * DataSync entity-level permissions granted to specific resources.
+     */
+    dataSync?: DataSyncScopePermissions;
+  };
 
   /**
    * Permissions granted to resources which match specified regular expression.
    */
-  patterns?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>>;
+  patterns?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>> & {
+    /**
+     * Permissions granted through the `users` scope to `User` resources which match specified
+     * regular expression.
+     */
+    users?: Record<string, UserScopePermissions | undefined>;
+
+    /**
+     * DataSync entity-level permissions granted to resources which match specified regular expression.
+     */
+    dataSync?: DataSyncScopePermissions;
+  };
 
   /**
    * The uuid that is exclusively authorized to use this token to make API requests.
@@ -372,6 +588,67 @@ export type Permissions = {
    * - set / remove channel members
    */
   join: boolean;
+};
+
+/**
+ * Granted `User` scope permissions.
+ *
+ * Decoded from the token `res` / `pat` wire key `usr`, which backs the `users` grant scope. Mirrors
+ * {@link UserTokenPermissions}: only the CRUD-relevant operations apply, so `read` / `write` /
+ * `manage` / `join` are intentionally not part of this type.
+ */
+export type UserScopePermissions = DataSyncPermissions;
+
+/**
+ * Granted DataSync entity-level permissions.
+ *
+ * Applies to parsed DataSync entities, relationships, memberships, and — as
+ * {@link UserScopePermissions} — `User` resources granted through the `users` scope. Only the
+ * CRUD-relevant operations are exposed.
+ */
+export type DataSyncPermissions = {
+  /**
+   * Resource `create` permission.
+   */
+  create: boolean;
+
+  /**
+   * Resource `get` permission.
+   */
+  get: boolean;
+
+  /**
+   * Resource `update` permission.
+   */
+  update: boolean;
+
+  /**
+   * Resource `delete` permission.
+   */
+  delete: boolean;
+};
+
+/**
+ * Parsed DataSync permission scopes.
+ *
+ * Decoded from the token `res` / `pat` wire keys `datasync:entities` / `datasync:relationships` /
+ * `datasync:memberships`.
+ */
+export type DataSyncScopePermissions = {
+  /**
+   * DataSync `entity` permissions keyed by concrete entity id or RegEx pattern.
+   */
+  entities?: Record<string, DataSyncPermissions | undefined>;
+
+  /**
+   * DataSync `relationship` permissions keyed by composite relationship id or RegEx pattern.
+   */
+  relationships?: Record<string, DataSyncPermissions | undefined>;
+
+  /**
+   * DataSync `membership` permissions keyed by composite membership id or RegEx pattern.
+   */
+  memberships?: Record<string, DataSyncPermissions | undefined>;
 };
 
 // endregion
