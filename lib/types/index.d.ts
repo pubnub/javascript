@@ -10789,21 +10789,27 @@ declare namespace PubNub {
     /**
      * Get All Entities request parameters.
      *
-     * `entityClass` is required — entities are always listed within the context of their class.
+     * `class` is required — entities are always listed within the context of their class.
      */
     export type GetEntitiesParameters = PagedRequestParameters & {
-      /** Entity class name to filter by (required). */
-      entityClass: string;
+      /**
+       * Entity class name to filter by (required).
+       *
+       * Matches the stored `entityClass` property carried by responses and real-time events.
+       */
+      class: string;
       /**
        * Entity class version. If not provided, the server returns entities for the latest version.
+       *
+       * Matches the stored `entityClassVersion` property.
        */
-      entityClassVersion?: number;
+      classVersion?: number;
       /**
        * Level of the entity class, used to disambiguate a class name defined at both levels.
        *
        * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
        */
-      entityClassLevel?: ClassLevel;
+      classLevel?: ClassLevel;
     };
 
     /**
@@ -11101,10 +11107,18 @@ declare namespace PubNub {
      * Get All Relationships request parameters.
      */
     export type GetRelationshipsParameters = PagedRequestParameters & {
-      /** Relationship class name (required by the server). */
-      relationshipClass: string;
-      /** Relationship class version. */
-      relationshipClassVersion?: number;
+      /**
+       * Relationship class name (required by the server).
+       *
+       * Matches the stored `relationshipClass` property carried by responses and real-time events.
+       */
+      class: string;
+      /**
+       * Relationship class version.
+       *
+       * Matches the stored `relationshipClassVersion` property.
+       */
+      classVersion?: number;
       /** Filter relationships by first entity ID. */
       entityAId?: string;
       /** Filter relationships by second entity ID. */
@@ -11387,20 +11401,24 @@ declare namespace PubNub {
       /**
        * Entity class name to filter by.
        *
-       * Optional — unlike {@link GetEntitiesParameters.entityClass}, users are listed across every user
+       * Optional — unlike {@link GetEntitiesParameters.class}, users are listed across every user
        * class when omitted.
+       *
+       * Matches the stored `entityClass` property carried by responses and real-time events.
        */
-      entityClass?: string;
+      class?: string;
       /**
        * Entity class version. If not provided, the server returns users for the latest version.
+       *
+       * Matches the stored `entityClassVersion` property.
        */
-      entityClassVersion?: number;
+      classVersion?: number;
       /**
        * Level of the entity class, used to disambiguate a class name defined at both levels.
        *
        * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
        */
-      entityClassLevel?: ClassLevel;
+      classLevel?: ClassLevel;
     };
 
     /**
@@ -11650,20 +11668,24 @@ declare namespace PubNub {
       /**
        * Entity class name to filter by.
        *
-       * Optional — unlike {@link GetEntitiesParameters.entityClass}, channels are listed across every
+       * Optional — unlike {@link GetEntitiesParameters.class}, channels are listed across every
        * channel class when omitted.
+       *
+       * Matches the stored `entityClass` property carried by responses and real-time events.
        */
-      entityClass?: string;
+      class?: string;
       /**
        * Entity class version. If not provided, the server returns channels for the latest version.
+       *
+       * Matches the stored `entityClassVersion` property.
        */
-      entityClassVersion?: number;
+      classVersion?: number;
       /**
        * Level of the entity class, used to disambiguate a class name defined at both levels.
        *
        * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
        */
-      entityClassLevel?: ClassLevel;
+      classLevel?: ClassLevel;
     };
 
     /**
@@ -11918,8 +11940,10 @@ declare namespace PubNub {
       /**
        * Schema version of the relationship class.
        * If not provided, the server uses the latest version.
+       *
+       * Matches the stored `relationshipClassVersion` property.
        */
-      relationshipClassVersion?: number;
+      classVersion?: number;
     };
 
     /**

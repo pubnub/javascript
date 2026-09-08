@@ -16151,9 +16151,9 @@
 	        return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/users`;
 	    }
 	    get queryParameters() {
-	        const { entityClass, entityClassVersion, entityClassLevel, cursor, limit, filter, filterFast, sort } = this.parameters;
+	        const { class: entityClass, classVersion, classLevel, cursor, limit, filter, filterFast, sort } = this.parameters;
 	        const sorting = serializeDataSyncSort(sort);
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClass ? { entity_class: entityClass } : {})), (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (entityClassLevel ? { entity_class_level: entityClassLevel } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClass ? { entity_class: entityClass } : {})), (classVersion !== undefined ? { entity_class_version: `${classVersion}` } : {})), (classLevel ? { entity_class_level: classLevel } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
 	}
 
@@ -16446,9 +16446,9 @@
 	        return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/channels`;
 	    }
 	    get queryParameters() {
-	        const { entityClass, entityClassVersion, entityClassLevel, cursor, limit, filter, filterFast, sort } = this.parameters;
+	        const { class: entityClass, classVersion, classLevel, cursor, limit, filter, filterFast, sort } = this.parameters;
 	        const sorting = serializeDataSyncSort(sort);
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClass ? { entity_class: entityClass } : {})), (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (entityClassLevel ? { entity_class_level: entityClassLevel } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (entityClass ? { entity_class: entityClass } : {})), (classVersion !== undefined ? { entity_class_version: `${classVersion}` } : {})), (classLevel ? { entity_class_level: classLevel } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
 	}
 
@@ -16746,9 +16746,9 @@
 	        return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/memberships`;
 	    }
 	    get queryParameters() {
-	        const { userId, channelId, relationshipClassVersion, cursor, limit, filter, filterFast, sort } = this.parameters;
+	        const { userId, channelId, classVersion, cursor, limit, filter, filterFast, sort } = this.parameters;
 	        const sorting = serializeDataSyncSort(sort);
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (userId ? { user_id: userId } : {})), (channelId ? { channel_id: channelId } : {})), (relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (userId ? { user_id: userId } : {})), (channelId ? { channel_id: channelId } : {})), (classVersion !== undefined ? { relationship_class_version: `${classVersion}` } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
 	}
 
@@ -17051,16 +17051,16 @@
 	        });
 	    }
 	    validate() {
-	        if (!this.parameters.relationshipClass)
+	        if (!this.parameters.class)
 	            return 'Relationship class cannot be empty';
 	    }
 	    get path() {
 	        return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/relationships`;
 	    }
 	    get queryParameters() {
-	        const { relationshipClass, relationshipClassVersion, entityAId, entityBId, cursor, limit, filter, filterFast, sort, } = this.parameters;
+	        const { class: relationshipClass, classVersion, entityAId, entityBId, cursor, limit, filter, filterFast, sort, } = this.parameters;
 	        const sorting = serializeDataSyncSort(sort);
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ relationship_class: relationshipClass }, (relationshipClassVersion !== undefined ? { relationship_class_version: `${relationshipClassVersion}` } : {})), (entityAId ? { entity_a_id: entityAId } : {})), (entityBId ? { entity_b_id: entityBId } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ relationship_class: relationshipClass }, (classVersion !== undefined ? { relationship_class_version: `${classVersion}` } : {})), (entityAId ? { entity_a_id: entityAId } : {})), (entityBId ? { entity_b_id: entityBId } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
 	}
 
@@ -17358,16 +17358,16 @@
 	        });
 	    }
 	    validate() {
-	        if (!this.parameters.entityClass)
+	        if (!this.parameters.class)
 	            return 'Entity class cannot be empty';
 	    }
 	    get path() {
 	        return `/v1/datasync/subkeys/${this.parameters.keySet.subscribeKey}/entities`;
 	    }
 	    get queryParameters() {
-	        const { entityClass, entityClassVersion, entityClassLevel, cursor, limit, filter, filterFast, sort } = this.parameters;
+	        const { class: entityClass, classVersion, classLevel, cursor, limit, filter, filterFast, sort } = this.parameters;
 	        const sorting = serializeDataSyncSort(sort);
-	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ entity_class: entityClass }, (entityClassVersion !== undefined ? { entity_class_version: `${entityClassVersion}` } : {})), (entityClassLevel ? { entity_class_level: entityClassLevel } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
+	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ entity_class: entityClass }, (classVersion !== undefined ? { entity_class_version: `${classVersion}` } : {})), (classLevel ? { entity_class_level: classLevel } : {})), (cursor ? { cursor } : {})), (limit ? { limit: `${limit}` } : {})), (filter ? { filter } : {})), (filterFast ? { filter_fast: filterFast } : {})), (sorting.length ? { sort: sorting } : {}));
 	    }
 	}
 
