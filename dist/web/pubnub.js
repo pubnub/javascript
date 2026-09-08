@@ -5613,7 +5613,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '12.0.3';
+	            return '13.0.0';
 	        },
 	        getVersion() {
 	            return this.version;

@@ -1,5 +1,14 @@
 ---
 changelog:
+  - date: 2026-09-08
+    version: v13.0.0
+    changes:
+      - type: feature
+        text: "Added dataSync feature support."
+      - type: bug
+        text: "No listener callback will be triggered for event with unknown event types."
+      - type: bug
+        text: "All events from the presence channels will be categorised as presence event."
   - date: 2026-07-27
     version: v12.0.3
     changes:
@@ -1477,7 +1486,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '12.0.3'
+version: '13.0.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1493,7 +1502,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v12.0.3.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v13.0.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2164,7 +2173,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v12.0.3/pubnub.12.0.3.js
+            location: https://github.com/pubnub/javascript/releases/download/v13.0.0/pubnub.13.0.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
