@@ -447,10 +447,12 @@ export type AppContextObjectData = ChannelObjectData | UuidObjectData | Membersh
 type DataSyncEventName = 'create' | 'update' | 'delete';
 
 /**
- * DataSync object kinds carried on the wire (raw service value).
+ * DataSync object kind.
  *
  * The service reports the semantic kind for its own built-in classes (`user` / `channel` /
  * `membership`) and the generic storage kind for developer-defined ones (`entity` / `relationship`).
+ * Used both for the kind as sent ({@link DataSyncData.type}) and for the kind normalized across
+ * service versions ({@link DataSyncData.objectType}).
  */
 export type DataSyncObjectType = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
 
@@ -463,26 +465,16 @@ export type DataSyncObjectType = 'user' | 'channel' | 'membership' | 'entity' | 
 export type DataSyncClassLevel = 'Global' | 'SubKey';
 
 /**
- * Normalized DataSync object kind.
+ * Reserved DataSync system class names (lower-cased) → normalized object kind.
  *
- * This discriminator lets consumers branch on the semantic kind in a `dataSync` listener without
- * matching class-name strings. The service already reports it as the wire
- * {@link DataSyncObjectType}; for a service which still sends the generic `entity` / `relationship`
- * kind for its built-in classes it is derived from the class identity instead.
- */
-export type DataSyncNormalizedType = DataSyncObjectType;
-
-/**
- * Reserved DataSync system class names (lower-cased) → normalized object type.
- *
- * Only consulted when the wire {@link DataSyncObjectType} is the generic `entity` / `relationship`
+ * Only consulted when the wire {@link DataSyncData.type} is the generic `entity` / `relationship`
  * kind, and only for classes the service marks as `Global` (see {@link DataSyncClassLevel}) — so a
  * developer-defined class which happens to share one of these names is not mistaken for a typed
  * resource. Keys are compared case-insensitively.
  *
  * @internal
  */
-const DATA_SYNC_RESERVED_CLASSES: Record<string, DataSyncNormalizedType> = {
+const DATA_SYNC_RESERVED_CLASSES: Record<string, DataSyncObjectType> = {
   user: 'user',
   channel: 'channel',
   membership: 'membership',
@@ -620,7 +612,7 @@ export type DataSyncData = {
    * the built-in classes under the generic `'entity'` / `'relationship'` kind, where it is derived
    * from {@link className} / {@link classLevel} instead.
    */
-  objectType: DataSyncNormalizedType;
+  objectType: DataSyncObjectType;
 
   /**
    * Object class name.
@@ -1148,7 +1140,7 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     // The service reports the semantic kind directly; the class-name lookup only fills it in for a
     // service which still sends the built-in classes under the generic `entity` / `relationship` kind.
     const genericType = metadata.type === 'entity' || metadata.type === 'relationship';
-    const objectType: DataSyncNormalizedType = genericType
+    const objectType: DataSyncObjectType = genericType
       ? (systemClass && DATA_SYNC_RESERVED_CLASSES[systemClass.toLowerCase()]) || metadata.type
       : metadata.type;
     const parsedVersion = metadata.classVersion !== undefined ? Number.parseInt(`${metadata.classVersion}`, 10) : NaN;

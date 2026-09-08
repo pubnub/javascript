@@ -392,7 +392,7 @@ export function assertEventCommon(
   expected: {
     event: 'create' | 'update' | 'delete';
     type: Subscription.DataSyncObjectType;
-    objectType: Subscription.DataSyncNormalizedType;
+    objectType: Subscription.DataSyncObjectType;
     id: string;
     channelOneOf: string[];
     className?: string;

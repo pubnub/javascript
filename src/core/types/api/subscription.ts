@@ -14,7 +14,6 @@ import {
 export type {
   DataSyncData,
   DataSyncObjectType,
-  DataSyncNormalizedType,
   DataSyncClassLevel,
   DataSyncEntityData,
   DataSyncRelationshipData,
