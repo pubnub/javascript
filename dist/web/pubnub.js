@@ -6759,9 +6759,9 @@
 	    PubNubEventType.DataSync,
 	]);
 	/**
-	 * Reserved DataSync system class names (lower-cased) → normalized object type.
+	 * Reserved DataSync system class names (lower-cased) → normalized object kind.
 	 *
-	 * Only consulted when the wire {@link DataSyncObjectType} is the generic `entity` / `relationship`
+	 * Only consulted when the wire {@link DataSyncData.type} is the generic `entity` / `relationship`
 	 * kind, and only for classes the service marks as `Global` (see {@link DataSyncClassLevel}) — so a
 	 * developer-defined class which happens to share one of these names is not mistaken for a typed
 	 * resource. Keys are compared case-insensitively.

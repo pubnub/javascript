@@ -4096,10 +4096,12 @@ declare namespace PubNub {
   type DataSyncEventName = 'create' | 'update' | 'delete';
 
   /**
-   * DataSync object kinds carried on the wire (raw service value).
+   * DataSync object kind.
    *
    * The service reports the semantic kind for its own built-in classes (`user` / `channel` /
    * `membership`) and the generic storage kind for developer-defined ones (`entity` / `relationship`).
+   * Used both for the kind as sent ({@link DataSyncData.type}) and for the kind normalized across
+   * service versions ({@link DataSyncData.objectType}).
    */
   export type DataSyncObjectType = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
 
@@ -4110,16 +4112,6 @@ declare namespace PubNub {
    * `Membership`); `SubKey` identifies classes defined by the developer on their own key set.
    */
   export type DataSyncClassLevel = 'Global' | 'SubKey';
-
-  /**
-   * Normalized DataSync object kind.
-   *
-   * This discriminator lets consumers branch on the semantic kind in a `dataSync` listener without
-   * matching class-name strings. The service already reports it as the wire
-   * {@link DataSyncObjectType}; for a service which still sends the generic `entity` / `relationship`
-   * kind for its built-in classes it is derived from the class identity instead.
-   */
-  export type DataSyncNormalizedType = DataSyncObjectType;
 
   /**
    * DataSync entity change payload (create / update).
@@ -4240,7 +4232,7 @@ declare namespace PubNub {
      * the built-in classes under the generic `'entity'` / `'relationship'` kind, where it is derived
      * from {@link className} / {@link classLevel} instead.
      */
-    objectType: DataSyncNormalizedType;
+    objectType: DataSyncObjectType;
     /**
      * Object class name.
      */
