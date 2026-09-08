@@ -6761,7 +6761,8 @@
 	/**
 	 * Reserved DataSync system class names (lower-cased) → normalized object type.
 	 *
-	 * Only consulted for classes the service marks as `Global` (see {@link DataSyncClassLevel}), so a
+	 * Only consulted when the wire {@link DataSyncObjectType} is the generic `entity` / `relationship`
+	 * kind, and only for classes the service marks as `Global` (see {@link DataSyncClassLevel}) — so a
 	 * developer-defined class which happens to share one of these names is not mistaken for a typed
 	 * resource. Keys are compared case-insensitively.
 	 *
@@ -7039,7 +7040,12 @@
 	        // When it is absent (service predating the field) fall back to the legacy positional heuristic,
 	        // where the system class was the first segment.
 	        const systemClass = classLevel === undefined ? classSegments[0] : classLevel === 'Global' ? className : undefined;
-	        const objectType = (systemClass && DATA_SYNC_RESERVED_CLASSES[systemClass.toLowerCase()]) || metadata.type;
+	        // The service reports the semantic kind directly; the class-name lookup only fills it in for a
+	        // service which still sends the built-in classes under the generic `entity` / `relationship` kind.
+	        const genericType = metadata.type === 'entity' || metadata.type === 'relationship';
+	        const objectType = genericType
+	            ? (systemClass && DATA_SYNC_RESERVED_CLASSES[systemClass.toLowerCase()]) || metadata.type
+	            : metadata.type;
 	        const parsedVersion = metadata.classVersion !== undefined ? Number.parseInt(`${metadata.classVersion}`, 10) : NaN;
 	        const classVersion = Number.isNaN(parsedVersion) ? undefined : parsedVersion;
 	        const raw = ((_a = payload.data) !== null && _a !== void 0 ? _a : {});
@@ -7047,7 +7053,9 @@
 	        let data;
 	        if (metadata.event === 'delete')
 	            data = { id: raw.id, deletedAt: raw.deletedAt };
-	        else if (metadata.type === 'relationship')
+	        else if (objectType === 'membership')
+	            data = Object.assign({}, raw);
+	        else if (objectType === 'relationship')
 	            data = Object.assign({}, raw);
 	        else
 	            data = Object.assign({}, raw);

@@ -4097,8 +4097,11 @@ declare namespace PubNub {
 
   /**
    * DataSync object kinds carried on the wire (raw service value).
+   *
+   * The service reports the semantic kind for its own built-in classes (`user` / `channel` /
+   * `membership`) and the generic storage kind for developer-defined ones (`entity` / `relationship`).
    */
-  type DataSyncObjectType = 'entity' | 'relationship';
+  export type DataSyncObjectType = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
 
   /**
    * Scope of the class definition a DataSync object belongs to.
@@ -4111,12 +4114,12 @@ declare namespace PubNub {
   /**
    * Normalized DataSync object kind.
    *
-   * Users and Channels are backed by entity classes; Memberships by a relationship class. This
-   * discriminator lets consumers branch on the semantic kind in a `dataSync` listener without matching
-   * class-name strings. Falls back to the raw wire {@link DataSyncObjectType} for developer-defined
-   * classes.
+   * This discriminator lets consumers branch on the semantic kind in a `dataSync` listener without
+   * matching class-name strings. The service already reports it as the wire
+   * {@link DataSyncObjectType}; for a service which still sends the generic `entity` / `relationship`
+   * kind for its built-in classes it is derived from the class identity instead.
    */
-  export type DataSyncNormalizedType = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
+  export type DataSyncNormalizedType = DataSyncObjectType;
 
   /**
    * DataSync entity change payload (create / update).
@@ -4165,16 +4168,31 @@ declare namespace PubNub {
   export type DataSyncRelationshipData = DataSyncEntityData & {
     /**
      * First entity id in the relationship.
-     *
-     * For a membership this is the channel id.
      */
     entityAId?: string;
     /**
      * Second entity id in the relationship.
-     *
-     * For a membership this is the user id.
      */
     entityBId?: string;
+  };
+
+  /**
+   * DataSync membership change payload (create / update).
+   *
+   * A membership is stored as a relationship, but the service names its endpoints semantically —
+   * `channelId` / `userId` instead of `entityAId` / `entityBId` — matching the REST
+   * `MembershipObject`. Class identity is not repeated here: it is reported once on the event itself as
+   * {@link DataSyncData.className} / {@link DataSyncData.classLevel} / {@link DataSyncData.classVersion}.
+   */
+  export type DataSyncMembershipData = DataSyncEntityData & {
+    /**
+     * Id of the channel the membership joins.
+     */
+    channelId?: string;
+    /**
+     * Id of the user the membership joins.
+     */
+    userId?: string;
   };
 
   /**
@@ -4215,8 +4233,12 @@ declare namespace PubNub {
      * Normalized DataSync object kind.
      *
      * The built-in `User` / `Channel` / `Membership` classes map to `'user'` / `'channel'` /
-     * `'membership'`; developer-defined classes fall back to the raw wire {@link type} (`'entity'` /
-     * `'relationship'`). Use this to discriminate typed resources without knowing class-name strings.
+     * `'membership'`; developer-defined classes to `'entity'` / `'relationship'`. Use this to
+     * discriminate typed resources without knowing class-name strings.
+     *
+     * Normally identical to the wire {@link type}; it differs only for a service which still reports
+     * the built-in classes under the generic `'entity'` / `'relationship'` kind, where it is derived
+     * from {@link className} / {@link classLevel} instead.
      */
     objectType: DataSyncNormalizedType;
     /**
@@ -4237,7 +4259,7 @@ declare namespace PubNub {
      *
      * For `delete` events only `{ id, deletedAt }` is populated.
      */
-    data: DataSyncEntityData | DataSyncRelationshipData | DataSyncDeleteData;
+    data: DataSyncEntityData | DataSyncRelationshipData | DataSyncMembershipData | DataSyncDeleteData;
   };
 
   /**
