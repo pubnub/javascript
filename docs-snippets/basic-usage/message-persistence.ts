@@ -47,7 +47,7 @@ try {
 try {
   const result = await pubnub.messageCounts({
     channels: ['chats.room1', 'chats.room2'],
-    channelTimetokens: ['replace-with-channel-timetoken-(optional)'],
+    channelTimetokens: ['replace-with-timetoken'], // single timetoken applied to all channels
   });
   console.log('Message counts retrieved successfully:', result);
 } catch (error) {
