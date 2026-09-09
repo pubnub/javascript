@@ -1,6 +1,5 @@
 import { Readable } from 'stream';
 import { Buffer } from 'buffer';
-import { ProxyAgentOptions } from 'proxy-agent';
 
 /**
  * PubNub client for Node.js platform.
@@ -34,7 +33,7 @@ declare class PubNub extends PubNubCore<
    * @throws An error if {@link PubNub} client already configured to use `keepAlive`.
    * `keepAlive` and `proxy` can't be used simultaneously.
    */
-  setProxy(configuration?: ProxyAgentOptions): void;
+  setProxy(configuration?: NodeTransportProxyConfiguration): void;
 }
 
 /**
@@ -307,6 +306,70 @@ declare class PubNubCore<
    * @returns `UserMetadata` entity.
    */
   userMetadata(id: string): PubNub.UserMetadata;
+  /**
+   * Create a `DataSyncUser` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `User` object identifier (used verbatim, so wildcard identifiers
+   * like `user.*` are supported).
+   * @returns `DataSyncUser` entity.
+   */
+  dataSyncUser(id: string): PubNub.DataSyncUser;
+  /**
+   * Create a `DataSyncChannel` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `Channel` object identifier (used verbatim, so wildcard identifiers
+   * like `channel.*` are supported).
+   * @returns `DataSyncChannel` entity.
+   */
+  dataSyncChannel(id: string): PubNub.DataSyncChannel;
+  /**
+   * Create a `DataSyncMembership` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * **Important:** Membership changes are delivered on the data channels of both linked entities
+   * (the user and the channel identifier), not on the membership identifier — use
+   * {@link PubNubCore#dataSyncUser dataSyncUser} / {@link PubNubCore#dataSyncChannel
+   * dataSyncChannel} to observe them.
+   *
+   * @param id - Unique DataSync `Membership` object identifier (`{userId}:{channelId}`, used
+   * verbatim, so wildcard identifiers like `user-123:*` are supported).
+   * @returns `DataSyncMembership` entity.
+   */
+  dataSyncMembership(id: string): PubNub.DataSyncMembership;
+  /**
+   * Create a `DataSyncEntity` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `Entity` object identifier (used verbatim, so wildcard identifiers
+   * like `customer.*` are supported).
+   * @returns `DataSyncEntity` entity.
+   */
+  dataSyncEntity(id: string): PubNub.DataSyncEntity;
+  /**
+   * Create a `DataSyncRelationship` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * **Important:** Relationship changes are delivered on the data channels of both linked entities
+   * (`entityAId` and `entityBId`), not on the relationship identifier — use
+   * {@link PubNubCore#dataSyncEntity dataSyncEntity} to observe them.
+   *
+   * @param id - Unique DataSync `Relationship` object identifier (used verbatim, so wildcard
+   * identifiers like `owns.*` are supported).
+   * @returns `DataSyncRelationship` entity.
+   */
+  dataSyncRelationship(id: string): PubNub.DataSyncRelationship;
   /**
    * Create subscriptions set object.
    *
@@ -769,6 +832,10 @@ declare class PubNubCore<
    * PubNub App Context API group.
    */
   get objects(): PubNub.PubNubObjects;
+  /**
+   * PubNub DataSync API group.
+   */
+  get dataSync(): PubNub.PubNubDataSync;
   /**
    * Fetch a paginated list of User objects.
    *
@@ -1384,6 +1451,13 @@ declare class PubNubCore<
    */
   set onFile(listener: ((event: PubNub.Subscription.File) => void) | undefined);
   /**
+   * Set a new DataSync event handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new
+   * DataSync event is received from the real-time network.
+   */
+  set onDataSync(listener: ((event: PubNub.Subscription.DataSyncObject) => void) | undefined);
+  /**
    * Set events handler.
    *
    * @param listener - Events listener configuration object, which lets specify handlers for multiple
@@ -1503,6 +1577,12 @@ declare namespace PubNub {
      * {@link LegacyCryptor|Legacy} cryptor identifier.
      */
     static LEGACY_IDENTIFIER: string;
+    /**
+     * Construct crypto module with legacy cryptor for encryption and both legacy and AES-CBC
+     * cryptors for decryption.
+     *
+     * @deprecated Use {@link aesCbcCryptoModule} for new applications.
+     */
     static legacyCryptoModule(config: CryptorConfiguration): NodeCryptoModule;
     static aesCbcCryptoModule(config: CryptorConfiguration): NodeCryptoModule;
     /**
@@ -1548,7 +1628,13 @@ declare namespace PubNub {
     /**
      * Whether random initialization vector should be used or not.
      *
+     * When `false`, a hard-coded IV is used. That mode is insecure and exists only for
+     * compatibility with legacy clients — do not disable random IVs in new applications.
+     *
      * @default `true`
+     *
+     * @deprecated Prefer leaving random IVs enabled. Pass cryptor options through
+     * {@link AbstractCryptoModule.aesCbcCryptoModule} for new applications.
      */
     useRandomIVs?: boolean;
     /**
@@ -1623,6 +1709,8 @@ declare namespace PubNub {
      * @returns Crypto module which encrypts data using legacy cryptor.
      *
      * @throws Error if `config.cipherKey` not set.
+     *
+     * @deprecated Use {@link aesCbcCryptoModule} for new applications.
      */
     static legacyCryptoModule(config: CryptorConfiguration): ICryptoModule;
     /**
@@ -2025,6 +2113,126 @@ declare namespace PubNub {
      * Update channel memberships REST API operation.
      */
     PNSetMembershipsOperation = 'PNSetMembershipsOperation',
+    /**
+     * Create entity REST API operation.
+     */
+    PNCreateDataSyncEntityOperation = 'PNCreateDataSyncEntityOperation',
+    /**
+     * Get entity REST API operation.
+     */
+    PNGetDataSyncEntityOperation = 'PNGetDataSyncEntityOperation',
+    /**
+     * Get all entities REST API operation.
+     */
+    PNGetDataSyncEntitiesOperation = 'PNGetDataSyncEntitiesOperation',
+    /**
+     * Set entity REST API operation (full replacement via PUT).
+     */
+    PNSetDataSyncEntityOperation = 'PNSetDataSyncEntityOperation',
+    /**
+     * Update entity REST API operation (partial update via PATCH).
+     */
+    PNUpdateDataSyncEntityOperation = 'PNUpdateDataSyncEntityOperation',
+    /**
+     * Remove entity REST API operation.
+     */
+    PNRemoveDataSyncEntityOperation = 'PNRemoveDataSyncEntityOperation',
+    /**
+     * Create relationship REST API operation.
+     */
+    PNCreateDataSyncRelationshipOperation = 'PNCreateDataSyncRelationshipOperation',
+    /**
+     * Get relationship REST API operation.
+     */
+    PNGetDataSyncRelationshipOperation = 'PNGetDataSyncRelationshipOperation',
+    /**
+     * Get all relationships REST API operation.
+     */
+    PNGetDataSyncRelationshipsOperation = 'PNGetDataSyncRelationshipsOperation',
+    /**
+     * Set relationship REST API operation (full replacement via PUT).
+     */
+    PNSetDataSyncRelationshipOperation = 'PNSetDataSyncRelationshipOperation',
+    /**
+     * Update relationship REST API operation (partial update via PATCH).
+     */
+    PNUpdateDataSyncRelationshipOperation = 'PNUpdateDataSyncRelationshipOperation',
+    /**
+     * Remove relationship REST API operation.
+     */
+    PNRemoveDataSyncRelationshipOperation = 'PNRemoveDataSyncRelationshipOperation',
+    /**
+     * Create user REST API operation.
+     */
+    PNCreateDataSyncUserOperation = 'PNCreateDataSyncUserOperation',
+    /**
+     * Get user REST API operation.
+     */
+    PNGetDataSyncUserOperation = 'PNGetDataSyncUserOperation',
+    /**
+     * Get all users REST API operation.
+     */
+    PNGetDataSyncUsersOperation = 'PNGetDataSyncUsersOperation',
+    /**
+     * Set user REST API operation (full replacement via PUT).
+     */
+    PNSetDataSyncUserOperation = 'PNSetDataSyncUserOperation',
+    /**
+     * Update user REST API operation (partial update via PATCH).
+     */
+    PNUpdateDataSyncUserOperation = 'PNUpdateDataSyncUserOperation',
+    /**
+     * Remove user REST API operation.
+     */
+    PNRemoveDataSyncUserOperation = 'PNRemoveDataSyncUserOperation',
+    /**
+     * Create channel REST API operation.
+     */
+    PNCreateDataSyncChannelOperation = 'PNCreateDataSyncChannelOperation',
+    /**
+     * Get channel REST API operation.
+     */
+    PNGetDataSyncChannelOperation = 'PNGetDataSyncChannelOperation',
+    /**
+     * Get all channels REST API operation.
+     */
+    PNGetDataSyncChannelsOperation = 'PNGetDataSyncChannelsOperation',
+    /**
+     * Set channel REST API operation (full replacement via PUT).
+     */
+    PNSetDataSyncChannelOperation = 'PNSetDataSyncChannelOperation',
+    /**
+     * Update channel REST API operation (partial update via PATCH).
+     */
+    PNUpdateDataSyncChannelOperation = 'PNUpdateDataSyncChannelOperation',
+    /**
+     * Remove channel REST API operation.
+     */
+    PNRemoveDataSyncChannelOperation = 'PNRemoveDataSyncChannelOperation',
+    /**
+     * Create membership REST API operation.
+     */
+    PNCreateDataSyncMembershipOperation = 'PNCreateDataSyncMembershipOperation',
+    /**
+     * Get membership REST API operation.
+     */
+    PNGetDataSyncMembershipOperation = 'PNGetDataSyncMembershipOperation',
+    /**
+     * Get all memberships REST API operation.
+     */
+    PNGetDataSyncMembershipsOperation = 'PNGetDataSyncMembershipsOperation',
+    /**
+     * Set membership REST API operation (full replacement via PUT).
+     */
+    PNSetDataSyncMembershipOperation = 'PNSetDataSyncMembershipOperation',
+    /**
+     * Update membership REST API operation (partial update via PATCH).
+     */
+    PNUpdateDataSyncMembershipOperation = 'PNUpdateDataSyncMembershipOperation',
+    /**
+     * Remove membership REST API operation.
+     */
+    PNRemoveDataSyncMembershipOperation = 'PNRemoveDataSyncMembershipOperation',
     /**
      * Fetch list of files sent to the channel REST API operation.
      */
@@ -2950,6 +3158,8 @@ declare namespace PubNub {
      * @param [response] - Service response (if available)
      * @param [errorCategory] - Request processing error category.
      * @param [attempt] - Number of sequential failure.
+     * @param [statusCode] - Response HTTP status code (available when request failed with an error and hence there is
+     * no `response`).
      *
      * @returns `true` if another request retry attempt can be done.
      */
@@ -2958,6 +3168,7 @@ declare namespace PubNub {
       response?: TransportResponse,
       errorCategory?: StatusCategory,
       attempt?: number,
+      statusCode?: number,
     ): boolean;
     /**
      * Computed delay for next request retry attempt.
@@ -3074,6 +3285,10 @@ declare namespace PubNub {
      * Request will be sent using `PATCH` method.
      */
     PATCH = 'PATCH',
+    /**
+     * Request will be sent using `PUT` method.
+     */
+    PUT = 'PUT',
     /**
      * Request will be sent using `DELETE` method.
      */
@@ -3342,6 +3557,11 @@ declare namespace PubNub {
      * Object with data received from a transport-specific response object.
      */
     message: TransportResponse;
+    /**
+     * Additional information which can be useful alongside the response (e.g. the application-layer
+     * protocol negotiated for the connection).
+     */
+    details?: string;
   };
 
   /**
@@ -3506,6 +3726,12 @@ declare namespace PubNub {
      */
     file?: (file: Subscription.File) => void;
     /**
+     * Real-time DataSync change events listener.
+     *
+     * @param event - Changed DataSync object information.
+     */
+    dataSync?: (event: Subscription.DataSyncObject) => void;
+    /**
      * Real-time PubNub client status change event.
      *
      * @param status - PubNub client status information
@@ -3567,6 +3793,12 @@ declare namespace PubNub {
      * Files event.
      */
     Files = 4,
+    /**
+     * DataSync object change event.
+     *
+     * **Note:** Value must equal `5` to match the service wire value (`e: 5`).
+     */
+    DataSync = 5,
   }
 
   /**
@@ -3857,6 +4089,170 @@ declare namespace PubNub {
    * App Context service response.
    */
   export type AppContextObjectData = ChannelObjectData | UuidObjectData | MembershipObjectData;
+
+  /**
+   * DataSync change event kinds.
+   */
+  type DataSyncEventName = 'create' | 'update' | 'delete';
+
+  /**
+   * DataSync object kind.
+   *
+   * The service reports the semantic kind for its own built-in classes (`user` / `channel` /
+   * `membership`) and the generic storage kind for developer-defined ones (`entity` / `relationship`).
+   * Used both for the kind as sent ({@link DataSyncData.type}) and for the kind normalized across
+   * service versions ({@link DataSyncData.objectType}).
+   */
+  export type DataSyncObjectType = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
+
+  /**
+   * Scope of the class definition a DataSync object belongs to.
+   *
+   * `Global` identifies the built-in classes provided by the service (`User`, `Channel`,
+   * `Membership`); `SubKey` identifies classes defined by the developer on their own key set.
+   */
+  export type DataSyncClassLevel = 'Global' | 'SubKey';
+
+  /**
+   * DataSync entity change payload (create / update).
+   *
+   * Mirrors the object as sent by the service. Class identity is not repeated here: it is reported once
+   * on the event itself as {@link DataSyncData.className} / {@link DataSyncData.classLevel} /
+   * {@link DataSyncData.classVersion}.
+   */
+  export type DataSyncEntityData = {
+    /**
+     * Unique entity identifier.
+     */
+    id: string;
+    /**
+     * Lifecycle status.
+     */
+    status?: string;
+    /**
+     * User-defined JSON payload.
+     */
+    payload?: Payload;
+    /**
+     * Date and time the entity was created (ISO 8601).
+     */
+    createdAt?: string;
+    /**
+     * Date and time the entity was last updated (ISO 8601).
+     */
+    updatedAt?: string;
+    /**
+     * Content fingerprint for optimistic concurrency control.
+     */
+    eTag?: string;
+    /**
+     * Auto-deletion timestamp (ISO 8601).
+     */
+    expiresAt?: string;
+  };
+
+  /**
+   * DataSync relationship change payload (create / update).
+   *
+   * Class identity is not repeated here: it is reported once on the event itself as
+   * {@link DataSyncData.className} / {@link DataSyncData.classLevel} / {@link DataSyncData.classVersion}.
+   */
+  export type DataSyncRelationshipData = DataSyncEntityData & {
+    /**
+     * First entity id in the relationship.
+     */
+    entityAId?: string;
+    /**
+     * Second entity id in the relationship.
+     */
+    entityBId?: string;
+  };
+
+  /**
+   * DataSync membership change payload (create / update).
+   *
+   * A membership is stored as a relationship, but the service names its endpoints semantically —
+   * `channelId` / `userId` instead of `entityAId` / `entityBId` — matching the REST
+   * `MembershipObject`. Class identity is not repeated here: it is reported once on the event itself as
+   * {@link DataSyncData.className} / {@link DataSyncData.classLevel} / {@link DataSyncData.classVersion}.
+   */
+  export type DataSyncMembershipData = DataSyncEntityData & {
+    /**
+     * Id of the channel the membership joins.
+     */
+    channelId?: string;
+    /**
+     * Id of the user the membership joins.
+     */
+    userId?: string;
+  };
+
+  /**
+   * DataSync delete change payload.
+   */
+  export type DataSyncDeleteData = {
+    /**
+     * Unique identifier of the removed object.
+     */
+    id: string;
+    /**
+     * Date and time the object was removed (ISO 8601).
+     */
+    deletedAt?: string;
+  };
+
+  /**
+   * Parsed DataSync change event (dispatched under `message`).
+   */
+  export type DataSyncData = {
+    /**
+     * DataSync service payload version.
+     */
+    version?: string;
+    /**
+     * The type of change which happened to the object.
+     */
+    event: DataSyncEventName;
+    /**
+     * Name of the service which generated the update (always `data-sync`).
+     */
+    source: string;
+    /**
+     * Raw DataSync object kind as sent by the service.
+     */
+    type: DataSyncObjectType;
+    /**
+     * Normalized DataSync object kind.
+     *
+     * The built-in `User` / `Channel` / `Membership` classes map to `'user'` / `'channel'` /
+     * `'membership'`; developer-defined classes to `'entity'` / `'relationship'`. Use this to
+     * discriminate typed resources without knowing class-name strings.
+     *
+     * Normally identical to the wire {@link type}; it differs only for a service which still reports
+     * the built-in classes under the generic `'entity'` / `'relationship'` kind, where it is derived
+     * from {@link className} / {@link classLevel} instead.
+     */
+    objectType: DataSyncObjectType;
+    /**
+     * Object class name.
+     */
+    className?: string;
+    /**
+     * Scope of the class definition: `Global` for the built-in classes (`User` / `Channel` /
+     * `Membership`), `SubKey` for classes defined by the developer on their own key set.
+     */
+    classLevel?: DataSyncClassLevel;
+    /**
+     * Version of the object class schema (parsed from the wire `classVersion`).
+     */
+    classVersion?: number;
+    /**
+     * Changed object information.
+     *
+     * For `delete` events only `{ id, deletedAt }` is populated.
+     */
+    data: DataSyncEntityData | DataSyncRelationshipData | DataSyncMembershipData | DataSyncDeleteData;
+  };
 
   /**
    * File service response.
@@ -4500,6 +4896,21 @@ declare namespace PubNub {
   };
 
   /**
+   * PubNub DataSync entity subscription configuration options.
+   */
+  export type DataSyncSubscriptionOptions = SubscriptionOptions & {
+    /**
+     * Name of the DataSync projection which should be observed.
+     *
+     * A projection is observed on its own `__{projection}__{id}` data channel, so the projection name
+     * is part of the subscription identity: two subscriptions of the same object with different
+     * projections receive their own real-time updates.
+     *
+     */
+    projection?: string;
+  };
+
+  /**
    * Common interface for entities which can be used in subscription.
    */
   export interface SubscriptionCapable {
@@ -4554,6 +4965,12 @@ declare namespace PubNub {
      */
     onFile?: (event: Subscription.File) => void;
     /**
+     * Set a new DataSync event handler.
+     *
+     * Function, which will be called each time when a new DataSync event is received from the real-time network.
+     */
+    onDataSync?: (event: Subscription.DataSyncObject) => void;
+    /**
      * Set events handler.
      *
      * @param listener - Events listener configuration object, which lets specify handlers for multiple types of events.
@@ -4572,32 +4989,62 @@ declare namespace PubNub {
   }
 
   /**
-   * First-class objects which provides access to the channel app context object-specific APIs.
+   * First-class object which provides access to the real-time updates of a DataSync `Relationship`
+   * object.
+   *
+   * **Important:** The service delivers relationship changes on the data channels of **both linked
+   * entities** (`entityAId` and `entityBId`), and never on the relationship's own identifier. Observe
+   * `pubnub.dataSyncEntity(...)` for the linked entities to receive relationship updates; this entity
+   * is only useful if a key set is configured to publish relationship changes on the relationship
+   * identifier itself.
    */
-  export class ChannelMetadata extends Entity {
-    /**
-     * Get unique channel metadata object identifier.
-     *
-     * @returns Channel metadata identifier.
-     */
-    get id(): string;
-  }
+  export class DataSyncRelationship extends DataSyncSubscribable {}
 
   /**
-   * Common entity interface.
+   * Base class for DataSync objects which can be observed with the subscribe REST API.
+   *
+   * A DataSync object is observed on a data channel named after its identifier, optionally prefixed
+   * with the name of an observed projection: `__{projection}__{id}`.
+   *
+   * **Note:** The identifier is used verbatim, so an identifier which already looks prefixed
+   * (`__admin__u1`) will be prefixed again when a projection is requested (`__admin____admin__u1`).
    */
-  export abstract class Entity implements EntityInterface, SubscriptionCapable {
+  export abstract class DataSyncSubscribable extends Entity {
     /**
-     * Create a subscribable's subscription object for real-time updates.
+     * Get unique DataSync object identifier.
      *
-     * Create a subscription object which can be used to subscribe to the real-time updates sent to the specific data
-     * stream.
+     * @returns DataSync object identifier.
+     */
+    get id(): string;
+    /**
+     * Get the name of the projection which is observed by this entity.
+     *
+     * **Note:** A projection is chosen per subscription
+     * ({@link DataSyncSubscriptionOptions#projection}), so an entity created by the PubNub client
+     * always reports `undefined` here: it is the base-projection entity, and the entities bound to
+     * other projections are internal to it.
+     *
+     * @returns Observed projection name or `undefined` when the object is observed through its base
+     * projection.
+     */
+    get projection(): string | undefined;
+    /**
+     * Create a DataSync object's subscription object for real-time updates.
      *
      * @param [subscriptionOptions] - Subscription object behavior customization options.
      *
-     * @returns Configured and ready to use subscribable's subscription object.
+     * @returns Configured and ready to use DataSync object's subscription object.
+     *
+     * @example
+     * ```typescript
+     * // Observe the object itself.
+     * pubnub.dataSyncUser('u1').subscription().subscribe();
+     *
+     * // Observe the `admin` projection of the object (the `__admin__u1` data channel).
+     * pubnub.dataSyncUser('u1').subscription({ projection: 'admin' }).subscribe();
+     * ```
      */
-    subscription(subscriptionOptions?: SubscriptionOptions): Subscription;
+    subscription(subscriptionOptions?: DataSyncSubscriptionOptions): Subscription;
     /**
      * Stringify entity object.
      *
@@ -4605,11 +5052,6 @@ declare namespace PubNub {
      */
     toString(): string;
   }
-
-  /**
-   * Common entity interface.
-   */
-  export interface EntityInterface extends SubscriptionCapable {}
 
   /**
    * Single-entity subscription object which can be used to receive and handle real-time updates.
@@ -4719,6 +5161,13 @@ declare namespace PubNub {
      * is received from the real-time network.
      */
     set onFile(listener: ((event: Subscription.File) => void) | undefined);
+    /**
+     * Set a new DataSync event handler.
+     *
+     * @param listener - Listener function, which will be called each time when a new
+     * DataSync event is received from the real-time network.
+     */
+    set onDataSync(listener: ((event: Subscription.DataSyncObject) => void) | undefined);
     /**
      * Set events handler.
      *
@@ -4871,6 +5320,76 @@ declare namespace PubNub {
      */
     toString(): string;
   }
+
+  /**
+   * Common entity interface.
+   */
+  export abstract class Entity implements EntityInterface, SubscriptionCapable {
+    /**
+     * Create a subscribable's subscription object for real-time updates.
+     *
+     * Create a subscription object which can be used to subscribe to the real-time updates sent to the specific data
+     * stream.
+     *
+     * @param [subscriptionOptions] - Subscription object behavior customization options.
+     *
+     * @returns Configured and ready to use subscribable's subscription object.
+     */
+    subscription(subscriptionOptions?: SubscriptionOptions): Subscription;
+    /**
+     * Stringify entity object.
+     *
+     * @returns Serialized entity object.
+     */
+    toString(): string;
+  }
+
+  /**
+   * Common entity interface.
+   */
+  export interface EntityInterface extends SubscriptionCapable {}
+
+  /**
+   * First-class object which provides access to the real-time updates of a DataSync `Membership`
+   * object.
+   *
+   * **Note:** A membership identifier is composite (`{userId}:{channelId}`) and is used verbatim as
+   * the name of the observed data channel.
+   *
+   * **Important:** The service delivers membership changes on the data channels of **both linked
+   * entities** (the user identifier and the channel identifier), and never on the membership's own
+   * identifier. Observe `pubnub.dataSyncUser(...)` and/or `pubnub.dataSyncChannel(...)` to receive
+   * membership updates; this entity is only useful if a key set is configured to publish membership
+   * changes on the membership identifier itself.
+   */
+  export class DataSyncMembership extends DataSyncSubscribable {}
+
+  /**
+   * First-class object which provides access to the real-time updates of a DataSync `Channel` object.
+   */
+  export class DataSyncChannel extends DataSyncSubscribable {}
+
+  /**
+   * First-class object which provides access to the real-time updates of a DataSync `Entity` object.
+   */
+  export class DataSyncEntity extends DataSyncSubscribable {}
+
+  /**
+   * First-class objects which provides access to the channel app context object-specific APIs.
+   */
+  export class ChannelMetadata extends Entity {
+    /**
+     * Get unique channel metadata object identifier.
+     *
+     * @returns Channel metadata identifier.
+     */
+    get id(): string;
+  }
+
+  /**
+   * First-class object which provides access to the real-time updates of a DataSync `User` object.
+   */
+  export class DataSyncUser extends DataSyncSubscribable {}
 
   /**
    * First-class objects which provides access to the channel group-specific APIs.
@@ -5479,6 +5998,782 @@ declare namespace PubNub {
   }
 
   /**
+   * PubNub DataSync API interface.
+   */
+  export class PubNubDataSync {
+    /**
+     * Create a new Entity.
+     *
+     * To change a field later with `updateEntity`, address it by its JSON Pointer: `classVersion` is
+     * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    createEntity(
+      parameters: DataSync.CreateEntityParameters,
+      callback: ResultCallback<DataSync.CreateEntityResponse>,
+    ): void;
+    /**
+     * Create a new Entity.
+     *
+     * To change a field later with `updateEntity`, address it by its JSON Pointer: `classVersion` is
+     * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous create entity response.
+     */
+    createEntity(parameters: DataSync.CreateEntityParameters): Promise<DataSync.CreateEntityResponse>;
+    /**
+     * Get a specific Entity.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getEntity(parameters: DataSync.GetEntityParameters, callback: ResultCallback<DataSync.GetEntityResponse>): void;
+    /**
+     * Get a specific Entity.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous get entity response.
+     */
+    getEntity(parameters: DataSync.GetEntityParameters): Promise<DataSync.GetEntityResponse>;
+    /**
+     * Get a paginated list of Entities for a given Entity Class.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getEntities(
+      parameters: DataSync.GetEntitiesParameters,
+      callback: ResultCallback<DataSync.GetEntitiesResponse>,
+    ): void;
+    /**
+     * Get a paginated list of Entities for a given Entity Class.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous get entities response.
+     */
+    getEntities(parameters: DataSync.GetEntitiesParameters): Promise<DataSync.GetEntitiesResponse>;
+    /**
+     * Set an Entity (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    setEntity(parameters: DataSync.SetEntityParameters, callback: ResultCallback<DataSync.SetEntityResponse>): void;
+    /**
+     * Set an Entity (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous set entity response.
+     */
+    setEntity(parameters: DataSync.SetEntityParameters): Promise<DataSync.SetEntityResponse>;
+    /**
+     * Update an Entity (partial update via JSON Patch RFC 6902).
+     *
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name an entity carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateEntity({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/creditScore': 810 },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    updateEntity(
+      parameters: DataSync.UpdateEntityParameters,
+      callback: ResultCallback<DataSync.UpdateEntityResponse>,
+    ): void;
+    /**
+     * Update an Entity (partial update via JSON Patch RFC 6902).
+     *
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name an entity carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateEntity({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/creditScore': 810 },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous update entity response.
+     */
+    updateEntity(parameters: DataSync.UpdateEntityParameters): Promise<DataSync.UpdateEntityResponse>;
+    /**
+     * Remove an Entity.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    removeEntity(
+      parameters: DataSync.RemoveEntityParameters,
+      callback: ResultCallback<DataSync.RemoveEntityResponse>,
+    ): void;
+    /**
+     * Remove an Entity.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous remove entity response.
+     */
+    removeEntity(parameters: DataSync.RemoveEntityParameters): Promise<DataSync.RemoveEntityResponse>;
+    /**
+     * Create a new Relationship.
+     *
+     * To change a field later with `updateRelationship`, address it by its JSON Pointer:
+     * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+     * fields as `/payload/<fieldName>`. `class`, `entityAId`, and `entityBId` are immutable and
+     * cannot be patched.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    createRelationship(
+      parameters: DataSync.CreateRelationshipParameters,
+      callback: ResultCallback<DataSync.CreateRelationshipResponse>,
+    ): void;
+    /**
+     * Create a new Relationship.
+     *
+     * To change a field later with `updateRelationship`, address it by its JSON Pointer:
+     * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+     * fields as `/payload/<fieldName>`. `class`, `entityAId`, and `entityBId` are immutable and
+     * cannot be patched.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous create relationship response.
+     */
+    createRelationship(parameters: DataSync.CreateRelationshipParameters): Promise<DataSync.CreateRelationshipResponse>;
+    /**
+     * Get a specific Relationship.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getRelationship(
+      parameters: DataSync.GetRelationshipParameters,
+      callback: ResultCallback<DataSync.GetRelationshipResponse>,
+    ): void;
+    /**
+     * Get a specific Relationship.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous get relationship response.
+     */
+    getRelationship(parameters: DataSync.GetRelationshipParameters): Promise<DataSync.GetRelationshipResponse>;
+    /**
+     * Get a paginated list of Relationships.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getRelationships(
+      parameters: DataSync.GetRelationshipsParameters,
+      callback: ResultCallback<DataSync.GetRelationshipsResponse>,
+    ): void;
+    /**
+     * Get a paginated list of Relationships.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous get relationships response.
+     */
+    getRelationships(parameters: DataSync.GetRelationshipsParameters): Promise<DataSync.GetRelationshipsResponse>;
+    /**
+     * Set a Relationship (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    setRelationship(
+      parameters: DataSync.SetRelationshipParameters,
+      callback: ResultCallback<DataSync.SetRelationshipResponse>,
+    ): void;
+    /**
+     * Set a Relationship (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous set relationship response.
+     */
+    setRelationship(parameters: DataSync.SetRelationshipParameters): Promise<DataSync.SetRelationshipResponse>;
+    /**
+     * Update a Relationship (partial update via JSON Patch RFC 6902).
+     *
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a relationship carries in responses and real-time events:
+     *
+     * - `classVersion` → `/relationshipClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `relationshipClass`, `entityAId`, and `entityBId` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateRelationship({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/label': 'primary' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    updateRelationship(
+      parameters: DataSync.UpdateRelationshipParameters,
+      callback: ResultCallback<DataSync.UpdateRelationshipResponse>,
+    ): void;
+    /**
+     * Update a Relationship (partial update via JSON Patch RFC 6902).
+     *
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a relationship carries in responses and real-time events:
+     *
+     * - `classVersion` → `/relationshipClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `relationshipClass`, `entityAId`, and `entityBId` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateRelationship({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/label': 'primary' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous update relationship response.
+     */
+    updateRelationship(parameters: DataSync.UpdateRelationshipParameters): Promise<DataSync.UpdateRelationshipResponse>;
+    /**
+     * Remove a Relationship.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    removeRelationship(
+      parameters: DataSync.RemoveRelationshipParameters,
+      callback: ResultCallback<DataSync.RemoveRelationshipResponse>,
+    ): void;
+    /**
+     * Remove a Relationship.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous remove relationship response.
+     */
+    removeRelationship(parameters: DataSync.RemoveRelationshipParameters): Promise<DataSync.RemoveRelationshipResponse>;
+    /**
+     * Create a new User.
+     *
+     * To change a field later with `updateUser`, address it by its JSON Pointer: `classVersion` is
+     * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    createUser(parameters: DataSync.CreateUserParameters, callback: ResultCallback<DataSync.CreateUserResponse>): void;
+    /**
+     * Create a new User.
+     *
+     * To change a field later with `updateUser`, address it by its JSON Pointer: `classVersion` is
+     * patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous create user response.
+     */
+    createUser(parameters: DataSync.CreateUserParameters): Promise<DataSync.CreateUserResponse>;
+    /**
+     * Get a specific User.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getUser(parameters: DataSync.GetUserParameters, callback: ResultCallback<DataSync.GetUserResponse>): void;
+    /**
+     * Get a specific User.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous get user response.
+     */
+    getUser(parameters: DataSync.GetUserParameters): Promise<DataSync.GetUserResponse>;
+    /**
+     * Get a paginated list of Users.
+     *
+     * @param callback - Request completion handler callback.
+     */
+    getUsers(callback: ResultCallback<DataSync.GetUsersResponse>): void;
+    /**
+     * Get a paginated list of Users.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getUsers(parameters: DataSync.GetUsersParameters, callback: ResultCallback<DataSync.GetUsersResponse>): void;
+    /**
+     * Get a paginated list of Users.
+     *
+     * @param [parameters] - Request configuration parameters.
+     *
+     * @returns Asynchronous get users response.
+     */
+    getUsers(parameters?: DataSync.GetUsersParameters): Promise<DataSync.GetUsersResponse>;
+    /**
+     * Set a User (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    setUser(parameters: DataSync.SetUserParameters, callback: ResultCallback<DataSync.SetUserResponse>): void;
+    /**
+     * Set a User (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous set user response.
+     */
+    setUser(parameters: DataSync.SetUserParameters): Promise<DataSync.SetUserResponse>;
+    /**
+     * Update a User (partial update via JSON Patch RFC 6902).
+     *
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a user carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateUser({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/email': 'alice.v@acme.test' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    updateUser(parameters: DataSync.UpdateUserParameters, callback: ResultCallback<DataSync.UpdateUserResponse>): void;
+    /**
+     * Update a User (partial update via JSON Patch RFC 6902).
+     *
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a user carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateUser({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/email': 'alice.v@acme.test' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous update user response.
+     */
+    updateUser(parameters: DataSync.UpdateUserParameters): Promise<DataSync.UpdateUserResponse>;
+    /**
+     * Remove a User.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    removeUser(parameters: DataSync.RemoveUserParameters, callback: ResultCallback<DataSync.RemoveUserResponse>): void;
+    /**
+     * Remove a User.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous remove user response.
+     */
+    removeUser(parameters: DataSync.RemoveUserParameters): Promise<DataSync.RemoveUserResponse>;
+    /**
+     * Create a new Channel.
+     *
+     * To change a field later with `updateChannel`, address it by its JSON Pointer: `classVersion`
+     * is patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    createChannel(
+      parameters: DataSync.CreateChannelParameters,
+      callback: ResultCallback<DataSync.CreateChannelResponse>,
+    ): void;
+    /**
+     * Create a new Channel.
+     *
+     * To change a field later with `updateChannel`, address it by its JSON Pointer: `classVersion`
+     * is patched as `/entityClassVersion`, `status` as `/status`, and payload fields as
+     * `/payload/<fieldName>`. `class` and `classLevel` are immutable and cannot be patched.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous create channel response.
+     */
+    createChannel(parameters: DataSync.CreateChannelParameters): Promise<DataSync.CreateChannelResponse>;
+    /**
+     * Get a specific Channel.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getChannel(parameters: DataSync.GetChannelParameters, callback: ResultCallback<DataSync.GetChannelResponse>): void;
+    /**
+     * Get a specific Channel.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous get channel response.
+     */
+    getChannel(parameters: DataSync.GetChannelParameters): Promise<DataSync.GetChannelResponse>;
+    /**
+     * Get a paginated list of Channels.
+     *
+     * @param callback - Request completion handler callback.
+     */
+    getChannels(callback: ResultCallback<DataSync.GetChannelsResponse>): void;
+    /**
+     * Get a paginated list of Channels.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getChannels(
+      parameters: DataSync.GetChannelsParameters,
+      callback: ResultCallback<DataSync.GetChannelsResponse>,
+    ): void;
+    /**
+     * Get a paginated list of Channels.
+     *
+     * @param [parameters] - Request configuration parameters.
+     *
+     * @returns Asynchronous get channels response.
+     */
+    getChannels(parameters?: DataSync.GetChannelsParameters): Promise<DataSync.GetChannelsResponse>;
+    /**
+     * Set a Channel (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    setChannel(parameters: DataSync.SetChannelParameters, callback: ResultCallback<DataSync.SetChannelResponse>): void;
+    /**
+     * Set a Channel (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous set channel response.
+     */
+    setChannel(parameters: DataSync.SetChannelParameters): Promise<DataSync.SetChannelResponse>;
+    /**
+     * Update a Channel (partial update via JSON Patch RFC 6902).
+     *
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a channel carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateChannel({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/memberCount': 42 },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    updateChannel(
+      parameters: DataSync.UpdateChannelParameters,
+      callback: ResultCallback<DataSync.UpdateChannelResponse>,
+    ): void;
+    /**
+     * Update a Channel (partial update via JSON Patch RFC 6902).
+     *
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a channel carries in responses and real-time events:
+     *
+     * - `classVersion` → `/entityClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateChannel({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/memberCount': 42 },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous update channel response.
+     */
+    updateChannel(parameters: DataSync.UpdateChannelParameters): Promise<DataSync.UpdateChannelResponse>;
+    /**
+     * Remove a Channel.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    removeChannel(
+      parameters: DataSync.RemoveChannelParameters,
+      callback: ResultCallback<DataSync.RemoveChannelResponse>,
+    ): void;
+    /**
+     * Remove a Channel.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous remove channel response.
+     */
+    removeChannel(parameters: DataSync.RemoveChannelParameters): Promise<DataSync.RemoveChannelResponse>;
+    /**
+     * Create a new Membership (associates a User with a Channel).
+     *
+     * To change a field later with `updateMembership`, address it by its JSON Pointer:
+     * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+     * fields as `/payload/<fieldName>`. `userId` and `channelId` are immutable and cannot be patched.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    createMembership(
+      parameters: DataSync.CreateMembershipParameters,
+      callback: ResultCallback<DataSync.CreateMembershipResponse>,
+    ): void;
+    /**
+     * Create a new Membership (associates a User with a Channel).
+     *
+     * To change a field later with `updateMembership`, address it by its JSON Pointer:
+     * `classVersion` is patched as `/relationshipClassVersion`, `status` as `/status`, and payload
+     * fields as `/payload/<fieldName>`. `userId` and `channelId` are immutable and cannot be patched.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous create membership response.
+     */
+    createMembership(parameters: DataSync.CreateMembershipParameters): Promise<DataSync.CreateMembershipResponse>;
+    /**
+     * Get a specific Membership.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getMembership(
+      parameters: DataSync.GetMembershipParameters,
+      callback: ResultCallback<DataSync.GetMembershipResponse>,
+    ): void;
+    /**
+     * Get a specific Membership.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous get membership response.
+     */
+    getMembership(parameters: DataSync.GetMembershipParameters): Promise<DataSync.GetMembershipResponse>;
+    /**
+     * Get a paginated list of Memberships.
+     *
+     * @param callback - Request completion handler callback.
+     */
+    getMemberships(callback: ResultCallback<DataSync.GetMembershipsResponse>): void;
+    /**
+     * Get a paginated list of Memberships.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    getMemberships(
+      parameters: DataSync.GetMembershipsParameters,
+      callback: ResultCallback<DataSync.GetMembershipsResponse>,
+    ): void;
+    /**
+     * Get a paginated list of Memberships.
+     *
+     * @param [parameters] - Request configuration parameters.
+     *
+     * @returns Asynchronous get memberships response.
+     */
+    getMemberships(parameters?: DataSync.GetMembershipsParameters): Promise<DataSync.GetMembershipsResponse>;
+    /**
+     * Set a Membership (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    setMembership(
+      parameters: DataSync.SetMembershipParameters,
+      callback: ResultCallback<DataSync.SetMembershipResponse>,
+    ): void;
+    /**
+     * Set a Membership (full replacement via PUT).
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous set membership response.
+     */
+    setMembership(parameters: DataSync.SetMembershipParameters): Promise<DataSync.SetMembershipResponse>;
+    /**
+     * Update a Membership (partial update via JSON Patch RFC 6902).
+     *
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a membership carries in responses and real-time events:
+     *
+     * - `classVersion` → `/relationshipClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `userId` and `channelId` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateMembership({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/role': 'moderator' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    updateMembership(
+      parameters: DataSync.UpdateMembershipParameters,
+      callback: ResultCallback<DataSync.UpdateMembershipResponse>,
+    ): void;
+    /**
+     * Update a Membership (partial update via JSON Patch RFC 6902).
+     *
+     * Paths are JSON Pointers (RFC 6901). Address each field by its stored property name, which
+     * is the name a membership carries in responses and real-time events:
+     *
+     * - `classVersion` → `/relationshipClassVersion`
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`; nest deeper with more segments, e.g.
+     *   `/payload/address/city`. A field name that contains a `.` is written as-is
+     *   (`/payload/user.name`).
+     *
+     * `userId` and `channelId` are immutable and cannot be patched.
+     *
+     * @example
+     * ```typescript
+     * await pubnub.dataSync.updateMembership({
+     *   id,
+     *   replace: { '/status': 'inactive', '/payload/role': 'moderator' },
+     *   remove: ['/payload/legacyField'],
+     * });
+     * ```
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous update membership response.
+     */
+    updateMembership(parameters: DataSync.UpdateMembershipParameters): Promise<DataSync.UpdateMembershipResponse>;
+    /**
+     * Remove a Membership.
+     *
+     * @param parameters - Request configuration parameters.
+     * @param callback - Request completion handler callback.
+     */
+    removeMembership(
+      parameters: DataSync.RemoveMembershipParameters,
+      callback: ResultCallback<DataSync.RemoveMembershipResponse>,
+    ): void;
+    /**
+     * Remove a Membership.
+     *
+     * @param parameters - Request configuration parameters.
+     *
+     * @returns Asynchronous remove membership response.
+     */
+    removeMembership(parameters: DataSync.RemoveMembershipParameters): Promise<DataSync.RemoveMembershipResponse>;
+  }
+
+  /**
    * Logging module manager.
    *
    * Manager responsible for log requests handling and forwarding to the registered {@link Logger logger} implementations.
@@ -5749,6 +7044,16 @@ declare namespace PubNub {
     };
 
     /**
+     * DataSync object change real-time event.
+     */
+    export type DataSyncObject = Event & {
+      /**
+       * Parsed DataSync change payload.
+       */
+      message: DataSyncData;
+    };
+
+    /**
      * Subscribe request parameters.
      */
     export type SubscribeParameters = {
@@ -5795,7 +7100,15 @@ declare namespace PubNub {
      */
     export type SubscriptionResponse = {
       cursor: SubscriptionCursor;
-      messages: (PresenceEvent | MessageEvent | SignalEvent | MessageActionEvent | AppContextEvent | FileEvent)[];
+      messages: (
+        | PresenceEvent
+        | MessageEvent
+        | SignalEvent
+        | MessageActionEvent
+        | AppContextEvent
+        | FileEvent
+        | DataSyncEvent
+      )[];
     };
   }
 
@@ -8317,6 +9630,13 @@ declare namespace PubNub {
        */
       write?: boolean;
       /**
+       * Whether `create` operations are permitted for corresponding level or not.
+       *
+       * Used by DataSync `Channel` grants (a DataSync Channel is an entity, granted through the reused
+       * `channels` scope). Ignored for classic messaging channels.
+       */
+      create?: boolean;
+      /**
        * Whether `get` operations are permitted for corresponding level or not.
        */
       get?: boolean;
@@ -8362,6 +9682,13 @@ declare namespace PubNub {
      */
     export type UuidTokenPermissions = {
       /**
+       * Whether `create` operations are permitted for corresponding level or not.
+       *
+       * Used by DataSync `User` grants (a DataSync User is an entity, granted through the reused
+       * `users` / `uuids` scope). Ignored for App Context UUID-metadata grants.
+       */
+      create?: boolean;
+      /**
        * Whether `get` operations are permitted for corresponding level or not.
        */
       get?: boolean;
@@ -8377,8 +9704,138 @@ declare namespace PubNub {
 
     /**
      * User-specific token permissions.
+     *
+     * DataSync `User` resources only support the CRUD operations; `read` / `write` / `manage` / `join`
+     * remain classic messaging concepts and are intentionally not part of this type.
      */
-    type UserTokenPermissions = UuidTokenPermissions;
+    export type UserTokenPermissions = {
+      /**
+       * Whether `create` operations are permitted for corresponding level or not.
+       */
+      create?: boolean;
+      /**
+       * Whether `get` operations are permitted for corresponding level or not.
+       */
+      get?: boolean;
+      /**
+       * Whether `update` operations are permitted for corresponding level or not.
+       */
+      update?: boolean;
+      /**
+       * Whether `delete` operations are permitted for corresponding level or not.
+       */
+      delete?: boolean;
+    };
+
+    /**
+     * DataSync entity-level token permissions.
+     *
+     * Applies to DataSync entities, relationships, and memberships. Only the CRUD-relevant operations
+     * are exposed.
+     */
+    export type DataSyncTokenPermissions = {
+      /**
+       * Whether `create` operations are permitted for corresponding level or not.
+       */
+      create?: boolean;
+      /**
+       * Whether `get` operations are permitted for corresponding level or not.
+       */
+      get?: boolean;
+      /**
+       * Whether `update` operations are permitted for corresponding level or not.
+       */
+      update?: boolean;
+      /**
+       * Whether `delete` operations are permitted for corresponding level or not.
+       */
+      delete?: boolean;
+    };
+
+    /**
+     * DataSync permission scopes.
+     *
+     * Carried in the grant token `resources` / `patterns` sections and serialized to the wire keys
+     * `datasync:entities` / `datasync:relationships` / `datasync:memberships`.
+     */
+    export type DataSyncTokenScopes = {
+      /**
+       * Object containing DataSync `entity` permissions.
+       *
+       * Keys are concrete entity ids (e.g. `order-456`) for `resources` or RegEx patterns
+       * (e.g. `order-*`) for `patterns`.
+       */
+      entities?: Record<string, DataSyncTokenPermissions>;
+      /**
+       * Object containing DataSync `relationship` permissions.
+       *
+       * Keys are composite relationship ids (e.g. `user.A:channel.X`).
+       */
+      relationships?: Record<string, DataSyncTokenPermissions>;
+      /**
+       * Object containing DataSync `membership` permissions.
+       *
+       * Keys are composite membership ids (e.g. `user-123:channel-X`).
+       */
+      memberships?: Record<string, DataSyncTokenPermissions>;
+    };
+
+    /**
+     * Per-resource DataSync projection assignment.
+     *
+     * Each id maps to the single projection name the principal is "looking through" for that resource
+     * (use `__default__` for the base projection).
+     *
+     * Covers every DataSync resource kind — entities, relationships, users, channels, and memberships.
+     */
+    export type DataSyncProjectionScope = {
+      /**
+       * Entity id -> projection name.
+       *
+       * Keys are concrete entity ids (e.g. `user.A`) for `resources` or RegEx patterns
+       * (e.g. `user.*`) for `patterns`.
+       */
+      entities?: Record<string, string>;
+      /**
+       * Relationship id -> projection name.
+       */
+      relationships?: Record<string, string>;
+      /**
+       * DataSync `User` id -> projection name.
+       *
+       * Projections for DataSync Users are keyed by `datasync:users:<id>` on the wire, unlike the
+       * `User` *permissions*, which reuse the un-prefixed `users` grant scope.
+       */
+      users?: Record<string, string>;
+      /**
+       * DataSync `Channel` id -> projection name.
+       *
+       * Projections for DataSync Channels are keyed by `datasync:channels:<id>` on the wire, unlike the
+       * `Channel` *permissions*, which reuse the un-prefixed `channels` grant scope.
+       */
+      channels?: Record<string, string>;
+      /**
+       * Membership id -> projection name.
+       */
+      memberships?: Record<string, string>;
+    };
+
+    /**
+     * DataSync projection permissions for grant token requests.
+     *
+     * Encoded into the `pn-projections` key within the token's `meta` section. Exact (`res`) match
+     * takes priority over pattern (`pat`) match.
+     */
+    export type DataSyncProjections = {
+      /**
+       * Projection assignments for concrete resources.
+       */
+      resources?: DataSyncProjectionScope;
+      /**
+       * Projection assignments for resources which match a RegEx pattern.
+       */
+      patterns?: DataSyncProjectionScope;
+    };
 
     /**
      * Generate access token with permissions.
@@ -8432,6 +9889,60 @@ declare namespace PubNub {
     };
 
     /**
+     * Grant scopes which may appear in both the `resources` and `patterns` sections.
+     *
+     * Keys are concrete resource ids for `resources` and RegEx patterns for `patterns`.
+     */
+    type CommonGrantScopes = {
+      /**
+       * Object containing `channel` permissions.
+       */
+      channels?: Record<string, ChannelTokenPermissions>;
+      /**
+       * Object containing `channel group` permissions.
+       */
+      groups?: Record<string, ChannelGroupTokenPermissions>;
+      /**
+       * Object containing DataSync entity-level permissions.
+       */
+      dataSync?: DataSyncTokenScopes;
+    };
+
+    /**
+     * Principal grant scope.
+     *
+     * `users` and `uuids` name the same underlying target, so only one of them may be supplied in a
+     * single grant — providing both is a compile-time error (and is rejected at runtime as well).
+     */
+    type PrincipalGrantScopes =
+      | {
+          /**
+           * Object containing `user` permissions.
+           *
+           * Preferred DataSync terminology for granting permissions on `User` resources (create / get /
+           * update / delete). May be combined with `channels`, `groups`, and `dataSync` in a single
+           * grant, but not with the deprecated {@link PrincipalGrantScopes.uuids | uuids} scope.
+           */
+          users?: Record<string, UserTokenPermissions>;
+          uuids?: never;
+        }
+      | {
+          /**
+           * Object containing `uuid` metadata permissions.
+           *
+           * @deprecated Legacy App Context terminology. For DataSync `User` grants prefer `users`.
+           * `uuids` remains for App Context UUID-metadata permissions.
+           */
+          uuids?: Record<string, UuidTokenPermissions>;
+          users?: never;
+        };
+
+    /**
+     * Permission scopes accepted by the `resources` and `patterns` sections of a grant.
+     */
+    export type GrantScopes = CommonGrantScopes & PrincipalGrantScopes;
+
+    /**
      * Generate token with permissions.
      *
      * Generate time-limited access token with required permissions for resources.
@@ -8446,47 +9957,28 @@ declare namespace PubNub {
       ttl: number;
       /**
        * Object containing resource permissions.
+       *
+       * Keys within each scope are concrete resource ids. `users` and `uuids` are mutually exclusive.
        */
-      resources?: {
-        /**
-         * Object containing `uuid` metadata permissions.
-         */
-        uuids?: Record<string, UuidTokenPermissions>;
-        /**
-         * Object containing `channel` permissions.
-         */
-        channels?: Record<string, ChannelTokenPermissions>;
-        /**
-         * Object containing `channel group` permissions.
-         */
-        groups?: Record<string, ChannelGroupTokenPermissions>;
-      };
+      resources?: GrantScopes;
       /**
        * Object containing permissions to multiple resources specified by a RegEx pattern.
+       *
+       * Keys within each scope are RegEx patterns. `users` and `uuids` are mutually exclusive.
        */
-      patterns?: {
-        /**
-         * Object containing `uuid` metadata permissions to apply to all `uuids` matching the RegEx
-         * pattern.
-         */
-        uuids?: Record<string, UuidTokenPermissions>;
-        /**
-         * Object containing `channel` permissions to apply to all `channels` matching the RegEx
-         * pattern.
-         */
-        channels?: Record<string, ChannelTokenPermissions>;
-        /**
-         * Object containing `channel group` permissions to apply to all `channel groups` matching the
-         * RegEx pattern.
-         */
-        groups?: Record<string, ChannelGroupTokenPermissions>;
-      };
+      patterns?: GrantScopes;
       /**
        * Extra metadata to be published with the request.
        *
        * **Important:** Values must be scalar only; `arrays` or `objects` aren't supported.
        */
       meta?: Metadata;
+      /**
+       * DataSync projection permissions.
+       *
+       * Encoded into the `pn-projections` key within the token's `meta` section.
+       */
+      dataSyncProjections?: DataSyncProjections;
       /**
        * Single `uuid` which is authorized to use the token to make API requests to PubNub.
        */
@@ -8527,11 +10019,30 @@ declare namespace PubNub {
       /**
        * Permissions granted to specific resources.
        */
-      resources?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>>;
+      resources?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>> & {
+        /**
+         * Permissions granted to specific `User` resources through the `users` scope.
+         */
+        users?: Record<string, UserScopePermissions | undefined>;
+        /**
+         * DataSync entity-level permissions granted to specific resources.
+         */
+        dataSync?: DataSyncScopePermissions;
+      };
       /**
        * Permissions granted to resources which match specified regular expression.
        */
-      patterns?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>>;
+      patterns?: Partial<Record<'channels' | 'groups' | 'uuids', Record<string, Permissions | undefined>>> & {
+        /**
+         * Permissions granted through the `users` scope to `User` resources which match specified
+         * regular expression.
+         */
+        users?: Record<string, UserScopePermissions | undefined>;
+        /**
+         * DataSync entity-level permissions granted to resources which match specified regular expression.
+         */
+        dataSync?: DataSyncScopePermissions;
+      };
       /**
        * The uuid that is exclusively authorized to use this token to make API requests.
        */
@@ -8626,6 +10137,62 @@ declare namespace PubNub {
        * - set / remove channel members
        */
       join: boolean;
+    };
+
+    /**
+     * Granted `User` scope permissions.
+     *
+     * Decoded from the token `res` / `pat` wire key `usr`, which backs the `users` grant scope. Mirrors
+     * {@link UserTokenPermissions}: only the CRUD-relevant operations apply, so `read` / `write` /
+     * `manage` / `join` are intentionally not part of this type.
+     */
+    export type UserScopePermissions = DataSyncPermissions;
+
+    /**
+     * Granted DataSync entity-level permissions.
+     *
+     * Applies to parsed DataSync entities, relationships, memberships, and — as
+     * {@link UserScopePermissions} — `User` resources granted through the `users` scope. Only the
+     * CRUD-relevant operations are exposed.
+     */
+    export type DataSyncPermissions = {
+      /**
+       * Resource `create` permission.
+       */
+      create: boolean;
+      /**
+       * Resource `get` permission.
+       */
+      get: boolean;
+      /**
+       * Resource `update` permission.
+       */
+      update: boolean;
+      /**
+       * Resource `delete` permission.
+       */
+      delete: boolean;
+    };
+
+    /**
+     * Parsed DataSync permission scopes.
+     *
+     * Decoded from the token `res` / `pat` wire keys `datasync:entities` / `datasync:relationships` /
+     * `datasync:memberships`.
+     */
+    export type DataSyncScopePermissions = {
+      /**
+       * DataSync `entity` permissions keyed by concrete entity id or RegEx pattern.
+       */
+      entities?: Record<string, DataSyncPermissions | undefined>;
+      /**
+       * DataSync `relationship` permissions keyed by composite relationship id or RegEx pattern.
+       */
+      relationships?: Record<string, DataSyncPermissions | undefined>;
+      /**
+       * DataSync `membership` permissions keyed by composite membership id or RegEx pattern.
+       */
+      memberships?: Record<string, DataSyncPermissions | undefined>;
     };
 
     /**
@@ -8925,6 +10492,1582 @@ declare namespace PubNub {
        * High-precision time when published data has been received by the PubNub service.
        */
       timetoken: string;
+    };
+  }
+
+  export namespace DataSync {
+    /**
+     * Filterable field definition for entity classes.
+     */
+    export type FilterableField = {
+      /** Unique semantic identifier for the property. */
+      name: string;
+      /** JSON Pointer (RFC 6901) to the property location. */
+      path: string;
+      /** Data type of the property value. */
+      valueKind: 'string' | 'number' | 'boolean' | 'date' | 'datetime';
+      /**
+       * Whether the property should be indexed for full-text search.
+       * @default false
+       */
+      enabledAdvancedFiltering?: boolean;
+      /**
+       * Whether the property can have null values.
+       * @default true
+       */
+      isNullable?: boolean;
+    };
+
+    /**
+     * Cursor-based pagination metadata returned by the server.
+     *
+     * Forward pagination details.
+     * `has_next` is the only field the service
+     * guarantees, while `next_cursor` and `limit` are optional. Pagination is forward-only — there is
+     * no previous-page cursor.
+     */
+    export type DataSyncPageMeta = {
+      /** Whether there are more results after this page. */
+      has_next: boolean;
+      /**
+       * cursor for the next page, passed back as the `cursor` request parameter.
+       *
+       * `null` when there are no more results (`has_next` is `false`).
+       */
+      next_cursor?: string | null;
+      /** The limit applied to this page (may differ from the requested `limit`). */
+      limit?: number;
+    };
+
+    /**
+     * navigation links.
+     */
+    export type DataSyncLinks = {
+      /** Link to the current page, with all query parameters applied. */
+      self: string;
+      /** Link to the next page, including its cursor. `null` when there are no more results. */
+      next?: string | null;
+      /** Additional links for related resources. */
+      [key: string]: string | null | undefined;
+    };
+
+    /**
+     * Common parameters for paginated list requests.
+     */
+    type PagedRequestParameters = {
+      /** Opaque cursor for pagination. Omit for the first page. */
+      cursor?: string;
+      /**
+       * Maximum number of items per page.
+       * @default 20
+       * @max 100
+       */
+      limit?: number;
+      /**
+       *
+       * Supports the full expression grammar (logical operators and nested conditions), so an object
+       * written moments earlier may not be matched yet. Use {@link filterFast} when the query must see
+       * the latest writes.
+       */
+      filter?: string;
+      /**
+       * Filter expression evaluated against strongly consistent storage.
+       *
+       * Reflects the latest writes, but accepts only a limited number of conditions. Use {@link filter}
+       * for complex queries.
+       */
+      filterFast?: string;
+      /**
+       * Sort expression.
+       *
+       * Comma-separated list of property names to sort by, each optionally
+       * suffixed with `:desc` (ascending by default). Only payload properties
+       * with `filtering` other than `none` in the class definition are
+       * accepted.
+       * e.g. `"+name,-reatedAt"`), or a map of field → direction that is serialized to the
+       * `field:order` form the service expects (e.g. `{ firstName: 'desc' }` → `firstName:desc`).
+       */
+      sort?: DataSyncSort;
+    };
+
+    /**
+     * Sorting options for paginated DataSync list requests.
+     *
+     * Prefer the object form (`{ firstName: 'desc' }`), which is normalized to the `field:order`
+     * form the service expects. A raw string is passed through unchanged.
+     */
+    export type DataSyncSort = string | Record<string, 'asc' | 'desc' | null>;
+
+    /**
+     * Class hierarchy level used to disambiguate classes that share a name at different levels.
+     *
+     * `Global` targets a class provided by the service; `SubKey` targets one defined on the key set.
+     * Mirrors the event-side `DataSyncClassLevel` reported on subscribe messages.
+     */
+    export type ClassLevel = 'Global' | 'SubKey';
+
+    /**
+     * Single-entity response envelope.
+     *
+     * `status` is the HTTP status code added by the SDK; `data`, `links` and `meta` come from the
+     *  service response and are passed through verbatim.
+     */
+    type DataSyncEntityResponse<T> = {
+      /** HTTP status code. */
+      status: number;
+      /** Response data. */
+      data: T;
+      /** HATEOAS links, when the service provides them for the resource. */
+      links?: DataSyncLinks;
+      /** Response metadata, when the service provides it for the resource. */
+      meta?: DataSyncPageMeta;
+    };
+
+    /**
+     * Paged list response envelope.
+     *
+     * `status` is the HTTP status code added by the SDK; `data`, `links` and `meta` come from the
+     * service and are passed through verbatim. Use
+     * `meta.has_next` / `meta.next_cursor` to page forward by feeding the cursor back in as `cursor`.
+     */
+    type DataSyncPagedResponse<T> = {
+      /** HTTP status code. */
+      status: number;
+      /** Array of response items. */
+      data: T[];
+      /** HATEOAS links for pagination (`self`, `next`, plus any related-resource links). */
+      links?: DataSyncLinks;
+      /** Cursor-based pagination metadata. */
+      meta?: DataSyncPageMeta;
+    };
+
+    /**
+     * A source → destination path pair (JSON Pointer) for JSON Patch `move` and `copy` operations.
+     */
+    export type PatchMovePath = {
+      /** JSON Pointer source path, used verbatim (RFC 6902 `from`). */
+      from: string;
+      /** JSON Pointer destination path, used verbatim (RFC 6902 `path`). */
+      path: string;
+    };
+
+    /**
+     * Entity data properties for create requests.
+     *
+     * The mutable, versioned payload of an entity. `class` (immutable) and `id` live at the
+     * top level of {@link CreateEntityParameters}; everything that can change over the entity's
+     * lifetime is grouped here under `data`.
+     *
+     * Each field below documents the JSON Pointer to use when changing it later with
+     * `updateEntity` ({@link UpdateEntityParameters}) — the create-time parameter name and the
+     * patch path are not always the same.
+     */
+    export type CreateEntityData = {
+      /**
+       * Version of the entity class schema.
+       *
+       * To change this later, patch `/entityClassVersion` — the stored property name, which is what
+       * responses and real-time events carry. It is *not* `/data/classVersion`.
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createEntity({ class: 'Customer', data: { classVersion: 1 } });
+       * // later: bump the version
+       * await pubnub.dataSync.updateEntity({ id, replace: { '/entityClassVersion': 2 } });
+       * ```
+       */
+      classVersion: number;
+      /**
+       * Optional lifecycle status.
+       *
+       * To change this later, patch `/status`.
+       *
+       * @example
+       * ```typescript
+       * await pubnub.dataSync.updateEntity({ id, replace: { '/status': 'inactive' } });
+       * ```
+       */
+      status?: string;
+      /**
+       * User-defined JSON payload conforming to the entity class schema.
+       *
+       * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+       * A field name that contains a `.` is written as-is (`/payload/user.name`).
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createEntity({
+       *   class: 'Customer',
+       *   data: { classVersion: 1, payload: { creditScore: 720, address: { city: 'Pune' } } },
+       * });
+       * // later: one top-level field, one nested field, one field whose name contains a dot
+       * await pubnub.dataSync.updateEntity({
+       *   id,
+       *   replace: { '/payload/creditScore': 810, '/payload/address/city': 'Mumbai' },
+       *   add: { '/payload/user.name': 'Alice' },
+       *   remove: ['/payload/address/line2'],
+       * });
+       * ```
+       */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Entity data properties for update (PUT) requests.
+     *
+     * The mutable, versioned payload of an entity. `id` lives at the top level of
+     * {@link SetEntityParameters}. `entityClass` is immutable after creation and therefore
+     * has no place in updates.
+     */
+    export type SetEntityData = {
+      /**
+       * Version of the entity class schema.
+       *
+       * With `updateEntity` (PATCH) the same value is addressed as `/entityClassVersion`.
+       */
+      classVersion: number;
+      /** Optional lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload conforming to the entity class schema. */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Entity resource as returned from the server.
+     */
+    export type EntityObject = {
+      /** Unique identifier (UUID). */
+      id: string;
+      /** Entity class this entity belongs to. */
+      entityClass: string;
+      /** Version of the entity class schema. */
+      entityClassVersion: number;
+      /** Lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload. */
+      payload?: Record<string, unknown>;
+      /** Date and time the entity was created (ISO 8601). */
+      createdAt: string;
+      /** Date and time the entity was last updated (ISO 8601). */
+      updatedAt: string;
+      /** Content fingerprint for optimistic concurrency control. */
+      eTag: string;
+      /** Auto-deletion timestamp (ISO 8601). Entities expire at this time. */
+      expiresAt: string;
+    };
+
+    /**
+     * Create Entity request parameters.
+     */
+    export type CreateEntityParameters = {
+      /**
+       * Optional entity ID.
+       * Server auto-generates a UUID if not provided.
+       */
+      id?: string;
+      /**
+       * Entity class this entity belongs to. Set at creation time and immutable afterward.
+       *
+       * Stored on the entity as `entityClass` — the name it carries in responses and real-time event
+       * payloads. Immutable, so it cannot be patched: `updateEntity` rejects `/entityClass`.
+       */
+      class: string;
+      /**
+       * Class hierarchy level of `class`. Set at creation time and immutable afterward.
+       *
+       * Omit to let the service apply its default.
+       *
+       * Stored on the entity as `entityClassLevel`. Immutable, so it cannot be patched.
+       */
+      classLevel?: ClassLevel;
+      /**
+       * Mutable, versioned entity data (class version, status, and payload).
+       *
+       * These fields map into the request body envelope. `id` and `class` are kept at the top
+       * level because they identify the resource, while everything in `data` is what the entity
+       * carries and can change over its lifetime.
+       */
+      data: CreateEntityData;
+    };
+
+    /**
+     * Get Entity request parameters.
+     */
+    export type GetEntityParameters = {
+      /** Entity ID. */
+      id: string;
+    };
+
+    /**
+     * Get All Entities request parameters.
+     *
+     * `class` is required — entities are always listed within the context of their class.
+     */
+    export type GetEntitiesParameters = PagedRequestParameters & {
+      /**
+       * Entity class name to filter by (required).
+       *
+       * Matches the stored `entityClass` property carried by responses and real-time events.
+       */
+      class: string;
+      /**
+       * Entity class version. If not provided, the server returns entities for the latest version.
+       *
+       * Matches the stored `entityClassVersion` property.
+       */
+      classVersion?: number;
+      /**
+       * Level of the entity class, used to disambiguate a class name defined at both levels.
+       *
+       * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
+       */
+      classLevel?: ClassLevel;
+    };
+
+    /**
+     * Set Entity request parameters (full replacement via PUT).
+     *
+     * `entityClass` is immutable after creation — only `classVersion`, `status`,
+     * and `payload` can be updated.
+     */
+    export type SetEntityParameters = {
+      /** Entity ID. */
+      id: string;
+      /** Complete, mutable entity data for replacement (excludes immutable `entityClass`). */
+      data: SetEntityData;
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the update only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Update Entity request parameters (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
+     *
+     * Patch paths address the entity's **stored property names** — the same keys that come
+     * back in responses and real-time events — not the grouped parameter names used by
+     * {@link CreateEntityParameters}:
+     *
+     * - `classVersion` → `/entityClassVersion` (not `/data/classVersion`)
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+     *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * At least one of `add`, `replace`, or `remove` must be provided.
+     */
+    export type UpdateEntityParameters = {
+      /** Entity ID. */
+      id: string;
+      /**
+       * Fields to add, keyed by JSON Pointer.
+       *
+       * Each key is a JSON Pointer to the target field, used exactly as provided.
+       * The SDK converts these to JSON Patch "add" operations.
+       *
+       * @example
+       * ```typescript
+       * add: {
+       *   '/payload/tags/0': 'priority',
+       *   '/payload/profile/displayName': 'Alice',
+       * }
+       * ```
+       */
+      add?: Record<string, unknown>;
+      /**
+       * Fields to replace, keyed by JSON Pointer.
+       *
+       * Each key is a JSON Pointer to the target field, used exactly as provided.
+       * The SDK converts these to JSON Patch "replace" operations.
+       *
+       * @example
+       * ```typescript
+       * replace: {
+       *   '/status': 'active',
+       *   '/payload/score': 300,
+       * }
+       * ```
+       */
+      replace?: Record<string, unknown>;
+      /**
+       * Array of JSON Pointer field paths to remove.
+       *
+       * The SDK converts these to JSON Patch "remove" operations.
+       *
+       * @example
+       * ```typescript
+       * remove: ['/payload/tempFlag', '/payload/legacyField']
+       * ```
+       */
+      remove?: string[];
+      /**
+       * Source → destination path pairs to move (RFC 6902 "move").
+       *
+       * The value at each `from` is removed and re-added at `path`. Both are JSON Pointers used
+       * exactly as provided (prefix with `/payload` to target payload fields).
+       *
+       * @example
+       * ```typescript
+       * move: [{ from: '/payload/legacyName', path: '/payload/displayName' }]
+       * ```
+       */
+      move?: PatchMovePath[];
+      /**
+       * Source → destination path pairs to copy (RFC 6902 "copy").
+       *
+       * The value at each `from` is duplicated to `path`. Both are JSON Pointers used exactly as
+       * provided (prefix with `/payload` to target payload fields).
+       *
+       * @example
+       * ```typescript
+       * copy: [{ from: '/payload/displayName', path: '/payload/previousName' }]
+       * ```
+       */
+      copy?: PatchMovePath[];
+      /**
+       * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test").
+       *
+       * The patch fails if the value at any path does not equal the expected value. Keys are used
+       * exactly as provided (prefix with `/payload` for payload fields).
+       *
+       * @example
+       * ```typescript
+       * test: { '/status': 'active' }
+       * ```
+       */
+      test?: Record<string, unknown>;
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the patch only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Remove Entity request parameters.
+     */
+    export type RemoveEntityParameters = {
+      /** Entity ID. */
+      id: string;
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the delete only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /** Response for creating an entity. */
+    export type CreateEntityResponse = DataSyncEntityResponse<EntityObject>;
+
+    /** Response for getting a single entity. */
+    export type GetEntityResponse = DataSyncEntityResponse<EntityObject>;
+
+    /** Response for listing entities. */
+    export type GetEntitiesResponse = DataSyncPagedResponse<EntityObject>;
+
+    /** Response for updating an entity (PUT). */
+    export type SetEntityResponse = DataSyncEntityResponse<EntityObject>;
+
+    /** Response for patching an entity (PATCH). */
+    export type UpdateEntityResponse = DataSyncEntityResponse<EntityObject>;
+
+    /** Response for removing an entity. */
+    export type RemoveEntityResponse = {
+      /** HTTP status code. */
+      status: number;
+    };
+
+    /**
+     * Relationship data properties for create requests.
+     *
+     * The mutable, versioned payload of a relationship. `id`, `class`, `entityAId`, and `entityBId`
+     * live at the top level of {@link CreateRelationshipParameters} (identity + immutable structure);
+     * everything that can change over the relationship's lifetime is grouped here under `data`.
+     *
+     * Each field below documents the JSON Pointer to use when changing it later with
+     * `updateRelationship` ({@link UpdateRelationshipParameters}) — the create-time parameter name
+     * and the patch path are not always the same.
+     */
+    export type CreateRelationshipData = {
+      /**
+       * Version of the relationship class schema.
+       *
+       * To change this later, patch `/relationshipClassVersion` — the stored property name, which is
+       * what responses and real-time events carry. It is *not* `/data/classVersion`.
+       *
+       * @example
+       * ```typescript
+       * await pubnub.dataSync.updateRelationship({ id, replace: { '/relationshipClassVersion': 2 } });
+       * ```
+       */
+      classVersion: number;
+      /**
+       * Optional lifecycle status.
+       *
+       * To change this later, patch `/status`.
+       */
+      status?: string;
+      /**
+       * User-defined JSON payload.
+       *
+       * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+       * A field name that contains a `.` is written as-is (`/payload/user.name`).
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createRelationship({
+       *   class: 'RequestedBy', entityAId, entityBId,
+       *   data: { classVersion: 1, payload: { label: 'primary', linkedAt: '2026-07-06T10:00:00.000Z' } },
+       * });
+       * // later
+       * await pubnub.dataSync.updateRelationship({
+       *   id,
+       *   replace: { '/payload/label': 'secondary' },
+       *   move: [{ from: '/payload/linkedAt', path: '/payload/linkedOn' }],
+       * });
+       * ```
+       */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Relationship data properties for update (PUT) requests.
+     *
+     * The mutable, versioned payload of a relationship. `id`, `entityAId`, and `entityBId` live at the
+     * top level of {@link SetRelationshipParameters}. `relationshipClass` is immutable after creation
+     * and therefore has no place in updates. The server rejects a PUT that omits `classVersion`.
+     */
+    export type SetRelationshipData = {
+      /**
+       * Version of the relationship class schema.
+       *
+       * With `updateRelationship` (PATCH) the same value is addressed as `/relationshipClassVersion`.
+       */
+      classVersion: number;
+      /** Optional lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload. */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Relationship resource as returned from the server.
+     */
+    export type RelationshipObject = {
+      /** Unique identifier. */
+      id: string;
+      /** First entity ID in the relationship. */
+      entityAId: string;
+      /** Second entity ID in the relationship. */
+      entityBId: string;
+      /** Relationship class this relationship belongs to. */
+      relationshipClass: string;
+      /** Version of the relationship class schema. */
+      relationshipClassVersion: number;
+      /** Lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload. */
+      payload?: Record<string, unknown>;
+      /** Date and time the relationship was created (ISO 8601). */
+      createdAt: string;
+      /** Date and time the relationship was last updated (ISO 8601). */
+      updatedAt: string;
+      /** Content fingerprint for optimistic concurrency control. */
+      eTag: string;
+      /** Auto-deletion timestamp (ISO 8601). */
+      expiresAt: string;
+    };
+
+    /**
+     * Create Relationship request parameters.
+     */
+    export type CreateRelationshipParameters = {
+      /**
+       * Optional relationship ID.
+       * Server auto-generates a UUID if not provided.
+       */
+      id?: string;
+      /**
+       * Relationship class this relationship belongs to. Set at creation time and immutable afterward.
+       *
+       * Stored on the relationship as `relationshipClass` — the name it carries in responses and
+       * real-time event payloads. Immutable, so it cannot be patched.
+       */
+      class: string;
+      /** First entity ID in the relationship. Immutable after creation, so it cannot be patched. */
+      entityAId: string;
+      /** Second entity ID in the relationship. Immutable after creation, so it cannot be patched. */
+      entityBId: string;
+      /** Mutable, versioned relationship data (class version, status, and payload). */
+      data: CreateRelationshipData;
+    };
+
+    /**
+     * Get Relationship request parameters.
+     */
+    export type GetRelationshipParameters = {
+      /** Relationship ID. */
+      id: string;
+    };
+
+    /**
+     * Get All Relationships request parameters.
+     */
+    export type GetRelationshipsParameters = PagedRequestParameters & {
+      /**
+       * Relationship class name (required by the server).
+       *
+       * Matches the stored `relationshipClass` property carried by responses and real-time events.
+       */
+      class: string;
+      /**
+       * Relationship class version.
+       *
+       * Matches the stored `relationshipClassVersion` property.
+       */
+      classVersion?: number;
+      /** Filter relationships by first entity ID. */
+      entityAId?: string;
+      /** Filter relationships by second entity ID. */
+      entityBId?: string;
+    };
+
+    /**
+     * Set Relationship request parameters (full replacement via PUT).
+     */
+    export type SetRelationshipParameters = {
+      /** Relationship ID. */
+      id: string;
+      /** First entity ID in the relationship. */
+      entityAId: string;
+      /** Second entity ID in the relationship. */
+      entityBId: string;
+      /** Complete, mutable relationship data for replacement (excludes immutable `relationshipClass`). */
+      data: SetRelationshipData;
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the update only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Update Relationship request parameters (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
+     *
+     * Patch paths address the relationship's **stored property names** — the same keys that come
+     * back in responses and real-time events — not the grouped parameter names used by
+     * {@link CreateRelationshipParameters}:
+     *
+     * - `classVersion` → `/relationshipClassVersion` (not `/data/classVersion`)
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+     *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+     *
+     * `relationshipClass`, `entityAId`, and `entityBId` are immutable and cannot be patched.
+     *
+     * At least one of `add`, `replace`, or `remove` must be provided.
+     */
+    export type UpdateRelationshipParameters = {
+      /** Relationship ID. */
+      id: string;
+      /**
+       * Fields to add, keyed by JSON Pointer.
+       *
+       * Each key is a JSON Pointer to the target field, used exactly as provided (prefix with
+       * `/payload` to target payload fields). The SDK converts these to JSON Patch "add" operations.
+       *
+       * @example
+       * ```typescript
+       * add: {
+       *   '/payload/tags/0': 'mentor',
+       * }
+       * ```
+       */
+      add?: Record<string, unknown>;
+      /**
+       * Fields to replace, keyed by JSON Pointer.
+       *
+       * Each key is a JSON Pointer to the target field, used exactly as provided (prefix with
+       * `/payload` to target payload fields). The SDK converts these to JSON Patch "replace" operations.
+       *
+       * @example
+       * ```typescript
+       * replace: {
+       *   '/payload/role': 'admin',
+       *   '/payload/permissions/read': true,
+       * }
+       * ```
+       */
+      replace?: Record<string, unknown>;
+      /**
+       * Array of JSON Pointer field paths to remove.
+       *
+       * The SDK converts these to JSON Patch "remove" operations.
+       *
+       * @example
+       * ```typescript
+       * remove: ['/payload/tempFlag', '/payload/legacyField']
+       * ```
+       */
+      remove?: string[];
+      /**
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is
+       * removed and re-added at `path`.
+       */
+      move?: PatchMovePath[];
+      /**
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
+       */
+      copy?: PatchMovePath[];
+      /**
+       * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
+       * value at any path does not equal the expected value. Keys are used as provided (prefix with
+       * `/payload` for payload fields).
+       */
+      test?: Record<string, unknown>;
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the patch only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Remove Relationship request parameters.
+     */
+    export type RemoveRelationshipParameters = {
+      /** Relationship ID. */
+      id: string;
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the delete only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /** Response for creating a relationship. */
+    export type CreateRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+
+    /** Response for getting a single relationship. */
+    export type GetRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+
+    /** Response for listing relationships. */
+    export type GetRelationshipsResponse = DataSyncPagedResponse<RelationshipObject>;
+
+    /** Response for updating a relationship (PUT). */
+    export type SetRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+
+    /** Response for patching a relationship (PATCH). */
+    export type UpdateRelationshipResponse = DataSyncEntityResponse<RelationshipObject>;
+
+    /** Response for removing a relationship. */
+    export type RemoveRelationshipResponse = {
+      /** HTTP status code. */
+      status: number;
+    };
+
+    /**
+     * User data properties for create requests.
+     *
+     * The mutable, versioned payload of a user. `id` lives at the top level of
+     * {@link CreateUserParameters}; everything that can change over the user's lifetime is here.
+     *
+     * Each field below documents the JSON Pointer to use when changing it later with `updateUser`
+     * ({@link UpdateUserParameters}) — the create-time parameter name and the patch path are not
+     * always the same.
+     */
+    export type CreateUserData = {
+      /**
+       * Version of the entity class schema.
+       *
+       * To change this later, patch `/entityClassVersion` — the stored property name, which is what
+       * responses and real-time events carry. It is *not* `/data/classVersion`.
+       *
+       * @example
+       * ```typescript
+       * await pubnub.dataSync.updateUser({ id, replace: { '/entityClassVersion': 2 } });
+       * ```
+       */
+      classVersion: number;
+      /**
+       * Optional lifecycle status.
+       *
+       * To change this later, patch `/status`.
+       */
+      status?: string;
+      /**
+       * User-defined JSON payload conforming to the entity class schema.
+       *
+       * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+       * A field name that contains a `.` is written as-is (`/payload/user.name`).
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createUser({
+       *   data: { classVersion: 1, payload: { email: 'alice@acme.test', isActive: true } },
+       * });
+       * // later
+       * await pubnub.dataSync.updateUser({
+       *   id,
+       *   replace: { '/payload/email': 'alice.v@acme.test' },
+       *   remove: ['/payload/isActive'],
+       * });
+       * ```
+       */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * User resource as returned from the server.
+     */
+    export type UserObject = {
+      /** Unique identifier (UUID). */
+      id: string;
+      /** Version of the entity class schema. */
+      entityClassVersion: number;
+      /** Lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload. */
+      payload?: Record<string, unknown>;
+      /** Date and time the user was created (ISO 8601). */
+      createdAt: string;
+      /** Date and time the user was last updated (ISO 8601). */
+      updatedAt: string;
+      /** Content fingerprint for optimistic concurrency control. */
+      eTag: string;
+      /** Auto-deletion timestamp (ISO 8601). Users expire at this time. */
+      expiresAt: string;
+    };
+
+    /**
+     * Create User request parameters.
+     */
+    export type CreateUserParameters = {
+      /**
+       * Optional user ID.
+       * Server auto-generates a UUID if not provided.
+       */
+      id?: string;
+      /**
+       * Entity class this user belongs to. Set at creation time and immutable afterward.
+       *
+       * Must be `User` or one of its subclasses. Omit to let the service apply the default (`User`).
+       *
+       * Stored on the user as `entityClass` — the name it carries in responses and real-time event
+       * payloads. Immutable, so it cannot be patched: `updateUser` rejects `/entityClass`.
+       */
+      class?: string;
+      /**
+       * Class hierarchy level of the user's entity class. Set at creation time and immutable afterward.
+       *
+       * Omit to let the service apply its default.
+       *
+       * Stored on the user as `entityClassLevel`. Immutable, so it cannot be patched.
+       */
+      classLevel?: ClassLevel;
+      /** Mutable, versioned user data (class version, status, and payload). */
+      data: CreateUserData;
+    };
+
+    /**
+     * User data properties for update (PUT) requests.
+     *
+     * The mutable, versioned payload of a user. `id` lives at the top level of
+     * {@link SetUserParameters}.
+     */
+    export type SetUserData = {
+      /**
+       * Version of the entity class schema.
+       *
+       * With `updateUser` (PATCH) the same value is addressed as `/entityClassVersion`.
+       */
+      classVersion: number;
+      /** Optional lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload conforming to the entity class schema. */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Get User request parameters.
+     */
+    export type GetUserParameters = {
+      /** User ID. */
+      id: string;
+    };
+
+    /**
+     * Get All Users request parameters.
+     */
+    export type GetUsersParameters = PagedRequestParameters & {
+      /**
+       * Entity class name to filter by.
+       *
+       * Optional — unlike {@link GetEntitiesParameters.class}, users are listed across every user
+       * class when omitted.
+       *
+       * Matches the stored `entityClass` property carried by responses and real-time events.
+       */
+      class?: string;
+      /**
+       * Entity class version. If not provided, the server returns users for the latest version.
+       *
+       * Matches the stored `entityClassVersion` property.
+       */
+      classVersion?: number;
+      /**
+       * Level of the entity class, used to disambiguate a class name defined at both levels.
+       *
+       * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
+       */
+      classLevel?: ClassLevel;
+    };
+
+    /**
+     * Set User request parameters (full replacement via PUT).
+     */
+    export type SetUserParameters = {
+      /** User ID. */
+      id: string;
+      /** Complete, mutable user data for replacement. */
+      data: SetUserData;
+      /**
+       * ETag for optimistic concurrency control.
+       * If provided, the update only succeeds if the server's ETag matches.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Update User request parameters (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
+     *
+     * Patch paths address the user's **stored property names** — the same keys that come
+     * back in responses and real-time events — not the grouped parameter names used by
+     * {@link CreateUserParameters}:
+     *
+     * - `classVersion` → `/entityClassVersion` (not `/data/classVersion`)
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+     *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * At least one of `add`, `replace`, or `remove` must be provided.
+     */
+    export type UpdateUserParameters = {
+      /** User ID. */
+      id: string;
+      /**
+       * Fields to add, keyed by JSON Pointer (used exactly as provided).
+       * The SDK converts these to JSON Patch "add" operations.
+       */
+      add?: Record<string, unknown>;
+      /**
+       * Fields to replace, keyed by JSON Pointer (used exactly as provided).
+       * The SDK converts these to JSON Patch "replace" operations.
+       */
+      replace?: Record<string, unknown>;
+      /**
+       * Array of JSON Pointer field paths to remove (used exactly as provided).
+       * The SDK converts these to JSON Patch "remove" operations.
+       */
+      remove?: string[];
+      /**
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is
+       * removed and re-added at `path`.
+       */
+      move?: PatchMovePath[];
+      /**
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
+       */
+      copy?: PatchMovePath[];
+      /**
+       * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
+       * value at any path does not equal the expected value. Keys are used as provided (prefix with
+       * `/payload` for payload fields).
+       */
+      test?: Record<string, unknown>;
+      /**
+       * ETag for optimistic concurrency control.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Remove User request parameters.
+     */
+    export type RemoveUserParameters = {
+      /** User ID. */
+      id: string;
+      /**
+       * ETag for optimistic concurrency control.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /** Response for creating a user. */
+    export type CreateUserResponse = DataSyncEntityResponse<UserObject>;
+
+    /** Response for getting a single user. */
+    export type GetUserResponse = DataSyncEntityResponse<UserObject>;
+
+    /** Response for listing users. */
+    export type GetUsersResponse = DataSyncPagedResponse<UserObject>;
+
+    /** Response for updating a user (PUT). */
+    export type SetUserResponse = DataSyncEntityResponse<UserObject>;
+
+    /** Response for patching a user (PATCH). */
+    export type UpdateUserResponse = DataSyncEntityResponse<UserObject>;
+
+    /** Response for removing a user. */
+    export type RemoveUserResponse = {
+      /** HTTP status code. */
+      status: number;
+    };
+
+    /**
+     * Channel data properties for create requests.
+     *
+     * The mutable, versioned payload of a channel. `id` lives at the top level of
+     * {@link CreateChannelParameters}; everything that can change over the channel's lifetime is here.
+     *
+     * Each field below documents the JSON Pointer to use when changing it later with `updateChannel`
+     * ({@link UpdateChannelParameters}) — the create-time parameter name and the patch path are not
+     * always the same.
+     */
+    export type CreateChannelData = {
+      /**
+       * Version of the entity class schema.
+       *
+       * To change this later, patch `/entityClassVersion` — the stored property name, which is what
+       * responses and real-time events carry. It is *not* `/data/classVersion`.
+       *
+       * @example
+       * ```typescript
+       * await pubnub.dataSync.updateChannel({ id, replace: { '/entityClassVersion': 2 } });
+       * ```
+       */
+      classVersion: number;
+      /**
+       * Optional lifecycle status.
+       *
+       * To change this later, patch `/status`.
+       */
+      status?: string;
+      /**
+       * User-defined JSON payload conforming to the entity class schema.
+       *
+       * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+       * A field name that contains a `.` is written as-is (`/payload/user.name`).
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createChannel({
+       *   data: { classVersion: 1, payload: { name: 'engineering', memberCount: 1 } },
+       * });
+       * // later
+       * await pubnub.dataSync.updateChannel({
+       *   id,
+       *   replace: { '/payload/memberCount': 42 },
+       *   add: { '/payload/category': 'general' },
+       * });
+       * ```
+       */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Channel data properties for update (PUT) requests.
+     *
+     * The mutable, versioned payload of a channel. `id` lives at the top level of
+     * {@link SetChannelParameters}.
+     */
+    export type SetChannelData = {
+      /**
+       * Version of the entity class schema.
+       *
+       * With `updateChannel` (PATCH) the same value is addressed as `/entityClassVersion`.
+       */
+      classVersion: number;
+      /** Optional lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload conforming to the entity class schema. */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Channel resource as returned from the server.
+     */
+    export type ChannelObject = {
+      /** Unique identifier (UUID). */
+      id: string;
+      /** Version of the entity class schema. */
+      entityClassVersion: number;
+      /** Lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload. */
+      payload?: Record<string, unknown>;
+      /** Date and time the channel was created (ISO 8601). */
+      createdAt: string;
+      /** Date and time the channel was last updated (ISO 8601). */
+      updatedAt: string;
+      /** Content fingerprint for optimistic concurrency control. */
+      eTag: string;
+      /** Auto-deletion timestamp (ISO 8601). Channels expire at this time. */
+      expiresAt: string;
+    };
+
+    /**
+     * Create Channel request parameters.
+     */
+    export type CreateChannelParameters = {
+      /**
+       * Optional channel ID.
+       * Server auto-generates a UUID if not provided.
+       */
+      id?: string;
+      /**
+       * Entity class this channel belongs to. Set at creation time and immutable afterward.
+       *
+       * Must be `Channel` or one of its subclasses. Omit to let the service apply the default
+       * (`Channel`).
+       *
+       * Stored on the channel as `entityClass` — the name it carries in responses and real-time event
+       * payloads. Immutable, so it cannot be patched: `updateChannel` rejects `/entityClass`.
+       */
+      class?: string;
+      /**
+       * Class hierarchy level of the channel's entity class. Set at creation time and immutable
+       * afterward.
+       *
+       * Omit to let the service apply its default.
+       *
+       * Stored on the channel as `entityClassLevel`. Immutable, so it cannot be patched.
+       */
+      classLevel?: ClassLevel;
+      /** Mutable, versioned channel data (class version, status, and payload). */
+      data: CreateChannelData;
+    };
+
+    /**
+     * Get Channel request parameters.
+     */
+    export type GetChannelParameters = {
+      /** Channel ID. */
+      id: string;
+    };
+
+    /**
+     * Get All Channels request parameters.
+     */
+    export type GetChannelsParameters = PagedRequestParameters & {
+      /**
+       * Entity class name to filter by.
+       *
+       * Optional — unlike {@link GetEntitiesParameters.class}, channels are listed across every
+       * channel class when omitted.
+       *
+       * Matches the stored `entityClass` property carried by responses and real-time events.
+       */
+      class?: string;
+      /**
+       * Entity class version. If not provided, the server returns channels for the latest version.
+       *
+       * Matches the stored `entityClassVersion` property.
+       */
+      classVersion?: number;
+      /**
+       * Level of the entity class, used to disambiguate a class name defined at both levels.
+       *
+       * `Global` targets the service-provided class; `SubKey` targets one defined on the key set.
+       */
+      classLevel?: ClassLevel;
+    };
+
+    /**
+     * Set Channel request parameters (full replacement via PUT).
+     */
+    export type SetChannelParameters = {
+      /** Channel ID. */
+      id: string;
+      /** Complete, mutable channel data for replacement. */
+      data: SetChannelData;
+      /**
+       * ETag for optimistic concurrency control.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Update Channel request parameters (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
+     *
+     * Patch paths address the channel's **stored property names** — the same keys that come
+     * back in responses and real-time events — not the grouped parameter names used by
+     * {@link CreateChannelParameters}:
+     *
+     * - `classVersion` → `/entityClassVersion` (not `/data/classVersion`)
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+     *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+     *
+     * `entityClass` and `entityClassLevel` are immutable and cannot be patched.
+     *
+     * At least one of `add`, `replace`, or `remove` must be provided.
+     */
+    export type UpdateChannelParameters = {
+      /** Channel ID. */
+      id: string;
+      /**
+       * Fields to add, keyed by JSON Pointer (used exactly as provided).
+       * The SDK converts these to JSON Patch "add" operations.
+       */
+      add?: Record<string, unknown>;
+      /**
+       * Fields to replace, keyed by JSON Pointer (used exactly as provided).
+       * The SDK converts these to JSON Patch "replace" operations.
+       */
+      replace?: Record<string, unknown>;
+      /**
+       * Array of JSON Pointer field paths to remove (used exactly as provided).
+       * The SDK converts these to JSON Patch "remove" operations.
+       */
+      remove?: string[];
+      /**
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is
+       * removed and re-added at `path`.
+       */
+      move?: PatchMovePath[];
+      /**
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
+       */
+      copy?: PatchMovePath[];
+      /**
+       * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
+       * value at any path does not equal the expected value. Keys are used as provided (prefix with
+       * `/payload` for payload fields).
+       */
+      test?: Record<string, unknown>;
+      /**
+       * ETag for optimistic concurrency control.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Remove Channel request parameters.
+     */
+    export type RemoveChannelParameters = {
+      /** Channel ID. */
+      id: string;
+      /**
+       * ETag for optimistic concurrency control.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /** Response for creating a channel. */
+    export type CreateChannelResponse = DataSyncEntityResponse<ChannelObject>;
+
+    /** Response for getting a single channel. */
+    export type GetChannelResponse = DataSyncEntityResponse<ChannelObject>;
+
+    /** Response for listing channels. */
+    export type GetChannelsResponse = DataSyncPagedResponse<ChannelObject>;
+
+    /** Response for updating a channel (PUT). */
+    export type SetChannelResponse = DataSyncEntityResponse<ChannelObject>;
+
+    /** Response for patching a channel (PATCH). */
+    export type UpdateChannelResponse = DataSyncEntityResponse<ChannelObject>;
+
+    /** Response for removing a channel. */
+    export type RemoveChannelResponse = {
+      /** HTTP status code. */
+      status: number;
+    };
+
+    /**
+     * Membership data properties for create requests.
+     *
+     * The mutable, versioned payload of a membership. `id`, `userId`, and `channelId` live at the
+     * top level of {@link CreateMembershipParameters} (identity + immutable structure); everything
+     * that can change over the membership's lifetime is grouped here under `data`.
+     *
+     * Each field below documents the JSON Pointer to use when changing it later with
+     * `updateMembership` ({@link UpdateMembershipParameters}) — the create-time parameter name and
+     * the patch path are not always the same.
+     */
+    export type CreateMembershipData = {
+      /**
+       * Version of the Membership relationship class.
+       *
+       * To change this later, patch `/relationshipClassVersion` — the stored property name, which is
+       * what responses and real-time events carry. It is *not* `/data/classVersion`.
+       *
+       * @example
+       * ```typescript
+       * await pubnub.dataSync.updateMembership({ id, replace: { '/relationshipClassVersion': 2 } });
+       * ```
+       */
+      classVersion: number;
+      /**
+       * Optional lifecycle status.
+       *
+       * To change this later, patch `/status`.
+       */
+      status?: string;
+      /**
+       * User-defined JSON payload.
+       *
+       * To change a payload field later, patch `/payload/<fieldName>`; nest deeper with more segments.
+       * A field name that contains a `.` is written as-is (`/payload/user.name`).
+       *
+       * @example
+       * ```typescript
+       * // create
+       * await pubnub.dataSync.createMembership({
+       *   userId, channelId,
+       *   data: { classVersion: 1, payload: { role: 'member', notificationsEnabled: true } },
+       * });
+       * // later
+       * await pubnub.dataSync.updateMembership({
+       *   id,
+       *   replace: { '/payload/role': 'moderator' },
+       *   remove: ['/payload/notificationsEnabled'],
+       * });
+       * ```
+       */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Membership data properties for update (PUT) requests.
+     *
+     * The mutable, versioned payload of a membership. `id`, `userId`, and `channelId` live at the top
+     * level of {@link SetMembershipParameters}. The server rejects a PUT that omits `classVersion`
+     * (`SYN-0004: must not be null`), mirroring {@link SetRelationshipData}.
+     */
+    export type SetMembershipData = {
+      /**
+       * Version of the Membership relationship class.
+       *
+       * With `updateMembership` (PATCH) the same value is addressed as `/relationshipClassVersion`.
+       */
+      classVersion: number;
+      /** Optional lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload. */
+      payload?: Record<string, unknown>;
+    };
+
+    /**
+     * Membership resource as returned from the server.
+     *
+     * A membership is a `Membership`-class relationship between a channel (`entityAId`) and a user
+     * (`entityBId`), exposed on the REST response as `channelId` / `userId`.
+     */
+    export type MembershipObject = {
+      /** Unique identifier. */
+      id: string;
+      /** Channel ID reference. */
+      channelId: string;
+      /** User ID reference. */
+      userId: string;
+      /**
+       * Relationship class this membership belongs to — `Membership`, or one of its descendant classes.
+       *
+       * Server-assigned: the create/set endpoints take no class parameter, so it is never chosen by
+       * the caller.
+       */
+      relationshipClass: string;
+      /** Version of the relationship class schema. */
+      relationshipClassVersion: number;
+      /** Lifecycle status. */
+      status?: string;
+      /** User-defined JSON payload. */
+      payload?: Record<string, unknown>;
+      /** Date and time the membership was created (ISO 8601). */
+      createdAt: string;
+      /** Date and time the membership was last updated (ISO 8601). */
+      updatedAt: string;
+      /** Content fingerprint for optimistic concurrency control. */
+      eTag: string;
+      /** Auto-deletion timestamp (ISO 8601). */
+      expiresAt: string;
+    };
+
+    /**
+     * Create Membership request parameters.
+     */
+    export type CreateMembershipParameters = {
+      /**
+       * Optional membership ID.
+       * Server auto-generates a UUID if not provided.
+       */
+      id?: string;
+      /** User ID reference. Immutable after creation, so it cannot be patched. */
+      userId: string;
+      /** Channel ID reference. Immutable after creation, so it cannot be patched. */
+      channelId: string;
+      /** Mutable, versioned membership data (class version, status, and payload). */
+      data: CreateMembershipData;
+    };
+
+    /**
+     * Get Membership request parameters.
+     */
+    export type GetMembershipParameters = {
+      /** Membership ID. */
+      id: string;
+    };
+
+    /**
+     * Get All Memberships request parameters.
+     */
+    export type GetMembershipsParameters = PagedRequestParameters & {
+      /** Filter memberships by user ID. */
+      userId?: string;
+      /** Filter memberships by channel ID. */
+      channelId?: string;
+      /**
+       * Schema version of the relationship class.
+       * If not provided, the server uses the latest version.
+       *
+       * Matches the stored `relationshipClassVersion` property.
+       */
+      classVersion?: number;
+    };
+
+    /**
+     * Set Membership request parameters (full replacement via PUT).
+     */
+    export type SetMembershipParameters = {
+      /** Membership ID. */
+      id: string;
+      /** User ID reference. */
+      userId: string;
+      /** Channel ID reference. */
+      channelId: string;
+      /** Complete, mutable membership data for replacement. */
+      data: SetMembershipData;
+      /**
+       * ETag for optimistic concurrency control.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Update Membership request parameters (partial update via JSON Patch RFC 6902).
+     *
+     * Uses `add`, `replace`, and `remove` with JSON Pointer (RFC 6901) field paths.
+     *
+     * Patch paths address the membership's **stored property names** — the same keys that come
+     * back in responses and real-time events — not the grouped parameter names used by
+     * {@link CreateMembershipParameters}:
+     *
+     * - `classVersion` → `/relationshipClassVersion` (not `/data/classVersion`)
+     * - `status` → `/status`
+     * - a payload field → `/payload/<fieldName>`, e.g. `/payload/address/city` for a nested one.
+     *   A field name that contains a `.` is written as-is (`/payload/user.name`).
+     *
+     * `userId` and `channelId` are immutable and cannot be patched.
+     *
+     * At least one of `add`, `replace`, or `remove` must be provided.
+     */
+    export type UpdateMembershipParameters = {
+      /** Membership ID. */
+      id: string;
+      /**
+       * Fields to add, keyed by JSON Pointer (used exactly as provided).
+       * The SDK converts these to JSON Patch "add" operations.
+       */
+      add?: Record<string, unknown>;
+      /**
+       * Fields to replace, keyed by JSON Pointer (used exactly as provided).
+       * The SDK converts these to JSON Patch "replace" operations.
+       */
+      replace?: Record<string, unknown>;
+      /**
+       * Array of JSON Pointer field paths to remove (used exactly as provided).
+       * The SDK converts these to JSON Patch "remove" operations.
+       */
+      remove?: string[];
+      /**
+       * Source → destination path pairs to move (RFC 6902 "move"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is
+       * removed and re-added at `path`.
+       */
+      move?: PatchMovePath[];
+      /**
+       * Source → destination path pairs to copy (RFC 6902 "copy"). Both paths are JSON Pointers used
+       * as provided (prefix with `/payload` to target payload fields); the value at `from` is duplicated to `path`.
+       */
+      copy?: PatchMovePath[];
+      /**
+       * Fields to test (JSON Pointer keys → expected value; RFC 6902 "test"). The patch fails if the
+       * value at any path does not equal the expected value. Keys are used as provided (prefix with
+       * `/payload` for payload fields).
+       */
+      test?: Record<string, unknown>;
+      /**
+       * ETag for optimistic concurrency control.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /**
+     * Remove Membership request parameters.
+     */
+    export type RemoveMembershipParameters = {
+      /** Membership ID. */
+      id: string;
+      /**
+       * ETag for optimistic concurrency control.
+       */
+      ifMatchesEtag?: string;
+    };
+
+    /** Response for creating a membership. */
+    export type CreateMembershipResponse = DataSyncEntityResponse<MembershipObject>;
+
+    /** Response for getting a single membership. */
+    export type GetMembershipResponse = DataSyncEntityResponse<MembershipObject>;
+
+    /** Response for listing memberships. */
+    export type GetMembershipsResponse = DataSyncPagedResponse<MembershipObject>;
+
+    /** Response for updating a membership (PUT). */
+    export type SetMembershipResponse = DataSyncEntityResponse<MembershipObject>;
+
+    /** Response for patching a membership (PATCH). */
+    export type UpdateMembershipResponse = DataSyncEntityResponse<MembershipObject>;
+
+    /** Response for removing a membership. */
+    export type RemoveMembershipResponse = {
+      /** HTTP status code. */
+      status: number;
     };
   }
 

@@ -65,7 +65,30 @@ export enum PubNubEventType {
    * Files event.
    */
   Files,
+
+  /**
+   * DataSync object change event.
+   *
+   * **Note:** Value must equal `5` to match the service wire value (`e: 5`).
+   */
+  DataSync,
 }
+
+/**
+ * Event types which this SDK version knows how to parse.
+ *
+ * Events with any other `e` value are ignored: they most likely originate from a service release newer than
+ * the SDK
+ */
+const KNOWN_EVENT_TYPES: ReadonlySet<PubNubEventType> = new Set([
+  PubNubEventType.Presence,
+  PubNubEventType.Message,
+  PubNubEventType.Signal,
+  PubNubEventType.AppContext,
+  PubNubEventType.MessageAction,
+  PubNubEventType.Files,
+  PubNubEventType.DataSync,
+]);
 
 /**
  * Time cursor.
@@ -417,6 +440,223 @@ export type VSPMembershipObjectData = ObjectData<
 export type AppContextObjectData = ChannelObjectData | UuidObjectData | MembershipObjectData;
 // endregion
 
+// region DataSync service response
+/**
+ * DataSync change event kinds.
+ */
+type DataSyncEventName = 'create' | 'update' | 'delete';
+
+/**
+ * DataSync object kind.
+ *
+ * The service reports the semantic kind for its own built-in classes (`user` / `channel` /
+ * `membership`) and the generic storage kind for developer-defined ones (`entity` / `relationship`).
+ * Used both for the kind as sent ({@link DataSyncData.type}) and for the kind normalized across
+ * service versions ({@link DataSyncData.objectType}).
+ */
+export type DataSyncObjectType = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
+
+/**
+ * Scope of the class definition a DataSync object belongs to.
+ *
+ * `Global` identifies the built-in classes provided by the service (`User`, `Channel`,
+ * `Membership`); `SubKey` identifies classes defined by the developer on their own key set.
+ */
+export type DataSyncClassLevel = 'Global' | 'SubKey';
+
+/**
+ * Reserved DataSync system class names (lower-cased) → normalized object kind.
+ *
+ * Only consulted when the wire {@link DataSyncData.type} is the generic `entity` / `relationship`
+ * kind, and only for classes the service marks as `Global` (see {@link DataSyncClassLevel}) — so a
+ * developer-defined class which happens to share one of these names is not mistaken for a typed
+ * resource. Keys are compared case-insensitively.
+ *
+ * @internal
+ */
+const DATA_SYNC_RESERVED_CLASSES: Record<string, DataSyncObjectType> = {
+  user: 'user',
+  channel: 'channel',
+  membership: 'membership',
+};
+
+/**
+ * DataSync entity change payload (create / update).
+ *
+ * Mirrors the object as sent by the service. Class identity is not repeated here: it is reported once
+ * on the event itself as {@link DataSyncData.className} / {@link DataSyncData.classLevel} /
+ * {@link DataSyncData.classVersion}.
+ */
+export type DataSyncEntityData = {
+  /**
+   * Unique entity identifier.
+   */
+  id: string;
+
+  /**
+   * Lifecycle status.
+   */
+  status?: string;
+
+  /**
+   * User-defined JSON payload.
+   */
+  payload?: Payload;
+
+  /**
+   * Date and time the entity was created (ISO 8601).
+   */
+  createdAt?: string;
+
+  /**
+   * Date and time the entity was last updated (ISO 8601).
+   */
+  updatedAt?: string;
+
+  /**
+   * Content fingerprint for optimistic concurrency control.
+   */
+  eTag?: string;
+
+  /**
+   * Auto-deletion timestamp (ISO 8601).
+   */
+  expiresAt?: string;
+};
+
+/**
+ * DataSync relationship change payload (create / update).
+ *
+ * Class identity is not repeated here: it is reported once on the event itself as
+ * {@link DataSyncData.className} / {@link DataSyncData.classLevel} / {@link DataSyncData.classVersion}.
+ */
+export type DataSyncRelationshipData = DataSyncEntityData & {
+  /**
+   * First entity id in the relationship.
+   */
+  entityAId?: string;
+
+  /**
+   * Second entity id in the relationship.
+   */
+  entityBId?: string;
+};
+
+/**
+ * DataSync membership change payload (create / update).
+ *
+ * A membership is stored as a relationship, but the service names its endpoints semantically —
+ * `channelId` / `userId` instead of `entityAId` / `entityBId` — matching the REST
+ * `MembershipObject`. Class identity is not repeated here: it is reported once on the event itself as
+ * {@link DataSyncData.className} / {@link DataSyncData.classLevel} / {@link DataSyncData.classVersion}.
+ */
+export type DataSyncMembershipData = DataSyncEntityData & {
+  /**
+   * Id of the channel the membership joins.
+   */
+  channelId?: string;
+
+  /**
+   * Id of the user the membership joins.
+   */
+  userId?: string;
+};
+
+/**
+ * DataSync delete change payload.
+ */
+export type DataSyncDeleteData = {
+  /**
+   * Unique identifier of the removed object.
+   */
+  id: string;
+
+  /**
+   * Date and time the object was removed (ISO 8601).
+   */
+  deletedAt?: string;
+};
+
+/**
+ * Parsed DataSync change event (dispatched under `message`).
+ */
+export type DataSyncData = {
+  /**
+   * DataSync service payload version.
+   */
+  version?: string;
+
+  /**
+   * The type of change which happened to the object.
+   */
+  event: DataSyncEventName;
+
+  /**
+   * Name of the service which generated the update (always `data-sync`).
+   */
+  source: string;
+
+  /**
+   * Raw DataSync object kind as sent by the service.
+   */
+  type: DataSyncObjectType;
+
+  /**
+   * Normalized DataSync object kind.
+   *
+   * The built-in `User` / `Channel` / `Membership` classes map to `'user'` / `'channel'` /
+   * `'membership'`; developer-defined classes to `'entity'` / `'relationship'`. Use this to
+   * discriminate typed resources without knowing class-name strings.
+   *
+   * Normally identical to the wire {@link type}; it differs only for a service which still reports
+   * the built-in classes under the generic `'entity'` / `'relationship'` kind, where it is derived
+   * from {@link className} / {@link classLevel} instead.
+   */
+  objectType: DataSyncObjectType;
+
+  /**
+   * Object class name.
+   */
+  className?: string;
+
+  /**
+   * Scope of the class definition: `Global` for the built-in classes (`User` / `Channel` /
+   * `Membership`), `SubKey` for classes defined by the developer on their own key set.
+   */
+  classLevel?: DataSyncClassLevel;
+
+  /**
+   * Version of the object class schema (parsed from the wire `classVersion`).
+   */
+  classVersion?: number;
+
+  /**
+   * Changed object information.
+   *
+   * For `delete` events only `{ id, deletedAt }` is populated.
+   */
+  data: DataSyncEntityData | DataSyncRelationshipData | DataSyncMembershipData | DataSyncDeleteData;
+};
+
+/**
+ * Raw DataSync envelope payload (before parsing).
+ *
+ * @internal
+ */
+type DataSyncServiceData = {
+  version?: string;
+  metadata?: {
+    event?: DataSyncEventName;
+    source?: string;
+    type?: DataSyncObjectType;
+    className?: string;
+    classLevel?: string;
+    classVersion?: string | number;
+  };
+  data?: Record<string, unknown>;
+};
+// endregion
+
 // region File service response
 /**
  * File service response.
@@ -663,12 +903,24 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       .map((envelope) => {
         let { e: eventType } = envelope;
 
+        // Events delivered on a presence channel are always presence events: the `-pnpres` suffix wins over
+        // the service-reported type. `envelope.c` is the actual channel (`envelope.b` is the channel group
+        // name), so this also covers presence delivered through a subscribed channel group.
+        if (envelope.c.endsWith('-pnpres')) eventType = PubNubEventType.Presence;
         // Resolve missing event type.
-        eventType ??= envelope.c.endsWith('-pnpres') ? PubNubEventType.Presence : PubNubEventType.Message;
+        else eventType ??= PubNubEventType.Message;
+
+        // Ignore an event type this SDK version cannot parse rather than delivering an unexpected payload.
+        if (!KNOWN_EVENT_TYPES.has(eventType)) return undefined;
+
         const pn_mfp = messageFingerprint(envelope.d);
 
         // Check whether payload is string (potentially encrypted data).
-        if (eventType != PubNubEventType.Signal && typeof envelope.d === 'string') {
+        if (
+          eventType != PubNubEventType.Presence &&
+          eventType != PubNubEventType.Signal &&
+          typeof envelope.d === 'string'
+        ) {
           if (eventType == PubNubEventType.Message) {
             return {
               type: PubNubEventType.Message,
@@ -712,14 +964,23 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
             data: this.messageActionFromEnvelope(envelope),
             pn_mfp,
           };
+        } else if (eventType === PubNubEventType.DataSync) {
+          const dataSync = this.dataSyncFromEnvelope(envelope);
+
+          // Guard: only treat as DataSync when the service marks it so; otherwise fall back to message.
+          if (dataSync) return { type: PubNubEventType.DataSync, data: dataSync, pn_mfp };
+
+          return { type: PubNubEventType.Message, data: this.messageFromEnvelope(envelope), pn_mfp };
         }
 
+        // The only known event type left is a file event.
         return {
           type: PubNubEventType.Files,
           data: this.fileFromEnvelope(envelope),
           pn_mfp,
         };
-      });
+      })
+      .filter((event): event is Subscription.SubscriptionResponse['messages'][number] => event !== undefined);
 
     return {
       cursor: { timetoken: serviceResponse.t.t, region: serviceResponse.t.r },
@@ -747,14 +1008,29 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     const actualChannel = subscription !== null ? trimmedChannel : null;
     const subscribedChannel = subscription !== null ? subscription : trimmedChannel;
 
-    if (typeof payload !== 'string') {
-      if ('data' in payload) {
+    // Presence payloads are objects. A string can only reach here when a non-presence payload has been published
+    // on a `-pnpres` channel: try to read it as JSON and never spread a string (which would add character-indexed
+    // keys to the event).
+    let presenceData: PresenceData | undefined;
+
+    if (typeof payload === 'string') {
+      try {
+        const parsed: unknown = JSON.parse(payload);
+        if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed))
+          presenceData = parsed as PresenceData;
+      } catch {
+        // Not JSON (encrypted or plain-text publish): payload contributes no presence fields.
+      }
+    } else presenceData = payload as PresenceData;
+
+    if (presenceData) {
+      if ('data' in presenceData) {
         // @ts-expect-error This is `state-change` object which should have `state` field.
-        payload['state'] = payload.data;
-        delete payload.data;
-      } else if ('action' in payload && payload.action === 'interval') {
-        payload.hereNowRefresh = payload.here_now_refresh ?? false;
-        delete payload.here_now_refresh;
+        presenceData['state'] = presenceData.data;
+        delete presenceData.data;
+      } else if ('action' in presenceData && presenceData.action === 'interval') {
+        presenceData.hereNowRefresh = presenceData.here_now_refresh ?? false;
+        delete presenceData.here_now_refresh;
       }
     }
 
@@ -764,8 +1040,9 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       actualChannel,
       subscribedChannel,
       timetoken: envelope.p.t,
-      ...(payload as PresenceData),
-    };
+      ...(presenceData ?? {}),
+      // Cast: presence fields are absent when the payload could not be read as an object.
+    } as Subscription.Presence;
   }
 
   private messageFromEnvelope(envelope: Envelope): Subscription.Message {
@@ -837,6 +1114,61 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       subscription,
       timetoken: envelope.p.t,
       message: object,
+    };
+  }
+
+  private dataSyncFromEnvelope(envelope: Envelope): Subscription.DataSyncObject | undefined {
+    const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
+    const payload = envelope.d as DataSyncServiceData;
+    const metadata = payload?.metadata;
+
+    // Only treat the envelope as DataSync when the service marks it and carries the required fields.
+    if (!metadata || metadata.source !== 'data-sync' || !metadata.event || !metadata.type) return undefined;
+
+    // Wire `className` is a bare class name (`User`, `Membership`, `Customer`); the `:`-splitting below
+    // is only there to keep tolerating the retired positional composite (`User::` / `::Customer`).
+    const classSegments = metadata.className ? metadata.className.split(':') : [];
+    const nonEmptySegments = classSegments.filter((segment) => segment.length > 0);
+    const className = nonEmptySegments.length > 0 ? nonEmptySegments[nonEmptySegments.length - 1] : undefined;
+    const classLevel = metadata.classLevel as DataSyncClassLevel | undefined;
+
+    // `classLevel` authoritatively separates the built-in classes from developer-defined ones, so a
+    // developer class named `User` / `Channel` / `Membership` is not mistaken for a typed resource.
+    // When it is absent (service predating the field) fall back to the legacy positional heuristic,
+    // where the system class was the first segment.
+    const systemClass = classLevel === undefined ? classSegments[0] : classLevel === 'Global' ? className : undefined;
+    // The service reports the semantic kind directly; the class-name lookup only fills it in for a
+    // service which still sends the built-in classes under the generic `entity` / `relationship` kind.
+    const genericType = metadata.type === 'entity' || metadata.type === 'relationship';
+    const objectType: DataSyncObjectType = genericType
+      ? (systemClass && DATA_SYNC_RESERVED_CLASSES[systemClass.toLowerCase()]) || metadata.type
+      : metadata.type;
+    const parsedVersion = metadata.classVersion !== undefined ? Number.parseInt(`${metadata.classVersion}`, 10) : NaN;
+    const classVersion = Number.isNaN(parsedVersion) ? undefined : parsedVersion;
+    const raw = (payload.data ?? {}) as Record<string, unknown>;
+
+    // `data` mirrors the object as sent by the service; class identity is reported once, on the event.
+    let data: DataSyncData['data'];
+    if (metadata.event === 'delete') data = { id: raw.id as string, deletedAt: raw.deletedAt as string | undefined };
+    else if (objectType === 'membership') data = { ...raw } as DataSyncMembershipData;
+    else if (objectType === 'relationship') data = { ...raw } as DataSyncRelationshipData;
+    else data = { ...raw } as DataSyncEntityData;
+
+    return {
+      channel,
+      subscription,
+      timetoken: envelope.p.t,
+      message: {
+        version: payload.version,
+        event: metadata.event,
+        source: metadata.source,
+        type: metadata.type,
+        objectType,
+        className,
+        classLevel,
+        classVersion,
+        data,
+      },
     };
   }
 

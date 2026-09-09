@@ -7,6 +7,24 @@
 import { Payload, Query } from './types/api';
 
 /**
+ * Object log property names that must never appear in SDK logs.
+ *
+ * @internal
+ */
+export const SENSITIVE_LOG_KEYS = new Set(['authKey', 'authKeys', 'secretKey', 'cipherKey', 'token', 'auth']);
+
+/**
+ * Whether an object log key should be omitted because it may hold a secret.
+ *
+ * @param key - Property name from an object being logged.
+ *
+ * @returns `true` when the key should be filtered from log output.
+ *
+ * @internal
+ */
+export const isSensitiveLogKey = (key: string): boolean => SENSITIVE_LOG_KEYS.has(key);
+
+/**
  * Percent-encode input string.
  *
  * **Note:** Encode content in accordance of the `PubNub` service requirements.

@@ -53,6 +53,13 @@ export type Listener = {
   file?: (file: Subscription.File) => void;
 
   /**
+   * Real-time DataSync change events listener.
+   *
+   * @param event - Changed DataSync object information.
+   */
+  dataSync?: (event: Subscription.DataSyncObject) => void;
+
+  /**
    * Real-time PubNub client status change event.
    *
    * @param status - PubNub client status information
@@ -183,6 +190,16 @@ export class EventDispatcher {
   }
 
   /**
+   * Set a new DataSync event handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new
+   * DataSync event is received from the real-time network.
+   */
+  set onDataSync(listener: ((event: Subscription.DataSyncObject) => void) | undefined) {
+    this.updateTypeOrObjectListener({ add: !!listener, listener, type: 'dataSync' });
+  }
+
+  /**
    * Dispatch received a real-time update.
    *
    * @param event - A real-time event from multiplexed subscription.
@@ -249,6 +266,7 @@ export class EventDispatcher {
       }
     } else if (event.type === PubNubEventType.MessageAction) this.announce('messageAction', event.data);
     else if (event.type === PubNubEventType.Files) this.announce('file', event.data);
+    else if (event.type === PubNubEventType.DataSync) this.announce('dataSync', event.data);
   }
 
   /**

@@ -158,7 +158,11 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
           userIdChangeHandler = (userId: string) => middleware.onUserIdChange(userId);
           transport = middleware;
 
-          if (configurationCopy.subscriptionWorkerUnsubscribeOfflineClients) {
+          if (
+            configurationCopy.subscriptionWorkerUnsubscribeOfflineClients &&
+            typeof window !== 'undefined' &&
+            window.addEventListener
+          ) {
             window.addEventListener(
               'pagehide',
               (event) => {
@@ -211,7 +215,13 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
       }
     }
 
-    if (configuration.listenToBrowserNetworkEvents ?? true) {
+    // `window` is unavailable in DOM-less contexts (e.g. MV3 service workers); only attach network
+    // listeners when a `window` with event support actually exists.
+    if (
+      (configuration.listenToBrowserNetworkEvents ?? true) &&
+      typeof window !== 'undefined' &&
+      window.addEventListener
+    ) {
       window.addEventListener('offline', () => {
         this.networkDownDetected();
       });

@@ -1,3 +1,44 @@
+## v13.0.0
+September 08 2026
+
+#### Added
+- Added dataSync feature support.
+
+#### Fixed
+- No listener callback will be triggered for event with unknown event types.
+- All events from the presence channels will be categorised as presence event.
+
+## v12.0.3
+July 27 2026
+
+#### Fixed
+- Fixes unbound fetch issue.
+
+## v12.0.2
+July 22 2026
+
+#### Fixed
+- Fixes issue of getting error while obtain APM safe fetch api.
+
+## v12.0.1
+July 21 2026
+
+#### Fixed
+- Encoding on user provided file api inputs to avoid potential path traversal attack.
+
+#### Modified
+- Logger omits potential use sensitive information to be logged.
+- User will get warning while trying to configure legacy crypto module.
+
+## v12.0.0
+June 22 2026
+
+#### Added
+- **BREAKING CHANGES**: Added HTTP/2 support for Node, upgrade minimum node version requirements to v22.
+
+#### Fixed
+- React native specific dependencies is made as peer-dependency for package dependency installation. Fixed the following issues reported by [@tmcpartlin](https://github.com/tmcpartlin): [#383](https://github.com/pubnub/javascript/issues/383).
+
 ## v11.0.2
 June 11 2026
 

@@ -98,9 +98,14 @@ import {
 } from '../entities/interfaces/subscription-capable';
 import { EventEmitCapable } from '../entities/interfaces/event-emit-capable';
 import { EntityInterface } from '../entities/interfaces/entity-interface';
+import { DataSyncRelationship } from '../entities/data-sync-relationship';
+import { DataSyncMembership } from '../entities/data-sync-membership';
+import { DataSyncChannel } from '../entities/data-sync-channel';
+import { DataSyncEntity } from '../entities/data-sync-entity';
 import { SubscriptionBase } from '../entities/subscription-base';
 import { ChannelMetadata } from '../entities/channel-metadata';
 import { SubscriptionSet } from '../entities/subscription-set';
+import { DataSyncUser } from '../entities/data-sync-user';
 import { ChannelGroup } from '../entities/channel-group';
 import { UserMetadata } from '../entities/user-metadata';
 import { Channel } from '../entities/channel';
@@ -115,6 +120,9 @@ import PubNubPushNotifications from './pubnub-push';
 import * as AppContext from './types/api/app-context';
 import PubNubObjects from './pubnub-objects';
 // endregion
+// region DataSync
+import PubNubDataSync from './pubnub-data-sync';
+// endregion
 // region Time
 import * as Time from './endpoints/time';
 // endregion
@@ -123,7 +131,7 @@ import { DownloadFileRequest } from './endpoints/file_upload/download_file';
 import { SubscriptionInput } from './types/api/subscription';
 import { LoggerManager } from './components/logger-manager';
 import { LogLevel as LoggerLogLevel } from './interfaces/logger';
-import { encodeString, messageFingerprint } from './utils';
+import { encodeString, isSensitiveLogKey, messageFingerprint } from './utils';
 import { Entity } from '../entities/entity';
 import Categories from './constants/categories';
 
@@ -316,6 +324,14 @@ export class PubNubCore<
   private readonly _objects: PubNubObjects;
 
   /**
+   * PubNub DataSync REST API entry point.
+   *
+   * @internal
+   */
+  // @ts-expect-error Allowed to simplify interface when module can be disabled.
+  private readonly _dataSync: PubNubDataSync;
+
+  /**
    * PubNub Channel Group REST API entry point.
    *
    * @internal
@@ -426,13 +442,15 @@ export class PubNubCore<
       message: configuration.configuration as unknown as Record<string, unknown>,
       details: 'Create with configuration:',
       ignoredKeys(key: string, obj: Record<string, unknown>) {
-        return typeof obj[key] === 'function' || key.startsWith('_');
+        return typeof obj[key] === 'function' || key.startsWith('_') || key === 'keySet' || isSensitiveLogKey(key);
       },
     }));
 
     // API group entry points initialization.
     if (process.env.APP_CONTEXT_MODULE !== 'disabled')
       this._objects = new PubNubObjects(this._configuration, this.sendRequest.bind(this));
+    if (process.env.DATA_SYNC_MODULE !== 'disabled')
+      this._dataSync = new PubNubDataSync(this._configuration, this.sendRequest.bind(this));
     if (process.env.CHANNEL_GROUPS_MODULE !== 'disabled')
       this._channelGroups = new PubNubChannelGroups(
         this._configuration.logger(),
@@ -702,7 +720,7 @@ export class PubNubCore<
    * @param authKey - New authorization key which should be used with new requests.
    */
   setAuthKey(authKey: string): void {
-    this.logger.debug('PubNub', `Set auth key: ${authKey}`);
+    this.logger.debug('PubNub', 'Auth key updated.');
     this._configuration.setAuthKey(authKey);
 
     if (this.onAuthenticationChange) this.onAuthenticationChange(authKey);
@@ -827,7 +845,7 @@ export class PubNubCore<
    * @param key - New key which should be used for data encryption / decryption.
    */
   setCipherKey(key: string): void {
-    this.logger.debug('PubNub', `Set cipher key: ${key}`);
+    this.logger.debug('PubNub', 'Cipher key updated.');
     this.cipherKey = key;
   }
 
@@ -1001,6 +1019,100 @@ export class PubNubCore<
     if (!metadata) metadata = this.entities[`${id}_um`] = new UserMetadata(id, this);
 
     return metadata as UserMetadata;
+  }
+
+  /**
+   * Create a `DataSyncUser` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `User` object identifier (used verbatim, so wildcard identifiers
+   * like `user.*` are supported).
+   * @returns `DataSyncUser` entity.
+   */
+  public dataSyncUser(id: string): DataSyncUser {
+    let entity = this.entities[`${id}_dsu`];
+    if (!entity) entity = this.entities[`${id}_dsu`] = new DataSyncUser(id, this);
+
+    return entity as DataSyncUser;
+  }
+
+  /**
+   * Create a `DataSyncChannel` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `Channel` object identifier (used verbatim, so wildcard identifiers
+   * like `channel.*` are supported).
+   * @returns `DataSyncChannel` entity.
+   */
+  public dataSyncChannel(id: string): DataSyncChannel {
+    let entity = this.entities[`${id}_dsc`];
+    if (!entity) entity = this.entities[`${id}_dsc`] = new DataSyncChannel(id, this);
+
+    return entity as DataSyncChannel;
+  }
+
+  /**
+   * Create a `DataSyncMembership` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * **Important:** Membership changes are delivered on the data channels of both linked entities
+   * (the user and the channel identifier), not on the membership identifier — use
+   * {@link PubNubCore#dataSyncUser dataSyncUser} / {@link PubNubCore#dataSyncChannel
+   * dataSyncChannel} to observe them.
+   *
+   * @param id - Unique DataSync `Membership` object identifier (`{userId}:{channelId}`, used
+   * verbatim, so wildcard identifiers like `user-123:*` are supported).
+   * @returns `DataSyncMembership` entity.
+   */
+  public dataSyncMembership(id: string): DataSyncMembership {
+    let entity = this.entities[`${id}_dsm`];
+    if (!entity) entity = this.entities[`${id}_dsm`] = new DataSyncMembership(id, this);
+
+    return entity as DataSyncMembership;
+  }
+
+  /**
+   * Create a `DataSyncEntity` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * @param id - Unique DataSync `Entity` object identifier (used verbatim, so wildcard identifiers
+   * like `customer.*` are supported).
+   * @returns `DataSyncEntity` entity.
+   */
+  public dataSyncEntity(id: string): DataSyncEntity {
+    let entity = this.entities[`${id}_dse`];
+    if (!entity) entity = this.entities[`${id}_dse`] = new DataSyncEntity(id, this);
+
+    return entity as DataSyncEntity;
+  }
+
+  /**
+   * Create a `DataSyncRelationship` entity.
+   *
+   * Entity can be used for the interaction with the following API:
+   * - `subscribe`
+   *
+   * **Important:** Relationship changes are delivered on the data channels of both linked entities
+   * (`entityAId` and `entityBId`), not on the relationship identifier — use
+   * {@link PubNubCore#dataSyncEntity dataSyncEntity} to observe them.
+   *
+   * @param id - Unique DataSync `Relationship` object identifier (used verbatim, so wildcard
+   * identifiers like `owns.*` are supported).
+   * @returns `DataSyncRelationship` entity.
+   */
+  public dataSyncRelationship(id: string): DataSyncRelationship {
+    let entity = this.entities[`${id}_dsr`];
+    if (!entity) entity = this.entities[`${id}_dsr`] = new DataSyncRelationship(id, this);
+
+    return entity as DataSyncRelationship;
   }
 
   /**
@@ -2952,16 +3064,14 @@ export class PubNubCore<
         messageType: 'object',
         message: { ...parameters },
         details: 'Grant token permissions with parameters:',
+        ignoredKeys: isSensitiveLogKey,
       }));
 
       const request = new GrantTokenRequest({ ...parameters, keySet: this._configuration.keySet });
       const logResponse = (response: PAM.GrantTokenResponse | null) => {
         if (!response) return;
 
-        this.logger.debug(
-          'PubNub',
-          `Grant token permissions success. Received token with requested permissions: ${response}`,
-        );
+        this.logger.debug('PubNub', 'Grant token permissions success.');
       };
 
       if (callback)
@@ -3009,11 +3119,7 @@ export class PubNubCore<
     callback?: ResultCallback<PAM.RevokeTokenResponse>,
   ): Promise<PAM.RevokeTokenResponse | void> {
     if (process.env.PAM_MODULE !== 'disabled') {
-      this.logger.debug('PubNub', () => ({
-        messageType: 'object',
-        message: { token },
-        details: 'Revoke token permissions with parameters:',
-      }));
+      this.logger.debug('PubNub', 'Revoke token permissions.');
 
       const request = new RevokeTokenRequest({ token, keySet: this._configuration.keySet });
       const logResponse = (response: PAM.RevokeTokenResponse | null) => {
@@ -3071,6 +3177,7 @@ export class PubNubCore<
    * @param token - New access token which should be used with next REST API endpoint calls.
    */
   public setToken(token: string | undefined): void {
+    this.logger.debug('PubNub', 'Access token updated.');
     this.token = token;
   }
 
@@ -3084,6 +3191,7 @@ export class PubNubCore<
    * @returns Token's permissions information for the resources.
    */
   public parseToken(token: string): PAM.Token | undefined {
+    this.logger.debug('PubNub', 'Parse access token.');
     return this.tokenManager && this.tokenManager.parseToken(token);
   }
   // endregion
@@ -3130,6 +3238,7 @@ export class PubNubCore<
         messageType: 'object',
         message: { ...parameters },
         details: 'Grant auth key(s) permissions with parameters:',
+        ignoredKeys: isSensitiveLogKey,
       }));
 
       const request = new GrantRequest({ ...parameters, keySet: this._configuration.keySet });
@@ -3194,6 +3303,7 @@ export class PubNubCore<
         messageType: 'object',
         message: { ...parameters },
         details: 'Audit auth key(s) permissions with parameters:',
+        ignoredKeys: isSensitiveLogKey,
       }));
 
       const request = new AuditRequest({ ...parameters, keySet: this._configuration.keySet });
@@ -3231,6 +3341,20 @@ export class PubNubCore<
   get objects(): PubNubObjects {
     return this._objects;
   }
+
+  // --------------------------------------------------------
+  // -------------------- DataSync API ---------------------
+  // --------------------------------------------------------
+  // region DataSync API
+
+  /**
+   * PubNub DataSync API group.
+   */
+  get dataSync(): PubNubDataSync {
+    return this._dataSync;
+  }
+
+  // endregion
 
   // region Deprecated API
   /**
@@ -4719,6 +4843,18 @@ export class PubNubCore<
   set onFile(listener: ((event: Subscription.File) => void) | undefined) {
     if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
       if (this.eventDispatcher) this.eventDispatcher.onFile = listener;
+    } else throw new Error('Listener error: subscription module disabled');
+  }
+
+  /**
+   * Set a new DataSync event handler.
+   *
+   * @param listener - Listener function, which will be called each time when a new
+   * DataSync event is received from the real-time network.
+   */
+  set onDataSync(listener: ((event: Subscription.DataSyncObject) => void) | undefined) {
+    if (process.env.SUBSCRIBE_MODULE !== 'disabled') {
+      if (this.eventDispatcher) this.eventDispatcher.onDataSync = listener;
     } else throw new Error('Listener error: subscription module disabled');
   }
 
