@@ -7049,31 +7049,31 @@
 	        const parsedVersion = metadata.classVersion !== undefined ? Number.parseInt(`${metadata.classVersion}`, 10) : NaN;
 	        const classVersion = Number.isNaN(parsedVersion) ? undefined : parsedVersion;
 	        const raw = ((_a = payload.data) !== null && _a !== void 0 ? _a : {});
-	        // `data` mirrors the object as sent by the service; class identity is reported once, on the event.
-	        let data;
+	        // Class identity is reported once, on the event, so it is shared by every event shape.
+	        const common = {
+	            version: payload.version,
+	            source: metadata.source,
+	            type: metadata.type,
+	            className,
+	            classLevel,
+	            classVersion,
+	        };
+	        // `data` mirrors the object as sent by the service, and its shape is tied to `event` /
+	        // `objectType` — which is what makes `message` a discriminated union for the consumer.
+	        let message;
 	        if (metadata.event === 'delete')
-	            data = { id: raw.id, deletedAt: raw.deletedAt };
+	            message = Object.assign(Object.assign({}, common), { event: metadata.event, objectType, data: { id: raw.id, deletedAt: raw.deletedAt } });
 	        else if (objectType === 'membership')
-	            data = Object.assign({}, raw);
+	            message = Object.assign(Object.assign({}, common), { event: metadata.event, objectType, data: Object.assign({}, raw) });
 	        else if (objectType === 'relationship')
-	            data = Object.assign({}, raw);
+	            message = Object.assign(Object.assign({}, common), { event: metadata.event, objectType, data: Object.assign({}, raw) });
 	        else
-	            data = Object.assign({}, raw);
+	            message = Object.assign(Object.assign({}, common), { event: metadata.event, objectType, data: Object.assign({}, raw) });
 	        return {
 	            channel,
 	            subscription,
 	            timetoken: envelope.p.t,
-	            message: {
-	                version: payload.version,
-	                event: metadata.event,
-	                source: metadata.source,
-	                type: metadata.type,
-	                objectType,
-	                className,
-	                classLevel,
-	                classVersion,
-	                data,
-	            },
+	            message,
 	        };
 	    }
 	    fileFromEnvelope(envelope) {

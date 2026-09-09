@@ -501,9 +501,10 @@ export type DataSyncEntityData = {
   /**
    * User-defined JSON payload.
    *
-   * Same shape as the REST-side entity payload: a JSON object whose values are opaque to the SDK.
+   * A JSON object, like the REST-side entity payload. Stays assignable to {@link Payload}, so an
+   * event body can be forwarded to any payload-taking API without a cast.
    */
-  payload?: Record<string, unknown>;
+  payload?: Record<string, Payload | null>;
 
   /**
    * Date and time the entity was created (ISO 8601).
