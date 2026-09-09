@@ -366,11 +366,42 @@ type PrincipalGrantScopes =
 export type GrantScopes = CommonGrantScopes & PrincipalGrantScopes;
 
 /**
+ * Principal which is authorized to use the generated token.
+ *
+ * `authorizedUserId` and `authorized_uuid` name the same underlying target, so only one of them may
+ * be supplied in a single grant — providing both is a compile-time error (and is rejected at runtime
+ * as well).
+ */
+type AuthorizedPrincipal =
+  | {
+      /**
+       * Single `userId` which is authorized to use the token to make API requests to PubNub.
+       *
+       * Preferred User terminology; the equivalent of the deprecated
+       * {@link AuthorizedPrincipal.authorized_uuid | authorized_uuid}.
+       */
+      authorizedUserId?: string;
+
+      authorized_uuid?: never;
+    }
+  | {
+      /**
+       * Single `uuid` which is authorized to use the token to make API requests to PubNub.
+       *
+       * @deprecated Legacy App Context terminology. Use
+       * {@link AuthorizedPrincipal.authorizedUserId | authorizedUserId} instead.
+       */
+      authorized_uuid?: string;
+
+      authorizedUserId?: never;
+    };
+
+/**
  * Generate token with permissions.
  *
  * Generate time-limited access token with required permissions for resources.
  */
-export type GrantTokenParameters = {
+type BaseGrantTokenParameters = {
   /**
    * Total number of minutes for which the token is valid.
    *
@@ -406,12 +437,15 @@ export type GrantTokenParameters = {
    * Encoded into the `pn-projections` key within the token's `meta` section.
    */
   dataSyncProjections?: DataSyncProjections;
-
-  /**
-   * Single `uuid` which is authorized to use the token to make API requests to PubNub.
-   */
-  authorized_uuid?: string;
 };
+
+/**
+ * Generate token with permissions.
+ *
+ * Generate time-limited access token with required permissions for resources. The token principal is
+ * named with `authorizedUserId` (preferred) or the deprecated `authorized_uuid` — never both.
+ */
+export type GrantTokenParameters = BaseGrantTokenParameters & AuthorizedPrincipal;
 
 /**
  * Response with generated access token.

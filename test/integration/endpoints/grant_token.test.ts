@@ -374,8 +374,7 @@ describe('grant token endpoint', () => {
           ttl: 1440,
           authorizedUserId: 'user-alice-042',
           resources: { users: { 'user-alice-042': { get: true } } },
-          // `authorizedUserId` belongs to the Objects grant parameters.
-        } as unknown as Parameters<typeof pubnub.grantToken>[0]);
+        });
 
         assert.strictEqual(scope.isDone(), true);
         assert.strictEqual(body().permissions.uuid, 'user-alice-042');
@@ -559,7 +558,7 @@ describe('grant token endpoint', () => {
               memberships: { 'user-alice-042:channel-engineering-001': { get: true, update: true } },
             },
           },
-        } as unknown as Parameters<typeof pubnub.grantToken>[0]);
+        });
 
         assert.strictEqual(scope.isDone(), true);
         assert.deepEqual(body(), {
