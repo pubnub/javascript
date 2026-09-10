@@ -376,7 +376,7 @@ type AuthorizedPrincipal =
   | {
       /**
        * Single `userId` which is authorized to use the token to make API requests to PubNub.
-       * 
+       *
        */
       authorizedUserId?: string;
 
