@@ -4210,7 +4210,7 @@ declare namespace PubNub {
    * Building block of the {@link DataSyncData} union; not meant to be named directly.
    */
   type DataSyncChangeEvent<
-    Event extends DataSyncEventName,
+    EventName extends DataSyncEventName,
     ObjectType extends DataSyncObjectType,
     Data extends DataSyncEntityData | DataSyncDeleteData,
   > = {
@@ -4221,7 +4221,7 @@ declare namespace PubNub {
     /**
      * The type of change which happened to the object.
      */
-    event: Event;
+    event: EventName;
     /**
      * Name of the service which generated the update (always `data-sync`).
      */
@@ -9978,8 +9978,6 @@ declare namespace PubNub {
           /**
            * Single `userId` which is authorized to use the token to make API requests to PubNub.
            *
-           * Preferred User terminology; the equivalent of the deprecated
-           * {@link AuthorizedPrincipal.authorized_uuid | authorized_uuid}.
            */
           authorizedUserId?: string;
           authorized_uuid?: never;
@@ -9988,8 +9986,6 @@ declare namespace PubNub {
           /**
            * Single `uuid` which is authorized to use the token to make API requests to PubNub.
            *
-           * @deprecated Legacy App Context terminology. Use
-           * {@link AuthorizedPrincipal.authorizedUserId | authorizedUserId} instead.
            */
           authorized_uuid?: string;
           authorizedUserId?: never;

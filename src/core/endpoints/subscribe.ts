@@ -586,7 +586,7 @@ export type DataSyncDeleteData = {
  * Building block of the {@link DataSyncData} union; not meant to be named directly.
  */
 type DataSyncChangeEvent<
-  Event extends DataSyncEventName,
+  EventName extends DataSyncEventName,
   ObjectType extends DataSyncObjectType,
   Data extends DataSyncEntityData | DataSyncDeleteData,
 > = {
@@ -598,7 +598,7 @@ type DataSyncChangeEvent<
   /**
    * The type of change which happened to the object.
    */
-  event: Event;
+  event: EventName;
 
   /**
    * Name of the service which generated the update (always `data-sync`).

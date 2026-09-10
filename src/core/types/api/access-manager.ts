@@ -376,9 +376,7 @@ type AuthorizedPrincipal =
   | {
       /**
        * Single `userId` which is authorized to use the token to make API requests to PubNub.
-       *
-       * Preferred User terminology; the equivalent of the deprecated
-       * {@link AuthorizedPrincipal.authorized_uuid | authorized_uuid}.
+       * 
        */
       authorizedUserId?: string;
 
@@ -388,8 +386,6 @@ type AuthorizedPrincipal =
       /**
        * Single `uuid` which is authorized to use the token to make API requests to PubNub.
        *
-       * @deprecated Legacy App Context terminology. Use
-       * {@link AuthorizedPrincipal.authorizedUserId | authorizedUserId} instead.
        */
       authorized_uuid?: string;
 
