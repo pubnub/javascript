@@ -4131,8 +4131,11 @@ declare namespace PubNub {
     status?: string;
     /**
      * User-defined JSON payload.
+     *
+     * A JSON object, like the REST-side entity payload. Stays assignable to {@link Payload}, so an
+     * event body can be forwarded to any payload-taking API without a cast.
      */
-    payload?: Payload;
+    payload?: Record<string, Payload | null>;
     /**
      * Date and time the entity was created (ISO 8601).
      */
@@ -4202,9 +4205,15 @@ declare namespace PubNub {
   };
 
   /**
-   * Parsed DataSync change event (dispatched under `message`).
+   * Parsed DataSync change event for a single `event` / `objectType` combination.
+   *
+   * Building block of the {@link DataSyncData} union; not meant to be named directly.
    */
-  export type DataSyncData = {
+  type DataSyncChangeEvent<
+    EventName extends DataSyncEventName,
+    ObjectType extends DataSyncObjectType,
+    Data extends DataSyncEntityData | DataSyncDeleteData,
+  > = {
     /**
      * DataSync service payload version.
      */
@@ -4212,7 +4221,7 @@ declare namespace PubNub {
     /**
      * The type of change which happened to the object.
      */
-    event: DataSyncEventName;
+    event: EventName;
     /**
      * Name of the service which generated the update (always `data-sync`).
      */
@@ -4232,7 +4241,7 @@ declare namespace PubNub {
      * the built-in classes under the generic `'entity'` / `'relationship'` kind, where it is derived
      * from {@link className} / {@link classLevel} instead.
      */
-    objectType: DataSyncObjectType;
+    objectType: ObjectType;
     /**
      * Object class name.
      */
@@ -4251,8 +4260,23 @@ declare namespace PubNub {
      *
      * For `delete` events only `{ id, deletedAt }` is populated.
      */
-    data: DataSyncEntityData | DataSyncRelationshipData | DataSyncMembershipData | DataSyncDeleteData;
+    data: Data;
   };
+
+  /**
+   * Parsed DataSync change event (dispatched under `message`).
+   *
+   * Discriminated by {@link DataSyncChangeEvent.event | event} and
+   * {@link DataSyncChangeEvent.objectType | objectType}, so narrowing on either tells the compiler the
+   * exact shape of `data`: a `delete` carries only `{ id, deletedAt }`, a `membership` names its
+   * endpoints `channelId` / `userId`, and a developer-defined `relationship` names them
+   * `entityAId` / `entityBId`.
+   */
+  export type DataSyncData =
+    | DataSyncChangeEvent<'create' | 'update', 'user' | 'channel' | 'entity', DataSyncEntityData>
+    | DataSyncChangeEvent<'create' | 'update', 'relationship', DataSyncRelationshipData>
+    | DataSyncChangeEvent<'create' | 'update', 'membership', DataSyncMembershipData>
+    | DataSyncChangeEvent<'delete', DataSyncObjectType, DataSyncDeleteData>;
 
   /**
    * File service response.
@@ -9943,11 +9967,36 @@ declare namespace PubNub {
     export type GrantScopes = CommonGrantScopes & PrincipalGrantScopes;
 
     /**
+     * Principal which is authorized to use the generated token.
+     *
+     * `authorizedUserId` and `authorized_uuid` name the same underlying target, so only one of them may
+     * be supplied in a single grant — providing both is a compile-time error (and is rejected at runtime
+     * as well).
+     */
+    type AuthorizedPrincipal =
+      | {
+          /**
+           * Single `userId` which is authorized to use the token to make API requests to PubNub.
+           *
+           */
+          authorizedUserId?: string;
+          authorized_uuid?: never;
+        }
+      | {
+          /**
+           * Single `uuid` which is authorized to use the token to make API requests to PubNub.
+           *
+           */
+          authorized_uuid?: string;
+          authorizedUserId?: never;
+        };
+
+    /**
      * Generate token with permissions.
      *
      * Generate time-limited access token with required permissions for resources.
      */
-    export type GrantTokenParameters = {
+    type BaseGrantTokenParameters = {
       /**
        * Total number of minutes for which the token is valid.
        *
@@ -9979,11 +10028,15 @@ declare namespace PubNub {
        * Encoded into the `pn-projections` key within the token's `meta` section.
        */
       dataSyncProjections?: DataSyncProjections;
-      /**
-       * Single `uuid` which is authorized to use the token to make API requests to PubNub.
-       */
-      authorized_uuid?: string;
     };
+
+    /**
+     * Generate token with permissions.
+     *
+     * Generate time-limited access token with required permissions for resources. The token principal is
+     * named with `authorizedUserId` (preferred) or the deprecated `authorized_uuid` — never both.
+     */
+    export type GrantTokenParameters = BaseGrantTokenParameters & AuthorizedPrincipal;
 
     /**
      * Response with generated access token.

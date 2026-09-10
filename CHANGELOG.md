@@ -1,3 +1,9 @@
+## v13.0.1
+September 10 2026
+
+#### Fixed
+- Type definition updates for dataSync related events and permissions.
+
 ## v13.0.0
 September 08 2026
 

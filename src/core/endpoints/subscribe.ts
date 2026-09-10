@@ -500,8 +500,11 @@ export type DataSyncEntityData = {
 
   /**
    * User-defined JSON payload.
+   *
+   * A JSON object, like the REST-side entity payload. Stays assignable to {@link Payload}, so an
+   * event body can be forwarded to any payload-taking API without a cast.
    */
-  payload?: Payload;
+  payload?: Record<string, Payload | null>;
 
   /**
    * Date and time the entity was created (ISO 8601).
@@ -578,9 +581,15 @@ export type DataSyncDeleteData = {
 };
 
 /**
- * Parsed DataSync change event (dispatched under `message`).
+ * Parsed DataSync change event for a single `event` / `objectType` combination.
+ *
+ * Building block of the {@link DataSyncData} union; not meant to be named directly.
  */
-export type DataSyncData = {
+type DataSyncChangeEvent<
+  EventName extends DataSyncEventName,
+  ObjectType extends DataSyncObjectType,
+  Data extends DataSyncEntityData | DataSyncDeleteData,
+> = {
   /**
    * DataSync service payload version.
    */
@@ -589,7 +598,7 @@ export type DataSyncData = {
   /**
    * The type of change which happened to the object.
    */
-  event: DataSyncEventName;
+  event: EventName;
 
   /**
    * Name of the service which generated the update (always `data-sync`).
@@ -612,7 +621,7 @@ export type DataSyncData = {
    * the built-in classes under the generic `'entity'` / `'relationship'` kind, where it is derived
    * from {@link className} / {@link classLevel} instead.
    */
-  objectType: DataSyncObjectType;
+  objectType: ObjectType;
 
   /**
    * Object class name.
@@ -635,8 +644,23 @@ export type DataSyncData = {
    *
    * For `delete` events only `{ id, deletedAt }` is populated.
    */
-  data: DataSyncEntityData | DataSyncRelationshipData | DataSyncMembershipData | DataSyncDeleteData;
+  data: Data;
 };
+
+/**
+ * Parsed DataSync change event (dispatched under `message`).
+ *
+ * Discriminated by {@link DataSyncChangeEvent.event | event} and
+ * {@link DataSyncChangeEvent.objectType | objectType}, so narrowing on either tells the compiler the
+ * exact shape of `data`: a `delete` carries only `{ id, deletedAt }`, a `membership` names its
+ * endpoints `channelId` / `userId`, and a developer-defined `relationship` names them
+ * `entityAId` / `entityBId`.
+ */
+export type DataSyncData =
+  | DataSyncChangeEvent<'create' | 'update', 'user' | 'channel' | 'entity', DataSyncEntityData>
+  | DataSyncChangeEvent<'create' | 'update', 'relationship', DataSyncRelationshipData>
+  | DataSyncChangeEvent<'create' | 'update', 'membership', DataSyncMembershipData>
+  | DataSyncChangeEvent<'delete', DataSyncObjectType, DataSyncDeleteData>;
 
 /**
  * Raw DataSync envelope payload (before parsing).
@@ -1147,28 +1171,37 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     const classVersion = Number.isNaN(parsedVersion) ? undefined : parsedVersion;
     const raw = (payload.data ?? {}) as Record<string, unknown>;
 
-    // `data` mirrors the object as sent by the service; class identity is reported once, on the event.
-    let data: DataSyncData['data'];
-    if (metadata.event === 'delete') data = { id: raw.id as string, deletedAt: raw.deletedAt as string | undefined };
-    else if (objectType === 'membership') data = { ...raw } as DataSyncMembershipData;
-    else if (objectType === 'relationship') data = { ...raw } as DataSyncRelationshipData;
-    else data = { ...raw } as DataSyncEntityData;
+    // Class identity is reported once, on the event, so it is shared by every event shape.
+    const common = {
+      version: payload.version,
+      source: metadata.source,
+      type: metadata.type,
+      className,
+      classLevel,
+      classVersion,
+    };
+
+    // `data` mirrors the object as sent by the service, and its shape is tied to `event` /
+    // `objectType` — which is what makes `message` a discriminated union for the consumer.
+    let message: DataSyncData;
+    if (metadata.event === 'delete')
+      message = {
+        ...common,
+        event: metadata.event,
+        objectType,
+        data: { id: raw.id as string, deletedAt: raw.deletedAt as string | undefined },
+      };
+    else if (objectType === 'membership')
+      message = { ...common, event: metadata.event, objectType, data: { ...raw } as DataSyncMembershipData };
+    else if (objectType === 'relationship')
+      message = { ...common, event: metadata.event, objectType, data: { ...raw } as DataSyncRelationshipData };
+    else message = { ...common, event: metadata.event, objectType, data: { ...raw } as DataSyncEntityData };
 
     return {
       channel,
       subscription,
       timetoken: envelope.p.t,
-      message: {
-        version: payload.version,
-        event: metadata.event,
-        source: metadata.source,
-        type: metadata.type,
-        objectType,
-        className,
-        classLevel,
-        classVersion,
-        data,
-      },
+      message,
     };
   }
 

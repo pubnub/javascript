@@ -353,6 +353,47 @@ describe('DataSync subscribe event parsing', () => {
     });
   });
 
+  // `data` is typed per `event` / `objectType`, so a listener reaches the right body by narrowing the
+  // event instead of casting it. These tests fail to *compile* if that discrimination regresses.
+  describe('narrowing `data` without a cast', () => {
+    it('narrows a create body from `event`, exposing `status` / `payload`', async () => {
+      const message = await parseDataSyncMessage(TYPED_USER_CREATE);
+      if (message.event === 'delete') throw new Error('expected a create event');
+
+      assert.strictEqual(message.data.status, 'st', 'status');
+      assert.deepStrictEqual(message.data.payload, { name: 'N' }, 'payload');
+      assert.strictEqual(message.data.payload?.name, 'N', 'payload field');
+    });
+
+    it('narrows a membership body from `objectType`, exposing channelId / userId', async () => {
+      const message = await parseDataSyncMessage(TYPED_MEMBERSHIP_CREATE);
+      if (message.event === 'delete' || message.objectType !== 'membership')
+        throw new Error('expected a membership create event');
+
+      assert.strictEqual(message.data.channelId, 'c.mem914058452', 'channelId');
+      assert.strictEqual(message.data.userId, 'u.mem914058452', 'userId');
+    });
+
+    it('narrows a relationship body from `objectType`, exposing entityAId / entityBId', async () => {
+      const message = await parseDataSyncMessage(CUSTOM_RELATIONSHIP_CREATE);
+      if (message.event === 'delete' || message.objectType !== 'relationship')
+        throw new Error('expected a relationship create event');
+
+      assert.strictEqual(message.data.entityAId, 'cust-70b1d0f54f', 'entityAId');
+      assert.strictEqual(message.data.entityBId, 'lq-871f0a90f3', 'entityBId');
+    });
+
+    it('narrows a delete body to { id, deletedAt }', async () => {
+      const message = await parseDataSyncMessage(TYPED_MEMBERSHIP_DELETE);
+      if (message.event !== 'delete') throw new Error('expected a delete event');
+
+      assert.strictEqual(message.data.id, 'm.mem914058452', 'id');
+      assert.strictEqual(message.data.deletedAt, '2026-08-13T03:46:14.418911Z', 'deletedAt');
+      // @ts-expect-error A delete body carries no object fields.
+      assert.strictEqual(message.data.payload, undefined, 'no payload on a delete body');
+    });
+  });
+
   describe('service compatibility', () => {
     it('still derives objectType from the class identity when the wire type is the generic kind', async () => {
       const user = await parseDataSyncMessage({
