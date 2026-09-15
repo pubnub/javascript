@@ -6,20 +6,6 @@ const pubnub = new PubNub({
   userId: 'poll-service',
 });
 
-// snippet.automatedPollingReceiveTrigger
-type PollTrigger = { reaction: string };
-
-const triggerSubscription = pubnub.channel('game.poll-triggers').subscription({ receivePresenceEvents: false });
-
-triggerSubscription.onMessage = (event) => {
-  const trigger = event.message as PollTrigger;
-
-  console.log('open a poll because fans keep tapping', trigger.reaction);
-};
-
-triggerSubscription.subscribe();
-// snippet.end
-
 // snippet.automatedPollingPublishTriggeredPoll
 const pollsByReaction: Record<string, { title: string; options: { id: number; text: string }[] }> = {
   '\u{1F621}': {
@@ -67,8 +53,6 @@ async function openPollForReaction(reaction: string) {
     );
   }
 }
-
-await openPollForReaction('\u{1F621}');
 // snippet.end
 
 // snippet.automatedPollingThrottleTriggers
@@ -79,12 +63,29 @@ function shouldOpenPoll() {
   const now = Date.now();
 
   if (now - lastPollOpenedAt < minimumMillisecondsBetweenPolls) {
+    console.log('that trigger arrived inside the cooldown window, so no new poll opened');
     return false;
   }
 
   lastPollOpenedAt = now;
   return true;
 }
+// snippet.end
 
-console.log('open a poll now?', shouldOpenPoll());
+// snippet.automatedPollingReceiveTrigger
+type PollTrigger = { reaction: string };
+
+const triggerSubscription = pubnub.channel('game.poll-triggers').subscription({ receivePresenceEvents: false });
+
+triggerSubscription.onMessage = (event) => {
+  const trigger = event.message as PollTrigger;
+
+  console.log('open a poll because fans keep tapping', trigger.reaction);
+
+  if (shouldOpenPoll()) {
+    void openPollForReaction(trigger.reaction);
+  }
+};
+
+triggerSubscription.subscribe();
 // snippet.end
