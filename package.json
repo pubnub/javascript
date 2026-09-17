@@ -2,7 +2,7 @@
   "name": "pubnub",
   "version": "13.0.1",
   "author": "PubNub <support@pubnub.com>",
-  "description": "Publish & Subscribe Real-time Messaging with PubNub",
+  "description": "PubNub SDK for JavaScript. Publish/subscribe messaging over HTTP long-poll with server-assigned message ordering, channel occupancy via Here Now, and message history through Message Persistence.",
   "scripts": {
     "build": "npm run build:node && npm run build:web",
     "build:web": "rollup -c ./rollup.config.js --bundleConfigAsCjs",
@@ -45,15 +45,18 @@
     "url": "git://github.com/pubnub/javascript.git"
   },
   "keywords": [
-    "cloud",
-    "publish",
-    "subscribe",
-    "websockets",
-    "comet",
-    "bosh",
-    "xmpp",
+    "pubnub",
+    "realtime",
     "real-time",
-    "messaging"
+    "publish-subscribe",
+    "pubsub",
+    "messaging",
+    "occupancy",
+    "presence",
+    "message-ordering",
+    "message-history",
+    "chat",
+    "long-poll"
   ],
   "dependencies": {
     "agentkeepalive": "^3.5.2",
