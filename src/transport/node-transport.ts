@@ -8,6 +8,7 @@ import { Agent, ProxyAgent, Dispatcher, buildConnector } from 'undici';
 import { Buffer } from 'buffer';
 import * as zlib from 'zlib';
 
+import type { NodeTransportProxyConfiguration } from '../node/components/configuration';
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
 import { Transport, TransportKeepAlive } from '../core/interfaces/transport';
 import { TransportResponse } from '../core/types/transport-response';
@@ -17,32 +18,6 @@ import StatusCategory from '../core/constants/categories';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
 import { PubNubFileInterface } from '../core/types/file';
 import { queryStringFromObject } from '../core/utils';
-
-/**
- * Proxy configuration accepted by {@link NodeTransport.setProxy}.
- *
- * This replaces the `proxy-agent` package's `ProxyAgentOptions`. The common fields used by callers
- * (`hostname`/`host`, `port`, `protocol`, `auth`) are mapped onto an `undici` {@link ProxyAgent} URI
- * by {@link NodeTransport.proxyAgentOptions}. A fully-formed proxy URI string is also accepted.
- *
- * **Known limitation (deferred to a later iteration):** unlike `proxy-agent`, `undici`'s `ProxyAgent`
- * does not support SOCKS proxies, PAC files, or `HTTP(S)_PROXY`/`NO_PROXY` environment-variable
- * auto-detection. Only explicit HTTP/HTTPS proxies are handled here.
- */
-export type NodeTransportProxyConfiguration =
-  | string
-  | {
-      /** Proxy host name (alias of {@link host}). */
-      hostname?: string;
-      /** Proxy host name. */
-      host?: string;
-      /** Proxy port. */
-      port?: number;
-      /** Proxy protocol (`'http'` / `'https'`). Defaults to `http`. */
-      protocol?: string;
-      /** Basic-auth credentials in `user:password` form. */
-      auth?: string;
-    };
 
 /**
  * Class representing a `fetch`-based Node.js transport provider.

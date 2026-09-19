@@ -33,7 +33,7 @@ declare class PubNub extends PubNubCore<
    * @throws An error if {@link PubNub} client already configured to use `keepAlive`.
    * `keepAlive` and `proxy` can't be used simultaneously.
    */
-  setProxy(configuration?: NodeTransportProxyConfiguration): void;
+  setProxy(configuration?: PubNub.NodeTransportProxyConfiguration): void;
 }
 
 /**
@@ -2682,6 +2682,32 @@ declare namespace PubNub {
       File: PubNubFileConstructor<PubNubFile, PubNubFileParameters>,
     ): Promise<PubNubFile | undefined>;
   }
+
+  /**
+   * Proxy configuration accepted by {@link PubNub.setProxy}.
+   *
+   * This replaces the `proxy-agent` package's `ProxyAgentOptions`. The common fields used by callers
+   * (`hostname`/`host`, `port`, `protocol`, `auth`) are mapped onto an `undici` proxy URI
+   * by the Node.js transport. A fully-formed proxy URI string is also accepted.
+   *
+   * **Known limitation (deferred to a later iteration):** unlike `proxy-agent`, `undici`'s `ProxyAgent`
+   * does not support SOCKS proxies, PAC files, or `HTTP(S)_PROXY`/`NO_PROXY` environment-variable
+   * auto-detection. Only explicit HTTP/HTTPS proxies are handled here.
+   */
+  export type NodeTransportProxyConfiguration =
+    | string
+    | {
+        /** Proxy host name (alias of {@link host}). */
+        hostname?: string;
+        /** Proxy host name. */
+        host?: string;
+        /** Proxy port. */
+        port?: number;
+        /** Proxy protocol (`'http'` / `'https'`). Defaults to `http`. */
+        protocol?: string;
+        /** Basic-auth credentials in `user:password` form. */
+        auth?: string;
+      };
 
   /**
    * NodeJS platform PubNub client configuration.
@@ -7075,6 +7101,16 @@ declare namespace PubNub {
        * Parsed DataSync change payload.
        */
       message: DataSyncData;
+    };
+
+    /**
+     * Extended DataSync change real-time event.
+     *
+     * Type extended for listener manager support.
+     */
+    type DataSyncEvent = {
+      type: PubNubEventType.DataSync;
+      data: DataSyncObject;
     };
 
     /**
