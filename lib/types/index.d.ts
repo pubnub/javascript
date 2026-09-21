@@ -2684,32 +2684,6 @@ declare namespace PubNub {
   }
 
   /**
-   * Proxy configuration accepted by {@link PubNub.setProxy}.
-   *
-   * This replaces the `proxy-agent` package's `ProxyAgentOptions`. The common fields used by callers
-   * (`hostname`/`host`, `port`, `protocol`, `auth`) are mapped onto an `undici` proxy URI
-   * by the Node.js transport. A fully-formed proxy URI string is also accepted.
-   *
-   * **Known limitation (deferred to a later iteration):** unlike `proxy-agent`, `undici`'s `ProxyAgent`
-   * does not support SOCKS proxies, PAC files, or `HTTP(S)_PROXY`/`NO_PROXY` environment-variable
-   * auto-detection. Only explicit HTTP/HTTPS proxies are handled here.
-   */
-  export type NodeTransportProxyConfiguration =
-    | string
-    | {
-        /** Proxy host name (alias of {@link host}). */
-        hostname?: string;
-        /** Proxy host name. */
-        host?: string;
-        /** Proxy port. */
-        port?: number;
-        /** Proxy protocol (`'http'` / `'https'`). Defaults to `http`. */
-        protocol?: string;
-        /** Basic-auth credentials in `user:password` form. */
-        auth?: string;
-      };
-
-  /**
    * NodeJS platform PubNub client configuration.
    */
   export type PubNubConfiguration = UserConfiguration & {
@@ -3710,6 +3684,27 @@ declare namespace PubNub {
      */
     request(req: TransportRequest): TransportRequest;
   }
+
+  /**
+   * Proxy configuration accepted by {@link PubNub.setProxy}.
+   *
+   * Provide an `http://` or `https://` proxy URI, or an object with host, port, protocol, and optional
+   * basic-auth credentials. Only explicit HTTP and HTTPS proxies are supported.
+   */
+  export type NodeTransportProxyConfiguration =
+    | string
+    | {
+        /** Proxy host name (alias of {@link host}). */
+        hostname?: string;
+        /** Proxy host name. */
+        host?: string;
+        /** Proxy port. */
+        port?: number;
+        /** Proxy protocol (`http` or `https`). Defaults to `http`. */
+        protocol?: string;
+        /** Basic-auth credentials in `user:password` form. */
+        auth?: string;
+      };
 
   /**
    * Real-time events' listener.

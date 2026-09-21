@@ -6,7 +6,8 @@ import { NodeCryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/module
 import type { NodeCryptoModule as CryptoModuleType } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 
 import { ExtendedConfiguration, PlatformConfiguration } from '../core/interfaces/configuration';
-import { PubNubConfiguration, NodeTransportProxyConfiguration, setDefaults } from './components/configuration';
+import { PubNubConfiguration, setDefaults } from './components/configuration';
+import type { NodeTransportProxyConfiguration } from './types/proxy';
 import PubNubFile, { PubNubFileParameters } from '../file/modules/node';
 import { CryptorConfiguration } from '../core/interfaces/crypto-module';
 import { makeConfiguration } from '../core/components/configuration';

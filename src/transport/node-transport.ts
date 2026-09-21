@@ -8,7 +8,7 @@ import { Agent, ProxyAgent, Dispatcher, buildConnector } from 'undici';
 import { Buffer } from 'buffer';
 import * as zlib from 'zlib';
 
-import type { NodeTransportProxyConfiguration } from '../node/components/configuration';
+import type { NodeTransportProxyConfiguration } from '../node/types/proxy';
 import { CancellationController, TransportRequest } from '../core/types/transport-request';
 import { Transport, TransportKeepAlive } from '../core/interfaces/transport';
 import { TransportResponse } from '../core/types/transport-response';
@@ -472,6 +472,14 @@ export class NodeTransport implements Transport {
 
   /**
    * Adapts a {@link NodeTransportProxyConfiguration} to `undici` {@link ProxyAgent} options.
+   *
+   * This replaces the `proxy-agent` package's `ProxyAgentOptions`. The common fields used by callers
+   * (`hostname`/`host`, `port`, `protocol`, `auth`) are mapped onto an `undici` proxy URI. A
+   * fully-formed proxy URI string is also accepted.
+   *
+   * Unlike `proxy-agent`, `undici`'s `ProxyAgent` does not support SOCKS proxies, PAC files, or
+   * `HTTP(S)_PROXY`/`NO_PROXY` environment-variable auto-detection. Only explicit HTTP/HTTPS proxies
+   * are handled here.
    *
    * @param configuration - Proxy configuration provided through {@link setProxy}.
    *
