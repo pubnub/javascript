@@ -1,3 +1,9 @@
+## v13.0.2
+September 21 2026
+
+#### Modified
+- Updates for package metadata/description related details.
+
 ## v13.0.1
 September 10 2026
 
