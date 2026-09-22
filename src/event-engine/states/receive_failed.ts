@@ -4,26 +4,11 @@
  * @internal
  */
 
-import { State } from '../core/state';
-import { Effects } from '../effects';
-import { Events, reconnect, restore, subscriptionChange, unsubscribeAll } from '../events';
-import { PubNubError } from '../../errors/pubnub-error';
-import { HandshakingState } from './handshaking';
-import { UnsubscribedState } from './unsubscribed';
-import * as Subscription from '../../core/types/api/subscription';
+import { reconnect, restore, subscriptionChange, unsubscribeAll } from '../events';
+import { HandshakingState, ReceiveFailedState, UnsubscribedState } from './instances';
 
-/**
- * Context which represent current Subscription Event Engine data state.
- *
- * @internal
- */
-export type ReceiveFailedStateContext = {
-  channels: string[];
-  groups: string[];
-  cursor: Subscription.SubscriptionCursor;
-
-  reason: PubNubError;
-};
+export { ReceiveFailedState };
+export type { ReceiveFailedStateContext } from './instances';
 
 /**
  * Failed to receive real-time updates (disconnected) state.
@@ -33,7 +18,6 @@ export type ReceiveFailedStateContext = {
  *
  * @internal
  */
-export const ReceiveFailedState = new State<ReceiveFailedStateContext, Events, Effects>('RECEIVE_FAILED');
 
 ReceiveFailedState.on(reconnect.type, (context, { payload }) =>
   HandshakingState.with({

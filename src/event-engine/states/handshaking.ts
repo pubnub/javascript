@@ -4,38 +4,22 @@
  * @internal
  */
 
-import { Effects, emitStatus, handshake } from '../effects';
-import {
-  disconnect,
-  Events,
-  handshakeFailure,
-  handshakeSuccess,
-  restore,
-  subscriptionChange,
-  unsubscribeAll,
-} from '../events';
-import * as Subscription from '../../core/types/api/subscription';
+import { emitStatus, handshake } from '../effects';
+import { disconnect, handshakeFailure, handshakeSuccess, restore, subscriptionChange, unsubscribeAll } from '../events';
 import categoryConstants from '../../core/constants/categories';
-import { HandshakeStoppedState } from './handshake_stopped';
-import { HandshakeFailedState } from './handshake_failed';
-import { UnsubscribedState } from './unsubscribed';
-import { ReceivingState } from './receiving';
-import { State } from '../core/state';
 import { PubNubAPIError } from '../../errors/pubnub-api-error';
 import RequestOperation from '../../core/constants/operations';
-import { adjustedTimetokenBy, referenceSubscribeTimetoken } from '../../core/utils';
+import { referenceSubscribeTimetoken } from '../../core/utils';
+import {
+  HandshakeFailedState,
+  HandshakeStoppedState,
+  HandshakingState,
+  ReceivingState,
+  UnsubscribedState,
+} from './instances';
 
-/**
- * Context which represent current Subscription Event Engine data state.
- *
- * @internal
- */
-export type HandshakingStateContext = {
-  channels: string[];
-  groups: string[];
-  cursor?: Subscription.SubscriptionCursor;
-  onDemand?: boolean;
-};
+export { HandshakingState };
+export type { HandshakingStateContext } from './instances';
 
 /**
  * Initial subscription handshake (disconnected) state.
@@ -45,7 +29,6 @@ export type HandshakingStateContext = {
  *
  * @internal
  */
-export const HandshakingState = new State<HandshakingStateContext, Events, Effects>('HANDSHAKING');
 
 HandshakingState.onEnter((context) => handshake(context.channels, context.groups, context.onDemand ?? false));
 HandshakingState.onExit(() => handshake.cancel);

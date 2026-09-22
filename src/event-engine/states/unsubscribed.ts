@@ -4,10 +4,10 @@
  * @internal
  */
 
-import { State } from '../core/state';
-import { Effects } from '../effects';
-import { Events, subscriptionChange, restore } from '../events';
-import { HandshakingState } from './handshaking';
+import { subscriptionChange, restore } from '../events';
+import { HandshakingState, UnsubscribedState } from './instances';
+
+export { UnsubscribedState };
 
 /**
  * Unsubscribed / disconnected state.
@@ -16,7 +16,6 @@ import { HandshakingState } from './handshaking';
  *
  * @internal
  */
-export const UnsubscribedState = new State<void, Events, Effects>('UNSUBSCRIBED');
 
 UnsubscribedState.on(subscriptionChange.type, (_, { payload }) => {
   if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);

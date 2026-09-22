@@ -4,38 +4,16 @@
  * @internal
  */
 
-import { Effects, emitMessages, emitStatus, receiveMessages } from '../effects';
-import {
-  disconnect,
-  Events,
-  receiveFailure,
-  receiveSuccess,
-  restore,
-  subscriptionChange,
-  unsubscribeAll,
-} from '../events';
-import * as Subscription from '../../core/types/api/subscription';
+import { emitMessages, emitStatus, receiveMessages } from '../effects';
+import { disconnect, receiveFailure, receiveSuccess, restore, subscriptionChange, unsubscribeAll } from '../events';
 import categoryConstants from '../../core/constants/categories';
 import { PubNubAPIError } from '../../errors/pubnub-api-error';
 import RequestOperation from '../../core/constants/operations';
 import { referenceSubscribeTimetoken } from '../../core/utils';
-import { ReceiveStoppedState } from './receive_stopped';
-import { ReceiveFailedState } from './receive_failed';
-import { UnsubscribedState } from './unsubscribed';
-import { State } from '../core/state';
+import { ReceiveFailedState, ReceiveStoppedState, ReceivingState, UnsubscribedState } from './instances';
 
-/**
- * Context which represent current Subscription Event Engine data state.
- *
- * @internal
- */
-export type ReceivingStateContext = {
-  channels: string[];
-  groups: string[];
-  cursor: Subscription.SubscriptionCursor;
-  referenceTimetoken?: string;
-  onDemand?: boolean;
-};
+export { ReceivingState };
+export type { ReceivingStateContext } from './instances';
 
 /**
  * Receiving real-time updates (connected) state.
@@ -44,7 +22,6 @@ export type ReceivingStateContext = {
  *
  * @internal
  */
-export const ReceivingState = new State<ReceivingStateContext, Events, Effects>('RECEIVING');
 
 ReceivingState.onEnter((context) =>
   receiveMessages(context.channels, context.groups, context.cursor, context.onDemand ?? false),

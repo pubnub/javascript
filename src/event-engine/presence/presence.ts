@@ -5,7 +5,7 @@
  */
 
 import { Dependencies, PresenceEventEngineDispatcher } from './dispatcher';
-import { HeartbeatInactiveState } from './states/heartbeat_inactive';
+import { HeartbeatInactiveState } from './states';
 import { Dispatcher, Engine } from '../core';
 import * as effects from './effects';
 import * as events from './events';

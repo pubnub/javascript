@@ -4,23 +4,10 @@
  * @internal
  */
 
-import { State } from '../core/state';
-import { Effects } from '../effects';
-import { Events, reconnect, restore, subscriptionChange, unsubscribeAll } from '../events';
-import { HandshakingState } from './handshaking';
-import { UnsubscribedState } from './unsubscribed';
-import * as Subscription from '../../core/types/api/subscription';
+import { reconnect, restore, subscriptionChange, unsubscribeAll } from '../events';
+import { HandshakeStoppedState, HandshakingState, UnsubscribedState } from './instances';
 
-/**
- * Context which represent current Subscription Event Engine data state.
- *
- * @internal
- */
-type HandshakeStoppedStateContext = {
-  channels: string[];
-  groups: string[];
-  cursor?: Subscription.SubscriptionCursor;
-};
+export { HandshakeStoppedState };
 
 /**
  * Stopped initial subscription handshake (disconnected) state.
@@ -30,7 +17,6 @@ type HandshakeStoppedStateContext = {
  *
  * @internal
  */
-export const HandshakeStoppedState = new State<HandshakeStoppedStateContext, Events, Effects>('HANDSHAKE_STOPPED');
 
 HandshakeStoppedState.on(subscriptionChange.type, (context, { payload }) => {
   if (payload.channels.length === 0 && payload.groups.length === 0) return UnsubscribedState.with(undefined);

@@ -4,22 +4,12 @@
  * @internal
  */
 
-import { State } from '../../core/state';
-import { Events, disconnect, joined, left, leftAll, timesUp } from '../events';
-import { Effects, leave, wait } from '../effects';
-import { HeartbeatingState } from './heartbeating';
-import { HeartbeatStoppedState } from './heartbeat_stopped';
-import { HeartbeatInactiveState } from './heartbeat_inactive';
+import { disconnect, joined, left, leftAll, timesUp } from '../events';
+import { leave, wait } from '../effects';
+import { HeartbeatCooldownState, HeartbeatInactiveState, HeartbeatingState, HeartbeatStoppedState } from './instances';
 
-/**
- * Context which represent current Presence Event Engine data state.
- *
- * @internal
- */
-export type HeartbeatCooldownStateContext = {
-  channels: string[];
-  groups: string[];
-};
+export { HeartbeatCooldownState };
+export type { HeartbeatCooldownStateContext } from './instances';
 
 /**
  * Waiting next heartbeat state.
@@ -28,7 +18,6 @@ export type HeartbeatCooldownStateContext = {
  *
  * @internal
  */
-export const HeartbeatCooldownState = new State<HeartbeatCooldownStateContext, Events, Effects>('HEARTBEAT_COOLDOWN');
 
 HeartbeatCooldownState.onEnter(() => wait());
 HeartbeatCooldownState.onExit(() => wait.cancel);
