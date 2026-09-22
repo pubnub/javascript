@@ -5613,7 +5613,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '13.0.2';
+	            return '13.0.3';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -9197,99 +9197,40 @@
 	}
 
 	/**
-	 * Heartbeat stopped state module.
+	 * Presence Event Engine state instances.
+	 *
+	 * Isolated from transition handlers so state modules can import sibling states
+	 * without creating circular dependencies.
 	 *
 	 * @internal
 	 */
-	/**
-	 * Heartbeat stopped state.
-	 *
-	 * State in which Presence Event Engine still has information about active channels / groups, but doesn't wait for
-	 * delayed heartbeat request sending.
-	 *
-	 * @internal
-	 */
-	const HeartbeatStoppedState = new State('HEARTBEAT_STOPPED');
-	HeartbeatStoppedState.on(joined.type, (context, event) => HeartbeatStoppedState.with({
-	    channels: [...context.channels, ...event.payload.channels.filter((channel) => !context.channels.includes(channel))],
-	    groups: [...context.groups, ...event.payload.groups.filter((group) => !context.groups.includes(group))],
-	}));
-	HeartbeatStoppedState.on(left.type, (context, event) => HeartbeatStoppedState.with({
-	    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
-	    groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
-	}));
-	HeartbeatStoppedState.on(reconnect$1.type, (context, _) => HeartbeatingState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	}));
-	HeartbeatStoppedState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined));
-
-	/**
-	 * Waiting next heartbeat state module.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Waiting next heartbeat state.
-	 *
-	 * State in which Presence Event Engine is waiting when delay will run out and next heartbeat call should be done.
-	 *
-	 * @internal
-	 */
+	/** @internal */
+	const HeartbeatInactiveState = new State('HEARTBEAT_INACTIVE');
+	/** @internal */
+	const HeartbeatingState = new State('HEARTBEATING');
+	/** @internal */
 	const HeartbeatCooldownState = new State('HEARTBEAT_COOLDOWN');
-	HeartbeatCooldownState.onEnter(() => wait());
-	HeartbeatCooldownState.onExit(() => wait.cancel);
-	HeartbeatCooldownState.on(timesUp.type, (context, _) => HeartbeatingState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	}));
-	HeartbeatCooldownState.on(joined.type, (context, event) => HeartbeatingState.with({
-	    channels: [...context.channels, ...event.payload.channels.filter((channel) => !context.channels.includes(channel))],
-	    groups: [...context.groups, ...event.payload.groups.filter((group) => !context.groups.includes(group))],
-	}));
-	HeartbeatCooldownState.on(left.type, (context, event) => HeartbeatingState.with({
-	    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
-	    groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
-	}, [leave(event.payload.channels, event.payload.groups)]));
-	HeartbeatCooldownState.on(disconnect$1.type, (context, event) => HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
-	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
-	]));
-	HeartbeatCooldownState.on(leftAll.type, (context, event) => HeartbeatInactiveState.with(undefined, [
-	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
-	]));
+	/** @internal */
+	const HeartbeatStoppedState = new State('HEARTBEAT_STOPPED');
+	/** @internal */
+	const HeartbeatFailedState = new State('HEARTBEAT_FAILED');
 
 	/**
-	 * Failed to heartbeat state module.
+	 * Inactive heratbeating state module.
 	 *
 	 * @internal
 	 */
 	/**
-	 * Failed to heartbeat state.
+	 * Inactive heratbeating state
 	 *
-	 * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
-	 * exhausted.
+	 * State in which Presence Event Engine doesn't process any heartbeat requests (initial state).
 	 *
 	 * @internal
 	 */
-	const HeartbeatFailedState = new State('HEARTBEAT_FAILED');
-	HeartbeatFailedState.on(joined.type, (context, event) => HeartbeatingState.with({
-	    channels: [...context.channels, ...event.payload.channels.filter((channel) => !context.channels.includes(channel))],
-	    groups: [...context.groups, ...event.payload.groups.filter((group) => !context.groups.includes(group))],
+	HeartbeatInactiveState.on(joined.type, (_, event) => HeartbeatingState.with({
+	    channels: event.payload.channels,
+	    groups: event.payload.groups,
 	}));
-	HeartbeatFailedState.on(left.type, (context, event) => HeartbeatingState.with({
-	    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
-	    groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
-	}, [leave(event.payload.channels, event.payload.groups)]));
-	HeartbeatFailedState.on(reconnect$1.type, (context, _) => HeartbeatingState.with({
-	    channels: context.channels,
-	    groups: context.groups,
-	}));
-	HeartbeatFailedState.on(disconnect$1.type, (context, event) => HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
-	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
-	]));
-	HeartbeatFailedState.on(leftAll.type, (context, event) => HeartbeatInactiveState.with(undefined, [
-	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
-	]));
 
 	/**
 	 * Heartbeating state module.
@@ -9303,7 +9244,6 @@
 	 *
 	 * @internal
 	 */
-	const HeartbeatingState = new State('HEARTBEATING');
 	HeartbeatingState.onEnter((context) => heartbeat(context.channels, context.groups));
 	HeartbeatingState.onExit(() => heartbeat.cancel);
 	HeartbeatingState.on(heartbeatSuccess.type, (context, event) => HeartbeatCooldownState.with({ channels: context.channels, groups: context.groups }, [
@@ -9330,22 +9270,96 @@
 	]));
 
 	/**
-	 * Inactive heratbeating state module.
+	 * Waiting next heartbeat state module.
 	 *
 	 * @internal
 	 */
 	/**
-	 * Inactive heratbeating state
+	 * Waiting next heartbeat state.
 	 *
-	 * State in which Presence Event Engine doesn't process any heartbeat requests (initial state).
+	 * State in which Presence Event Engine is waiting when delay will run out and next heartbeat call should be done.
 	 *
 	 * @internal
 	 */
-	const HeartbeatInactiveState = new State('HEARTBEAT_INACTIVE');
-	HeartbeatInactiveState.on(joined.type, (_, event) => HeartbeatingState.with({
-	    channels: event.payload.channels,
-	    groups: event.payload.groups,
+	HeartbeatCooldownState.onEnter(() => wait());
+	HeartbeatCooldownState.onExit(() => wait.cancel);
+	HeartbeatCooldownState.on(timesUp.type, (context, _) => HeartbeatingState.with({
+	    channels: context.channels,
+	    groups: context.groups,
 	}));
+	HeartbeatCooldownState.on(joined.type, (context, event) => HeartbeatingState.with({
+	    channels: [...context.channels, ...event.payload.channels.filter((channel) => !context.channels.includes(channel))],
+	    groups: [...context.groups, ...event.payload.groups.filter((group) => !context.groups.includes(group))],
+	}));
+	HeartbeatCooldownState.on(left.type, (context, event) => HeartbeatingState.with({
+	    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
+	    groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
+	}, [leave(event.payload.channels, event.payload.groups)]));
+	HeartbeatCooldownState.on(disconnect$1.type, (context, event) => HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
+	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+	]));
+	HeartbeatCooldownState.on(leftAll.type, (context, event) => HeartbeatInactiveState.with(undefined, [
+	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+	]));
+
+	/**
+	 * Heartbeat stopped state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Heartbeat stopped state.
+	 *
+	 * State in which Presence Event Engine still has information about active channels / groups, but doesn't wait for
+	 * delayed heartbeat request sending.
+	 *
+	 * @internal
+	 */
+	HeartbeatStoppedState.on(joined.type, (context, event) => HeartbeatStoppedState.with({
+	    channels: [...context.channels, ...event.payload.channels.filter((channel) => !context.channels.includes(channel))],
+	    groups: [...context.groups, ...event.payload.groups.filter((group) => !context.groups.includes(group))],
+	}));
+	HeartbeatStoppedState.on(left.type, (context, event) => HeartbeatStoppedState.with({
+	    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
+	    groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
+	}));
+	HeartbeatStoppedState.on(reconnect$1.type, (context, _) => HeartbeatingState.with({
+	    channels: context.channels,
+	    groups: context.groups,
+	}));
+	HeartbeatStoppedState.on(leftAll.type, (context, _) => HeartbeatInactiveState.with(undefined));
+
+	/**
+	 * Failed to heartbeat state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Failed to heartbeat state.
+	 *
+	 * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
+	 * exhausted.
+	 *
+	 * @internal
+	 */
+	HeartbeatFailedState.on(joined.type, (context, event) => HeartbeatingState.with({
+	    channels: [...context.channels, ...event.payload.channels.filter((channel) => !context.channels.includes(channel))],
+	    groups: [...context.groups, ...event.payload.groups.filter((group) => !context.groups.includes(group))],
+	}));
+	HeartbeatFailedState.on(left.type, (context, event) => HeartbeatingState.with({
+	    channels: context.channels.filter((channel) => !event.payload.channels.includes(channel)),
+	    groups: context.groups.filter((group) => !event.payload.groups.includes(group)),
+	}, [leave(event.payload.channels, event.payload.groups)]));
+	HeartbeatFailedState.on(reconnect$1.type, (context, _) => HeartbeatingState.with({
+	    channels: context.channels,
+	    groups: context.groups,
+	}));
+	HeartbeatFailedState.on(disconnect$1.type, (context, event) => HeartbeatStoppedState.with({ channels: context.channels, groups: context.groups }, [
+	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+	]));
+	HeartbeatFailedState.on(leftAll.type, (context, event) => HeartbeatInactiveState.with(undefined, [
+	    ...(!event.payload.isOffline ? [leave(context.channels, context.groups)] : []),
+	]));
 
 	/**
 	 * Presence Event Engine module.
@@ -9418,57 +9432,6 @@
 	        this.dispatcher.dispose();
 	    }
 	}
-
-	/**
-	 * Subscribe Event Engine effects module.
-	 *
-	 * @internal
-	 */
-	/**
-	 * Initial subscription effect.
-	 *
-	 * Performs subscribe REST API call with `tt=0`.
-	 *
-	 * @internal
-	 */
-	const handshake = createManagedEffect('HANDSHAKE', (channels, groups, onDemand) => ({
-	    channels,
-	    groups,
-	    onDemand,
-	}));
-	/**
-	 * Real-time updates receive effect.
-	 *
-	 * Performs sequential subscribe REST API call with `tt` set to the value received from the previous subscribe
-	 * REST API call.
-	 *
-	 * @internal
-	 */
-	const receiveMessages = createManagedEffect('RECEIVE_MESSAGES', (channels, groups, cursor, onDemand) => ({
-	    channels,
-	    groups,
-	    cursor,
-	    onDemand,
-	}));
-	/**
-	 * Emit real-time updates effect.
-	 *
-	 * Notify event listeners about updates for which listener handlers has been provided.
-	 *
-	 * @internal
-	 */
-	const emitMessages = createEffect('EMIT_MESSAGES', (cursor, events) => ({
-	    cursor,
-	    events,
-	}));
-	/**
-	 * Emit subscription status change effect.
-	 *
-	 * Notify status change event listeners.
-	 *
-	 * @internal
-	 */
-	const emitStatus = createEffect('EMIT_STATUS', (status) => status);
 
 	/**
 	 * Subscribe Event Engine events module.
@@ -9568,6 +9531,29 @@
 	const unsubscribeAll = createEvent('UNSUBSCRIBE_ALL', () => ({}));
 
 	/**
+	 * Subscribe Event Engine state instances.
+	 *
+	 * Isolated from transition handlers so state modules can import sibling states
+	 * without creating circular dependencies.
+	 *
+	 * @internal
+	 */
+	/** @internal */
+	const UnsubscribedState = new State('UNSUBSCRIBED');
+	/** @internal */
+	const HandshakingState = new State('HANDSHAKING');
+	/** @internal */
+	const HandshakeStoppedState = new State('HANDSHAKE_STOPPED');
+	/** @internal */
+	const HandshakeFailedState = new State('HANDSHAKE_FAILED');
+	/** @internal */
+	const ReceivingState = new State('RECEIVING');
+	/** @internal */
+	const ReceiveStoppedState = new State('RECEIVE_STOPPED');
+	/** @internal */
+	const ReceiveFailedState = new State('RECEIVE_FAILED');
+
+	/**
 	 * Unsubscribed / disconnected state module.
 	 *
 	 * @internal
@@ -9579,7 +9565,6 @@
 	 *
 	 * @internal
 	 */
-	const UnsubscribedState = new State('UNSUBSCRIBED');
 	UnsubscribedState.on(subscriptionChange.type, (_, { payload }) => {
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
 	        return UnsubscribedState.with(undefined);
@@ -9597,77 +9582,55 @@
 	});
 
 	/**
-	 * Stopped initial subscription handshake (disconnected) state.
+	 * Subscribe Event Engine effects module.
 	 *
 	 * @internal
 	 */
 	/**
-	 * Stopped initial subscription handshake (disconnected) state.
+	 * Initial subscription effect.
 	 *
-	 * State in which Subscription Event Engine still has information about subscription but doesn't have subscription
-	 * cursor for next sequential subscribe REST API call.
+	 * Performs subscribe REST API call with `tt=0`.
 	 *
 	 * @internal
 	 */
-	const HandshakeStoppedState = new State('HANDSHAKE_STOPPED');
-	HandshakeStoppedState.on(subscriptionChange.type, (context, { payload }) => {
-	    if (payload.channels.length === 0 && payload.groups.length === 0)
-	        return UnsubscribedState.with(undefined);
-	    return HandshakeStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
-	});
-	HandshakeStoppedState.on(reconnect.type, (context, { payload }) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: payload.cursor || context.cursor, onDemand: true })));
-	HandshakeStoppedState.on(restore.type, (context, { payload }) => {
-	    var _a;
-	    if (payload.channels.length === 0 && payload.groups.length === 0)
-	        return UnsubscribedState.with(undefined);
-	    return HandshakeStoppedState.with({
-	        channels: payload.channels,
-	        groups: payload.groups,
-	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || ((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0 },
-	    });
-	});
-	HandshakeStoppedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
-
+	const handshake = createManagedEffect('HANDSHAKE', (channels, groups, onDemand) => ({
+	    channels,
+	    groups,
+	    onDemand,
+	}));
 	/**
-	 * Failed initial subscription handshake (disconnected) state.
+	 * Real-time updates receive effect.
+	 *
+	 * Performs sequential subscribe REST API call with `tt` set to the value received from the previous subscribe
+	 * REST API call.
 	 *
 	 * @internal
 	 */
+	const receiveMessages = createManagedEffect('RECEIVE_MESSAGES', (channels, groups, cursor, onDemand) => ({
+	    channels,
+	    groups,
+	    cursor,
+	    onDemand,
+	}));
 	/**
-	 * Failed initial subscription handshake (disconnected) state.
+	 * Emit real-time updates effect.
 	 *
-	 * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
-	 * exhausted.
+	 * Notify event listeners about updates for which listener handlers has been provided.
 	 *
 	 * @internal
 	 */
-	const HandshakeFailedState = new State('HANDSHAKE_FAILED');
-	HandshakeFailedState.on(subscriptionChange.type, (context, { payload }) => {
-	    if (payload.channels.length === 0 && payload.groups.length === 0)
-	        return UnsubscribedState.with(undefined);
-	    return HandshakingState.with({
-	        channels: payload.channels,
-	        groups: payload.groups,
-	        cursor: context.cursor,
-	        onDemand: true,
-	    });
-	});
-	HandshakeFailedState.on(reconnect.type, (context, { payload }) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: payload.cursor || context.cursor, onDemand: true })));
-	HandshakeFailedState.on(restore.type, (context, { payload }) => {
-	    var _a, _b;
-	    if (payload.channels.length === 0 && payload.groups.length === 0)
-	        return UnsubscribedState.with(undefined);
-	    return HandshakingState.with({
-	        channels: payload.channels,
-	        groups: payload.groups,
-	        cursor: {
-	            timetoken: `${payload.cursor.timetoken}`,
-	            region: payload.cursor.region ? payload.cursor.region : ((_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0),
-	        },
-	        onDemand: true,
-	    });
-	});
-	HandshakeFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
+	const emitMessages = createEffect('EMIT_MESSAGES', (cursor, events) => ({
+	    cursor,
+	    events,
+	}));
+	/**
+	 * Emit subscription status change effect.
+	 *
+	 * Notify status change event listeners.
+	 *
+	 * @internal
+	 */
+	const emitStatus = createEffect('EMIT_STATUS', (status) => status);
 
 	/**
 	 * Initial subscription handshake (disconnected) state.
@@ -9682,7 +9645,6 @@
 	 *
 	 * @internal
 	 */
-	const HandshakingState = new State('HANDSHAKING');
 	HandshakingState.onEnter((context) => { var _a; return handshake(context.channels, context.groups, (_a = context.onDemand) !== null && _a !== void 0 ? _a : false); });
 	HandshakingState.onExit(() => handshake.cancel);
 	HandshakingState.on(subscriptionChange.type, (context, { payload }) => {
@@ -9749,74 +9711,50 @@
 	HandshakingState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
 
 	/**
-	 * Stopped real-time updates (disconnected) state module.
+	 * Stopped initial subscription handshake (disconnected) state.
 	 *
 	 * @internal
 	 */
 	/**
-	 * Stopped real-time updates (disconnected) state.
+	 * Stopped initial subscription handshake (disconnected) state.
 	 *
-	 * State in which Subscription Event Engine still has information about subscription but doesn't process real-time
-	 * updates.
+	 * State in which Subscription Event Engine still has information about subscription but doesn't have subscription
+	 * cursor for next sequential subscribe REST API call.
 	 *
 	 * @internal
 	 */
-	const ReceiveStoppedState = new State('RECEIVE_STOPPED');
-	ReceiveStoppedState.on(subscriptionChange.type, (context, { payload }) => {
+	HandshakeStoppedState.on(subscriptionChange.type, (context, { payload }) => {
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
 	        return UnsubscribedState.with(undefined);
-	    return ReceiveStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+	    return HandshakeStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
 	});
-	ReceiveStoppedState.on(restore.type, (context, { payload }) => {
+	HandshakeStoppedState.on(reconnect.type, (context, { payload }) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: payload.cursor || context.cursor, onDemand: true })));
+	HandshakeStoppedState.on(restore.type, (context, { payload }) => {
+	    var _a;
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
 	        return UnsubscribedState.with(undefined);
-	    return ReceiveStoppedState.with({
+	    return HandshakeStoppedState.with({
 	        channels: payload.channels,
 	        groups: payload.groups,
-	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
+	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || ((_a = context.cursor) === null || _a === void 0 ? void 0 : _a.region) || 0 },
 	    });
 	});
-	ReceiveStoppedState.on(reconnect.type, (context, { payload }) => {
-	    var _a;
-	    return HandshakingState.with({
-	        channels: context.channels,
-	        groups: context.groups,
-	        cursor: {
-	            timetoken: !!payload.cursor.timetoken ? (_a = payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
-	            region: payload.cursor.region || context.cursor.region,
-	        },
-	        onDemand: true,
-	    });
-	});
-	ReceiveStoppedState.on(unsubscribeAll.type, () => UnsubscribedState.with(undefined));
+	HandshakeStoppedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
 
 	/**
-	 * Failed to receive real-time updates (disconnected) state.
+	 * Failed initial subscription handshake (disconnected) state.
 	 *
 	 * @internal
 	 */
 	/**
-	 * Failed to receive real-time updates (disconnected) state.
+	 * Failed initial subscription handshake (disconnected) state.
 	 *
 	 * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
 	 * exhausted.
 	 *
 	 * @internal
 	 */
-	const ReceiveFailedState = new State('RECEIVE_FAILED');
-	ReceiveFailedState.on(reconnect.type, (context, { payload }) => {
-	    var _a;
-	    return HandshakingState.with({
-	        channels: context.channels,
-	        groups: context.groups,
-	        cursor: {
-	            timetoken: !!payload.cursor.timetoken ? (_a = payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
-	            region: payload.cursor.region || context.cursor.region,
-	        },
-	        onDemand: true,
-	    });
-	});
-	ReceiveFailedState.on(subscriptionChange.type, (context, { payload }) => {
+	HandshakeFailedState.on(subscriptionChange.type, (context, { payload }) => {
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
 	        return UnsubscribedState.with(undefined);
 	    return HandshakingState.with({
@@ -9826,17 +9764,22 @@
 	        onDemand: true,
 	    });
 	});
-	ReceiveFailedState.on(restore.type, (context, { payload }) => {
+	HandshakeFailedState.on(reconnect.type, (context, { payload }) => HandshakingState.with(Object.assign(Object.assign({}, context), { cursor: payload.cursor || context.cursor, onDemand: true })));
+	HandshakeFailedState.on(restore.type, (context, { payload }) => {
+	    var _a, _b;
 	    if (payload.channels.length === 0 && payload.groups.length === 0)
 	        return UnsubscribedState.with(undefined);
 	    return HandshakingState.with({
 	        channels: payload.channels,
 	        groups: payload.groups,
-	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
+	        cursor: {
+	            timetoken: `${payload.cursor.timetoken}`,
+	            region: payload.cursor.region ? payload.cursor.region : ((_b = (_a = context === null || context === void 0 ? void 0 : context.cursor) === null || _a === void 0 ? void 0 : _a.region) !== null && _b !== void 0 ? _b : 0),
+	        },
 	        onDemand: true,
 	    });
 	});
-	ReceiveFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));
+	HandshakeFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with());
 
 	/**
 	 * Receiving real-time updates (connected) state module.
@@ -9850,7 +9793,6 @@
 	 *
 	 * @internal
 	 */
-	const ReceivingState = new State('RECEIVING');
 	ReceivingState.onEnter((context) => { var _a; return receiveMessages(context.channels, context.groups, context.cursor, (_a = context.onDemand) !== null && _a !== void 0 ? _a : false); });
 	ReceivingState.onExit(() => receiveMessages.cancel);
 	ReceivingState.on(receiveSuccess.type, (context, { payload }) => ReceivingState.with({
@@ -9937,6 +9879,94 @@
 	        operation: RequestOperation$1.PNUnsubscribeOperation,
 	    }),
 	]));
+
+	/**
+	 * Stopped real-time updates (disconnected) state module.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Stopped real-time updates (disconnected) state.
+	 *
+	 * State in which Subscription Event Engine still has information about subscription but doesn't process real-time
+	 * updates.
+	 *
+	 * @internal
+	 */
+	ReceiveStoppedState.on(subscriptionChange.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return ReceiveStoppedState.with({ channels: payload.channels, groups: payload.groups, cursor: context.cursor });
+	});
+	ReceiveStoppedState.on(restore.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return ReceiveStoppedState.with({
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
+	    });
+	});
+	ReceiveStoppedState.on(reconnect.type, (context, { payload }) => {
+	    var _a;
+	    return HandshakingState.with({
+	        channels: context.channels,
+	        groups: context.groups,
+	        cursor: {
+	            timetoken: !!payload.cursor.timetoken ? (_a = payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
+	            region: payload.cursor.region || context.cursor.region,
+	        },
+	        onDemand: true,
+	    });
+	});
+	ReceiveStoppedState.on(unsubscribeAll.type, () => UnsubscribedState.with(undefined));
+
+	/**
+	 * Failed to receive real-time updates (disconnected) state.
+	 *
+	 * @internal
+	 */
+	/**
+	 * Failed to receive real-time updates (disconnected) state.
+	 *
+	 * State in which Subscription Event Engine waits for user to try to reconnect after all retry attempts has been
+	 * exhausted.
+	 *
+	 * @internal
+	 */
+	ReceiveFailedState.on(reconnect.type, (context, { payload }) => {
+	    var _a;
+	    return HandshakingState.with({
+	        channels: context.channels,
+	        groups: context.groups,
+	        cursor: {
+	            timetoken: !!payload.cursor.timetoken ? (_a = payload.cursor) === null || _a === void 0 ? void 0 : _a.timetoken : context.cursor.timetoken,
+	            region: payload.cursor.region || context.cursor.region,
+	        },
+	        onDemand: true,
+	    });
+	});
+	ReceiveFailedState.on(subscriptionChange.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakingState.with({
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: context.cursor,
+	        onDemand: true,
+	    });
+	});
+	ReceiveFailedState.on(restore.type, (context, { payload }) => {
+	    if (payload.channels.length === 0 && payload.groups.length === 0)
+	        return UnsubscribedState.with(undefined);
+	    return HandshakingState.with({
+	        channels: payload.channels,
+	        groups: payload.groups,
+	        cursor: { timetoken: `${payload.cursor.timetoken}`, region: payload.cursor.region || context.cursor.region },
+	        onDemand: true,
+	    });
+	});
+	ReceiveFailedState.on(unsubscribeAll.type, (_) => UnsubscribedState.with(undefined));
 
 	/**
 	 * Subscribe Event Engine effects dispatcher.

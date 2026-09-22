@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "13.0.2",
+  "version": "13.0.3",
   "author": "PubNub <support@pubnub.com>",
   "description": "PubNub SDK for JavaScript. Publish/subscribe messaging over HTTP long-poll with server-assigned message ordering, channel occupancy via Here Now, and message history through Message Persistence.",
   "scripts": {
@@ -94,6 +94,7 @@
     "@types/lil-uuid": "^0.1.3",
     "@types/mocha": "^9.1.1",
     "@types/nock": "^9.3.1",
+    "@types/node": "^22.13.14",
     "@types/node-fetch": "^2.6.11",
     "@types/sinon": "^17.0.3",
     "@types/text-encoding": "^0.0.39",

@@ -4,22 +4,12 @@
  * @internal
  */
 
-import { State } from '../../core/state';
-import { Events, disconnect, heartbeatFailure, heartbeatSuccess, joined, left, leftAll, reconnect } from '../events';
-import { Effects, heartbeat, leave } from '../effects';
-import { HeartbeatingState } from './heartbeating';
-import { HeartbeatStoppedState } from './heartbeat_stopped';
-import { HeartbeatInactiveState } from './heartbeat_inactive';
+import { disconnect, heartbeatFailure, heartbeatSuccess, joined, left, leftAll, reconnect } from '../events';
+import { heartbeat, leave } from '../effects';
+import { HeartbeatFailedState, HeartbeatInactiveState, HeartbeatingState, HeartbeatStoppedState } from './instances';
 
-/**
- * Context which represent current Presence Event Engine data state.
- *
- * @internal
- */
-export type HeartbeatFailedStateContext = {
-  channels: string[];
-  groups: string[];
-};
+export { HeartbeatFailedState };
+export type { HeartbeatFailedStateContext } from './instances';
 
 /**
  * Failed to heartbeat state.
@@ -29,7 +19,6 @@ export type HeartbeatFailedStateContext = {
  *
  * @internal
  */
-export const HeartbeatFailedState = new State<HeartbeatFailedStateContext, Events, Effects>('HEARTBEAT_FAILED');
 
 HeartbeatFailedState.on(joined.type, (context, event) =>
   HeartbeatingState.with({

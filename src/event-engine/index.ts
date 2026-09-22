@@ -4,10 +4,9 @@
  * @internal
  */
 
-import { ReceivingState, ReceivingStateContext } from './states/receiving';
+import { ReceivingState, ReceivingStateContext, UnsubscribedState } from './states';
 import { Dependencies, EventEngineDispatcher } from './dispatcher';
 import { subscriptionTimetokenFromReference } from '../core/utils';
-import { UnsubscribedState } from './states/unsubscribed';
 import { Dispatcher, Engine } from './core';
 import categoryConstants from '../core/constants/categories';
 import * as utils from '../core/utils';

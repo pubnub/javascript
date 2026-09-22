@@ -4,10 +4,10 @@
  * @internal
  */
 
-import { State } from '../../core/state';
-import { Effects } from '../effects';
-import { Events, joined } from '../events';
-import { HeartbeatingState } from './heartbeating';
+import { joined } from '../events';
+import { HeartbeatInactiveState, HeartbeatingState } from './instances';
+
+export { HeartbeatInactiveState };
 
 /**
  * Inactive heratbeating state
@@ -16,7 +16,6 @@ import { HeartbeatingState } from './heartbeating';
  *
  * @internal
  */
-export const HeartbeatInactiveState = new State<void, Events, Effects>('HEARTBEAT_INACTIVE');
 
 HeartbeatInactiveState.on(joined.type, (_, event) =>
   HeartbeatingState.with({

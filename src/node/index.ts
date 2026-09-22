@@ -7,12 +7,13 @@ import type { NodeCryptoModule as CryptoModuleType } from '../crypto/modules/Nod
 
 import { ExtendedConfiguration, PlatformConfiguration } from '../core/interfaces/configuration';
 import { PubNubConfiguration, setDefaults } from './components/configuration';
+import type { NodeTransportProxyConfiguration } from './types/proxy';
 import PubNubFile, { PubNubFileParameters } from '../file/modules/node';
 import { CryptorConfiguration } from '../core/interfaces/crypto-module';
 import { makeConfiguration } from '../core/components/configuration';
 import { TokenManager } from '../core/components/token_manager';
 import { Cryptography } from '../core/interfaces/cryptography';
-import { NodeTransport, NodeTransportProxyConfiguration } from '../transport/node-transport';
+import { NodeTransport } from '../transport/node-transport';
 import { PubNubMiddleware } from '../transport/middleware';
 import { PubNubFileConstructor } from '../core/types/file';
 import { decode } from '../core/components/base64_codec';

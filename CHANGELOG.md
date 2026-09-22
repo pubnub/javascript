@@ -1,3 +1,12 @@
+## v13.0.3
+September 22 2026
+
+#### Fixed
+- Added required public type definitions for proxy type, dataSync event. Merges PR #517 . Fixed the following issues reported by [@thilllon](https://github.com/thilllon): [#517](https://github.com/pubnub/javascript/issues/517).
+
+#### Modified
+- Fixes Rollup circular dependency warnings in Event Engine state modules. Fixed the following issues reported by [@rikkrome](https://github.com/rikkrome): [#290](https://github.com/pubnub/javascript/issues/290).
+
 ## v13.0.2
 September 21 2026
 

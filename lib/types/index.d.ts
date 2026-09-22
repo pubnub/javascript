@@ -33,7 +33,7 @@ declare class PubNub extends PubNubCore<
    * @throws An error if {@link PubNub} client already configured to use `keepAlive`.
    * `keepAlive` and `proxy` can't be used simultaneously.
    */
-  setProxy(configuration?: NodeTransportProxyConfiguration): void;
+  setProxy(configuration?: PubNub.NodeTransportProxyConfiguration): void;
 }
 
 /**
@@ -3686,6 +3686,27 @@ declare namespace PubNub {
   }
 
   /**
+   * Proxy configuration accepted by {@link PubNub.setProxy}.
+   *
+   * Provide an `http://` or `https://` proxy URI, or an object with host, port, protocol, and optional
+   * basic-auth credentials. Only explicit HTTP and HTTPS proxies are supported.
+   */
+  export type NodeTransportProxyConfiguration =
+    | string
+    | {
+        /** Proxy host name (alias of {@link host}). */
+        hostname?: string;
+        /** Proxy host name. */
+        host?: string;
+        /** Proxy port. */
+        port?: number;
+        /** Proxy protocol (`http` or `https`). Defaults to `http`. */
+        protocol?: string;
+        /** Basic-auth credentials in `user:password` form. */
+        auth?: string;
+      };
+
+  /**
    * Real-time events' listener.
    */
   export type Listener = {
@@ -7075,6 +7096,16 @@ declare namespace PubNub {
        * Parsed DataSync change payload.
        */
       message: DataSyncData;
+    };
+
+    /**
+     * Extended DataSync change real-time event.
+     *
+     * Type extended for listener manager support.
+     */
+    type DataSyncEvent = {
+      type: PubNubEventType.DataSync;
+      data: DataSyncObject;
     };
 
     /**

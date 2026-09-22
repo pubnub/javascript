@@ -542,8 +542,6 @@ export type DataSyncObject = Event & {
  * Extended DataSync change real-time event.
  *
  * Type extended for listener manager support.
- *
- * @internal
  */
 type DataSyncEvent = {
   type: PubNubEventType.DataSync;
