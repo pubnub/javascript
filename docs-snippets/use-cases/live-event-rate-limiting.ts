@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -17,16 +17,13 @@ try {
     console.log(`${channel} holds ${data.occupancy} fans`);
   });
 } catch (error) {
-  console.error(
-    `Reading the shard occupancy failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Reading the shard occupancy failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
 // snippet.rateLimitingPickShardForFan
-async function pickShardForFan(shardCount: number, maxFansPerShard: number) {
+async function pickShardForFan(shardCount = 0, maxFansPerShard = 0) {
   const channels = Array.from({ length: shardCount }, (_, index) => `game.chat.shard-${index}`);
 
   const response = await pubnub.hereNow({ channels, includeUUIDs: false });
@@ -49,7 +46,7 @@ console.log('this fan joins', shard);
 const minimumMillisecondsBetweenMessages = 2000;
 let lastPublishedAt = 0;
 
-async function sendChatMessage(text: string) {
+async function sendChatMessage(text = '') {
   const now = Date.now();
 
   if (now - lastPublishedAt < minimumMillisecondsBetweenMessages) {

@@ -1,5 +1,8 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
+// Presence monitoring and the decision to alert a fan run under their own service
+// identity, separate from any fan's own client, so this script's watcher is never
+// the same connection whose absence it is trying to detect.
 const pubnub = new PubNub({
   publishKey: 'demo',
   subscribeKey: 'demo',
@@ -14,29 +17,55 @@ try {
   });
   console.log('fans currently watching the stream:', response.totalOccupancy);
 } catch (error) {
-  console.error(
-    `Counting the fans watching failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Counting the fans watching failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
+}
+// snippet.end
+
+// snippet.reEngagementPublishMomentAlert
+async function sendMomentAlert(userId = '') {
+  const alertChannel = `game.moment-alerts.${userId}`;
+  const moment = PubNub.notificationPayload('Injury time', 'Two minutes left, and it is still 2-2.');
+
+  moment.sound = 'default';
+  moment.apns.configurations = [{ targets: [{ topic: 'com.example.matchday' }] }];
+
+  try {
+    const response = await pubnub.publish({
+      channel: alertChannel,
+      message: {
+        ...moment.buildPayload(['apns2', 'fcm']),
+        moment: 'injury-time',
+      },
+      customMessageType: 'moment-alert',
+    });
+    console.log(`moment alert published to ${alertChannel} at timetoken:`, response.timetoken);
+  } catch (error) {
+    const status = error instanceof Error && 'status' in error ? error.status : undefined;
+    console.error(`Publishing the moment alert failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
+  }
 }
 // snippet.end
 
 // snippet.reEngagementCheckOneFan
-try {
-  const response = await pubnub.whereNow({ uuid: 'fan-42' });
+async function notifyIfAbsent(userId = '') {
+  try {
+    const response = await pubnub.whereNow({ uuid: userId });
 
-  if (response.channels.includes('game.stream')) {
-    console.log('fan-42 is watching, so no alert is needed');
-  } else {
-    console.log('fan-42 left the stream, so a push alert can bring them back');
+    if (response.channels.includes('game.stream')) {
+      console.log(`${userId} is still subscribed to game.stream, so no alert is needed`);
+      return;
+    }
+  } catch (error) {
+    const status = error instanceof Error && 'status' in error ? error.status : undefined;
+    console.error(
+      `Checking where ${userId} is subscribed failed: ${error}${status ? ` Additional information: ${status}` : ''}`,
+    );
+    return;
   }
-} catch (error) {
-  console.error(
-    `Checking where the fan is failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+
+  console.log(`${userId} is not subscribed to game.stream, so sending a moment alert`);
+  await sendMomentAlert(userId);
 }
 // snippet.end
 
@@ -46,50 +75,47 @@ const streamSubscription = pubnub.channel('game.stream').subscription({ receiveP
 streamSubscription.onPresence = (event) => {
   if (event.action === 'leave' || event.action === 'timeout') {
     console.log(`${event.uuid} stopped watching, and ${event.occupancy} fans remain`);
+    void notifyIfAbsent(event.uuid);
   }
 };
 
 streamSubscription.subscribe();
 // snippet.end
 
-// snippet.reEngagementPublishMomentAlert
-const moment = PubNub.notificationPayload('Injury time', 'Two minutes left, and it is still 2-2.');
+// snippet.reEngagementFanViewer
+const viewerUserId = process.argv[2] ?? 'fan-a';
 
-moment.sound = 'default';
-moment.apns.configurations = [{ targets: [{ topic: 'com.example.matchday' }] }];
+const viewerClient = new PubNub({
+  publishKey: 'demo',
+  subscribeKey: 'demo',
+  userId: viewerUserId,
+});
+
+const watchSubscription = viewerClient.channel('game.stream').subscription({ receivePresenceEvents: false });
+watchSubscription.subscribe();
 
 try {
-  const response = await pubnub.publish({
-    channel: 'game.moment-alerts',
-    message: {
-      ...moment.buildPayload(['apns2', 'fcm']),
-      moment: 'injury-time',
-    },
-    customMessageType: 'moment-alert',
-  });
-  console.log('moment alert published at timetoken:', response.timetoken);
-} catch (error) {
-  console.error(
-    `Publishing the moment alert failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
-}
-// snippet.end
-
-// snippet.reEngagementRegisterForMomentAlerts
-try {
-  const response = await pubnub.push.addChannels({
-    channels: ['game.moment-alerts'],
+  const response = await viewerClient.push.addChannels({
+    channels: [`game.moment-alerts.${viewerUserId}`],
     device: 'replace-with-the-fcm-registration-token',
     pushGateway: 'fcm',
   });
-  console.log('device registered for moment alerts:', response);
+  console.log(`${viewerUserId} registered its device for game.moment-alerts.${viewerUserId}:`, response);
 } catch (error) {
-  console.error(
-    `Registering for moment alerts failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Registering the device failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
+
+const alertSubscription = viewerClient.channel(`game.moment-alerts.${viewerUserId}`).subscription();
+
+alertSubscription.onMessage = (event) => {
+  console.log(`${viewerUserId} received a moment alert:`, event.message);
+};
+
+alertSubscription.subscribe();
+
+process.on('SIGINT', () => {
+  console.log(`${viewerUserId} left game.stream, but is still reachable for a moment alert`);
+  watchSubscription.unsubscribe();
+});
 // snippet.end

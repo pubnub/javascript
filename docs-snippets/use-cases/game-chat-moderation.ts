@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -6,8 +6,10 @@ const pubnub = new PubNub({
   userId: 'moderator-7',
 });
 
-// Removing a message from Message Persistence is a server-side operation, so this
-// client is configured with the keyset's secret key and runs on your own infrastructure.
+// Removing a message from Message Persistence, and granting the token that lets
+// moderator.js write hide decisions to the control channel, are both server-side
+// operations, so this client is configured with the keyset's secret key and runs
+// on your own infrastructure.
 const server = new PubNub({
   publishKey: 'demo',
   subscribeKey: 'demo',
@@ -15,32 +17,66 @@ const server = new PubNub({
   userId: 'moderation-service',
 });
 
-// snippet.chatModerationFlagMessage
+// snippet.chatModerationGrantControlChannelAccess
 try {
-  const response = await pubnub.addMessageAction({
-    channel: 'game.chat',
-    messageTimetoken: 'replace-with-message-timetoken',
-    action: {
-      type: 'moderation',
-      value: 'hidden',
+  const token = await server.grantToken({
+    ttl: 60,
+    authorizedUserId: 'moderator-7',
+    resources: {
+      channels: {
+        'game.chat': { read: true },
+        'game.chat.moderation': { read: true, write: true },
+      },
     },
   });
-  console.log('message flagged at timetoken:', response.data.actionTimetoken);
+  console.log('token that lets moderator-7 publish hide decisions:', token);
 } catch (error) {
-  console.error(
-    `Flagging the message failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Granting moderator access failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
+}
+// snippet.end
+
+// snippet.chatModerationApplyModeratorToken
+pubnub.setToken('replace-with-the-token-server-js-printed');
+// snippet.end
+
+// snippet.chatModerationFlagMessage
+try {
+  const response = await pubnub.publish({
+    channel: 'game.chat.moderation',
+    message: {
+      action: 'hide',
+      messageTimetoken: 'replace-with-message-timetoken',
+    },
+    customMessageType: 'moderation-hide',
+    storeInHistory: true,
+  });
+  console.log('message flagged at timetoken:', response.timetoken);
+} catch (error) {
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Flagging the message failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
 // snippet.chatModerationReceiveModerationDecisions
-const moderationSubscription = pubnub.channel('game.chat').subscription();
+const hiddenTimetokens = new Set();
 
-moderationSubscription.onMessageAction = (event) => {
-  if (event.data.type === 'moderation' && event.data.value === 'hidden') {
-    console.log('hide the message published at', event.data.messageTimetoken);
+const moderationSubscription = pubnub.channel('game.chat.moderation').subscription();
+
+moderationSubscription.onMessage = (event) => {
+  const decision = event.message;
+  const action =
+    typeof decision === 'object' && decision !== null && !Array.isArray(decision) && 'action' in decision
+      ? decision.action
+      : undefined;
+  const messageTimetoken =
+    typeof decision === 'object' && decision !== null && !Array.isArray(decision) && 'messageTimetoken' in decision
+      ? decision.messageTimetoken
+      : undefined;
+
+  if (action === 'hide' && typeof messageTimetoken === 'string') {
+    hiddenTimetokens.add(messageTimetoken);
+    console.log('hide the message published at', messageTimetoken);
   }
 };
 
@@ -48,51 +84,56 @@ moderationSubscription.subscribe();
 // snippet.end
 
 // snippet.chatModerationLoadHistoryWithFlags
-// Requesting message actions alongside the messages adds an `actions` map to each
-// entry, keyed by action type and then by action value.
-type ModeratedEntry = {
-  timetoken: string | number;
-  message: unknown;
-  actions?: Record<string, Record<string, unknown>>;
-};
-
 try {
   const response = await pubnub.fetchMessages({
-    channels: ['game.chat'],
+    channels: ['game.chat', 'game.chat.moderation'],
     count: 25,
-    includeMessageActions: true,
   });
 
-  const entries = (response.channels['game.chat'] ?? []) as ModeratedEntry[];
+  const moderationEntries = response.channels['game.chat.moderation'] ?? [];
 
-  entries.forEach((entry) => {
-    const hidden = entry.actions?.moderation?.hidden !== undefined;
+  moderationEntries.forEach((entry) => {
+    const decision = entry.message;
+    const action =
+      typeof decision === 'object' && decision !== null && !Array.isArray(decision) && 'action' in decision
+        ? decision.action
+        : undefined;
+    const messageTimetoken =
+      typeof decision === 'object' && decision !== null && !Array.isArray(decision) && 'messageTimetoken' in decision
+        ? decision.messageTimetoken
+        : undefined;
+
+    if (action === 'hide' && typeof messageTimetoken === 'string') {
+      hiddenTimetokens.add(messageTimetoken);
+    }
+  });
+
+  const chatEntries = response.channels['game.chat'] ?? [];
+
+  chatEntries.forEach((entry) => {
+    const hidden = hiddenTimetokens.has(entry.timetoken.toString());
     console.log(entry.timetoken, hidden ? '[hidden by a moderator]' : entry.message);
   });
 } catch (error) {
-  console.error(
-    `Loading the moderated history failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Loading the moderated history failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
 // snippet.chatModerationDeleteMessage
 try {
-  const messageTimetoken = 17000000000000000;
+  const messageTimetoken = 'replace-with-message-timetoken';
+  const start = (BigInt(messageTimetoken) - BigInt(1)).toString();
+  const end = messageTimetoken;
 
   const response = await server.deleteMessages({
     channel: 'game.chat',
-    start: (messageTimetoken - 1).toString(),
-    end: messageTimetoken.toString(),
+    start,
+    end,
   });
   console.log('message deleted from Message Persistence:', response);
 } catch (error) {
-  console.error(
-    `Deleting the message failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Deleting the message failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end

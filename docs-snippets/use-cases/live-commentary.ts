@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -19,11 +19,8 @@ try {
   });
   console.log('commentary published at timetoken:', response.timetoken);
 } catch (error) {
-  console.error(
-    `Publishing the commentary failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Publishing the commentary failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
@@ -34,6 +31,14 @@ const commentarySubscription = commentaryChannel.subscription({ receivePresenceE
 commentarySubscription.onMessage = (event) => {
   console.log(`[${event.timetoken}] ${JSON.stringify(event.message)}`);
 };
+
+pubnub.addListener({
+  status: (event) => {
+    if (event.category === 'PNConnectedCategory') {
+      console.log('connected and ready to receive commentary');
+    }
+  },
+});
 
 commentarySubscription.subscribe();
 // snippet.end
@@ -51,14 +56,15 @@ try {
     console.log(entry.timetoken, entry.message);
   });
 } catch (error) {
-  console.error(
-    `Loading the commentary backlog failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Loading the commentary backlog failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
 // snippet.liveCommentaryUnsubscribe
-commentarySubscription.unsubscribe();
+process.on('SIGINT', () => {
+  console.log('viewer shutting down, closing the commentary subscription');
+  commentarySubscription.unsubscribe();
+  process.exit(0);
+});
 // snippet.end

@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -27,11 +27,8 @@ try {
   });
   console.log('poll published at timetoken:', response.timetoken);
 } catch (error) {
-  console.error(
-    `Publishing the poll failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Publishing the poll failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
@@ -59,11 +56,8 @@ try {
     console.log('poll that is already open:', entries[0].message);
   }
 } catch (error) {
-  console.error(
-    `Fetching the open poll failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Fetching the open poll failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
@@ -76,11 +70,8 @@ try {
   });
   console.log('vote published at timetoken:', response.timetoken);
 } catch (error) {
-  console.error(
-    `Publishing the vote failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Publishing the vote failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
@@ -98,11 +89,8 @@ try {
   });
   console.log('results published at timetoken:', response.timetoken);
 } catch (error) {
-  console.error(
-    `Publishing the results failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Publishing the results failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 

@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -15,24 +15,27 @@ try {
   });
   console.log('reaction published at timetoken:', response.timetoken);
 } catch (error) {
-  console.error(
-    `Publishing the reaction failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Publishing the reaction failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
 // snippet.realTimeAdsReceiveAdDecision
-type AdDecision = { adId: number; clickPoints: number };
-
 const adSubscription = pubnub.channel('game.ad-decisions').subscription({ receivePresenceEvents: false });
 
 adSubscription.onMessage = (event) => {
-  const decision = event.message as AdDecision;
+  const decision = event.message;
+  const adId =
+    typeof decision === 'object' && decision !== null && !Array.isArray(decision) && 'adId' in decision
+      ? decision.adId
+      : undefined;
+  const clickPoints =
+    typeof decision === 'object' && decision !== null && !Array.isArray(decision) && 'clickPoints' in decision
+      ? decision.clickPoints
+      : undefined;
 
-  if (decision.adId) {
-    console.log(`show ad ${decision.adId}, worth ${decision.clickPoints} points`);
+  if (adId) {
+    console.log(`show ad ${adId}, worth ${clickPoints} points`);
   } else {
     console.log('no ad to show, so clear the ad slot');
   }
@@ -42,14 +45,20 @@ adSubscription.subscribe();
 // snippet.end
 
 // snippet.realTimeAdsReceiveReactionUpgrade
-type ReactionUpgrade = { reaction: string; replacement: string };
-
 const upgradeSubscription = pubnub.channel('game.reaction-upgrades').subscription({ receivePresenceEvents: false });
 
 upgradeSubscription.onMessage = (event) => {
-  const upgrade = event.message as ReactionUpgrade;
+  const upgrade = event.message;
+  const reaction =
+    typeof upgrade === 'object' && upgrade !== null && !Array.isArray(upgrade) && 'reaction' in upgrade
+      ? upgrade.reaction
+      : undefined;
+  const replacement =
+    typeof upgrade === 'object' && upgrade !== null && !Array.isArray(upgrade) && 'replacement' in upgrade
+      ? upgrade.replacement
+      : undefined;
 
-  console.log(`render ${upgrade.reaction} as ${upgrade.replacement} from now on`);
+  console.log(`render ${reaction} as ${replacement} from now on`);
 };
 
 upgradeSubscription.subscribe();
