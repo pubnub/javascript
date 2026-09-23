@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -18,11 +18,7 @@ try {
   });
   console.log('Fetched Messages:', result);
 } catch (error) {
-  console.error(
-    `Messages fetch failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Messages fetch failed: ${error}`);
 }
 // snippet.end
 
@@ -35,11 +31,7 @@ try {
   });
   console.log('Messages deleted successfully:', result);
 } catch (error) {
-  console.error(
-    `Messages delete failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Messages delete failed: ${error}`);
 }
 // snippet.end
 
@@ -51,10 +43,6 @@ try {
   });
   console.log('Message counts retrieved successfully:', result);
 } catch (error) {
-  console.error(
-    `Message counts retrieval failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Message counts retrieval failed: ${error}`);
 }
 // snippet.end

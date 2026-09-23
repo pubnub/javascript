@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../lib/types';
+import PubNub from '../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -14,11 +14,7 @@ try {
   });
   console.log('hereNow response:', response);
 } catch (error) {
-  console.error(
-    `hereNow failed with error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`hereNow failed with error: ${error}`);
 }
 // snippet.end
 
@@ -30,11 +26,7 @@ try {
   });
   console.log('hereNow response:', response);
 } catch (error) {
-  console.error(
-    `hereNow failed with error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`hereNow failed with error: ${error}`);
 }
 // snippet.end
 
@@ -45,10 +37,6 @@ try {
   });
   console.log('hereNow response:', response);
 } catch (error) {
-  console.error(
-    `hereNow failed with error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`hereNow failed with error: ${error}`);
 }
 // snippet.end
