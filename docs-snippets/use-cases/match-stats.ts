@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -16,11 +16,8 @@ try {
   });
   console.log('score published at timetoken:', response.timetoken);
 } catch (error) {
-  console.error(
-    `Publishing the stat failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Publishing the stat failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
@@ -55,10 +52,7 @@ try {
     }
   });
 } catch (error) {
-  console.error(
-    `Fetching the current stats failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Fetching the current stats failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end

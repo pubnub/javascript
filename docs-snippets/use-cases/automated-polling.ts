@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -7,25 +7,31 @@ const pubnub = new PubNub({
 });
 
 // snippet.automatedPollingPublishTriggeredPoll
-const pollsByReaction: Record<string, { title: string; options: { id: number; text: string }[] }> = {
-  '\u{1F621}': {
-    title: 'Which team is playing dirtiest?',
-    options: [
-      { id: 1, text: 'Home team' },
-      { id: 2, text: 'Away team' },
-    ],
-  },
-  '\u{1F389}': {
-    title: 'Whose fans are celebrating hardest?',
-    options: [
-      { id: 1, text: 'Home team' },
-      { id: 2, text: 'Away team' },
-    ],
-  },
-};
+const pollsByReaction = new Map([
+  [
+    '\u{1F621}',
+    {
+      title: 'Which team is playing dirtiest?',
+      options: [
+        { id: 1, text: 'Home team' },
+        { id: 2, text: 'Away team' },
+      ],
+    },
+  ],
+  [
+    '\u{1F389}',
+    {
+      title: 'Whose fans are celebrating hardest?',
+      options: [
+        { id: 1, text: 'Home team' },
+        { id: 2, text: 'Away team' },
+      ],
+    },
+  ],
+]);
 
-async function openPollForReaction(reaction: string) {
-  const template = pollsByReaction[reaction];
+async function openPollForReaction(reaction = '') {
+  const template = pollsByReaction.get(reaction);
 
   if (!template) {
     console.log('no poll is defined for', reaction);
@@ -46,11 +52,8 @@ async function openPollForReaction(reaction: string) {
     });
     console.log('triggered poll published at timetoken:', response.timetoken);
   } catch (error) {
-    console.error(
-      `Publishing the triggered poll failed: ${error}.${
-        (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-      }`,
-    );
+    const status = error instanceof Error && 'status' in error ? error.status : undefined;
+    console.error(`Publishing the triggered poll failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
   }
 }
 // snippet.end
@@ -73,17 +76,23 @@ function shouldOpenPoll() {
 // snippet.end
 
 // snippet.automatedPollingReceiveTrigger
-type PollTrigger = { reaction: string };
-
 const triggerSubscription = pubnub.channel('game.poll-triggers').subscription({ receivePresenceEvents: false });
 
 triggerSubscription.onMessage = (event) => {
-  const trigger = event.message as PollTrigger;
+  const trigger = event.message;
+  const rawReaction =
+    typeof trigger === 'object' && trigger !== null && !Array.isArray(trigger) && 'reaction' in trigger
+      ? trigger.reaction
+      : undefined;
 
-  console.log('open a poll because fans keep tapping', trigger.reaction);
+  if (typeof rawReaction !== 'string') return;
+
+  const reaction = rawReaction;
+
+  console.log('open a poll because fans keep tapping', reaction);
 
   if (shouldOpenPoll()) {
-    void openPollForReaction(trigger.reaction);
+    void openPollForReaction(reaction);
   }
 };
 

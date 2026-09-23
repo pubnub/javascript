@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -17,11 +17,8 @@ try {
   });
   console.log('channel metadata set:', response.data);
 } catch (error) {
-  console.error(
-    `Setting the channel metadata failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Setting the channel metadata failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
@@ -37,11 +34,8 @@ try {
   });
   console.log('fan profile set:', response.data);
 } catch (error) {
-  console.error(
-    `Setting the fan profile failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Setting the fan profile failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
@@ -72,11 +66,8 @@ try {
   });
   console.log('chat message published at timetoken:', response.timetoken);
 } catch (error) {
-  console.error(
-    `Publishing the chat message failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Publishing the chat message failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
@@ -94,11 +85,8 @@ try {
     console.log(entry.timetoken, entry.message);
   });
 } catch (error) {
-  console.error(
-    `Loading recent messages failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Loading recent messages failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
@@ -110,11 +98,8 @@ try {
   });
   console.log('fans in the chat:', response.totalOccupancy);
 } catch (error) {
-  console.error(
-    `Counting the fans online failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Counting the fans online failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
@@ -130,11 +115,8 @@ try {
   });
   console.log('reaction added at timetoken:', response.data.actionTimetoken);
 } catch (error) {
-  console.error(
-    `Adding the reaction failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  const status = error instanceof Error && 'status' in error ? error.status : undefined;
+  console.error(`Adding the reaction failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
 }
 // snippet.end
 
