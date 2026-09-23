@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 import fs from 'fs';
 
 const pubnub = new PubNub({
@@ -22,11 +22,7 @@ try {
 
   console.log('File sent successfully:', response);
 } catch (error) {
-  console.error(
-    `Error sending file: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error sending file: ${error}`);
 }
 // snippet.end
 
@@ -35,11 +31,7 @@ try {
   const response = await pubnub.listFiles({ channel: 'my_channel' });
   console.log('Files listed successfully:', response);
 } catch (error) {
-  console.error(
-    `Error listing files: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error listing files: ${error}`);
 }
 // snippet.end
 
@@ -66,31 +58,23 @@ try {
     console.log('File saved to ./cat_picture.jpg');
   });
 } catch (error) {
-  console.error(
-    `Error downloading file: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error downloading file: ${error}`);
 }
 // snippet.end
 
 // snippet.downloadFileReactNativeBasicUsage
 // in React and React Native
-let file;
+let fileContent;
 try {
-  file = await pubnub.downloadFile({
+  const file = await pubnub.downloadFile({
     channel: 'awesomeChannel',
     id: 'imageId',
     name: 'cat_picture.jpg',
   });
+  fileContent = await file.toBlob();
 } catch (error) {
-  console.error(
-    `Error downloading file: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error downloading file: ${error}`);
 }
-const fileContent = await file!.toBlob();
 // snippet.end
 
 // snippet.deleteFileBasicUsage
@@ -102,11 +86,7 @@ try {
   });
   console.log('File deleted successfully:', deleteFileResponse);
 } catch (error) {
-  console.error(
-    `Error deleting file: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error deleting file: ${error}`);
 }
 // snippet.end
 
@@ -121,10 +101,6 @@ try {
   });
   console.log('File message published successfully:', fileMessageResponse);
 } catch (error) {
-  console.error(
-    `Error publishing file message: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error publishing file message: ${error}`);
 }
 // snippet.end

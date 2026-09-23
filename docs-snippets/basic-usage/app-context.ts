@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -14,11 +14,7 @@ async function getAllUUIDMetadata() {
     const response = await pubnub.objects.getAllUUIDMetadata();
     console.log('getAllUUIDMetadata response:', response);
   } catch (error) {
-    console.error(
-      `Get all UUID metadata error: ${error}.${
-        (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-      }`,
-    );
+    console.error(`Get all UUID metadata error: ${error}`);
   }
 }
 
@@ -32,11 +28,7 @@ try {
   const response = await pubnub.objects.getUUIDMetadata();
   console.log('getUUIDMetadata response:', response);
 } catch (error) {
-  console.error(
-    `Get UUID metadata error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Get UUID metadata error: ${error}`);
 }
 
 // Using the passed in UUID
@@ -46,11 +38,7 @@ try {
   });
   console.log('getUUIDMetadata response:', response);
 } catch (error) {
-  console.error(
-    `Get UUID metadata error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Get UUID metadata error: ${error}`);
 }
 // snippet.end
 
@@ -64,11 +52,7 @@ try {
   });
   console.log('setUUIDMetadata response:', response);
 } catch (error) {
-  console.error(
-    `Set UUID metadata error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Set UUID metadata error: ${error}`);
 }
 
 // Using the passed in UUID
@@ -81,11 +65,7 @@ try {
   });
   console.log('setUUIDMetadata response:', response);
 } catch (error) {
-  console.error(
-    `Set UUID metadata error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Set UUID metadata error: ${error}`);
 }
 // snippet.end
 
@@ -94,11 +74,7 @@ try {
 try {
   const response = await pubnub.objects.removeUUIDMetadata();
 } catch (error) {
-  console.error(
-    `Remove UUID metadata error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Remove UUID metadata error: ${error}`);
 }
 
 // Using the passed in UUID
@@ -107,11 +83,7 @@ try {
     uuid: 'myUuid',
   });
 } catch (error) {
-  console.error(
-    `Remove UUID metadata error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Remove UUID metadata error: ${error}`);
 }
 // snippet.end
 
@@ -124,11 +96,7 @@ try {
     },
   });
 } catch (error) {
-  console.error(
-    `Get all channel metadata error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Get all channel metadata error: ${error}`);
 }
 
 // Get all channels with the filter option. To get all channel which has Id ending 'Team'.
@@ -138,11 +106,7 @@ try {
   });
   console.log('Get all channel metadata response:', response);
 } catch (error) {
-  console.error(
-    `Get all channel metadata error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Get all channel metadata error: ${error}`);
 }
 // snippet.end
 
@@ -154,11 +118,7 @@ try {
   });
   console.log('Get channel metadata response:', response);
 } catch (error) {
-  console.error(
-    `Get channel metadata error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Get channel metadata error: ${error}`);
 }
 // snippet.end
 
@@ -179,11 +139,7 @@ try {
   });
   console.log('Set channel metadata response:', response);
 } catch (error) {
-  console.error(
-    `Set channel metadata error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Set channel metadata error: ${error}`);
 }
 // snippet.end
 
@@ -193,11 +149,7 @@ try {
     channel: 'team.red',
   });
 } catch (error) {
-  console.error(
-    `Remove channel metadata error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Remove channel metadata error: ${error}`);
 }
 // snippet.end
 
@@ -206,11 +158,7 @@ try {
 try {
   const response = await pubnub.objects.getMemberships();
 } catch (error) {
-  console.error(
-    `Get memberships error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Get memberships error: ${error}`);
 }
 
 // Using the passed in UUID
@@ -222,11 +170,7 @@ try {
     },
   });
 } catch (error) {
-  console.error(
-    `Get memberships with channels fields included error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Get memberships with channels fields included error: ${error}`);
 }
 
 // Get all memberships that are starred by the user
@@ -236,11 +180,7 @@ try {
     filter: 'custom.starred == true',
   });
 } catch (error) {
-  console.error(
-    `Get filtered memberships error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Get filtered memberships error: ${error}`);
 }
 // snippet.end
 
@@ -255,11 +195,7 @@ try {
   });
   console.log('Set memberships response:', response);
 } catch (error) {
-  console.error(
-    `Set memberships error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Set memberships error: ${error}`);
 }
 
 // Using the passed in UUID
@@ -277,11 +213,7 @@ try {
   });
   console.log('Set memberships response:', response);
 } catch (error) {
-  console.error(
-    `Set memberships error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Set memberships error: ${error}`);
 }
 // snippet.end
 
@@ -292,11 +224,7 @@ try {
     channels: ['ch-1', 'ch-2'],
   });
 } catch (error) {
-  console.error(
-    `Remove memberships error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Remove memberships error: ${error}`);
 }
 
 // Using the passed in UUID
@@ -306,11 +234,7 @@ try {
     channels: ['ch-1', 'ch-2'],
   });
 } catch (error) {
-  console.error(
-    `Remove memberships for given uuids error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Remove memberships for given uuids error: ${error}`);
 }
 // snippet.end
 
@@ -324,11 +248,7 @@ try {
   });
   console.log('getChannelMembers response:', response);
 } catch (error) {
-  console.error(
-    `Get channel members error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Get channel members error: ${error}`);
 }
 
 // Get all channel members with "admin" in the description
@@ -339,11 +259,7 @@ try {
   });
   console.log('getChannelMembers response:', response);
 } catch (error) {
-  console.error(
-    `Get channel members error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Get channel members error: ${error}`);
 }
 // snippet.end
 
@@ -355,11 +271,7 @@ try {
   });
   console.log('setChannelMembers response:', response);
 } catch (error) {
-  console.error(
-    `Set channel members error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Set channel members error: ${error}`);
 }
 // snippet.end
 
@@ -370,10 +282,6 @@ try {
     uuids: ['uuid-1', 'uuid-2'],
   });
 } catch (error) {
-  console.error(
-    `Remove channel members error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Remove channel members error: ${error}`);
 }
 // snippet.end
