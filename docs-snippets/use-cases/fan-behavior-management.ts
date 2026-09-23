@@ -85,6 +85,7 @@ async function muteFan(userId = '') {
   }
 
   const writableTokens = entry.tokens.filter((issued = { token: '', write: false }) => issued.write);
+  const stillValid = [];
 
   for (const issued of writableTokens) {
     try {
@@ -93,11 +94,20 @@ async function muteFan(userId = '') {
     } catch (error) {
       const status = error instanceof Error && 'status' in error ? error.status : undefined;
       console.error(`Revoking a writable token failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
+      // Keep tracking a token you couldn't revoke, so the next mute or ban retries it.
+      stillValid.push(issued);
     }
   }
 
+  // Record the mute before issuing anything new, so a later grant can't hand out write access.
   entry.status = 'muted';
-  entry.tokens = entry.tokens.filter((issued = { token: '', write: false }) => !issued.write);
+  entry.tokens = [...entry.tokens.filter((issued = { token: '', write: false }) => !issued.write), ...stillValid];
+  state[userId] = entry;
+  saveState(state);
+
+  if (stillValid.length > 0) {
+    console.error(`${stillValid.length} writable token(s) are still valid. Run mute again to retry revoking them.`);
+  }
 
   try {
     const token = await server.grantToken({
@@ -159,6 +169,8 @@ async function banFan(userId = '') {
   const state = loadState();
   const entry = state[userId] ?? { status: 'active', tokens: [] };
 
+  const stillValid = [];
+
   for (const issued of entry.tokens) {
     try {
       await server.revokeToken(issued.token);
@@ -166,15 +178,21 @@ async function banFan(userId = '') {
     } catch (error) {
       const status = error instanceof Error && 'status' in error ? error.status : undefined;
       console.error(`Revoking a token failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
+      // Keep tracking a token you couldn't revoke, so the next ban retries it.
+      stillValid.push(issued);
     }
   }
 
   entry.status = 'banned';
-  entry.tokens = [];
+  entry.tokens = stillValid;
   state[userId] = entry;
   saveState(state);
 
-  console.log(`${userId} is banned. Every outstanding token, read-only and writable, is now revoked.`);
+  if (stillValid.length > 0) {
+    console.error(`${userId} is banned, but ${stillValid.length} token(s) are still valid. Run ban again to retry revoking them.`);
+  } else {
+    console.log(`${userId} is banned. Every outstanding token, read-only and writable, is now revoked.`);
+  }
 }
 // snippet.end
 
