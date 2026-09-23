@@ -189,7 +189,9 @@ async function banFan(userId = '') {
   saveState(state);
 
   if (stillValid.length > 0) {
-    console.error(`${userId} is banned, but ${stillValid.length} token(s) are still valid. Run ban again to retry revoking them.`);
+    console.error(
+      `${userId} is banned, but ${stillValid.length} token(s) are still valid. Run ban again to retry revoking them.`,
+    );
   } else {
     console.log(`${userId} is banned. Every outstanding token, read-only and writable, is now revoked.`);
   }

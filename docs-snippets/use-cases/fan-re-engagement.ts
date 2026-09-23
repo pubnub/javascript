@@ -58,7 +58,9 @@ async function notifyIfAbsent(userId = '') {
     }
   } catch (error) {
     const status = error instanceof Error && 'status' in error ? error.status : undefined;
-    console.error(`Checking where ${userId} is subscribed failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
+    console.error(
+      `Checking where ${userId} is subscribed failed: ${error}${status ? ` Additional information: ${status}` : ''}`,
+    );
     return;
   }
 

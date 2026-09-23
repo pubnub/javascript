@@ -89,7 +89,9 @@ try {
   console.log('this device receives alerts on:', response.channels);
 } catch (error) {
   const status = error instanceof Error && 'status' in error ? error.status : undefined;
-  console.error(`Listing the device registrations failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
+  console.error(
+    `Listing the device registrations failed: ${error}${status ? ` Additional information: ${status}` : ''}`,
+  );
 }
 // snippet.end
 
@@ -102,7 +104,9 @@ try {
   console.log('this device receives alerts on:', response.channels);
 } catch (error) {
   const status = error instanceof Error && 'status' in error ? error.status : undefined;
-  console.error(`Listing the device registrations failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
+  console.error(
+    `Listing the device registrations failed: ${error}${status ? ` Additional information: ${status}` : ''}`,
+  );
 }
 // snippet.end
 
@@ -118,7 +122,9 @@ try {
   console.log('device no longer receives score alerts:', response);
 } catch (error) {
   const status = error instanceof Error && 'status' in error ? error.status : undefined;
-  console.error(`Removing the device registration failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
+  console.error(
+    `Removing the device registration failed: ${error}${status ? ` Additional information: ${status}` : ''}`,
+  );
 }
 // snippet.end
 
@@ -132,6 +138,8 @@ try {
   console.log('device no longer receives score alerts:', response);
 } catch (error) {
   const status = error instanceof Error && 'status' in error ? error.status : undefined;
-  console.error(`Removing the device registration failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
+  console.error(
+    `Removing the device registration failed: ${error}${status ? ` Additional information: ${status}` : ''}`,
+  );
 }
 // snippet.end

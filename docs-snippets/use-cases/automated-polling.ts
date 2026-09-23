@@ -53,7 +53,9 @@ async function openPollForReaction(reaction = '') {
     console.log('triggered poll published at timetoken:', response.timetoken);
   } catch (error) {
     const status = error instanceof Error && 'status' in error ? error.status : undefined;
-    console.error(`Publishing the triggered poll failed: ${error}${status ? ` Additional information: ${status}` : ''}`);
+    console.error(
+      `Publishing the triggered poll failed: ${error}${status ? ` Additional information: ${status}` : ''}`,
+    );
   }
 }
 // snippet.end
