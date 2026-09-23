@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -14,11 +14,7 @@ try {
   });
   console.log('addChannels to Group response:', response);
 } catch (error) {
-  console.error(
-    `Add channels to group error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Add channels to group error: ${error}`);
 }
 // snippet.end
 
@@ -30,15 +26,11 @@ try {
     channelGroup: 'myChannelGroup',
   });
   console.log('Listing push channels for the device:', response);
-  response.channels.forEach((channel: string) => {
+  response.channels.forEach((channel) => {
     console.log(channel);
   });
 } catch (error) {
-  console.error(
-    `List channels of group error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`List channels of group error: ${error}`);
 }
 // snippet.end
 
@@ -52,11 +44,7 @@ try {
   });
   console.log('removeChannels from group response:', response);
 } catch (error) {
-  console.error(
-    `Remove channels from group error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Remove channels from group error: ${error}`);
 }
 // snippet.end
 
@@ -69,10 +57,6 @@ try {
   });
   console.log('deleteChannelGroup response:', response);
 } catch (error) {
-  console.error(
-    `Delete channel group error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Delete channel group error: ${error}`);
 }
 // snippet.end

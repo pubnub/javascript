@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 const pubnub = new PubNub({
   publishKey: 'demo',
@@ -17,11 +17,7 @@ try {
   });
   console.log('Here Now Result:', result);
 } catch (error) {
-  console.error(
-    `Here Now failed with error: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Here Now failed with error: ${error}`);
 }
 // snippet.end
 
@@ -32,11 +28,7 @@ try {
   });
   console.log('State set successfully:', response);
 } catch (error) {
-  console.error(
-    `State set failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`State set failed: ${error}`);
 }
 // snippet.end
 
@@ -49,11 +41,7 @@ try {
   });
   console.log('State set successfully:', response);
 } catch (error) {
-  console.error(
-    `State set failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`State set failed: ${error}`);
 }
 // snippet.end
 
@@ -66,11 +54,7 @@ try {
   });
   console.log('State retrieved successfully:', response);
 } catch (error) {
-  console.error(
-    `State retrieval failed: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`State retrieval failed: ${error}`);
 }
 // snippet.end
 

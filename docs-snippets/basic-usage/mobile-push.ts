@@ -1,4 +1,4 @@
-import PubNub, { PubNubError } from '../../lib/types';
+import PubNub from '../../lib/types';
 
 // Initialize PubNub with demo keys
 const pubnub = new PubNub({
@@ -19,11 +19,7 @@ try {
   });
   console.log('device added to channels response:', response);
 } catch (error) {
-  console.error(
-    `Error adding device to channels: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error adding device to channels: ${error}`);
 }
 
 // Function to add a device to a channel for FCM
@@ -35,11 +31,7 @@ try {
   });
   console.log('device added to channels response:', response);
 } catch (error) {
-  console.error(
-    `Error adding device to channels: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error adding device to channels: ${error}`);
 }
 // snippet.end
 
@@ -53,15 +45,11 @@ try {
     topic: 'com.example.bundle_id',
   });
   console.log('listing channels for device response:', response);
-  response.channels.forEach((channel: string) => {
+  response.channels.forEach((channel) => {
     console.log(channel);
   });
 } catch (error) {
-  console.error(
-    `Error listing channels for device: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error listing channels for device: ${error}`);
 }
 
 // for FCM
@@ -73,15 +61,11 @@ try {
 
   console.log('listing channels for device response:', response);
 
-  response.channels.forEach((channel: string) => {
+  response.channels.forEach((channel) => {
     console.log(channel);
   });
 } catch (error) {
-  console.error(
-    `Error listing channels for device: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error listing channels for device: ${error}`);
 }
 // snippet.end
 
@@ -98,11 +82,7 @@ try {
 
   console.log('removing device from channel response:', response);
 } catch (error) {
-  console.error(
-    `Error removing device from channel: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error removing device from channel: ${error}`);
 }
 
 // for FCM
@@ -115,11 +95,7 @@ try {
 
   console.log('removing device from channel response:', response);
 } catch (error) {
-  console.error(
-    `Error removing device from channel: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error removing device from channel: ${error}`);
 }
 // snippet.end
 
@@ -136,11 +112,7 @@ try {
 
   console.log('deleteDevice response:', response);
 } catch (error) {
-  console.error(
-    `Error deleting device: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error deleting device: ${error}`);
 }
 
 // for FCM
@@ -152,11 +124,7 @@ try {
 
   console.log('deleteDevice response:', response);
 } catch (error) {
-  console.error(
-    `Error deleting device: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error deleting device: ${error}`);
 }
 
 // snippet.end
@@ -173,10 +141,6 @@ try {
   });
   console.log('publish response:', response);
 } catch (error) {
-  console.error(
-    `Error publishing message: ${error}.${
-      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
-    }`,
-  );
+  console.error(`Error publishing message: ${error}`);
 }
 // snippet.end
