@@ -518,6 +518,124 @@ describe('access endpoints', () => {
           });
       });
     });
+
+    it('issues the correct RESTful request for categories', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/auth/grant/sub-key/mySubscribeKey')
+        .query(
+          (query) =>
+            query.category === 'channels,uuids' &&
+            query.auth === 'auth_key' &&
+            query.g === '1' &&
+            query.r === '0' &&
+            query.channel === undefined &&
+            query['channel-group'] === undefined &&
+            query['target-uuid'] === undefined,
+        )
+        .reply(
+          200,
+          JSON.stringify({
+            message: 'Success',
+            payload: {
+              level: 'category',
+              subscribe_key: 'mySubscribeKey',
+              ttl: 1440,
+              categories: {
+                channels: { auths: { auth_key: { r: 0, w: 0, m: 0, d: 0, g: 1, u: 0, j: 0 } } },
+                uuids: { auths: { auth_key: { r: 0, w: 0, m: 0, d: 0, g: 1, u: 0, j: 0 } } },
+              },
+            },
+            service: 'Access Manager',
+            status: 200,
+          }),
+          { 'content-type': 'text/javascript' },
+        );
+
+      pubnub.grant({ categories: ['channels', 'uuids'], authKeys: ['auth_key'], get: true }, (status, response) => {
+        try {
+          assert.equal(status.error, false);
+          assert.equal(response!.level, 'category');
+          if (response?.level === 'category') assert.equal(response.categories.channels.auths.auth_key.g, 1);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
+
+    it('issues a combined channel and category grant', (done) => {
+      const scope = utils
+        .createNock()
+        .get('/v2/auth/grant/sub-key/mySubscribeKey')
+        .query((query) => query.channel === 'ch1' && query.category === 'uuids' && query.g === '1' && query.r === '0')
+        .reply(
+          200,
+          JSON.stringify({
+            message: 'Success',
+            payload: { level: 'channel', subscribe_key: 'mySubscribeKey', channels: {} },
+            service: 'Access Manager',
+            status: 200,
+          }),
+          { 'content-type': 'text/javascript' },
+        );
+
+      pubnub.grant({ channels: ['ch1'], categories: ['uuids'], authKeys: ['auth_key'], get: true }, (status) => {
+        try {
+          assert.equal(status.error, false);
+          assert.equal(scope.isDone(), true);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
+
+    it('rejects a category grant without authKeys', (done) => {
+      const scope = utils.createNock().get('/v2/auth/grant/sub-key/mySubscribeKey').query(true).reply(200, {});
+
+      pubnub.grant({ categories: ['channels'], get: true }, (status) => {
+        try {
+          assert.equal(status.error, true);
+          assert.equal(status.message, 'authKeys are required for grant request on categories');
+          assert.equal(scope.isDone(), false);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
+
+    it('rejects a category grant with a permission other than get', (done) => {
+      const scope = utils.createNock().get('/v2/auth/grant/sub-key/mySubscribeKey').query(true).reply(200, {});
+
+      pubnub.grant({ categories: ['channels'], authKeys: ['auth_key'], read: true }, (status) => {
+        try {
+          assert.equal(status.error, true);
+          assert.equal(status.message, 'Category permissions must be exactly the get permission');
+          assert.equal(scope.isDone(), false);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
+
+    it('rejects a one-minute category grant', (done) => {
+      const scope = utils.createNock().get('/v2/auth/grant/sub-key/mySubscribeKey').query(true).reply(200, {});
+
+      pubnub.grant({ categories: ['channels'], authKeys: ['auth_key'], get: true, ttl: 1 }, (status) => {
+        try {
+          assert.equal(status.error, true);
+          assert.equal(status.message, 'One-minute category grants are not supported');
+          assert.equal(scope.isDone(), false);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+    });
   });
 });
 
