@@ -81,6 +81,12 @@ type PermissionPayload = {
 type ProjectionsPayload = Record<'res' | 'pat', Record<string, string>>;
 
 /**
+ *
+ * A single `GET` per resource type. Only `channels` and `uuids` are valid.
+ */
+type CategoriesPayload = Partial<Record<'channels' | 'uuids', number>>;
+
+/**
  * Wire-level `meta` section.
  *
  * Holds user-supplied scalar metadata plus the SDK-injected `pn-projections` object.
@@ -143,14 +149,15 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
       patterns,
     } = this.parameters;
 
-    // DataSync projections are a standalone grant target — a request carrying only projections
-    // (no resources / patterns permissions) is still valid.
+    // DataSync projections and category grants are standalone grant targets — a request carrying
+    // only projections or only categories (no resources / patterns permissions) is still valid.
     const hasProjections = this.buildProjections() !== undefined;
+    const hasCategories = this.buildCategories() !== undefined;
 
     if (!subscribeKey) return 'Missing Subscribe Key';
     if (!publishKey) return 'Missing Publish Key';
     if (!secretKey) return 'Missing Secret Key';
-    if (!resources && !patterns && !hasProjections) return 'Missing either Resources or Patterns';
+    if (!resources && !patterns && !hasProjections && !hasCategories) return 'Missing either Resources or Patterns';
 
     // A single token can grant DataSync `users`, `channels`, `groups`, and `dataSync` together.
     // together. `uuids` / `spaces` / `authorized_uuid` are the deprecated App Context terminology;
@@ -179,7 +186,7 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
       });
     });
 
-    if (permissionsEmpty && !hasProjections) return 'Missing values for either Resources or Patterns';
+    if (permissionsEmpty && !hasProjections && !hasCategories) return 'Missing values for either Resources or Patterns';
   }
 
   async parse(response: TransportResponse): Promise<PAM.GrantTokenResponse> {
@@ -203,7 +210,8 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
       ('authorizedUserId' in this.parameters ? this.parameters.authorizedUserId : undefined) ??
       ('authorized_uuid' in this.parameters ? this.parameters.authorized_uuid : undefined);
 
-    const permissions: Record<string, MetaPayload | string | Record<string, PermissionPayload>> = {};
+    const permissions: Record<string, MetaPayload | string | Record<string, PermissionPayload> | CategoriesPayload> =
+      {};
     const resourcePermissions: PermissionPayload = {};
     const patternPermissions: PermissionPayload = {};
     const mapPermissions = (
@@ -276,6 +284,11 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
     if (uuid) permissions.uuid = `${uuid}`;
     permissions.resources = resourcePermissions;
     permissions.patterns = patternPermissions;
+
+    // Category grants are a single integer per resource type. Omit the key entirely when none are
+    // set so tokens that don't use categories stay byte-for-byte identical.
+    const categories = this.buildCategories();
+    if (categories) permissions.categories = categories;
 
     // Merge DataSync projections into `meta` under `pn-projections`, preserving user-supplied meta.
     // `pn-projections` is omitted entirely when no projections are set.
@@ -356,6 +369,26 @@ export class GrantTokenRequest extends AbstractRequest<PAM.GrantTokenResponse, S
     const pat = encodeScope(projections.patterns);
     if (Object.keys(res).length > 0) result.res = res;
     if (Object.keys(pat).length > 0) result.pat = pat;
+
+    return Object.keys(result).length > 0 ? result : undefined;
+  }
+
+  /**
+   * Build the `permissions.categories` payload.
+   *
+   * Category grants are a single integer per resource type, not a per-id bitmask. Only `get: true`
+   * is encoded, Any other runtime flag is ignored so a non-TypeScript caller cannot send a
+   * value other than `32`. The payload is omitted entirely when no category is granted.
+   *
+   * @returns Encoded categories payload, or `undefined` when no category `get` is set.
+   */
+  private buildCategories(): CategoriesPayload | undefined {
+    const categories = 'categories' in this.parameters ? this.parameters.categories : undefined;
+    if (!categories) return undefined;
+
+    const result: CategoriesPayload = {};
+    if (categories.channels?.get === true) result.channels = 32;
+    if (categories.uuids?.get === true) result.uuids = 32;
 
     return Object.keys(result).length > 0 ? result : undefined;
   }

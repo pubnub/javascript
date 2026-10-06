@@ -2,8 +2,26 @@
 /* eslint no-console: 0 */
 
 import assert from 'assert';
+import CborSync from 'cbor-sync';
 
 import PubNub from '../../../src/node/index';
+
+/**
+ * Encode a minimal access token, including the `res` / `pat` keys `parseToken` always reads.
+ */
+const encodeToken = (overrides: Record<string, unknown> = {}) => {
+  const encoded = CborSync.encode({
+    v: 2,
+    t: 1628109699,
+    ttl: 60,
+    res: { chan: {}, grp: {} },
+    pat: { chan: {}, grp: {} },
+    sig: Buffer.alloc(32, 1),
+    ...overrides,
+  });
+
+  return Buffer.from(encoded).toString('base64');
+};
 
 describe('#components/token_manager', () => {
   let pubnub: PubNub;
@@ -157,6 +175,40 @@ describe('#components/token_manager', () => {
         update: true,
         delete: true,
       });
+    });
+
+    it('contains category enumeration permissions', () => {
+      const permissions = pubnub.parseToken(encodeToken({ cat: { chan: 32, uuid: 32 } }))!;
+
+      assert.deepEqual(permissions.categories, {
+        channels: { get: true },
+        uuids: { get: true },
+      });
+    });
+
+    it('omits uuid categories when only channel enumeration is granted', () => {
+      const permissions = pubnub.parseToken(encodeToken({ cat: { chan: 32 } }))!;
+
+      assert.deepEqual(permissions.categories?.channels, { get: true });
+      assert.strictEqual(permissions.categories?.uuids, undefined);
+    });
+
+    it('omits categories when the token has no cat section', () => {
+      const permissions = pubnub.parseToken(encodeToken())!;
+
+      assert.strictEqual(permissions.categories, undefined);
+    });
+
+    it('does not treat a resource-level get as a category grant', () => {
+      const permissions = pubnub.parseToken(
+        encodeToken({
+          res: { chan: { 'channel-1': 32 }, grp: {} },
+          pat: { chan: {}, grp: {} },
+        }),
+      )!;
+
+      assert.strictEqual(permissions.resources?.channels?.['channel-1']?.get, true);
+      assert.strictEqual(permissions.categories, undefined);
     });
   });
 

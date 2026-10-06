@@ -89,6 +89,7 @@ describe('grant token endpoint', () => {
       resources: Record<string, Record<string, number>>;
       patterns: Record<string, Record<string, number>>;
       meta: Record<string, unknown>;
+      categories?: { channels?: number; uuids?: number };
     };
   };
 
@@ -156,6 +157,10 @@ describe('grant token endpoint', () => {
           { ttl: 1440, resources: { users: {}, dataSync: {} } },
           'Missing values for either Resources or Patterns',
         );
+      });
+
+      it('fail on empty categories', async () => {
+        await assertRejects({ ttl: 1440, categories: {} }, 'Missing values for either Resources or Patterns');
       });
 
       it('should reject mixing `users` with `uuids`', async () => {
@@ -615,6 +620,38 @@ describe('grant token endpoint', () => {
         assert.deepEqual(body().permissions.resources['datasync:entities'], {
           'school-greenwood-001': GET,
         });
+      });
+    });
+
+    describe('##categories', () => {
+      it('should grant only category enumeration', async () => {
+        const { scope, body } = mockGrant();
+
+        const token = await pubnub.grantToken({
+          ttl: 1440,
+          categories: {
+            channels: { get: true },
+            uuids: { get: true },
+          },
+        });
+
+        assert.strictEqual(token, 'token');
+        assert.strictEqual(scope.isDone(), true);
+        assert.deepEqual(body().permissions.categories, { channels: GET, uuids: GET });
+      });
+
+      it('should encode categories alongside channel resources', async () => {
+        const { scope, body } = mockGrant();
+
+        await pubnub.grantToken({
+          ttl: 1440,
+          resources: { channels: { 'channel-1': { read: true } } },
+          categories: { uuids: { get: true } },
+        });
+
+        assert.strictEqual(scope.isDone(), true);
+        assert.deepEqual(body().permissions.resources.channels, { 'channel-1': READ });
+        assert.deepEqual(body().permissions.categories, { uuids: GET });
       });
     });
   });

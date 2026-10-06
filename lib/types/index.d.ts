@@ -10023,6 +10023,38 @@ declare namespace PubNub {
         };
 
     /**
+     * Category-level token permissions.
+     *
+     * Grants enumeration of every resource of that type. A resource-level or pattern `get` does not
+     * grant this permission. The only supported operation is `get`, which the wire encodes as `32`.
+     */
+    export type CategoryTokenPermissions = {
+      /**
+       * Whether listing every resource of this type is permitted.
+       *
+       * A resource-level or pattern `get` does not grant this permission.
+       */
+      get?: boolean;
+    };
+
+    /**
+     * Category-level grants.
+     *
+     * Permissions apply to a resource type as a whole rather than to a named resource or a RegEx
+     * pattern. Only `channels` and `uuids` are supported, and only the `get` operation.
+     */
+    export type GrantCategories = {
+      /**
+       * Enumeration permission for channel metadata (`GET /v2/objects/{sub_key}/channels`).
+       */
+      channels?: CategoryTokenPermissions;
+      /**
+       * Enumeration permission for uuid metadata (`GET /v2/objects/{sub_key}/uuids`).
+       */
+      uuids?: CategoryTokenPermissions;
+    };
+
+    /**
      * Generate token with permissions.
      *
      * Generate time-limited access token with required permissions for resources.
@@ -10047,6 +10079,13 @@ declare namespace PubNub {
        * Keys within each scope are RegEx patterns. `users` and `uuids` are mutually exclusive.
        */
       patterns?: GrantScopes;
+      /**
+       * Category-level permissions.
+       *
+       * Grants enumeration of every channel or uuid on the subscribe key. A resource-level or pattern
+       * `get` does not imply this permission. A grant that carries only `categories` is valid.
+       */
+      categories?: GrantCategories;
       /**
        * Extra metadata to be published with the request.
        *
@@ -10128,6 +10167,13 @@ declare namespace PubNub {
         dataSync?: DataSyncScopePermissions;
       };
       /**
+       * Category-level permissions.
+       *
+       * Decoded from the token `cat` section. Present only when the grant requested category-level
+       * enumeration. `chan` maps to `channels` and `uuid` maps to `uuids`.
+       */
+      categories?: TokenCategories;
+      /**
        * The uuid that is exclusively authorized to use this token to make API requests.
        */
       authorized_uuid?: string;
@@ -10139,6 +10185,36 @@ declare namespace PubNub {
        * Additional information which has been added to the token.
        */
       meta?: Payload;
+    };
+
+    /**
+     * Decoded category-level permissions.
+     *
+     * `get` is `true` when the token category bitmask includes `32`.
+     */
+    export type CategoryPermissions = {
+      /**
+       * Whether listing every resource of this type is permitted.
+       *
+       * A resource-level or pattern `get` does not grant this permission.
+       */
+      get: boolean;
+    };
+
+    /**
+     * Decoded category-level permission scopes.
+     *
+     * Decoded from the token `cat` wire keys `chan` and `uuid`.
+     */
+    export type TokenCategories = {
+      /**
+       * Enumeration permission for channel metadata.
+       */
+      channels?: CategoryPermissions;
+      /**
+       * Enumeration permission for uuid metadata.
+       */
+      uuids?: CategoryPermissions;
     };
 
     /**
@@ -10363,7 +10439,14 @@ declare namespace PubNub {
      * Common permissions audit response content.
      */
     type BaseAuditResponse<
-      Level extends 'channel' | 'channel+auth' | 'channel-group' | 'channel-group+auth' | 'user' | 'subkey',
+      Level extends
+        | 'channel'
+        | 'channel+auth'
+        | 'channel-group'
+        | 'channel-group+auth'
+        | 'user'
+        | 'subkey'
+        | 'category',
     > = {
       /**
        * Permissions level.
@@ -10377,6 +10460,13 @@ declare namespace PubNub {
        * Duration for which permissions has been granted.
        */
       ttl?: number;
+      /**
+       * Category-level permissions.
+       *
+       * Present when the grant requested enumeration of every channel or uuid. A resource-level `get`
+       * does not populate this map. A combined grant may keep its existing `level` and still include it.
+       */
+      categories?: CategoryPermissionsMap;
     };
 
     /**
@@ -10388,6 +10478,13 @@ declare namespace PubNub {
        */
       auths: Record<string, LevelPermissions>;
     };
+
+    /**
+     * Category-level permissions keyed by `channels` or `uuids`.
+     *
+     * Each entry carries auth-key bits. Only `g` is meaningful for a category grant.
+     */
+    type CategoryPermissionsMap = Record<'channels' | 'uuids', AuthKeysPermissions<ChannelPermissions>>;
 
     /**
      * Single channel permissions audit result.
@@ -10458,6 +10555,19 @@ declare namespace PubNub {
     };
 
     /**
+     * Category-level permissions grant result.
+     *
+     * Returned when the grant requested enumeration of every channel or uuid and no other resource
+     * level is reported.
+     */
+    type CategoryPermissionsResponse = BaseAuditResponse<'category'> & {
+      /**
+       * Per-category auth-key permissions.
+       */
+      categories: CategoryPermissionsMap;
+    };
+
+    /**
      * Response with permission information.
      */
     export type PermissionsResponse =
@@ -10466,7 +10576,8 @@ declare namespace PubNub {
       | ChannelGroupPermissionsResponse
       | ChannelGroupsPermissionsResponse
       | UserPermissionsResponse
-      | SubKeyPermissionsResponse;
+      | SubKeyPermissionsResponse
+      | CategoryPermissionsResponse;
 
     /**
      * Audit permissions for provided auth keys / global permissions.
@@ -10510,6 +10621,14 @@ declare namespace PubNub {
        * List of App Context UUID for which permissions should be granted.
        */
       uuids?: string[];
+      /**
+       * Categories for which enumeration permission should be granted.
+       *
+       * `channels` lists all channel metadata. `uuids` lists all uuid metadata. Requires {@link authKeys}.
+       * Only `get` may be `true` in the same request; `ttl: 1` with `get: true` is rejected. A
+       * resource-level `get` does not grant this permission. Sent as the `category` query parameter.
+       */
+      categories?: Array<'channels' | 'uuids'>;
       /**
        * List of auth keys for which permissions should be granted on specified objects.
        *
