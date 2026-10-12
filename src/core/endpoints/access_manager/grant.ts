@@ -105,6 +105,7 @@ export class GrantRequest extends AbstractRequest<PAM.PermissionsResponse, Servi
     this.parameters.channels ??= [];
     this.parameters.channelGroups ??= [];
     this.parameters.uuids ??= [];
+    this.parameters.categories ??= [];
     this.parameters.read ??= READ_PERMISSION;
     this.parameters.write ??= WRITE_PERMISSION;
     this.parameters.delete ??= DELETE_PERMISSION;
@@ -124,7 +125,16 @@ export class GrantRequest extends AbstractRequest<PAM.PermissionsResponse, Servi
       uuids = [],
       channels = [],
       channelGroups = [],
+      categories = [],
       authKeys = [],
+      read,
+      write,
+      manage,
+      delete: del,
+      update,
+      join,
+      get,
+      ttl,
     } = this.parameters;
 
     if (!subscribeKey) return 'Missing Subscribe Key';
@@ -135,6 +145,15 @@ export class GrantRequest extends AbstractRequest<PAM.PermissionsResponse, Servi
 
     if (uuids.length && (channels.length !== 0 || channelGroups.length !== 0))
       return 'Both channel/channel group and uuid cannot be used in the same request';
+
+    if (categories.length > 0) {
+      if (authKeys.length === 0) return 'authKeys are required for grant request on categories';
+      if (categories.some((category) => category !== 'channels' && category !== 'uuids'))
+        return 'Invalid category: only channels and uuids are supported';
+      if (read || write || manage || del || update || join)
+        return 'Category permissions must be exactly the get permission';
+      if (ttl === 1 && get) return 'One-minute category grants are not supported';
+    }
   }
 
   async parse(response: TransportResponse): Promise<PAM.PermissionsResponse> {
@@ -149,6 +168,7 @@ export class GrantRequest extends AbstractRequest<PAM.PermissionsResponse, Servi
     const {
       channels,
       channelGroups,
+      categories,
       authKeys,
       uuids,
       read,
@@ -166,6 +186,7 @@ export class GrantRequest extends AbstractRequest<PAM.PermissionsResponse, Servi
       ...(channelGroups && channelGroups?.length > 0 ? { 'channel-group': channelGroups.join(',') } : {}),
       ...(authKeys && authKeys?.length > 0 ? { auth: authKeys.join(',') } : {}),
       ...(uuids && uuids?.length > 0 ? { 'target-uuid': uuids.join(',') } : {}),
+      ...(categories && categories.length > 0 ? { category: categories.join(',') } : {}),
       r: read ? '1' : '0',
       w: write ? '1' : '0',
       m: manage ? '1' : '0',

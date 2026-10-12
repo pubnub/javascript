@@ -5613,7 +5613,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '13.0.3';
+	            return '13.1.0';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -5796,6 +5796,9 @@
 	            const patternDataSync = this.extractDataSyncScopes(parsed.pat);
 	            if (patternDataSync)
 	                ((_b = result.patterns) !== null && _b !== void 0 ? _b : (result.patterns = {})).dataSync = patternDataSync;
+	            const categories = this.extractCategories(parsed.cat);
+	            if (categories)
+	                result.categories = categories;
 	            if (parsed.meta && Object.keys(parsed.meta).length > 0)
 	                result.meta = parsed.meta;
 	            return result;
@@ -5834,6 +5837,26 @@
 	        if ((permissions & 1) === 1)
 	            permissionsResult.read = true;
 	        return permissionsResult;
+	    }
+	    /**
+	     * Extract category-level permissions from the token `cat` section.
+	     *
+	     * `chan` maps to `channels` and `uuid` maps to `uuids`. `get` is set from the `32` bit. The
+	     * section is omitted when `cat` is absent or empty.
+	     *
+	     * @param cat - Raw `cat` section decoded from the token.
+	     *
+	     * @returns Human-readable category permissions, or `undefined` when none are present.
+	     */
+	    extractCategories(cat) {
+	        if (!cat)
+	            return undefined;
+	        const result = {};
+	        if (typeof cat.chan === 'number')
+	            result.channels = { get: (cat.chan & 32) === 32 };
+	        if (typeof cat.uuid === 'number')
+	            result.uuids = { get: (cat.uuid & 32) === 32 };
+	        return Object.keys(result).length > 0 ? result : undefined;
 	    }
 	    /**
 	     * Extract DataSync permission scopes from a token permissions section.

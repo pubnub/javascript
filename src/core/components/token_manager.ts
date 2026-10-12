@@ -72,6 +72,14 @@ type RawToken = {
    * Additional information which has been added to the token.
    */
   meta?: Payload;
+
+  /**
+   * Category-level permissions.
+   *
+   * Present only when the grant requested enumeration of every channel (`chan`) or uuid (`uuid`).
+   * Values are the `GET` bitmask (`32`).
+   */
+  cat?: Partial<Record<'chan' | 'uuid', number>>;
 };
 // endregion
 
@@ -203,6 +211,9 @@ export class TokenManager {
       const patternDataSync = this.extractDataSyncScopes(parsed.pat);
       if (patternDataSync) (result.patterns ??= {}).dataSync = patternDataSync;
 
+      const categories = this.extractCategories(parsed.cat);
+      if (categories) result.categories = categories;
+
       if (parsed.meta && Object.keys(parsed.meta).length > 0) result.meta = parsed.meta;
 
       return result;
@@ -238,6 +249,26 @@ export class TokenManager {
     if ((permissions & 1) === 1) permissionsResult.read = true;
 
     return permissionsResult;
+  }
+
+  /**
+   * Extract category-level permissions from the token `cat` section.
+   *
+   * `chan` maps to `channels` and `uuid` maps to `uuids`. `get` is set from the `32` bit. The
+   * section is omitted when `cat` is absent or empty.
+   *
+   * @param cat - Raw `cat` section decoded from the token.
+   *
+   * @returns Human-readable category permissions, or `undefined` when none are present.
+   */
+  private extractCategories(cat?: Partial<Record<'chan' | 'uuid', number>>): PAM.TokenCategories | undefined {
+    if (!cat) return undefined;
+
+    const result: PAM.TokenCategories = {};
+    if (typeof cat.chan === 'number') result.channels = { get: (cat.chan & 32) === 32 };
+    if (typeof cat.uuid === 'number') result.uuids = { get: (cat.uuid & 32) === 32 };
+
+    return Object.keys(result).length > 0 ? result : undefined;
   }
 
   /**
