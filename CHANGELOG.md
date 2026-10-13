@@ -1,3 +1,9 @@
+## v13.1.1
+October 13 2026
+
+#### Fixed
+- Fix the missing `heartbeat` query parameter for the new subscription flow on `handshake` and `receive messages` state.
+
 ## v13.1.0
 October 12 2026
 
