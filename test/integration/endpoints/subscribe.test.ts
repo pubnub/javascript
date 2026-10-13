@@ -65,6 +65,7 @@ describe('subscribe endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         ee: '',
+        heartbeat: '300',
       })
       .reply(
         200,
@@ -79,6 +80,7 @@ describe('subscribe endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         ee: '',
+        heartbeat: '300',
         tt: cursorTimetoken,
         tr: 1,
       })
@@ -116,7 +118,7 @@ describe('subscribe endpoints', () => {
   });
 
   it('supports addition of multiple channels / channel groups', (done) => {
-    // Event Engine: handshake uses `ee` (no `heartbeat` on subscribe); `m` on handshake is ignored.
+    // Event Engine: handshake uses `ee` and `heartbeat` (presence timeout); `m` on handshake is ignored.
     // Long-poll receive must be mocked after handshake.
     const cursorTimetoken = '14607577960932487';
 
@@ -128,6 +130,7 @@ describe('subscribe endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         ee: '',
+        heartbeat: '300',
       })
       .reply(
         200,
@@ -143,6 +146,7 @@ describe('subscribe endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         ee: '',
+        heartbeat: '300',
         tt: cursorTimetoken,
         tr: 1,
       })
@@ -193,6 +197,7 @@ describe('subscribe endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         ee: '',
+        heartbeat: '300',
       })
       .reply(
         200,
@@ -208,6 +213,7 @@ describe('subscribe endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         ee: '',
+        heartbeat: '300',
         tt: cursorTimetoken,
         tr: 1,
       })
@@ -255,6 +261,7 @@ describe('subscribe endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         ee: '',
+        heartbeat: '300',
       })
       .reply(
         200,
@@ -270,6 +277,7 @@ describe('subscribe endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         ee: '',
+        heartbeat: '300',
         tt: cursorTimetoken,
         tr: 1,
       })
@@ -442,6 +450,7 @@ describe('subscribe endpoints', () => {
         pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
         uuid: 'myUUID',
         ee: '',
+        heartbeat: '300',
       })
       .reply(
         200,
@@ -457,6 +466,7 @@ describe('subscribe endpoints', () => {
         tt: cursorHandshake,
         tr: 1,
         ee: '',
+        heartbeat: '300',
       })
       .reply(
         200,
@@ -472,6 +482,7 @@ describe('subscribe endpoints', () => {
         tt: cursorAfterInterval,
         tr: 1,
         ee: '',
+        heartbeat: '300',
       })
       .reply(200, `{"t":{"t":"${cursorAfterInterval}","r":1},"m":[]}`, { 'content-type': 'text/javascript' })
       .persist();

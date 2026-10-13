@@ -32,7 +32,7 @@ export class HandshakeSubscribeRequest extends BaseSubscribeRequest {
   }
 
   protected get queryParameters(): Query {
-    const { channelGroups, filterExpression, state, onDemand } = this
+    const { channelGroups, heartbeat, filterExpression, state, onDemand } = this
       .parameters as unknown as Subscription.CancelableSubscribeParameters;
     const query: Query = { ee: '' };
 
@@ -40,6 +40,7 @@ export class HandshakeSubscribeRequest extends BaseSubscribeRequest {
     if (channelGroups && channelGroups.length > 0) query['channel-group'] = channelGroups.sort().join(',');
     if (filterExpression && filterExpression.length > 0) query['filter-expr'] = filterExpression;
     if (state && Object.keys(state).length > 0) query['state'] = JSON.stringify(state);
+    if (heartbeat) query.heartbeat = heartbeat;
 
     return query;
   }

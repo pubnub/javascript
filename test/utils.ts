@@ -62,6 +62,7 @@ export default {
     subKey: string;
     userId: string;
     eventEngine?: boolean;
+    presenceTimeout?: number;
     pnsdk: string;
     requests: {
       channels?: string[];
@@ -104,7 +105,10 @@ export default {
       if (groups && !query['channel-group']) query['channel-group'] = groups;
       if (parameters.pnsdk && !query.pnsdk) query.pnsdk = parameters.pnsdk;
       if (parameters.userId && !query.uuid) query.uuid = parameters.userId;
-      if (parameters.eventEngine) query.ee = '';
+      if (parameters.eventEngine) {
+        query.ee = '';
+        query.heartbeat = String(parameters.presenceTimeout ?? 300);
+      }
 
       let responseBody: Record<string, unknown> = {};
 

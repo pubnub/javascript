@@ -5613,7 +5613,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '13.1.0';
+	            return '13.1.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -10386,7 +10386,7 @@
 	        return `/v2/subscribe/${subscribeKey}/${encodeNames(channels.sort(), ',')}/0`;
 	    }
 	    get queryParameters() {
-	        const { channelGroups, filterExpression, timetoken, region, onDemand } = this
+	        const { channelGroups, filterExpression, timetoken, region, heartbeat, onDemand } = this
 	            .parameters;
 	        const query = { ee: '' };
 	        if (onDemand)
@@ -10403,6 +10403,8 @@
 	            query['tt'] = timetoken;
 	        if (region)
 	            query['tr'] = region;
+	        if (heartbeat)
+	            query.heartbeat = heartbeat;
 	        return query;
 	    }
 	}
@@ -10428,7 +10430,7 @@
 	        return `/v2/subscribe/${subscribeKey}/${encodeNames(channels.sort(), ',')}/0`;
 	    }
 	    get queryParameters() {
-	        const { channelGroups, filterExpression, state, onDemand } = this
+	        const { channelGroups, heartbeat, filterExpression, state, onDemand } = this
 	            .parameters;
 	        const query = { ee: '' };
 	        if (onDemand)
@@ -10439,6 +10441,8 @@
 	            query['filter-expr'] = filterExpression;
 	        if (state && Object.keys(state).length > 0)
 	            query['state'] = JSON.stringify(state);
+	        if (heartbeat)
+	            query.heartbeat = heartbeat;
 	        return query;
 	    }
 	}
@@ -19797,6 +19801,8 @@
 	                // `on-demand` query parameter not required for non-SharedWorker environment.
 	                if (!this._configuration.isSharedWorkerEnabled())
 	                    parameters.onDemand = false;
+	                if (!parameters.heartbeat)
+	                    parameters.heartbeat = this._configuration.getPresenceTimeout();
 	                const request = new HandshakeSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
 	                const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
 	                    request.abort('Cancel subscribe handshake request');
@@ -19828,6 +19834,8 @@
 	                // `on-demand` query parameter not required for non-SharedWorker environment.
 	                if (!this._configuration.isSharedWorkerEnabled())
 	                    parameters.onDemand = false;
+	                if (!parameters.heartbeat)
+	                    parameters.heartbeat = this._configuration.getPresenceTimeout();
 	                const request = new ReceiveMessagesSubscribeRequest(Object.assign(Object.assign({}, parameters), { keySet: this._configuration.keySet, crypto: this._configuration.getCryptoModule(), getFileUrl: this.getFileUrl.bind(this) }));
 	                const abortUnsubscribe = parameters.abortSignal.subscribe((err) => {
 	                    request.abort('Cancel long-poll subscribe request');
