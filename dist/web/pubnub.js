@@ -10366,7 +10366,6 @@
 	        const { channelGroups, filterExpression, timetoken, region, heartbeat, onDemand } = this
 	            .parameters;
 	        const query = { ee: '' };
-	        console.log(`~~~> RECEIVE`, heartbeat);
 	        if (onDemand)
 	            query['on-demand'] = 1;
 	        if (channelGroups && channelGroups.length > 0)
@@ -10411,7 +10410,6 @@
 	        const { channelGroups, heartbeat, filterExpression, state, onDemand } = this
 	            .parameters;
 	        const query = { ee: '' };
-	        console.log(`~~~> HANDSHAKE`, heartbeat);
 	        if (onDemand)
 	            query['on-demand'] = 1;
 	        if (channelGroups && channelGroups.length > 0)
