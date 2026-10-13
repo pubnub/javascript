@@ -514,4 +514,100 @@ describe('EventEngine', () => {
     expect(presenceEngine?.channels).to.deep.equal([]);
     expect(presenceEngine?.groups).to.deep.equal([]);
   });
+
+  describe('heartbeat delay timer', () => {
+    const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+    it('should cancel the pending heartbeat delay timer when destroyed', async () => {
+      utils
+        .createNock()
+        .get('/v2/presence/sub-key/demo/channel/test/heartbeat')
+        .query(true)
+        .reply(200, '{"message":"OK", "service":"Presence"}', { 'content-type': 'text/javascript' })
+        .persist();
+
+      // Unique delay identifies the heartbeat delay timer among other timers.
+      const heartbeatDelay = 7000;
+      pubnub.setHeartbeatInterval(heartbeatDelay / 1000);
+
+      const { setTimeout: scheduleTimeout, clearTimeout: cancelTimeout } = global;
+      const delayTimers: unknown[] = [];
+      const cancelledTimers = new Set<unknown>();
+      global.setTimeout = ((callback: () => void, delay?: number, ...args: unknown[]) => {
+        const timer = scheduleTimeout(callback, delay, ...args);
+        if (delay === heartbeatDelay) delayTimers.push(timer);
+        return timer;
+      }) as typeof setTimeout;
+      global.clearTimeout = ((timer: unknown) => {
+        cancelledTimers.add(timer);
+        cancelTimeout(timer as NodeJS.Timeout);
+      }) as typeof clearTimeout;
+
+      try {
+        // @ts-expect-error Intentional access to the private interface.
+        pubnub.join({ channels: ['test'] });
+
+        await forState('HEARTBEAT_COOLDOWN', 1000);
+        expect(delayTimers).to.have.lengthOf(1);
+
+        pubnub.destroy(true);
+        // Cancellation is dispatched asynchronously (`AbortSignal` notifies listeners on the next tick).
+        await sleep(50);
+
+        expect(cancelledTimers.has(delayTimers[0])).to.equal(true);
+      } finally {
+        global.setTimeout = scheduleTimeout;
+        global.clearTimeout = cancelTimeout;
+      }
+    });
+
+    it('should not send heartbeats after destroy', async () => {
+      let heartbeats = 0;
+      utils
+        .createNock()
+        .get('/v2/presence/sub-key/demo/channel/test/heartbeat')
+        .query(true)
+        .reply(() => {
+          heartbeats++;
+          return [200, '{"message":"OK", "service":"Presence"}', { 'content-type': 'text/javascript' }];
+        })
+        .persist();
+
+      // @ts-expect-error Intentional access to the private interface.
+      pubnub.join({ channels: ['test'] });
+
+      await forState('HEARTBEAT_COOLDOWN', 1000);
+      pubnub.destroy(true);
+      const heartbeatsAtDestroy = heartbeats;
+
+      await sleep(1500);
+
+      expect(heartbeats).to.equal(heartbeatsAtDestroy);
+    });
+
+    it('should stop the heartbeat loop when heartbeat interval is reset to zero', async () => {
+      let heartbeats = 0;
+      utils
+        .createNock()
+        .get('/v2/presence/sub-key/demo/channel/test/heartbeat')
+        .query(true)
+        .reply(() => {
+          heartbeats++;
+          return [200, '{"message":"OK", "service":"Presence"}', { 'content-type': 'text/javascript' }];
+        })
+        .persist();
+
+      // @ts-expect-error Intentional access to the private interface.
+      pubnub.join({ channels: ['test'] });
+
+      await forState('HEARTBEAT_COOLDOWN', 1000);
+      pubnub.setHeartbeatInterval(0);
+      const heartbeatsAtReset = heartbeats;
+
+      // At most one heartbeat already scheduled with the previous interval is expected after the reset.
+      await sleep(2500);
+
+      expect(heartbeats - heartbeatsAtReset).to.be.at.most(1);
+    });
+  });
 });

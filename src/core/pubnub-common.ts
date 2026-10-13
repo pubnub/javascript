@@ -495,12 +495,24 @@ export class PubNubCore<
 
                   this.makeUnsubscribe(parameters, () => {});
                 },
-                heartbeatDelay: () =>
-                  new Promise((resolve, reject) => {
+                heartbeatDelay: () => {
+                  let cancelDelay = () => {};
+                  const promise = new Promise<void>((resolve, reject) => {
                     heartbeatInterval = this._configuration.getHeartbeatInterval();
                     if (!heartbeatInterval) reject(new PubNubError('Heartbeat interval has been reset.'));
-                    else setTimeout(resolve, heartbeatInterval * 1000);
-                  }),
+                    else {
+                      const timeoutId = setTimeout(() => {
+                        resolve();
+                      }, heartbeatInterval * 1000);
+
+                      cancelDelay = () => {
+                        clearTimeout(timeoutId);
+                        reject(new PubNubError('Heartbeat interval has been cancelled.'));
+                      };
+                    }
+                  });
+                  return { cancelDelay, promise };
+                },
                 emitStatus: (status) => this.emitStatus(status),
                 config: this._configuration,
                 presenceState: this.presenceState,
@@ -529,7 +541,6 @@ export class PubNubCore<
 
               return this.subscribeReceiveMessages(parameters);
             },
-            delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
             join: (parameters) => {
               this.logger.trace('EventEngine', () => ({
                 messageType: 'object',
