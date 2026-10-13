@@ -1,4 +1,6 @@
-# PubNub JavaScript SDK (V4)
+<img width="1920" height="600" alt="image" src="https://github.com/user-attachments/assets/b60b4e27-a140-4784-8b34-85ae421023e2" />
+
+# PubNub JavaScript SDK
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/2859917905c549b8bfa27630ff276fce)](https://www.codacy.com/app/PubNub/javascript?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pubnub/javascript&amp;utm_campaign=Badge_Grade)
 [![npm](https://img.shields.io/npm/v/pubnub.svg)]()
@@ -27,8 +29,8 @@ Watch [Getting Started with PubNub JS SDK](https://app.dashcam.io/replay/64ee0d2
      npm install pubnub
      ```
    * or download one of our builds from our CDN: 
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.13.0.3.js
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.13.0.3.min.js
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.13.1.0.js
+     * https://cdn.pubnub.com/sdk/javascript/pubnub.13.1.0.min.js
 
    > **React Native:** the SDK relies on a global `URL` implementation, which React Native does not
    > provide, so it depends on [`react-native-url-polyfill`](https://www.npmjs.com/package/react-native-url-polyfill).

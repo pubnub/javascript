@@ -129,6 +129,37 @@ describe('GrantTokenRequest', () => {
       });
       assert.equal(validBothRequest.validate(), undefined);
     });
+
+    it('should pass validation with only categories', () => {
+      const request = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        categories: {
+          channels: { get: true },
+        },
+      });
+      assert.equal(request.validate(), undefined);
+    });
+
+    it('should reject empty categories', () => {
+      const request = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        categories: {},
+      });
+      assert.equal(request.validate(), 'Missing values for either Resources or Patterns');
+    });
+
+    it('should reject categories when get is false', () => {
+      const request = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        categories: {
+          channels: { get: false },
+        },
+      });
+      assert.equal(request.validate(), 'Missing values for either Resources or Patterns');
+    });
   });
 
   describe('terminology synonym validation', () => {
@@ -851,6 +882,43 @@ describe('GrantTokenRequest', () => {
       const transportRequest = request.request();
       const body = parseBodyAsString(transportRequest.body!);
       assert.equal(body.permissions.resources.channels['channel-engineering-001'], 16);
+    });
+
+    it('should encode category get permissions as 32', () => {
+      const request = new GrantTokenRequest({
+        keySet: defaultKeySet,
+        ttl: 60,
+        categories: {
+          channels: { get: true },
+          uuids: { get: true },
+        },
+      });
+
+      const transportRequest = request.request();
+      const body = parseBodyAsString(transportRequest.body!);
+      assert.deepEqual(body.permissions.categories, { channels: 32, uuids: 32 });
+    });
+
+    it('should omit categories when none are granted', () => {
+      const request = new GrantTokenRequest(defaultParameters);
+
+      const transportRequest = request.request();
+      const body = parseBodyAsString(transportRequest.body!);
+      assert.equal(body.permissions.categories, undefined);
+    });
+
+    it('should encode categories alongside channel resources', () => {
+      const request = new GrantTokenRequest({
+        ...defaultParameters,
+        categories: {
+          uuids: { get: true },
+        },
+      });
+
+      const transportRequest = request.request();
+      const body = parseBodyAsString(transportRequest.body!);
+      assert.equal(body.permissions.resources.channels.test_channel, 3);
+      assert.deepEqual(body.permissions.categories, { uuids: 32 });
     });
   });
 

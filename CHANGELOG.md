@@ -1,3 +1,9 @@
+## v13.1.0
+October 12 2026
+
+#### Added
+- Add Access Manager `categories` enumeration support to grantToken and parseToken, and to the legacy grant method, so a token or auth key can list all channel and UUID metadata.
+
 ## v13.0.3
 September 22 2026
 
