@@ -9205,8 +9205,9 @@
 	        this.on(wait.type, asyncHandler((_1, abortSignal_1, _a) => __awaiter(this, [_1, abortSignal_1, _a], void 0, function* (_, abortSignal, { heartbeatDelay }) {
 	            const { cancelDelay, promise } = heartbeatDelay();
 	            abortSignal.throwIfAborted();
-	            abortSignal.subscribe(() => cancelDelay());
+	            const unsubscribeAbortListener = abortSignal.subscribe(() => cancelDelay());
 	            yield promise;
+	            unsubscribeAbortListener();
 	            abortSignal.throwIfAborted();
 	            return engine.transition(timesUp());
 	        })));

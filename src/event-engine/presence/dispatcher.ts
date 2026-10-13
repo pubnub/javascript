@@ -87,10 +87,11 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
       asyncHandler(async (_, abortSignal, { heartbeatDelay }) => {
         const { cancelDelay, promise } = heartbeatDelay();
         abortSignal.throwIfAborted();
-        abortSignal.subscribe(() => cancelDelay());
+        const unsubscribeAbortListener = abortSignal.subscribe(() => cancelDelay());
 
         await promise;
 
+        unsubscribeAbortListener();
         abortSignal.throwIfAborted();
 
         return engine.transition(events.timesUp());
