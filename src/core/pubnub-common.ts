@@ -1947,6 +1947,7 @@ export class PubNubCore<
     if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
       // `on-demand` query parameter not required for non-SharedWorker environment.
       if (!this._configuration.isSharedWorkerEnabled()) parameters.onDemand = false;
+      if (!parameters.heartbeat) parameters.heartbeat = this._configuration.getPresenceTimeout();
 
       const request = new HandshakeSubscribeRequest({
         ...parameters,
@@ -1984,6 +1985,7 @@ export class PubNubCore<
     if (process.env.SUBSCRIBE_EVENT_ENGINE_MODULE !== 'disabled') {
       // `on-demand` query parameter not required for non-SharedWorker environment.
       if (!this._configuration.isSharedWorkerEnabled()) parameters.onDemand = false;
+      if (!parameters.heartbeat) parameters.heartbeat = this._configuration.getPresenceTimeout();
 
       const request = new ReceiveMessagesSubscribeRequest({
         ...parameters,

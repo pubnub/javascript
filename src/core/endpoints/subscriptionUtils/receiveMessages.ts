@@ -38,7 +38,7 @@ export class ReceiveMessagesSubscribeRequest extends BaseSubscribeRequest {
   }
 
   protected get queryParameters(): Query {
-    const { channelGroups, filterExpression, timetoken, region, onDemand } = this
+    const { channelGroups, filterExpression, timetoken, region, heartbeat, onDemand } = this
       .parameters as unknown as Subscription.CancelableSubscribeParameters;
     const query: Query = { ee: '' };
 
@@ -49,6 +49,7 @@ export class ReceiveMessagesSubscribeRequest extends BaseSubscribeRequest {
       if (timetoken && timetoken !== '0' && timetoken.length > 0) query['tt'] = timetoken;
     } else if (timetoken && timetoken > 0) query['tt'] = timetoken;
     if (region) query['tr'] = region;
+    if (heartbeat) query.heartbeat = heartbeat;
 
     return query;
   }
