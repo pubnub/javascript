@@ -5613,7 +5613,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '13.1.1';
+	            return '13.1.2';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -9203,8 +9203,11 @@
 	            }
 	        })));
 	        this.on(wait.type, asyncHandler((_1, abortSignal_1, _a) => __awaiter(this, [_1, abortSignal_1, _a], void 0, function* (_, abortSignal, { heartbeatDelay }) {
+	            const { cancelDelay, promise } = heartbeatDelay();
 	            abortSignal.throwIfAborted();
-	            yield heartbeatDelay();
+	            const unsubscribeAbortListener = abortSignal.subscribe(() => cancelDelay());
+	            yield promise;
+	            unsubscribeAbortListener();
 	            abortSignal.throwIfAborted();
 	            return engine.transition(timesUp());
 	        })));
@@ -18607,13 +18610,24 @@
 	                                    }));
 	                                    this.makeUnsubscribe(parameters, () => { });
 	                                },
-	                                heartbeatDelay: () => new Promise((resolve, reject) => {
-	                                    heartbeatInterval = this._configuration.getHeartbeatInterval();
-	                                    if (!heartbeatInterval)
-	                                        reject(new PubNubError('Heartbeat interval has been reset.'));
-	                                    else
-	                                        setTimeout(resolve, heartbeatInterval * 1000);
-	                                }),
+	                                heartbeatDelay: () => {
+	                                    let cancelDelay = () => { };
+	                                    const promise = new Promise((resolve, reject) => {
+	                                        heartbeatInterval = this._configuration.getHeartbeatInterval();
+	                                        if (!heartbeatInterval)
+	                                            reject(new PubNubError('Heartbeat interval has been reset.'));
+	                                        else {
+	                                            const timeoutId = setTimeout(() => {
+	                                                resolve();
+	                                            }, heartbeatInterval * 1000);
+	                                            cancelDelay = () => {
+	                                                clearTimeout(timeoutId);
+	                                                reject(new PubNubError('Heartbeat interval has been cancelled.'));
+	                                            };
+	                                        }
+	                                    });
+	                                    return { cancelDelay, promise };
+	                                },
 	                                emitStatus: (status) => this.emitStatus(status),
 	                                config: this._configuration,
 	                                presenceState: this.presenceState,
@@ -18639,7 +18653,6 @@
 	                            }));
 	                            return this.subscribeReceiveMessages(parameters);
 	                        },
-	                        delay: (amount) => new Promise((resolve) => setTimeout(resolve, amount)),
 	                        join: (parameters) => {
 	                            var _a, _b;
 	                            this.logger.trace('EventEngine', () => ({

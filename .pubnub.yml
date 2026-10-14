@@ -1,5 +1,14 @@
 ---
 changelog:
+  - date: 2026-10-14
+    version: v13.1.2
+    changes:
+      - type: bug
+        text: "Clear pending heartbeat delay timer when presence effect is aborted, so destroy no longer waits for the full heartbeat interval."
+      - type: improvement
+        text: "Drop `delay` from event engine dependencies and client setup, as heartbeat delay now uses `heartbeatDelay`."
+      - type: improvement
+        text: "Add tests for timer cancel on destroy, no heartbeats after destroy and heartbeat loop stop on zero interval."
   - date: 2026-10-13
     version: v13.1.1
     changes:
@@ -1513,7 +1522,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '13.1.1'
+version: '13.1.2'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1529,7 +1538,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v13.1.1.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v13.1.2.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2200,7 +2209,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v13.1.1/pubnub.13.1.1.js
+            location: https://github.com/pubnub/javascript/releases/download/v13.1.2/pubnub.13.1.2.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

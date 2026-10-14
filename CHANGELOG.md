@@ -1,3 +1,13 @@
+## v13.1.2
+October 14 2026
+
+#### Fixed
+- Clear pending heartbeat delay timer when presence effect is aborted, so destroy no longer waits for the full heartbeat interval.
+
+#### Modified
+- Drop `delay` from event engine dependencies and client setup, as heartbeat delay now uses `heartbeatDelay`.
+- Add tests for timer cancel on destroy, no heartbeats after destroy and heartbeat loop stop on zero interval.
+
 ## v13.1.1
 October 13 2026
 

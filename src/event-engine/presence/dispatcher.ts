@@ -25,7 +25,7 @@ export type Dependencies = {
     callback?: ResultCallback<Presence.PresenceHeartbeatResponse>,
   ) => Promise<Presence.PresenceHeartbeatResponse | void>;
   leave: (parameters: Presence.PresenceLeaveParameters) => void;
-  heartbeatDelay: () => Promise<void>;
+  heartbeatDelay: () => { cancelDelay: () => void; promise: Promise<void> };
 
   config: PrivateClientConfiguration;
   presenceState: Record<string, Payload>;
@@ -85,9 +85,13 @@ export class PresenceEventEngineDispatcher extends Dispatcher<effects.Effects, D
     this.on(
       effects.wait.type,
       asyncHandler(async (_, abortSignal, { heartbeatDelay }) => {
+        const { cancelDelay, promise } = heartbeatDelay();
         abortSignal.throwIfAborted();
-        await heartbeatDelay();
+        const unsubscribeAbortListener = abortSignal.subscribe(() => cancelDelay());
 
+        await promise;
+
+        unsubscribeAbortListener();
         abortSignal.throwIfAborted();
 
         return engine.transition(events.timesUp());

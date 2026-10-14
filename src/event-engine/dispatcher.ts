@@ -31,8 +31,6 @@ export type Dependencies = {
   presenceState: Record<string, Payload>;
   config: PrivateClientConfiguration;
 
-  delay: (milliseconds: number) => Promise<void>;
-
   emitMessages: (
     cursor: Subscription.SubscriptionCursor,
     events: Subscription.SubscriptionResponse['messages'],
