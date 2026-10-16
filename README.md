@@ -1,170 +1,142 @@
 <img width="1920" height="600" alt="image" src="https://github.com/user-attachments/assets/b60b4e27-a140-4784-8b34-85ae421023e2" />
 
-# PubNub JavaScript SDK
+# PubNub JavaScript and TypeScript SDK
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/2859917905c549b8bfa27630ff276fce)](https://www.codacy.com/app/PubNub/javascript?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pubnub/javascript&amp;utm_campaign=Badge_Grade)
-[![npm](https://img.shields.io/npm/v/pubnub.svg)]()
-[![Bower](https://img.shields.io/bower/v/pubnub.svg)]()
-[![Known Vulnerabilities](https://snyk.io/test/npm/pubnub/badge.svg)](https://snyk.io/test/npm/pubnub)
+[![npm](https://img.shields.io/npm/v/pubnub.svg)](https://www.npmjs.com/package/pubnub)
 
-This is the official PubNub JavaScript SDK repository.
+This is the official PubNub SDK for browsers, Node.js, React, React Native, Angular, Vue, and other JavaScript or TypeScript applications.
 
-PubNub takes care of the infrastructure and APIs needed for the realtime communication layer of your application. Work on your app's logic and let PubNub handle sending and receiving data across the world in less than 100ms.
+[Documentation](https://www.pubnub.com/docs/sdks/javascript) · [API reference](https://www.pubnub.com/docs/sdks/javascript/api-reference/publish-and-subscribe) · [Changelog](https://www.pubnub.com/docs/sdks/javascript/changelog)
 
-## Get keys
+## Requirements
 
-You will need the publish and subscribe keys to authenticate your app. Get your keys from the [Admin Portal](https://dashboard.pubnub.com/login).
+- **Node.js:** [22 or later](https://www.pubnub.com/docs/sdks/javascript/environment-setup)
+- **Supported environments:** [Modern browsers, Node.js, React, React Native, Angular, Vue, and other JavaScript/TypeScript environments](https://www.pubnub.com/docs/sdks/javascript)
+- **React Native:** Install `react-native-url-polyfill` alongside `pubnub` when using React Native.
 
-## Tutorial Video
+## Installation
 
-[![Getting Started with PubNub JS SDK](https://replayable-api-production.herokuapp.com/replay/64ee0d2ca4bc310061f566ca/gif?shareKey=8YQoHC40jdzYpYGpcJhQ)](https://app.dashcam.io/replay/64ee0d2ca4bc310061f566ca?share=8YQoHC40jdzYpYGpcJhQ) 
+From your JavaScript project's root directory:
 
-Watch [Getting Started with PubNub JS SDK](https://app.dashcam.io/replay/64ee0d2ca4bc310061f566ca?share=8YQoHC40jdzYpYGpcJhQ) on Dashcam
+```sh
+npm install pubnub
+```
 
-## Configure PubNub
+See [Environment setup](https://www.pubnub.com/docs/sdks/javascript/environment-setup) for toolchain and platform details.
 
-1. Integrate the JavaScript SDK into your project:
-   * use `npm`:
-     ```
-     npm install pubnub
-     ```
-   * or download one of our builds from our CDN: 
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.13.1.2.js
-     * https://cdn.pubnub.com/sdk/javascript/pubnub.13.1.2.min.js
+## Example
 
-   > **React Native:** the SDK relies on a global `URL` implementation, which React Native does not
-   > provide, so it depends on [`react-native-url-polyfill`](https://www.npmjs.com/package/react-native-url-polyfill).
-   > This is declared as an **optional peer dependency** — only React Native projects need it, while
-   > Node.js and browser consumers are unaffected. Install it alongside the SDK:
-   >
-   > ```
-   > npm install react-native-url-polyfill
-   > ```
-   >
-   > The SDK loads the polyfill automatically (`import 'react-native-url-polyfill/auto'`), so no extra
-   > import is required once the package is installed.
+This example runs on Node.js 22 or later.
 
-2. Configure your keys:
+If Access Manager is enabled, obtain a token from your trusted backend and call `pubnub.setToken(token)` before accessing protected resources. Keep the secret key and token-granting logic on the backend.
 
-  ```javascript
-  pubnub = new PubNub({
-    publishKey: 'myPublishKey',
-    subscribeKey: 'mySubscribeKey',
-    userId: 'myUniqueUserId',
-  });
-  ```
-
-## Add event listeners
+Create `index.js` in the project root and add:
 
 ```javascript
-// create a subscription from a channel entity
-const channel = pubnub.channel('my_channel');
-const subscription = channel.subscription();
-subscription.subscribe();
+const PubNub = require("pubnub");
 
-// Event-specific listeners
-subscription.onMessage =  (messageEvent) => { console.log("Message event: ", messageEvent); };
-subscription.onPresence =  (presenceEvent) => { console.log("Presence event: ", presenceEvent); };
-subscription.onMessage = (messageEvent) => { console.log("Message event: ", messageEvent); };
-subscription.onPresence = (presenceEvent) => { console.log("Presence event: ", presenceEvent); };
-subscription.onSignal = (signalEvent) => { console.log("Signal event: ", signalEvent); };
-subscription.onObjects = (objectsEvent) => { console.log("Objects event: ", objectsEvent); };
-subscription.onMessageAction = (messageActionEvent) => { console.log("Message Action event: ", messageActionEvent); };
-subscription.onFile = (fileEvent) => { console.log("File event: ", fileEvent); };
-
-// Generic listeners
-subscription.addListener({
-  // Messages
-  message: function (m) {
-    const channelName = m.channel; // Channel on which the message was published
-    const channelGroup = m.subscription; // Channel group or wildcard subscription match (if exists)
-    const pubTT = m.timetoken; // Publish timetoken
-    const msg = m.message; // Message payload
-    const publisher = m.publisher; // Message publisher
-  },
-  // Presence
-  // requires a subscription with presence
-  presence: function (p) {
-    const action = p.action; // Can be join, leave, state-change, or timeout
-    const channelName = p.channel; // Channel to which the message belongs
-    const occupancy = p.occupancy; // Number of users subscribed to the channel
-    const state = p.state; // User state
-    const channelGroup = p.subscription; //  Channel group or wildcard subscription match, if any
-    const publishTime = p.timestamp; // Publish timetoken
-    const timetoken = p.timetoken; // Current timetoken
-    const uuid = p.uuid; // UUIDs of users who are subscribed to the channel
-  },
-  // Signals
-  signal: function (s) {
-    const channelName = s.channel; // Channel to which the signal belongs
-    const channelGroup = s.subscription; // Channel group or wildcard subscription match, if any
-    const pubTT = s.timetoken; // Publish timetoken
-    const msg = s.message; // Payload
-    const publisher = s.publisher; // Message publisher
-  },
-  // App Context
-  objects: (objectEvent) => {
-    const channel = objectEvent.channel; // Channel to which the event belongs
-    const channelGroup = objectEvent.subscription; // Channel group
-    const timetoken = objectEvent.timetoken; // Event timetoken
-    const publisher = objectEvent.publisher; // UUID that made the call
-    const event = objectEvent.event; // Name of the event that occurred
-    const type = objectEvent.type; // Type of the event that occurred
-    const data = objectEvent.data; // Data from the event that occurred
-  },
-  // Message Reactions
-  messageAction: function (ma) {
-    const channelName = ma.channel; // Channel to which the message belongs
-    const publisher = ma.publisher; // Message publisher
-    const event = ma.event; // Message action added or removed
-    const type = ma.data.type; // Message action type
-    const value = ma.data.value; // Message action value
-    const messageTimetoken = ma.data.messageTimetoken; // Timetoken of the original message
-    const actionTimetoken = ma.data.actionTimetoken; // Timetoken of the message action
-  },
-  // File Sharing
-  file: function (event) {
-    const channelName = event.channel; // Channel to which the file belongs
-    const channelGroup = event.subscription; // Channel group or wildcard subscription match (if exists)
-    const publisher = event.publisher; // File publisher
-    const timetoken = event.timetoken; // Event timetoken
-
-    const message = event.message; // Optional message attached to the file
-    const fileId = event.file.id; // File unique id
-    const fileName = event.file.name;// File name
-    const fileUrl = event.file.url; // File direct URL
-  }
+const pubnub = new PubNub({
+  publishKey: "YOUR_PUBLISH_KEY",
+  subscribeKey: "YOUR_SUBSCRIBE_KEY",
+  userId: "hello-world-user",
 });
-```
 
-## Publish/subscribe
+const subscription = pubnub.channel("hello_world").subscription();
+let published = false;
 
-```javascript
-const channel = pubnub.channel('my_channel');
-const subscription = channel.subscription();
+subscription.onMessage = (event) => {
+  console.log(event.message);
+
+  subscription.unsubscribe();
+  pubnub.removeAllListeners();
+  pubnub.destroy();
+};
+
+pubnub.addListener({
+  status: async (status) => {
+    if (status.category === "PNConnectedCategory" && !published) {
+      published = true;
+
+      await pubnub.publish({
+        channel: "hello_world",
+        message: "Hello world",
+      });
+    }
+  },
+});
+
 subscription.subscribe();
-
-try {
-    const result = await pubnub.publish({
-        message: {
-            such: "object",
-        },
-        channel: "my_channel",
-        sendByPost: false, // true to send via post
-        storeInHistory: false, //override default Message Persistence options
-        meta: {
-            cool: "meta",
-        }, // publish extra meta with the request
-    });
-} catch (status) {
-    console.log(status);
-}
 ```
 
-## Documentation
+Run the example:
 
-* [Build your first realtime JS app with PubNub](https://www.pubnub.com/tutorials/real-time-data-streaming/)
-* [API reference for JavaScript](https://www.pubnub.com/docs/sdks/javascript/api-reference/publish-and-subscribe)
+```sh
+node index.js
+```
+
+The terminal prints:
+
+```text
+Hello world
+```
+
+The example calls `subscription.unsubscribe()`, `pubnub.removeAllListeners()`, and `pubnub.destroy()` after receiving the message. Reuse one PubNub client for the user/session rather than creating a client for every operation.
+
+## Next steps
+
+See the [JavaScript SDK documentation](https://www.pubnub.com/docs/sdks/javascript).
+
+| Next step | Documentation |
+| --- | --- |
+| Configure the client | [Configuration](https://www.pubnub.com/docs/sdks/javascript/api-reference/configuration) |
+| Work with subscriptions and messages | [Publish & Subscribe](https://www.pubnub.com/docs/sdks/javascript/api-reference/publish-and-subscribe) |
+| Check channel occupancy | [Presence](https://www.pubnub.com/docs/sdks/javascript/api-reference/presence) |
+| Read message history | [Message Persistence](https://www.pubnub.com/docs/sdks/javascript/api-reference/storage-and-playback) |
+
+## Access Manager
+
+[Access Manager](https://www.pubnub.com/docs/sdks/javascript/api-reference/access-manager)
+
+## Client lifetime
+
+Create one PubNub instance and reuse it for the lifetime of the user or application session. Call `subscription.unsubscribe()` when an individual subscription is no longer needed, `pubnub.unsubscribeAll()` to stop all subscriptions, `pubnub.removeAllListeners()` when registered listeners are no longer required, and `pubnub.destroy()` when the client itself is no longer needed.
+
+## Delivery
+
+Live delivery through PubNub SDKs is at-most-once. A subscriber can miss messages if its buffer overflows or if it is disconnected when a message is published. For recovery after longer gaps, see [Message Persistence](https://www.pubnub.com/docs/sdks/javascript/api-reference/storage-and-playback).
+
+## Troubleshooting
+
+### React Native reports URL-related errors
+
+Install `react-native-url-polyfill` alongside `pubnub`. The SDK no longer bundles this dependency. See [JavaScript Environment Setup](https://www.pubnub.com/docs/sdks/javascript/environment-setup).
+
+### Access Manager grant APIs are unavailable in a browser build
+
+Issue tokens from a trusted backend and call `pubnub.setToken(token)` in the client. The prebuilt browser SDK deliberately disables the Access Manager server module and secret-key functionality. See [Configuration](https://www.pubnub.com/docs/sdks/javascript/api-reference/configuration).
+
+### Hot reload and server rendering
+
+Reuse the PubNub client and subscription across renders. In React, create them in lifecycle/application code and unsubscribe, remove listeners, and destroy an owned client from the corresponding cleanup instead of creating another client on every render.
+
+Further troubleshooting: [JavaScript SDK documentation](https://www.pubnub.com/docs/sdks/javascript).
+
+## Changelog and upgrades
+
+[Changelog](https://www.pubnub.com/docs/sdks/javascript/changelog)
+
+For a major version change, review the SDK-specific migration guidance linked from the JavaScript documentation and the [JavaScript SDK changelog](https://www.pubnub.com/docs/sdks/javascript/changelog) for breaking changes introduced after that guide.
+
+## Contributing
+
+Report bugs and request features in the [issue tracker](https://github.com/pubnub/javascript/issues).
+
+Install the repository dependencies, run the relevant build and test commands for the affected package/platform, and include tests for behavioral changes before opening a pull request.
+
+## License
+
+[PubNub Software Development Kit License Agreement](https://github.com/pubnub/javascript/blob/master/LICENSE)
+
 
 ## Support
 
