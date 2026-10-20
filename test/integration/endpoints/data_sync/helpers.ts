@@ -484,16 +484,41 @@ export function assertEventMembershipData(
   if (exp.payload) assertPayloadContains(data.payload as Record<string, unknown>, exp.payload);
 }
 
-/** Delete body is trimmed to `{ id, deletedAt? }` only. */
-export function assertEventDeleteData(data: Subscription.DataSyncDeleteData, id: string): void {
+/**
+ * Delete body is trimmed to `{ id, deletedAt? }`, plus the linked ids for a membership
+ * (`channelId` / `userId`) or a relationship (`entityAId` / `entityBId`). Pass `links` to require
+ * those ids; otherwise every link key must be absent.
+ */
+export function assertEventDeleteData(
+  data: Subscription.DataSyncDeleteData & {
+    channelId?: string;
+    userId?: string;
+    entityAId?: string;
+    entityBId?: string;
+  },
+  id: string,
+  links?: { channelId: string; userId: string } | { entityAId: string; entityBId: string },
+): void {
   assert.strictEqual(data.id, id, 'delete data.id');
   assert.ok(!('payload' in data), 'no payload on delete');
   assert.ok(!('status' in data), 'no status on delete');
-  assert.ok(!('entityAId' in data), 'no entityAId on delete');
-  assert.ok(!('entityBId' in data), 'no entityBId on delete');
-  assert.ok(!('channelId' in data), 'no channelId on delete');
-  assert.ok(!('userId' in data), 'no userId on delete');
   assert.ok(!('eTag' in data), 'no eTag on delete');
+  if (links && 'channelId' in links) {
+    assert.strictEqual(data.channelId, links.channelId, 'channelId');
+    assert.strictEqual(data.userId, links.userId, 'userId');
+    assert.ok(!('entityAId' in data), 'no entityAId on membership delete');
+    assert.ok(!('entityBId' in data), 'no entityBId on membership delete');
+  } else if (links && 'entityAId' in links) {
+    assert.strictEqual(data.entityAId, links.entityAId, 'entityAId');
+    assert.strictEqual(data.entityBId, links.entityBId, 'entityBId');
+    assert.ok(!('channelId' in data), 'no channelId on relationship delete');
+    assert.ok(!('userId' in data), 'no userId on relationship delete');
+  } else {
+    assert.ok(!('channelId' in data), 'no channelId on delete');
+    assert.ok(!('userId' in data), 'no userId on delete');
+    assert.ok(!('entityAId' in data), 'no entityAId on delete');
+    assert.ok(!('entityBId' in data), 'no entityBId on delete');
+  }
   if (data.deletedAt !== undefined) {
     assert.strictEqual(typeof data.deletedAt, 'string', 'deletedAt is ISO string');
     assert.ok(!Number.isNaN(Date.parse(data.deletedAt)), 'deletedAt parses');
