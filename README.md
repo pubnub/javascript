@@ -38,11 +38,11 @@ This example runs in Node.js 22 or later. It subscribes to hello_world, publishe
 
 ### Get your keys
 
-Open the [PubNub Admin Portal](https://admin.pubnub.com/).
+1. Open the [PubNub Admin Portal](https://admin.pubnub.com/).
 
-Create an app and a keyset for development, or select an existing development keyset.
+2. Create an app and a keyset for development, or select an existing development keyset.
 
-Copy its publish key and subscribe key.
+3. Copy its publish key and subscribe key.
 
 If Access Manager is enabled, obtain a token from your trusted backend and call `pubnub.setToken(token)` before accessing protected resources. Keep the secret key and token-granting logic on the backend.
 
@@ -74,7 +74,7 @@ subscription.onMessage = (event) => {
 
 pubnub.addListener({
   status: async (status) => {
-    if (status.category === "PNConnectedCategory" && !published) {
+    if (status.category === PubNub.CATEGORIES.PNConnectedCategory && !published) {
       published = true;
 
       await pubnub.publish({
