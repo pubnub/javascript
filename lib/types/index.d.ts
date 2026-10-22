@@ -4224,6 +4224,7 @@ declare namespace PubNub {
      */
     deletedAt?: string;
   };
+
   /**
    * DataSync membership delete payload.
    *
@@ -4240,6 +4241,7 @@ declare namespace PubNub {
      */
     userId?: string;
   };
+
   /**
    * DataSync relationship delete payload.
    *
