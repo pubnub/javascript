@@ -1,5 +1,14 @@
 ---
 changelog:
+  - date: 2026-10-22
+    version: v13.1.3
+    changes:
+      - type: improvement
+        text: "Upgrade fflate, undici dependency version suggested by Synk."
+      - type: improvement
+        text: "Update dataSync event types for delete membership and relationship events."
+      - type: improvement
+        text: "Updated README to reflect SDK support for TypeScript and various environments, added installation instructions, and improved clarity on usage examples."
   - date: 2026-10-14
     version: v13.1.2
     changes:
@@ -1522,7 +1531,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '13.1.2'
+version: '13.1.3'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1538,7 +1547,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v13.1.2.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v13.1.3.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2209,7 +2218,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v13.1.2/pubnub.13.1.2.js
+            location: https://github.com/pubnub/javascript/releases/download/v13.1.3/pubnub.13.1.3.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

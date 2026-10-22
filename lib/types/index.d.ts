@@ -4226,6 +4226,40 @@ declare namespace PubNub {
   };
 
   /**
+   * DataSync membership delete payload.
+   *
+   * A removed membership still names the channel and user it joined, so a subscriber on either
+   * endpoint can tell which membership went away. The rest of the membership body is omitted.
+   */
+  export type DataSyncMembershipDeleteData = DataSyncDeleteData & {
+    /**
+     * Id of the channel the removed membership joined.
+     */
+    channelId?: string;
+    /**
+     * Id of the user the removed membership joined.
+     */
+    userId?: string;
+  };
+
+  /**
+   * DataSync relationship delete payload.
+   *
+   * A removed relationship still names the two entities it linked, so a subscriber on either
+   * endpoint can tell which relationship went away. The rest of the relationship body is omitted.
+   */
+  export type DataSyncRelationshipDeleteData = DataSyncDeleteData & {
+    /**
+     * First entity id in the removed relationship.
+     */
+    entityAId?: string;
+    /**
+     * Second entity id in the removed relationship.
+     */
+    entityBId?: string;
+  };
+
+  /**
    * Parsed DataSync change event for a single `event` / `objectType` combination.
    *
    * Building block of the {@link DataSyncData} union; not meant to be named directly.
@@ -4279,7 +4313,8 @@ declare namespace PubNub {
     /**
      * Changed object information.
      *
-     * For `delete` events only `{ id, deletedAt }` is populated.
+     * For `delete` events the body is `{ id, deletedAt }`. A membership delete also includes
+     * `channelId` and `userId`. A relationship delete also includes `entityAId` and `entityBId`.
      */
     data: Data;
   };
@@ -4289,15 +4324,18 @@ declare namespace PubNub {
    *
    * Discriminated by {@link DataSyncChangeEvent.event | event} and
    * {@link DataSyncChangeEvent.objectType | objectType}, so narrowing on either tells the compiler the
-   * exact shape of `data`: a `delete` carries only `{ id, deletedAt }`, a `membership` names its
-   * endpoints `channelId` / `userId`, and a developer-defined `relationship` names them
-   * `entityAId` / `entityBId`.
+   * exact shape of `data`: a `delete` carries `{ id, deletedAt }`, plus the linked ids for a
+   * membership (`channelId` / `userId`) or a relationship (`entityAId` / `entityBId`). A membership
+   * create or update names its endpoints `channelId` / `userId`, and a developer-defined
+   * relationship names them `entityAId` / `entityBId`.
    */
   export type DataSyncData =
     | DataSyncChangeEvent<'create' | 'update', 'user' | 'channel' | 'entity', DataSyncEntityData>
     | DataSyncChangeEvent<'create' | 'update', 'relationship', DataSyncRelationshipData>
     | DataSyncChangeEvent<'create' | 'update', 'membership', DataSyncMembershipData>
-    | DataSyncChangeEvent<'delete', DataSyncObjectType, DataSyncDeleteData>;
+    | DataSyncChangeEvent<'delete', 'membership', DataSyncMembershipDeleteData>
+    | DataSyncChangeEvent<'delete', 'relationship', DataSyncRelationshipDeleteData>
+    | DataSyncChangeEvent<'delete', 'user' | 'channel' | 'entity', DataSyncDeleteData>;
 
   /**
    * File service response.

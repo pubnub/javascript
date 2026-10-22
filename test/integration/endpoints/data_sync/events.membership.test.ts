@@ -174,7 +174,7 @@ describe('DataSync events — Membership', function () {
     });
   });
 
-  it('membership delete → "delete" event with only {id, deletedAt}', async () => {
+  it('membership delete → "delete" event with {id, deletedAt, channelId, userId}', async () => {
     const { userId, channelId } = await seedEndpoints();
     const id = freshId('membership');
     await createMembership(id, userId, channelId);
@@ -195,7 +195,7 @@ describe('DataSync events — Membership', function () {
       className: 'Membership',
       classLevel: 'Global',
     });
-    assertEventDeleteData(event.message.data as Subscription.DataSyncDeleteData, id);
+    assertEventDeleteData(event.message.data as Subscription.DataSyncDeleteData, id, { channelId, userId });
   });
 
   it('routing proof — a subscriber to the membership id receives nothing', async () => {

@@ -18,6 +18,8 @@ export type {
   DataSyncEntityData,
   DataSyncRelationshipData,
   DataSyncMembershipData,
+  DataSyncMembershipDeleteData,
+  DataSyncRelationshipDeleteData,
   DataSyncDeleteData,
 } from '../../endpoints/subscribe';
 import { AbortSignal } from '../../components/abort_signal';

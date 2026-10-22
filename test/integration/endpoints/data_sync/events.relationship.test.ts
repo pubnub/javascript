@@ -4,6 +4,7 @@
  * ROUTING RULE: relationship-type events are delivered on the TWO endpoint-entity id channels
  * (`entityAId` AND `entityBId`), NEVER on the relationship's own id. We therefore subscribe to both
  * endpoint ids and assert `channel ∈ {customerId, loanQuoteId}`; `data.id` still equals the rel id.
+ * A delete keeps those endpoint ids on the body along with `id` and `deletedAt`.
  *
  */
 
@@ -199,7 +200,7 @@ describe('DataSync events Relationship REQUESTED_BY', function () {
     }
   });
 
-  it('relationship delete  delete event with only {id, deletedAt}', async () => {
+  it('relationship delete event with {id, deletedAt, entityAId, entityBId}', async () => {
     const { customerId, loanQuoteId } = await seedEndpoints();
     const relId = freshId('requested-by');
     await createRel(relId, customerId, loanQuoteId);
@@ -220,7 +221,10 @@ describe('DataSync events Relationship REQUESTED_BY', function () {
       className: RELATIONSHIP_CLASS_REQUESTED_BY,
       classLevel: 'SubKey',
     });
-    assertEventDeleteData(event.message.data as Subscription.DataSyncDeleteData, relId);
+    assertEventDeleteData(event.message.data as Subscription.DataSyncDeleteData, relId, {
+      entityAId: customerId,
+      entityBId: loanQuoteId,
+    });
   });
 
   it('routing proof — a subscriber to the relationship id receives nothing', async () => {

@@ -227,7 +227,40 @@ const TYPED_MEMBERSHIP_DELETE: WireEnvelope = {
       classLevel: 'Global',
       classVersion: 1,
     },
-    data: { id: 'm.mem914058452', deletedAt: '2026-08-13T03:46:14.418911Z' },
+    data: {
+      id: 'm.mem914058452',
+      deletedAt: '2026-08-13T03:46:14.418911Z',
+      channelId: 'c.mem914058452',
+      userId: 'u.mem914058452',
+      status: 'active',
+      payload: { role: 'member' },
+    },
+  },
+};
+
+const TYPED_RELATIONSHIP_DELETE: WireEnvelope = {
+  e: 5,
+  p: { t: '17865927752415830', r: 21 },
+  c: 'cust-70b1d0f54f',
+  b: 'cust-70b1d0f54f',
+  d: {
+    version: '1.0',
+    metadata: {
+      event: 'delete',
+      source: 'data-sync',
+      type: 'relationship',
+      className: 'REQUESTED_BY',
+      classLevel: 'SubKey',
+      classVersion: 1,
+    },
+    data: {
+      id: 'rel-c129c5a237',
+      deletedAt: '2026-08-13T03:46:14.418911Z',
+      entityAId: 'cust-70b1d0f54f',
+      entityBId: 'lq-871f0a90f3',
+      status: 'active',
+      payload: { linkedAt: '2026-07-06T10:00:00.000Z' },
+    },
   },
 };
 
@@ -340,7 +373,7 @@ describe('DataSync subscribe event parsing', () => {
   });
 
   describe('delete events', () => {
-    it('trims the delete body to { id, deletedAt }', async () => {
+    it('keeps channelId and userId on a membership delete and drops the rest', async () => {
       const message = await parseDataSyncMessage(TYPED_MEMBERSHIP_DELETE);
 
       assert.strictEqual(message.event, 'delete', 'event');
@@ -349,6 +382,21 @@ describe('DataSync subscribe event parsing', () => {
       assert.deepStrictEqual(message.data, {
         id: 'm.mem914058452',
         deletedAt: '2026-08-13T03:46:14.418911Z',
+        channelId: 'c.mem914058452',
+        userId: 'u.mem914058452',
+      });
+    });
+
+    it('keeps entityAId and entityBId on a relationship delete and drops the rest', async () => {
+      const message = await parseDataSyncMessage(TYPED_RELATIONSHIP_DELETE);
+
+      assert.strictEqual(message.event, 'delete', 'event');
+      assert.strictEqual(message.objectType, 'relationship', 'objectType');
+      assert.deepStrictEqual(message.data, {
+        id: 'rel-c129c5a237',
+        deletedAt: '2026-08-13T03:46:14.418911Z',
+        entityAId: 'cust-70b1d0f54f',
+        entityBId: 'lq-871f0a90f3',
       });
     });
   });
@@ -383,13 +431,27 @@ describe('DataSync subscribe event parsing', () => {
       assert.strictEqual(message.data.entityBId, 'lq-871f0a90f3', 'entityBId');
     });
 
-    it('narrows a delete body to { id, deletedAt }', async () => {
+    it('narrows a membership delete body to { id, deletedAt, channelId, userId }', async () => {
       const message = await parseDataSyncMessage(TYPED_MEMBERSHIP_DELETE);
-      if (message.event !== 'delete') throw new Error('expected a delete event');
+      if (message.event !== 'delete' || message.objectType !== 'membership')
+        throw new Error('expected a membership delete event');
 
       assert.strictEqual(message.data.id, 'm.mem914058452', 'id');
       assert.strictEqual(message.data.deletedAt, '2026-08-13T03:46:14.418911Z', 'deletedAt');
-      // @ts-expect-error A delete body carries no object fields.
+      assert.strictEqual(message.data.channelId, 'c.mem914058452', 'channelId');
+      assert.strictEqual(message.data.userId, 'u.mem914058452', 'userId');
+      // @ts-expect-error A delete body carries no payload.
+      assert.strictEqual(message.data.payload, undefined, 'no payload on a delete body');
+    });
+
+    it('narrows a relationship delete body to { id, deletedAt, entityAId, entityBId }', async () => {
+      const message = await parseDataSyncMessage(TYPED_RELATIONSHIP_DELETE);
+      if (message.event !== 'delete' || message.objectType !== 'relationship')
+        throw new Error('expected a relationship delete event');
+
+      assert.strictEqual(message.data.entityAId, 'cust-70b1d0f54f', 'entityAId');
+      assert.strictEqual(message.data.entityBId, 'lq-871f0a90f3', 'entityBId');
+      // @ts-expect-error A delete body carries no payload.
       assert.strictEqual(message.data.payload, undefined, 'no payload on a delete body');
     });
   });
