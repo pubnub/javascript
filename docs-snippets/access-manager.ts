@@ -231,3 +231,53 @@ try {
   );
 }
 // snippet.end
+
+// snippet.grantTokenWithCategories
+// Grants `my-authorized-uuid` permission to list all channel metadata and all uuid metadata.
+// Category permissions support only the `get` operation.
+try {
+  const token = await pubnub.grantToken({
+    ttl: 15,
+    authorizedUserId: 'my-authorized-uuid',
+    categories: {
+      channels: { get: true },
+      uuids: { get: true },
+    },
+  });
+  console.log('Granted token:', token);
+} catch (error) {
+  console.error(
+    `Grant token error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
+}
+// snippet.end
+
+// snippet.parseTokenWithCategories
+// Decodes a token that was granted with category permissions.
+const parsedToken = pubnub.parseToken('use-token-string-generated-by-grantToken()');
+
+console.log('Can list all channel metadata:', parsedToken?.categories?.channels?.get);
+console.log('Can list all uuid metadata:', parsedToken?.categories?.uuids?.get);
+// snippet.end
+
+// snippet.grantWithCategories
+// Grants the auth key permission to list all channel metadata and all uuid metadata.
+// This legacy `grant` method requires the secret key to be set on the client.
+try {
+  const response = await pubnub.grant({
+    authKeys: ['my-auth-key'],
+    categories: ['channels', 'uuids'],
+    get: true,
+    ttl: 15,
+  });
+  console.log('Grant response:', response);
+} catch (error) {
+  console.error(
+    `Grant error: ${error}.${
+      (error as PubNubError).status ? ` Additional information: ${(error as PubNubError).status}` : ''
+    }`,
+  );
+}
+// snippet.end
