@@ -997,922 +997,1444 @@
 	}
 
 	/**
-	 * CryptoJS implementation.
+	 * Utilities for hex, bytes, CSPRNG.
+	 * @module
+	 */
+	/*! noble-ciphers - MIT License (c) 2023 Paul Miller (paulmillr.com) */
+	/**
+	 * Checks if something is Uint8Array. Be careful: nodejs Buffer will return true.
+	 * @param a - Value to inspect.
+	 * @returns `true` when the value is a Uint8Array view, including Node's `Buffer`.
+	 * @example
+	 * Guards a value before treating it as raw key material.
+	 *
+	 * ```ts
+	 * isBytes(new Uint8Array());
+	 * ```
+	 */
+	function isBytes$1(a) {
+	    // Plain `instanceof Uint8Array` is too strict for some Buffer / proxy /
+	    // cross-realm cases. The fallback still requires a real ArrayBuffer view
+	    // so plain JSON-deserialized `{ constructor: ... }`
+	    // spoofing is rejected, and `BYTES_PER_ELEMENT === 1` keeps the fallback on byte-oriented views.
+	    return (a instanceof Uint8Array ||
+	        (ArrayBuffer.isView(a) &&
+	            a.constructor.name === 'Uint8Array' &&
+	            'BYTES_PER_ELEMENT' in a &&
+	            a.BYTES_PER_ELEMENT === 1));
+	}
+	// Shared error-message prefix builder. Only called on throw paths, so assert
+	// success paths never pay for the string concatenation.
+	const atitle$1 = (title) => (title ? `"${title}" ` : '');
+	/**
+	 * Asserts something is a non-negative safe integer.
+	 * @param n - Value to validate.
+	 * @returns The validated number.
+	 * @throws On wrong argument types. {@link TypeError}
+	 * @throws On wrong argument ranges or values. {@link RangeError}
+	 * @example
+	 * Validates a non-negative length or counter.
+	 *
+	 * ```ts
+	 * anumber(1);
+	 * ```
+	 */
+	function anumber(n, title = '') {
+	    if (typeof n !== 'number')
+	        throw new TypeError(atitle$1(title) + 'expected number, got ' + typeof n);
+	    if (!Number.isSafeInteger(n) || n < 0)
+	        throw new RangeError(atitle$1(title) + 'expected integer >= 0, got ' + n);
+	    return n;
+	}
+	/**
+	 * Asserts something is Uint8Array.
+	 * @param value - Value to validate.
+	 * @param length - Expected byte length.
+	 * @param title - Optional label used in error messages.
+	 * @returns The validated byte array.
+	 * On Node, `Buffer` is accepted too because it is a Uint8Array view.
+	 * @throws On wrong argument types. {@link TypeError}
+	 * @throws On wrong argument lengths. {@link RangeError}
+	 * @example
+	 * Validates a fixed-length nonce or key buffer.
+	 *
+	 * ```ts
+	 * abytes(new Uint8Array([1, 2]), 2);
+	 * ```
+	 */
+	function abytes$1(value, length, title = '') {
+	    // Success path first: this runs at the start of every update() / digestInto(), and the
+	    // common `abytes(data)` form must not pay for length handling it does not use.
+	    if (isBytes$1(value) && (length === undefined || value.length === length))
+	        return value;
+	    // Error path: recompute freely to build the exact message.
+	    if (length !== undefined)
+	        anumber(length, 'length');
+	    const bytes = isBytes$1(value);
+	    const ofLen = length !== undefined ? ` of length ${length}` : '';
+	    const got = bytes ? `length=${value.length}` : `type=${typeof value}`;
+	    const message = atitle$1(title) + 'expected Uint8Array' + ofLen + ', got ' + got;
+	    if (!bytes)
+	        throw new TypeError(message);
+	    throw new RangeError(message);
+	}
+	/**
+	 * Casts a typed-array view to Uint32Array.
+	 * @param arr - Typed-array view to reinterpret.
+	 * @returns Uint32Array view over the same bytes. Callers are expected to provide a
+	 * 4-byte-aligned offset; trailing `1..3` bytes are silently dropped.
+	 * @example
+	 * Views a byte buffer as 32-bit words for block processing.
+	 *
+	 * ```ts
+	 * u32(new Uint8Array(4));
+	 * ```
+	 */
+	function u32(arr) {
+	    return new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.byteLength / 4));
+	}
+	/**
+	 * Zeroizes typed arrays in place.
+	 * Warning: JS provides no guarantees.
+	 * @param arrays - Arrays to wipe.
+	 * @example
+	 * Wipes a temporary key buffer after use.
+	 *
+	 * ```ts
+	 * const bytes = new Uint8Array([1]);
+	 * clean(bytes);
+	 * ```
+	 */
+	function clean$1(...arrays) {
+	    for (let i = 0; i < arrays.length; i++) {
+	        arrays[i].fill(0);
+	    }
+	}
+	/**
+	 * Whether the current platform is little-endian.
+	 * Most are; some IBM systems are not.
+	 */
+	const isLE = /* @__PURE__ */ (() => new Uint8Array(new Uint32Array([0x11223344]).buffer)[0] === 0x44)();
+	/**
+	 * Reverses byte order of one 32-bit word.
+	 * @param word - Unsigned 32-bit word to swap.
+	 * @returns The same word with bytes reversed.
+	 * @example
+	 * Swaps a big-endian word into little-endian byte order.
+	 *
+	 * ```ts
+	 * byteSwap(0x11223344);
+	 * ```
+	 */
+	function byteSwap(word) {
+	    return (((word << 24) & 0xff000000) |
+	        ((word << 8) & 0xff0000) |
+	        ((word >>> 8) & 0xff00) |
+	        ((word >>> 24) & 0xff));
+	}
+	/**
+	 * Byte-swaps every word of a Uint32Array in place.
+	 * @param arr - Uint32Array whose words should be swapped.
+	 * @returns The same array after in-place byte swapping.
+	 * @example
+	 * Swaps every 32-bit word in a word-view buffer.
+	 *
+	 * ```ts
+	 * byteSwap32(new Uint32Array([0x11223344]));
+	 * ```
+	 */
+	function byteSwap32(arr) {
+	    for (let i = 0; i < arr.length; i++) {
+	        arr[i] = byteSwap(arr[i]);
+	    }
+	    return arr;
+	}
+	/**
+	 * Normalizes a Uint32Array view to the little-endian representation expected by cipher cores.
+	 * @param u - Word view to normalize in place.
+	 * @returns Little-endian normalized word view.
+	 * @example
+	 * Normalizes a word-view buffer before block processing.
+	 *
+	 * ```ts
+	 * swap32IfBE(new Uint32Array([0x11223344]));
+	 * ```
+	 */
+	const swap32IfBE = isLE
+	    ? (u) => u
+	    : byteSwap32;
+	/**
+	 * Checks if two U8A use same underlying buffer and overlaps.
+	 * This is invalid and can corrupt data.
+	 * @param a - First byte view.
+	 * @param b - Second byte view.
+	 * @returns `true` when the views overlap in memory.
+	 * @example
+	 * Detects whether two slices alias the same backing buffer.
+	 *
+	 * ```ts
+	 * overlapBytes(new Uint8Array(4), new Uint8Array(4));
+	 * ```
+	 */
+	function overlapBytes(a, b) {
+	    // Zero-length views cannot overwrite anything, even if their offset sits inside another range.
+	    if (!a.byteLength || !b.byteLength)
+	        return false;
+	    return (a.buffer === b.buffer && // best we can do, may fail with an obscure Proxy
+	        a.byteOffset < b.byteOffset + b.byteLength && // a starts before b end
+	        b.byteOffset < a.byteOffset + a.byteLength // b starts before a end
+	    );
+	}
+	/**
+	 * If input and output overlap and input starts before output, we will overwrite end of input before
+	 * we start processing it, so this is not supported by forward-processing ciphers.
+	 * @param input - Input bytes.
+	 * @param output - Output bytes.
+	 * @throws If the output view would overwrite unread input bytes. {@link Error}
+	 * @example
+	 * Rejects an in-place layout that would overwrite unread input bytes.
+	 *
+	 * ```ts
+	 * const buffer = new Uint8Array(8);
+	 * complexOverlapBytes(buffer.subarray(0, 4), buffer.subarray(2, 6));
+	 * ```
+	 */
+	function complexOverlapBytes(input, output) {
+	    // This is very cursed. It works somehow, but I'm completely unsure,
+	    // reasoning about overlapping aligned windows is very hard.
+	    if (overlapBytes(input, output) && input.byteOffset < output.byteOffset)
+	        throw new Error('complex overlap of input and output is not supported');
+	}
+	/**
+	 * Wraps a cipher: validates args, ensures encrypt() can only be called once.
+	 * Used internally by the exported cipher constructors.
+	 * Output-buffer support is inferred from the wrapped `encrypt` / `decrypt`
+	 * arity (`fn.length === 2`), so wrapped output-capable methods must use a normal
+	 * second parameter, not a default/rest parameter. AAD support is explicit in
+	 * `params.withAAD`; optional AAD starts after the nonce slot when one is present.
+	 * @__NO_SIDE_EFFECTS__
+	 * @param params - Static cipher metadata. See {@link CipherParams}.
+	 * @param constructor - Cipher constructor.
+	 * @returns Wrapped constructor with validation.
+	 */
+	const wrapCipher = (params, constructor) => {
+	    function wrappedCipher(key, ...args) {
+	        // Validate key
+	        abytes$1(key, undefined, 'key');
+	        // Validate nonce if nonceLength is present
+	        if (params.nonceLength !== undefined) {
+	            const nonce = args[0];
+	            abytes$1(nonce, params.varSizeNonce ? undefined : params.nonceLength, 'nonce');
+	        }
+	        // Keep tag length available for decrypt-size checks after constructor validation.
+	        const tagl = params.tagLength;
+	        const aadStart = params.nonceLength !== undefined ? 1 : 0;
+	        // No-AAD constructors otherwise silently ignore byte args meant as AAD.
+	        if (!params.withAAD) {
+	            for (let i = aadStart; i < args.length; i++)
+	                if (isBytes$1(args[i]))
+	                    throw new Error('AAD not supported');
+	        }
+	        // Validate the first AAD slot early; rest-arg AAD constructors validate the tail themselves.
+	        if (params.withAAD && args[aadStart] !== undefined)
+	            abytes$1(args[aadStart], undefined, 'AAD');
+	        const cipher = constructor(key, ...args);
+	        const checkOutput = (fnLength, output) => {
+	            if (output !== undefined) {
+	                if (fnLength !== 2)
+	                    throw new Error('cipher output not supported');
+	                abytes$1(output, undefined, 'output');
+	            }
+	        };
+	        // Create wrapped cipher with validation and single-use encryption
+	        let called = false;
+	        const wrCipher = {
+	            encrypt(data, output) {
+	                if (called)
+	                    throw new Error('cannot encrypt() twice with same key + nonce');
+	                // Any encrypt attempt consumes the instance, even if validation rejects below.
+	                called = true;
+	                abytes$1(data, undefined, 'data');
+	                checkOutput(cipher.encrypt.length, output);
+	                return cipher.encrypt(data, output);
+	            },
+	            decrypt(data, output) {
+	                abytes$1(data, undefined, 'data');
+	                if (tagl && data.length < tagl)
+	                    throw new Error('"ciphertext" expected length >= tagLength=' + tagl);
+	                checkOutput(cipher.decrypt.length, output);
+	                return cipher.decrypt(data, output);
+	            },
+	        };
+	        return wrCipher;
+	    }
+	    Object.assign(wrappedCipher, params);
+	    return wrappedCipher;
+	};
+	/**
+	 * By default, returns u8a of length.
+	 * When out is available, it checks it for validity and uses it.
+	 * @param expectedLength - Required output length.
+	 * @param out - Optional destination buffer.
+	 * @param onlyAligned - Whether `out` must be 4-byte aligned.
+	 * @returns Output buffer ready for writing.
+	 * @throws On wrong argument types. {@link TypeError}
+	 * @throws If the provided output buffer has the wrong size. {@link RangeError}
+	 * @throws If the provided output buffer has the wrong alignment. {@link Error}
+	 * @example
+	 * Reuses a caller-provided output buffer when lengths match.
+	 *
+	 * ```ts
+	 * getOutput(16, new Uint8Array(16));
+	 * ```
+	 */
+	function getOutput(expectedLength, out, onlyAligned = true) {
+	    if (out === undefined)
+	        return new Uint8Array(expectedLength);
+	    // Keep Buffer/cross-realm Uint8Array support here instead of trusting a shape-compatible object.
+	    abytes$1(out, expectedLength, 'output');
+	    if (onlyAligned && !isAligned32(out))
+	        throw new Error('invalid output, must be aligned');
+	    return out;
+	}
+	/**
+	 * Checks whether a byte array is aligned to a 4-byte offset.
+	 * @param bytes - Byte array to inspect.
+	 * @returns `true` when the view is 4-byte aligned.
+	 * @example
+	 * Checks whether a buffer can be safely viewed as Uint32Array.
+	 *
+	 * ```ts
+	 * isAligned32(new Uint8Array(4));
+	 * ```
+	 */
+	function isAligned32(bytes) {
+	    return bytes.byteOffset % 4 === 0;
+	}
+	/**
+	 * Copies bytes into a new Uint8Array.
+	 * @param bytes - Bytes to copy.
+	 * @returns Copied byte array.
+	 * @throws On wrong argument types. {@link TypeError}
+	 * @example
+	 * Copies input into an aligned Uint8Array before block processing.
+	 *
+	 * ```ts
+	 * copyBytes(new Uint8Array([1, 2]));
+	 * ```
+	 */
+	function copyBytes(bytes) {
+	    // `Uint8Array.from(...)` would also accept arrays / other typed arrays. Keep this helper strict
+	    // because callers use it at byte-validation boundaries before mutating the detached copy.
+	    return Uint8Array.from(abytes$1(bytes));
+	}
+	/**
+	 * Cryptographically secure PRNG backed by `crypto.getRandomValues`.
+	 * @param bytesLength - number of random bytes to generate
+	 * @returns Random bytes.
+	 * The platform `getRandomValues()` implementation still defines any
+	 * single-call length cap, and this helper rejects oversize requests
+	 * with a stable library `RangeError` instead of host-specific errors.
+	 * @throws On wrong argument types. {@link TypeError}
+	 * @throws On wrong argument ranges or values. {@link RangeError}
+	 * @throws If the current runtime does not provide `crypto.getRandomValues`. {@link Error}
+	 * @example
+	 * Generate a fresh random key or nonce.
+	 * ```ts
+	 * const key = randomBytes(16);
+	 * ```
+	 */
+	function randomBytes(bytesLength = 32) {
+	    // Match the repo's other length-taking helpers instead of relying on Uint8Array coercion.
+	    anumber(bytesLength, 'bytesLength');
+	    const cr = typeof globalThis === 'object' ? globalThis.crypto : null;
+	    if (typeof cr?.getRandomValues !== 'function')
+	        throw new Error('crypto.getRandomValues must be defined');
+	    // Web Cryptography API Level 2 §10.1.1:
+	    // if `byteLength > 65536`, throw `QuotaExceededError`.
+	    // Keep the guard explicit so callers can see the quota in code
+	    // instead of discovering it by reading the spec or host errors.
+	    // This wrapper surfaces the same quota as a stable library RangeError.
+	    if (bytesLength > 65536)
+	        throw new RangeError(`"bytesLength" expected <= 65536, got ${bytesLength}`);
+	    return cr.getRandomValues(new Uint8Array(bytesLength));
+	}
+
+	/**
+	 * {@link https://en.wikipedia.org/wiki/Advanced_Encryption_Standard | AES}
+	 * a.k.a. Advanced Encryption Standard
+	 * is a variant of Rijndael block cipher, standardized by NIST in 2001.
+	 * We provide the fastest available pure JS implementation.
+	 *
+	 * `cipher = encrypt(block, key)`
+	 *
+	 * Data is split into 128-bit blocks.
+	 * Encrypted in 10/12/14 rounds (128/192/256 bits). In every round:
+	 * 1. **S-box**, table substitution
+	 * 2. **Shift rows**, cyclic shift left of all rows of data array
+	 * 3. **Mix columns**, multiplying every column by fixed polynomial
+	 * 4. **Add round key**, round_key xor i-th column of array
+	 *
+	 * Check out
+	 * {@link https://csrc.nist.gov/files/pubs/fips/197/final/docs/fips-197.pdf | FIPS-197},
+	 * {@link https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38G.pdf | NIST 800-38G},
+	 * and {@link https://csrc.nist.gov/csrc/media/projects/cryptographic-standards-and-guidelines/documents/aes-development/rijndael-ammended.pdf | original proposal}.
+	 * @module
+	 */
+	const BLOCK_SIZE = 16;
+	const POLY = 0x11b; // 1 + x + x**3 + x**4 + x**8
+	// Validates plain AES key sizes only; AES-SIV's doubled-key contract is checked elsewhere.
+	function validateKeyLength(key) {
+	    if (![16, 24, 32].includes(key.length))
+	        throw new Error('"aes key" expected Uint8Array of length 16/24/32, got length=' + key.length);
+	}
+	// TODO: remove multiplication, binary ops only
+	// Doubles one GF(2^8) field element; callers are expected to stay in byte range.
+	// FIPS 197 upd1 §4.3 equation (4.5): XTIMES(b) left-shifts by one and, when
+	// b7=1, reduces by m(x); using POLY=0x11b here yields the same byte result
+	// as XORing with {1b} after the shift.
+	function mul2(n) {
+	    return (n << 1) ^ (POLY & -(n >> 7));
+	}
+	// Shift-and-add multiplication in GF(2^8); callers are expected to pass byte values.
+	// FIPS 197 upd1 §4.3 equation (4.7): general products are XORs of repeated
+	// XTIMES() multiples, e.g. {57}•{13} = {57}⊕{ae}⊕{07}.
+	function mul(a, b) {
+	    let res = 0;
+	    for (; b > 0; b >>= 1) {
+	        // Usual shift-and-add step in GF(2^8), not a scalar-multiplication ladder.
+	        res ^= a & -(b & 1); // if (b&1) res ^=a (but const-time).
+	        a = mul2(a); // a = 2*a
+	    }
+	    return res;
+	}
+	// AES S-box is generated using finite field inversion,
+	// an affine transform, and xor of a constant 0x63.
+	const sbox = /* @__PURE__ */ (() => {
+	    const t = new Uint8Array(256);
+	    // Repeated multiplication by {03} walks all 255 nonzero field elements
+	    // once, so t[255 - i] is the multiplicative inverse of t[i] for the
+	    // affine step.
+	    for (let i = 0, x = 1; i < 256; i++, x ^= mul2(x))
+	        t[i] = x;
+	    const box = new Uint8Array(256);
+	    // FIPS 197 upd1 §5.1.1: SBOX({00}) = {63} because the inverse step leaves
+	    // {00} at {00}, then the affine transform xors in c = {63}.
+	    box[0] = 0x63;
+	    for (let i = 0; i < 255; i++) {
+	        let x = t[255 - i];
+	        x |= x << 8;
+	        box[t[i]] = (x ^ (x >> 4) ^ (x >> 5) ^ (x >> 6) ^ (x >> 7) ^ 0x63) & 0xff;
+	    }
+	    clean$1(t);
+	    return box;
+	})();
+	// FIPS 197 upd1 §5.3.2: INVSBOX() is derived from SBOX() by swapping input
+	// and output roles (Table 6).
+	// `indexOf` is only used once at module init, so the quadratic setup cost stays off hot paths.
+	const invSbox = /* @__PURE__ */ sbox.map((_, j) => sbox.indexOf(j));
+	// FIPS 197 upd1 §5.2: ROTWORD([a0,a1,a2,a3]) = [a1,a2,a3,a0]; with this LE
+	// word packing that is a right rotate by 8 bits.
+	const rotr32_8 = (n) => (n << 24) | (n >>> 8);
+	// LE T-table helper: rotates one precomputed word by one byte so T1/T2/T3
+	// reuse T0's substitution/mix result in the other byte lanes.
+	const rotl32_8 = (n) => (n << 8) | (n >>> 24);
+	// T-table is optimization suggested in 5.2 of original proposal (missed from FIPS-197). Changes:
+	// - LE instead of BE
+	// - bigger tables: T0 and T1 are merged into T01 table and T2 & T3 into T23;
+	//   so index is u16, instead of u8. This speeds up things, unexpectedly
+	function genTtable(sbox, fn) {
+	    if (sbox.length !== 256)
+	        throw new Error('wrong sbox length');
+	    const T0 = new Uint32Array(256).map((_, j) => fn(sbox[j]));
+	    const T1 = T0.map(rotl32_8);
+	    const T2 = T1.map(rotl32_8);
+	    const T3 = T2.map(rotl32_8);
+	    // Pre-xor adjacent lanes so apply0123/applySbox can fetch two substituted
+	    // byte lanes per lookup in the LE round layout.
+	    const T01 = new Uint32Array(256 * 256);
+	    const T23 = new Uint32Array(256 * 256);
+	    const sbox2 = new Uint16Array(256 * 256);
+	    for (let i = 0; i < 256; i++) {
+	        for (let j = 0; j < 256; j++) {
+	            const idx = i * 256 + j;
+	            T01[idx] = T0[i] ^ T1[j];
+	            T23[idx] = T2[i] ^ T3[j];
+	            sbox2[idx] = (sbox[i] << 8) | sbox[j];
+	        }
+	    }
+	    return { sbox, sbox2, T0, T1, T2, T3, T01, T23 };
+	}
+	// Forward round precompute: the packed word stores the MIXCOLUMNS row
+	// [{02},{01},{01},{03}] in LE byte-lane order, and the returned `sbox2`
+	// is also reused by key expansion and the final round.
+	const tableEncoding = /* @__PURE__ */ genTtable(sbox, (s) => (mul(s, 3) << 24) | (s << 16) | (s << 8) | mul(s, 2));
+	// Inverse round precompute: the packed word stores the INVMIXCOLUMNS row
+	// [{0e},{09},{0d},{0b}] in LE byte-lane order, and the tables are reused
+	// by decrypt() and expandKeyDecLE().
+	const tableDecoding = /* @__PURE__ */ genTtable(invSbox, (s) => (mul(s, 11) << 24) | (mul(s, 13) << 16) | (mul(s, 9) << 8) | mul(s, 14));
+	// FIPS 197 upd1 §5.2 Table 5: left-most bytes of Rcon[j] = x^(j-1), generated by repeated XTIMES().
+	const xPowers = /* @__PURE__ */ (() => {
+	    const p = new Uint8Array(16);
+	    for (let i = 0, x = 1; i < 16; i++, x = mul2(x))
+	        p[i] = x;
+	    return p;
+	})();
+	/** Forward AES key expansion used across ECB/CBC/CTR/GCM/CMAC/KW-style paths. */
+	function expandKeyLE(key) {
+	    abytes$1(key);
+	    const len = key.length;
+	    validateKeyLength(key);
+	    const { sbox2 } = tableEncoding;
+	    const toClean = [];
+	    // Copy on BE or misaligned inputs so the LE word normalization below never
+	    // mutates caller key bytes in place.
+	    if (!isLE || !isAligned32(key))
+	        toClean.push((key = copyBytes(key)));
+	    const k32 = swap32IfBE(u32(key));
+	    const Nk = k32.length;
+	    // `applySbox` normally reads one byte lane from each argument; repeating
+	    // `n` across all four lanes turns it into SUBWORD(n).
+	    const subByte = (n) => applySbox(sbox2, n, n, n, n);
+	    // AES key sizes are 16/24/32 bytes, so len + 28 yields the 44/52/60
+	    // schedule words from FIPS 197 §5.2 / Table 3.
+	    const xk = new Uint32Array(len + 28); // expanded key
+	    xk.set(k32);
+	    // 4.3.1 Key expansion
+	    for (let i = Nk; i < xk.length; i++) {
+	        let t = xk[i - 1];
+	        if (i % Nk === 0)
+	            t = subByte(rotr32_8(t)) ^ xPowers[i / Nk - 1];
+	        else if (Nk > 6 && i % Nk === 4)
+	            t = subByte(t);
+	        xk[i] = xk[i - Nk] ^ t;
+	    }
+	    clean$1(...toClean);
+	    return xk;
+	}
+	function expandKeyDecLE(key) {
+	    const encKey = expandKeyLE(key);
+	    const xk = encKey.slice();
+	    const Nk = encKey.length;
+	    const { sbox2 } = tableEncoding;
+	    const { T0, T1, T2, T3 } = tableDecoding;
+	    // Local decrypt() walks round keys forward from xk[0], so reverse the
+	    // encryption round-key blocks first before applying the equivalent-inverse
+	    // middle-round transform.
+	    for (let i = 0; i < Nk; i += 4) {
+	        for (let j = 0; j < 4; j++)
+	            xk[i + j] = encKey[Nk - i - 4 + j];
+	    }
+	    clean$1(encKey);
+	    // Apply InvMixColumn to the reversed round keys using the same LE sbox2
+	    // packing as the forward path.
+	    // apply InvMixColumn except first & last round
+	    for (let i = 4; i < Nk - 4; i++) {
+	        const x = xk[i];
+	        const w = applySbox(sbox2, x, x, x, x);
+	        xk[i] = T0[w & 0xff] ^ T1[(w >>> 8) & 0xff] ^ T2[(w >>> 16) & 0xff] ^ T3[w >>> 24];
+	    }
+	    return xk;
+	}
+	// Apply tables
+	function apply0123(T01, T23, s0, s1, s2, s3) {
+	    // `T01` takes the low byte lane from `s0` plus the next lane from `s1`;
+	    // `T23` does the same for `s2`/`s3`.
+	    // Equivalent to `T0[s0&0xff] ^ T1[(s1>>>8)&0xff] ^ T2[(s2>>>16)&0xff] ^
+	    // T3[s3>>>24]`, but with two merged-table fetches.
+	    return (T01[((s0 << 8) & 0xff00) | ((s1 >>> 8) & 0xff)] ^
+	        T23[((s2 >>> 8) & 0xff00) | ((s3 >>> 24) & 0xff)]);
+	}
+	function applySbox(sbox2, s0, s1, s2, s3) {
+	    // `sbox2` packs two substituted byte lanes at a time in the same LE
+	    // layout used by the round code.
+	    // Equivalent to `SBOX(byte0(s0)) | SBOX(byte1(s1))<<8 |
+	    // SBOX(byte2(s2))<<16 | SBOX(byte3(s3))<<24`.
+	    return (sbox2[(s0 & 0xff) | (s1 & 0xff00)] |
+	        (sbox2[((s2 >>> 16) & 0xff) | ((s3 >>> 16) & 0xff00)] << 16));
+	}
+	function encrypt(xk, s0, s1, s2, s3) {
+	    const { sbox2, T01, T23 } = tableEncoding;
+	    let k = 0;
+	    ((s0 ^= xk[k++]), (s1 ^= xk[k++]), (s2 ^= xk[k++]), (s3 ^= xk[k++]));
+	    // `xk` has Nr+1 round-key blocks, so after the initial AddRoundKey and the
+	    // final S-box-only round there are Nr-1 full table/MixColumns rounds left.
+	    const rounds = xk.length / 4 - 2;
+	    for (let i = 0; i < rounds; i++) {
+	        const t0 = xk[k++] ^ apply0123(T01, T23, s0, s1, s2, s3);
+	        const t1 = xk[k++] ^ apply0123(T01, T23, s1, s2, s3, s0);
+	        const t2 = xk[k++] ^ apply0123(T01, T23, s2, s3, s0, s1);
+	        const t3 = xk[k++] ^ apply0123(T01, T23, s3, s0, s1, s2);
+	        ((s0 = t0), (s1 = t1), (s2 = t2), (s3 = t3));
+	    }
+	    // last round (without mixcolumns, so using SBOX2 table)
+	    const t0 = xk[k++] ^ applySbox(sbox2, s0, s1, s2, s3);
+	    const t1 = xk[k++] ^ applySbox(sbox2, s1, s2, s3, s0);
+	    const t2 = xk[k++] ^ applySbox(sbox2, s2, s3, s0, s1);
+	    const t3 = xk[k++] ^ applySbox(sbox2, s3, s0, s1, s2);
+	    return { s0: t0, s1: t1, s2: t2, s3: t3 };
+	}
+	// Can't be merged with encrypt: arg positions for apply0123 / applySbox are different
+	function decrypt(xk, s0, s1, s2, s3) {
+	    const { sbox2, T01, T23 } = tableDecoding;
+	    let k = 0;
+	    ((s0 ^= xk[k++]), (s1 ^= xk[k++]), (s2 ^= xk[k++]), (s3 ^= xk[k++]));
+	    // With `expandKeyDecLE()` the round keys are already reversed and middle
+	    // rounds are InvMixColumns-adjusted, so this loop follows the equivalent
+	    // inverse cipher order directly.
+	    const rounds = xk.length / 4 - 2;
+	    for (let i = 0; i < rounds; i++) {
+	        const t0 = xk[k++] ^ apply0123(T01, T23, s0, s3, s2, s1);
+	        const t1 = xk[k++] ^ apply0123(T01, T23, s1, s0, s3, s2);
+	        const t2 = xk[k++] ^ apply0123(T01, T23, s2, s1, s0, s3);
+	        const t3 = xk[k++] ^ apply0123(T01, T23, s3, s2, s1, s0);
+	        ((s0 = t0), (s1 = t1), (s2 = t2), (s3 = t3));
+	    }
+	    // Final equivalent-inverse round omits InvMixColumns, so use inverse
+	    // S-box lanes in InvShiftRows order.
+	    const t0 = xk[k++] ^ applySbox(sbox2, s0, s3, s2, s1);
+	    const t1 = xk[k++] ^ applySbox(sbox2, s1, s0, s3, s2);
+	    const t2 = xk[k++] ^ applySbox(sbox2, s2, s1, s0, s3);
+	    const t3 = xk[k++] ^ applySbox(sbox2, s3, s2, s1, s0);
+	    return { s0: t0, s1: t1, s2: t2, s3: t3 };
+	}
+	function validateBlockDecrypt(data, dst) {
+	    abytes$1(data);
+	    // ECB/CBC decryption always consumes whole ciphertext blocks; PKCS#7/CMS
+	    // padding, when enabled, is removed only after decrypting the final block.
+	    if (data.length % BLOCK_SIZE !== 0) {
+	        throw new Error('ciphertext must be multiple of ' + BLOCK_SIZE);
+	    }
+	    // Validate caller-provided output before key expansion; allocation happens after it.
+	    if (dst !== undefined) {
+	        getOutput(data.length, dst);
+	        complexOverlapBytes(data, dst);
+	    }
+	}
+	// ECB/CBC core modes operate on whole blocks; `pkcs5` enables the library's
+	// PKCS#7/CMS-compatible final-block padding convenience before encryption.
+	function validateBlockEncrypt(plaintext, pkcs5, dst) {
+	    abytes$1(plaintext);
+	    let outLen = plaintext.length;
+	    const remaining = outLen % BLOCK_SIZE;
+	    if (!pkcs5 && remaining !== 0)
+	        throw new Error('plaintext must be multiple of ' + BLOCK_SIZE);
+	    if (pkcs5) {
+	        let left = BLOCK_SIZE - remaining;
+	        // RFC 5652 pads even already-aligned inputs, so a full extra block is
+	        // appended when the plaintext length is already a multiple of 16 bytes.
+	        if (!left)
+	            left = BLOCK_SIZE; // if no bytes left, create empty padding block
+	        outLen = outLen + left;
+	    }
+	    // Validate caller-provided output before key expansion; allocation happens after it.
+	    if (dst !== undefined) {
+	        getOutput(outLen, dst);
+	        complexOverlapBytes(plaintext, dst);
+	    }
+	    return outLen;
+	}
+	function prepareBlockEncrypt(plaintext, outLen, dst) {
+	    if (dst === undefined)
+	        dst = new Uint8Array(outLen);
+	    // Copy on BE or misaligned inputs so u32()/swap32IfBE() normalization never
+	    // mutates caller plaintext bytes in place before ECB/CBC processing.
+	    if (!isLE || !isAligned32(plaintext))
+	        plaintext = copyBytes(plaintext);
+	    const o = u32(dst);
+	    // Keep the full byte owner so callers can wipe a conditional copy without rebuilding a view.
+	    return { b: plaintext, o, out: dst };
+	}
+	// `pkcs5` is the historical option name; for AES's 16-byte block this is the
+	// generic PKCS#7/CMS-style block-padding rule on decrypt.
+	function validatePKCS(data, pkcs5) {
+	    if (!pkcs5)
+	        return data;
+	    const len = data.length;
+	    // RFC 5652 pads even empty / already-aligned inputs, so a valid padded
+	    // ECB/CBC ciphertext is never empty when PKCS#7/CMS unpadding is enabled.
+	    // AES-CBC/ECB ciphertext should be full blocks before unpadding
+	    if (len === 0)
+	        throw new Error('pkcs7: empty ciphertext not allowed');
+	    const lastByte = data[len - 1];
+	    let valid = 1;
+	    valid &= ((lastByte - 1) >>> 31) ^ 1; // pad >= 1
+	    valid &= ((16 - lastByte) >>> 31) ^ 1; // pad <= 16
+	    // Check exactly 16 tail bytes in constant-shape loop
+	    // For i < pad: byte must equal pad
+	    // For i >= pad: ignore byte
+	    for (let i = 0; i < 16; i++) {
+	        // const b = data[len - 1 - i];
+	        const shouldCheck = (i - lastByte) >>> 31; // 1 if i < pad else 0
+	        const eq = (data[len - 1 - i] ^ lastByte) === 0 ? 1 : 0; // 1 if equal
+	        valid &= eq | (shouldCheck ^ 1); // pass if equal OR not checked
+	    }
+	    // if (invalidLen) throw new Error('aes/pkcs7: ciphertext length must be multiple of 16');
+	    // Padding rejection is observable as a decrypt failure; authenticate CBC/ECB
+	    // ciphertexts before decrypting or use `disablePadding` in a higher-level protocol.
+	    if (!valid)
+	        throw new Error('aes: bad decrypt');
+	    return data.subarray(0, len - lastByte);
+	}
+	// ECB/CBC callers only pass the final short block here, so `left.length` is
+	// 0..15 and the helper always emits exactly one padded 16-byte block.
+	function padPCKS(left) {
+	    const tmp = new Uint8Array(16);
+	    const tmp32 = u32(tmp);
+	    tmp.set(left);
+	    const paddingByte = BLOCK_SIZE - left.length;
+	    // RFC 5652 §6.3 fills the whole suffix with the padding length byte:
+	    // e.g. `aa 0f..0f` for a 1-byte tail, or `10..10` for a full extra block.
+	    for (let i = BLOCK_SIZE - paddingByte; i < BLOCK_SIZE; i++)
+	        tmp[i] = paddingByte;
+	    return tmp32;
+	}
+	/**
+	 * **CBC** (Cipher Block Chaining): Each plaintext block is XORed with the
+	 * previous block of ciphertext before encryption.
+	 * Hard to use: requires proper padding and an unpredictable IV. Unauthenticated: needs MAC.
+	 * Bad padding is reported as decrypt failure, which can be a padding oracle if exposed.
+	 * @param key - AES key bytes.
+	 * @param iv - 16-byte unpredictable initialization vector.
+	 * @param opts - Padding options. See {@link BlockOpts}.
+	 * @returns Cipher instance with `encrypt()` and `decrypt()`.
+	 * @example
+	 * Encrypts a padded message with a fresh key and 16-byte IV.
+	 *
+	 * ```ts
+	 * import { cbc } from '@noble/ciphers/aes.js';
+	 * import { randomBytes } from '@noble/ciphers/utils.js';
+	 * const key = randomBytes(16);
+	 * const iv = randomBytes(16);
+	 * const cipher = cbc(key, iv);
+	 * cipher.encrypt(new Uint8Array([1, 2, 3]));
+	 * ```
+	 */
+	const cbc = /* @__PURE__ */ wrapCipher({ blockSize: 16, nonceLength: 16 }, function aescbc(key, iv, opts = {}) {
+	    const pkcs5 = !opts.disablePadding;
+	    return {
+	        encrypt(plaintext, dst) {
+	            // Validate inputs before expanding the key, so a validation throw
+	            // never leaves an unwiped expanded key behind.
+	            const outLen = validateBlockEncrypt(plaintext, pkcs5, dst);
+	            const xk = expandKeyLE(key);
+	            const { b: input, o, out: _out } = prepareBlockEncrypt(plaintext, outLen, dst);
+	            const b = u32(input);
+	            swap32IfBE(b);
+	            let _iv = iv;
+	            const toClean = [xk];
+	            // Copy on BE or misaligned inputs so IV normalization and the mutable
+	            // local chaining state never write back into caller IV bytes.
+	            if (!isLE || !isAligned32(_iv))
+	                toClean.push((_iv = copyBytes(_iv)));
+	            const n32 = u32(_iv);
+	            swap32IfBE(n32);
+	            // prettier-ignore
+	            let s0 = n32[0], s1 = n32[1], s2 = n32[2], s3 = n32[3];
+	            let i = 0;
+	            for (; i + 4 <= b.length;) {
+	                ((s0 ^= b[i + 0]), (s1 ^= b[i + 1]), (s2 ^= b[i + 2]), (s3 ^= b[i + 3]));
+	                ({ s0, s1, s2, s3 } = encrypt(xk, s0, s1, s2, s3));
+	                ((o[i++] = s0), (o[i++] = s1), (o[i++] = s2), (o[i++] = s3));
+	            }
+	            if (pkcs5) {
+	                const tmp32 = padPCKS(plaintext.subarray(i * 4));
+	                swap32IfBE(tmp32);
+	                ((s0 ^= tmp32[0]), (s1 ^= tmp32[1]), (s2 ^= tmp32[2]), (s3 ^= tmp32[3]));
+	                ({ s0, s1, s2, s3 } = encrypt(xk, s0, s1, s2, s3));
+	                ((o[i++] = s0), (o[i++] = s1), (o[i++] = s2), (o[i++] = s3));
+	                // The padding scratch contains the final plaintext tail; wipe it as soon as consumed.
+	                clean$1(tmp32);
+	            }
+	            swap32IfBE(o);
+	            clean$1(...toClean);
+	            if (input !== plaintext)
+	                clean$1(input);
+	            return _out;
+	        },
+	        decrypt(ciphertext, dst) {
+	            // Validate inputs before expanding the key, so a validation throw
+	            // never leaves an unwiped expanded key behind.
+	            validateBlockDecrypt(ciphertext, dst);
+	            const xk = expandKeyDecLE(key);
+	            if (dst === undefined)
+	                dst = new Uint8Array(ciphertext.length);
+	            let _iv = iv;
+	            const toClean = [xk];
+	            // Copy on BE or misaligned inputs so IV normalization and the mutable
+	            // local chaining state never write back into caller IV bytes.
+	            if (!isLE || !isAligned32(_iv))
+	                toClean.push((_iv = copyBytes(_iv)));
+	            const n32 = u32(_iv);
+	            swap32IfBE(n32);
+	            // Copy on BE or misaligned ciphertext so u32()/swap32IfBE()
+	            // normalization never mutates caller bytes in place before decrypt().
+	            if (!isLE || !isAligned32(ciphertext))
+	                toClean.push((ciphertext = copyBytes(ciphertext)));
+	            const b = u32(ciphertext);
+	            const o = u32(dst);
+	            swap32IfBE(b);
+	            // prettier-ignore
+	            let s0 = n32[0], s1 = n32[1], s2 = n32[2], s3 = n32[3];
+	            for (let i = 0; i + 4 <= b.length;) {
+	                // prettier-ignore
+	                const ps0 = s0, ps1 = s1, ps2 = s2, ps3 = s3;
+	                ((s0 = b[i + 0]), (s1 = b[i + 1]), (s2 = b[i + 2]), (s3 = b[i + 3]));
+	                const { s0: o0, s1: o1, s2: o2, s3: o3 } = decrypt(xk, s0, s1, s2, s3);
+	                ((o[i++] = o0 ^ ps0), (o[i++] = o1 ^ ps1), (o[i++] = o2 ^ ps2), (o[i++] = o3 ^ ps3));
+	            }
+	            swap32IfBE(o);
+	            clean$1(...toClean);
+	            return validatePKCS(dst, pkcs5);
+	        },
+	    };
+	});
+
+	// Split a JS number into u32 halves without a BigInt allocation. Exact only for integers
+	// `0 <= n < 2**53`; callers use it on byte / bit counters, which JS length math caps far below
+	// that (an ArrayBuffer cannot exceed 2**53 - 1 bytes).
+	const fromNumH = (n) => (n / 2 ** 32) | 0;
+	const fromNumL = (n) => n >>> 0;
+	// Drop-in replacement for `view.setBigUint64(byteOffset, BigInt(n), isLE)` without the per-call
+	// BigInt allocation. Same `n < 2**53` precondition as `fromNumH`/`fromNumL`.
+	function setU64FromNum(view, byteOffset, n, isLE) {
+	    const h = fromNumH(n);
+	    const l = fromNumL(n);
+	    view.setUint32(byteOffset, isLE ? l : h, isLE);
+	    view.setUint32(byteOffset + 4, isLE ? h : l, isLE);
+	}
+
+	/**
+	 * Checks if something is Uint8Array. Be careful: nodejs Buffer will return true.
+	 * @param a - value to test
+	 * @returns `true` when the value is a Uint8Array-compatible view.
+	 * @example
+	 * Check whether a value is a Uint8Array-compatible view.
+	 * ```ts
+	 * isBytes(new Uint8Array([1, 2, 3]));
+	 * ```
+	 */
+	function isBytes(a) {
+	    // Plain `instanceof Uint8Array` is too strict for some Buffer / proxy / cross-realm cases.
+	    // The fallback still requires a real ArrayBuffer view, so plain
+	    // JSON-deserialized `{ constructor: ... }` spoofing is rejected, and
+	    // `BYTES_PER_ELEMENT === 1` keeps the fallback on byte-oriented views.
+	    return (a instanceof Uint8Array ||
+	        (ArrayBuffer.isView(a) &&
+	            a.constructor.name === 'Uint8Array' &&
+	            'BYTES_PER_ELEMENT' in a &&
+	            a.BYTES_PER_ELEMENT === 1));
+	}
+	// Shared error-message prefix builder. Only called on throw paths, so assert
+	// success paths never pay for the string concatenation.
+	const atitle = (title) => (title ? `"${title}" ` : '');
+	/**
+	 * Asserts something is Uint8Array.
+	 * @param value - value to validate
+	 * @param length - optional exact length constraint
+	 * @param title - label included in thrown errors
+	 * @returns The validated byte array.
+	 * @throws On wrong argument types. {@link TypeError}
+	 * @throws On wrong argument ranges or values. {@link RangeError}
+	 * @example
+	 * Validate that a value is a byte array.
+	 * ```ts
+	 * abytes(new Uint8Array([1, 2, 3]));
+	 * ```
+	 */
+	function abytes(value, length, title = '') {
+	    // Success path first: this runs at the start of every update() / digestInto(), and the
+	    // common `abytes(data)` form must not pay for length handling it does not use.
+	    if (isBytes(value) && (length === undefined))
+	        return value;
+	    const bytes = isBytes(value);
+	    const ofLen = '';
+	    const got = bytes ? `length=${value.length}` : `type=${typeof value}`;
+	    const message = atitle(title) + 'expected Uint8Array' + ofLen + ', got ' + got;
+	    if (!bytes)
+	        throw new TypeError(message);
+	    throw new RangeError(message);
+	}
+	const aobject = (value, label) => {
+	    if (value === null || typeof value !== 'object' || Array.isArray(value))
+	        throw new TypeError((label === 'object' ? '' : `"${label}" `) + 'expected object, got type=' + typeof value);
+	};
+	const aopts = (value, label) => {
+	    aobject(value, label);
+	    const proto = Object.getPrototypeOf(value);
+	    if (proto !== Object.prototype && proto !== null)
+	        throw new TypeError(`"${label}" expected plain object`);
+	    // Object.assign() treats an own "__proto__" source key as a write to the target's legacy
+	    // prototype setter. Reject it before merging so inherited option values cannot be injected.
+	    if (Object.hasOwn(value, '__proto__'))
+	        throw new TypeError(`"${label}.__proto__" is not allowed`);
+	};
+	/**
+	 * Asserts a hash instance has not been destroyed or finished.
+	 * @param instance - hash instance to validate
+	 * @param checkFinished - whether to reject finalized instances
+	 * @throws If the hash instance has already been destroyed or finalized. {@link Error}
+	 * @example
+	 * Validate that a hash instance is still usable.
+	 * ```ts
+	 * import { aexists } from '@noble/hashes/utils.js';
+	 * import { sha256 } from '@noble/hashes/sha2.js';
+	 * const hash = sha256.create();
+	 * aexists(hash);
+	 * ```
+	 */
+	function aexists(instance, checkFinished = true) {
+	    // Runs on every update()/digestInto(); the flags are library-owned booleans, so only their
+	    // truthiness is checked - re-validating their type per call was pure hot-path overhead.
+	    if (instance.destroyed)
+	        throw new Error('hash was destroyed');
+	    if (checkFinished && instance.finished)
+	        throw new Error('digest() was already called');
+	}
+	/**
+	 * Asserts output is a sufficiently-sized byte array.
+	 * @param out - destination buffer
+	 * @param instance - hash instance providing output length
+	 * Oversized buffers are allowed; downstream code only promises to fill the first `outputLen` bytes.
+	 * @throws On wrong argument types. {@link TypeError}
+	 * @throws On wrong argument ranges or values. {@link RangeError}
+	 * @example
+	 * Validate a caller-provided digest buffer.
+	 * ```ts
+	 * import { aoutput } from '@noble/hashes/utils.js';
+	 * import { sha256 } from '@noble/hashes/sha2.js';
+	 * const hash = sha256.create();
+	 * aoutput(new Uint8Array(hash.outputLen), hash);
+	 * ```
+	 */
+	function aoutput(out, instance) {
+	    abytes(out, undefined, 'output');
+	    // `outputLen` is a library-owned readonly number; the negated comparison keeps failing fast
+	    // when it is missing/NaN (comparisons with undefined/NaN are false) without an anumber() call.
+	    const min = instance.outputLen;
+	    if (!(out.length >= min)) {
+	        throw new RangeError('"output" expected length >= ' + min);
+	    }
+	}
+	/**
+	 * Zeroizes typed arrays in place. Warning: JS provides no guarantees.
+	 * @param arrays - arrays to overwrite with zeros
+	 * @example
+	 * Zeroize sensitive buffers in place.
+	 * ```ts
+	 * clean(new Uint8Array([1, 2, 3]));
+	 * ```
+	 */
+	function clean(...arrays) {
+	    for (let i = 0; i < arrays.length; i++) {
+	        arrays[i].fill(0);
+	    }
+	}
+	/**
+	 * Creates a DataView for byte-level manipulation.
+	 * @param arr - source typed array
+	 * @returns DataView over the same buffer region.
+	 * @example
+	 * Create a DataView over an existing buffer.
+	 * ```ts
+	 * createView(new Uint8Array(4));
+	 * ```
+	 */
+	function createView(arr) {
+	    return new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
+	}
+	/**
+	 * Rotate-right operation for uint32 values.
+	 * @param word - source word
+	 * @param shift - shift amount in bits
+	 * @returns Rotated word.
+	 * @example
+	 * Rotate a 32-bit word to the right.
+	 * ```ts
+	 * rotr(0x12345678, 8);
+	 * ```
+	 */
+	function rotr(word, shift) {
+	    return (word << (32 - shift)) | (word >>> shift);
+	}
+	/**
+	 * Merges default options and passed options.
+	 * @param defaults - base option object
+	 * @param opts - user overrides
+	 * @param title - label included in thrown override errors
+	 * @returns Fresh merged option object with a null prototype.
+	 * @throws On wrong argument types. {@link TypeError}
+	 * @example
+	 * Merge user overrides onto default options.
+	 * ```ts
+	 * checkOpts({ dkLen: 32 }, { asyncTick: 10 });
+	 * ```
+	 */
+	function checkOpts(defaults, opts, title = 'opts') {
+	    aopts(defaults, 'defaults');
+	    if (opts !== undefined)
+	        aopts(opts, title);
+	    // Callers read optional fields directly, so omitted values must not fall through to ambient
+	    // Object.prototype pollution (for example a forged `dkLen` changing SHAKE's default output).
+	    const merged = Object.assign(Object.create(null), defaults, opts);
+	    return merged;
+	}
+	/**
+	 * Creates a callable hash function from a stateful class constructor.
+	 * @param hashCons - hash constructor or factory
+	 * @param info - optional metadata such as DER OID
+	 * @returns Frozen callable hash wrapper with `.create()`.
+	 *   Wrapper construction eagerly calls `hashCons(undefined)` once to read
+	 *   `outputLen` / `blockLen`, so constructor side effects happen at module
+	 *   init time.
+	 * @throws On wrong argument types. {@link TypeError}
+	 * @example
+	 * Wrap a stateful hash constructor into a callable helper.
+	 * ```ts
+	 * import { createHasher } from '@noble/hashes/utils.js';
+	 * import { sha256 } from '@noble/hashes/sha2.js';
+	 * const wrapped = createHasher(sha256.create, { oid: sha256.oid });
+	 * wrapped(new Uint8Array([1]));
+	 * ```
+	 */
+	function createHasher(hashCons, info = {}) {
+	    if (typeof hashCons !== 'function')
+	        throw new TypeError('"hashCons" expected function, got type=' + typeof hashCons);
+	    info = checkOpts({}, info, 'info');
+	    const hashC = (msg, opts) => hashCons(opts)
+	        .update(msg)
+	        .digest();
+	    const tmp = hashCons(undefined);
+	    hashC.outputLen = tmp.outputLen;
+	    hashC.blockLen = tmp.blockLen;
+	    hashC.canXOF = tmp.canXOF;
+	    hashC.create = (opts) => hashCons(opts);
+	    Object.assign(hashC, info);
+	    return Object.freeze(hashC);
+	}
+	/**
+	 * Creates OID metadata for NIST hashes with prefix `06 09 60 86 48 01 65 03 04 02`.
+	 * @param suffix - final OID byte for the selected hash.
+	 *   The helper accepts any byte even though only the documented NIST hash
+	 *   suffixes are meaningful downstream.
+	 * @returns Object containing the DER-encoded OID.
+	 * @example
+	 * Build OID metadata for a NIST hash.
+	 * ```ts
+	 * oidNist(0x01);
+	 * ```
+	 */
+	const oidNist = (suffix) => ({
+	    // Current NIST hashAlgs suffixes used here fit in one DER subidentifier octet.
+	    // Larger suffix values would need base-128 OID encoding and a different length byte.
+	    oid: Uint8Array.from([0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, suffix]),
+	});
+
+	/**
+	 * Internal Merkle-Damgard hash utils.
+	 * @module
+	 */
+	/**
+	 * Shared 32-bit conditional boolean primitive reused by SHA-256, SHA-1, and MD5 `F`.
+	 * Returns bits from `b` when `a` is set, otherwise from `c`.
+	 * The XOR form is equivalent to MD5's `F(X,Y,Z) = XY v not(X)Z` because the masked terms never
+	 * set the same bit.
+	 * @param a - selector word
+	 * @param b - word chosen when selector bit is set
+	 * @param c - word chosen when selector bit is clear
+	 * @returns Mixed 32-bit word.
+	 * @example
+	 * Combine three words with the shared 32-bit choice primitive.
+	 * ```ts
+	 * Chi(0xffffffff, 0x12345678, 0x87654321);
+	 * ```
+	 */
+	function Chi(a, b, c) {
+	    return (a & b) ^ (~a & c);
+	}
+	/**
+	 * Shared 32-bit majority primitive reused by SHA-256 and SHA-1.
+	 * Returns bits shared by at least two inputs.
+	 * @param a - first input word
+	 * @param b - second input word
+	 * @param c - third input word
+	 * @returns Mixed 32-bit word.
+	 * @example
+	 * Combine three words with the shared 32-bit majority primitive.
+	 * ```ts
+	 * Maj(0xffffffff, 0x12345678, 0x87654321);
+	 * ```
+	 */
+	function Maj(a, b, c) {
+	    return (a & b) ^ (a & c) ^ (b & c);
+	}
+	/**
+	 * Merkle-Damgard hash construction base class.
+	 * Could be used to create MD5, RIPEMD, SHA1, SHA2.
+	 * Accepts only byte-aligned `Uint8Array` input, even when the underlying spec describes bit
+	 * strings with partial-byte tails.
+	 * @param blockLen - internal block size in bytes
+	 * @param outputLen - digest size in bytes
+	 * @param padOffset - trailing length field size in bytes
+	 * @param isLE - whether length and state words are encoded in little-endian
+	 * @example
+	 * Use a concrete subclass to get the shared Merkle-Damgard update/digest flow.
+	 * ```ts
+	 * import { _SHA1 } from '@noble/hashes/legacy.js';
+	 * const hash = new _SHA1();
+	 * hash.update(new Uint8Array([97, 98, 99]));
+	 * hash.digest();
+	 * ```
+	 */
+	class HashMD {
+	    blockLen;
+	    outputLen;
+	    canXOF = false;
+	    padOffset;
+	    isLE;
+	    // For partial updates less than block size
+	    buffer;
+	    view;
+	    finished = false;
+	    length = 0;
+	    pos = 0;
+	    destroyed = false;
+	    constructor(blockLen, outputLen, padOffset, isLE) {
+	        this.blockLen = blockLen;
+	        this.outputLen = outputLen;
+	        this.padOffset = padOffset;
+	        this.isLE = isLE;
+	        this.buffer = new Uint8Array(blockLen);
+	        this.view = createView(this.buffer);
+	    }
+	    update(data) {
+	        aexists(this);
+	        abytes(data);
+	        const { view, buffer, blockLen } = this;
+	        const len = data.length;
+	        let processed = false;
+	        for (let pos = 0; pos < len;) {
+	            const take = Math.min(blockLen - this.pos, len - pos);
+	            // Fast path only when there is no buffered partial block: `take === blockLen` implies
+	            // `this.pos === 0`, so we can process full blocks directly from the input view.
+	            if (take === blockLen) {
+	                const dataView = createView(data);
+	                for (; blockLen <= len - pos; pos += blockLen)
+	                    this.process(dataView, pos);
+	                processed = true;
+	                continue;
+	            }
+	            // When the whole input is buffered in one go (common for short messages), passing `data`
+	            // directly avoids allocating a subarray view.
+	            buffer.set(pos === 0 && take === len ? data : data.subarray(pos, pos + take), this.pos);
+	            this.pos += take;
+	            pos += take;
+	            if (this.pos === blockLen) {
+	                this.process(view, 0);
+	                this.pos = 0;
+	                processed = true;
+	            }
+	        }
+	        this.length += data.length;
+	        // Shared schedule buffers only pick up input-derived words inside process(); if everything
+	        // was buffered without processing, there is nothing to zero.
+	        if (processed)
+	            this.roundClean();
+	        return this;
+	    }
+	    digestInto(out) {
+	        aexists(this);
+	        aoutput(out, this);
+	        this.finished = true;
+	        // Padding
+	        // We can avoid allocation of buffer for padding completely if it
+	        // was previously not allocated here. But it won't change performance.
+	        const { buffer, view, blockLen, isLE } = this;
+	        let { pos } = this;
+	        // append the bit '1' to the message, then zero-pad the rest of the block
+	        buffer[pos++] = 0b10000000;
+	        buffer.fill(0, pos);
+	        // we have less than padOffset left in buffer, so we cannot put length in
+	        // current block, need process it and pad again
+	        if (this.padOffset > blockLen - pos) {
+	            this.process(view, 0);
+	            buffer.fill(0);
+	        }
+	        // `padOffset` reserves the whole length field. For SHA-384/512 the high 64 bits stay zero from
+	        // the padding fill above, and JS will overflow before user input can make that half non-zero.
+	        // So we only need to write the low 64 bits here (`length * 8` only scales the exponent of an
+	        // integer below 2**53, so the split inside the helper stays exact).
+	        setU64FromNum(view, blockLen - 8, this.length * 8, isLE);
+	        this.process(view, 0);
+	        // The final block above is processed outside update(), so the shared message-schedule
+	        // buffers (e.g. SHA256_W) would otherwise retain input-derived words after digest().
+	        this.roundClean();
+	        // digest() passes our own `buffer` as `out`; reuse its cached view instead of allocating one.
+	        const oview = out === buffer ? view : createView(out);
+	        const len = this.outputLen;
+	        // NOTE: we do division by 4 later, which must be fused in single op with modulo by JIT
+	        const outLen = len / 4;
+	        const state = this.get();
+	        // Subclass-misconfiguration invariant: outputLen must be 32-bit aligned and fit the state.
+	        if (len % 4 || outLen > state.length)
+	            throw new Error('invalid outputLen');
+	        for (let i = 0; i < outLen; i++)
+	            oview.setUint32(4 * i, state[i], isLE);
+	    }
+	    digest() {
+	        const { buffer, outputLen } = this;
+	        this.digestInto(buffer);
+	        // Copy before destroy(): subclasses wipe `buffer` during cleanup, but `digest()` must return
+	        // fresh bytes to the caller.
+	        const res = buffer.slice(0, outputLen);
+	        this.destroy();
+	        return res;
+	    }
+	    _cloneIntoMeta(to) {
+	        const { buffer, length, finished, destroyed, pos } = this;
+	        to.destroyed = destroyed;
+	        to.finished = finished;
+	        to.length = length;
+	        to.pos = pos;
+	        // Only partial-block bytes need copying: when `length % blockLen === 0`, `pos === 0` and
+	        // later `update()` / `digestInto()` overwrite `to.buffer` from the start before reading it.
+	        if (pos)
+	            to.buffer.set(buffer); // Avoid a hot modulo guard.
+	        return to;
+	    }
+	    clone() {
+	        return this._cloneInto();
+	    }
+	}
+	/**
+	 * Initial SHA-2 state: fractional parts of square roots of first 16 primes 2..53.
+	 * Check out `test/misc/sha2-gen-iv.js` for recomputation guide.
+	 */
+	/** Initial SHA256 state from RFC 6234 §6.1: the first 32 bits of the fractional parts of the
+	 * square roots of the first eight prime numbers. Exported as a shared table; callers must treat
+	 * it as read-only because constructors copy words from it by index. */
+	const SHA256_IV = /* @__PURE__ */ Uint32Array.from([
+	    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
+	]);
+
+	/**
+	 * SHA2 hash function. A.k.a. sha256, sha384, sha512, sha512_224, sha512_256.
+	 * SHA256 is the fastest hash implementable in JS, even faster than Blake3.
+	 * Check out {@link https://www.rfc-editor.org/rfc/rfc4634 | RFC 4634} and
+	 * {@link https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf | FIPS 180-4}.
+	 * @module
+	 */
+	/**
+	 * SHA-224 / SHA-256 round constants from RFC 6234 §5.1: the first 32 bits
+	 * of the cube roots of the first 64 primes (2..311).
+	 */
+	// prettier-ignore
+	const SHA256_K = /* @__PURE__ */ Uint32Array.from([
+	    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+	    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+	    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+	    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+	    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+	    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+	    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+	    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+	]);
+	/** Reusable SHA-224 / SHA-256 message schedule buffer `W_t` from RFC 6234 §6.2 step 1. */
+	const SHA256_W = /* @__PURE__ */ new Uint32Array(64);
+	/** Internal SHA-224 / SHA-256 compression engine from RFC 6234 §6.2. */
+	class SHA2_32B extends HashMD {
+	    // We cannot use array here since array allows indexing by variable
+	    // which means optimizer/compiler cannot use registers.
+	    // Numeric initializers matter: starting the fields as `undefined` changes
+	    // V8's field representation and makes sha256 3x slower (measured).
+	    A = 0;
+	    B = 0;
+	    C = 0;
+	    D = 0;
+	    E = 0;
+	    F = 0;
+	    G = 0;
+	    H = 0;
+	    constructor(outputLen, IV) {
+	        super(64, outputLen, 8, false);
+	        this.A = IV[0] | 0;
+	        this.B = IV[1] | 0;
+	        this.C = IV[2] | 0;
+	        this.D = IV[3] | 0;
+	        this.E = IV[4] | 0;
+	        this.F = IV[5] | 0;
+	        this.G = IV[6] | 0;
+	        this.H = IV[7] | 0;
+	    }
+	    get() {
+	        const { A, B, C, D, E, F, G, H } = this;
+	        return [A, B, C, D, E, F, G, H];
+	    }
+	    // prettier-ignore
+	    set(A, B, C, D, E, F, G, H) {
+	        this.A = A | 0;
+	        this.B = B | 0;
+	        this.C = C | 0;
+	        this.D = D | 0;
+	        this.E = E | 0;
+	        this.F = F | 0;
+	        this.G = G | 0;
+	        this.H = H | 0;
+	    }
+	    _cloneInto(to) {
+	        (to ||= new this.constructor()).set(...this.get());
+	        return this._cloneIntoMeta(to);
+	    }
+	    process(view, offset) {
+	        // Extend the first 16 words into the remaining 48 words w[16..63] of the message schedule array
+	        for (let i = 0; i < 16; i++, offset += 4)
+	            SHA256_W[i] = view.getUint32(offset, false);
+	        for (let i = 16; i < 64; i++) {
+	            const W15 = SHA256_W[i - 15];
+	            const W2 = SHA256_W[i - 2];
+	            const s0 = rotr(W15, 7) ^ rotr(W15, 18) ^ (W15 >>> 3);
+	            const s1 = rotr(W2, 17) ^ rotr(W2, 19) ^ (W2 >>> 10);
+	            SHA256_W[i] = (s1 + SHA256_W[i - 7] + s0 + SHA256_W[i - 16]) | 0;
+	        }
+	        // Compression function main loop, 64 rounds
+	        let { A, B, C, D, E, F, G, H } = this;
+	        for (let i = 0; i < 64; i++) {
+	            const sigma1 = rotr(E, 6) ^ rotr(E, 11) ^ rotr(E, 25);
+	            const T1 = (H + sigma1 + Chi(E, F, G) + SHA256_K[i] + SHA256_W[i]) | 0;
+	            const sigma0 = rotr(A, 2) ^ rotr(A, 13) ^ rotr(A, 22);
+	            const T2 = (sigma0 + Maj(A, B, C)) | 0;
+	            H = G;
+	            G = F;
+	            F = E;
+	            E = (D + T1) | 0;
+	            D = C;
+	            C = B;
+	            B = A;
+	            A = (T1 + T2) | 0;
+	        }
+	        // Add the compressed chunk to the current hash value
+	        A = (A + this.A) | 0;
+	        B = (B + this.B) | 0;
+	        C = (C + this.C) | 0;
+	        D = (D + this.D) | 0;
+	        E = (E + this.E) | 0;
+	        F = (F + this.F) | 0;
+	        G = (G + this.G) | 0;
+	        H = (H + this.H) | 0;
+	        this.set(A, B, C, D, E, F, G, H);
+	    }
+	    roundClean() {
+	        clean(SHA256_W);
+	    }
+	    destroy() {
+	        // HashMD callers route post-destroy usability through `destroyed`; zeroizing alone still leaves
+	        // update()/digest() callable on reused instances.
+	        this.destroyed = true;
+	        this.set(0, 0, 0, 0, 0, 0, 0, 0);
+	        clean(this.buffer);
+	    }
+	}
+	/** Internal SHA-256 hash class grounded in RFC 6234 §6.2. */
+	class _SHA256 extends SHA2_32B {
+	    constructor() {
+	        super(32, SHA256_IV);
+	    }
+	}
+	/**
+	 * SHA2-256 hash function from RFC 4634. In JS it's the fastest: even faster than Blake3. Some info:
+	 *
+	 * - Trying 2^128 hashes would get 50% chance of collision, using birthday attack.
+	 * - BTC network is doing 2^70 hashes/sec (2^95 hashes/year) as per 2025.
+	 * - Each sha256 hash is executing 2^18 bit operations.
+	 * - Good 2024 ASICs can do 200Th/sec with 3500 watts of power, corresponding to 2^36 hashes/joule.
+	 * @param msg - message bytes to hash
+	 * @param opts - Reserved hash options.
+	 * @returns Digest bytes.
+	 * @example
+	 * Hash a message with SHA2-256.
+	 * ```ts
+	 * sha256(new Uint8Array([97, 98, 99]));
+	 * ```
+	 */
+	const sha256 = /* @__PURE__ */ createHasher(() => new _SHA256(), 
+	/* @__PURE__ */ oidNist(0x01));
+
+	/**
+	 * Platform-agnostic cryptography primitives contract and byte helpers.
 	 *
 	 * @internal
 	 */
-
-	/*eslint-disable */
-
-	/*
-	 CryptoJS v3.1.2
-	 code.google.com/p/crypto-js
-	 (c) 2009-2013 by Jeff Mott. All rights reserved.
-	 code.google.com/p/crypto-js/wiki/License
+	/**
+	 * Encode string to UTF-8 bytes.
+	 *
+	 * @param string - Source string.
+	 *
+	 * @returns UTF-8 bytes.
+	 *
+	 * @internal
 	 */
-	var CryptoJS =
-	  CryptoJS ||
-	  (function (h, s) {
-	    var f = {},
-	      g = (f.lib = {}),
-	      q = function () {},
-	      m = (g.Base = {
-	        extend: function (a) {
-	          q.prototype = this;
-	          var c = new q();
-	          a && c.mixIn(a);
-	          c.hasOwnProperty('init') ||
-	            (c.init = function () {
-	              c.$super.init.apply(this, arguments);
-	            });
-	          c.init.prototype = c;
-	          c.$super = this;
-	          return c;
-	        },
-	        create: function () {
-	          var a = this.extend();
-	          a.init.apply(a, arguments);
-	          return a;
-	        },
-	        init: function () {},
-	        mixIn: function (a) {
-	          for (var c in a) a.hasOwnProperty(c) && (this[c] = a[c]);
-	          a.hasOwnProperty('toString') && (this.toString = a.toString);
-	        },
-	        clone: function () {
-	          return this.init.prototype.extend(this);
-	        },
-	      }),
-	      r = (g.WordArray = m.extend({
-	        init: function (a, c) {
-	          a = this.words = a || [];
-	          this.sigBytes = c != s ? c : 4 * a.length;
-	        },
-	        toString: function (a) {
-	          return (a || k).stringify(this);
-	        },
-	        concat: function (a) {
-	          var c = this.words,
-	            d = a.words,
-	            b = this.sigBytes;
-	          a = a.sigBytes;
-	          this.clamp();
-	          if (b % 4)
-	            for (var e = 0; e < a; e++)
-	              c[(b + e) >>> 2] |= ((d[e >>> 2] >>> (24 - 8 * (e % 4))) & 255) << (24 - 8 * ((b + e) % 4));
-	          else if (65535 < d.length) for (e = 0; e < a; e += 4) c[(b + e) >>> 2] = d[e >>> 2];
-	          else c.push.apply(c, d);
-	          this.sigBytes += a;
-	          return this;
-	        },
-	        clamp: function () {
-	          var a = this.words,
-	            c = this.sigBytes;
-	          a[c >>> 2] &= 4294967295 << (32 - 8 * (c % 4));
-	          a.length = h.ceil(c / 4);
-	        },
-	        clone: function () {
-	          var a = m.clone.call(this);
-	          a.words = this.words.slice(0);
-	          return a;
-	        },
-	        random: function (a) {
-	          for (var c = [], d = 0; d < a; d += 4) c.push((4294967296 * h.random()) | 0);
-	          return new r.init(c, a);
-	        },
-	      })),
-	      l = (f.enc = {}),
-	      k = (l.Hex = {
-	        stringify: function (a) {
-	          var c = a.words;
-	          a = a.sigBytes;
-	          for (var d = [], b = 0; b < a; b++) {
-	            var e = (c[b >>> 2] >>> (24 - 8 * (b % 4))) & 255;
-	            d.push((e >>> 4).toString(16));
-	            d.push((e & 15).toString(16));
-	          }
-	          return d.join('');
-	        },
-	        parse: function (a) {
-	          for (var c = a.length, d = [], b = 0; b < c; b += 2)
-	            d[b >>> 3] |= parseInt(a.substr(b, 2), 16) << (24 - 4 * (b % 8));
-	          return new r.init(d, c / 2);
-	        },
-	      }),
-	      n = (l.Latin1 = {
-	        stringify: function (a) {
-	          var c = a.words;
-	          a = a.sigBytes;
-	          for (var d = [], b = 0; b < a; b++) d.push(String.fromCharCode((c[b >>> 2] >>> (24 - 8 * (b % 4))) & 255));
-	          return d.join('');
-	        },
-	        parse: function (a) {
-	          for (var c = a.length, d = [], b = 0; b < c; b++) d[b >>> 2] |= (a.charCodeAt(b) & 255) << (24 - 8 * (b % 4));
-	          return new r.init(d, c);
-	        },
-	      }),
-	      j = (l.Utf8 = {
-	        stringify: function (a) {
-	          try {
-	            return decodeURIComponent(escape(n.stringify(a)));
-	          } catch (c) {
-	            throw Error('Malformed UTF-8 data');
-	          }
-	        },
-	        parse: function (a) {
-	          return n.parse(unescape(encodeURIComponent(a)));
-	        },
-	      }),
-	      u = (g.BufferedBlockAlgorithm = m.extend({
-	        reset: function () {
-	          this._data = new r.init();
-	          this._nDataBytes = 0;
-	        },
-	        _append: function (a) {
-	          'string' == typeof a && (a = j.parse(a));
-	          this._data.concat(a);
-	          this._nDataBytes += a.sigBytes;
-	        },
-	        _process: function (a) {
-	          var c = this._data,
-	            d = c.words,
-	            b = c.sigBytes,
-	            e = this.blockSize,
-	            f = b / (4 * e),
-	            f = a ? h.ceil(f) : h.max((f | 0) - this._minBufferSize, 0);
-	          a = f * e;
-	          b = h.min(4 * a, b);
-	          if (a) {
-	            for (var g = 0; g < a; g += e) this._doProcessBlock(d, g);
-	            g = d.splice(0, a);
-	            c.sigBytes -= b;
-	          }
-	          return new r.init(g, b);
-	        },
-	        clone: function () {
-	          var a = m.clone.call(this);
-	          a._data = this._data.clone();
-	          return a;
-	        },
-	        _minBufferSize: 0,
-	      }));
-	    g.Hasher = u.extend({
-	      cfg: m.extend(),
-	      init: function (a) {
-	        this.cfg = this.cfg.extend(a);
-	        this.reset();
-	      },
-	      reset: function () {
-	        u.reset.call(this);
-	        this._doReset();
-	      },
-	      update: function (a) {
-	        this._append(a);
-	        this._process();
-	        return this;
-	      },
-	      finalize: function (a) {
-	        a && this._append(a);
-	        return this._doFinalize();
-	      },
-	      blockSize: 16,
-	      _createHelper: function (a) {
-	        return function (c, d) {
-	          return new a.init(d).finalize(c);
-	        };
-	      },
-	      _createHmacHelper: function (a) {
-	        return function (c, d) {
-	          return new t.HMAC.init(a, d).finalize(c);
-	        };
-	      },
-	    });
-	    var t = (f.algo = {});
-	    return f;
-	  })(Math);
-
-	// SHA256
-	(function (h) {
-	  for (
-	    var s = CryptoJS,
-	      f = s.lib,
-	      g = f.WordArray,
-	      q = f.Hasher,
-	      f = s.algo,
-	      m = [],
-	      r = [],
-	      l = function (a) {
-	        return (4294967296 * (a - (a | 0))) | 0;
-	      },
-	      k = 2,
-	      n = 0;
-	    64 > n;
-
-	  ) {
-	    var j;
-	    a: {
-	      j = k;
-	      for (var u = h.sqrt(j), t = 2; t <= u; t++)
-	        if (!(j % t)) {
-	          j = !1;
-	          break a;
-	        }
-	      j = !0;
-	    }
-	    j && (8 > n && (m[n] = l(h.pow(k, 0.5))), (r[n] = l(h.pow(k, 1 / 3))), n++);
-	    k++;
-	  }
-	  var a = [],
-	    f = (f.SHA256 = q.extend({
-	      _doReset: function () {
-	        this._hash = new g.init(m.slice(0));
-	      },
-	      _doProcessBlock: function (c, d) {
-	        for (
-	          var b = this._hash.words,
-	            e = b[0],
-	            f = b[1],
-	            g = b[2],
-	            j = b[3],
-	            h = b[4],
-	            m = b[5],
-	            n = b[6],
-	            q = b[7],
-	            p = 0;
-	          64 > p;
-	          p++
-	        ) {
-	          if (16 > p) a[p] = c[d + p] | 0;
-	          else {
-	            var k = a[p - 15],
-	              l = a[p - 2];
-	            a[p] =
-	              (((k << 25) | (k >>> 7)) ^ ((k << 14) | (k >>> 18)) ^ (k >>> 3)) +
-	              a[p - 7] +
-	              (((l << 15) | (l >>> 17)) ^ ((l << 13) | (l >>> 19)) ^ (l >>> 10)) +
-	              a[p - 16];
-	          }
-	          k =
-	            q +
-	            (((h << 26) | (h >>> 6)) ^ ((h << 21) | (h >>> 11)) ^ ((h << 7) | (h >>> 25))) +
-	            ((h & m) ^ (~h & n)) +
-	            r[p] +
-	            a[p];
-	          l =
-	            (((e << 30) | (e >>> 2)) ^ ((e << 19) | (e >>> 13)) ^ ((e << 10) | (e >>> 22))) +
-	            ((e & f) ^ (e & g) ^ (f & g));
-	          q = n;
-	          n = m;
-	          m = h;
-	          h = (j + k) | 0;
-	          j = g;
-	          g = f;
-	          f = e;
-	          e = (k + l) | 0;
-	        }
-	        b[0] = (b[0] + e) | 0;
-	        b[1] = (b[1] + f) | 0;
-	        b[2] = (b[2] + g) | 0;
-	        b[3] = (b[3] + j) | 0;
-	        b[4] = (b[4] + h) | 0;
-	        b[5] = (b[5] + m) | 0;
-	        b[6] = (b[6] + n) | 0;
-	        b[7] = (b[7] + q) | 0;
-	      },
-	      _doFinalize: function () {
-	        var a = this._data,
-	          d = a.words,
-	          b = 8 * this._nDataBytes,
-	          e = 8 * a.sigBytes;
-	        d[e >>> 5] |= 128 << (24 - (e % 32));
-	        d[(((e + 64) >>> 9) << 4) + 14] = h.floor(b / 4294967296);
-	        d[(((e + 64) >>> 9) << 4) + 15] = b;
-	        a.sigBytes = 4 * d.length;
-	        this._process();
-	        return this._hash;
-	      },
-	      clone: function () {
-	        var a = q.clone.call(this);
-	        a._hash = this._hash.clone();
-	        return a;
-	      },
-	    }));
-	  s.SHA256 = q._createHelper(f);
-	  s.HmacSHA256 = q._createHmacHelper(f);
-	})(Math);
-
-	// HMAC SHA256
-	(function () {
-	  var h = CryptoJS,
-	    s = h.enc.Utf8;
-	  h.algo.HMAC = h.lib.Base.extend({
-	    init: function (f, g) {
-	      f = this._hasher = new f.init();
-	      'string' == typeof g && (g = s.parse(g));
-	      var h = f.blockSize,
-	        m = 4 * h;
-	      g.sigBytes > m && (g = f.finalize(g));
-	      g.clamp();
-	      for (var r = (this._oKey = g.clone()), l = (this._iKey = g.clone()), k = r.words, n = l.words, j = 0; j < h; j++)
-	        (k[j] ^= 1549556828), (n[j] ^= 909522486);
-	      r.sigBytes = l.sigBytes = m;
-	      this.reset();
-	    },
-	    reset: function () {
-	      var f = this._hasher;
-	      f.reset();
-	      f.update(this._iKey);
-	    },
-	    update: function (f) {
-	      this._hasher.update(f);
-	      return this;
-	    },
-	    finalize: function (f) {
-	      var g = this._hasher;
-	      f = g.finalize(f);
-	      g.reset();
-	      return g.finalize(this._oKey.clone().concat(f));
-	    },
-	  });
-	})();
-
-	// Base64
-	(function () {
-	  var u = CryptoJS,
-	    p = u.lib.WordArray;
-	  u.enc.Base64 = {
-	    stringify: function (d) {
-	      var l = d.words,
-	        p = d.sigBytes,
-	        t = this._map;
-	      d.clamp();
-	      d = [];
-	      for (var r = 0; r < p; r += 3)
-	        for (
-	          var w =
-	              (((l[r >>> 2] >>> (24 - 8 * (r % 4))) & 255) << 16) |
-	              (((l[(r + 1) >>> 2] >>> (24 - 8 * ((r + 1) % 4))) & 255) << 8) |
-	              ((l[(r + 2) >>> 2] >>> (24 - 8 * ((r + 2) % 4))) & 255),
-	            v = 0;
-	          4 > v && r + 0.75 * v < p;
-	          v++
-	        )
-	          d.push(t.charAt((w >>> (6 * (3 - v))) & 63));
-	      if ((l = t.charAt(64))) for (; d.length % 4; ) d.push(l);
-	      return d.join('');
-	    },
-	    parse: function (d) {
-	      var l = d.length,
-	        s = this._map,
-	        t = s.charAt(64);
-	      t && ((t = d.indexOf(t)), -1 != t && (l = t));
-	      for (var t = [], r = 0, w = 0; w < l; w++)
-	        if (w % 4) {
-	          var v = s.indexOf(d.charAt(w - 1)) << (2 * (w % 4)),
-	            b = s.indexOf(d.charAt(w)) >>> (6 - 2 * (w % 4));
-	          t[r >>> 2] |= (v | b) << (24 - 8 * (r % 4));
-	          r++;
-	        }
-	      return p.create(t, r);
-	    },
-	    _map: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
-	  };
-	})();
-
-	// BlockCipher
-	(function (u) {
-	  function p(b, n, a, c, e, j, k) {
-	    b = b + ((n & a) | (~n & c)) + e + k;
-	    return ((b << j) | (b >>> (32 - j))) + n;
-	  }
-	  function d(b, n, a, c, e, j, k) {
-	    b = b + ((n & c) | (a & ~c)) + e + k;
-	    return ((b << j) | (b >>> (32 - j))) + n;
-	  }
-	  function l(b, n, a, c, e, j, k) {
-	    b = b + (n ^ a ^ c) + e + k;
-	    return ((b << j) | (b >>> (32 - j))) + n;
-	  }
-	  function s(b, n, a, c, e, j, k) {
-	    b = b + (a ^ (n | ~c)) + e + k;
-	    return ((b << j) | (b >>> (32 - j))) + n;
-	  }
-	  for (var t = CryptoJS, r = t.lib, w = r.WordArray, v = r.Hasher, r = t.algo, b = [], x = 0; 64 > x; x++)
-	    b[x] = (4294967296 * u.abs(u.sin(x + 1))) | 0;
-	  r = r.MD5 = v.extend({
-	    _doReset: function () {
-	      this._hash = new w.init([1732584193, 4023233417, 2562383102, 271733878]);
-	    },
-	    _doProcessBlock: function (q, n) {
-	      for (var a = 0; 16 > a; a++) {
-	        var c = n + a,
-	          e = q[c];
-	        q[c] = (((e << 8) | (e >>> 24)) & 16711935) | (((e << 24) | (e >>> 8)) & 4278255360);
-	      }
-	      var a = this._hash.words,
-	        c = q[n + 0],
-	        e = q[n + 1],
-	        j = q[n + 2],
-	        k = q[n + 3],
-	        z = q[n + 4],
-	        r = q[n + 5],
-	        t = q[n + 6],
-	        w = q[n + 7],
-	        v = q[n + 8],
-	        A = q[n + 9],
-	        B = q[n + 10],
-	        C = q[n + 11],
-	        u = q[n + 12],
-	        D = q[n + 13],
-	        E = q[n + 14],
-	        x = q[n + 15],
-	        f = a[0],
-	        m = a[1],
-	        g = a[2],
-	        h = a[3],
-	        f = p(f, m, g, h, c, 7, b[0]),
-	        h = p(h, f, m, g, e, 12, b[1]),
-	        g = p(g, h, f, m, j, 17, b[2]),
-	        m = p(m, g, h, f, k, 22, b[3]),
-	        f = p(f, m, g, h, z, 7, b[4]),
-	        h = p(h, f, m, g, r, 12, b[5]),
-	        g = p(g, h, f, m, t, 17, b[6]),
-	        m = p(m, g, h, f, w, 22, b[7]),
-	        f = p(f, m, g, h, v, 7, b[8]),
-	        h = p(h, f, m, g, A, 12, b[9]),
-	        g = p(g, h, f, m, B, 17, b[10]),
-	        m = p(m, g, h, f, C, 22, b[11]),
-	        f = p(f, m, g, h, u, 7, b[12]),
-	        h = p(h, f, m, g, D, 12, b[13]),
-	        g = p(g, h, f, m, E, 17, b[14]),
-	        m = p(m, g, h, f, x, 22, b[15]),
-	        f = d(f, m, g, h, e, 5, b[16]),
-	        h = d(h, f, m, g, t, 9, b[17]),
-	        g = d(g, h, f, m, C, 14, b[18]),
-	        m = d(m, g, h, f, c, 20, b[19]),
-	        f = d(f, m, g, h, r, 5, b[20]),
-	        h = d(h, f, m, g, B, 9, b[21]),
-	        g = d(g, h, f, m, x, 14, b[22]),
-	        m = d(m, g, h, f, z, 20, b[23]),
-	        f = d(f, m, g, h, A, 5, b[24]),
-	        h = d(h, f, m, g, E, 9, b[25]),
-	        g = d(g, h, f, m, k, 14, b[26]),
-	        m = d(m, g, h, f, v, 20, b[27]),
-	        f = d(f, m, g, h, D, 5, b[28]),
-	        h = d(h, f, m, g, j, 9, b[29]),
-	        g = d(g, h, f, m, w, 14, b[30]),
-	        m = d(m, g, h, f, u, 20, b[31]),
-	        f = l(f, m, g, h, r, 4, b[32]),
-	        h = l(h, f, m, g, v, 11, b[33]),
-	        g = l(g, h, f, m, C, 16, b[34]),
-	        m = l(m, g, h, f, E, 23, b[35]),
-	        f = l(f, m, g, h, e, 4, b[36]),
-	        h = l(h, f, m, g, z, 11, b[37]),
-	        g = l(g, h, f, m, w, 16, b[38]),
-	        m = l(m, g, h, f, B, 23, b[39]),
-	        f = l(f, m, g, h, D, 4, b[40]),
-	        h = l(h, f, m, g, c, 11, b[41]),
-	        g = l(g, h, f, m, k, 16, b[42]),
-	        m = l(m, g, h, f, t, 23, b[43]),
-	        f = l(f, m, g, h, A, 4, b[44]),
-	        h = l(h, f, m, g, u, 11, b[45]),
-	        g = l(g, h, f, m, x, 16, b[46]),
-	        m = l(m, g, h, f, j, 23, b[47]),
-	        f = s(f, m, g, h, c, 6, b[48]),
-	        h = s(h, f, m, g, w, 10, b[49]),
-	        g = s(g, h, f, m, E, 15, b[50]),
-	        m = s(m, g, h, f, r, 21, b[51]),
-	        f = s(f, m, g, h, u, 6, b[52]),
-	        h = s(h, f, m, g, k, 10, b[53]),
-	        g = s(g, h, f, m, B, 15, b[54]),
-	        m = s(m, g, h, f, e, 21, b[55]),
-	        f = s(f, m, g, h, v, 6, b[56]),
-	        h = s(h, f, m, g, x, 10, b[57]),
-	        g = s(g, h, f, m, t, 15, b[58]),
-	        m = s(m, g, h, f, D, 21, b[59]),
-	        f = s(f, m, g, h, z, 6, b[60]),
-	        h = s(h, f, m, g, C, 10, b[61]),
-	        g = s(g, h, f, m, j, 15, b[62]),
-	        m = s(m, g, h, f, A, 21, b[63]);
-	      a[0] = (a[0] + f) | 0;
-	      a[1] = (a[1] + m) | 0;
-	      a[2] = (a[2] + g) | 0;
-	      a[3] = (a[3] + h) | 0;
-	    },
-	    _doFinalize: function () {
-	      var b = this._data,
-	        n = b.words,
-	        a = 8 * this._nDataBytes,
-	        c = 8 * b.sigBytes;
-	      n[c >>> 5] |= 128 << (24 - (c % 32));
-	      var e = u.floor(a / 4294967296);
-	      n[(((c + 64) >>> 9) << 4) + 15] = (((e << 8) | (e >>> 24)) & 16711935) | (((e << 24) | (e >>> 8)) & 4278255360);
-	      n[(((c + 64) >>> 9) << 4) + 14] = (((a << 8) | (a >>> 24)) & 16711935) | (((a << 24) | (a >>> 8)) & 4278255360);
-	      b.sigBytes = 4 * (n.length + 1);
-	      this._process();
-	      b = this._hash;
-	      n = b.words;
-	      for (a = 0; 4 > a; a++)
-	        (c = n[a]), (n[a] = (((c << 8) | (c >>> 24)) & 16711935) | (((c << 24) | (c >>> 8)) & 4278255360));
-	      return b;
-	    },
-	    clone: function () {
-	      var b = v.clone.call(this);
-	      b._hash = this._hash.clone();
-	      return b;
-	    },
-	  });
-	  t.MD5 = v._createHelper(r);
-	  t.HmacMD5 = v._createHmacHelper(r);
-	})(Math);
-	(function () {
-	  var u = CryptoJS,
-	    p = u.lib,
-	    d = p.Base,
-	    l = p.WordArray,
-	    p = u.algo,
-	    s = (p.EvpKDF = d.extend({
-	      cfg: d.extend({ keySize: 4, hasher: p.MD5, iterations: 1 }),
-	      init: function (d) {
-	        this.cfg = this.cfg.extend(d);
-	      },
-	      compute: function (d, r) {
-	        for (
-	          var p = this.cfg, s = p.hasher.create(), b = l.create(), u = b.words, q = p.keySize, p = p.iterations;
-	          u.length < q;
-
-	        ) {
-	          n && s.update(n);
-	          var n = s.update(d).finalize(r);
-	          s.reset();
-	          for (var a = 1; a < p; a++) (n = s.finalize(n)), s.reset();
-	          b.concat(n);
-	        }
-	        b.sigBytes = 4 * q;
-	        return b;
-	      },
-	    }));
-	  u.EvpKDF = function (d, l, p) {
-	    return s.create(p).compute(d, l);
-	  };
-	})();
-
-	// Cipher
-	CryptoJS.lib.Cipher ||
-	  (function (u) {
-	    var p = CryptoJS,
-	      d = p.lib,
-	      l = d.Base,
-	      s = d.WordArray,
-	      t = d.BufferedBlockAlgorithm,
-	      r = p.enc.Base64,
-	      w = p.algo.EvpKDF,
-	      v = (d.Cipher = t.extend({
-	        cfg: l.extend(),
-	        createEncryptor: function (e, a) {
-	          return this.create(this._ENC_XFORM_MODE, e, a);
-	        },
-	        createDecryptor: function (e, a) {
-	          return this.create(this._DEC_XFORM_MODE, e, a);
-	        },
-	        init: function (e, a, b) {
-	          this.cfg = this.cfg.extend(b);
-	          this._xformMode = e;
-	          this._key = a;
-	          this.reset();
-	        },
-	        reset: function () {
-	          t.reset.call(this);
-	          this._doReset();
-	        },
-	        process: function (e) {
-	          this._append(e);
-	          return this._process();
-	        },
-	        finalize: function (e) {
-	          e && this._append(e);
-	          return this._doFinalize();
-	        },
-	        keySize: 4,
-	        ivSize: 4,
-	        _ENC_XFORM_MODE: 1,
-	        _DEC_XFORM_MODE: 2,
-	        _createHelper: function (e) {
-	          return {
-	            encrypt: function (b, k, d) {
-	              return ('string' == typeof k ? c : a).encrypt(e, b, k, d);
-	            },
-	            decrypt: function (b, k, d) {
-	              return ('string' == typeof k ? c : a).decrypt(e, b, k, d);
-	            },
-	          };
-	        },
-	      }));
-	    d.StreamCipher = v.extend({
-	      _doFinalize: function () {
-	        return this._process(!0);
-	      },
-	      blockSize: 1,
-	    });
-	    var b = (p.mode = {}),
-	      x = function (e, a, b) {
-	        var c = this._iv;
-	        c ? (this._iv = u) : (c = this._prevBlock);
-	        for (var d = 0; d < b; d++) e[a + d] ^= c[d];
-	      },
-	      q = (d.BlockCipherMode = l.extend({
-	        createEncryptor: function (e, a) {
-	          return this.Encryptor.create(e, a);
-	        },
-	        createDecryptor: function (e, a) {
-	          return this.Decryptor.create(e, a);
-	        },
-	        init: function (e, a) {
-	          this._cipher = e;
-	          this._iv = a;
-	        },
-	      })).extend();
-	    q.Encryptor = q.extend({
-	      processBlock: function (e, a) {
-	        var b = this._cipher,
-	          c = b.blockSize;
-	        x.call(this, e, a, c);
-	        b.encryptBlock(e, a);
-	        this._prevBlock = e.slice(a, a + c);
-	      },
-	    });
-	    q.Decryptor = q.extend({
-	      processBlock: function (e, a) {
-	        var b = this._cipher,
-	          c = b.blockSize,
-	          d = e.slice(a, a + c);
-	        b.decryptBlock(e, a);
-	        x.call(this, e, a, c);
-	        this._prevBlock = d;
-	      },
-	    });
-	    b = b.CBC = q;
-	    q = (p.pad = {}).Pkcs7 = {
-	      pad: function (a, b) {
-	        for (
-	          var c = 4 * b, c = c - (a.sigBytes % c), d = (c << 24) | (c << 16) | (c << 8) | c, l = [], n = 0;
-	          n < c;
-	          n += 4
-	        )
-	          l.push(d);
-	        c = s.create(l, c);
-	        a.concat(c);
-	      },
-	      unpad: function (a) {
-	        a.sigBytes -= a.words[(a.sigBytes - 1) >>> 2] & 255;
-	      },
-	    };
-	    d.BlockCipher = v.extend({
-	      cfg: v.cfg.extend({ mode: b, padding: q }),
-	      reset: function () {
-	        v.reset.call(this);
-	        var a = this.cfg,
-	          b = a.iv,
-	          a = a.mode;
-	        if (this._xformMode == this._ENC_XFORM_MODE) var c = a.createEncryptor;
-	        else (c = a.createDecryptor), (this._minBufferSize = 1);
-	        this._mode = c.call(a, this, b && b.words);
-	      },
-	      _doProcessBlock: function (a, b) {
-	        this._mode.processBlock(a, b);
-	      },
-	      _doFinalize: function () {
-	        var a = this.cfg.padding;
-	        if (this._xformMode == this._ENC_XFORM_MODE) {
-	          a.pad(this._data, this.blockSize);
-	          var b = this._process(!0);
-	        } else (b = this._process(!0)), a.unpad(b);
-	        return b;
-	      },
-	      blockSize: 4,
-	    });
-	    var n = (d.CipherParams = l.extend({
-	        init: function (a) {
-	          this.mixIn(a);
-	        },
-	        toString: function (a) {
-	          return (a || this.formatter).stringify(this);
-	        },
-	      })),
-	      b = ((p.format = {}).OpenSSL = {
-	        stringify: function (a) {
-	          var b = a.ciphertext;
-	          a = a.salt;
-	          return (a ? s.create([1398893684, 1701076831]).concat(a).concat(b) : b).toString(r);
-	        },
-	        parse: function (a) {
-	          a = r.parse(a);
-	          var b = a.words;
-	          if (1398893684 == b[0] && 1701076831 == b[1]) {
-	            var c = s.create(b.slice(2, 4));
-	            b.splice(0, 4);
-	            a.sigBytes -= 16;
-	          }
-	          return n.create({ ciphertext: a, salt: c });
-	        },
-	      }),
-	      a = (d.SerializableCipher = l.extend({
-	        cfg: l.extend({ format: b }),
-	        encrypt: function (a, b, c, d) {
-	          d = this.cfg.extend(d);
-	          var l = a.createEncryptor(c, d);
-	          b = l.finalize(b);
-	          l = l.cfg;
-	          return n.create({
-	            ciphertext: b,
-	            key: c,
-	            iv: l.iv,
-	            algorithm: a,
-	            mode: l.mode,
-	            padding: l.padding,
-	            blockSize: a.blockSize,
-	            formatter: d.format,
-	          });
-	        },
-	        decrypt: function (a, b, c, d) {
-	          d = this.cfg.extend(d);
-	          b = this._parse(b, d.format);
-	          return a.createDecryptor(c, d).finalize(b.ciphertext);
-	        },
-	        _parse: function (a, b) {
-	          return 'string' == typeof a ? b.parse(a, this) : a;
-	        },
-	      })),
-	      p = ((p.kdf = {}).OpenSSL = {
-	        execute: function (a, b, c, d) {
-	          d || (d = s.random(8));
-	          a = w.create({ keySize: b + c }).compute(a, d);
-	          c = s.create(a.words.slice(b), 4 * c);
-	          a.sigBytes = 4 * b;
-	          return n.create({ key: a, iv: c, salt: d });
-	        },
-	      }),
-	      c = (d.PasswordBasedCipher = a.extend({
-	        cfg: a.cfg.extend({ kdf: p }),
-	        encrypt: function (b, c, d, l) {
-	          l = this.cfg.extend(l);
-	          d = l.kdf.execute(d, b.keySize, b.ivSize);
-	          l.iv = d.iv;
-	          b = a.encrypt.call(this, b, c, d.key, l);
-	          b.mixIn(d);
-	          return b;
-	        },
-	        decrypt: function (b, c, d, l) {
-	          l = this.cfg.extend(l);
-	          c = this._parse(c, l.format);
-	          d = l.kdf.execute(d, b.keySize, b.ivSize, c.salt);
-	          l.iv = d.iv;
-	          return a.decrypt.call(this, b, c, d.key, l);
-	        },
-	      }));
-	  })();
-
-	// AES
-	(function () {
-	  for (
-	    var u = CryptoJS,
-	      p = u.lib.BlockCipher,
-	      d = u.algo,
-	      l = [],
-	      s = [],
-	      t = [],
-	      r = [],
-	      w = [],
-	      v = [],
-	      b = [],
-	      x = [],
-	      q = [],
-	      n = [],
-	      a = [],
-	      c = 0;
-	    256 > c;
-	    c++
-	  )
-	    a[c] = 128 > c ? c << 1 : (c << 1) ^ 283;
-	  for (var e = 0, j = 0, c = 0; 256 > c; c++) {
-	    var k = j ^ (j << 1) ^ (j << 2) ^ (j << 3) ^ (j << 4),
-	      k = (k >>> 8) ^ (k & 255) ^ 99;
-	    l[e] = k;
-	    s[k] = e;
-	    var z = a[e],
-	      F = a[z],
-	      G = a[F],
-	      y = (257 * a[k]) ^ (16843008 * k);
-	    t[e] = (y << 24) | (y >>> 8);
-	    r[e] = (y << 16) | (y >>> 16);
-	    w[e] = (y << 8) | (y >>> 24);
-	    v[e] = y;
-	    y = (16843009 * G) ^ (65537 * F) ^ (257 * z) ^ (16843008 * e);
-	    b[k] = (y << 24) | (y >>> 8);
-	    x[k] = (y << 16) | (y >>> 16);
-	    q[k] = (y << 8) | (y >>> 24);
-	    n[k] = y;
-	    e ? ((e = z ^ a[a[a[G ^ z]]]), (j ^= a[a[j]])) : (e = j = 1);
-	  }
-	  var H = [0, 1, 2, 4, 8, 16, 32, 64, 128, 27, 54],
-	    d = (d.AES = p.extend({
-	      _doReset: function () {
-	        for (
-	          var a = this._key,
-	            c = a.words,
-	            d = a.sigBytes / 4,
-	            a = 4 * ((this._nRounds = d + 6) + 1),
-	            e = (this._keySchedule = []),
-	            j = 0;
-	          j < a;
-	          j++
-	        )
-	          if (j < d) e[j] = c[j];
-	          else {
-	            var k = e[j - 1];
-	            j % d
-	              ? 6 < d &&
-	                4 == j % d &&
-	                (k = (l[k >>> 24] << 24) | (l[(k >>> 16) & 255] << 16) | (l[(k >>> 8) & 255] << 8) | l[k & 255])
-	              : ((k = (k << 8) | (k >>> 24)),
-	                (k = (l[k >>> 24] << 24) | (l[(k >>> 16) & 255] << 16) | (l[(k >>> 8) & 255] << 8) | l[k & 255]),
-	                (k ^= H[(j / d) | 0] << 24));
-	            e[j] = e[j - d] ^ k;
-	          }
-	        c = this._invKeySchedule = [];
-	        for (d = 0; d < a; d++)
-	          (j = a - d),
-	            (k = d % 4 ? e[j] : e[j - 4]),
-	            (c[d] =
-	              4 > d || 4 >= j ? k : b[l[k >>> 24]] ^ x[l[(k >>> 16) & 255]] ^ q[l[(k >>> 8) & 255]] ^ n[l[k & 255]]);
-	      },
-	      encryptBlock: function (a, b) {
-	        this._doCryptBlock(a, b, this._keySchedule, t, r, w, v, l);
-	      },
-	      decryptBlock: function (a, c) {
-	        var d = a[c + 1];
-	        a[c + 1] = a[c + 3];
-	        a[c + 3] = d;
-	        this._doCryptBlock(a, c, this._invKeySchedule, b, x, q, n, s);
-	        d = a[c + 1];
-	        a[c + 1] = a[c + 3];
-	        a[c + 3] = d;
-	      },
-	      _doCryptBlock: function (a, b, c, d, e, j, l, f) {
-	        for (
-	          var m = this._nRounds,
-	            g = a[b] ^ c[0],
-	            h = a[b + 1] ^ c[1],
-	            k = a[b + 2] ^ c[2],
-	            n = a[b + 3] ^ c[3],
-	            p = 4,
-	            r = 1;
-	          r < m;
-	          r++
-	        )
-	          var q = d[g >>> 24] ^ e[(h >>> 16) & 255] ^ j[(k >>> 8) & 255] ^ l[n & 255] ^ c[p++],
-	            s = d[h >>> 24] ^ e[(k >>> 16) & 255] ^ j[(n >>> 8) & 255] ^ l[g & 255] ^ c[p++],
-	            t = d[k >>> 24] ^ e[(n >>> 16) & 255] ^ j[(g >>> 8) & 255] ^ l[h & 255] ^ c[p++],
-	            n = d[n >>> 24] ^ e[(g >>> 16) & 255] ^ j[(h >>> 8) & 255] ^ l[k & 255] ^ c[p++],
-	            g = q,
-	            h = s,
-	            k = t;
-	        q = ((f[g >>> 24] << 24) | (f[(h >>> 16) & 255] << 16) | (f[(k >>> 8) & 255] << 8) | f[n & 255]) ^ c[p++];
-	        s = ((f[h >>> 24] << 24) | (f[(k >>> 16) & 255] << 16) | (f[(n >>> 8) & 255] << 8) | f[g & 255]) ^ c[p++];
-	        t = ((f[k >>> 24] << 24) | (f[(n >>> 16) & 255] << 16) | (f[(g >>> 8) & 255] << 8) | f[h & 255]) ^ c[p++];
-	        n = ((f[n >>> 24] << 24) | (f[(g >>> 16) & 255] << 16) | (f[(h >>> 8) & 255] << 8) | f[k & 255]) ^ c[p++];
-	        a[b] = q;
-	        a[b + 1] = s;
-	        a[b + 2] = t;
-	        a[b + 3] = n;
-	      },
-	      keySize: 8,
-	    }));
-	  u.AES = p._createHelper(d);
-	})();
-
-	// Mode ECB
-	CryptoJS.mode.ECB = (function () {
-	  var ECB = CryptoJS.lib.BlockCipherMode.extend();
-
-	  ECB.Encryptor = ECB.extend({
-	    processBlock: function (words, offset) {
-	      this._cipher.encryptBlock(words, offset);
-	    },
-	  });
-
-	  ECB.Decryptor = ECB.extend({
-	    processBlock: function (words, offset) {
-	      this._cipher.decryptBlock(words, offset);
-	    },
-	  });
-
-	  return ECB;
-	})();
-
-	var hmacSha256 = CryptoJS;
-
-	var CryptoJS$1 = /*@__PURE__*/getDefaultExportFromCjs(hmacSha256);
+	const encodeUtf8 = (string) => new TextEncoder().encode(string);
+	/**
+	 * Decode UTF-8 bytes to string.
+	 *
+	 * **Note:** Non-fatal decoder used because React Native `TextDecoder` polyfill doesn't support `fatal` option.
+	 *
+	 * @param bytes - UTF-8 bytes.
+	 *
+	 * @returns Decoded string.
+	 *
+	 * @internal
+	 */
+	const decodeUtf8 = (bytes) => new TextDecoder().decode(bytes);
+	/**
+	 * Convert bytes to lowercase hex string.
+	 *
+	 * @param bytes - Source bytes.
+	 *
+	 * @returns Hex string.
+	 *
+	 * @internal
+	 */
+	const bytesToHex = (bytes) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+	/**
+	 * Convert hex string to bytes.
+	 *
+	 * @param hex - Hex string.
+	 *
+	 * @returns Decoded bytes.
+	 *
+	 * @internal
+	 */
+	const hexToBytes = (hex) => { var _a; return Uint8Array.from((_a = hex.match(/.{1,2}/g)) !== null && _a !== void 0 ? _a : [], (byte) => parseInt(byte, 16)); };
+	/**
+	 * Concatenate two bytes arrays.
+	 *
+	 * @param a - First bytes array.
+	 * @param b - Second bytes array.
+	 *
+	 * @returns Concatenated bytes.
+	 *
+	 * @internal
+	 */
+	const concatBytes = (a, b) => {
+	    const result = new Uint8Array(a.length + b.length);
+	    result.set(a);
+	    result.set(b, a.length);
+	    return result;
+	};
+	/**
+	 * Copy bytes into standalone `ArrayBuffer`.
+	 *
+	 * **Important:** Primitives may return views into larger buffers (noble subarrays, Node.js `Buffer` pool), so the
+	 * underlying `.buffer` must never be used directly.
+	 *
+	 * @param bytes - Source bytes (possibly a view).
+	 *
+	 * @returns `ArrayBuffer` with exactly `bytes` content.
+	 *
+	 * @internal
+	 */
+	const toArrayBuffer = (bytes) => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 
 	/**
 	 * AES-CBC cryptor module.
@@ -1925,8 +2447,7 @@
 	class AesCbcCryptor {
 	    constructor({ cipherKey }) {
 	        this.cipherKey = cipherKey;
-	        this.CryptoJS = CryptoJS$1;
-	        this.encryptedKey = this.CryptoJS.SHA256(cipherKey);
+	        this.encryptedKey = sha256(AesCbcCryptor.encoder.encode(cipherKey));
 	    }
 	    // --------------------------------------------------------
 	    // --------------------- Encryption -----------------------
@@ -1937,13 +2458,8 @@
 	        if (stringData.length === 0)
 	            throw new Error('encryption error. empty content');
 	        const abIv = this.getIv();
-	        return {
-	            metadata: abIv,
-	            data: decode(this.CryptoJS.AES.encrypt(data, this.encryptedKey, {
-	                iv: this.bufferToWordArray(abIv),
-	                mode: this.CryptoJS.mode.CBC,
-	            }).ciphertext.toString(this.CryptoJS.enc.Base64)),
-	        };
+	        const plaintext = typeof data === 'string' ? AesCbcCryptor.encoder.encode(data) : new Uint8Array(data);
+	        return { metadata: abIv, data: toArrayBuffer(cbc(this.encryptedKey, abIv).encrypt(plaintext)) };
 	    }
 	    encryptFileData(data) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -1963,12 +2479,9 @@
 	    decrypt(encryptedData) {
 	        if (typeof encryptedData.data === 'string')
 	            throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
-	        const iv = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.metadata));
-	        const data = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.data));
-	        return AesCbcCryptor.encoder.encode(this.CryptoJS.AES.decrypt({ ciphertext: data }, this.encryptedKey, {
-	            iv,
-	            mode: this.CryptoJS.mode.CBC,
-	        }).toString(this.CryptoJS.enc.Utf8)).buffer;
+	        const iv = new Uint8Array(encryptedData.metadata);
+	        const data = new Uint8Array(encryptedData.data);
+	        return toArrayBuffer(cbc(this.encryptedKey, iv).decrypt(data));
 	    }
 	    decryptFileData(encryptedData) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -2015,21 +2528,6 @@
 	        });
 	    }
 	    /**
-	     * Convert bytes array to words array.
-	     *
-	     * @param b - Bytes array (buffer) which should be converted.
-	     *
-	     * @returns Word sized array.
-	     */
-	    bufferToWordArray(b) {
-	        const wa = [];
-	        let i;
-	        for (i = 0; i < b.length; i += 1) {
-	            wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
-	        }
-	        return this.CryptoJS.lib.WordArray.create(wa, b.length);
-	    }
-	    /**
 	     * Serialize cryptor information to string.
 	     *
 	     * @returns Serialized cryptor information.
@@ -2050,6 +2548,46 @@
 	 *  {@link ArrayBuffer} to {@link string} decoder.
 	 */
 	AesCbcCryptor.decoder = new TextDecoder();
+
+	/**
+	 * Cryptography primitives backed by `@noble` (Web, React Native).
+	 *
+	 * @internal
+	 */
+	/**
+	 * Prepare AES-CBC cipher instance.
+	 *
+	 * **Note:** AES-ECB isn't reachable through public API and intentionally not bundled.
+	 *
+	 * @param mode - AES block cipher mode.
+	 * @param key - AES key.
+	 * @param iv - Initialization vector.
+	 *
+	 * @returns AES-CBC cipher.
+	 *
+	 * @internal
+	 */
+	const aesCipher = (mode, key, iv) => {
+	    if (mode === 'ecb')
+	        throw new Error('AES-ECB is not supported');
+	    return cbc(key, iv);
+	};
+	/**
+	 * `@noble`-based cryptography primitives.
+	 *
+	 * **Note:** Request signature (HMAC-SHA256) is Node.js-only and intentionally not bundled.
+	 *
+	 * @internal
+	 */
+	const noblePrimitives = {
+	    sha256: (data) => sha256(data),
+	    hmacSha256: () => {
+	        throw new Error('HMAC-SHA256 is not supported on this platform');
+	    },
+	    aesEncrypt: (mode, key, iv, data) => aesCipher(mode, key, iv).encrypt(data),
+	    aesDecrypt: (mode, key, iv, data) => aesCipher(mode, key, iv).decrypt(data),
+	    randomBytes: (length) => randomBytes(length),
+	};
 
 	/**
 	 * PubNub package utilities module.
@@ -2241,35 +2779,25 @@
 	/**
 	 * Legacy cryptography module.
 	 *
+	 * Platform-agnostic implementation which relies on platform-provided crypto primitives.
+	 *
 	 * @internal
 	 */
 	/**
-	 * Convert bytes array to words array.
-	 *
-	 * @param b - Bytes array (buffer) which should be converted.
-	 *
-	 * @returns Word sized array.
+	 * Whether insecure random initialization vector fallback warning has been printed.
 	 *
 	 * @internal
 	 */
-	/* eslint-disable  @typescript-eslint/no-explicit-any */
-	function bufferToWordArray(b) {
-	    const wa = [];
-	    let i;
-	    for (i = 0; i < b.length; i += 1) {
-	        wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
-	    }
-	    // @ts-expect-error Bundled library without types.
-	    return CryptoJS$1.lib.WordArray.create(wa, b.length);
-	}
+	let insecureRandomWarningShown = false;
 	/**
 	 * Legacy cryptography module for files and signature.
 	 *
 	 * @internal
 	 */
-	class Crypto {
-	    constructor(configuration) {
+	class LegacyCrypto {
+	    constructor(configuration, primitives) {
 	        this.configuration = configuration;
+	        this.primitives = primitives;
 	        /**
 	         * Crypto initialization vector.
 	         */
@@ -2328,10 +2856,9 @@
 	     * @returns HMAC-SHA256 hash from provided `data`.
 	     */
 	    HMACSHA256(data) {
-	        // @ts-expect-error Bundled library without types.
-	        const hash = CryptoJS$1.HmacSHA256(data, this.configuration.secretKey);
-	        // @ts-expect-error Bundled library without types.
-	        return hash.toString(CryptoJS$1.enc.Base64);
+	        var _a;
+	        const hash = this.primitives.hmacSha256(encodeUtf8((_a = this.configuration.secretKey) !== null && _a !== void 0 ? _a : ''), encodeUtf8(data));
+	        return encode(toArrayBuffer(hash));
 	    }
 	    /**
 	     * Generate SHA256 hash from input data.
@@ -2341,8 +2868,7 @@
 	     * @returns SHA256 hash from provided `data`.
 	     */
 	    SHA256(data) {
-	        // @ts-expect-error Bundled library without types.
-	        return CryptoJS$1.SHA256(data).toString(CryptoJS$1.enc.Hex);
+	        return bytesToHex(this.primitives.sha256(encodeUtf8(data)));
 	    }
 	    /**
 	     * Encrypt provided data.
@@ -2399,21 +2925,19 @@
 	                ignoredKeys: isSensitiveLogKey,
 	            }));
 	        }
+	        if (typeof data !== 'string')
+	            throw new Error('Encryption error: data should be a string');
 	        options = this.parseOptions(options);
 	        const mode = this.getMode(options);
 	        const cipherKey = this.getPaddedKey(decidedCipherKey, options);
+	        const plaintext = encodeUtf8(data);
 	        if (this.configuration.useRandomIVs) {
-	            const waIv = this.getRandomIV();
-	            // @ts-expect-error Bundled library without types.
-	            const waPayload = CryptoJS$1.AES.encrypt(data, cipherKey, { iv: waIv, mode }).ciphertext;
-	            // @ts-expect-error Bundled library without types.
-	            return waIv.clone().concat(waPayload.clone()).toString(CryptoJS$1.enc.Base64);
+	            const iv = this.getRandomIV();
+	            const payload = this.primitives.aesEncrypt(mode, cipherKey, iv, plaintext);
+	            return encode(toArrayBuffer(concatBytes(iv, payload)));
 	        }
-	        const iv = this.getIV(options);
-	        // @ts-expect-error Bundled library without types.
-	        const encryptedHexArray = CryptoJS$1.AES.encrypt(data, cipherKey, { iv, mode }).ciphertext;
-	        // @ts-expect-error Bundled library without types.
-	        const base64Encrypted = encryptedHexArray.toString(CryptoJS$1.enc.Base64);
+	        const encrypted = this.primitives.aesEncrypt(mode, cipherKey, this.getIV(options), plaintext);
+	        const base64Encrypted = encode(toArrayBuffer(encrypted));
 	        return base64Encrypted || data;
 	    }
 	    /**
@@ -2441,14 +2965,11 @@
 	        const mode = this.getMode(options);
 	        const cipherKey = this.getPaddedKey(decidedCipherKey, options);
 	        if (this.configuration.useRandomIVs) {
-	            const ciphertext = new Uint8ClampedArray(decode(data));
-	            const iv = bufferToWordArray(ciphertext.slice(0, 16));
-	            const payload = bufferToWordArray(ciphertext.slice(16));
+	            const ciphertext = new Uint8Array(decode(data));
+	            const iv = ciphertext.slice(0, 16);
+	            const payload = ciphertext.slice(16);
 	            try {
-	                // @ts-expect-error Bundled library without types.
-	                const plainJSON = CryptoJS$1.AES.decrypt({ ciphertext: payload }, cipherKey, { iv, mode }).toString(
-	                // @ts-expect-error Bundled library without types.
-	                CryptoJS$1.enc.Utf8);
+	                const plainJSON = decodeUtf8(this.primitives.aesDecrypt(mode, cipherKey, iv, payload));
 	                return JSON.parse(plainJSON);
 	            }
 	            catch (e) {
@@ -2460,10 +2981,8 @@
 	        else {
 	            const iv = this.getIV(options);
 	            try {
-	                // @ts-expect-error Bundled library without types.
-	                const ciphertext = CryptoJS$1.enc.Base64.parse(data);
-	                // @ts-expect-error Bundled library without types.
-	                const plainJSON = CryptoJS$1.AES.decrypt({ ciphertext }, cipherKey, { iv, mode }).toString(CryptoJS$1.enc.Utf8);
+	                const ciphertext = new Uint8Array(decode(data));
+	                const plainJSON = decodeUtf8(this.primitives.aesDecrypt(mode, cipherKey, iv, ciphertext));
 	                return JSON.parse(plainJSON);
 	            }
 	            catch (e) {
@@ -2506,16 +3025,14 @@
 	     * @param key - Key in `encoding` provided by `options`.
 	     * @param options - Crypto configuration options with cipher key details.
 	     *
-	     * @returns Array buffer with decoded key.
+	     * @returns Bytes array with decoded key.
 	     */
 	    decodeKey(key, options) {
-	        // @ts-expect-error Bundled library without types.
 	        if (options.keyEncoding === 'base64')
-	            return CryptoJS$1.enc.Base64.parse(key);
-	        // @ts-expect-error Bundled library without types.
+	            return new Uint8Array(decode(key));
 	        if (options.keyEncoding === 'hex')
-	            return CryptoJS$1.enc.Hex.parse(key);
-	        return key;
+	            return hexToBytes(key);
+	        return encodeUtf8(key);
 	    }
 	    /**
 	     * Add padding to the cipher key.
@@ -2526,11 +3043,10 @@
 	     * @returns Properly padded cipher key.
 	     */
 	    getPaddedKey(key, options) {
-	        key = this.decodeKey(key, options);
-	        // @ts-expect-error Bundled library without types.
+	        const decodedKey = this.decodeKey(key, options);
 	        if (options.encryptKey)
-	            return CryptoJS$1.enc.Utf8.parse(this.SHA256(key).slice(0, 32));
-	        return key;
+	            return encodeUtf8(bytesToHex(this.primitives.sha256(decodedKey)).slice(0, 32));
+	        return decodedKey;
 	    }
 	    /**
 	     * Cipher mode.
@@ -2540,11 +3056,7 @@
 	     * @returns Crypto cipher mode.
 	     */
 	    getMode(options) {
-	        // @ts-expect-error Bundled library without types.
-	        if (options.mode === 'ecb')
-	            return CryptoJS$1.mode.ECB;
-	        // @ts-expect-error Bundled library without types.
-	        return CryptoJS$1.mode.CBC;
+	        return options.mode === 'ecb' ? 'ecb' : 'cbc';
 	    }
 	    /**
 	     * Cipher initialization vector.
@@ -2554,17 +3066,44 @@
 	     * @returns Initialization vector.
 	     */
 	    getIV(options) {
-	        // @ts-expect-error Bundled library without types.
-	        return options.mode === 'cbc' ? CryptoJS$1.enc.Utf8.parse(this.iv) : null;
+	        return options.mode === 'cbc' ? encodeUtf8(this.iv) : null;
 	    }
 	    /**
 	     * Random initialization vector.
 	     *
+	     * Falls back to the insecure `Math.random()` source (previous behavior) when the platform doesn't provide
+	     * `crypto.getRandomValues` (for example, React Native without polyfill).
+	     *
 	     * @returns Generated random initialization vector.
 	     */
 	    getRandomIV() {
-	        // @ts-expect-error Bundled library without types.
-	        return CryptoJS$1.lib.WordArray.random(16);
+	        try {
+	            return this.primitives.randomBytes(16);
+	        }
+	        catch (_) {
+	            if (!insecureRandomWarningShown && this.logger) {
+	                insecureRandomWarningShown = true;
+	                this.logger.warn('Crypto', "'crypto.getRandomValues' is unavailable; falling back to insecure Math.random() IV. " +
+	                    "Install 'react-native-get-random-values'.");
+	            }
+	            return Uint8Array.from({ length: 16 }, () => Math.floor(Math.random() * 256));
+	        }
+	    }
+	}
+
+	/**
+	 * Legacy cryptography module (`@noble`-backed: Web, React Native).
+	 *
+	 * @internal
+	 */
+	/**
+	 * Legacy cryptography module for data encryption / decryption.
+	 *
+	 * @internal
+	 */
+	class Crypto extends LegacyCrypto {
+	    constructor(configuration) {
+	        super(configuration, noblePrimitives);
 	    }
 	}
 
