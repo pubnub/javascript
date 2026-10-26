@@ -18,7 +18,7 @@ import { PubNubMiddleware } from '../transport/middleware';
 import { PubNubFileConstructor } from '../core/types/file';
 import { decode } from '../core/components/base64_codec';
 import NodeCryptography from '../crypto/modules/node';
-import Crypto from '../core/components/cryptography';
+import Crypto from '../core/components/cryptography/node';
 import { PubNubError } from '../errors/pubnub-error';
 import { PubNubCore } from '../core/pubnub-common';
 import Cbor from '../cbor/common';

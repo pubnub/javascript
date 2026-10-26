@@ -3,7 +3,7 @@
 import lilUUID from 'lil-uuid';
 import assert from 'assert';
 
-import CryptoJS from '../../src/core/components/cryptography/hmac-sha256';
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
 import { Payload } from '../../src/core/types/api';
 import PubNub from '../../src/node/index';
 
@@ -146,17 +146,17 @@ describe('#core / mounting point', () => {
   });
 
   it('supports custom encryption/decryption', () => {
+    const customKey = createHash('sha256').update('customKey').digest();
     let customEncrypt = (data: Payload) => {
-      // @ts-expect-error Bundled library without types.
-      let cipher = CryptoJS.AES.encrypt(JSON.stringify(data), 'customKey');
-      return cipher.toString();
+      const iv = randomBytes(16);
+      const cipher = createCipheriv('aes-256-cbc', customKey, iv);
+      return Buffer.concat([iv, cipher.update(JSON.stringify(data)), cipher.final()]).toString('base64');
     };
 
     let customDecrypt = (data: Payload) => {
-      // @ts-expect-error Bundled library without types.
-      let bytes = CryptoJS.AES.decrypt(data, 'customKey');
-      // @ts-expect-error Bundled library without types.
-      return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+      const bytes = Buffer.from(data as string, 'base64');
+      const decipher = createDecipheriv('aes-256-cbc', customKey, bytes.subarray(0, 16));
+      return JSON.parse(Buffer.concat([decipher.update(bytes.subarray(16)), decipher.final()]).toString('utf8'));
     };
 
     let pn = new PubNub({

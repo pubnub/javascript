@@ -7,7 +7,7 @@
 import PubNubFile, { PubNubFileParameters } from '../../../file/modules/node';
 import { CryptorConfiguration } from '../../../core/interfaces/crypto-module';
 import { LoggerManager } from '../../../core/components/logger-manager';
-import Crypto from '../../../core/components/cryptography/index';
+import Crypto from '../../../core/components/cryptography/node';
 import { PubNubFileConstructor } from '../../../core/types/file';
 import { encode } from '../../../core/components/base64_codec';
 import { PubNubError } from '../../../errors/pubnub-error';
