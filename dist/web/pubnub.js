@@ -6258,7 +6258,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '13.1.2';
+	            return '13.1.3';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -7729,7 +7729,31 @@
 	        // `data` mirrors the object as sent by the service, and its shape is tied to `event` /
 	        // `objectType` — which is what makes `message` a discriminated union for the consumer.
 	        let message;
-	        if (metadata.event === 'delete')
+	        if (metadata.event === 'delete' && objectType === 'membership') {
+	            const data = {
+	                id: raw.id,
+	                deletedAt: raw.deletedAt,
+	            };
+	            // Membership deletes name the endpoints they joined. Other fields stay trimmed.
+	            if (typeof raw.channelId === 'string')
+	                data.channelId = raw.channelId;
+	            if (typeof raw.userId === 'string')
+	                data.userId = raw.userId;
+	            message = Object.assign(Object.assign({}, common), { event: metadata.event, objectType, data });
+	        }
+	        else if (metadata.event === 'delete' && objectType === 'relationship') {
+	            const data = {
+	                id: raw.id,
+	                deletedAt: raw.deletedAt,
+	            };
+	            // Relationship deletes name the entities they linked. Other fields stay trimmed.
+	            if (typeof raw.entityAId === 'string')
+	                data.entityAId = raw.entityAId;
+	            if (typeof raw.entityBId === 'string')
+	                data.entityBId = raw.entityBId;
+	            message = Object.assign(Object.assign({}, common), { event: metadata.event, objectType, data });
+	        }
+	        else if (metadata.event === 'delete')
 	            message = Object.assign(Object.assign({}, common), { event: metadata.event, objectType, data: { id: raw.id, deletedAt: raw.deletedAt } });
 	        else if (objectType === 'membership')
 	            message = Object.assign(Object.assign({}, common), { event: metadata.event, objectType, data: Object.assign({}, raw) });

@@ -1,3 +1,11 @@
+## v13.1.3
+October 22 2026
+
+#### Modified
+- Upgrade fflate, undici dependency version suggested by Synk. Fixed the following issues reported by [@pubnub-snyk-universal-prd[bot]](https://github.com/pubnub-snyk-universal-prd[bot]) and [@pubnub-snyk-universal-prd[bot]](https://github.com/pubnub-snyk-universal-prd[bot]): [#528](https://github.com/pubnub/javascript/issues/528) and [#530](https://github.com/pubnub/javascript/issues/530).
+- Update dataSync event types for delete membership and relationship events.
+- Updated README to reflect SDK support for TypeScript and various environments, added installation instructions, and improved clarity on usage examples.
+
 ## v13.1.2
 October 14 2026
 
