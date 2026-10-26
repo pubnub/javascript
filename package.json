@@ -59,6 +59,8 @@
     "long-poll"
   ],
   "dependencies": {
+    "@noble/ciphers": "2.4.0",
+    "@noble/hashes": "2.4.0",
     "agentkeepalive": "^3.5.2",
     "buffer": "^6.0.3",
     "cbor-js": "^0.1.0",

@@ -2,8 +2,10 @@
  * AES-CBC cryptor module.
  */
 
-import cryptoJS from '../../../core/components/cryptography/hmac-sha256';
-import { decode } from '../../../core/components/base64_codec';
+import { cbc } from '@noble/ciphers/aes.js';
+import { sha256 } from '@noble/hashes/sha2.js';
+
+import { toArrayBuffer } from '../../../core/components/cryptography/primitives';
 import { ICryptor, EncryptedDataType } from './ICryptor';
 
 /**
@@ -32,15 +34,14 @@ export default class AesCbcCryptor implements ICryptor {
    */
   cipherKey: string;
 
-  /* eslint-disable  @typescript-eslint/no-explicit-any */
-  encryptedKey: any;
-  /* eslint-disable  @typescript-eslint/no-explicit-any */
-  CryptoJS: any;
+  /**
+   * SHA-256 digest of the cipher key (AES-256 key).
+   */
+  encryptedKey: Uint8Array;
 
   constructor({ cipherKey }: { cipherKey: string }) {
     this.cipherKey = cipherKey;
-    this.CryptoJS = cryptoJS;
-    this.encryptedKey = this.CryptoJS.SHA256(cipherKey);
+    this.encryptedKey = sha256(AesCbcCryptor.encoder.encode(cipherKey));
   }
 
   // --------------------------------------------------------
@@ -52,16 +53,9 @@ export default class AesCbcCryptor implements ICryptor {
     const stringData = typeof data === 'string' ? data : AesCbcCryptor.decoder.decode(data);
     if (stringData.length === 0) throw new Error('encryption error. empty content');
     const abIv = this.getIv();
+    const plaintext = typeof data === 'string' ? AesCbcCryptor.encoder.encode(data) : new Uint8Array(data);
 
-    return {
-      metadata: abIv,
-      data: decode(
-        this.CryptoJS.AES.encrypt(data, this.encryptedKey, {
-          iv: this.bufferToWordArray(abIv),
-          mode: this.CryptoJS.mode.CBC,
-        }).ciphertext.toString(this.CryptoJS.enc.Base64),
-      ),
-    };
+    return { metadata: abIv, data: toArrayBuffer(cbc(this.encryptedKey, abIv).encrypt(plaintext)) };
   }
 
   async encryptFileData(data: ArrayBuffer): Promise<EncryptedDataType> {
@@ -83,15 +77,10 @@ export default class AesCbcCryptor implements ICryptor {
     if (typeof encryptedData.data === 'string')
       throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
 
-    const iv = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.metadata!));
-    const data = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.data));
+    const iv = new Uint8Array(encryptedData.metadata!);
+    const data = new Uint8Array(encryptedData.data);
 
-    return AesCbcCryptor.encoder.encode(
-      this.CryptoJS.AES.decrypt({ ciphertext: data }, this.encryptedKey, {
-        iv,
-        mode: this.CryptoJS.mode.CBC,
-      }).toString(this.CryptoJS.enc.Utf8),
-    ).buffer;
+    return toArrayBuffer(cbc(this.encryptedKey, iv).decrypt(data));
   }
 
   async decryptFileData(encryptedData: EncryptedDataType): Promise<ArrayBuffer> {
@@ -140,24 +129,6 @@ export default class AesCbcCryptor implements ICryptor {
     const bKey = AesCbcCryptor.encoder.encode(this.cipherKey);
     const abHash = await crypto.subtle.digest('SHA-256', bKey.buffer);
     return crypto.subtle.importKey('raw', abHash, this.algo, true, ['encrypt', 'decrypt']);
-  }
-
-  /**
-   * Convert bytes array to words array.
-   *
-   * @param b - Bytes array (buffer) which should be converted.
-   *
-   * @returns Word sized array.
-   */
-  private bufferToWordArray(b: string | any[] | Uint8Array | Uint8ClampedArray) {
-    const wa: number[] = [];
-    let i;
-
-    for (i = 0; i < b.length; i += 1) {
-      wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
-    }
-
-    return this.CryptoJS.lib.WordArray.create(wa, b.length);
   }
 
   /**
