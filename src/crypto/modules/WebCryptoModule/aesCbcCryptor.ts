@@ -5,7 +5,12 @@
 import { cbc } from '@noble/ciphers/aes.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 
-import { toArrayBuffer } from '../../../core/components/cryptography/primitives';
+import {
+  encodeUtf8,
+  isWellFormedUtf8,
+  toArrayBuffer,
+  unpadLegacy,
+} from '../../../core/components/cryptography/primitives';
 import { ICryptor, EncryptedDataType } from './ICryptor';
 
 /**
@@ -41,7 +46,7 @@ export default class AesCbcCryptor implements ICryptor {
 
   constructor({ cipherKey }: { cipherKey: string }) {
     this.cipherKey = cipherKey;
-    this.encryptedKey = sha256(AesCbcCryptor.encoder.encode(cipherKey));
+    this.encryptedKey = sha256(encodeUtf8(cipherKey));
   }
 
   // --------------------------------------------------------
@@ -53,7 +58,7 @@ export default class AesCbcCryptor implements ICryptor {
     const stringData = typeof data === 'string' ? data : AesCbcCryptor.decoder.decode(data);
     if (stringData.length === 0) throw new Error('encryption error. empty content');
     const abIv = this.getIv();
-    const plaintext = typeof data === 'string' ? AesCbcCryptor.encoder.encode(data) : new Uint8Array(data);
+    const plaintext = typeof data === 'string' ? encodeUtf8(data) : new Uint8Array(data);
 
     return { metadata: abIv, data: toArrayBuffer(cbc(this.encryptedKey, abIv).encrypt(plaintext)) };
   }
@@ -80,7 +85,11 @@ export default class AesCbcCryptor implements ICryptor {
     const iv = new Uint8Array(encryptedData.metadata!);
     const data = new Uint8Array(encryptedData.data);
 
-    return toArrayBuffer(cbc(this.encryptedKey, iv).decrypt(data));
+    // Padding removed leniently and decrypted data must be well-formed UTF-8 (CryptoJS-compatible).
+    const plaintext = unpadLegacy(cbc(this.encryptedKey, iv, { disablePadding: true }).decrypt(data));
+    if (!isWellFormedUtf8(plaintext)) throw new Error('Malformed UTF-8 data');
+
+    return toArrayBuffer(plaintext);
   }
 
   async decryptFileData(encryptedData: EncryptedDataType): Promise<ArrayBuffer> {

@@ -7,7 +7,7 @@
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from 'crypto';
 import { Buffer } from 'buffer';
 
-import { AesMode, CryptoPrimitives } from './primitives';
+import { AesMode, CryptoPrimitives, unpadLegacy } from './primitives';
 
 /**
  * OpenSSL cipher name for provided AES mode and key.
@@ -35,7 +35,9 @@ export const nodePrimitives: CryptoPrimitives = {
   },
   aesDecrypt: (mode, key, iv, data) => {
     const decipher = createDecipheriv(algorithm(mode, key), key, mode === 'ecb' ? null : iv);
-    return Buffer.concat([decipher.update(data), decipher.final()]);
+    // Padding removed leniently by `unpadLegacy` (CryptoJS-compatible).
+    decipher.setAutoPadding(false);
+    return unpadLegacy(Buffer.concat([decipher.update(data), decipher.final()]));
   },
   randomBytes: (length) => randomBytes(length),
 };

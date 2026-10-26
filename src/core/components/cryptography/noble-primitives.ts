@@ -8,7 +8,7 @@ import { cbc } from '@noble/ciphers/aes.js';
 import { randomBytes } from '@noble/ciphers/utils.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 
-import { AesMode, CryptoPrimitives } from './primitives';
+import { AesMode, CryptoPrimitives, unpadLegacy } from './primitives';
 
 /**
  * Prepare AES-CBC cipher instance.
@@ -23,9 +23,10 @@ import { AesMode, CryptoPrimitives } from './primitives';
  *
  * @internal
  */
-const aesCipher = (mode: AesMode, key: Uint8Array, iv: Uint8Array | null) => {
+const aesCipher = (mode: AesMode, key: Uint8Array, iv: Uint8Array | null, decrypt = false) => {
   if (mode === 'ecb') throw new Error('AES-ECB is not supported');
-  return cbc(key, iv!);
+  // Padding removed leniently by `unpadLegacy` on decryption (CryptoJS-compatible).
+  return cbc(key, iv!, decrypt ? { disablePadding: true } : undefined);
 };
 
 /**
@@ -41,6 +42,6 @@ export const noblePrimitives: CryptoPrimitives = {
     throw new Error('HMAC-SHA256 is not supported on this platform');
   },
   aesEncrypt: (mode, key, iv, data) => aesCipher(mode, key, iv).encrypt(data),
-  aesDecrypt: (mode, key, iv, data) => aesCipher(mode, key, iv).decrypt(data),
+  aesDecrypt: (mode, key, iv, data) => unpadLegacy(aesCipher(mode, key, iv, true).decrypt(data)),
   randomBytes: (length) => randomBytes(length),
 };
