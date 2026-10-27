@@ -13,7 +13,7 @@ describe('components/crypto useRandomIVs', () => {
     uuid: 'myUUID',
   });
 
-  it('should be able to encrypt and decrypt a message', () => {
+  it('should be able to encrypt and decrypt a message', async () => {
     const data = {
       message:
         'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et ' +
@@ -23,14 +23,14 @@ describe('components/crypto useRandomIVs', () => {
         'mollit anim id est laborum.',
     };
     const plaintext = JSON.stringify(data);
-    const ciphertext = pubnub.encrypt(plaintext);
+    const ciphertext = await pubnub.encrypt(plaintext);
 
-    const decrypted = pubnub.decrypt(ciphertext);
+    const decrypted = await pubnub.decrypt(ciphertext);
 
     expect(decrypted).to.deep.equal(data, JSON.stringify(decrypted));
   });
 
-  it('should be able to encrypt and decrypt a message with ICryptoModule', () => {
+  it('should be able to encrypt and decrypt a message with ICryptoModule', async () => {
     const pubnub = new PubNub({
       subscribeKey: 'demo-36',
       publishKey: 'demo-36',
@@ -49,9 +49,9 @@ describe('components/crypto useRandomIVs', () => {
         'mollit anim id est laborum.',
     };
     const plaintext = JSON.stringify(data);
-    const ciphertext = pubnub.encrypt(plaintext);
+    const ciphertext = await pubnub.encrypt(plaintext);
 
-    const decrypted = pubnub.decrypt(ciphertext);
+    const decrypted = await pubnub.decrypt(ciphertext);
 
     expect(decrypted).to.deep.equal(data);
   });
