@@ -1,0 +1,43 @@
+{
+  "source": "PubNub C# SDK commit 2d329ff (AesGcmCryptorVectorTests)",
+  "vectors": [
+    {
+      "name": "hello",
+      "expect": "decrypt",
+      "cipherKey": "enigma",
+      "keySha256": "67a4f45f0d1d9bc606486fc42dc4941668e71d34ee500735fe9b7ea4625c687c",
+      "plaintext": "Hello world",
+      "plaintextHex": "48656c6c6f20776f726c64",
+      "nonce": "0102030405060708090a0b0c",
+      "tag": "dabd1d02d7219c77218ad262c4a9aecc",
+      "ciphertext": "ea1b5780788b593294f898",
+      "metadata": "0102030405060708090a0b0cdabd1d02d7219c77218ad262c4a9aecc",
+      "payload": "504e4544014143474d1c0102030405060708090a0b0cdabd1d02d7219c77218ad262c4a9aeccea1b5780788b593294f898"
+    },
+    {
+      "name": "unicode",
+      "expect": "decrypt",
+      "cipherKey": "enigma",
+      "keySha256": "67a4f45f0d1d9bc606486fc42dc4941668e71d34ee500735fe9b7ea4625c687c",
+      "plaintext": "héllo 你好",
+      "plaintextHex": "68c3a96c6c6f20e4bda0e5a5bd",
+      "nonce": "111111111111111111111111",
+      "tag": "a5dd072360f4433e2979f440fc7827b3",
+      "ciphertext": "d138fbfc4bd0c337e29d9f2c98",
+      "metadata": "111111111111111111111111a5dd072360f4433e2979f440fc7827b3",
+      "payload": "504e4544014143474d1c111111111111111111111111a5dd072360f4433e2979f440fc7827b3d138fbfc4bd0c337e29d9f2c98"
+    },
+    {
+      "name": "binary",
+      "expect": "decrypt",
+      "cipherKey": "myCipherKey",
+      "keySha256": "8c33871ac40eea7eb80fdd88465c48f0ee10054de5dfe77af9ed8c0ef626663e",
+      "plaintextHex": "00ff7f80",
+      "nonce": "000102030405060708090a0b",
+      "tag": "8fefca7becf7235b4d09b970d4d56d19",
+      "ciphertext": "c411f0f1",
+      "metadata": "000102030405060708090a0b8fefca7becf7235b4d09b970d4d56d19",
+      "payload": "504e4544014143474d1c000102030405060708090a0b8fefca7becf7235b4d09b970d4d56d19c411f0f1"
+    }
+  ]
+}
