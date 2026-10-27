@@ -19,6 +19,7 @@ import { PubNubFileConstructor } from '../core/types/file';
 import { decode } from '../core/components/base64_codec';
 import NodeCryptography from '../crypto/modules/node';
 import Crypto from '../core/components/cryptography';
+import NodeCryptoPrimitives, { hmacSha256 } from '../crypto/primitives/node';
 import { PubNubError } from '../errors/pubnub-error';
 import { PubNubCore } from '../core/pubnub-common';
 import Cbor from '../cbor/common';
@@ -97,14 +98,17 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
     // Legacy crypto (legacy data encryption / decryption and request signature support).
     let crypto: Crypto | undefined;
     if (process.env.CRYPTO_MODULE !== 'disabled') {
-      crypto = new Crypto({
-        secretKey: clientConfiguration.secretKey,
-        cipherKey: clientConfiguration.getCipherKey(),
-        useRandomIVs: clientConfiguration.getUseRandomIVs(),
-        customEncrypt: clientConfiguration.getCustomEncrypt(),
-        customDecrypt: clientConfiguration.getCustomDecrypt(),
-        logger: clientConfiguration.logger(),
-      });
+      crypto = new Crypto(
+        {
+          secretKey: clientConfiguration.secretKey,
+          cipherKey: clientConfiguration.getCipherKey(),
+          useRandomIVs: clientConfiguration.getUseRandomIVs(),
+          customEncrypt: clientConfiguration.getCustomEncrypt(),
+          customDecrypt: clientConfiguration.getCustomDecrypt(),
+          logger: clientConfiguration.logger(),
+        },
+        new NodeCryptoPrimitives(),
+      );
     }
 
     let cryptography: Cryptography<string | ArrayBuffer | Buffer | Readable> | undefined;
@@ -120,7 +124,7 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
       clientConfiguration,
       tokenManager,
       transport,
-      shaHMAC: process.env.CRYPTO_MODULE !== 'disabled' ? crypto?.HMACSHA256.bind(crypto) : undefined,
+      shaHMAC: process.env.CRYPTO_MODULE !== 'disabled' ? hmacSha256 : undefined,
     });
 
     super({

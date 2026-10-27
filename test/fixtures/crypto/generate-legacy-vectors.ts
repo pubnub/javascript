@@ -5,8 +5,11 @@
  * committed as `legacy-vectors.json` and used by parity tests to guarantee that the native crypto
  * implementations produce / accept exactly the same ciphertexts.
  *
- * Usage (only meaningful against the v13 sources): `npx tsx test/fixtures/crypto/generate-legacy-vectors.ts`
+ * **Note:** Runs only against the v13 (CryptoJS-based) sources it was written for, e.g. from a worktree of commit
+ * `788cdb92`: `npx tsx test/fixtures/crypto/generate-legacy-vectors.ts`. Kept to document how the fixture was
+ * produced; type checking is disabled because the APIs it calls no longer exist.
  */
+// @ts-nocheck
 
 import { writeFileSync } from 'fs';
 import { join } from 'path';

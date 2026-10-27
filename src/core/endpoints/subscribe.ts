@@ -956,15 +956,17 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
       );
     }
 
-    const events: Subscription.SubscriptionResponse['messages'] = serviceResponse.m
-      .filter((envelope) => {
-        const subscribable = envelope.b === undefined ? envelope.c : envelope.b;
-        return (
-          (this.parameters.channels && this.parameters.channels.includes(subscribable)) ||
-          (this.parameters.channelGroups && this.parameters.channelGroups.includes(subscribable))
-        );
-      })
-      .map((envelope) => {
+    const envelopes = serviceResponse.m.filter((envelope) => {
+      const subscribable = envelope.b === undefined ? envelope.c : envelope.b;
+      return (
+        (this.parameters.channels && this.parameters.channels.includes(subscribable)) ||
+        (this.parameters.channelGroups && this.parameters.channelGroups.includes(subscribable))
+      );
+    });
+
+    // Envelopes processed concurrently (payload decryption is asynchronous); `Promise.all` preserves order.
+    const parsedEvents = await Promise.all(
+      envelopes.map(async (envelope) => {
         let { e: eventType } = envelope;
 
         // Events delivered on a presence channel are always presence events: the `-pnpres` suffix wins over
@@ -988,20 +990,20 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
           if (eventType == PubNubEventType.Message) {
             return {
               type: PubNubEventType.Message,
-              data: this.messageFromEnvelope(envelope),
+              data: await this.messageFromEnvelope(envelope),
               pn_mfp,
             };
           }
 
           return {
             type: PubNubEventType.Files,
-            data: this.fileFromEnvelope(envelope),
+            data: await this.fileFromEnvelope(envelope),
             pn_mfp,
           };
         } else if (eventType == PubNubEventType.Message) {
           return {
             type: PubNubEventType.Message,
-            data: this.messageFromEnvelope(envelope),
+            data: await this.messageFromEnvelope(envelope),
             pn_mfp,
           };
         } else if (eventType === PubNubEventType.Presence) {
@@ -1034,17 +1036,20 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
           // Guard: only treat as DataSync when the service marks it so; otherwise fall back to message.
           if (dataSync) return { type: PubNubEventType.DataSync, data: dataSync, pn_mfp };
 
-          return { type: PubNubEventType.Message, data: this.messageFromEnvelope(envelope), pn_mfp };
+          return { type: PubNubEventType.Message, data: await this.messageFromEnvelope(envelope), pn_mfp };
         }
 
         // The only known event type left is a file event.
         return {
           type: PubNubEventType.Files,
-          data: this.fileFromEnvelope(envelope),
+          data: await this.fileFromEnvelope(envelope),
           pn_mfp,
         };
-      })
-      .filter((event): event is Subscription.SubscriptionResponse['messages'][number] => event !== undefined);
+      }),
+    );
+    const events: Subscription.SubscriptionResponse['messages'] = parsedEvents.filter(
+      (event): event is Subscription.SubscriptionResponse['messages'][number] => event !== undefined,
+    );
 
     return {
       cursor: { timetoken: serviceResponse.t.t, region: serviceResponse.t.r },
@@ -1109,9 +1114,9 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     } as Subscription.Presence;
   }
 
-  private messageFromEnvelope(envelope: Envelope): Subscription.Message {
+  private async messageFromEnvelope(envelope: Envelope): Promise<Subscription.Message> {
     const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
-    const [message, decryptionError] = this.decryptedData<Payload>(envelope.d);
+    const [message, decryptionError] = await this.decryptedData<Payload>(envelope.d);
 
     // Backward compatibility with deprecated properties.
     const actualChannel = subscription !== null ? channel : null;
@@ -1263,9 +1268,9 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
     };
   }
 
-  private fileFromEnvelope(envelope: Envelope): Subscription.File {
+  private async fileFromEnvelope(envelope: Envelope): Promise<Subscription.File> {
     const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
-    const [file, decryptionError] = this.decryptedData<Subscription.File | string>(envelope.d);
+    const [file, decryptionError] = await this.decryptedData<Subscription.File | string>(envelope.d);
     let errorMessage = decryptionError;
 
     // Basic file event payload.
@@ -1308,14 +1313,14 @@ export class BaseSubscribeRequest extends AbstractRequest<Subscription.Subscript
    *
    * @returns Tuple with decrypted data and decryption error (if any).
    */
-  private decryptedData<T extends Payload = Payload>(data: Payload): [T, string | undefined] {
+  private async decryptedData<T extends Payload = Payload>(data: Payload): Promise<[T, string | undefined]> {
     if (!this.parameters.crypto || typeof data !== 'string') return [data as T, undefined];
 
     let payload: Payload | null;
     let error: string | undefined;
 
     try {
-      const decryptedData = this.parameters.crypto.decrypt(data);
+      const decryptedData = await this.parameters.crypto.decrypt(data);
       payload =
         decryptedData instanceof ArrayBuffer
           ? JSON.parse(SubscribeRequest.decoder.decode(decryptedData))

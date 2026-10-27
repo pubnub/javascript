@@ -22,6 +22,7 @@ import { Transport } from '../core/interfaces/transport';
 import { LogLevel } from '../core/interfaces/logger';
 import Crypto from '../core/components/cryptography';
 import WebCryptography from '../crypto/modules/web';
+import WebCryptoPrimitives from '../crypto/primitives/web';
 import { PubNubCore } from '../core/pubnub-common';
 import Cbor from '../cbor/common';
 import { Payload } from '../core/types/api';
@@ -109,14 +110,17 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
     let crypto: Crypto | undefined;
     if (process.env.CRYPTO_MODULE !== 'disabled') {
       if (clientConfiguration.getCipherKey() || clientConfiguration.secretKey) {
-        crypto = new Crypto({
-          secretKey: clientConfiguration.secretKey,
-          cipherKey: clientConfiguration.getCipherKey(),
-          useRandomIVs: clientConfiguration.getUseRandomIVs(),
-          customEncrypt: clientConfiguration.getCustomEncrypt(),
-          customDecrypt: clientConfiguration.getCustomDecrypt(),
-          logger: clientConfiguration.logger(),
-        });
+        crypto = new Crypto(
+          {
+            secretKey: clientConfiguration.secretKey,
+            cipherKey: clientConfiguration.getCipherKey(),
+            useRandomIVs: clientConfiguration.getUseRandomIVs(),
+            customEncrypt: clientConfiguration.getCustomEncrypt(),
+            customDecrypt: clientConfiguration.getCustomDecrypt(),
+            logger: clientConfiguration.logger(),
+          },
+          new WebCryptoPrimitives(),
+        );
       }
     }
 

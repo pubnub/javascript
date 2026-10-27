@@ -12,6 +12,7 @@ import { ILegacyCryptor } from './ILegacyCryptor';
 import AesCbcCryptor from './aesCbcCryptor';
 import LegacyCryptor from './legacyCryptor';
 import { LoggerManager } from '../../../core/components/logger-manager';
+import { Payload } from '../../../core/types/api';
 
 /**
  * Re-export bundled cryptors.
@@ -120,12 +121,12 @@ export class WebCryptoModule extends AbstractCryptoModule<CryptorType> {
   // --------------------------------------------------------
   // region Encryption
 
-  encrypt(data: ArrayBuffer | string) {
+  async encrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | string> {
     // Encrypt data.
     const encrypted =
       data instanceof ArrayBuffer && this.defaultCryptor.identifier === WebCryptoModule.LEGACY_IDENTIFIER
-        ? (this.defaultCryptor as ILegacyCryptor).encrypt(WebCryptoModule.decoder.decode(data))
-        : (this.defaultCryptor as ICryptor).encrypt(data);
+        ? await (this.defaultCryptor as ILegacyCryptor).encrypt(WebCryptoModule.decoder.decode(data))
+        : await (this.defaultCryptor as ICryptor).encrypt(data);
 
     if (!encrypted.metadata) return encrypted.data;
     else if (typeof encrypted.data === 'string')
@@ -161,7 +162,7 @@ export class WebCryptoModule extends AbstractCryptoModule<CryptorType> {
   // --------------------------------------------------------
   // region Decryption
 
-  decrypt(data: ArrayBuffer | string) {
+  async decrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | Payload | null> {
     const encryptedData = typeof data === 'string' ? decode(data) : data;
     const header = CryptorHeader.tryParse(encryptedData);
     const cryptor = this.getCryptor(header);

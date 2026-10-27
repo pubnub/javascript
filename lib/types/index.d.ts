@@ -1483,11 +1483,11 @@ declare class PubNubCore<
    * @param [customCipherKey] - Cipher key which should be used to encrypt data. **Deprecated:**
    * use {@link Configuration#cryptoModule|cryptoModule} instead.
    *
-   * @returns Data encryption result as a string.
+   * @returns Asynchronous data encryption result as a string.
    *
    * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
-  encrypt(data: string | PubNub.Payload, customCipherKey?: string): string;
+  encrypt(data: string | PubNub.Payload, customCipherKey?: string): Promise<string>;
   /**
    * Decrypt data.
    *
@@ -1495,11 +1495,11 @@ declare class PubNubCore<
    * @param [customCipherKey] - Cipher key which should be used to decrypt data. **Deprecated:**
    * use {@link Configuration#cryptoModule|cryptoModule} instead.
    *
-   * @returns Data decryption result as an object.
+   * @returns Asynchronous data decryption result as an object.
    *
    * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
-  decrypt(data: string, customCipherKey?: string): PubNub.Payload | null;
+  decrypt(data: string, customCipherKey?: string): Promise<PubNub.Payload | null>;
   /**
    * Encrypt file content.
    *
@@ -1593,12 +1593,12 @@ declare namespace PubNub {
      * @returns Crypto module with pre-configured default cryptor.
      */
     static withDefaultCryptor(defaultCryptor: CryptorType): NodeCryptoModule;
-    encrypt(data: ArrayBuffer | string): string | ArrayBuffer;
+    encrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | string>;
     encryptFile(
       file: PubNubFile,
       File: PubNubFileConstructor<PubNubFile, PubNubFileParameters>,
     ): Promise<PubNubFile | undefined>;
-    decrypt(data: ArrayBuffer | string): ArrayBuffer | Payload | null;
+    decrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | Payload | null>;
     decryptFile(
       file: PubNubFile,
       File: PubNubFileConstructor<PubNubFile, PubNubFileParameters>,
@@ -1642,13 +1642,13 @@ declare namespace PubNub {
      *
      * @deprecated Instead use {@link cryptoModule} for data encryption.
      */
-    customEncrypt?: (data: string | Payload) => string;
+    customEncrypt?: (data: string | Payload) => MaybePromise<string>;
     /**
      * Custom data decryption method.
      *
      * @deprecated Instead use {@link cryptoModule} for data decryption.
      */
-    customDecrypt?: (data: string) => string;
+    customDecrypt?: (data: string) => MaybePromise<Payload | null>;
   };
 
   /**
@@ -1660,9 +1660,9 @@ declare namespace PubNub {
      *
      * @param data - Data which should be encrypted using `CryptoModule`.
      *
-     * @returns Data encryption result.
+     * @returns Asynchronous data encryption result.
      */
-    encrypt(data: ArrayBuffer | string): ArrayBuffer | string;
+    encrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | string>;
     /**
      * Encrypt file object.
      *
@@ -1680,9 +1680,9 @@ declare namespace PubNub {
      *
      * @param data - Dta which should be encrypted using `CryptoModule`.
      *
-     * @returns Data decryption result.
+     * @returns Asynchronous data decryption result.
      */
-    decrypt(data: ArrayBuffer | string): ArrayBuffer | Payload | null;
+    decrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | Payload | null>;
     /**
      * Decrypt file object.
      *
@@ -1730,9 +1730,9 @@ declare namespace PubNub {
      *
      * @param data - Data which should be encrypted using {@link ICryptoModule}.
      *
-     * @returns Data encryption result.
+     * @returns Asynchronous data encryption result.
      */
-    abstract encrypt(data: ArrayBuffer | string): ArrayBuffer | string;
+    abstract encrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | string>;
     /**
      * Encrypt file object.
      *
@@ -1750,9 +1750,9 @@ declare namespace PubNub {
      *
      * @param data - Dta which should be encrypted using `ICryptoModule`.
      *
-     * @returns Data decryption result.
+     * @returns Asynchronous data decryption result.
      */
-    abstract decrypt(data: ArrayBuffer | string): ArrayBuffer | Payload | null;
+    abstract decrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | Payload | null>;
     /**
      * Decrypt file object.
      *
@@ -2412,6 +2412,11 @@ declare namespace PubNub {
   }
 
   /**
+   * Value which can be returned synchronously or asynchronously.
+   */
+  export type MaybePromise<T> = T | Promise<T>;
+
+  /**
    * PubNub File instance creation parameters.
    */
   export type PubNubFileParameters<StringEncoding extends BufferEncoding = BufferEncoding> = {
@@ -2590,7 +2595,7 @@ declare namespace PubNub {
      *
      * @throws Error if unknown data type has been passed.
      */
-    encrypt(data: BufferSource | string): EncryptedDataType;
+    encrypt(data: BufferSource | string): MaybePromise<EncryptedDataType>;
     /**
      * Encrypt provided source {@link Readable} stream.
      *
@@ -2610,7 +2615,7 @@ declare namespace PubNub {
      *
      * @throws Error if unknown data type has been passed.
      */
-    decrypt(data: EncryptedDataType): ArrayBuffer;
+    decrypt(data: EncryptedDataType): MaybePromise<ArrayBuffer>;
     /**
      * Decrypt provided encrypted stream object.
      *
@@ -2640,7 +2645,7 @@ declare namespace PubNub {
      *
      * @throws Error if unknown data type has been passed.
      */
-    encrypt(data: string): EncryptedDataType;
+    encrypt(data: string): MaybePromise<EncryptedDataType>;
     /**
      * Encrypt provided source {@link PubNub} File object.
      *
@@ -2665,7 +2670,7 @@ declare namespace PubNub {
      *
      * @throws Error if unknown data type has been passed.
      */
-    decrypt(data: EncryptedDataType): Payload | null;
+    decrypt(data: EncryptedDataType): MaybePromise<Payload | null>;
     /**
      * Decrypt provided encrypted {@link PubNub} File object.
      *

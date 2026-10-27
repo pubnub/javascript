@@ -139,18 +139,21 @@ export class GetHistoryRequest extends AbstractRequest<History.GetHistoryRespons
     if (!Array.isArray(messages)) return { messages: [], startTimeToken, endTimeToken };
 
     return {
-      messages: messages.map((payload) => {
-        const processedPayload = this.processPayload(payload.message);
-        const item: History.GetHistoryResponse['messages'][number] = {
-          entry: processedPayload.payload,
-          timetoken: payload.timetoken,
-        };
+      // Messages processed concurrently (payload decryption is asynchronous); `Promise.all` preserves order.
+      messages: await Promise.all(
+        messages.map(async (payload) => {
+          const processedPayload = await this.processPayload(payload.message);
+          const item: History.GetHistoryResponse['messages'][number] = {
+            entry: processedPayload.payload,
+            timetoken: payload.timetoken,
+          };
 
-        if (processedPayload.error) item.error = processedPayload.error;
-        if (payload.meta) item.meta = payload.meta;
+          if (processedPayload.error) item.error = processedPayload.error;
+          if (payload.meta) item.meta = payload.meta;
 
-        return item;
-      }),
+          return item;
+        }),
+      ),
       startTimeToken,
       endTimeToken,
     };
@@ -179,7 +182,7 @@ export class GetHistoryRequest extends AbstractRequest<History.GetHistoryRespons
     };
   }
 
-  private processPayload(payload: Payload): { payload: Payload; error?: string } {
+  private async processPayload(payload: Payload): Promise<{ payload: Payload; error?: string }> {
     const { crypto, logVerbosity } = this.parameters;
     if (!crypto || typeof payload !== 'string') return { payload };
 
@@ -187,7 +190,7 @@ export class GetHistoryRequest extends AbstractRequest<History.GetHistoryRespons
     let error: string | undefined;
 
     try {
-      const decryptedData = crypto.decrypt(payload);
+      const decryptedData = await crypto.decrypt(payload);
       decryptedPayload =
         decryptedData instanceof ArrayBuffer
           ? JSON.parse(GetHistoryRequest.decoder.decode(decryptedData))

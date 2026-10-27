@@ -124,12 +124,12 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
   // --------------------------------------------------------
   // region Encryption
 
-  encrypt(data: ArrayBuffer | string) {
+  async encrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | string> {
     // Encrypt data.
     const encrypted =
       data instanceof ArrayBuffer && this.defaultCryptor.identifier === NodeCryptoModule.LEGACY_IDENTIFIER
-        ? (this.defaultCryptor as ILegacyCryptor).encrypt(NodeCryptoModule.decoder.decode(data))
-        : (this.defaultCryptor as ICryptor).encrypt(data);
+        ? await (this.defaultCryptor as ILegacyCryptor).encrypt(NodeCryptoModule.decoder.decode(data))
+        : await (this.defaultCryptor as ICryptor).encrypt(data);
 
     if (!encrypted.metadata) return encrypted.data;
 
@@ -153,7 +153,7 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
       return (this.defaultCryptor as ILegacyCryptor).encryptFile(file, File);
 
     if (file.data instanceof Buffer) {
-      const encryptedData = this.encrypt(file.data);
+      const encryptedData = await this.encrypt(file.data);
 
       return File.create({
         name: file.name,
@@ -198,7 +198,7 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
   // --------------------------------------------------------
   // region Decryption
 
-  decrypt(data: ArrayBuffer | string): ArrayBuffer | Payload | null {
+  async decrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | Payload | null> {
     const encryptedData = Buffer.from(typeof data === 'string' ? decode(data) : data);
     const header = CryptorHeader.tryParse(
       encryptedData.buffer.slice(encryptedData.byteOffset, encryptedData.byteOffset + encryptedData.length),
@@ -235,7 +235,7 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
 
       return File.create({
         name: file.name,
-        data: Buffer.from(this.decrypt(file.data) as ArrayBuffer),
+        data: Buffer.from((await this.decrypt(file.data)) as ArrayBuffer),
       });
     }
 

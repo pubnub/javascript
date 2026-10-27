@@ -2,6 +2,7 @@
  * Legacy cryptor module.
  */
 
+import { MaybePromise } from '../../../core/interfaces/crypto-primitives';
 import PubNubFile, { PubNubFileParameters } from '../../../file/modules/node';
 import { PubNubFileConstructor } from '../../../core/types/file';
 import { Payload } from '../../../core/types/api';
@@ -30,7 +31,7 @@ export interface ILegacyCryptor {
    *
    * @throws Error if unknown data type has been passed.
    */
-  encrypt(data: string): EncryptedDataType;
+  encrypt(data: string): MaybePromise<EncryptedDataType>;
 
   /**
    * Encrypt provided source {@link PubNub} File object.
@@ -63,7 +64,7 @@ export interface ILegacyCryptor {
    *
    * @throws Error if unknown data type has been passed.
    */
-  decrypt(data: EncryptedDataType): Payload | null;
+  decrypt(data: EncryptedDataType): MaybePromise<Payload | null>;
 
   /**
    * Decrypt provided encrypted {@link PubNub} File object.

@@ -69,9 +69,17 @@
     "undici": "^7.30.1"
   },
   "peerDependencies": {
+    "@noble/ciphers": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
     "react-native-url-polyfill": "^2.0.0"
   },
   "peerDependenciesMeta": {
+    "@noble/ciphers": {
+      "optional": true
+    },
+    "@noble/hashes": {
+      "optional": true
+    },
     "react-native-url-polyfill": {
       "optional": true
     }
@@ -80,6 +88,8 @@
     "basic-ftp": "5.3.1"
   },
   "devDependencies": {
+    "@noble/ciphers": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",

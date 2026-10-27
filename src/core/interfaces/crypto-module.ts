@@ -5,6 +5,7 @@
 import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
 import { LoggerManager } from '../components/logger-manager';
 import { Payload } from '../types/api';
+import { MaybePromise } from './crypto-primitives';
 
 /**
  * Crypto module configuration.
@@ -43,14 +44,14 @@ export type CryptorConfiguration = {
    *
    * @deprecated Instead use {@link cryptoModule} for data encryption.
    */
-  customEncrypt?: (data: string | Payload) => string;
+  customEncrypt?: (data: string | Payload) => MaybePromise<string>;
 
   /**
    * Custom data decryption method.
    *
    * @deprecated Instead use {@link cryptoModule} for data decryption.
    */
-  customDecrypt?: (data: string) => string;
+  customDecrypt?: (data: string) => MaybePromise<Payload | null>;
 
   /**
    * Registered loggers' manager.
@@ -83,9 +84,9 @@ export interface ICryptoModule {
    *
    * @param data - Data which should be encrypted using `CryptoModule`.
    *
-   * @returns Data encryption result.
+   * @returns Asynchronous data encryption result.
    */
-  encrypt(data: ArrayBuffer | string): ArrayBuffer | string;
+  encrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | string>;
 
   /**
    * Encrypt file object.
@@ -112,9 +113,9 @@ export interface ICryptoModule {
    *
    * @param data - Dta which should be encrypted using `CryptoModule`.
    *
-   * @returns Data decryption result.
+   * @returns Asynchronous data decryption result.
    */
-  decrypt(data: ArrayBuffer | string): ArrayBuffer | Payload | null;
+  decrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | Payload | null>;
 
   /**
    * Decrypt file object.
@@ -219,9 +220,9 @@ export abstract class AbstractCryptoModule<C> implements ICryptoModule {
    *
    * @param data - Data which should be encrypted using {@link ICryptoModule}.
    *
-   * @returns Data encryption result.
+   * @returns Asynchronous data encryption result.
    */
-  abstract encrypt(data: ArrayBuffer | string): ArrayBuffer | string;
+  abstract encrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | string>;
 
   /**
    * Encrypt file object.
@@ -248,9 +249,9 @@ export abstract class AbstractCryptoModule<C> implements ICryptoModule {
    *
    * @param data - Dta which should be encrypted using `ICryptoModule`.
    *
-   * @returns Data decryption result.
+   * @returns Asynchronous data decryption result.
    */
-  abstract decrypt(data: ArrayBuffer | string): ArrayBuffer | Payload | null;
+  abstract decrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | Payload | null>;
 
   /**
    * Decrypt file object.
