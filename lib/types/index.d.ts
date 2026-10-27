@@ -1586,6 +1586,27 @@ declare namespace PubNub {
     static legacyCryptoModule(config: CryptorConfiguration): NodeCryptoModule;
     static aesCbcCryptoModule(config: CryptorConfiguration): NodeCryptoModule;
     /**
+     * Construct decrypt-only AES-GCM cryptor.
+     *
+     * Modules created with {@link aesCbcCryptoModule}, {@link legacyCryptoModule} or `cipherKey` already register it.
+     * Use it to let a custom crypto module decrypt AES-GCM (`ACGM`) payloads produced by other PubNub SDKs:
+     *
+     * @example
+     * ```typescript
+     * const cryptoModule = new PubNub.CryptoModule({
+     *   default: myCryptor,
+     *   cryptors: [PubNub.CryptoModule.aesGcmCryptor({ cipherKey: 'my-key' })],
+     * });
+     * ```
+     *
+     * @param config - Cryptor configuration options.
+     *
+     * @returns AES-GCM cryptor which can be used only as an additional (decryption) cryptor.
+     *
+     * @throws Error if `config.cipherKey` not set.
+     */
+    static aesGcmCryptor(config: CryptorConfiguration): ICryptor;
+    /**
      * Construct crypto module with `cryptor` as default for data encryption and decryption.
      *
      * @param defaultCryptor - Default cryptor for data encryption and decryption.

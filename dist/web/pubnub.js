@@ -466,6 +466,181 @@
 	};
 
 	/**
+	 * Request processing status categories.
+	 */
+	var StatusCategory;
+	(function (StatusCategory) {
+	    /**
+	     * Call failed when network was unable to complete the call.
+	     */
+	    StatusCategory["PNNetworkIssuesCategory"] = "PNNetworkIssuesCategory";
+	    /**
+	     * Network call timed out.
+	     */
+	    StatusCategory["PNTimeoutCategory"] = "PNTimeoutCategory";
+	    /**
+	     * Request has been cancelled.
+	     */
+	    StatusCategory["PNCancelledCategory"] = "PNCancelledCategory";
+	    /**
+	     * Server responded with bad response.
+	     */
+	    StatusCategory["PNBadRequestCategory"] = "PNBadRequestCategory";
+	    /**
+	     * Server responded with access denied.
+	     */
+	    StatusCategory["PNAccessDeniedCategory"] = "PNAccessDeniedCategory";
+	    /**
+	     * Incomplete parameters provided for used endpoint.
+	     */
+	    StatusCategory["PNValidationErrorCategory"] = "PNValidationErrorCategory";
+	    /**
+	     * PubNub request acknowledgment status.
+	     *
+	     * Some API endpoints respond with request processing status w/o useful data.
+	     */
+	    StatusCategory["PNAcknowledgmentCategory"] = "PNAcknowledgmentCategory";
+	    /**
+	     * PubNub service or intermediate "actor" returned unexpected response.
+	     *
+	     * There can be few sources of unexpected return with success code:
+	     * - proxy server / VPN;
+	     * - Wi-Fi hotspot authorization page.
+	     */
+	    StatusCategory["PNMalformedResponseCategory"] = "PNMalformedResponseCategory";
+	    /**
+	     * Server can't process request.
+	     *
+	     * There can be few sources of unexpected return with success code:
+	     * - potentially an ongoing incident;
+	     * - proxy server / VPN.
+	     */
+	    StatusCategory["PNServerErrorCategory"] = "PNServerErrorCategory";
+	    /**
+	     * Something strange happened; please check the logs.
+	     */
+	    StatusCategory["PNUnknownCategory"] = "PNUnknownCategory";
+	    // --------------------------------------------------------
+	    // --------------------- Network status -------------------
+	    // --------------------------------------------------------
+	    /**
+	     * SDK will announce when the network appears to be connected again.
+	     */
+	    StatusCategory["PNNetworkUpCategory"] = "PNNetworkUpCategory";
+	    /**
+	     * SDK will announce when the network appears to down.
+	     */
+	    StatusCategory["PNNetworkDownCategory"] = "PNNetworkDownCategory";
+	    // --------------------------------------------------------
+	    // -------------------- Real-time events ------------------
+	    // --------------------------------------------------------
+	    /**
+	     * PubNub client reconnected to the real-time updates stream.
+	     */
+	    StatusCategory["PNReconnectedCategory"] = "PNReconnectedCategory";
+	    /**
+	     * PubNub client connected to the real-time updates stream.
+	     */
+	    StatusCategory["PNConnectedCategory"] = "PNConnectedCategory";
+	    /**
+	     * Set of active channels and groups has been changed.
+	     */
+	    StatusCategory["PNSubscriptionChangedCategory"] = "PNSubscriptionChangedCategory";
+	    /**
+	     * Received real-time updates exceed specified threshold.
+	     *
+	     * After temporary disconnection and catchup, this category means that potentially some
+	     * real-time updates have been pushed into `storage` and need to be requested separately.
+	     */
+	    StatusCategory["PNRequestMessageCountExceededCategory"] = "PNRequestMessageCountExceededCategory";
+	    /**
+	     * PubNub client disconnected from the real-time updates streams.
+	     */
+	    StatusCategory["PNDisconnectedCategory"] = "PNDisconnectedCategory";
+	    /**
+	     * PubNub client wasn't able to connect to the real-time updates streams.
+	     */
+	    StatusCategory["PNConnectionErrorCategory"] = "PNConnectionErrorCategory";
+	    /**
+	     * PubNub client unexpectedly disconnected from the real-time updates streams.
+	     */
+	    StatusCategory["PNDisconnectedUnexpectedlyCategory"] = "PNDisconnectedUnexpectedlyCategory";
+	    // --------------------------------------------------------
+	    // ------------------ Shared worker events ----------------
+	    // --------------------------------------------------------
+	    /**
+	     * SDK will announce when newer shared worker will be 'noticed'.
+	     */
+	    StatusCategory["PNSharedWorkerUpdatedCategory"] = "PNSharedWorkerUpdatedCategory";
+	})(StatusCategory || (StatusCategory = {}));
+	var StatusCategory$1 = StatusCategory;
+
+	/**
+	 * PubNub operation error module.
+	 */
+	/**
+	 * PubNub operation error.
+	 *
+	 * When an operation can't be performed or there is an error from the server, this object will be returned.
+	 */
+	class PubNubError extends Error {
+	    /**
+	     * Create PubNub operation error.
+	     *
+	     * @param message - Message with details about why operation failed.
+	     * @param [status] - Additional information about performed operation.
+	     *
+	     * @returns Configured and ready to use PubNub operation error.
+	     *
+	     * @internal
+	     */
+	    constructor(message, status) {
+	        super(message);
+	        this.status = status;
+	        this.name = 'PubNubError';
+	        this.message = message;
+	        Object.setPrototypeOf(this, new.target.prototype);
+	    }
+	}
+	/**
+	 * Create error status object.
+	 *
+	 * @param errorPayload - Additional information which should be attached to the error status object.
+	 * @param category - Occurred error category.
+	 *
+	 * @returns Error status object.
+	 *
+	 * @internal
+	 */
+	function createError(errorPayload, category) {
+	    var _a;
+	    (_a = errorPayload.statusCode) !== null && _a !== void 0 ? _a : (errorPayload.statusCode = 0);
+	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category, error: true });
+	}
+	/**
+	 * Create operation arguments validation error status object.
+	 *
+	 * @param message - Information about failed validation requirement.
+	 * @param [statusCode] - Operation HTTP status code.
+	 *
+	 * @returns Operation validation error status object.
+	 *
+	 * @internal
+	 */
+	function createValidationError(message, statusCode) {
+	    return createError(Object.assign({ message }, ({})), StatusCategory$1.PNValidationErrorCategory);
+	}
+	/**
+	 * Create malformed service response error status object.
+	 *
+	 * @param [responseText] - Stringified original service response.
+	 * @param [statusCode] - Operation HTTP status code.
+	 */
+	function createMalformedResponseError(responseText, statusCode) {
+	    return createError(Object.assign(Object.assign({ message: 'Unable to deserialize service response' }, (responseText !== undefined ? { responseText } : {})), (statusCode !== undefined ? { statusCode } : {})), StatusCategory$1.PNMalformedResponseCategory);
+	}
+
+	/**
 	 * Crypto module.
 	 */
 	class AbstractCryptoModule {
@@ -503,9 +678,12 @@
 	    }
 	    // endregion
 	    constructor(configuration) {
-	        var _a;
+	        var _a, _b;
+	        // AES-GCM cryptor is decrypt-only and can be registered only as an additional cryptor.
+	        if (((_a = configuration.default) === null || _a === void 0 ? void 0 : _a.identifier) === 'ACGM')
+	            throw new PubNubError("Crypto module error: AES-GCM cryptor (ACGM) can't be used as default cryptor.");
 	        this.defaultCryptor = configuration.default;
-	        this.cryptors = (_a = configuration.cryptors) !== null && _a !== void 0 ? _a : [];
+	        this.cryptors = (_b = configuration.cryptors) !== null && _b !== void 0 ? _b : [];
 	    }
 	    /**
 	     * Assign registered loggers' manager.
@@ -822,181 +1000,6 @@
 	}
 
 	/**
-	 * Request processing status categories.
-	 */
-	var StatusCategory;
-	(function (StatusCategory) {
-	    /**
-	     * Call failed when network was unable to complete the call.
-	     */
-	    StatusCategory["PNNetworkIssuesCategory"] = "PNNetworkIssuesCategory";
-	    /**
-	     * Network call timed out.
-	     */
-	    StatusCategory["PNTimeoutCategory"] = "PNTimeoutCategory";
-	    /**
-	     * Request has been cancelled.
-	     */
-	    StatusCategory["PNCancelledCategory"] = "PNCancelledCategory";
-	    /**
-	     * Server responded with bad response.
-	     */
-	    StatusCategory["PNBadRequestCategory"] = "PNBadRequestCategory";
-	    /**
-	     * Server responded with access denied.
-	     */
-	    StatusCategory["PNAccessDeniedCategory"] = "PNAccessDeniedCategory";
-	    /**
-	     * Incomplete parameters provided for used endpoint.
-	     */
-	    StatusCategory["PNValidationErrorCategory"] = "PNValidationErrorCategory";
-	    /**
-	     * PubNub request acknowledgment status.
-	     *
-	     * Some API endpoints respond with request processing status w/o useful data.
-	     */
-	    StatusCategory["PNAcknowledgmentCategory"] = "PNAcknowledgmentCategory";
-	    /**
-	     * PubNub service or intermediate "actor" returned unexpected response.
-	     *
-	     * There can be few sources of unexpected return with success code:
-	     * - proxy server / VPN;
-	     * - Wi-Fi hotspot authorization page.
-	     */
-	    StatusCategory["PNMalformedResponseCategory"] = "PNMalformedResponseCategory";
-	    /**
-	     * Server can't process request.
-	     *
-	     * There can be few sources of unexpected return with success code:
-	     * - potentially an ongoing incident;
-	     * - proxy server / VPN.
-	     */
-	    StatusCategory["PNServerErrorCategory"] = "PNServerErrorCategory";
-	    /**
-	     * Something strange happened; please check the logs.
-	     */
-	    StatusCategory["PNUnknownCategory"] = "PNUnknownCategory";
-	    // --------------------------------------------------------
-	    // --------------------- Network status -------------------
-	    // --------------------------------------------------------
-	    /**
-	     * SDK will announce when the network appears to be connected again.
-	     */
-	    StatusCategory["PNNetworkUpCategory"] = "PNNetworkUpCategory";
-	    /**
-	     * SDK will announce when the network appears to down.
-	     */
-	    StatusCategory["PNNetworkDownCategory"] = "PNNetworkDownCategory";
-	    // --------------------------------------------------------
-	    // -------------------- Real-time events ------------------
-	    // --------------------------------------------------------
-	    /**
-	     * PubNub client reconnected to the real-time updates stream.
-	     */
-	    StatusCategory["PNReconnectedCategory"] = "PNReconnectedCategory";
-	    /**
-	     * PubNub client connected to the real-time updates stream.
-	     */
-	    StatusCategory["PNConnectedCategory"] = "PNConnectedCategory";
-	    /**
-	     * Set of active channels and groups has been changed.
-	     */
-	    StatusCategory["PNSubscriptionChangedCategory"] = "PNSubscriptionChangedCategory";
-	    /**
-	     * Received real-time updates exceed specified threshold.
-	     *
-	     * After temporary disconnection and catchup, this category means that potentially some
-	     * real-time updates have been pushed into `storage` and need to be requested separately.
-	     */
-	    StatusCategory["PNRequestMessageCountExceededCategory"] = "PNRequestMessageCountExceededCategory";
-	    /**
-	     * PubNub client disconnected from the real-time updates streams.
-	     */
-	    StatusCategory["PNDisconnectedCategory"] = "PNDisconnectedCategory";
-	    /**
-	     * PubNub client wasn't able to connect to the real-time updates streams.
-	     */
-	    StatusCategory["PNConnectionErrorCategory"] = "PNConnectionErrorCategory";
-	    /**
-	     * PubNub client unexpectedly disconnected from the real-time updates streams.
-	     */
-	    StatusCategory["PNDisconnectedUnexpectedlyCategory"] = "PNDisconnectedUnexpectedlyCategory";
-	    // --------------------------------------------------------
-	    // ------------------ Shared worker events ----------------
-	    // --------------------------------------------------------
-	    /**
-	     * SDK will announce when newer shared worker will be 'noticed'.
-	     */
-	    StatusCategory["PNSharedWorkerUpdatedCategory"] = "PNSharedWorkerUpdatedCategory";
-	})(StatusCategory || (StatusCategory = {}));
-	var StatusCategory$1 = StatusCategory;
-
-	/**
-	 * PubNub operation error module.
-	 */
-	/**
-	 * PubNub operation error.
-	 *
-	 * When an operation can't be performed or there is an error from the server, this object will be returned.
-	 */
-	class PubNubError extends Error {
-	    /**
-	     * Create PubNub operation error.
-	     *
-	     * @param message - Message with details about why operation failed.
-	     * @param [status] - Additional information about performed operation.
-	     *
-	     * @returns Configured and ready to use PubNub operation error.
-	     *
-	     * @internal
-	     */
-	    constructor(message, status) {
-	        super(message);
-	        this.status = status;
-	        this.name = 'PubNubError';
-	        this.message = message;
-	        Object.setPrototypeOf(this, new.target.prototype);
-	    }
-	}
-	/**
-	 * Create error status object.
-	 *
-	 * @param errorPayload - Additional information which should be attached to the error status object.
-	 * @param category - Occurred error category.
-	 *
-	 * @returns Error status object.
-	 *
-	 * @internal
-	 */
-	function createError(errorPayload, category) {
-	    var _a;
-	    (_a = errorPayload.statusCode) !== null && _a !== void 0 ? _a : (errorPayload.statusCode = 0);
-	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category, error: true });
-	}
-	/**
-	 * Create operation arguments validation error status object.
-	 *
-	 * @param message - Information about failed validation requirement.
-	 * @param [statusCode] - Operation HTTP status code.
-	 *
-	 * @returns Operation validation error status object.
-	 *
-	 * @internal
-	 */
-	function createValidationError(message, statusCode) {
-	    return createError(Object.assign({ message }, ({})), StatusCategory$1.PNValidationErrorCategory);
-	}
-	/**
-	 * Create malformed service response error status object.
-	 *
-	 * @param [responseText] - Stringified original service response.
-	 * @param [statusCode] - Operation HTTP status code.
-	 */
-	function createMalformedResponseError(responseText, statusCode) {
-	    return createError(Object.assign(Object.assign({ message: 'Unable to deserialize service response' }, (responseText !== undefined ? { responseText } : {})), (statusCode !== undefined ? { statusCode } : {})), StatusCategory$1.PNMalformedResponseCategory);
-	}
-
-	/**
 	 * Byte helpers shared by cryptors and crypto primitives.
 	 *
 	 * @internal
@@ -1005,13 +1008,14 @@
 	 * Lazily created UTF-8 decoder.
 	 *
 	 * **Note:** Not created at module load and doesn't use `fatal` option because some polyfills (for example
-	 * `fast-text-encoding` used on React Native) throw when it is requested.
+	 * `fast-text-encoding` used on React Native) throw when it is requested. Input is validated by
+	 * {@link isWellFormedUtf8} instead, so the decoder only ever receives well-formed data.
 	 */
 	let decoder;
 	/**
-	 * Lazily created UTF-8 encoder.
+	 * Whether {@link decoder} strips a leading BOM despite `ignoreBOM` option (detected once, on first use).
 	 */
-	let encoder;
+	let decoderStripsBOM = false;
 	/**
 	 * Convert bytes to lowercase HEX string.
 	 *
@@ -1033,10 +1037,85 @@
 	 */
 	const toArrayBuffer = (bytes) => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 	/**
+	 * Concatenate two byte sequences.
+	 *
+	 * @param first - Leading bytes.
+	 * @param second - Trailing bytes.
+	 *
+	 * @returns New bytes array with {@link first} followed by {@link second}.
+	 *
+	 * @internal
+	 */
+	const concatBytes = (first, second) => {
+	    const result = new Uint8Array(first.byteLength + second.byteLength);
+	    result.set(first, 0);
+	    result.set(second, first.byteLength);
+	    return result;
+	};
+	/**
+	 * Check whether bytes are well-formed UTF-8.
+	 *
+	 * Implements Unicode "Well-Formed UTF-8 Byte Sequences" (Table 3-7): rejects stray continuation bytes, overlong
+	 * forms (`C0`, `C1`, `E0 80-9F`, `F0 80-8F`), surrogates (`ED A0-BF`), code points above U+10FFFF (`F4 90-BF`,
+	 * `F5-FF`) and truncated sequences. Same rules as CryptoJS `Utf8.stringify` (`decodeURIComponent`).
+	 *
+	 * @param bytes - Bytes which should be checked.
+	 *
+	 * @returns `true` if bytes are well-formed UTF-8.
+	 *
+	 * @internal
+	 */
+	const isWellFormedUtf8 = (bytes) => {
+	    const length = bytes.length;
+	    let index = 0;
+	    while (index < length) {
+	        const lead = bytes[index];
+	        if (lead < 0x80) {
+	            index += 1;
+	            continue;
+	        }
+	        let continuationBytes;
+	        // Allowed range of the first continuation byte (narrower for some lead bytes).
+	        let lower = 0x80;
+	        let upper = 0xbf;
+	        if (lead >= 0xc2 && lead <= 0xdf)
+	            continuationBytes = 1;
+	        else if (lead >= 0xe0 && lead <= 0xef) {
+	            continuationBytes = 2;
+	            if (lead === 0xe0)
+	                lower = 0xa0;
+	            else if (lead === 0xed)
+	                upper = 0x9f;
+	        }
+	        else if (lead >= 0xf0 && lead <= 0xf4) {
+	            continuationBytes = 3;
+	            if (lead === 0xf0)
+	                lower = 0x90;
+	            else if (lead === 0xf4)
+	                upper = 0x8f;
+	        }
+	        else
+	            return false;
+	        if (index + continuationBytes >= length)
+	            return false;
+	        const first = bytes[index + 1];
+	        if (first < lower || first > upper)
+	            return false;
+	        for (let offset = 2; offset <= continuationBytes; offset++) {
+	            const next = bytes[index + offset];
+	            if (next < 0x80 || next > 0xbf)
+	                return false;
+	        }
+	        index += continuationBytes + 1;
+	    }
+	    return true;
+	};
+	/**
 	 * Strictly decode UTF-8 bytes.
 	 *
-	 * Behaves like CryptoJS `Utf8.stringify` used by previous SDK versions: malformed sequences (and a leading
-	 * BOM, which a regular decoder silently strips) are rejected instead of being replaced.
+	 * Behaves like CryptoJS `Utf8.stringify` used by previous SDK versions: malformed sequences are rejected instead of
+	 * being replaced, and a leading BOM is preserved (regular decoders silently strip it). Result doesn't depend on the
+	 * platform `TextDecoder` implementation or polyfill.
 	 *
 	 * @param bytes - UTF-8 encoded bytes.
 	 *
@@ -1047,14 +1126,15 @@
 	 * @internal
 	 */
 	const decodeUtf8Strict = (bytes) => {
-	    decoder !== null && decoder !== void 0 ? decoder : (decoder = new TextDecoder());
-	    encoder !== null && encoder !== void 0 ? encoder : (encoder = new TextEncoder());
-	    const decoded = decoder.decode(bytes);
-	    const encoded = encoder.encode(decoded);
-	    const matches = encoded.byteLength === bytes.byteLength && encoded.every((byte, index) => byte === bytes[index]);
-	    if (!matches)
+	    if (!isWellFormedUtf8(bytes))
 	        throw new Error('Malformed UTF-8 data');
-	    return decoded;
+	    if (!decoder) {
+	        decoder = new TextDecoder('utf-8', { ignoreBOM: true });
+	        decoderStripsBOM = decoder.decode(new Uint8Array([0xef, 0xbb, 0xbf])).length === 0;
+	    }
+	    const decoded = decoder.decode(bytes);
+	    const hasBOM = bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf;
+	    return hasBOM && decoderStripsBOM ? `\uFEFF${decoded}` : decoded;
 	};
 
 	/**
@@ -1071,7 +1151,7 @@
 	class WebCryptoPrimitives {
 	    constructor() {
 	        /**
-	         * Imported keys cache (keyed by the hex representation of the raw key).
+	         * Imported keys cache (keyed by the algorithm and hex representation of the raw key).
 	         */
 	        this.keys = new Map();
 	    }
@@ -1082,14 +1162,35 @@
 	    }
 	    aesCbcEncrypt(key, iv, data) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const cryptoKey = yield this.importKey(key);
+	            const cryptoKey = yield this.importKey(key, 'AES-CBC');
 	            return new Uint8Array(yield this.subtle.encrypt({ name: 'AES-CBC', iv }, cryptoKey, data));
 	        });
 	    }
 	    aesCbcDecrypt(key, iv, data) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const cryptoKey = yield this.importKey(key);
+	            const cryptoKey = yield this.importKey(key, 'AES-CBC');
 	            return new Uint8Array(yield this.subtle.decrypt({ name: 'AES-CBC', iv }, cryptoKey, data));
+	        });
+	    }
+	    /**
+	     * Decrypt and authenticate data using AES-256-GCM (128-bit tag, no additional authenticated data).
+	     *
+	     * Used only by the decrypt-only `ACGM` cryptor (Web and Node.js). Intentionally not part of
+	     * {@link CryptoPrimitives}: React Native supports only the legacy cryptor.
+	     *
+	     * @param key - 32 bytes long raw key.
+	     * @param nonce - 12 bytes long nonce.
+	     * @param data - Data which should be decrypted (without authentication tag).
+	     * @param tag - 16 bytes long authentication tag.
+	     *
+	     * @returns Decrypted data (returned only after the authentication tag has been verified).
+	     *
+	     * @throws Error if data can't be authenticated (for example: wrong key or modified nonce, tag or data).
+	     */
+	    aesGcmDecrypt(key, nonce, data, tag) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const cryptoKey = yield this.importKey(key, 'AES-GCM');
+	            return new Uint8Array(yield this.subtle.decrypt({ name: 'AES-GCM', iv: nonce, tagLength: 128 }, cryptoKey, concatBytes(data, tag)));
 	        });
 	    }
 	    randomBytes(length) {
@@ -1108,19 +1209,21 @@
 	        return crypto.subtle;
 	    }
 	    /**
-	     * Import raw AES-CBC key (cached, least recently imported keys evicted first).
+	     * Import raw AES key (cached, least recently imported keys evicted first).
 	     *
 	     * @param key - Raw key bytes.
+	     * @param algorithm - Algorithm for which key will be used.
 	     *
 	     * @returns Imported `CryptoKey`.
 	     */
-	    importKey(key) {
-	        const id = bytesToHex(key);
+	    importKey(key, algorithm) {
+	        const id = `${algorithm}:${bytesToHex(key)}`;
 	        let cryptoKey = this.keys.get(id);
 	        if (!cryptoKey) {
 	            if (this.keys.size >= WebCryptoPrimitives.MAX_CACHED_KEYS)
 	                this.keys.delete(this.keys.keys().next().value);
-	            cryptoKey = this.subtle.importKey('raw', key, 'AES-CBC', false, ['encrypt', 'decrypt']);
+	            const usages = algorithm === 'AES-CBC' ? ['encrypt', 'decrypt'] : ['decrypt'];
+	            cryptoKey = this.subtle.importKey('raw', key, algorithm, false, usages);
 	            cryptoKey.catch(() => this.keys.delete(id));
 	            this.keys.set(id, cryptoKey);
 	        }
@@ -1248,6 +1351,129 @@
 	 * @internal
 	 */
 	AesCbcCryptor.primitives = new WebCryptoPrimitives();
+
+	/**
+	 * AES-GCM cryptor module.
+	 */
+	/**
+	 * AES-GCM cryptor.
+	 *
+	 * Decrypt-only AES-256-GCM cryptor for payloads produced by other PubNub SDKs. Cryptor metadata stored in the
+	 * header is `nonce (12 bytes) || authentication tag (16 bytes)`.
+	 *
+	 * **Note:** Encryption isn't supported and cryptor can't be used as crypto module default cryptor.
+	 */
+	class AesGcmCryptor {
+	    constructor({ cipherKey }) {
+	        this.cipherKey = cipherKey;
+	    }
+	    // --------------------------------------------------------
+	    // --------------------- Encryption -----------------------
+	    // --------------------------------------------------------
+	    // region Encryption
+	    encrypt(_data) {
+	        throw new Error(AesGcmCryptor.ENCRYPTION_ERROR);
+	    }
+	    encryptFileData(_data) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            throw new Error(AesGcmCryptor.ENCRYPTION_ERROR);
+	        });
+	    }
+	    // endregion
+	    // --------------------------------------------------------
+	    // --------------------- Decryption -----------------------
+	    // --------------------------------------------------------
+	    // region Decryption
+	    decrypt(encryptedData) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.decryptFileData(encryptedData);
+	        });
+	    }
+	    decryptFileData(encryptedData) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            if (typeof encryptedData.data === 'string')
+	                throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
+	            if (encryptedData.data.byteLength === 0)
+	                throw new Error('Decryption error: empty content');
+	            if (!encryptedData.metadata || encryptedData.metadata.byteLength !== AesGcmCryptor.METADATA_LENGTH)
+	                throw new Error('Decryption error: invalid metadata');
+	            const metadata = new Uint8Array(encryptedData.metadata);
+	            try {
+	                const decrypted = yield AesGcmCryptor.primitives.aesGcmDecrypt(yield this.getKey(), metadata.slice(0, AesGcmCryptor.NONCE_LENGTH), new Uint8Array(encryptedData.data), metadata.slice(AesGcmCryptor.NONCE_LENGTH));
+	                return toArrayBuffer(decrypted);
+	            }
+	            catch (_error) {
+	                // Native error intentionally not exposed: wrong key and modified payload should be indistinguishable.
+	                throw new Error(AesGcmCryptor.DECRYPTION_ERROR);
+	            }
+	        });
+	    }
+	    // endregion
+	    // --------------------------------------------------------
+	    // ----------------------- Helpers ------------------------
+	    // --------------------------------------------------------
+	    // region Helpers
+	    get identifier() {
+	        return AesGcmCryptor.IDENTIFIER;
+	    }
+	    /**
+	     * Compute raw decryption key (cached).
+	     *
+	     * @returns SHA-256 digest of the cipher key.
+	     *
+	     * @internal
+	     */
+	    getKey() {
+	        if (!this.key) {
+	            this.key = AesGcmCryptor.primitives.sha256(AesGcmCryptor.encoder.encode(this.cipherKey));
+	            this.key.catch(() => (this.key = undefined));
+	        }
+	        return this.key;
+	    }
+	    // endregion
+	    /**
+	     * Serialize cryptor information to string.
+	     *
+	     * @returns Serialized cryptor information.
+	     */
+	    toString() {
+	        return 'AesGcmCryptor {}';
+	    }
+	}
+	/**
+	 * Cryptor unique identifier.
+	 */
+	AesGcmCryptor.IDENTIFIER = 'ACGM';
+	/**
+	 * Nonce length.
+	 */
+	AesGcmCryptor.NONCE_LENGTH = 12;
+	/**
+	 * Authentication tag length.
+	 */
+	AesGcmCryptor.TAG_LENGTH = 16;
+	/**
+	 * Cryptor metadata length (nonce and authentication tag).
+	 */
+	AesGcmCryptor.METADATA_LENGTH = AesGcmCryptor.NONCE_LENGTH + AesGcmCryptor.TAG_LENGTH;
+	/**
+	 * Generic decryption error message (doesn't reveal which part of the payload failed authentication).
+	 */
+	AesGcmCryptor.DECRYPTION_ERROR = 'Decryption error: unable to decrypt data';
+	/**
+	 * Unsupported encryption error message.
+	 */
+	AesGcmCryptor.ENCRYPTION_ERROR = 'Encryption error: AES-GCM cryptor (ACGM) supports decryption only.';
+	/**
+	 * {@link string|String} to {@link ArrayBuffer} response decoder.
+	 */
+	AesGcmCryptor.encoder = new TextEncoder();
+	/**
+	 * Native crypto primitives.
+	 *
+	 * @internal
+	 */
+	AesGcmCryptor.primitives = new WebCryptoPrimitives();
 
 	/**
 	 * PubNub package utilities module.
@@ -2025,7 +2251,10 @@
 	        }
 	        return new WebCryptoModule({
 	            default: new LegacyCryptor(Object.assign(Object.assign({}, config), { useRandomIVs: (_a = config.useRandomIVs) !== null && _a !== void 0 ? _a : true })),
-	            cryptors: [new AesCbcCryptor({ cipherKey: config.cipherKey })],
+	            cryptors: [
+	                new AesCbcCryptor({ cipherKey: config.cipherKey }),
+	                new AesGcmCryptor({ cipherKey: config.cipherKey }),
+	            ],
 	        });
 	    }
 	    static aesCbcCryptoModule(config) {
@@ -2036,8 +2265,34 @@
 	            default: new AesCbcCryptor({ cipherKey: config.cipherKey }),
 	            cryptors: [
 	                new LegacyCryptor(Object.assign(Object.assign({}, config), { useRandomIVs: (_a = config.useRandomIVs) !== null && _a !== void 0 ? _a : true })),
+	                new AesGcmCryptor({ cipherKey: config.cipherKey }),
 	            ],
 	        });
+	    }
+	    /**
+	     * Construct decrypt-only AES-GCM cryptor.
+	     *
+	     * Modules created with {@link aesCbcCryptoModule}, {@link legacyCryptoModule} or `cipherKey` already register it.
+	     * Use it to let a custom crypto module decrypt AES-GCM (`ACGM`) payloads produced by other PubNub SDKs:
+	     *
+	     * @example
+	     * ```typescript
+	     * const cryptoModule = new PubNub.CryptoModule({
+	     *   default: myCryptor,
+	     *   cryptors: [PubNub.CryptoModule.aesGcmCryptor({ cipherKey: 'my-key' })],
+	     * });
+	     * ```
+	     *
+	     * @param config - Cryptor configuration options.
+	     *
+	     * @returns AES-GCM cryptor which can be used only as an additional (decryption) cryptor.
+	     *
+	     * @throws Error if `config.cipherKey` not set.
+	     */
+	    static aesGcmCryptor(config) {
+	        if (!config.cipherKey)
+	            throw new PubNubError('Crypto module error: cipher key not set.');
+	        return new AesGcmCryptor({ cipherKey: config.cipherKey });
 	    }
 	    /**
 	     * Construct crypto module with `cryptor` as default for data encryption and decryption.
@@ -2123,7 +2378,7 @@
 	            const metadata = fileData.slice(header.length - header.metadataLength, header.length);
 	            return File.create({
 	                name: file.name,
-	                data: yield this.defaultCryptor.decryptFileData({
+	                data: yield cryptor.decryptFileData({
 	                    data: data.slice(header.length),
 	                    metadata: metadata,
 	                }),
@@ -20835,7 +21090,10 @@
 	            {
 	                const cryptoModule = new WebCryptoModule({
 	                    default: new LegacyCryptor(Object.assign(Object.assign({}, cryptoConfiguration), (!cryptoConfiguration.logger ? { logger: clientConfiguration.logger() } : {}))),
-	                    cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
+	                    cryptors: [
+	                        new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey }),
+	                        new AesGcmCryptor({ cipherKey: cryptoConfiguration.cipherKey }),
+	                    ],
 	                });
 	                return cryptoModule;
 	            }

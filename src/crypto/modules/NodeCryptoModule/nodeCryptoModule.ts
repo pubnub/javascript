@@ -132,7 +132,7 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
    *
    * @throws Error if `config.cipherKey` not set.
    */
-  static aesGcmCryptor(config: CryptorConfiguration) {
+  static aesGcmCryptor(config: CryptorConfiguration): ICryptor {
     if (!config.cipherKey) throw new PubNubError('Crypto module error: cipher key not set.');
 
     return new AesGcmCryptor({ cipherKey: config.cipherKey });
