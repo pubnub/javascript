@@ -6,6 +6,7 @@ import { PubNubFileConstructor, PubNubFileInterface } from '../types/file';
 import { LoggerManager } from '../components/logger-manager';
 import { Payload } from '../types/api';
 import { MaybePromise } from './crypto-primitives';
+import { PubNubError } from '../../errors/pubnub-error';
 
 /**
  * Crypto module configuration.
@@ -195,6 +196,10 @@ export abstract class AbstractCryptoModule<C> implements ICryptoModule {
   // endregion
 
   constructor(configuration: CryptoModuleConfiguration<C>) {
+    // AES-GCM cryptor is decrypt-only and can be registered only as an additional cryptor.
+    if ((configuration.default as { identifier?: string } | undefined)?.identifier === 'ACGM')
+      throw new PubNubError("Crypto module error: AES-GCM cryptor (ACGM) can't be used as default cryptor.");
+
     this.defaultCryptor = configuration.default;
     this.cryptors = configuration.cryptors ?? [];
   }
