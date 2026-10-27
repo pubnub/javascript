@@ -6,7 +6,7 @@
 /* global crypto */
 
 import { CryptoPrimitives } from '../../core/interfaces/crypto-primitives';
-import { bytesToHex } from '../../core/components/cryptography/bytes';
+import { bytesToHex, concatBytes } from '../../core/components/cryptography/bytes';
 import { PubNubError } from '../../errors/pubnub-error';
 
 /**
@@ -21,7 +21,7 @@ export default class WebCryptoPrimitives implements CryptoPrimitives {
   private static readonly MAX_CACHED_KEYS = 8;
 
   /**
-   * Imported keys cache (keyed by the hex representation of the raw key).
+   * Imported keys cache (keyed by the algorithm and hex representation of the raw key).
    */
   private readonly keys = new Map<string, Promise<CryptoKey>>();
 
@@ -30,13 +30,20 @@ export default class WebCryptoPrimitives implements CryptoPrimitives {
   }
 
   async aesCbcEncrypt(key: Uint8Array, iv: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
-    const cryptoKey = await this.importKey(key);
+    const cryptoKey = await this.importKey(key, 'AES-CBC');
     return new Uint8Array(await this.subtle.encrypt({ name: 'AES-CBC', iv }, cryptoKey, data));
   }
 
   async aesCbcDecrypt(key: Uint8Array, iv: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
-    const cryptoKey = await this.importKey(key);
+    const cryptoKey = await this.importKey(key, 'AES-CBC');
     return new Uint8Array(await this.subtle.decrypt({ name: 'AES-CBC', iv }, cryptoKey, data));
+  }
+
+  async aesGcmDecrypt(key: Uint8Array, nonce: Uint8Array, data: Uint8Array, tag: Uint8Array): Promise<Uint8Array> {
+    const cryptoKey = await this.importKey(key, 'AES-GCM');
+    return new Uint8Array(
+      await this.subtle.decrypt({ name: 'AES-GCM', iv: nonce, tagLength: 128 }, cryptoKey, concatBytes(data, tag)),
+    );
   }
 
   randomBytes(length: number): Uint8Array {
@@ -60,20 +67,22 @@ export default class WebCryptoPrimitives implements CryptoPrimitives {
   }
 
   /**
-   * Import raw AES-CBC key (cached, least recently imported keys evicted first).
+   * Import raw AES key (cached, least recently imported keys evicted first).
    *
    * @param key - Raw key bytes.
+   * @param algorithm - Algorithm for which key will be used.
    *
    * @returns Imported `CryptoKey`.
    */
-  private importKey(key: Uint8Array): Promise<CryptoKey> {
-    const id = bytesToHex(key);
+  private importKey(key: Uint8Array, algorithm: 'AES-CBC' | 'AES-GCM'): Promise<CryptoKey> {
+    const id = `${algorithm}:${bytesToHex(key)}`;
     let cryptoKey = this.keys.get(id);
 
     if (!cryptoKey) {
       if (this.keys.size >= WebCryptoPrimitives.MAX_CACHED_KEYS) this.keys.delete(this.keys.keys().next().value!);
 
-      cryptoKey = this.subtle.importKey('raw', key, 'AES-CBC', false, ['encrypt', 'decrypt']);
+      const usages: KeyUsage[] = algorithm === 'AES-CBC' ? ['encrypt', 'decrypt'] : ['decrypt'];
+      cryptoKey = this.subtle.importKey('raw', key, algorithm, false, usages);
       cryptoKey.catch(() => this.keys.delete(id));
       this.keys.set(id, cryptoKey);
     }

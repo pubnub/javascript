@@ -3,7 +3,12 @@
 
 import CborReader from 'cbor-js';
 
-import { WebCryptoModule, AesCbcCryptor, LegacyCryptor } from '../crypto/modules/WebCryptoModule/webCryptoModule';
+import {
+  WebCryptoModule,
+  AesCbcCryptor,
+  AesGcmCryptor,
+  LegacyCryptor,
+} from '../crypto/modules/WebCryptoModule/webCryptoModule';
 import type { WebCryptoModule as CryptoModuleType } from '../crypto/modules/WebCryptoModule/webCryptoModule';
 
 import { SubscriptionWorkerMiddleware } from '../transport/subscription-worker/subscription-worker-middleware';
@@ -71,7 +76,10 @@ export default class PubNub extends PubNubCore<ArrayBuffer | string, PubNubFileP
               ...cryptoConfiguration,
               ...(!cryptoConfiguration.logger ? { logger: clientConfiguration.logger() } : {}),
             }),
-            cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
+            cryptors: [
+              new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey }),
+              new AesGcmCryptor({ cipherKey: cryptoConfiguration.cipherKey }),
+            ],
           });
 
           return cryptoModule;

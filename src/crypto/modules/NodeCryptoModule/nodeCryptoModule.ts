@@ -14,13 +14,14 @@ import { PubNubError } from '../../../errors/pubnub-error';
 import { EncryptedDataType, ICryptor } from './ICryptor';
 import { ILegacyCryptor } from './ILegacyCryptor';
 import AesCbcCryptor from './aesCbcCryptor';
+import AesGcmCryptor from './aesGcmCryptor';
 import LegacyCryptor from './legacyCryptor';
 import { Payload } from '../../../core/types/api';
 
 /**
  * Re-export bundled cryptors.
  */
-export { LegacyCryptor, AesCbcCryptor };
+export { LegacyCryptor, AesCbcCryptor, AesGcmCryptor };
 
 /**
  * Crypto module cryptors interface.
@@ -89,7 +90,10 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
         ...config,
         useRandomIVs: config.useRandomIVs ?? true,
       }),
-      cryptors: [new AesCbcCryptor({ cipherKey: config.cipherKey })],
+      cryptors: [
+        new AesCbcCryptor({ cipherKey: config.cipherKey }),
+        new AesGcmCryptor({ cipherKey: config.cipherKey }),
+      ],
     });
   }
 
@@ -103,8 +107,35 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
           ...config,
           useRandomIVs: config.useRandomIVs ?? true,
         }),
+        new AesGcmCryptor({ cipherKey: config.cipherKey }),
       ],
     });
+  }
+
+  /**
+   * Construct decrypt-only AES-GCM cryptor.
+   *
+   * Modules created with {@link aesCbcCryptoModule}, {@link legacyCryptoModule} or `cipherKey` already register it.
+   * Use it to let a custom crypto module decrypt AES-GCM (`ACGM`) payloads produced by other PubNub SDKs:
+   *
+   * @example
+   * ```typescript
+   * const cryptoModule = new PubNub.CryptoModule({
+   *   default: myCryptor,
+   *   cryptors: [PubNub.CryptoModule.aesGcmCryptor({ cipherKey: 'my-key' })],
+   * });
+   * ```
+   *
+   * @param config - Cryptor configuration options.
+   *
+   * @returns AES-GCM cryptor which can be used only as an additional (decryption) cryptor.
+   *
+   * @throws Error if `config.cipherKey` not set.
+   */
+  static aesGcmCryptor(config: CryptorConfiguration) {
+    if (!config.cipherKey) throw new PubNubError('Crypto module error: cipher key not set.');
+
+    return new AesGcmCryptor({ cipherKey: config.cipherKey });
   }
 
   /**

@@ -41,6 +41,20 @@ export default class NodeCryptoPrimitives implements CryptoPrimitives {
     return new Uint8Array(Buffer.concat([decipher.update(data), decipher.final()]));
   }
 
+  async aesGcmDecrypt(key: Uint8Array, nonce: Uint8Array, data: Uint8Array, tag: Uint8Array): Promise<Uint8Array> {
+    const decipher = createDecipheriv('aes-256-gcm', key, nonce, { authTagLength: 16 });
+    decipher.setAuthTag(tag);
+
+    // `update` returns not yet authenticated data: release it only after `final` verified the tag.
+    const decrypted = decipher.update(data);
+    try {
+      return new Uint8Array(Buffer.concat([decrypted, decipher.final()]));
+    } catch (error) {
+      decrypted.fill(0);
+      throw error;
+    }
+  }
+
   randomBytes(length: number): Uint8Array {
     return new Uint8Array(randomBytes(length));
   }

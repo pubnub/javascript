@@ -2,7 +2,12 @@ import CborReader from 'cbor-sync';
 import { Readable } from 'stream';
 import { Buffer } from 'buffer';
 
-import { NodeCryptoModule, LegacyCryptor, AesCbcCryptor } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
+import {
+  NodeCryptoModule,
+  LegacyCryptor,
+  AesCbcCryptor,
+  AesGcmCryptor,
+} from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 import type { NodeCryptoModule as CryptoModuleType } from '../crypto/modules/NodeCryptoModule/nodeCryptoModule';
 
 import { ExtendedConfiguration, PlatformConfiguration } from '../core/interfaces/configuration';
@@ -75,7 +80,10 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
               ...cryptoConfiguration,
               ...(!cryptoConfiguration.logger ? { logger: clientConfiguration.logger() } : {}),
             }),
-            cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
+            cryptors: [
+              new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey }),
+              new AesGcmCryptor({ cipherKey: cryptoConfiguration.cipherKey }),
+            ],
           });
         } else return undefined;
       },
