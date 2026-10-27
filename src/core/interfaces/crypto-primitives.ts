@@ -50,22 +50,6 @@ export interface CryptoPrimitives {
   aesCbcDecrypt(key: Uint8Array, iv: Uint8Array, data: Uint8Array): Promise<Uint8Array>;
 
   /**
-   * Decrypt and authenticate data using AES-256-GCM (128-bit tag, no additional authenticated data).
-   *
-   * Plaintext is returned only after the authentication tag has been verified.
-   *
-   * @param key - 32 bytes long raw key.
-   * @param nonce - 12 bytes long nonce.
-   * @param data - Data which should be decrypted (without authentication tag).
-   * @param tag - 16 bytes long authentication tag.
-   *
-   * @returns Decrypted data.
-   *
-   * @throws Error if data can't be authenticated (for example: wrong key or modified nonce, tag or data).
-   */
-  aesGcmDecrypt(key: Uint8Array, nonce: Uint8Array, data: Uint8Array, tag: Uint8Array): Promise<Uint8Array>;
-
-  /**
    * Generate cryptographically secure random bytes.
    *
    * @param length - Number of bytes which should be generated.

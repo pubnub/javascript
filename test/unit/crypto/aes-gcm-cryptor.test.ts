@@ -8,8 +8,6 @@ import { WebCryptoModule } from '../../../src/crypto/modules/WebCryptoModule/web
 import { NodeCryptoModule } from '../../../src/crypto/modules/NodeCryptoModule/nodeCryptoModule';
 import WebAesGcmCryptor from '../../../src/crypto/modules/WebCryptoModule/aesGcmCryptor';
 import NodeAesGcmCryptor from '../../../src/crypto/modules/NodeCryptoModule/aesGcmCryptor';
-import NobleCryptoPrimitives from '../../../src/react_native/crypto/noble-primitives';
-import { CryptoPrimitives } from '../../../src/core/interfaces/crypto-primitives';
 import NodeCryptoPrimitives from '../../../src/crypto/primitives/node';
 import WebCryptoPrimitives from '../../../src/crypto/primitives/web';
 import { PubNubFile as WebPubNubFile } from '../../../src/file/modules/web';
@@ -85,10 +83,9 @@ const readStream = (stream: NodeJS.ReadableStream) =>
     stream.on('end', () => resolve({ data: Buffer.concat(chunks), chunks: chunks.length }));
   });
 
-const primitives: Record<string, () => CryptoPrimitives> = {
+const primitives: Record<string, () => WebCryptoPrimitives | NodeCryptoPrimitives> = {
   web: () => new WebCryptoPrimitives(),
   node: () => new NodeCryptoPrimitives(),
-  noble: () => new NobleCryptoPrimitives(),
 };
 
 const cryptors = {
