@@ -8,8 +8,7 @@ import { ICryptoModule } from '../interfaces/crypto-module';
 import { AbstractRequest } from '../components/request';
 import RequestOperation from '../constants/operations';
 import { KeySet, Payload, Query } from '../types/api';
-import { encode } from '../components/base64_codec';
-import { encodeString } from '../utils';
+import { encodeString, encryptMessagePayload } from '../utils';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -134,6 +133,11 @@ type ServiceResponse = [0 | 1, string, string];
  */
 export class PublishRequest extends AbstractRequest<PublishResponse, ServiceResponse> {
   /**
+   * Stringified encrypted payload (computed by {@link prepare} when `crypto` is set).
+   */
+  private encryptedPayload?: string;
+
+  /**
    * Construct data publish request.
    *
    * @param parameters - Request configuration.
@@ -161,6 +165,15 @@ export class PublishRequest extends AbstractRequest<PublishResponse, ServiceResp
     if (!channel) return "Missing 'channel'";
     if (!message) return "Missing 'message'";
     if (!publishKey) return "Missing 'publishKey'";
+  }
+
+  prepare(): Promise<void> | void {
+    const { crypto, message } = this.parameters;
+    if (!crypto) return;
+
+    return encryptMessagePayload(crypto, message).then((encrypted) => {
+      this.encryptedPayload = encrypted;
+    });
   }
 
   async parse(response: TransportResponse): Promise<PublishResponse> {
@@ -201,20 +214,19 @@ export class PublishRequest extends AbstractRequest<PublishResponse, ServiceResp
   /**
    * Pre-process provided data.
    *
-   * Data will be "normalized" and encrypted if `cryptoModule` has been provided.
+   * Data will be "normalized" and use encrypted payload computed by {@link prepare} if `cryptoModule` has
+   * been provided.
    *
    * @param payload - User-provided data which should be pre-processed before use.
    *
    * @returns Payload which can be used as part of request URL or body.
    *
-   * @throws {Error} in case if provided `payload` or results of `encryption` can't be stringified.
+   * @throws {Error} in case if provided `payload` can't be stringified or request hasn't been prepared.
    */
   private prepareMessagePayload(payload: Payload): string {
-    const { crypto } = this.parameters;
-    if (!crypto) return JSON.stringify(payload) || '';
+    if (!this.parameters.crypto) return JSON.stringify(payload) || '';
+    if (this.encryptedPayload === undefined) throw new Error('Encryption error: request payload not prepared');
 
-    const encrypted = crypto.encrypt(JSON.stringify(payload));
-
-    return JSON.stringify(typeof encrypted === 'string' ? encrypted : encode(encrypted));
+    return this.encryptedPayload;
   }
 }

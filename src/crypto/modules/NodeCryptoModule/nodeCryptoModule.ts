@@ -14,13 +14,14 @@ import { PubNubError } from '../../../errors/pubnub-error';
 import { EncryptedDataType, ICryptor } from './ICryptor';
 import { ILegacyCryptor } from './ILegacyCryptor';
 import AesCbcCryptor from './aesCbcCryptor';
+import AesGcmCryptor from './aesGcmCryptor';
 import LegacyCryptor from './legacyCryptor';
 import { Payload } from '../../../core/types/api';
 
 /**
  * Re-export bundled cryptors.
  */
-export { LegacyCryptor, AesCbcCryptor };
+export { LegacyCryptor, AesCbcCryptor, AesGcmCryptor };
 
 /**
  * Crypto module cryptors interface.
@@ -89,7 +90,10 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
         ...config,
         useRandomIVs: config.useRandomIVs ?? true,
       }),
-      cryptors: [new AesCbcCryptor({ cipherKey: config.cipherKey })],
+      cryptors: [
+        new AesCbcCryptor({ cipherKey: config.cipherKey }),
+        new AesGcmCryptor({ cipherKey: config.cipherKey }),
+      ],
     });
   }
 
@@ -103,8 +107,35 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
           ...config,
           useRandomIVs: config.useRandomIVs ?? true,
         }),
+        new AesGcmCryptor({ cipherKey: config.cipherKey }),
       ],
     });
+  }
+
+  /**
+   * Construct decrypt-only AES-GCM cryptor.
+   *
+   * Modules created with {@link aesCbcCryptoModule}, {@link legacyCryptoModule} or `cipherKey` already register it.
+   * Use it to let a custom crypto module decrypt AES-GCM (`ACGM`) payloads produced by other PubNub SDKs:
+   *
+   * @example
+   * ```typescript
+   * const cryptoModule = new PubNub.CryptoModule({
+   *   default: myCryptor,
+   *   cryptors: [PubNub.CryptoModule.aesGcmCryptor({ cipherKey: 'my-key' })],
+   * });
+   * ```
+   *
+   * @param config - Cryptor configuration options.
+   *
+   * @returns AES-GCM cryptor which can be used only as an additional (decryption) cryptor.
+   *
+   * @throws Error if `config.cipherKey` not set.
+   */
+  static aesGcmCryptor(config: CryptorConfiguration): ICryptor {
+    if (!config.cipherKey) throw new PubNubError('Crypto module error: cipher key not set.');
+
+    return new AesGcmCryptor({ cipherKey: config.cipherKey });
   }
 
   /**
@@ -124,12 +155,12 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
   // --------------------------------------------------------
   // region Encryption
 
-  encrypt(data: ArrayBuffer | string) {
+  async encrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | string> {
     // Encrypt data.
     const encrypted =
       data instanceof ArrayBuffer && this.defaultCryptor.identifier === NodeCryptoModule.LEGACY_IDENTIFIER
-        ? (this.defaultCryptor as ILegacyCryptor).encrypt(NodeCryptoModule.decoder.decode(data))
-        : (this.defaultCryptor as ICryptor).encrypt(data);
+        ? await (this.defaultCryptor as ILegacyCryptor).encrypt(NodeCryptoModule.decoder.decode(data))
+        : await (this.defaultCryptor as ICryptor).encrypt(data);
 
     if (!encrypted.metadata) return encrypted.data;
 
@@ -153,7 +184,7 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
       return (this.defaultCryptor as ILegacyCryptor).encryptFile(file, File);
 
     if (file.data instanceof Buffer) {
-      const encryptedData = this.encrypt(file.data);
+      const encryptedData = await this.encrypt(file.data);
 
       return File.create({
         name: file.name,
@@ -198,7 +229,7 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
   // --------------------------------------------------------
   // region Decryption
 
-  decrypt(data: ArrayBuffer | string): ArrayBuffer | Payload | null {
+  async decrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | Payload | null> {
     const encryptedData = Buffer.from(typeof data === 'string' ? decode(data) : data);
     const header = CryptorHeader.tryParse(
       encryptedData.buffer.slice(encryptedData.byteOffset, encryptedData.byteOffset + encryptedData.length),
@@ -235,7 +266,7 @@ export class NodeCryptoModule extends AbstractCryptoModule<CryptorType> {
 
       return File.create({
         name: file.name,
-        data: Buffer.from(this.decrypt(file.data) as ArrayBuffer),
+        data: Buffer.from((await this.decrypt(file.data)) as ArrayBuffer),
       });
     }
 

@@ -31,9 +31,9 @@ type PubNubMiddlewareConfiguration = {
   tokenManager?: TokenManager;
 
   /**
-   * HMAC-SHA256 hash generator from provided `data`.
+   * HMAC-SHA256 hash generator from provided `data` (base64 encoded digest).
    */
-  shaHMAC?: (data: string) => string;
+  shaHMAC?: (data: string, secretKey: string) => string;
 
   /**
    * Platform-specific transport for requests processing.

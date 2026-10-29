@@ -15,6 +15,7 @@ import PubNubFile from '../file/modules/react-native';
 import { PubNubConfiguration } from './configuration';
 import Crypto from '../core/components/cryptography';
 import LegacyCryptoModule from '../crypto/modules/LegacyCryptoModule';
+import NobleCryptoPrimitives from './crypto/noble-primitives';
 import type { CryptorConfiguration, ICryptoModule } from '../core/interfaces/crypto-module';
 import { PubNubCore } from '../core/pubnub-common';
 import { setDefaults } from './configuration';
@@ -109,14 +110,17 @@ export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
         if (!cryptoConfiguration.cipherKey) return undefined;
 
         if (process.env.CRYPTO_MODULE !== 'disabled') {
-          const legacy = new Crypto({
-            secretKey: platformConfiguration.secretKey,
-            cipherKey: cryptoConfiguration.cipherKey,
-            useRandomIVs: platformConfiguration.useRandomIVs,
-            customEncrypt: platformConfiguration.customEncrypt,
-            customDecrypt: platformConfiguration.customDecrypt,
-            logger: cryptoConfiguration.logger,
-          });
+          const legacy = new Crypto(
+            {
+              secretKey: platformConfiguration.secretKey,
+              cipherKey: cryptoConfiguration.cipherKey,
+              useRandomIVs: platformConfiguration.useRandomIVs,
+              customEncrypt: platformConfiguration.customEncrypt,
+              customDecrypt: platformConfiguration.customDecrypt,
+              logger: cryptoConfiguration.logger,
+            },
+            new NobleCryptoPrimitives(),
+          );
           return new LegacyCryptoModule(legacy);
         }
         return undefined;
@@ -135,14 +139,17 @@ export default class PubNub extends PubNubCore<null, PubNubFileParameters> {
     let crypto: Crypto | undefined;
     if (process.env.CRYPTO_MODULE !== 'disabled') {
       if (clientConfiguration.getCipherKey() || clientConfiguration.secretKey) {
-        crypto = new Crypto({
-          secretKey: clientConfiguration.secretKey,
-          cipherKey: clientConfiguration.getCipherKey(),
-          useRandomIVs: clientConfiguration.getUseRandomIVs(),
-          customEncrypt: clientConfiguration.getCustomEncrypt(),
-          customDecrypt: clientConfiguration.getCustomDecrypt(),
-          logger: clientConfiguration.logger(),
-        });
+        crypto = new Crypto(
+          {
+            secretKey: clientConfiguration.secretKey,
+            cipherKey: clientConfiguration.getCipherKey(),
+            useRandomIVs: clientConfiguration.getUseRandomIVs(),
+            customEncrypt: clientConfiguration.getCustomEncrypt(),
+            customDecrypt: clientConfiguration.getCustomDecrypt(),
+            logger: clientConfiguration.logger(),
+          },
+          new NobleCryptoPrimitives(),
+        );
       }
     }
 
