@@ -1037,22 +1037,6 @@
 	 */
 	const toArrayBuffer = (bytes) => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 	/**
-	 * Concatenate two byte sequences.
-	 *
-	 * @param first - Leading bytes.
-	 * @param second - Trailing bytes.
-	 *
-	 * @returns New bytes array with {@link first} followed by {@link second}.
-	 *
-	 * @internal
-	 */
-	const concatBytes = (first, second) => {
-	    const result = new Uint8Array(first.byteLength + second.byteLength);
-	    result.set(first, 0);
-	    result.set(second, first.byteLength);
-	    return result;
-	};
-	/**
 	 * Check whether bytes are well-formed UTF-8.
 	 *
 	 * Implements Unicode "Well-Formed UTF-8 Byte Sequences" (Table 3-7): rejects stray continuation bytes, overlong
@@ -1180,17 +1164,16 @@
 	     *
 	     * @param key - 32 bytes long raw key.
 	     * @param nonce - 12 bytes long nonce.
-	     * @param data - Data which should be decrypted (without authentication tag).
-	     * @param tag - 16 bytes long authentication tag.
+	     * @param data - Data which should be decrypted, with 16 bytes long authentication tag appended to the ciphertext.
 	     *
 	     * @returns Decrypted data (returned only after the authentication tag has been verified).
 	     *
-	     * @throws Error if data can't be authenticated (for example: wrong key or modified nonce, tag or data).
+	     * @throws Error if data can't be authenticated (for example: wrong key or modified nonce, ciphertext or tag).
 	     */
-	    aesGcmDecrypt(key, nonce, data, tag) {
+	    aesGcmDecrypt(key, nonce, data) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            const cryptoKey = yield this.importKey(key, 'AES-GCM');
-	            return new Uint8Array(yield this.subtle.decrypt({ name: 'AES-GCM', iv: nonce, tagLength: 128 }, cryptoKey, concatBytes(data, tag)));
+	            return new Uint8Array(yield this.subtle.decrypt({ name: 'AES-GCM', iv: nonce, tagLength: 128 }, cryptoKey, data));
 	        });
 	    }
 	    randomBytes(length) {
@@ -1359,7 +1342,8 @@
 	 * AES-GCM cryptor.
 	 *
 	 * Decrypt-only AES-256-GCM cryptor for payloads produced by other PubNub SDKs. Cryptor metadata stored in the
-	 * header is `nonce (12 bytes) || authentication tag (16 bytes)`.
+	 * header is `nonce (12 bytes)` and the authentication tag (16 bytes) is appended to the ciphertext:
+	 * `ciphertext || authentication tag`.
 	 *
 	 * **Note:** Encryption isn't supported and cryptor can't be used as crypto module default cryptor.
 	 */
@@ -1393,13 +1377,12 @@
 	        return __awaiter(this, void 0, void 0, function* () {
 	            if (typeof encryptedData.data === 'string')
 	                throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
-	            if (encryptedData.data.byteLength === 0)
-	                throw new Error('Decryption error: empty content');
 	            if (!encryptedData.metadata || encryptedData.metadata.byteLength !== AesGcmCryptor.METADATA_LENGTH)
 	                throw new Error('Decryption error: invalid metadata');
-	            const metadata = new Uint8Array(encryptedData.metadata);
+	            if (encryptedData.data.byteLength <= AesGcmCryptor.TAG_LENGTH)
+	                throw new Error('Decryption error: empty content');
 	            try {
-	                const decrypted = yield AesGcmCryptor.primitives.aesGcmDecrypt(yield this.getKey(), metadata.slice(0, AesGcmCryptor.NONCE_LENGTH), new Uint8Array(encryptedData.data), metadata.slice(AesGcmCryptor.NONCE_LENGTH));
+	                const decrypted = yield AesGcmCryptor.primitives.aesGcmDecrypt(yield this.getKey(), new Uint8Array(encryptedData.metadata), new Uint8Array(encryptedData.data));
 	                return toArrayBuffer(decrypted);
 	            }
 	            catch (_error) {
@@ -1453,9 +1436,9 @@
 	 */
 	AesGcmCryptor.TAG_LENGTH = 16;
 	/**
-	 * Cryptor metadata length (nonce and authentication tag).
+	 * Cryptor metadata length (nonce only).
 	 */
-	AesGcmCryptor.METADATA_LENGTH = AesGcmCryptor.NONCE_LENGTH + AesGcmCryptor.TAG_LENGTH;
+	AesGcmCryptor.METADATA_LENGTH = AesGcmCryptor.NONCE_LENGTH;
 	/**
 	 * Generic decryption error message (doesn't reveal which part of the payload failed authentication).
 	 */
