@@ -6,7 +6,7 @@
 /* global crypto */
 
 import { CryptoPrimitives } from '../../core/interfaces/crypto-primitives';
-import { bytesToHex, concatBytes } from '../../core/components/cryptography/bytes';
+import { bytesToHex } from '../../core/components/cryptography/bytes';
 import { PubNubError } from '../../errors/pubnub-error';
 
 /**
@@ -47,18 +47,15 @@ export default class WebCryptoPrimitives implements CryptoPrimitives {
    *
    * @param key - 32 bytes long raw key.
    * @param nonce - 12 bytes long nonce.
-   * @param data - Data which should be decrypted (without authentication tag).
-   * @param tag - 16 bytes long authentication tag.
+   * @param data - Data which should be decrypted, with 16 bytes long authentication tag appended to the ciphertext.
    *
    * @returns Decrypted data (returned only after the authentication tag has been verified).
    *
-   * @throws Error if data can't be authenticated (for example: wrong key or modified nonce, tag or data).
+   * @throws Error if data can't be authenticated (for example: wrong key or modified nonce, ciphertext or tag).
    */
-  async aesGcmDecrypt(key: Uint8Array, nonce: Uint8Array, data: Uint8Array, tag: Uint8Array): Promise<Uint8Array> {
+  async aesGcmDecrypt(key: Uint8Array, nonce: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
     const cryptoKey = await this.importKey(key, 'AES-GCM');
-    return new Uint8Array(
-      await this.subtle.decrypt({ name: 'AES-GCM', iv: nonce, tagLength: 128 }, cryptoKey, concatBytes(data, tag)),
-    );
+    return new Uint8Array(await this.subtle.decrypt({ name: 'AES-GCM', iv: nonce, tagLength: 128 }, cryptoKey, data));
   }
 
   randomBytes(length: number): Uint8Array {

@@ -10,7 +10,8 @@ import { ICryptor, EncryptedDataType } from './ICryptor';
  * AES-GCM cryptor.
  *
  * Decrypt-only AES-256-GCM cryptor for payloads produced by other PubNub SDKs. Cryptor metadata stored in the
- * header is `nonce (12 bytes) || authentication tag (16 bytes)`.
+ * header is `nonce (12 bytes)` and the authentication tag (16 bytes) is appended to the ciphertext:
+ * `ciphertext || authentication tag`.
  *
  * **Note:** Encryption isn't supported and cryptor can't be used as crypto module default cryptor.
  */
@@ -31,9 +32,9 @@ export default class AesGcmCryptor implements ICryptor {
   static TAG_LENGTH = 16;
 
   /**
-   * Cryptor metadata length (nonce and authentication tag).
+   * Cryptor metadata length (nonce only).
    */
-  static METADATA_LENGTH = AesGcmCryptor.NONCE_LENGTH + AesGcmCryptor.TAG_LENGTH;
+  static METADATA_LENGTH = AesGcmCryptor.NONCE_LENGTH;
 
   /**
    * Generic decryption error message (doesn't reveal which part of the payload failed authentication).
@@ -99,18 +100,15 @@ export default class AesGcmCryptor implements ICryptor {
   async decryptFileData(encryptedData: EncryptedDataType): Promise<ArrayBuffer> {
     if (typeof encryptedData.data === 'string')
       throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
-    if (encryptedData.data.byteLength === 0) throw new Error('Decryption error: empty content');
     if (!encryptedData.metadata || encryptedData.metadata.byteLength !== AesGcmCryptor.METADATA_LENGTH)
       throw new Error('Decryption error: invalid metadata');
-
-    const metadata = new Uint8Array(encryptedData.metadata);
+    if (encryptedData.data.byteLength <= AesGcmCryptor.TAG_LENGTH) throw new Error('Decryption error: empty content');
 
     try {
       const decrypted = await AesGcmCryptor.primitives.aesGcmDecrypt(
         await this.getKey(),
-        metadata.slice(0, AesGcmCryptor.NONCE_LENGTH),
+        new Uint8Array(encryptedData.metadata),
         new Uint8Array(encryptedData.data),
-        metadata.slice(AesGcmCryptor.NONCE_LENGTH),
       );
 
       return toArrayBuffer(decrypted);

@@ -49,19 +49,20 @@ export default class NodeCryptoPrimitives implements CryptoPrimitives {
    *
    * @param key - 32 bytes long raw key.
    * @param nonce - 12 bytes long nonce.
-   * @param data - Data which should be decrypted (without authentication tag).
-   * @param tag - 16 bytes long authentication tag.
+   * @param data - Data which should be decrypted, with 16 bytes long authentication tag appended to the ciphertext.
    *
    * @returns Decrypted data (returned only after the authentication tag has been verified).
    *
-   * @throws Error if data can't be authenticated (for example: wrong key or modified nonce, tag or data).
+   * @throws Error if data can't be authenticated (for example: wrong key or modified nonce, ciphertext or tag).
    */
-  async aesGcmDecrypt(key: Uint8Array, nonce: Uint8Array, data: Uint8Array, tag: Uint8Array): Promise<Uint8Array> {
+  async aesGcmDecrypt(key: Uint8Array, nonce: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
+    if (data.byteLength < 16) throw new Error('Decryption error: authentication tag is missing');
+
     const decipher = createDecipheriv('aes-256-gcm', key, nonce, { authTagLength: 16 });
-    decipher.setAuthTag(tag);
+    decipher.setAuthTag(data.subarray(data.byteLength - 16));
 
     // `update` returns not yet authenticated data: release it only after `final` verified the tag.
-    const decrypted = decipher.update(data);
+    const decrypted = decipher.update(data.subarray(0, data.byteLength - 16));
     try {
       return new Uint8Array(Buffer.concat([decrypted, decipher.final()]));
     } catch (error) {

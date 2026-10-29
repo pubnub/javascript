@@ -14,7 +14,8 @@ import NodeCryptoPrimitives from '../../primitives/node';
  * AES-GCM cryptor.
  *
  * Decrypt-only AES-256-GCM cryptor for payloads produced by other PubNub SDKs. Cryptor metadata stored in the
- * header is `nonce (12 bytes) || authentication tag (16 bytes)`.
+ * header is `nonce (12 bytes)` and the authentication tag (16 bytes) is appended to the ciphertext:
+ * `ciphertext || authentication tag`.
  *
  * **Note:** Encryption isn't supported and cryptor can't be used as crypto module default cryptor.
  *
@@ -37,9 +38,9 @@ export default class AesGcmCryptor implements ICryptor {
   static TAG_LENGTH = 16;
 
   /**
-   * Cryptor metadata length (nonce and authentication tag).
+   * Cryptor metadata length (nonce only).
    */
-  static METADATA_LENGTH = AesGcmCryptor.NONCE_LENGTH + AesGcmCryptor.TAG_LENGTH;
+  static METADATA_LENGTH = AesGcmCryptor.NONCE_LENGTH;
 
   /**
    * Generic decryption error message (doesn't reveal which part of the payload failed authentication).
@@ -97,9 +98,9 @@ export default class AesGcmCryptor implements ICryptor {
   async decrypt(input: EncryptedDataType): Promise<ArrayBuffer> {
     const data = typeof input.data === 'string' ? AesGcmCryptor.encoder.encode(input.data) : input.data;
 
-    if (data.byteLength === 0) throw new Error('Decryption error: empty content');
     if (!input.metadata || input.metadata.byteLength !== AesGcmCryptor.METADATA_LENGTH)
       throw new Error('Decryption error: invalid metadata');
+    if (data.byteLength <= AesGcmCryptor.TAG_LENGTH) throw new Error('Decryption error: empty content');
 
     return toArrayBuffer(await this.decryptBytes(new Uint8Array(input.metadata), new Uint8Array(data)));
   }
@@ -107,8 +108,9 @@ export default class AesGcmCryptor implements ICryptor {
   /**
    * Decrypt provided encrypted stream object.
    *
-   * **Note:** AES-GCM authenticates the whole message, so the stream is buffered in memory and decrypted data is
-   * written to the output stream only after successful authentication.
+   * **Note:** AES-GCM authenticates the whole message (authentication tag is the last 16 bytes of the stream), so the
+   * stream is buffered in memory and decrypted data is written to the output stream only after successful
+   * authentication.
    *
    * @param stream - Encrypted stream object for decryption.
    *
@@ -132,15 +134,18 @@ export default class AesGcmCryptor implements ICryptor {
     stream.stream.on('end', () => {
       const payload = Buffer.concat(chunks);
 
-      if (payload.byteLength <= AesGcmCryptor.METADATA_LENGTH) {
-        decryptedStream.destroy(new Error('Decryption error: empty content'));
-        return;
-      }
+      // Content validated asynchronously (like authentication) to report errors after the stream has been returned.
+      const decrypt = async () => {
+        if (payload.byteLength <= AesGcmCryptor.METADATA_LENGTH + AesGcmCryptor.TAG_LENGTH)
+          throw new Error('Decryption error: empty content');
 
-      this.decryptBytes(
-        payload.subarray(0, AesGcmCryptor.METADATA_LENGTH),
-        payload.subarray(AesGcmCryptor.METADATA_LENGTH),
-      ).then(
+        return this.decryptBytes(
+          payload.subarray(0, AesGcmCryptor.METADATA_LENGTH),
+          payload.subarray(AesGcmCryptor.METADATA_LENGTH),
+        );
+      };
+
+      decrypt().then(
         (decrypted) => decryptedStream.end(Buffer.from(decrypted)),
         (error) => decryptedStream.destroy(error),
       );
@@ -166,21 +171,16 @@ export default class AesGcmCryptor implements ICryptor {
   /**
    * Authenticate and decrypt data.
    *
-   * @param metadata - Cryptor metadata (nonce and authentication tag).
-   * @param data - Encrypted data.
+   * @param nonce - Cryptor metadata (nonce).
+   * @param data - Encrypted data with appended authentication tag.
    *
    * @returns Decrypted data.
    *
    * @throws Error with generic message if data can't be authenticated.
    */
-  private async decryptBytes(metadata: Uint8Array, data: Uint8Array) {
+  private async decryptBytes(nonce: Uint8Array, data: Uint8Array) {
     try {
-      return await AesGcmCryptor.primitives.aesGcmDecrypt(
-        await this.getKey(),
-        metadata.subarray(0, AesGcmCryptor.NONCE_LENGTH),
-        data,
-        metadata.subarray(AesGcmCryptor.NONCE_LENGTH),
-      );
+      return await AesGcmCryptor.primitives.aesGcmDecrypt(await this.getKey(), nonce, data);
     } catch (_error) {
       // Native error intentionally not exposed: wrong key and modified payload should be indistinguishable.
       throw new Error(AesGcmCryptor.DECRYPTION_ERROR);
