@@ -1,5 +1,8 @@
 /**
- * Typed access to AES-GCM (`ACGM`) decryption vectors produced by the PubNub C# SDK reference implementation.
+ * Typed access to AES-GCM (`ACGM`) decryption vectors.
+ *
+ * Vectors generated with `node:crypto` (independent of the SDK code under test) in the `ACGM` layout:
+ * `PNED | 0x01 | ACGM | 0x0c | nonce (12) | ciphertext | auth tag (16)` (metadata is the nonce only).
  */
 
 import { readFileSync } from 'fs';
@@ -15,6 +18,7 @@ export type AesGcmVector = {
   nonce: string;
   tag: string;
   ciphertext: string;
+  ciphertextWithTag: string;
   metadata: string;
   payload: string;
 };

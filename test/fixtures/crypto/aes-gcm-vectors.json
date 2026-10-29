@@ -1,5 +1,5 @@
 {
-  "source": "PubNub C# SDK commit 2d329ff (AesGcmCryptorVectorTests)",
+  "source": "Generated with node:crypto (scratch-acgm-encrypt.mjs), independent of the SDK code under test",
   "vectors": [
     {
       "name": "hello",
@@ -11,8 +11,9 @@
       "nonce": "0102030405060708090a0b0c",
       "tag": "dabd1d02d7219c77218ad262c4a9aecc",
       "ciphertext": "ea1b5780788b593294f898",
-      "metadata": "0102030405060708090a0b0cdabd1d02d7219c77218ad262c4a9aecc",
-      "payload": "504e4544014143474d1c0102030405060708090a0b0cdabd1d02d7219c77218ad262c4a9aeccea1b5780788b593294f898"
+      "ciphertextWithTag": "ea1b5780788b593294f898dabd1d02d7219c77218ad262c4a9aecc",
+      "metadata": "0102030405060708090a0b0c",
+      "payload": "504e4544014143474d0c0102030405060708090a0b0cea1b5780788b593294f898dabd1d02d7219c77218ad262c4a9aecc"
     },
     {
       "name": "unicode",
@@ -24,8 +25,9 @@
       "nonce": "111111111111111111111111",
       "tag": "a5dd072360f4433e2979f440fc7827b3",
       "ciphertext": "d138fbfc4bd0c337e29d9f2c98",
-      "metadata": "111111111111111111111111a5dd072360f4433e2979f440fc7827b3",
-      "payload": "504e4544014143474d1c111111111111111111111111a5dd072360f4433e2979f440fc7827b3d138fbfc4bd0c337e29d9f2c98"
+      "ciphertextWithTag": "d138fbfc4bd0c337e29d9f2c98a5dd072360f4433e2979f440fc7827b3",
+      "metadata": "111111111111111111111111",
+      "payload": "504e4544014143474d0c111111111111111111111111d138fbfc4bd0c337e29d9f2c98a5dd072360f4433e2979f440fc7827b3"
     },
     {
       "name": "binary",
@@ -36,8 +38,65 @@
       "nonce": "000102030405060708090a0b",
       "tag": "8fefca7becf7235b4d09b970d4d56d19",
       "ciphertext": "c411f0f1",
-      "metadata": "000102030405060708090a0b8fefca7becf7235b4d09b970d4d56d19",
-      "payload": "504e4544014143474d1c000102030405060708090a0b8fefca7becf7235b4d09b970d4d56d19c411f0f1"
+      "ciphertextWithTag": "c411f0f18fefca7becf7235b4d09b970d4d56d19",
+      "metadata": "000102030405060708090a0b",
+      "payload": "504e4544014143474d0c000102030405060708090a0bc411f0f18fefca7becf7235b4d09b970d4d56d19"
+    },
+    {
+      "name": "single-byte",
+      "expect": "decrypt",
+      "cipherKey": "customKey",
+      "keySha256": "128cf0f9f9027c04c79c0ff574341db71cb7a7545c40469d59804bf78377f215",
+      "plaintext": "a",
+      "plaintextHex": "61",
+      "nonce": "a1a2a3a4a5a6a7a8a9aaabac",
+      "tag": "eef1ccce8f5a09087348786b99b75076",
+      "ciphertext": "fb",
+      "ciphertextWithTag": "fbeef1ccce8f5a09087348786b99b75076",
+      "metadata": "a1a2a3a4a5a6a7a8a9aaabac",
+      "payload": "504e4544014143474d0ca1a2a3a4a5a6a7a8a9aaabacfbeef1ccce8f5a09087348786b99b75076"
+    },
+    {
+      "name": "one-block",
+      "expect": "decrypt",
+      "cipherKey": "enigma",
+      "keySha256": "67a4f45f0d1d9bc606486fc42dc4941668e71d34ee500735fe9b7ea4625c687c",
+      "plaintext": "0123456789abcdef",
+      "plaintextHex": "30313233343536373839616263646566",
+      "nonce": "8f5a2d1b6e9c4ef0a37d83b9",
+      "tag": "8c21b92d48f4dd5c71e99dce881c2ec9",
+      "ciphertext": "fd24a488008bd084305aaee605b34902",
+      "ciphertextWithTag": "fd24a488008bd084305aaee605b349028c21b92d48f4dd5c71e99dce881c2ec9",
+      "metadata": "8f5a2d1b6e9c4ef0a37d83b9",
+      "payload": "504e4544014143474d0c8f5a2d1b6e9c4ef0a37d83b9fd24a488008bd084305aaee605b349028c21b92d48f4dd5c71e99dce881c2ec9"
+    },
+    {
+      "name": "multi-block-json",
+      "expect": "decrypt",
+      "cipherKey": "enigma",
+      "keySha256": "67a4f45f0d1d9bc606486fc42dc4941668e71d34ee500735fe9b7ea4625c687c",
+      "plaintext": "{\"text\":\"Hello, 世界! 🌍\",\"n\":42,\"list\":[1,2,3],\"nested\":{\"ok\":true}}",
+      "plaintextHex": "7b2274657874223a2248656c6c6f2c20e4b896e7958c2120f09f8c8d222c226e223a34322c226c697374223a5b312c322c335d2c226e6573746564223a7b226f6b223a747275657d7d",
+      "nonce": "ffffffffffffffffffffffff",
+      "tag": "d307669e83fa4c9a8b13743a07a21b7f",
+      "ciphertext": "0d54b73ce2509d4e7655043f5b103cb4f1e78738a73a2f56109813955359b4784774de19050b4f14f7a439a859ac6c327856fe1af874bbe888945c603004176ddab22578e407663346",
+      "ciphertextWithTag": "0d54b73ce2509d4e7655043f5b103cb4f1e78738a73a2f56109813955359b4784774de19050b4f14f7a439a859ac6c327856fe1af874bbe888945c603004176ddab22578e407663346d307669e83fa4c9a8b13743a07a21b7f",
+      "metadata": "ffffffffffffffffffffffff",
+      "payload": "504e4544014143474d0cffffffffffffffffffffffff0d54b73ce2509d4e7655043f5b103cb4f1e78738a73a2f56109813955359b4784774de19050b4f14f7a439a859ac6c327856fe1af874bbe888945c603004176ddab22578e407663346d307669e83fa4c9a8b13743a07a21b7f"
+    },
+    {
+      "name": "unicode-key",
+      "expect": "decrypt",
+      "cipherKey": "ключ 🔑 key",
+      "keySha256": "c87d40b9e09784a5d672976e22b6bc9701da1e6fe5b8db721ed9ce715aedbdb0",
+      "plaintext": "Line one\n\tLine two with \"quotes\" & symbols <>/\\ — spans several AES blocks.",
+      "plaintextHex": "4c696e65206f6e650a094c696e652074776f2077697468202271756f7465732220262073796d626f6c73203c3e2f5c20e28094207370616e73207365766572616c2041455320626c6f636b732e",
+      "nonce": "000000000000000000000000",
+      "tag": "8390572d9b05255f3097614e888fcca4",
+      "ciphertext": "326052d9ff1b757ed8810f5d6f87a7c021920eb09b82e47049efecf5094f6f5837691e9fb66539dfc47d434cc01b783527c4d62ae2d8163043f86dc7ac405b90971ceaa07134add2be50dfd60f",
+      "ciphertextWithTag": "326052d9ff1b757ed8810f5d6f87a7c021920eb09b82e47049efecf5094f6f5837691e9fb66539dfc47d434cc01b783527c4d62ae2d8163043f86dc7ac405b90971ceaa07134add2be50dfd60f8390572d9b05255f3097614e888fcca4",
+      "metadata": "000000000000000000000000",
+      "payload": "504e4544014143474d0c000000000000000000000000326052d9ff1b757ed8810f5d6f87a7c021920eb09b82e47049efecf5094f6f5837691e9fb66539dfc47d434cc01b783527c4d62ae2d8163043f86dc7ac405b90971ceaa07134add2be50dfd60f8390572d9b05255f3097614e888fcca4"
     }
   ]
 }
