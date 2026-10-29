@@ -42,24 +42,6 @@ export const toArrayBuffer = (bytes: Uint8Array): ArrayBuffer =>
   bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 
 /**
- * Concatenate two byte sequences.
- *
- * @param first - Leading bytes.
- * @param second - Trailing bytes.
- *
- * @returns New bytes array with {@link first} followed by {@link second}.
- *
- * @internal
- */
-export const concatBytes = (first: Uint8Array, second: Uint8Array): Uint8Array => {
-  const result = new Uint8Array(first.byteLength + second.byteLength);
-  result.set(first, 0);
-  result.set(second, first.byteLength);
-
-  return result;
-};
-
-/**
  * Check whether bytes are well-formed UTF-8.
  *
  * Implements Unicode "Well-Formed UTF-8 Byte Sequences" (Table 3-7): rejects stray continuation bytes, overlong
