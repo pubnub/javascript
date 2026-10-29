@@ -48,6 +48,44 @@ try {
 }
 // snippet.end
 
+// snippet.publishMinimal
+const { timetoken } = await pubnub.publish({
+  channel: 'my_channel',
+  message: { text: 'Hello' },
+});
+
+console.log(timetoken); // "17918851187695440" (a string)
+// snippet.end
+
+// snippet.publishHandleErrors
+try {
+  await pubnub.publish({
+    channel: 'my_channel',
+    message: { text: 'Hello' },
+  });
+} catch (e) {
+  const status = (e as PubNubError).status;
+
+  if (status?.category === 'PNValidationErrorCategory') {
+    console.error('The call is invalid:', status.message);
+  } else if (status?.category === 'PNAccessDeniedCategory') {
+    console.error('403: the token or authKey has no write permission on the channel');
+  } else if (status?.category === 'PNNetworkIssuesCategory') {
+    console.error('The network is unreachable. Retry the publish yourself.');
+  } else {
+    console.error(status?.category, status?.statusCode, status?.errorData);
+  }
+}
+// snippet.end
+
+// snippet.publishFalsyMessage
+// message: 0 is rejected with "Missing 'message'", so wrap the value
+await pubnub.publish({
+  channel: 'my_channel',
+  message: { value: 0 },
+});
+// snippet.end
+
 // snippet.publishSuccessfull
 const response = await pubnub.publish({
   message: 'hello world!',

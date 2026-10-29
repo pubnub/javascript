@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>PubNub quickstart</title>
+  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.13.0.3.js"></script>
+</head>
+<body>
+  <h1>PubNub quickstart</h1>
+  <ul></ul>
+  <input placeholder="Type a message" />
+  <button>Send</button>
+
+  <script>
+    const pubnub = new PubNub({
+      publishKey: 'YOUR_PUBLISH_KEY',
+      subscribeKey: 'YOUR_SUBSCRIBE_KEY',
+      userId: 'YOUR_USER_ID',
+    });
+
+    pubnub.addListener({
+      message: (event) => {
+        // Add every incoming message to the list on the page
+        const item = document.createElement('li');
+        item.textContent = `${event.publisher}: ${event.message}`;
+        document.querySelector('ul')?.append(item);
+      },
+      status: (event) => {
+        if (event.category === 'PNConnectedCategory') {
+          console.log('Connected to PubNub');
+        }
+      },
+    });
+
+    const channel = pubnub.channel('hello_world');
+    const subscription = channel.subscription();
+    subscription.subscribe();
+
+    document.querySelector('button')?.addEventListener('click', async () => {
+      const input = document.querySelector('input');
+      if (!input || !input.value.trim()) return;
+
+      try {
+        const result = await pubnub.publish({
+          channel: 'hello_world',
+          message: input.value,
+        });
+        console.log(`Published, timetoken: ${result.timetoken}`);
+        input.value = '';
+      } catch (error) {
+        console.error(`Publish failed: ${error}`);
+      }
+    });
+  </script>
+</body>
+</html>

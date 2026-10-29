@@ -41,3 +41,19 @@ const pubnubConfig = new PubNub({
 });
 
 // snippet.end
+
+// snippet.setUserIdBasicUsage
+pubnub.setUserId('myUniqueUserId');
+// snippet.end
+
+// snippet.getUserIdBasicUsage
+const currentUserId = pubnub.getUserId();
+// snippet.end
+
+// snippet.getAuthKeyBasicUsage
+const currentAuthKey = pubnub.getAuthKey();
+// snippet.end
+
+// snippet.destroyBasicUsage
+pubnub.destroy();
+// snippet.end
