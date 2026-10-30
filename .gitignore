@@ -16,7 +16,6 @@ dist/contract
 dist/cucumber
 upload
 test/specs
-.claude/*
 
 # GitHub Actions #
 ##################
@@ -24,3 +23,6 @@ test/specs
 release-artifacts-*
 
 .vscode
+
+.env
+.env.local

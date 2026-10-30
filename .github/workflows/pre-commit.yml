@@ -1,0 +1,40 @@
+name: Pre-commit checks
+
+# Same hooks as .pre-commit-config.yaml. Local hooks can be skipped with --no-verify; this job can't.
+on:
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  pre-commit:
+    name: Formatting, lint and secret scan
+    runs-on:
+      group: organization/Default
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup NodeJS 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      - name: Install dependencies
+        run: npm ci
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Run pre-commit on changed files
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          pip install pre-commit
+          pre-commit run --show-diff-on-failure --color=never --from-ref "$BASE_SHA" --to-ref HEAD
