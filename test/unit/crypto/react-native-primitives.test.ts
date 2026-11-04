@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import Module from 'module';
 
-import NobleCryptoPrimitives from '../../../src/react_native/crypto/noble-primitives';
+import NobleCryptoPrimitives from '../../../src/crypto/primitives/react-native';
 
 describe('React Native noble primitives', () => {
   const cryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
@@ -28,7 +28,7 @@ describe('React Native noble primitives', () => {
   });
 
   it('can be constructed without @noble packages and fails with install hint on first use', async () => {
-    const modulePath = require.resolve('../../../src/react_native/crypto/noble-primitives');
+    const modulePath = require.resolve('../../../src/crypto/primitives/react-native');
     const moduleLoader = Module as unknown as { _load: (request: string, ...args: unknown[]) => unknown };
     const originalLoad = moduleLoader._load;
     const cached = require.cache[modulePath];

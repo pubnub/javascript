@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 
-import NobleCryptoPrimitives from '../../../src/react_native/crypto/noble-primitives';
+import NobleCryptoPrimitives from '../../../src/crypto/primitives/react-native';
 import vectors from '../../fixtures/crypto/legacy-vectors';
 
 type BytesModule = typeof import('../../../src/core/components/cryptography/bytes');

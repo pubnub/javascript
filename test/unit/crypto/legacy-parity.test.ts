@@ -2,7 +2,7 @@
 
 import { expect } from 'chai';
 
-import NobleCryptoPrimitives from '../../../src/react_native/crypto/noble-primitives';
+import NobleCryptoPrimitives from '../../../src/crypto/primitives/react-native';
 import { CryptoPrimitives } from '../../../src/core/interfaces/crypto-primitives';
 import LegacyCrypto from '../../../src/core/components/cryptography/index';
 import NodeCryptoPrimitives from '../../../src/crypto/primitives/node';

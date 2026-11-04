@@ -4,7 +4,7 @@ import { expect } from 'chai';
 
 import { WebCryptoModule } from '../../../src/crypto/modules/WebCryptoModule/webCryptoModule';
 import { NodeCryptoModule } from '../../../src/crypto/modules/NodeCryptoModule/nodeCryptoModule';
-import NobleCryptoPrimitives from '../../../src/react_native/crypto/noble-primitives';
+import NobleCryptoPrimitives from '../../../src/crypto/primitives/react-native';
 import { CryptoPrimitives } from '../../../src/core/interfaces/crypto-primitives';
 import LegacyCrypto from '../../../src/core/components/cryptography/index';
 import NodeCryptoPrimitives from '../../../src/crypto/primitives/node';

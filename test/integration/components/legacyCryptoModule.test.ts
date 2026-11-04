@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import { Buffer } from 'buffer';
 import LegacyCryptoModule from '../../../src/crypto/modules/LegacyCryptoModule';
-import NobleCryptoPrimitives from '../../../src/react_native/crypto/noble-primitives';
+import NobleCryptoPrimitives from '../../../src/crypto/primitives/react-native';
 import LegacyCrypto from '../../../src/core/components/cryptography/index';
 import { LoggerManager } from '../../../src/core/components/logger-manager';
 

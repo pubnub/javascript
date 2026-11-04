@@ -15,7 +15,7 @@ import PubNubFile from '../file/modules/react-native';
 import { PubNubConfiguration } from './configuration';
 import Crypto from '../core/components/cryptography';
 import LegacyCryptoModule from '../crypto/modules/LegacyCryptoModule';
-import NobleCryptoPrimitives from './crypto/noble-primitives';
+import NobleCryptoPrimitives from '../crypto/primitives/react-native';
 import type { CryptorConfiguration, ICryptoModule } from '../core/interfaces/crypto-module';
 import { PubNubCore } from '../core/pubnub-common';
 import { setDefaults } from './configuration';
