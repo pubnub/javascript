@@ -49,6 +49,12 @@ export default page('api-reference/presence', 'P4', (world) => {
         assert.ok(here.channels[channel]?.occupants.some((o) => o.uuid === occupant!.getUserId()), `${channel} lists the occupant`);
       }
     }, { timeout: PRESENCE_TIMEOUT, label: 'occupant visible in hereNow' });
+    // `hereNowChannelGroup` reads presence through `my_channel_group`, which was created a moment ago. A group read resolves the
+    // group's member channels first, and that can lag the channel reads above (seen in CI, where the steps run seconds apart).
+    await eventually(async () => {
+      const here = await world.observer.hereNow({ channelGroups: [otherGroup] });
+      assert.ok(here.channels[member]?.occupants.some((o) => o.uuid === occupant!.getUserId()), `${otherGroup} lists the occupant on ${member}`);
+    }, { timeout: PRESENCE_TIMEOUT, label: 'occupant visible through the channel group' });
     // The steps below read state through hereNow and the channel list through whereNow right after the snippet, in one shot.
     // Both are separate reads that can lag the occupant listing above, so wait for them here, once.
     await eventually(async () => {

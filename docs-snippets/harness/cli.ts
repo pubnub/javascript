@@ -105,14 +105,9 @@ async function stagedPlan(
 
 /** Exits with `code` once the event loop is empty. If it is still busy after 10 s, prints the open handles and exits 1. */
 function exitWhenIdle(code: number): void {
-  const timer = setTimeout(async () => {
-    console.error('the event loop is still busy 10 s after the run finished. Open handles:');
-    try {
-      const why = (await import('why-is-node-running')).default as (logger?: Console) => void;
-      why(console);
-    } catch {
-      console.error(process.getActiveResourcesInfo().join(', '));
-    }
+  const timer = setTimeout(() => {
+    console.error(`the event loop is still busy 10 s after the run finished (run exit code ${code}). Open handles:`);
+    console.error(`  ${describeHandles().join('\n  ') || 'none reported'}`);
     process.exit(1);
   }, 10_000);
   timer.unref();
@@ -120,6 +115,43 @@ function exitWhenIdle(code: number): void {
     clearTimeout(timer);
     process.exit(code);
   });
+}
+
+/**
+ * What keeps the event loop alive, one line per handle. Node's own lists, so nothing has to be loaded before the handles were
+ * created (why-is-node-running only sees handles created after it loads). Sockets show the remote host and port, timers
+ * their delay, child processes their pid. No key appears here, and stderr is redacted anyway.
+ */
+function describeHandles(): string[] {
+  const lines: string[] = [];
+  const handles = (process as unknown as { _getActiveHandles?: () => unknown[] })._getActiveHandles?.() ?? [];
+  for (const handle of handles) {
+    if (handle === process.stdout || handle === process.stderr || handle === process.stdin) continue;
+    const h = handle as {
+      constructor?: { name?: string };
+      remoteAddress?: string;
+      remotePort?: number;
+      _host?: string;
+      servername?: string;
+      pid?: number;
+      spawnfile?: string;
+      _idleTimeout?: number;
+      address?: () => unknown;
+      hasRef?: () => boolean;
+    };
+    const name = h.constructor?.name ?? typeof handle;
+    const detail: string[] = [];
+    if (h.servername || h._host) detail.push(`host ${h.servername ?? h._host}`);
+    if (h.remoteAddress) detail.push(`remote ${h.remoteAddress}:${h.remotePort ?? ''}`);
+    if (h.pid) detail.push(`pid ${h.pid}${h.spawnfile ? ` ${h.spawnfile}` : ''}`);
+    if (typeof h._idleTimeout === 'number' && h._idleTimeout > 0) detail.push(`timeout ${h._idleTimeout} ms`);
+    if (name === 'Server' && typeof h.address === 'function') detail.push(`listening ${JSON.stringify(h.address())}`);
+    if (typeof h.hasRef === 'function' && !h.hasRef()) detail.push('unref');
+    lines.push(`${name}${detail.length ? ` (${detail.join(', ')})` : ''}`);
+  }
+  const resources = process.getActiveResourcesInfo().filter((r) => r !== 'TTYWrap');
+  lines.push(`resource types: ${resources.join(', ') || 'none'}`);
+  return lines;
 }
 
 async function live(): Promise<number> {
