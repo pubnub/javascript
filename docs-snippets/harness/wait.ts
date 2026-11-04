@@ -102,6 +102,9 @@ export function expectEvent<K extends EventKind>(
       target.removeListener(listener);
       reject(new Error(`no "${kind}" event matched within ${timeout}ms`));
     }, timeout);
+    // The step awaits this promise, and Mocha's own test timer keeps the process alive meanwhile. unref() only means an
+    // abandoned wait cannot hold the process open after the run.
+    timer.unref();
     (listener as Record<string, unknown>)[kind] = (event: EventOf<K>) => {
       // A predicate that throws (reading a field of an event of another shape) means "not this one", not a test failure.
       let matched = false;
@@ -165,6 +168,9 @@ export function connected(
         ),
       );
     }, timeout);
+    // The step awaits this promise, and Mocha's own test timer keeps the process alive meanwhile. unref() only means an
+    // abandoned wait cannot hold the process open after the run.
+    timer.unref();
     client.addListener(listener);
   });
 }
@@ -300,6 +306,9 @@ export function expectStatus(
       client.removeListener(listener);
       reject(new Error(`no status in [${categories.join(', ')}] within ${timeout}ms`));
     }, timeout);
+    // The step awaits this promise, and Mocha's own test timer keeps the process alive meanwhile. unref() only means an
+    // abandoned wait cannot hold the process open after the run.
+    timer.unref();
     client.addListener(listener);
   });
 }

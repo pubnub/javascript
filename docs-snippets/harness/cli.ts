@@ -106,9 +106,21 @@ async function stagedPlan(
 /** Exits with `code` once the event loop is empty. If it is still busy after 10 s, prints the open handles and exits 1. */
 function exitWhenIdle(code: number): void {
   const timer = setTimeout(() => {
-    console.error(`the event loop is still busy 10 s after the run finished (run exit code ${code}). Open handles:`);
-    console.error(`  ${describeHandles().join('\n  ') || 'none reported'}`);
-    process.exit(1);
+    const resources = process.getActiveResourcesInfo();
+    // Real I/O: anything that could still talk to the service, a keyset or the machine. Timers alone cannot.
+    const io = resources.filter((r) => !['Timeout', 'Immediate', 'PipeWrap', 'TTYWrap'].includes(r));
+    const lines = describeHandles();
+    if (io.length > 0) {
+      console.error(`the event loop is still busy 10 s after the run finished (run exit code ${code}). Open handles:`);
+      console.error(`  ${lines.join('\n  ')}`);
+      process.exit(1);
+    }
+    // Only timers are left, for example a retry timer inside a destroyed SDK client. They cannot change any result, so the
+    // run keeps its exit code, but they are named so a real leak never goes unnoticed.
+    console.error(
+      `warning: only timers keep the event loop busy 10 s after the run (${resources.filter((r) => r === 'Timeout').length} timer(s)), exiting with the run's exit code ${code}`,
+    );
+    process.exit(code);
   }, 10_000);
   timer.unref();
   process.once('beforeExit', () => {
