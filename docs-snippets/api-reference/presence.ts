@@ -49,12 +49,21 @@ export default page('api-reference/presence', 'P4', (world) => {
         assert.ok(here.channels[channel]?.occupants.some((o) => o.uuid === occupant!.getUserId()), `${channel} lists the occupant`);
       }
     }, { timeout: PRESENCE_TIMEOUT, label: 'occupant visible in hereNow' });
-    // `hereNowChannelGroup` reads presence through `my_channel_group`, which was created a moment ago. A group read resolves the
-    // group's member channels first, and that can lag the channel reads above (seen in CI, where the steps run seconds apart).
-    await eventually(async () => {
-      const here = await world.observer.hereNow({ channelGroups: [otherGroup] });
-      assert.ok(here.channels[member]?.occupants.some((o) => o.uuid === occupant!.getUserId()), `${otherGroup} lists the occupant on ${member}`);
-    }, { timeout: PRESENCE_TIMEOUT, label: 'occupant visible through the channel group' });
+    // The samples read presence through the groups too: `hereNowBasicUsage` asks for `ch1` plus `cg1` in one call,
+    // `hereNowChannelGroup` asks for `my_channel_group`. Both groups were created a moment ago. A group read resolves the group's
+    // member channels first, and that can lag the channel reads above (seen in CI, where the steps run seconds apart). So wait
+    // for each group on its own, and for the exact combination the basic sample uses.
+    const reads: Array<[string, { channels?: string[]; channelGroups: string[] }]> = [
+      [cg1, { channelGroups: [cg1] }],
+      [otherGroup, { channelGroups: [otherGroup] }],
+      [`${ch1} and ${cg1}`, { channels: [ch1], channelGroups: [cg1] }],
+    ];
+    for (const [label, query] of reads) {
+      await eventually(async () => {
+        const here = await world.observer.hereNow(query);
+        assert.ok(here.channels[member]?.occupants.some((o) => o.uuid === occupant!.getUserId()), `${label} lists the occupant on ${member}`);
+      }, { timeout: PRESENCE_TIMEOUT, label: `occupant visible through ${label}` });
+    }
     // The steps below read state through hereNow and the channel list through whereNow right after the snippet, in one shot.
     // Both are separate reads that can lag the occupant listing above, so wait for them here, once.
     await eventually(async () => {
