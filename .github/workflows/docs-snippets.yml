@@ -1,0 +1,218 @@
+name: Docs snippets
+
+# Live tests of the JavaScript docs code samples (docs-snippets/README.md). Separate from run-tests.yml on purpose: this
+# suite calls the real PubNub service and is never part of npm test, ci:node or ci:web.
+#
+# No workflow-level paths filter: a required check behind a paths filter stays pending. The `changes` job decides instead,
+# and the `gate` job is the one to require in branch protection.
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Relevant changes
+    runs-on:
+      group: organization/Default
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+      live: ${{ steps.diff.outputs.live }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Decide with git diff
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          FORK: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          changed=false
+          if [ "$EVENT" = "schedule" ] || [ "$EVENT" = "workflow_dispatch" ]; then
+            changed=true
+          else
+            base="$PR_BASE"
+            [ "$EVENT" = "push" ] && base="$PUSH_BEFORE"
+            if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+              changed=true
+            elif git diff --name-only "$base" HEAD | grep -qE '^(docs-snippets/|src/|lib/|package\.json$|package-lock\.json$|\.github/workflows/docs-snippets\.yml$)'; then
+              changed=true
+            fi
+          fi
+          live=$changed
+          if [ "$FORK" = "true" ]; then
+            live=false
+            [ "$changed" = "true" ] && echo "live shards skipped: fork PR without secrets" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          echo "live=$live" >> "$GITHUB_OUTPUT"
+          echo "relevant changes: $changed, live shards: $live"
+
+  dry:
+    name: Dry run, types and manifest
+    needs: [changes]
+    if: needs.changes.outputs.changed == 'true'
+    runs-on:
+      group: organization/Default
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup NodeJS 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build the SDK for Node
+        run: npm run build:node
+      - name: Dry run (no network)
+        run: npm run test:docs-snippets:dry
+      - name: Type check the suite and the browser samples
+        run: npm run test:docs-snippets:types
+      - name: Check the coverage manifest
+        run: npm run docs-snippets:manifest -- --check
+
+  live:
+    name: Live shards (open, pam, datasync)
+    needs: [changes, dry]
+    if: needs.changes.outputs.live == 'true'
+    runs-on:
+      group: organization/Default
+    # The three shards run one after another in this one job, never in parallel. The pam and datasync roles may share one
+    # keyset, and the pam shard opens it with an application-level grant for a moment. Run in parallel, that grant and the
+    # janitor's revoke would break the other shard.
+    timeout-minutes: 35
+    # One live job at a time across the repository, so two workflow runs (a pull request and master, say) never share the
+    # keysets either. A newer waiting run replaces an older waiting one, a running one is never cancelled.
+    concurrency:
+      group: docs-snippets-live
+      cancel-in-progress: false
+    # Keys and secrets. The one place that maps CI secrets onto the env names the suite reads (docs-snippets/README.md, "Keys in
+    # CI"). They are set on the steps that run the suite only, never on the job, so `npm ci` (install scripts of
+    # dependencies) and the build never see them.
+    env:
+      DOCS_SNIPPETS_DS_KEYSET_ID: ${{ vars.SDK_DOCS_DS_KEYSET_ID }}
+      # Nightly: the CI keysets must have these features, so their skips fail the run.
+      DOCS_SNIPPETS_REQUIRE_FEATURES: ${{ github.event_name == 'schedule' && 'datasync-events,push-notifications' || '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup NodeJS 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build the SDK for Node
+        run: npm run build:node
+      # Each shard runs even when an earlier one failed (success() || failure()), but not after a cancel.
+      - name: Shard open
+        id: open
+        if: success() || failure()
+        env:
+          SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_OPEN_SUBSCRIBE_KEY }}
+          PUBLISH_KEY: ${{ secrets.SDK_DOCS_OPEN_PUBLISH_KEY }}
+          PAM_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_PAM_SUBSCRIBE_KEY }}
+          PAM_PUBLISH_KEY: ${{ secrets.SDK_DOCS_PAM_PUBLISH_KEY }}
+          PAM_SECRET_KEY: ${{ secrets.SDK_DOCS_PAM_SECRET_KEY }}
+          DS_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_DS_SUBSCRIBE_KEY }}
+          DS_PUBLISH_KEY: ${{ secrets.SDK_DOCS_DS_PUBLISH_KEY }}
+          DS_SECRET_KEY: ${{ secrets.SDK_DOCS_DS_SECRET_KEY }}
+        run: npm run test:docs-snippets -- --shard open
+      - name: Keep the open report
+        if: (success() || failure()) && steps.open.outcome != 'skipped'
+        run: mkdir -p docs-snippets/report/open && mv docs-snippets/report/run.json docs-snippets/report/summary.md docs-snippets/report/open/ 2>/dev/null || true
+      - name: Shard pam
+        id: pam
+        if: success() || failure()
+        env:
+          SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_OPEN_SUBSCRIBE_KEY }}
+          PUBLISH_KEY: ${{ secrets.SDK_DOCS_OPEN_PUBLISH_KEY }}
+          PAM_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_PAM_SUBSCRIBE_KEY }}
+          PAM_PUBLISH_KEY: ${{ secrets.SDK_DOCS_PAM_PUBLISH_KEY }}
+          PAM_SECRET_KEY: ${{ secrets.SDK_DOCS_PAM_SECRET_KEY }}
+          DS_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_DS_SUBSCRIBE_KEY }}
+          DS_PUBLISH_KEY: ${{ secrets.SDK_DOCS_DS_PUBLISH_KEY }}
+          DS_SECRET_KEY: ${{ secrets.SDK_DOCS_DS_SECRET_KEY }}
+        run: npm run test:docs-snippets -- --shard pam
+      - name: Keep the pam report
+        if: (success() || failure()) && steps.pam.outcome != 'skipped'
+        run: mkdir -p docs-snippets/report/pam && mv docs-snippets/report/run.json docs-snippets/report/summary.md docs-snippets/report/pam/ 2>/dev/null || true
+      - name: Shard datasync
+        id: datasync
+        if: success() || failure()
+        env:
+          SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_OPEN_SUBSCRIBE_KEY }}
+          PUBLISH_KEY: ${{ secrets.SDK_DOCS_OPEN_PUBLISH_KEY }}
+          PAM_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_PAM_SUBSCRIBE_KEY }}
+          PAM_PUBLISH_KEY: ${{ secrets.SDK_DOCS_PAM_PUBLISH_KEY }}
+          PAM_SECRET_KEY: ${{ secrets.SDK_DOCS_PAM_SECRET_KEY }}
+          DS_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_DS_SUBSCRIBE_KEY }}
+          DS_PUBLISH_KEY: ${{ secrets.SDK_DOCS_DS_PUBLISH_KEY }}
+          DS_SECRET_KEY: ${{ secrets.SDK_DOCS_DS_SECRET_KEY }}
+          # Only this shard gets the Admin API key: it sets up the DataSync classes before the tests.
+          PUBNUB_ADMIN_API_KEY: ${{ secrets.SDK_DOCS_ADMIN_API_KEY }}
+        run: npm run test:docs-snippets -- --shard datasync
+      - name: Keep the datasync report
+        if: (success() || failure()) && steps.datasync.outcome != 'skipped'
+        run: mkdir -p docs-snippets/report/datasync && mv docs-snippets/report/run.json docs-snippets/report/summary.md docs-snippets/report/datasync/ 2>/dev/null || true
+      # After a failure or a cancel: revoke the application-level Access Manager grants and remove leftovers, so a run that
+      # died between a grant and its revoke never leaves a keyset open until the next run.
+      - name: Revoke grants and clean up
+        if: cancelled() || failure()
+        env:
+          SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_OPEN_SUBSCRIBE_KEY }}
+          PUBLISH_KEY: ${{ secrets.SDK_DOCS_OPEN_PUBLISH_KEY }}
+          PAM_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_PAM_SUBSCRIBE_KEY }}
+          PAM_PUBLISH_KEY: ${{ secrets.SDK_DOCS_PAM_PUBLISH_KEY }}
+          PAM_SECRET_KEY: ${{ secrets.SDK_DOCS_PAM_SECRET_KEY }}
+          DS_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_DS_SUBSCRIBE_KEY }}
+          DS_PUBLISH_KEY: ${{ secrets.SDK_DOCS_DS_PUBLISH_KEY }}
+          DS_SECRET_KEY: ${{ secrets.SDK_DOCS_DS_SECRET_KEY }}
+        run: npm run test:docs-snippets:janitor
+      - name: Upload the reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-snippets-reports
+          path: docs-snippets/report/
+          if-no-files-found: warn
+
+  gate:
+    name: Docs snippets
+    if: always()
+    needs: [changes, dry, live]
+    runs-on:
+      group: organization/Default
+    steps:
+      - name: Decide
+        env:
+          RESULTS: ${{ needs.changes.result }} ${{ needs.dry.result }} ${{ needs.live.result }}
+          CHANGED: ${{ needs.changes.outputs.changed }}
+        run: |
+          echo "changes, dry, live: $RESULTS (relevant changes: $CHANGED)"
+          for result in $RESULTS; do
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              echo "a needed job ended with $result"
+              exit 1
+            fi
+          done
+          echo "docs snippets gate passed"
