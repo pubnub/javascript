@@ -81,8 +81,11 @@ export default page('api-reference/objects', 'P3', (world) => {
     assert.equal(response2.data.id, world.n('myUuid'));
     assert.equal(response2.data.email, 'john.doe@example.com');
     // Another client sees the stored objects.
-    const stored = await world.observer.objects.getUUIDMetadata({ uuid: world.n('myUuid') });
-    assert.equal(stored.data.email, 'john.doe@example.com');
+    // App Context reads lag behind writes, so the read-back by another client is polled (seen in CI, where steps run fast).
+    await eventually(async () => {
+      const stored = await world.observer.objects.getUUIDMetadata({ uuid: world.n('myUuid') });
+      assert.equal(stored.data.email, 'john.doe@example.com');
+    }, { label: 'stored user visible to another client' });
   });
 
   // Reads what the previous step stored, which is why it `needs` it.
@@ -216,8 +219,11 @@ export default page('api-reference/objects', 'P3', (world) => {
     assert.equal(response.data.id, world.n('team.red'));
     assert.equal(response.data.name, 'Red Team');
     assert.equal(response.data.custom, undefined, 'customFields: false leaves custom out of the response');
-    const stored = await world.observer.objects.getChannelMetadata({ channel: world.n('team.red'), include: { customFields: true } });
-    assert.deepEqual(stored.data.custom, { owner: 'Red Leader' });
+    // App Context reads lag behind writes, so the read-back by another client is polled (seen in CI, where steps run fast).
+    await eventually(async () => {
+      const stored = await world.observer.objects.getChannelMetadata({ channel: world.n('team.red'), include: { customFields: true } });
+      assert.deepEqual(stored.data.custom, { owner: 'Red Leader' });
+    }, { label: 'stored channel custom data visible to another client' });
     const event = await listening.next('objects', (e) => e.channel === world.n('team.red'));
     assert.equal(event.message.event, 'set');
     assert.equal(event.message.type, 'channel');
@@ -272,9 +278,12 @@ export default page('api-reference/objects', 'P3', (world) => {
     console.log('Object has been updated', setResponse);
     // snippet.end
     assert.equal(response.status, 200);
-    const stored = await world.observer.objects.getChannelMetadata({ channel: world.n('team.red'), include: { customFields: true } });
-    assert.deepEqual(stored.data.custom, { visible: 'team', edit: 'admin' });
-    assert.equal(stored.data.description, 'The channel for Red team.');
+    // App Context reads lag behind writes, so the read-back by another client is polled (seen in CI, where steps run fast).
+    await eventually(async () => {
+      const stored = await world.observer.objects.getChannelMetadata({ channel: world.n('team.red'), include: { customFields: true } });
+      assert.deepEqual(stored.data.custom, { visible: 'team', edit: 'admin' });
+      assert.equal(stored.data.description, 'The channel for Red team.');
+    }, { label: 'updated channel metadata visible to another client' });
   });
 
   // P9 cleanup of `team.red`, polled until the read fails.
@@ -327,15 +336,18 @@ export default page('api-reference/objects', 'P3', (world) => {
     // The default response carries the membership status. `type` and `custom` need their include flags,
     // so a second read proves that they were stored (live finding).
     assert.equal(response.data.find((m) => m.channel.id === world.n('channel-with-status-type'))?.status, 'helloStatus');
-    const stored = await world.observer.objects.getMemberships({
-      uuid: world.n('my-uuid'),
-      include: { typeField: true, statusField: true, customFields: true },
-    });
-    assert.deepEqual(stored.data.map((m) => m.channel.id).sort(), expected);
-    const special = stored.data.find((m) => m.channel.id === world.n('channel-with-status-type'));
-    assert.equal(special?.status, 'helloStatus');
-    assert.equal(special?.type, 'helloType');
-    assert.deepEqual(special?.custom, { hello: 'World' });
+    // App Context reads lag behind writes, so the read-back by another client is polled (seen in CI, where steps run fast).
+    await eventually(async () => {
+      const stored = await world.observer.objects.getMemberships({
+        uuid: world.n('my-uuid'),
+        include: { typeField: true, statusField: true, customFields: true },
+      });
+      assert.deepEqual(stored.data.map((m) => m.channel.id).sort(), expected);
+      const special = stored.data.find((m) => m.channel.id === world.n('channel-with-status-type'));
+      assert.equal(special?.status, 'helloStatus');
+      assert.equal(special?.type, 'helloType');
+      assert.deepEqual(special?.custom, { hello: 'World' });
+    }, { label: 'stored memberships visible to another client' });
   });
 
   // The friend client seeds `myUuid` with a starred membership OUTSIDE the markers, so the filter `custom.starred == true`
@@ -444,8 +456,11 @@ export default page('api-reference/objects', 'P3', (world) => {
     console.log('setChannelMembers response:', response);
     // snippet.end
     assert.deepEqual(response.data.map((m) => m.uuid.id).sort(), [world.n('uuid-1'), world.n('uuid-2'), world.n('uuid-3')].sort());
-    const stored = await world.observer.objects.getChannelMembers({ channel: world.n('myChannel'), include: { customFields: true } });
-    assert.deepEqual(stored.data.find((m) => m.uuid.id === world.n('uuid-3'))?.custom, { role: 'Super Admin' });
+    // App Context reads lag behind writes, so the read-back by another client is polled (seen in CI, where steps run fast).
+    await eventually(async () => {
+      const stored = await world.observer.objects.getChannelMembers({ channel: world.n('myChannel'), include: { customFields: true } });
+      assert.deepEqual(stored.data.find((m) => m.uuid.id === world.n('uuid-3'))?.custom, { role: 'Super Admin' });
+    }, { label: 'stored channel members visible to another client' });
   });
 
   // P9. Only `uuid-3` remains, which also shows that removal is by id and does not touch other members.
