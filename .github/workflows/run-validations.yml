@@ -29,13 +29,6 @@ jobs:
         uses: ./.github/.release/actions/actions/validators/pubnub-yml
         with:
           token: ${{ secrets.GH_TOKEN }}
-      - name: Cancel workflow runs for commit on error
-        if: failure()
-        uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
-        with:
-          # Cancel only the runs of this workflow. Without it every workflow of the commit is cancelled, other workflows
-          # (for example Docs snippets) included.
-          same-workflow-only: true
   all-validations:
     name: Validations
     runs-on:
