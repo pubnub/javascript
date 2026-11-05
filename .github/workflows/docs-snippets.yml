@@ -31,9 +31,10 @@ jobs:
       live: ${{ steps.diff.outputs.live }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Decide with git diff
         id: diff
         env:
@@ -72,9 +73,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Setup NodeJS 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: 'npm'
@@ -113,9 +116,11 @@ jobs:
       DOCS_SNIPPETS_REQUIRE_FEATURES: ${{ github.event_name == 'schedule' && 'datasync-events,push-notifications' || '' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Setup NodeJS 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: 'npm'
@@ -123,19 +128,14 @@ jobs:
         run: npm ci
       - name: Build the SDK for Node
         run: npm run build:node
-      # Each shard runs even when an earlier one failed (success() || failure()), but not after a cancel.
+      # Each shard runs even when an earlier one failed (success() || failure()), but not after a cancel. Each gets the secret key
+      # of its own role only. The janitor step after them needs every role, so it keeps all of them.
       - name: Shard open
         id: open
         if: success() || failure()
         env:
           SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_OPEN_SUBSCRIBE_KEY }}
           PUBLISH_KEY: ${{ secrets.SDK_DOCS_OPEN_PUBLISH_KEY }}
-          PAM_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_PAM_SUBSCRIBE_KEY }}
-          PAM_PUBLISH_KEY: ${{ secrets.SDK_DOCS_PAM_PUBLISH_KEY }}
-          PAM_SECRET_KEY: ${{ secrets.SDK_DOCS_PAM_SECRET_KEY }}
-          DS_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_DS_SUBSCRIBE_KEY }}
-          DS_PUBLISH_KEY: ${{ secrets.SDK_DOCS_DS_PUBLISH_KEY }}
-          DS_SECRET_KEY: ${{ secrets.SDK_DOCS_DS_SECRET_KEY }}
         run: npm run test:docs-snippets -- --shard open
       - name: Keep the open report
         if: (success() || failure()) && steps.open.outcome != 'skipped'
@@ -149,9 +149,6 @@ jobs:
           PAM_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_PAM_SUBSCRIBE_KEY }}
           PAM_PUBLISH_KEY: ${{ secrets.SDK_DOCS_PAM_PUBLISH_KEY }}
           PAM_SECRET_KEY: ${{ secrets.SDK_DOCS_PAM_SECRET_KEY }}
-          DS_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_DS_SUBSCRIBE_KEY }}
-          DS_PUBLISH_KEY: ${{ secrets.SDK_DOCS_DS_PUBLISH_KEY }}
-          DS_SECRET_KEY: ${{ secrets.SDK_DOCS_DS_SECRET_KEY }}
         run: npm run test:docs-snippets -- --shard pam
       - name: Keep the pam report
         if: (success() || failure()) && steps.pam.outcome != 'skipped'
@@ -162,9 +159,6 @@ jobs:
         env:
           SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_OPEN_SUBSCRIBE_KEY }}
           PUBLISH_KEY: ${{ secrets.SDK_DOCS_OPEN_PUBLISH_KEY }}
-          PAM_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_PAM_SUBSCRIBE_KEY }}
-          PAM_PUBLISH_KEY: ${{ secrets.SDK_DOCS_PAM_PUBLISH_KEY }}
-          PAM_SECRET_KEY: ${{ secrets.SDK_DOCS_PAM_SECRET_KEY }}
           DS_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_DS_SUBSCRIBE_KEY }}
           DS_PUBLISH_KEY: ${{ secrets.SDK_DOCS_DS_PUBLISH_KEY }}
           DS_SECRET_KEY: ${{ secrets.SDK_DOCS_DS_SECRET_KEY }}
@@ -174,6 +168,11 @@ jobs:
       - name: Keep the datasync report
         if: (success() || failure()) && steps.datasync.outcome != 'skipped'
         run: mkdir -p docs-snippets/report/datasync && mv docs-snippets/report/run.json docs-snippets/report/summary.md docs-snippets/report/datasync/ 2>/dev/null || true
+      # One block on the run page with a row per snippet id (passed, FAILED, skipped, not run, type checked only). It reads the
+      # shard reports and coverage.json, needs no secrets, and runs after a failure or a cancel too.
+      - name: Result per snippet id
+        if: always()
+        run: node docs-snippets/harness/snippet-summary.cjs docs-snippets/report/open docs-snippets/report/pam docs-snippets/report/datasync
       # After a failure or a cancel: revoke the application-level Access Manager grants and remove leftovers, so a run that
       # died between a grant and its revoke never leaves a keyset open until the next run.
       - name: Revoke grants and clean up
@@ -190,7 +189,7 @@ jobs:
         run: npm run test:docs-snippets:janitor
       - name: Upload the reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: docs-snippets-reports
           path: docs-snippets/report/

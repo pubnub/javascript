@@ -153,10 +153,15 @@ if (!dry) {
     async () => {
       // Stop collecting console output (quiet.ts): from here on every line of the cleanup must be visible.
       unmute();
-      for (const { role, keys } of guarded) {
-        await revokeApplicationGrantOnKeyset(keys, `signal-r${world.runId}`, 1);
-        process.stderr.write(`${role} keyset: application-level grant revoked\n`);
-      }
+      // All keysets are tried, a failure on one never skips the others. The first failure is thrown afterwards.
+      const results = await Promise.allSettled(
+        guarded.map(async ({ role, keys }) => {
+          await revokeApplicationGrantOnKeyset(keys, `signal-r${world.runId}`, 1);
+          process.stderr.write(`${role} keyset: application-level grant revoked\n`);
+        }),
+      );
+      const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+      if (failed) throw failed.reason;
     },
     async () => {
       const report = await runJanitor(env, world.runId, new Date(startedAt), [...usedRoles]);

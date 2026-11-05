@@ -635,6 +635,23 @@ async function dryRun(): Promise<number> {
       console.log(
         `  ${written.length} files written (run.json, summary.md, step summary), ${secrets.length} known secret value(s) checked, no leak (${env.open || env.pam || env.datasync ? 'loaded keys included' : 'no keys loaded, fake values only'})`,
       );
+    // The per snippet id summary (snippet-summary.cjs): right status per id, and the same leak rule as the other files.
+    {
+      const { renderSnippetSummary } = (await import(pathToFileURL(path.join(SUITE_DIR, 'harness', 'snippet-summary.cjs')).href)) as {
+        renderSnippetSummary: (r: unknown[], m: unknown) => string;
+      };
+      const manifest = {
+        leaky: { file: 'x.ts', step: 'leaky', role: 'open', phase: 'P4', mode: 'live', reason: null },
+        ghost: { file: 'x.ts', step: 'ghost', role: 'open', phase: 'P4', mode: 'live', reason: null },
+        typed: { file: 'b.ts', step: null, role: null, phase: null, mode: 'compile-only', reason: 'browser-only' },
+      };
+      const md = redact(renderSnippetSummary([{ shard: 'open', report }], manifest));
+      if (!/\| `leaky` \| FAILED \|/.test(md) || !/\| `ghost` \| NOT RUN \|/.test(md) || !/\| `typed` \| type checked only/.test(md))
+        fail('snippet summary: a failed, a not-run and a compile-only id must each show their own result');
+      if (!/\| 0 \| 1 \| 0 \| 1 \| 1 \| 0 \|/.test(md)) fail('snippet summary: counts row is wrong');
+      if (secrets.some((x) => md.includes(x)) || md.includes('0123abcd')) fail('the snippet summary leaks key values');
+      else console.log('  snippet summary: failed, not-run and type-checked ids shown, no leak');
+    }
     fs.rmSync(dir, { recursive: true, force: true });
   }
 
