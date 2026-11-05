@@ -1,5 +1,5 @@
 /**
- * Step registry: the single source of truth for what the app will run and in which order.
+ * Step registry: the single source of truth for what the suite will run and in which order.
  *
  * Page modules register steps through `step()`, `check()` and `stub()` (step.ts). The registry validates the wiring
  * (ids unique, `needs` point at earlier steps), sorts by phase, and answers one question for the Mocha binding:

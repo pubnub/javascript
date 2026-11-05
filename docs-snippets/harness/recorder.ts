@@ -29,7 +29,7 @@ export interface AssertionRecord {
   /** Failed assertions only: the values the assertion compared, already shortened. */
   expected?: string;
   actual?: string;
-  /** Failed assertions only: the first stack frame inside the app, as `file:line:column`. */
+  /** Failed assertions only: the first stack frame inside the suite, as `file:line:column`. */
   frame?: string;
 }
 
@@ -50,7 +50,7 @@ export function short(value: unknown, max = 80): string {
 }
 
 /**
- * First stack frame that belongs to the app (a page module, shared snippet or helper) and not to the recording layer, Node
+ * First stack frame that belongs to the suite (a page module, shared snippet or helper) and not to the recording layer, Node
  * or a dependency. The staged copy lives in `.run/<runId>/`, the prefix is cut so the frame names the source file, whose
  * line numbers are the same (the stage rewrite changes string literals only, never lines).
  */

@@ -10,7 +10,7 @@ import { isInsideRegion, isVisibleLine, scanMarkers, type SnippetRegion } from '
  * `catch` and `console.error` inside a snippet are errors too.
  *
  * Rules:
- *  1. id matches ^[A-Za-z0-9_-]+$ and is unique across the app
+ *  1. id matches ^[A-Za-z0-9_-]+$ and is unique across the suite
  *  2. no nested start marker, every snippet has snippet.end
  *  3. snippet.hide has a snippet.show, at most 3 lines per hidden block, and hidden lines only hold
  *     in-scope asserts or live configuration (they must hold `world.` or `assert(` as code, comments do not count,
@@ -45,7 +45,7 @@ const ERROR_HANDLING_SNIPPETS = new Set([
 ]);
 /** Directory of standalone quickstart snippet sources, see the end of lintApp. */
 const STANDALONE_DIR = 'quickstarts';
-const SCAN_DIRS = ['api-reference', 'shared', 'getting-started', 'migration-guides', 'browser', 'react-native'];
+const SCAN_DIRS = ['api-reference', 'shared', 'getting-started', 'migration-guides'];
 const RESOURCE_KEYS = new Set(['channel', 'channelGroup', 'uuid', 'userId', 'id', 'device', 'channelId', 'spaceId', 'entityAId', 'entityBId']);
 const RESOURCE_ARRAY_KEYS = new Set(['channels', 'channelGroups', 'uuids', 'userIds']);
 const RESOURCE_CALLS = new Set([
@@ -61,7 +61,7 @@ const RESOURCE_CALLS = new Set([
   'dataSyncMembership',
 ]);
 
-/** One lint finding. `line` is 1-based in `file` (relative to the app directory). */
+/** One lint finding. `line` is 1-based in `file` (relative to the suite directory). */
 export interface LintIssue {
   file: string;
   line: number;
@@ -244,11 +244,11 @@ export function lintApp(appDir: string): LintResult {
     }
   }
   // Standalone sources (quickstarts/*.ts, *.tsx, *.jsx). They are the exact text of the Web, React and React Native
-  // quickstart pages and of the React, browser-only and React Native samples of the API reference, run by a separate
-  // test project with a browser and React Native, not by a step() callback. So rules 1 and 2 apply (id shape,
+  // quickstart pages and of the React, browser-only and React Native samples of the API reference. This repository cannot
+  // run them (no browser, no React, no React Native), so no step() callback runs them. Rules 1 and 2 apply (id shape,
   // uniqueness, no nesting, snippet.end), hidden lines are not allowed except one `@ts-expect-error` line, and the
   // step and literal rules (3 to 7) do not apply: the pages teach try/catch around publish and use their own channel
-  // literals, which that test project replaces in memory.
+  // literals.
   const standalone = path.join(appDir, STANDALONE_DIR);
   if (fs.existsSync(standalone)) {
     for (const name of fs.readdirSync(standalone).filter((f) => /\.(tsx?|jsx)$/.test(f))) {

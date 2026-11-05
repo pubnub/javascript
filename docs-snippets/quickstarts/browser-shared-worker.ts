@@ -3,10 +3,8 @@ import PubNub from 'pubnub';
 /**
  * docs/sdks/javascript/set-up-your-environment.md, the SharedWorker sample.
  *
- * Type checked here by tsconfig.browser.json. A separate test project runs it live in headless Chromium. That test takes the lines between the markers (what the
- * page shows), fills the keys, the user id and the worker URL (a same-origin copy of the SDK's pubnub.worker.js, which a
- * SharedWorker requires), strips the TypeScript and runs them in a page. Then it proves that subscribe goes through the
- * shared worker. The hidden `@ts-expect-error` records an SDK typing bug: the shipped types lack `subscriptionWorkerUrl`.
+ * Type checked here by tsconfig.browser.json. It cannot be run in this repository, which has no browser. The hidden
+ * `@ts-expect-error` records an SDK typing bug: the shipped types lack `subscriptionWorkerUrl`.
  */
 // snippet.configurationBasicUsageSubscriptionWorkerUrl
 const pubnub = new PubNub({

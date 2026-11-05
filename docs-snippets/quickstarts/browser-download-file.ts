@@ -3,9 +3,8 @@ import type PubNub from 'pubnub';
 /**
  * docs/sdks/javascript/api-reference/file-sharing.md, "Download file", the browser sample.
  *
- * Type checked here by tsconfig.browser.json. A separate test project runs it live in headless Chromium. That test takes the lines between the markers (what the
- * page shows), fills the channel and the file id of a file it uploaded first, strips the TypeScript and runs them in a page
- * that holds a client named `pubnub`, as the page assumes. Then it calls `downloadFile()` and checks the image.
+ * Type checked here by tsconfig.browser.json. It cannot be run in this repository, which has no browser. The page assumes a
+ * client named `pubnub`, declared below.
  * The hidden `@ts-expect-error` records an SDK typing bug: the shipped types declare `toFile(): Promise<void>`.
  */
 declare const pubnub: PubNub;

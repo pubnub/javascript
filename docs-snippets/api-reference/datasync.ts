@@ -23,7 +23,7 @@ import { filterFragments, patchFragments, sortFragments } from '../fixtures/data
  *
  * Two snippet ids differ from the docs: `createChannelBasicUsage` (also used by the subscribe page) and
  * `getMembershipBasicUsage` (also used by the App Context page) became `createDataSyncChannelBasicUsage` and
- * `getDataSyncMembershipBasicUsage`, because snippet ids are unique across the app. The datasync page embeds the
+ * `getDataSyncMembershipBasicUsage`, because snippet ids are unique across the suite. The datasync page embeds the
  * old names from basic-usage/data-sync.ts and needs the new ones when it switches to this app.
  *
  * Doc inconsistencies the steps work around, all found by live runs:
@@ -358,7 +358,7 @@ export default page('api-reference/datasync', 'P2', (world) => {
   // ---- channels ----------------------------------------------------------------------------------------------
 
   // Creates the drop channel. Renamed from `createChannelBasicUsage` because that id is also used by another page
-  // (ids are unique across the app).
+  // (ids are unique across the suite).
   step('createDataSyncChannelBasicUsage', { ...secured, proves: 'createChannel creates the drop channel and echoes the payload.' }, async () => {
     const pubnub = world.server;
     // snippet.createDataSyncChannelBasicUsage

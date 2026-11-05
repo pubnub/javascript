@@ -4,12 +4,12 @@
  *
  *   live          a step runs it against the service and asserts the effect
  *   compile-only  type checked only: import-only snippets, and the browser sources of tsconfig.browser.json
- *   stub          not run and not compiled here: React and React Native sources (a separate test project with a browser and React Native runs them) and the
- *                 documented `stub()` steps of pages that need a browser or React Native
+ *   stub          not run and not compiled here: React and React Native sources, which cannot run in this repository (the SDK has no
+ *                 React or React Native dependencies), and the documented `stub()` steps of pages that need a browser or React Native
  *
  * `npm run docs-snippets:manifest -- --check` fails on a marker id without a step, a step id without a marker, a duplicate id
  * or a stale coverage.json. It also reports, without failing, docs ids missing from the manifest and manifest ids that no
- * docs page uses. Docs ids come from live `<EmbeddedCode>` tags and `SAMPLE-APP:` comments under docs/sdks/javascript of
+ * docs page uses. Docs ids come from `<EmbeddedCode>` tags under docs/sdks/javascript of
  * the docs checkout in DOCS_SNIPPETS_DOCS_DIR (default: a `documentation` checkout next to this repository).
  */
 import fs from 'node:fs';
@@ -79,7 +79,7 @@ export function buildManifest(lint: LintResult, reg: Registry): { manifest: Mani
         mode: browser ? 'compile-only' : 'stub',
         reason: browser
           ? 'browser-only, type checked by tsconfig.browser.json'
-          : 'react or react-native source, kept for the docs URLs, run by a separate test project',
+          : 'react or react-native source, kept for the docs URLs, cannot be run in this repository',
       };
     } else {
       problems.push(`marker ${snippet.id} in ${snippet.file} belongs to no step`);
@@ -124,7 +124,7 @@ export function serialize(manifest: Manifest): string {
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }
 
-/** Snippet ids the JavaScript docs pages use: live EmbeddedCode tags and SAMPLE-APP comments. Undefined when the dir is absent. */
+/** Snippet ids the JavaScript docs pages use, from their EmbeddedCode tags. Undefined when the dir is absent. */
 export function docsIds(docsDir: string): { ids: Map<string, string[]>; files: number } | undefined {
   const root = path.join(docsDir, 'docs', 'sdks', 'javascript');
   if (!fs.existsSync(root)) return undefined;
@@ -142,18 +142,8 @@ export function docsIds(docsDir: string): { ids: Map<string, string[]>; files: n
   for (const file of walk(root)) {
     files += 1;
     const rel = path.relative(docsDir, file);
-    let text = fs.readFileSync(file, 'utf8');
-    // SAMPLE-APP comments: {/* SAMPLE-APP: <app path> | ids: a, b | original: <EmbeddedCode ...> | ... */}
-    text = text.replace(/\{\/\*\s*SAMPLE-APP:([\s\S]*?)\*\/\}/g, (_m, body: string) => {
-      const list = /\|\s*ids:\s*([^|]+)\|/.exec(body);
-      for (const id of (list?.[1] ?? '')
-        .split(',')
-        .map((x) => x.trim())
-        .filter(Boolean))
-        add(id, rel);
-      return '';
-    });
-    // Live EmbeddedCode tags outside those comments. Only JavaScript SDK repository URLs count.
+    const text = fs.readFileSync(file, 'utf8');
+    // Only EmbeddedCode tags with a JavaScript SDK repository URL count.
     for (const tag of text.matchAll(/<EmbeddedCode\b[\s\S]*?\/>/g)) {
       if (!/pubnub\/javascript\//.test(tag[0])) continue;
       const list = /snippets=\{\[([^\]]*)\]\}/.exec(tag[0]);

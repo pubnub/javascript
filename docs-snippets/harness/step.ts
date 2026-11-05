@@ -1,5 +1,5 @@
 /**
- * The authoring API of the app: what a page module imports to register its steps.
+ * The authoring API of the suite: what a page module imports to register its steps.
  *
  *   page(path, defaultPhase, (world) => { step(...); check(...); stub(...); })
  *
@@ -42,16 +42,12 @@ export function check(id: string, a: StepOptions | Body, b?: Body): void {
   registry.add('check', id, options, fn);
 }
 
-/** Why each stub exists, by step id. Kept for debugging only (nothing reads it yet). The skip reason itself is `skipIf`. */
-export const stubNotes = new Map<string, string>();
-
 /** A documented skipped stub. Reported as skipped with its reason, never executed. */
 export function stub(id: string, reason: string, note: string): void {
   // The stub note doubles as the description in the report, so a skipped stub says what it stands for.
   registry.add('stub', id, { skipIf: reason, proves: note }, () => {
     throw new Error(`stub ${id} must never run: ${note}`);
   });
-  stubNotes.set(id, note);
 }
 
 /** What a page file default exports. `run.ts` lists these, `setup` is called once per run with the shared `World`. */

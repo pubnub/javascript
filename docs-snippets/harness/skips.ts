@@ -17,8 +17,3 @@ export function assertAllowedSkip(reason: string, where: string): void {
     );
   }
 }
-
-/** A runner-generated reason is fine locally. `missing-env:*` additionally fails CI (see policy.ts). */
-export function isRunnerReason(reason: string): boolean {
-  return /^(blocked-by:.+|missing-env:(open|pam|datasync))$/.test(reason);
-}

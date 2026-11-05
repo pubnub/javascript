@@ -1,5 +1,5 @@
 /**
- * The plan: the one place that lists every page module of the app.
+ * The plan: the one place that lists every page module of the suite.
  *
  * Role. `harness/mocha-entry.ts` imports this file from the staged copy (`docs-snippets/.run/<runId>/run.ts`), calls
  * `registerAll(world)` and turns each registered step into one Mocha test. A page module is a file that default

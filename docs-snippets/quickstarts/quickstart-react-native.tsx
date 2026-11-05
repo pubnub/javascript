@@ -5,9 +5,8 @@
  * of the page.
  *
  * `quickstart-react-native-app.tsx` is the complete `App.tsx` ("Set up event listeners" and "Complete example", the same
- * text twice on the page). A separate test project renders that file and the host components below with Jest and
- * jest-expo. This repository keeps the files for the docs URLs and does not compile them, because the SDK has no React
- * Native dependencies.
+ * text twice on the page). This repository keeps the files for the docs URLs. It cannot run or compile them, because the
+ * SDK has no React Native dependencies.
  *
  * Not run by Mocha (no `page()` module, no phase).
  * `quickstart-react-native-app.tsx` has no comments of its own, its text is the docs text. The odd indentation of the

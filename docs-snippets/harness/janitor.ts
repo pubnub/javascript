@@ -195,10 +195,10 @@ async function cleanupRun(admin: PubNub, runId: string, log: string[], residue: 
   // tokens are recomputed from its run id alone. The registrations themselves cannot be listed without the token.
   // Run ids of crashed push runs are found through the `push_marker` channel metadata the mobile push page sets
   // (see api-reference/mobile-push.ts), which the App Context sweep above lists by pattern.
-  // `niceDevice` is the docs sample's token. The app only registers it in the harness check that proves the
+  // `niceDevice` is the docs sample's token. The suite only registers it in the harness check that proves the
   // apns/apns2 rejection claim, and that check removes it again, but a crash in between is covered here.
   const devices = [...names.device.map((base) => suffixName(base, runId)), suffixName('niceDevice', runId)];
-  // Gateway variants the app can register on: fcm, apns (v1) and both apns2 environments with the docs topic.
+  // Gateway variants the suite can register on: fcm, apns (v1) and both apns2 environments with the docs topic.
   const gateways: Array<{
     label: string;
     remove: (device: string) => Promise<unknown>;

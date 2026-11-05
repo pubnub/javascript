@@ -32,7 +32,7 @@ const SDK_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.resolve('pu
 const TSC = path.resolve(path.dirname(fileURLToPath(import.meta.resolve('typescript'))), 'tsc.js');
 
 export default page('getting-started/set-up-your-environment', 'P0', (world) => {
-  /** A scratch directory below the staged app, so `pubnub` resolves from the app's node_modules. */
+  /** A scratch directory below the staged suite, so `pubnub` resolves from the suite's node_modules. */
   const scratch = (): string => fs.mkdtempSync(path.join(HERE, '.setup-'));
 
   // The only live step: the TypeScript init snippet with real keys. The hidden spread supplies them, `world.n` shows the staging
@@ -94,7 +94,7 @@ const pubnub = new PubNub({
     }
   });
 
-  // Each format runs in a real Node.js process in a scratch directory below the app, so `pubnub` resolves from the app's
+  // Each format runs in a real Node.js process in a scratch directory below the suite, so `pubnub` resolves from the suite's
   // node_modules. The probe constructs a client with a dummy subscribe key only, it makes no request.
   check('setUpModuleFormats', { timeout: 60_000, proves: 'Each documented module format loads the SDK in a real Node process.' }, () => {
     const dir = scratch();
@@ -187,5 +187,5 @@ module.exports = {
   });
 
   // The SharedWorker sample (configurationBasicUsageSubscriptionWorkerUrl) needs a browser. Its source is
-  // quickstarts/browser-shared-worker.ts, run live in headless Chromium by a separate test project.
+  // quickstarts/browser-shared-worker.ts. This repository has no browser, so it cannot run it.
 });

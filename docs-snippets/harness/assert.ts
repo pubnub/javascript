@@ -60,7 +60,7 @@ function labelOf(kind: string, args: unknown[]): string {
   }
 }
 
-/** Records a failed assertion with the values and the first frame inside the app. */
+/** Records a failed assertion with the values and the first frame inside the suite. */
 function recordFailure(kind: string, args: unknown[], error: unknown, callSite: Error | undefined): void {
   const e = error as { actual?: unknown; expected?: unknown; stack?: string };
   recorder.record({

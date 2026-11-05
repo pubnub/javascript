@@ -439,7 +439,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "downloadFileWebBasicUsage": {
       "file": "quickstarts/browser-download-file.ts",
@@ -1367,7 +1367,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "quickstartReactInit": {
       "file": "quickstarts/quickstart-react.tsx",
@@ -1375,7 +1375,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "quickstartReactNativeCleanup": {
       "file": "quickstarts/quickstart-react-native.tsx",
@@ -1383,7 +1383,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "quickstartReactNativeImport": {
       "file": "quickstarts/quickstart-react-native.tsx",
@@ -1391,7 +1391,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "quickstartReactNativeInit": {
       "file": "quickstarts/quickstart-react-native.tsx",
@@ -1399,7 +1399,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "quickstartReactNativePublish": {
       "file": "quickstarts/quickstart-react-native.tsx",
@@ -1407,7 +1407,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "quickstartReactNativeSubscription": {
       "file": "quickstarts/quickstart-react-native.tsx",
@@ -1415,7 +1415,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "quickstartReactPublish": {
       "file": "quickstarts/quickstart-react.tsx",
@@ -1423,7 +1423,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "quickstartReactSubscribe": {
       "file": "quickstarts/quickstart-react.tsx",
@@ -1431,7 +1431,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "quickstartWebInit": {
       "file": "quickstarts/quickstart-web.ts",
@@ -1471,7 +1471,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "reactFetchMessages": {
       "file": "quickstarts/react-fetch-messages.jsx",
@@ -1479,7 +1479,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "reactGetState": {
       "file": "quickstarts/react-get-state.jsx",
@@ -1487,7 +1487,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "reactHereNow": {
       "file": "quickstarts/react-here-now.jsx",
@@ -1495,7 +1495,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "reactListeners": {
       "file": "quickstarts/react-listeners.jsx",
@@ -1503,7 +1503,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "reactPresenceEvents": {
       "file": "quickstarts/react-presence-events.jsx",
@@ -1511,7 +1511,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "reactSetState": {
       "file": "quickstarts/react-set-state.jsx",
@@ -1519,7 +1519,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "reactSubscribe": {
       "file": "quickstarts/react-subscribe.jsx",
@@ -1527,7 +1527,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "reactWhereNow": {
       "file": "quickstarts/react-where-now.jsx",
@@ -1535,7 +1535,7 @@
       "role": null,
       "phase": null,
       "mode": "stub",
-      "reason": "react or react-native source, kept for the docs URLs, run by a separate test project"
+      "reason": "react or react-native source, kept for the docs URLs, cannot be run in this repository"
     },
     "reconnectBasicUsage": {
       "file": "api-reference/misc.ts",

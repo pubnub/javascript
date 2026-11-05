@@ -1,5 +1,5 @@
 /**
- * Waiting primitives. The rule of the app is "no blind retries and no fixed sleeps": every wait either polls a read until
+ * Waiting primitives. The rule of the suite is "no blind retries and no fixed sleeps": every wait either polls a read until
  * an assertion holds (`eventually`) or listens for the exact event the action should cause.
  *
  * - `eventually`    poll a read (hereNow, history, App Context filter) that is eventually consistent on the service.

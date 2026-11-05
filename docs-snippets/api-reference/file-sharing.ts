@@ -161,7 +161,7 @@ export default page('api-reference/file-sharing', 'P4', (world) => {
 
   // The React Native and browser download samples (downloadFileReactNativeBasicUsage, downloadFileWebBasicUsage) need
   // React Native or a browser. Their sources are quickstarts/react-native-download-file.ts and
-  // quickstarts/browser-download-file.ts, run live by a separate test project (Jest with jest-expo, headless Chromium).
+  // quickstarts/browser-download-file.ts. This repository cannot run them (no React Native, no browser).
 
   // Prose-only parts of the page that no browser-free run can execute. They appear in the report as skipped stubs.
   stub(

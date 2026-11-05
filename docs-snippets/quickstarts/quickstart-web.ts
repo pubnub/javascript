@@ -5,8 +5,8 @@ import PubNub from 'pubnub';
  *
  * The page loads the SDK from the CDN, which exposes the `PubNub` global. The import above only lets the compiler check
  * the snippets (`npm run test:docs-snippets:types`, tsconfig.browser.json, with the DOM library). The snippet bodies are the
- * exact text the page shows. The page that combines them is `quickstart-web.html`. A separate test project runs that file in
- * a browser DOM and checks that this file, the HTML file and the docs agree.
+ * exact text the page shows. The page that combines them is `quickstart-web.html`. This repository cannot run either file,
+ * because it has no browser.
  *
  * The publish snippet keeps its try and catch because the page teaches that error handling. Standalone quickstart files
  * are exempt from the "snippets let errors throw" rule of the Node snippets (see lint-markers.ts, STANDALONE_DIR).

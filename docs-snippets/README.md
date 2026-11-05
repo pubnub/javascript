@@ -142,7 +142,7 @@ Every skip prints its reason, and the report counts it. [`harness/skips.ts`](har
 
 `DOCS_SNIPPETS_STRICT=1` makes every skip fatal.
 
-The browser, React and React Native sources in `quickstarts/` stay here because the docs embed them. `tsconfig.browser.json` type checks the browser ones. Nothing compiles the React and React Native ones here, because the SDK has no React dependencies. A separate test project with a browser and React Native runs them.
+The browser, React and React Native sources in `quickstarts/` stay here because the docs embed them. `tsconfig.browser.json` type checks the browser ones. Nothing compiles the React and React Native ones here, because the SDK has no React or React Native dependencies, so these snippets cannot be run in this repository. The browser ones are type checked only, because this repository has no browser to run them in.
 
 ## Control variables
 

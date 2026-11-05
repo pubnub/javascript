@@ -258,11 +258,6 @@ export function loadEnv(source: Record<string, string | undefined> = envSource()
   };
 }
 
-/** Keys of a role, or undefined. */
-export function keysOf(env: Env, role: Role): OpenKeyset | SecuredKeyset | undefined {
-  return env[role];
-}
-
 /** Secured keysets to guard, without duplicates (pam and datasync may be one keyset). */
 export function securedKeysets(env: Env): Array<{ role: 'pam' | 'datasync'; keys: SecuredKeyset }> {
   const out: Array<{ role: 'pam' | 'datasync'; keys: SecuredKeyset }> = [];

@@ -23,7 +23,7 @@ import { isVisibleLine, scanMarkers, type SnippetRegion } from './markers.js';
 /** Directories whose files may contain snippets and are rewritten. */
 export const PAGE_DIRS = ['api-reference', 'shared', 'getting-started', 'migration-guides'];
 // Everything the staged run imports. `quickstarts/` is absent on purpose: those sources are type checked only
-// (tsconfig.browser.json), and a separate test project with a browser and React Native runs them.
+// (tsconfig.browser.json) or not at all, because this repository cannot run a browser, React or React Native.
 const COPY_DIRS = ['harness', 'fixtures', ...PAGE_DIRS];
 const COPY_FILES = ['run.ts', 'package.json', 'tsconfig.live.json', 'tsconfig.run.json'];
 

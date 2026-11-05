@@ -36,7 +36,7 @@ export default page('migration-guides/v8', 'P0', () => {
   });
 
   // Runs a separate `tsc` over scratch files (harness/tsc-project.ts) because the "before" sample must FAIL to compile, which
-  // cannot live in a file that the app's own typecheck has to pass. The long timeout is two cold `tsc` processes.
+  // cannot live in a file that the suite's own typecheck has to pass. The long timeout is two cold `tsc` processes.
   check('migrationV8TypeImports', { timeout: 90_000, proves: 'The before sample for type imports fails to compile and the after sample compiles.' }, () => {
     // The 7.x.x import no longer compiles: the type moved into the AppContext namespace.
     const before = tscProject(HERE, {

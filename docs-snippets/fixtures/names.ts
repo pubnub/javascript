@@ -70,7 +70,7 @@ export const names: Readonly<Record<NameKind, readonly string[]>> = {
    * The literal must be a realistic token that the real service accepts on EVERY gateway. The docs sample uses
    * `niceDevice`, which the service rejects for apns and apns2 (400 "Invalid device token", verified live 2026-11-02),
    * because it checks the token FORMAT for those gateways: a hex string of 64 characters (40 also passes) is accepted,
-   * and FCM accepts any string. So the app's snippet bodies show a 64-character hex token. The staging rewrite
+   * and FCM accepts any string. So the suite's snippet bodies show a 64-character hex token. The staging rewrite
    * replaces it with another 64-character hex token derived from the run id (see `deviceToken`), so the rewritten
    * value stays valid for apns and apns2. Tokens are not checked against Apple or Google until a push is sent.
    */

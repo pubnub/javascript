@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 
 /**
  * Compiles small TypeScript files with the real `tsc` against the installed SDK types and returns the diagnostics.
- * Used by the type-check-only modules (migration guide imports, React and React Native samples). The scratch directory
- * sits below the staged app so that `pubnub` and the type packages resolve from the app's `node_modules`.
+ * Used by the type-check-only modules (migration guide imports). The scratch directory sits below the staged suite so
+ * that `pubnub` and the type packages resolve from the suite's `node_modules`.
  */
 const TSC = path.resolve(path.dirname(fileURLToPath(import.meta.resolve('typescript'))), 'tsc.js');
 

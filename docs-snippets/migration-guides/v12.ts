@@ -59,7 +59,7 @@ export default page('migration-guides/v12', 'P7', (world) => {
     assert.throws(() => pubnub.setProxy({ hostname: '127.0.0.1', port: 8080, protocol: 'http' }), /keepAlive/);
   });
 
-  // Reads the manifest of the linked SDK checkout, so it tracks whatever version the app is wired to. `void PubNub` keeps the import used.
+  // Reads the manifest of the linked SDK checkout, so it tracks whatever version the suite is wired to. `void PubNub` keeps the import used.
   check('migrationV12ReactNativePolyfill', { proves: 'The SDK manifest lists react-native-url-polyfill as an optional peer dependency and requires Node 22 or later.' }, () => {
     // "Version 12.0.0 lists react-native-url-polyfill as an optional peer dependency, so installing pubnub no longer installs it."
     const manifest = JSON.parse(fs.readFileSync(path.join(SDK_ROOT, 'package.json'), 'utf8'));
