@@ -103,7 +103,19 @@ export default page('api-reference/presence', 'P4', (world) => {
     const entry = result.channels[world.n('ch1')]?.occupants.find((o) => o.uuid === pubnub.getUserId());
     assert.ok(entry, 'ch1 lists the occupant');
     assert.deepEqual(entry.state, { status: 'online' });
-    assert.ok(result.channels[world.n('cg1_member')], 'the channel group member is part of the result');
+    // The group member shows up a moment after the fixture joins it, so re-read until it does.
+    await eventually(
+      async () => {
+        const again = await pubnub.hereNow({
+          channels: [world.n('ch1')],
+          channelGroups: [world.n('cg1')],
+          includeUUIDs: true,
+          includeState: true,
+        });
+        assert.ok(again.channels[world.n('cg1_member')], 'the channel group member is part of the result');
+      },
+      { timeout: 30_000, label: 'hereNow lists the channel group member' },
+    );
   });
 
   step('hereNowWithState', { needs: ['presenceFixture'], proves: 'hereNow with includeState returns the state set in the fixture.' }, async () => {
