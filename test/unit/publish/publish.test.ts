@@ -240,13 +240,13 @@ describe('PublishRequest', () => {
   describe('encryption handling', () => {
     const mockCryptoModule: ICryptoModule = {
       set logger(_logger: any) {},
-      encrypt: (data: string) => `encrypted_${data}`,
-      decrypt: (data: string | ArrayBuffer) => data.toString().replace('encrypted_', ''),
+      encrypt: async (data: string | ArrayBuffer) => `encrypted_${data}`,
+      decrypt: async (data: string | ArrayBuffer) => data.toString().replace('encrypted_', ''),
       encryptFile: undefined as any,
       decryptFile: undefined as any,
     };
 
-    it('should encrypt message with cryptoModule for GET', () => {
+    it('should encrypt message with cryptoModule for GET', async () => {
       const testMessage = { secret: 'data' };
       const request = new PublishRequest({
         ...defaultParameters,
@@ -255,12 +255,13 @@ describe('PublishRequest', () => {
         sendByPost: false,
       });
 
+      await request.prepare();
       const transportRequest = request.request();
       const expectedEncryptedMessage = JSON.stringify(`encrypted_${JSON.stringify(testMessage)}`);
       assert(transportRequest.path.includes(encodeURIComponent(expectedEncryptedMessage)));
     });
 
-    it('should encrypt message with cryptoModule for POST', () => {
+    it('should encrypt message with cryptoModule for POST', async () => {
       const testMessage = { secret: 'data' };
       const request = new PublishRequest({
         ...defaultParameters,
@@ -269,15 +270,16 @@ describe('PublishRequest', () => {
         sendByPost: true,
       });
 
+      await request.prepare();
       const transportRequest = request.request();
       const expectedEncryptedMessage = JSON.stringify(`encrypted_${JSON.stringify(testMessage)}`);
       assert.equal(transportRequest.body, expectedEncryptedMessage);
     });
 
-    it('should handle ArrayBuffer encryption result', () => {
+    it('should handle ArrayBuffer encryption result', async () => {
       const arrayBufferCrypto: ICryptoModule = {
         set logger(_logger: any) {},
-        encrypt: (data: string) => {
+        encrypt: async () => {
           const buffer = new ArrayBuffer(8);
           const view = new Uint8Array(buffer);
           view.set([1, 2, 3, 4, 5, 6, 7, 8]);
@@ -294,13 +296,14 @@ describe('PublishRequest', () => {
         sendByPost: true,
       });
 
+      await request.prepare();
       const transportRequest = request.request();
       const expectedEncodedBuffer = JSON.stringify(encode(new ArrayBuffer(8)));
       // We can't easily compare ArrayBuffer content, so just verify it's a string
       assert.equal(typeof transportRequest.body, 'string');
     });
 
-    it('should handle encryption failure', () => {
+    it('should handle encryption failure', async () => {
       const failingCrypto: ICryptoModule = {
         set logger(_logger: any) {},
         encrypt: () => {
@@ -311,12 +314,13 @@ describe('PublishRequest', () => {
         decryptFile: undefined as any,
       };
 
-      assert.throws(() => {
-        new PublishRequest({
-          ...defaultParameters,
-          crypto: failingCrypto,
-        }).request();
-      }, /Encryption failed/);
+      // Encryption happens in `prepare()` (awaited by `sendRequest()` before `request()` is built).
+      const request = new PublishRequest({
+        ...defaultParameters,
+        crypto: failingCrypto,
+      });
+
+      await assert.rejects(async () => request.prepare(), /Encryption failed/);
     });
   });
 

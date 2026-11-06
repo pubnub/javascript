@@ -4,91 +4,55 @@
  * @internal
  */
 
+import { CryptoPrimitives } from '../../interfaces/crypto-primitives';
 import { CryptorConfiguration } from '../../interfaces/crypto-module';
 import { LoggerManager } from '../logger-manager';
 import { isSensitiveLogKey } from '../../utils';
 import { Payload } from '../../types/api';
-import { decode } from '../base64_codec';
-import CryptoJS from './hmac-sha256';
+import { bytesToHex, decodeUtf8Strict, toArrayBuffer } from './bytes';
+import { decode, encode } from '../base64_codec';
 
 /**
- * Convert bytes array to words array.
+ * Legacy cryptography module for data encryption / decryption.
  *
- * @param b - Bytes array (buffer) which should be converted.
- *
- * @returns Word sized array.
+ * Wire format (compatible with all PubNub SDKs):
+ * - key: first 32 characters of HEX encoded SHA-256 digest of the cipher key, used as UTF-8 bytes (AES-256),
+ * - cipher: AES-CBC with PKCS#7 padding,
+ * - random IV: `base64(iv + ciphertext)`, static IV (`0123456789012345`): `base64(ciphertext)`.
  *
  * @internal
  */
-/* eslint-disable  @typescript-eslint/no-explicit-any */
-function bufferToWordArray(b: string | any[] | Uint8ClampedArray) {
-  const wa: number[] = [];
-  let i;
-  for (i = 0; i < b.length; i += 1) {
-    wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
-  }
-
-  // @ts-expect-error Bundled library without types.
-  return CryptoJS.lib.WordArray.create(wa, b.length);
-}
-
-/**
- * Legacy cryptor configuration options.
- *
- * @internal
- */
-type CryptoConfiguration = {
-  encryptKey?: boolean;
-  keyEncoding?: 'hex' | 'utf8' | 'base64' | 'binary';
-  keyLength?: 128 | 256;
-  mode?: 'ecb' | 'cbc';
-};
-
-/**
- * Legacy cryptography module for files and signature.
- *
- * @internal
- */
-export default class {
+export default class LegacyCrypto {
   /**
-   * Crypto initialization vector.
+   * `string` to {@link Uint8Array} encoder.
    */
-  private iv = '0123456789012345';
+  private static readonly encoder = new TextEncoder();
 
   /**
-   * List os allowed cipher key encodings.
+   * Static crypto initialization vector (used when random IVs are disabled).
    */
-  private allowedKeyEncodings = ['hex', 'utf8', 'base64', 'binary'];
+  private static readonly staticIV = new TextEncoder().encode('0123456789012345');
 
   /**
-   * Allowed cipher key lengths.
+   * Initialization vector length.
    */
-  private allowedKeyLengths = [128, 256];
+  private static readonly IV_LENGTH = 16;
 
   /**
-   * Allowed crypto modes.
+   * Derived key for configured cipher key (keys for per-call custom cipher keys aren't cached).
    */
-  private allowedModes = ['ecb', 'cbc'];
-
-  /**
-   * Default cryptor configuration options.
-   */
-  private readonly defaultOptions: Required<CryptoConfiguration>;
+  private configuredKey?: Promise<Uint8Array>;
 
   /**
    * Registered loggers' manager.
    */
   private _logger?: LoggerManager;
 
-  constructor(private readonly configuration: CryptorConfiguration) {
+  constructor(
+    private readonly configuration: CryptorConfiguration,
+    private readonly primitives: CryptoPrimitives,
+  ) {
     this.logger = configuration.logger;
-
-    this.defaultOptions = {
-      encryptKey: true,
-      keyEncoding: 'utf8',
-      keyLength: 256,
-      mode: 'cbc',
-    };
   }
 
   /**
@@ -121,41 +85,14 @@ export default class {
   }
 
   /**
-   * Generate HMAC-SHA256 hash from input data.
-   *
-   * @param data - Data from which hash should be generated.
-   *
-   * @returns HMAC-SHA256 hash from provided `data`.
-   */
-  public HMACSHA256(data: string): string {
-    // @ts-expect-error Bundled library without types.
-    const hash = CryptoJS.HmacSHA256(data, this.configuration.secretKey);
-    // @ts-expect-error Bundled library without types.
-    return hash.toString(CryptoJS.enc.Base64);
-  }
-
-  /**
-   * Generate SHA256 hash from input data.
-   *
-   * @param data - Data from which hash should be generated.
-   *
-   * @returns SHA256 hash from provided `data`.
-   */
-  public SHA256(data: string): string {
-    // @ts-expect-error Bundled library without types.
-    return CryptoJS.SHA256(data).toString(CryptoJS.enc.Hex);
-  }
-
-  /**
    * Encrypt provided data.
    *
    * @param data - Source data which should be encrypted.
    * @param [customCipherKey] - Custom cipher key (different from defined on client level).
-   * @param [options] - Specific crypto configuration options.
    *
    * @returns Encrypted `data`.
    */
-  public encrypt(data: string | Payload, customCipherKey?: string, options?: CryptoConfiguration) {
+  public async encrypt(data: string | Payload, customCipherKey?: string): Promise<string> {
     if (this.configuration.customEncrypt) {
       if (this.logger)
         this.logger.warn('Crypto', "'customEncrypt' is deprecated. Consult docs for better alternative.");
@@ -163,7 +100,7 @@ export default class {
       return this.configuration.customEncrypt(data);
     }
 
-    return this.pnEncrypt(data as string, customCipherKey, options);
+    return this.pnEncrypt(typeof data === 'string' ? data : JSON.stringify(data), customCipherKey);
   }
 
   /**
@@ -171,11 +108,10 @@ export default class {
    *
    * @param data - Encrypted data which should be decrypted.
    * @param [customCipherKey] - Custom cipher key (different from defined on client level).
-   * @param [options] - Specific crypto configuration options.
    *
    * @returns Decrypted `data`.
    */
-  public decrypt(data: string, customCipherKey?: string, options?: CryptoConfiguration) {
+  public async decrypt(data: string, customCipherKey?: string): Promise<Payload | null> {
     if (this.configuration.customDecrypt) {
       if (this.logger)
         this.logger.warn('Crypto', "'customDecrypt' is deprecated. Consult docs for better alternative.");
@@ -183,7 +119,7 @@ export default class {
       return this.configuration.customDecrypt(data);
     }
 
-    return this.pnDecrypt(data, customCipherKey, options);
+    return this.pnDecrypt(data, customCipherKey);
   }
 
   /**
@@ -191,43 +127,35 @@ export default class {
    *
    * @param data - Source data which should be encrypted.
    * @param [customCipherKey] - Custom cipher key (different from defined on client level).
-   * @param [options] - Specific crypto configuration options.
    *
    * @returns Encrypted `data` as string.
    */
-  private pnEncrypt(data: string, customCipherKey?: string, options?: CryptoConfiguration): string {
+  private async pnEncrypt(data: string, customCipherKey?: string): Promise<string> {
     const decidedCipherKey = customCipherKey ?? this.configuration.cipherKey;
     if (!decidedCipherKey) return data;
 
     if (this.logger) {
       this.logger.debug('Crypto', () => ({
         messageType: 'object',
-        message: { data, ...(options ?? {}) },
+        message: { data },
         details: 'Encrypt with parameters:',
         ignoredKeys: isSensitiveLogKey,
       }));
     }
 
-    options = this.parseOptions(options);
-    const mode = this.getMode(options);
-    const cipherKey = this.getPaddedKey(decidedCipherKey, options);
+    const key = await this.getKey(decidedCipherKey);
+    const plaintext = LegacyCrypto.encoder.encode(data);
 
     if (this.configuration.useRandomIVs) {
-      const waIv = this.getRandomIV();
-      // @ts-expect-error Bundled library without types.
-      const waPayload = CryptoJS.AES.encrypt(data, cipherKey, { iv: waIv, mode }).ciphertext;
+      const iv = this.primitives.randomBytes(LegacyCrypto.IV_LENGTH);
+      const ciphertext = await this.primitives.aesCbcEncrypt(key, iv, plaintext);
 
-      // @ts-expect-error Bundled library without types.
-      return waIv.clone().concat(waPayload.clone()).toString(CryptoJS.enc.Base64);
+      return encode(this.concat(iv, ciphertext));
     }
 
-    const iv = this.getIV(options);
-    // @ts-expect-error Bundled library without types.
-    const encryptedHexArray = CryptoJS.AES.encrypt(data, cipherKey, { iv, mode }).ciphertext;
-    // @ts-expect-error Bundled library without types.
-    const base64Encrypted = encryptedHexArray.toString(CryptoJS.enc.Base64);
+    const ciphertext = await this.primitives.aesCbcEncrypt(key, LegacyCrypto.staticIV, plaintext);
 
-    return base64Encrypted || data;
+    return encode(toArrayBuffer(ciphertext)) || data;
   }
 
   /**
@@ -235,156 +163,82 @@ export default class {
    *
    * @param data - Encrypted data which should be decrypted.
    * @param [customCipherKey] - Custom cipher key (different from defined on client level).
-   * @param [options] - Specific crypto configuration options.
    *
-   * @returns Decrypted `data`.
+   * @returns Decrypted `data` or `null` if it can't be decrypted.
    */
-  private pnDecrypt(data: string, customCipherKey?: string, options?: CryptoConfiguration): Payload | null {
+  private async pnDecrypt(data: string, customCipherKey?: string): Promise<Payload | null> {
     const decidedCipherKey = customCipherKey ?? this.configuration.cipherKey;
     if (!decidedCipherKey) return data;
 
     if (this.logger) {
       this.logger.debug('Crypto', () => ({
         messageType: 'object',
-        message: { data, ...(options ?? {}) },
+        message: { data },
         details: 'Decrypt with parameters:',
         ignoredKeys: isSensitiveLogKey,
       }));
     }
 
-    options = this.parseOptions(options);
-    const mode = this.getMode(options);
-    const cipherKey = this.getPaddedKey(decidedCipherKey, options);
+    try {
+      const key = await this.getKey(decidedCipherKey);
+      const encrypted = new Uint8Array(decode(data));
+      let iv = LegacyCrypto.staticIV;
+      let ciphertext = encrypted;
 
-    if (this.configuration.useRandomIVs) {
-      const ciphertext = new Uint8ClampedArray(decode(data));
-
-      const iv = bufferToWordArray(ciphertext.slice(0, 16));
-      const payload = bufferToWordArray(ciphertext.slice(16));
-
-      try {
-        // @ts-expect-error Bundled library without types.
-        const plainJSON = CryptoJS.AES.decrypt({ ciphertext: payload }, cipherKey, { iv, mode }).toString(
-          // @ts-expect-error Bundled library without types.
-          CryptoJS.enc.Utf8,
-        );
-        return JSON.parse(plainJSON);
-      } catch (e) {
-        if (this.logger) this.logger.error('Crypto', () => ({ messageType: 'error', message: e }));
-
-        return null;
+      if (this.configuration.useRandomIVs) {
+        iv = encrypted.slice(0, LegacyCrypto.IV_LENGTH);
+        ciphertext = encrypted.slice(LegacyCrypto.IV_LENGTH);
       }
-    } else {
-      const iv = this.getIV(options);
-      try {
-        // @ts-expect-error Bundled library without types.
-        const ciphertext = CryptoJS.enc.Base64.parse(data);
-        // @ts-expect-error Bundled library without types.
-        const plainJSON = CryptoJS.AES.decrypt({ ciphertext }, cipherKey, { iv, mode }).toString(CryptoJS.enc.Utf8);
-        return JSON.parse(plainJSON);
-      } catch (e) {
-        if (this.logger) this.logger.error('Crypto', () => ({ messageType: 'error', message: e }));
 
-        return null;
-      }
+      const plaintext = await this.primitives.aesCbcDecrypt(key, iv, ciphertext);
+
+      return JSON.parse(decodeUtf8Strict(plaintext));
+    } catch (e) {
+      if (this.logger) this.logger.error('Crypto', () => ({ messageType: 'error', message: e }));
+
+      return null;
     }
   }
 
   /**
-   * Pre-process provided custom crypto configuration.
+   * Derive AES-256 key from the cipher key (cached for configured cipher key).
    *
-   * @param incomingOptions - Configuration which should be pre-processed before use.
+   * @param cipherKey - User-provided cipher key.
    *
-   * @returns Normalized crypto configuration options.
+   * @returns First 32 characters of HEX encoded SHA-256 digest as UTF-8 bytes.
    */
-  private parseOptions(incomingOptions?: CryptoConfiguration): Required<CryptoConfiguration> {
-    if (!incomingOptions) return this.defaultOptions;
+  private getKey(cipherKey: string): Promise<Uint8Array> {
+    if (cipherKey !== this.configuration.cipherKey) return this.deriveKey(cipherKey);
 
-    // Defaults
-    const options = {
-      encryptKey: incomingOptions.encryptKey ?? this.defaultOptions.encryptKey,
-      keyEncoding: incomingOptions.keyEncoding ?? this.defaultOptions.keyEncoding,
-      keyLength: incomingOptions.keyLength ?? this.defaultOptions.keyLength,
-      mode: incomingOptions.mode ?? this.defaultOptions.mode,
-    };
+    if (!this.configuredKey) {
+      this.configuredKey = this.deriveKey(cipherKey);
+      this.configuredKey.catch(() => (this.configuredKey = undefined));
+    }
 
-    // Validation
-    if (this.allowedKeyEncodings.indexOf(options.keyEncoding!.toLowerCase()) === -1)
-      options.keyEncoding = this.defaultOptions.keyEncoding;
-    if (this.allowedKeyLengths.indexOf(options.keyLength!) === -1) options.keyLength = this.defaultOptions.keyLength;
-    if (this.allowedModes.indexOf(options.mode!.toLowerCase()) === -1) options.mode = this.defaultOptions.mode;
-
-    return options;
+    return this.configuredKey;
   }
 
   /**
-   * Decode provided cipher key.
+   * Derive AES-256 key from the cipher key.
    *
-   * @param key - Key in `encoding` provided by `options`.
-   * @param options - Crypto configuration options with cipher key details.
+   * @param cipherKey - User-provided cipher key.
    *
-   * @returns Array buffer with decoded key.
+   * @returns First 32 characters of HEX encoded SHA-256 digest as UTF-8 bytes.
    */
-  private decodeKey(key: string, options: CryptoConfiguration) {
-    // @ts-expect-error Bundled library without types.
-    if (options.keyEncoding === 'base64') return CryptoJS.enc.Base64.parse(key);
-    // @ts-expect-error Bundled library without types.
-    if (options.keyEncoding === 'hex') return CryptoJS.enc.Hex.parse(key);
+  private async deriveKey(cipherKey: string): Promise<Uint8Array> {
+    const digest = await this.primitives.sha256(LegacyCrypto.encoder.encode(cipherKey));
 
-    return key;
+    return LegacyCrypto.encoder.encode(bytesToHex(digest).slice(0, 32));
   }
 
   /**
-   * Add padding to the cipher key.
-   *
-   * @param key - Key which should be padded.
-   * @param options - Crypto configuration options with cipher key details.
-   *
-   * @returns Properly padded cipher key.
+   * Join two byte arrays into {@link ArrayBuffer}.
    */
-  private getPaddedKey(key: string, options: CryptoConfiguration) {
-    key = this.decodeKey(key, options);
+  private concat(a: Uint8Array, b: Uint8Array): ArrayBuffer {
+    const result = new Uint8Array(a.byteLength + b.byteLength);
+    result.set(a, 0);
+    result.set(b, a.byteLength);
 
-    // @ts-expect-error Bundled library without types.
-    if (options.encryptKey) return CryptoJS.enc.Utf8.parse(this.SHA256(key).slice(0, 32));
-
-    return key;
-  }
-
-  /**
-   * Cipher mode.
-   *
-   * @param options - Crypto configuration with information about cipher mode.
-   *
-   * @returns Crypto cipher mode.
-   */
-  private getMode(options: CryptoConfiguration) {
-    // @ts-expect-error Bundled library without types.
-    if (options.mode === 'ecb') return CryptoJS.mode.ECB;
-
-    // @ts-expect-error Bundled library without types.
-    return CryptoJS.mode.CBC;
-  }
-
-  /**
-   * Cipher initialization vector.
-   *
-   * @param options - Crypto configuration with information about cipher mode.
-   *
-   * @returns Initialization vector.
-   */
-  private getIV(options: CryptoConfiguration) {
-    // @ts-expect-error Bundled library without types.
-    return options.mode === 'cbc' ? CryptoJS.enc.Utf8.parse(this.iv) : null;
-  }
-
-  /**
-   * Random initialization vector.
-   *
-   * @returns Generated random initialization vector.
-   */
-  private getRandomIV() {
-    // @ts-expect-error Bundled library without types.
-    return CryptoJS.lib.WordArray.random(16);
+    return result.buffer;
   }
 }

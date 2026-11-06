@@ -466,6 +466,181 @@
 	};
 
 	/**
+	 * Request processing status categories.
+	 */
+	var StatusCategory;
+	(function (StatusCategory) {
+	    /**
+	     * Call failed when network was unable to complete the call.
+	     */
+	    StatusCategory["PNNetworkIssuesCategory"] = "PNNetworkIssuesCategory";
+	    /**
+	     * Network call timed out.
+	     */
+	    StatusCategory["PNTimeoutCategory"] = "PNTimeoutCategory";
+	    /**
+	     * Request has been cancelled.
+	     */
+	    StatusCategory["PNCancelledCategory"] = "PNCancelledCategory";
+	    /**
+	     * Server responded with bad response.
+	     */
+	    StatusCategory["PNBadRequestCategory"] = "PNBadRequestCategory";
+	    /**
+	     * Server responded with access denied.
+	     */
+	    StatusCategory["PNAccessDeniedCategory"] = "PNAccessDeniedCategory";
+	    /**
+	     * Incomplete parameters provided for used endpoint.
+	     */
+	    StatusCategory["PNValidationErrorCategory"] = "PNValidationErrorCategory";
+	    /**
+	     * PubNub request acknowledgment status.
+	     *
+	     * Some API endpoints respond with request processing status w/o useful data.
+	     */
+	    StatusCategory["PNAcknowledgmentCategory"] = "PNAcknowledgmentCategory";
+	    /**
+	     * PubNub service or intermediate "actor" returned unexpected response.
+	     *
+	     * There can be few sources of unexpected return with success code:
+	     * - proxy server / VPN;
+	     * - Wi-Fi hotspot authorization page.
+	     */
+	    StatusCategory["PNMalformedResponseCategory"] = "PNMalformedResponseCategory";
+	    /**
+	     * Server can't process request.
+	     *
+	     * There can be few sources of unexpected return with success code:
+	     * - potentially an ongoing incident;
+	     * - proxy server / VPN.
+	     */
+	    StatusCategory["PNServerErrorCategory"] = "PNServerErrorCategory";
+	    /**
+	     * Something strange happened; please check the logs.
+	     */
+	    StatusCategory["PNUnknownCategory"] = "PNUnknownCategory";
+	    // --------------------------------------------------------
+	    // --------------------- Network status -------------------
+	    // --------------------------------------------------------
+	    /**
+	     * SDK will announce when the network appears to be connected again.
+	     */
+	    StatusCategory["PNNetworkUpCategory"] = "PNNetworkUpCategory";
+	    /**
+	     * SDK will announce when the network appears to down.
+	     */
+	    StatusCategory["PNNetworkDownCategory"] = "PNNetworkDownCategory";
+	    // --------------------------------------------------------
+	    // -------------------- Real-time events ------------------
+	    // --------------------------------------------------------
+	    /**
+	     * PubNub client reconnected to the real-time updates stream.
+	     */
+	    StatusCategory["PNReconnectedCategory"] = "PNReconnectedCategory";
+	    /**
+	     * PubNub client connected to the real-time updates stream.
+	     */
+	    StatusCategory["PNConnectedCategory"] = "PNConnectedCategory";
+	    /**
+	     * Set of active channels and groups has been changed.
+	     */
+	    StatusCategory["PNSubscriptionChangedCategory"] = "PNSubscriptionChangedCategory";
+	    /**
+	     * Received real-time updates exceed specified threshold.
+	     *
+	     * After temporary disconnection and catchup, this category means that potentially some
+	     * real-time updates have been pushed into `storage` and need to be requested separately.
+	     */
+	    StatusCategory["PNRequestMessageCountExceededCategory"] = "PNRequestMessageCountExceededCategory";
+	    /**
+	     * PubNub client disconnected from the real-time updates streams.
+	     */
+	    StatusCategory["PNDisconnectedCategory"] = "PNDisconnectedCategory";
+	    /**
+	     * PubNub client wasn't able to connect to the real-time updates streams.
+	     */
+	    StatusCategory["PNConnectionErrorCategory"] = "PNConnectionErrorCategory";
+	    /**
+	     * PubNub client unexpectedly disconnected from the real-time updates streams.
+	     */
+	    StatusCategory["PNDisconnectedUnexpectedlyCategory"] = "PNDisconnectedUnexpectedlyCategory";
+	    // --------------------------------------------------------
+	    // ------------------ Shared worker events ----------------
+	    // --------------------------------------------------------
+	    /**
+	     * SDK will announce when newer shared worker will be 'noticed'.
+	     */
+	    StatusCategory["PNSharedWorkerUpdatedCategory"] = "PNSharedWorkerUpdatedCategory";
+	})(StatusCategory || (StatusCategory = {}));
+	var StatusCategory$1 = StatusCategory;
+
+	/**
+	 * PubNub operation error module.
+	 */
+	/**
+	 * PubNub operation error.
+	 *
+	 * When an operation can't be performed or there is an error from the server, this object will be returned.
+	 */
+	class PubNubError extends Error {
+	    /**
+	     * Create PubNub operation error.
+	     *
+	     * @param message - Message with details about why operation failed.
+	     * @param [status] - Additional information about performed operation.
+	     *
+	     * @returns Configured and ready to use PubNub operation error.
+	     *
+	     * @internal
+	     */
+	    constructor(message, status) {
+	        super(message);
+	        this.status = status;
+	        this.name = 'PubNubError';
+	        this.message = message;
+	        Object.setPrototypeOf(this, new.target.prototype);
+	    }
+	}
+	/**
+	 * Create error status object.
+	 *
+	 * @param errorPayload - Additional information which should be attached to the error status object.
+	 * @param category - Occurred error category.
+	 *
+	 * @returns Error status object.
+	 *
+	 * @internal
+	 */
+	function createError(errorPayload, category) {
+	    var _a;
+	    (_a = errorPayload.statusCode) !== null && _a !== void 0 ? _a : (errorPayload.statusCode = 0);
+	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category, error: true });
+	}
+	/**
+	 * Create operation arguments validation error status object.
+	 *
+	 * @param message - Information about failed validation requirement.
+	 * @param [statusCode] - Operation HTTP status code.
+	 *
+	 * @returns Operation validation error status object.
+	 *
+	 * @internal
+	 */
+	function createValidationError(message, statusCode) {
+	    return createError(Object.assign({ message }, ({})), StatusCategory$1.PNValidationErrorCategory);
+	}
+	/**
+	 * Create malformed service response error status object.
+	 *
+	 * @param [responseText] - Stringified original service response.
+	 * @param [statusCode] - Operation HTTP status code.
+	 */
+	function createMalformedResponseError(responseText, statusCode) {
+	    return createError(Object.assign(Object.assign({ message: 'Unable to deserialize service response' }, (responseText !== undefined ? { responseText } : {})), (statusCode !== undefined ? { statusCode } : {})), StatusCategory$1.PNMalformedResponseCategory);
+	}
+
+	/**
 	 * Crypto module.
 	 */
 	class AbstractCryptoModule {
@@ -503,9 +678,12 @@
 	    }
 	    // endregion
 	    constructor(configuration) {
-	        var _a;
+	        var _a, _b;
+	        // AES-GCM cryptor is decrypt-only and can be registered only as an additional cryptor.
+	        if (((_a = configuration.default) === null || _a === void 0 ? void 0 : _a.identifier) === 'ACGM')
+	            throw new PubNubError("Crypto module error: AES-GCM cryptor (ACGM) can't be used as default cryptor.");
 	        this.defaultCryptor = configuration.default;
-	        this.cryptors = (_a = configuration.cryptors) !== null && _a !== void 0 ? _a : [];
+	        this.cryptors = (_b = configuration.cryptors) !== null && _b !== void 0 ? _b : [];
 	    }
 	    /**
 	     * Assign registered loggers' manager.
@@ -822,1097 +1000,223 @@
 	}
 
 	/**
-	 * Request processing status categories.
+	 * Byte helpers shared by cryptors and crypto primitives.
+	 *
+	 * @internal
 	 */
-	var StatusCategory;
-	(function (StatusCategory) {
-	    /**
-	     * Call failed when network was unable to complete the call.
-	     */
-	    StatusCategory["PNNetworkIssuesCategory"] = "PNNetworkIssuesCategory";
-	    /**
-	     * Network call timed out.
-	     */
-	    StatusCategory["PNTimeoutCategory"] = "PNTimeoutCategory";
-	    /**
-	     * Request has been cancelled.
-	     */
-	    StatusCategory["PNCancelledCategory"] = "PNCancelledCategory";
-	    /**
-	     * Server responded with bad response.
-	     */
-	    StatusCategory["PNBadRequestCategory"] = "PNBadRequestCategory";
-	    /**
-	     * Server responded with access denied.
-	     */
-	    StatusCategory["PNAccessDeniedCategory"] = "PNAccessDeniedCategory";
-	    /**
-	     * Incomplete parameters provided for used endpoint.
-	     */
-	    StatusCategory["PNValidationErrorCategory"] = "PNValidationErrorCategory";
-	    /**
-	     * PubNub request acknowledgment status.
-	     *
-	     * Some API endpoints respond with request processing status w/o useful data.
-	     */
-	    StatusCategory["PNAcknowledgmentCategory"] = "PNAcknowledgmentCategory";
-	    /**
-	     * PubNub service or intermediate "actor" returned unexpected response.
-	     *
-	     * There can be few sources of unexpected return with success code:
-	     * - proxy server / VPN;
-	     * - Wi-Fi hotspot authorization page.
-	     */
-	    StatusCategory["PNMalformedResponseCategory"] = "PNMalformedResponseCategory";
-	    /**
-	     * Server can't process request.
-	     *
-	     * There can be few sources of unexpected return with success code:
-	     * - potentially an ongoing incident;
-	     * - proxy server / VPN.
-	     */
-	    StatusCategory["PNServerErrorCategory"] = "PNServerErrorCategory";
-	    /**
-	     * Something strange happened; please check the logs.
-	     */
-	    StatusCategory["PNUnknownCategory"] = "PNUnknownCategory";
-	    // --------------------------------------------------------
-	    // --------------------- Network status -------------------
-	    // --------------------------------------------------------
-	    /**
-	     * SDK will announce when the network appears to be connected again.
-	     */
-	    StatusCategory["PNNetworkUpCategory"] = "PNNetworkUpCategory";
-	    /**
-	     * SDK will announce when the network appears to down.
-	     */
-	    StatusCategory["PNNetworkDownCategory"] = "PNNetworkDownCategory";
-	    // --------------------------------------------------------
-	    // -------------------- Real-time events ------------------
-	    // --------------------------------------------------------
-	    /**
-	     * PubNub client reconnected to the real-time updates stream.
-	     */
-	    StatusCategory["PNReconnectedCategory"] = "PNReconnectedCategory";
-	    /**
-	     * PubNub client connected to the real-time updates stream.
-	     */
-	    StatusCategory["PNConnectedCategory"] = "PNConnectedCategory";
-	    /**
-	     * Set of active channels and groups has been changed.
-	     */
-	    StatusCategory["PNSubscriptionChangedCategory"] = "PNSubscriptionChangedCategory";
-	    /**
-	     * Received real-time updates exceed specified threshold.
-	     *
-	     * After temporary disconnection and catchup, this category means that potentially some
-	     * real-time updates have been pushed into `storage` and need to be requested separately.
-	     */
-	    StatusCategory["PNRequestMessageCountExceededCategory"] = "PNRequestMessageCountExceededCategory";
-	    /**
-	     * PubNub client disconnected from the real-time updates streams.
-	     */
-	    StatusCategory["PNDisconnectedCategory"] = "PNDisconnectedCategory";
-	    /**
-	     * PubNub client wasn't able to connect to the real-time updates streams.
-	     */
-	    StatusCategory["PNConnectionErrorCategory"] = "PNConnectionErrorCategory";
-	    /**
-	     * PubNub client unexpectedly disconnected from the real-time updates streams.
-	     */
-	    StatusCategory["PNDisconnectedUnexpectedlyCategory"] = "PNDisconnectedUnexpectedlyCategory";
-	    // --------------------------------------------------------
-	    // ------------------ Shared worker events ----------------
-	    // --------------------------------------------------------
-	    /**
-	     * SDK will announce when newer shared worker will be 'noticed'.
-	     */
-	    StatusCategory["PNSharedWorkerUpdatedCategory"] = "PNSharedWorkerUpdatedCategory";
-	})(StatusCategory || (StatusCategory = {}));
-	var StatusCategory$1 = StatusCategory;
+	/**
+	 * Lazily created UTF-8 decoder.
+	 *
+	 * **Note:** Not created at module load and doesn't use `fatal` option because some polyfills (for example
+	 * `fast-text-encoding` used on React Native) throw when it is requested. Input is validated by
+	 * {@link isWellFormedUtf8} instead, so the decoder only ever receives well-formed data.
+	 */
+	let decoder;
+	/**
+	 * Whether {@link decoder} strips a leading BOM despite `ignoreBOM` option (detected once, on first use).
+	 */
+	let decoderStripsBOM = false;
+	/**
+	 * Convert bytes to lowercase HEX string.
+	 *
+	 * @param bytes - Source bytes.
+	 *
+	 * @returns HEX encoded bytes.
+	 *
+	 * @internal
+	 */
+	const bytesToHex = (bytes) => Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+	/**
+	 * Copy bytes into standalone {@link ArrayBuffer}.
+	 *
+	 * @param bytes - Source bytes (may be a view into a larger buffer).
+	 *
+	 * @returns {@link ArrayBuffer} which contains only source bytes.
+	 *
+	 * @internal
+	 */
+	const toArrayBuffer = (bytes) => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+	/**
+	 * Check whether bytes are well-formed UTF-8.
+	 *
+	 * Implements Unicode "Well-Formed UTF-8 Byte Sequences" (Table 3-7): rejects stray continuation bytes, overlong
+	 * forms (`C0`, `C1`, `E0 80-9F`, `F0 80-8F`), surrogates (`ED A0-BF`), code points above U+10FFFF (`F4 90-BF`,
+	 * `F5-FF`) and truncated sequences. Same rules as CryptoJS `Utf8.stringify` (`decodeURIComponent`).
+	 *
+	 * @param bytes - Bytes which should be checked.
+	 *
+	 * @returns `true` if bytes are well-formed UTF-8.
+	 *
+	 * @internal
+	 */
+	const isWellFormedUtf8 = (bytes) => {
+	    const length = bytes.length;
+	    let index = 0;
+	    while (index < length) {
+	        const lead = bytes[index];
+	        if (lead < 0x80) {
+	            index += 1;
+	            continue;
+	        }
+	        let continuationBytes;
+	        // Allowed range of the first continuation byte (narrower for some lead bytes).
+	        let lower = 0x80;
+	        let upper = 0xbf;
+	        if (lead >= 0xc2 && lead <= 0xdf)
+	            continuationBytes = 1;
+	        else if (lead >= 0xe0 && lead <= 0xef) {
+	            continuationBytes = 2;
+	            if (lead === 0xe0)
+	                lower = 0xa0;
+	            else if (lead === 0xed)
+	                upper = 0x9f;
+	        }
+	        else if (lead >= 0xf0 && lead <= 0xf4) {
+	            continuationBytes = 3;
+	            if (lead === 0xf0)
+	                lower = 0x90;
+	            else if (lead === 0xf4)
+	                upper = 0x8f;
+	        }
+	        else
+	            return false;
+	        if (index + continuationBytes >= length)
+	            return false;
+	        const first = bytes[index + 1];
+	        if (first < lower || first > upper)
+	            return false;
+	        for (let offset = 2; offset <= continuationBytes; offset++) {
+	            const next = bytes[index + offset];
+	            if (next < 0x80 || next > 0xbf)
+	                return false;
+	        }
+	        index += continuationBytes + 1;
+	    }
+	    return true;
+	};
+	/**
+	 * Strictly decode UTF-8 bytes.
+	 *
+	 * Behaves like CryptoJS `Utf8.stringify` used by previous SDK versions: malformed sequences are rejected instead of
+	 * being replaced, and a leading BOM is preserved (regular decoders silently strip it). Result doesn't depend on the
+	 * platform `TextDecoder` implementation or polyfill.
+	 *
+	 * @param bytes - UTF-8 encoded bytes.
+	 *
+	 * @returns Decoded string.
+	 *
+	 * @throws Error if bytes aren't a valid UTF-8 sequence.
+	 *
+	 * @internal
+	 */
+	const decodeUtf8Strict = (bytes) => {
+	    if (!isWellFormedUtf8(bytes))
+	        throw new Error('Malformed UTF-8 data');
+	    if (!decoder) {
+	        decoder = new TextDecoder('utf-8', { ignoreBOM: true });
+	        decoderStripsBOM = decoder.decode(new Uint8Array([0xef, 0xbb, 0xbf])).length === 0;
+	    }
+	    const decoded = decoder.decode(bytes);
+	    const hasBOM = bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf;
+	    return hasBOM && decoderStripsBOM ? `\uFEFF${decoded}` : decoded;
+	};
 
 	/**
-	 * PubNub operation error module.
-	 */
-	/**
-	 * PubNub operation error.
+	 * Browser cryptographic primitives backed by `crypto.subtle`.
 	 *
-	 * When an operation can't be performed or there is an error from the server, this object will be returned.
+	 * @internal
 	 */
-	class PubNubError extends Error {
+	/* global crypto */
+	/**
+	 * Browser cryptographic primitives.
+	 *
+	 * @internal
+	 */
+	class WebCryptoPrimitives {
+	    constructor() {
+	        /**
+	         * Imported keys cache (keyed by the algorithm and hex representation of the raw key).
+	         */
+	        this.keys = new Map();
+	    }
+	    sha256(data) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Uint8Array(yield this.subtle.digest('SHA-256', data));
+	        });
+	    }
+	    aesCbcEncrypt(key, iv, data) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const cryptoKey = yield this.importKey(key, 'AES-CBC');
+	            return new Uint8Array(yield this.subtle.encrypt({ name: 'AES-CBC', iv }, cryptoKey, data));
+	        });
+	    }
+	    aesCbcDecrypt(key, iv, data) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const cryptoKey = yield this.importKey(key, 'AES-CBC');
+	            return new Uint8Array(yield this.subtle.decrypt({ name: 'AES-CBC', iv }, cryptoKey, data));
+	        });
+	    }
 	    /**
-	     * Create PubNub operation error.
+	     * Decrypt and authenticate data using AES-256-GCM (128-bit tag, no additional authenticated data).
 	     *
-	     * @param message - Message with details about why operation failed.
-	     * @param [status] - Additional information about performed operation.
+	     * Used only by the decrypt-only `ACGM` cryptor (Web and Node.js). Intentionally not part of
+	     * {@link CryptoPrimitives}: React Native supports only the legacy cryptor.
 	     *
-	     * @returns Configured and ready to use PubNub operation error.
+	     * @param key - 32 bytes long raw key.
+	     * @param nonce - 12 bytes long nonce.
+	     * @param data - Data which should be decrypted, with 16 bytes long authentication tag appended to the ciphertext.
 	     *
-	     * @internal
+	     * @returns Decrypted data (returned only after the authentication tag has been verified).
+	     *
+	     * @throws Error if data can't be authenticated (for example: wrong key or modified nonce, ciphertext or tag).
 	     */
-	    constructor(message, status) {
-	        super(message);
-	        this.status = status;
-	        this.name = 'PubNubError';
-	        this.message = message;
-	        Object.setPrototypeOf(this, new.target.prototype);
+	    aesGcmDecrypt(key, nonce, data) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const cryptoKey = yield this.importKey(key, 'AES-GCM');
+	            return new Uint8Array(yield this.subtle.decrypt({ name: 'AES-GCM', iv: nonce, tagLength: 128 }, cryptoKey, data));
+	        });
+	    }
+	    randomBytes(length) {
+	        return crypto.getRandomValues(new Uint8Array(length));
+	    }
+	    /**
+	     * Retrieve `SubtleCrypto` interface.
+	     *
+	     * @returns `SubtleCrypto` interface.
+	     *
+	     * @throws PubNubError if `crypto.subtle` isn't available (non-secure context).
+	     */
+	    get subtle() {
+	        if (typeof crypto === 'undefined' || !crypto.subtle)
+	            throw new PubNubError('Crypto error: crypto.subtle is unavailable. Encryption requires a secure context (HTTPS or localhost).');
+	        return crypto.subtle;
+	    }
+	    /**
+	     * Import raw AES key (cached, least recently imported keys evicted first).
+	     *
+	     * @param key - Raw key bytes.
+	     * @param algorithm - Algorithm for which key will be used.
+	     *
+	     * @returns Imported `CryptoKey`.
+	     */
+	    importKey(key, algorithm) {
+	        const id = `${algorithm}:${bytesToHex(key)}`;
+	        let cryptoKey = this.keys.get(id);
+	        if (!cryptoKey) {
+	            if (this.keys.size >= WebCryptoPrimitives.MAX_CACHED_KEYS)
+	                this.keys.delete(this.keys.keys().next().value);
+	            const usages = algorithm === 'AES-CBC' ? ['encrypt', 'decrypt'] : ['decrypt'];
+	            cryptoKey = this.subtle.importKey('raw', key, algorithm, false, usages);
+	            cryptoKey.catch(() => this.keys.delete(id));
+	            this.keys.set(id, cryptoKey);
+	        }
+	        return cryptoKey;
 	    }
 	}
 	/**
-	 * Create error status object.
-	 *
-	 * @param errorPayload - Additional information which should be attached to the error status object.
-	 * @param category - Occurred error category.
-	 *
-	 * @returns Error status object.
-	 *
-	 * @internal
+	 * Maximum number of imported keys kept in cache.
 	 */
-	function createError(errorPayload, category) {
-	    var _a;
-	    (_a = errorPayload.statusCode) !== null && _a !== void 0 ? _a : (errorPayload.statusCode = 0);
-	    return Object.assign(Object.assign({}, errorPayload), { statusCode: errorPayload.statusCode, category, error: true });
-	}
-	/**
-	 * Create operation arguments validation error status object.
-	 *
-	 * @param message - Information about failed validation requirement.
-	 * @param [statusCode] - Operation HTTP status code.
-	 *
-	 * @returns Operation validation error status object.
-	 *
-	 * @internal
-	 */
-	function createValidationError(message, statusCode) {
-	    return createError(Object.assign({ message }, ({})), StatusCategory$1.PNValidationErrorCategory);
-	}
-	/**
-	 * Create malformed service response error status object.
-	 *
-	 * @param [responseText] - Stringified original service response.
-	 * @param [statusCode] - Operation HTTP status code.
-	 */
-	function createMalformedResponseError(responseText, statusCode) {
-	    return createError(Object.assign(Object.assign({ message: 'Unable to deserialize service response' }, (responseText !== undefined ? { responseText } : {})), (statusCode !== undefined ? { statusCode } : {})), StatusCategory$1.PNMalformedResponseCategory);
-	}
-
-	/**
-	 * CryptoJS implementation.
-	 *
-	 * @internal
-	 */
-
-	/*eslint-disable */
-
-	/*
-	 CryptoJS v3.1.2
-	 code.google.com/p/crypto-js
-	 (c) 2009-2013 by Jeff Mott. All rights reserved.
-	 code.google.com/p/crypto-js/wiki/License
-	 */
-	var CryptoJS =
-	  CryptoJS ||
-	  (function (h, s) {
-	    var f = {},
-	      g = (f.lib = {}),
-	      q = function () {},
-	      m = (g.Base = {
-	        extend: function (a) {
-	          q.prototype = this;
-	          var c = new q();
-	          a && c.mixIn(a);
-	          c.hasOwnProperty('init') ||
-	            (c.init = function () {
-	              c.$super.init.apply(this, arguments);
-	            });
-	          c.init.prototype = c;
-	          c.$super = this;
-	          return c;
-	        },
-	        create: function () {
-	          var a = this.extend();
-	          a.init.apply(a, arguments);
-	          return a;
-	        },
-	        init: function () {},
-	        mixIn: function (a) {
-	          for (var c in a) a.hasOwnProperty(c) && (this[c] = a[c]);
-	          a.hasOwnProperty('toString') && (this.toString = a.toString);
-	        },
-	        clone: function () {
-	          return this.init.prototype.extend(this);
-	        },
-	      }),
-	      r = (g.WordArray = m.extend({
-	        init: function (a, c) {
-	          a = this.words = a || [];
-	          this.sigBytes = c != s ? c : 4 * a.length;
-	        },
-	        toString: function (a) {
-	          return (a || k).stringify(this);
-	        },
-	        concat: function (a) {
-	          var c = this.words,
-	            d = a.words,
-	            b = this.sigBytes;
-	          a = a.sigBytes;
-	          this.clamp();
-	          if (b % 4)
-	            for (var e = 0; e < a; e++)
-	              c[(b + e) >>> 2] |= ((d[e >>> 2] >>> (24 - 8 * (e % 4))) & 255) << (24 - 8 * ((b + e) % 4));
-	          else if (65535 < d.length) for (e = 0; e < a; e += 4) c[(b + e) >>> 2] = d[e >>> 2];
-	          else c.push.apply(c, d);
-	          this.sigBytes += a;
-	          return this;
-	        },
-	        clamp: function () {
-	          var a = this.words,
-	            c = this.sigBytes;
-	          a[c >>> 2] &= 4294967295 << (32 - 8 * (c % 4));
-	          a.length = h.ceil(c / 4);
-	        },
-	        clone: function () {
-	          var a = m.clone.call(this);
-	          a.words = this.words.slice(0);
-	          return a;
-	        },
-	        random: function (a) {
-	          for (var c = [], d = 0; d < a; d += 4) c.push((4294967296 * h.random()) | 0);
-	          return new r.init(c, a);
-	        },
-	      })),
-	      l = (f.enc = {}),
-	      k = (l.Hex = {
-	        stringify: function (a) {
-	          var c = a.words;
-	          a = a.sigBytes;
-	          for (var d = [], b = 0; b < a; b++) {
-	            var e = (c[b >>> 2] >>> (24 - 8 * (b % 4))) & 255;
-	            d.push((e >>> 4).toString(16));
-	            d.push((e & 15).toString(16));
-	          }
-	          return d.join('');
-	        },
-	        parse: function (a) {
-	          for (var c = a.length, d = [], b = 0; b < c; b += 2)
-	            d[b >>> 3] |= parseInt(a.substr(b, 2), 16) << (24 - 4 * (b % 8));
-	          return new r.init(d, c / 2);
-	        },
-	      }),
-	      n = (l.Latin1 = {
-	        stringify: function (a) {
-	          var c = a.words;
-	          a = a.sigBytes;
-	          for (var d = [], b = 0; b < a; b++) d.push(String.fromCharCode((c[b >>> 2] >>> (24 - 8 * (b % 4))) & 255));
-	          return d.join('');
-	        },
-	        parse: function (a) {
-	          for (var c = a.length, d = [], b = 0; b < c; b++) d[b >>> 2] |= (a.charCodeAt(b) & 255) << (24 - 8 * (b % 4));
-	          return new r.init(d, c);
-	        },
-	      }),
-	      j = (l.Utf8 = {
-	        stringify: function (a) {
-	          try {
-	            return decodeURIComponent(escape(n.stringify(a)));
-	          } catch (c) {
-	            throw Error('Malformed UTF-8 data');
-	          }
-	        },
-	        parse: function (a) {
-	          return n.parse(unescape(encodeURIComponent(a)));
-	        },
-	      }),
-	      u = (g.BufferedBlockAlgorithm = m.extend({
-	        reset: function () {
-	          this._data = new r.init();
-	          this._nDataBytes = 0;
-	        },
-	        _append: function (a) {
-	          'string' == typeof a && (a = j.parse(a));
-	          this._data.concat(a);
-	          this._nDataBytes += a.sigBytes;
-	        },
-	        _process: function (a) {
-	          var c = this._data,
-	            d = c.words,
-	            b = c.sigBytes,
-	            e = this.blockSize,
-	            f = b / (4 * e),
-	            f = a ? h.ceil(f) : h.max((f | 0) - this._minBufferSize, 0);
-	          a = f * e;
-	          b = h.min(4 * a, b);
-	          if (a) {
-	            for (var g = 0; g < a; g += e) this._doProcessBlock(d, g);
-	            g = d.splice(0, a);
-	            c.sigBytes -= b;
-	          }
-	          return new r.init(g, b);
-	        },
-	        clone: function () {
-	          var a = m.clone.call(this);
-	          a._data = this._data.clone();
-	          return a;
-	        },
-	        _minBufferSize: 0,
-	      }));
-	    g.Hasher = u.extend({
-	      cfg: m.extend(),
-	      init: function (a) {
-	        this.cfg = this.cfg.extend(a);
-	        this.reset();
-	      },
-	      reset: function () {
-	        u.reset.call(this);
-	        this._doReset();
-	      },
-	      update: function (a) {
-	        this._append(a);
-	        this._process();
-	        return this;
-	      },
-	      finalize: function (a) {
-	        a && this._append(a);
-	        return this._doFinalize();
-	      },
-	      blockSize: 16,
-	      _createHelper: function (a) {
-	        return function (c, d) {
-	          return new a.init(d).finalize(c);
-	        };
-	      },
-	      _createHmacHelper: function (a) {
-	        return function (c, d) {
-	          return new t.HMAC.init(a, d).finalize(c);
-	        };
-	      },
-	    });
-	    var t = (f.algo = {});
-	    return f;
-	  })(Math);
-
-	// SHA256
-	(function (h) {
-	  for (
-	    var s = CryptoJS,
-	      f = s.lib,
-	      g = f.WordArray,
-	      q = f.Hasher,
-	      f = s.algo,
-	      m = [],
-	      r = [],
-	      l = function (a) {
-	        return (4294967296 * (a - (a | 0))) | 0;
-	      },
-	      k = 2,
-	      n = 0;
-	    64 > n;
-
-	  ) {
-	    var j;
-	    a: {
-	      j = k;
-	      for (var u = h.sqrt(j), t = 2; t <= u; t++)
-	        if (!(j % t)) {
-	          j = !1;
-	          break a;
-	        }
-	      j = !0;
-	    }
-	    j && (8 > n && (m[n] = l(h.pow(k, 0.5))), (r[n] = l(h.pow(k, 1 / 3))), n++);
-	    k++;
-	  }
-	  var a = [],
-	    f = (f.SHA256 = q.extend({
-	      _doReset: function () {
-	        this._hash = new g.init(m.slice(0));
-	      },
-	      _doProcessBlock: function (c, d) {
-	        for (
-	          var b = this._hash.words,
-	            e = b[0],
-	            f = b[1],
-	            g = b[2],
-	            j = b[3],
-	            h = b[4],
-	            m = b[5],
-	            n = b[6],
-	            q = b[7],
-	            p = 0;
-	          64 > p;
-	          p++
-	        ) {
-	          if (16 > p) a[p] = c[d + p] | 0;
-	          else {
-	            var k = a[p - 15],
-	              l = a[p - 2];
-	            a[p] =
-	              (((k << 25) | (k >>> 7)) ^ ((k << 14) | (k >>> 18)) ^ (k >>> 3)) +
-	              a[p - 7] +
-	              (((l << 15) | (l >>> 17)) ^ ((l << 13) | (l >>> 19)) ^ (l >>> 10)) +
-	              a[p - 16];
-	          }
-	          k =
-	            q +
-	            (((h << 26) | (h >>> 6)) ^ ((h << 21) | (h >>> 11)) ^ ((h << 7) | (h >>> 25))) +
-	            ((h & m) ^ (~h & n)) +
-	            r[p] +
-	            a[p];
-	          l =
-	            (((e << 30) | (e >>> 2)) ^ ((e << 19) | (e >>> 13)) ^ ((e << 10) | (e >>> 22))) +
-	            ((e & f) ^ (e & g) ^ (f & g));
-	          q = n;
-	          n = m;
-	          m = h;
-	          h = (j + k) | 0;
-	          j = g;
-	          g = f;
-	          f = e;
-	          e = (k + l) | 0;
-	        }
-	        b[0] = (b[0] + e) | 0;
-	        b[1] = (b[1] + f) | 0;
-	        b[2] = (b[2] + g) | 0;
-	        b[3] = (b[3] + j) | 0;
-	        b[4] = (b[4] + h) | 0;
-	        b[5] = (b[5] + m) | 0;
-	        b[6] = (b[6] + n) | 0;
-	        b[7] = (b[7] + q) | 0;
-	      },
-	      _doFinalize: function () {
-	        var a = this._data,
-	          d = a.words,
-	          b = 8 * this._nDataBytes,
-	          e = 8 * a.sigBytes;
-	        d[e >>> 5] |= 128 << (24 - (e % 32));
-	        d[(((e + 64) >>> 9) << 4) + 14] = h.floor(b / 4294967296);
-	        d[(((e + 64) >>> 9) << 4) + 15] = b;
-	        a.sigBytes = 4 * d.length;
-	        this._process();
-	        return this._hash;
-	      },
-	      clone: function () {
-	        var a = q.clone.call(this);
-	        a._hash = this._hash.clone();
-	        return a;
-	      },
-	    }));
-	  s.SHA256 = q._createHelper(f);
-	  s.HmacSHA256 = q._createHmacHelper(f);
-	})(Math);
-
-	// HMAC SHA256
-	(function () {
-	  var h = CryptoJS,
-	    s = h.enc.Utf8;
-	  h.algo.HMAC = h.lib.Base.extend({
-	    init: function (f, g) {
-	      f = this._hasher = new f.init();
-	      'string' == typeof g && (g = s.parse(g));
-	      var h = f.blockSize,
-	        m = 4 * h;
-	      g.sigBytes > m && (g = f.finalize(g));
-	      g.clamp();
-	      for (var r = (this._oKey = g.clone()), l = (this._iKey = g.clone()), k = r.words, n = l.words, j = 0; j < h; j++)
-	        (k[j] ^= 1549556828), (n[j] ^= 909522486);
-	      r.sigBytes = l.sigBytes = m;
-	      this.reset();
-	    },
-	    reset: function () {
-	      var f = this._hasher;
-	      f.reset();
-	      f.update(this._iKey);
-	    },
-	    update: function (f) {
-	      this._hasher.update(f);
-	      return this;
-	    },
-	    finalize: function (f) {
-	      var g = this._hasher;
-	      f = g.finalize(f);
-	      g.reset();
-	      return g.finalize(this._oKey.clone().concat(f));
-	    },
-	  });
-	})();
-
-	// Base64
-	(function () {
-	  var u = CryptoJS,
-	    p = u.lib.WordArray;
-	  u.enc.Base64 = {
-	    stringify: function (d) {
-	      var l = d.words,
-	        p = d.sigBytes,
-	        t = this._map;
-	      d.clamp();
-	      d = [];
-	      for (var r = 0; r < p; r += 3)
-	        for (
-	          var w =
-	              (((l[r >>> 2] >>> (24 - 8 * (r % 4))) & 255) << 16) |
-	              (((l[(r + 1) >>> 2] >>> (24 - 8 * ((r + 1) % 4))) & 255) << 8) |
-	              ((l[(r + 2) >>> 2] >>> (24 - 8 * ((r + 2) % 4))) & 255),
-	            v = 0;
-	          4 > v && r + 0.75 * v < p;
-	          v++
-	        )
-	          d.push(t.charAt((w >>> (6 * (3 - v))) & 63));
-	      if ((l = t.charAt(64))) for (; d.length % 4; ) d.push(l);
-	      return d.join('');
-	    },
-	    parse: function (d) {
-	      var l = d.length,
-	        s = this._map,
-	        t = s.charAt(64);
-	      t && ((t = d.indexOf(t)), -1 != t && (l = t));
-	      for (var t = [], r = 0, w = 0; w < l; w++)
-	        if (w % 4) {
-	          var v = s.indexOf(d.charAt(w - 1)) << (2 * (w % 4)),
-	            b = s.indexOf(d.charAt(w)) >>> (6 - 2 * (w % 4));
-	          t[r >>> 2] |= (v | b) << (24 - 8 * (r % 4));
-	          r++;
-	        }
-	      return p.create(t, r);
-	    },
-	    _map: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
-	  };
-	})();
-
-	// BlockCipher
-	(function (u) {
-	  function p(b, n, a, c, e, j, k) {
-	    b = b + ((n & a) | (~n & c)) + e + k;
-	    return ((b << j) | (b >>> (32 - j))) + n;
-	  }
-	  function d(b, n, a, c, e, j, k) {
-	    b = b + ((n & c) | (a & ~c)) + e + k;
-	    return ((b << j) | (b >>> (32 - j))) + n;
-	  }
-	  function l(b, n, a, c, e, j, k) {
-	    b = b + (n ^ a ^ c) + e + k;
-	    return ((b << j) | (b >>> (32 - j))) + n;
-	  }
-	  function s(b, n, a, c, e, j, k) {
-	    b = b + (a ^ (n | ~c)) + e + k;
-	    return ((b << j) | (b >>> (32 - j))) + n;
-	  }
-	  for (var t = CryptoJS, r = t.lib, w = r.WordArray, v = r.Hasher, r = t.algo, b = [], x = 0; 64 > x; x++)
-	    b[x] = (4294967296 * u.abs(u.sin(x + 1))) | 0;
-	  r = r.MD5 = v.extend({
-	    _doReset: function () {
-	      this._hash = new w.init([1732584193, 4023233417, 2562383102, 271733878]);
-	    },
-	    _doProcessBlock: function (q, n) {
-	      for (var a = 0; 16 > a; a++) {
-	        var c = n + a,
-	          e = q[c];
-	        q[c] = (((e << 8) | (e >>> 24)) & 16711935) | (((e << 24) | (e >>> 8)) & 4278255360);
-	      }
-	      var a = this._hash.words,
-	        c = q[n + 0],
-	        e = q[n + 1],
-	        j = q[n + 2],
-	        k = q[n + 3],
-	        z = q[n + 4],
-	        r = q[n + 5],
-	        t = q[n + 6],
-	        w = q[n + 7],
-	        v = q[n + 8],
-	        A = q[n + 9],
-	        B = q[n + 10],
-	        C = q[n + 11],
-	        u = q[n + 12],
-	        D = q[n + 13],
-	        E = q[n + 14],
-	        x = q[n + 15],
-	        f = a[0],
-	        m = a[1],
-	        g = a[2],
-	        h = a[3],
-	        f = p(f, m, g, h, c, 7, b[0]),
-	        h = p(h, f, m, g, e, 12, b[1]),
-	        g = p(g, h, f, m, j, 17, b[2]),
-	        m = p(m, g, h, f, k, 22, b[3]),
-	        f = p(f, m, g, h, z, 7, b[4]),
-	        h = p(h, f, m, g, r, 12, b[5]),
-	        g = p(g, h, f, m, t, 17, b[6]),
-	        m = p(m, g, h, f, w, 22, b[7]),
-	        f = p(f, m, g, h, v, 7, b[8]),
-	        h = p(h, f, m, g, A, 12, b[9]),
-	        g = p(g, h, f, m, B, 17, b[10]),
-	        m = p(m, g, h, f, C, 22, b[11]),
-	        f = p(f, m, g, h, u, 7, b[12]),
-	        h = p(h, f, m, g, D, 12, b[13]),
-	        g = p(g, h, f, m, E, 17, b[14]),
-	        m = p(m, g, h, f, x, 22, b[15]),
-	        f = d(f, m, g, h, e, 5, b[16]),
-	        h = d(h, f, m, g, t, 9, b[17]),
-	        g = d(g, h, f, m, C, 14, b[18]),
-	        m = d(m, g, h, f, c, 20, b[19]),
-	        f = d(f, m, g, h, r, 5, b[20]),
-	        h = d(h, f, m, g, B, 9, b[21]),
-	        g = d(g, h, f, m, x, 14, b[22]),
-	        m = d(m, g, h, f, z, 20, b[23]),
-	        f = d(f, m, g, h, A, 5, b[24]),
-	        h = d(h, f, m, g, E, 9, b[25]),
-	        g = d(g, h, f, m, k, 14, b[26]),
-	        m = d(m, g, h, f, v, 20, b[27]),
-	        f = d(f, m, g, h, D, 5, b[28]),
-	        h = d(h, f, m, g, j, 9, b[29]),
-	        g = d(g, h, f, m, w, 14, b[30]),
-	        m = d(m, g, h, f, u, 20, b[31]),
-	        f = l(f, m, g, h, r, 4, b[32]),
-	        h = l(h, f, m, g, v, 11, b[33]),
-	        g = l(g, h, f, m, C, 16, b[34]),
-	        m = l(m, g, h, f, E, 23, b[35]),
-	        f = l(f, m, g, h, e, 4, b[36]),
-	        h = l(h, f, m, g, z, 11, b[37]),
-	        g = l(g, h, f, m, w, 16, b[38]),
-	        m = l(m, g, h, f, B, 23, b[39]),
-	        f = l(f, m, g, h, D, 4, b[40]),
-	        h = l(h, f, m, g, c, 11, b[41]),
-	        g = l(g, h, f, m, k, 16, b[42]),
-	        m = l(m, g, h, f, t, 23, b[43]),
-	        f = l(f, m, g, h, A, 4, b[44]),
-	        h = l(h, f, m, g, u, 11, b[45]),
-	        g = l(g, h, f, m, x, 16, b[46]),
-	        m = l(m, g, h, f, j, 23, b[47]),
-	        f = s(f, m, g, h, c, 6, b[48]),
-	        h = s(h, f, m, g, w, 10, b[49]),
-	        g = s(g, h, f, m, E, 15, b[50]),
-	        m = s(m, g, h, f, r, 21, b[51]),
-	        f = s(f, m, g, h, u, 6, b[52]),
-	        h = s(h, f, m, g, k, 10, b[53]),
-	        g = s(g, h, f, m, B, 15, b[54]),
-	        m = s(m, g, h, f, e, 21, b[55]),
-	        f = s(f, m, g, h, v, 6, b[56]),
-	        h = s(h, f, m, g, x, 10, b[57]),
-	        g = s(g, h, f, m, t, 15, b[58]),
-	        m = s(m, g, h, f, D, 21, b[59]),
-	        f = s(f, m, g, h, z, 6, b[60]),
-	        h = s(h, f, m, g, C, 10, b[61]),
-	        g = s(g, h, f, m, j, 15, b[62]),
-	        m = s(m, g, h, f, A, 21, b[63]);
-	      a[0] = (a[0] + f) | 0;
-	      a[1] = (a[1] + m) | 0;
-	      a[2] = (a[2] + g) | 0;
-	      a[3] = (a[3] + h) | 0;
-	    },
-	    _doFinalize: function () {
-	      var b = this._data,
-	        n = b.words,
-	        a = 8 * this._nDataBytes,
-	        c = 8 * b.sigBytes;
-	      n[c >>> 5] |= 128 << (24 - (c % 32));
-	      var e = u.floor(a / 4294967296);
-	      n[(((c + 64) >>> 9) << 4) + 15] = (((e << 8) | (e >>> 24)) & 16711935) | (((e << 24) | (e >>> 8)) & 4278255360);
-	      n[(((c + 64) >>> 9) << 4) + 14] = (((a << 8) | (a >>> 24)) & 16711935) | (((a << 24) | (a >>> 8)) & 4278255360);
-	      b.sigBytes = 4 * (n.length + 1);
-	      this._process();
-	      b = this._hash;
-	      n = b.words;
-	      for (a = 0; 4 > a; a++)
-	        (c = n[a]), (n[a] = (((c << 8) | (c >>> 24)) & 16711935) | (((c << 24) | (c >>> 8)) & 4278255360));
-	      return b;
-	    },
-	    clone: function () {
-	      var b = v.clone.call(this);
-	      b._hash = this._hash.clone();
-	      return b;
-	    },
-	  });
-	  t.MD5 = v._createHelper(r);
-	  t.HmacMD5 = v._createHmacHelper(r);
-	})(Math);
-	(function () {
-	  var u = CryptoJS,
-	    p = u.lib,
-	    d = p.Base,
-	    l = p.WordArray,
-	    p = u.algo,
-	    s = (p.EvpKDF = d.extend({
-	      cfg: d.extend({ keySize: 4, hasher: p.MD5, iterations: 1 }),
-	      init: function (d) {
-	        this.cfg = this.cfg.extend(d);
-	      },
-	      compute: function (d, r) {
-	        for (
-	          var p = this.cfg, s = p.hasher.create(), b = l.create(), u = b.words, q = p.keySize, p = p.iterations;
-	          u.length < q;
-
-	        ) {
-	          n && s.update(n);
-	          var n = s.update(d).finalize(r);
-	          s.reset();
-	          for (var a = 1; a < p; a++) (n = s.finalize(n)), s.reset();
-	          b.concat(n);
-	        }
-	        b.sigBytes = 4 * q;
-	        return b;
-	      },
-	    }));
-	  u.EvpKDF = function (d, l, p) {
-	    return s.create(p).compute(d, l);
-	  };
-	})();
-
-	// Cipher
-	CryptoJS.lib.Cipher ||
-	  (function (u) {
-	    var p = CryptoJS,
-	      d = p.lib,
-	      l = d.Base,
-	      s = d.WordArray,
-	      t = d.BufferedBlockAlgorithm,
-	      r = p.enc.Base64,
-	      w = p.algo.EvpKDF,
-	      v = (d.Cipher = t.extend({
-	        cfg: l.extend(),
-	        createEncryptor: function (e, a) {
-	          return this.create(this._ENC_XFORM_MODE, e, a);
-	        },
-	        createDecryptor: function (e, a) {
-	          return this.create(this._DEC_XFORM_MODE, e, a);
-	        },
-	        init: function (e, a, b) {
-	          this.cfg = this.cfg.extend(b);
-	          this._xformMode = e;
-	          this._key = a;
-	          this.reset();
-	        },
-	        reset: function () {
-	          t.reset.call(this);
-	          this._doReset();
-	        },
-	        process: function (e) {
-	          this._append(e);
-	          return this._process();
-	        },
-	        finalize: function (e) {
-	          e && this._append(e);
-	          return this._doFinalize();
-	        },
-	        keySize: 4,
-	        ivSize: 4,
-	        _ENC_XFORM_MODE: 1,
-	        _DEC_XFORM_MODE: 2,
-	        _createHelper: function (e) {
-	          return {
-	            encrypt: function (b, k, d) {
-	              return ('string' == typeof k ? c : a).encrypt(e, b, k, d);
-	            },
-	            decrypt: function (b, k, d) {
-	              return ('string' == typeof k ? c : a).decrypt(e, b, k, d);
-	            },
-	          };
-	        },
-	      }));
-	    d.StreamCipher = v.extend({
-	      _doFinalize: function () {
-	        return this._process(!0);
-	      },
-	      blockSize: 1,
-	    });
-	    var b = (p.mode = {}),
-	      x = function (e, a, b) {
-	        var c = this._iv;
-	        c ? (this._iv = u) : (c = this._prevBlock);
-	        for (var d = 0; d < b; d++) e[a + d] ^= c[d];
-	      },
-	      q = (d.BlockCipherMode = l.extend({
-	        createEncryptor: function (e, a) {
-	          return this.Encryptor.create(e, a);
-	        },
-	        createDecryptor: function (e, a) {
-	          return this.Decryptor.create(e, a);
-	        },
-	        init: function (e, a) {
-	          this._cipher = e;
-	          this._iv = a;
-	        },
-	      })).extend();
-	    q.Encryptor = q.extend({
-	      processBlock: function (e, a) {
-	        var b = this._cipher,
-	          c = b.blockSize;
-	        x.call(this, e, a, c);
-	        b.encryptBlock(e, a);
-	        this._prevBlock = e.slice(a, a + c);
-	      },
-	    });
-	    q.Decryptor = q.extend({
-	      processBlock: function (e, a) {
-	        var b = this._cipher,
-	          c = b.blockSize,
-	          d = e.slice(a, a + c);
-	        b.decryptBlock(e, a);
-	        x.call(this, e, a, c);
-	        this._prevBlock = d;
-	      },
-	    });
-	    b = b.CBC = q;
-	    q = (p.pad = {}).Pkcs7 = {
-	      pad: function (a, b) {
-	        for (
-	          var c = 4 * b, c = c - (a.sigBytes % c), d = (c << 24) | (c << 16) | (c << 8) | c, l = [], n = 0;
-	          n < c;
-	          n += 4
-	        )
-	          l.push(d);
-	        c = s.create(l, c);
-	        a.concat(c);
-	      },
-	      unpad: function (a) {
-	        a.sigBytes -= a.words[(a.sigBytes - 1) >>> 2] & 255;
-	      },
-	    };
-	    d.BlockCipher = v.extend({
-	      cfg: v.cfg.extend({ mode: b, padding: q }),
-	      reset: function () {
-	        v.reset.call(this);
-	        var a = this.cfg,
-	          b = a.iv,
-	          a = a.mode;
-	        if (this._xformMode == this._ENC_XFORM_MODE) var c = a.createEncryptor;
-	        else (c = a.createDecryptor), (this._minBufferSize = 1);
-	        this._mode = c.call(a, this, b && b.words);
-	      },
-	      _doProcessBlock: function (a, b) {
-	        this._mode.processBlock(a, b);
-	      },
-	      _doFinalize: function () {
-	        var a = this.cfg.padding;
-	        if (this._xformMode == this._ENC_XFORM_MODE) {
-	          a.pad(this._data, this.blockSize);
-	          var b = this._process(!0);
-	        } else (b = this._process(!0)), a.unpad(b);
-	        return b;
-	      },
-	      blockSize: 4,
-	    });
-	    var n = (d.CipherParams = l.extend({
-	        init: function (a) {
-	          this.mixIn(a);
-	        },
-	        toString: function (a) {
-	          return (a || this.formatter).stringify(this);
-	        },
-	      })),
-	      b = ((p.format = {}).OpenSSL = {
-	        stringify: function (a) {
-	          var b = a.ciphertext;
-	          a = a.salt;
-	          return (a ? s.create([1398893684, 1701076831]).concat(a).concat(b) : b).toString(r);
-	        },
-	        parse: function (a) {
-	          a = r.parse(a);
-	          var b = a.words;
-	          if (1398893684 == b[0] && 1701076831 == b[1]) {
-	            var c = s.create(b.slice(2, 4));
-	            b.splice(0, 4);
-	            a.sigBytes -= 16;
-	          }
-	          return n.create({ ciphertext: a, salt: c });
-	        },
-	      }),
-	      a = (d.SerializableCipher = l.extend({
-	        cfg: l.extend({ format: b }),
-	        encrypt: function (a, b, c, d) {
-	          d = this.cfg.extend(d);
-	          var l = a.createEncryptor(c, d);
-	          b = l.finalize(b);
-	          l = l.cfg;
-	          return n.create({
-	            ciphertext: b,
-	            key: c,
-	            iv: l.iv,
-	            algorithm: a,
-	            mode: l.mode,
-	            padding: l.padding,
-	            blockSize: a.blockSize,
-	            formatter: d.format,
-	          });
-	        },
-	        decrypt: function (a, b, c, d) {
-	          d = this.cfg.extend(d);
-	          b = this._parse(b, d.format);
-	          return a.createDecryptor(c, d).finalize(b.ciphertext);
-	        },
-	        _parse: function (a, b) {
-	          return 'string' == typeof a ? b.parse(a, this) : a;
-	        },
-	      })),
-	      p = ((p.kdf = {}).OpenSSL = {
-	        execute: function (a, b, c, d) {
-	          d || (d = s.random(8));
-	          a = w.create({ keySize: b + c }).compute(a, d);
-	          c = s.create(a.words.slice(b), 4 * c);
-	          a.sigBytes = 4 * b;
-	          return n.create({ key: a, iv: c, salt: d });
-	        },
-	      }),
-	      c = (d.PasswordBasedCipher = a.extend({
-	        cfg: a.cfg.extend({ kdf: p }),
-	        encrypt: function (b, c, d, l) {
-	          l = this.cfg.extend(l);
-	          d = l.kdf.execute(d, b.keySize, b.ivSize);
-	          l.iv = d.iv;
-	          b = a.encrypt.call(this, b, c, d.key, l);
-	          b.mixIn(d);
-	          return b;
-	        },
-	        decrypt: function (b, c, d, l) {
-	          l = this.cfg.extend(l);
-	          c = this._parse(c, l.format);
-	          d = l.kdf.execute(d, b.keySize, b.ivSize, c.salt);
-	          l.iv = d.iv;
-	          return a.decrypt.call(this, b, c, d.key, l);
-	        },
-	      }));
-	  })();
-
-	// AES
-	(function () {
-	  for (
-	    var u = CryptoJS,
-	      p = u.lib.BlockCipher,
-	      d = u.algo,
-	      l = [],
-	      s = [],
-	      t = [],
-	      r = [],
-	      w = [],
-	      v = [],
-	      b = [],
-	      x = [],
-	      q = [],
-	      n = [],
-	      a = [],
-	      c = 0;
-	    256 > c;
-	    c++
-	  )
-	    a[c] = 128 > c ? c << 1 : (c << 1) ^ 283;
-	  for (var e = 0, j = 0, c = 0; 256 > c; c++) {
-	    var k = j ^ (j << 1) ^ (j << 2) ^ (j << 3) ^ (j << 4),
-	      k = (k >>> 8) ^ (k & 255) ^ 99;
-	    l[e] = k;
-	    s[k] = e;
-	    var z = a[e],
-	      F = a[z],
-	      G = a[F],
-	      y = (257 * a[k]) ^ (16843008 * k);
-	    t[e] = (y << 24) | (y >>> 8);
-	    r[e] = (y << 16) | (y >>> 16);
-	    w[e] = (y << 8) | (y >>> 24);
-	    v[e] = y;
-	    y = (16843009 * G) ^ (65537 * F) ^ (257 * z) ^ (16843008 * e);
-	    b[k] = (y << 24) | (y >>> 8);
-	    x[k] = (y << 16) | (y >>> 16);
-	    q[k] = (y << 8) | (y >>> 24);
-	    n[k] = y;
-	    e ? ((e = z ^ a[a[a[G ^ z]]]), (j ^= a[a[j]])) : (e = j = 1);
-	  }
-	  var H = [0, 1, 2, 4, 8, 16, 32, 64, 128, 27, 54],
-	    d = (d.AES = p.extend({
-	      _doReset: function () {
-	        for (
-	          var a = this._key,
-	            c = a.words,
-	            d = a.sigBytes / 4,
-	            a = 4 * ((this._nRounds = d + 6) + 1),
-	            e = (this._keySchedule = []),
-	            j = 0;
-	          j < a;
-	          j++
-	        )
-	          if (j < d) e[j] = c[j];
-	          else {
-	            var k = e[j - 1];
-	            j % d
-	              ? 6 < d &&
-	                4 == j % d &&
-	                (k = (l[k >>> 24] << 24) | (l[(k >>> 16) & 255] << 16) | (l[(k >>> 8) & 255] << 8) | l[k & 255])
-	              : ((k = (k << 8) | (k >>> 24)),
-	                (k = (l[k >>> 24] << 24) | (l[(k >>> 16) & 255] << 16) | (l[(k >>> 8) & 255] << 8) | l[k & 255]),
-	                (k ^= H[(j / d) | 0] << 24));
-	            e[j] = e[j - d] ^ k;
-	          }
-	        c = this._invKeySchedule = [];
-	        for (d = 0; d < a; d++)
-	          (j = a - d),
-	            (k = d % 4 ? e[j] : e[j - 4]),
-	            (c[d] =
-	              4 > d || 4 >= j ? k : b[l[k >>> 24]] ^ x[l[(k >>> 16) & 255]] ^ q[l[(k >>> 8) & 255]] ^ n[l[k & 255]]);
-	      },
-	      encryptBlock: function (a, b) {
-	        this._doCryptBlock(a, b, this._keySchedule, t, r, w, v, l);
-	      },
-	      decryptBlock: function (a, c) {
-	        var d = a[c + 1];
-	        a[c + 1] = a[c + 3];
-	        a[c + 3] = d;
-	        this._doCryptBlock(a, c, this._invKeySchedule, b, x, q, n, s);
-	        d = a[c + 1];
-	        a[c + 1] = a[c + 3];
-	        a[c + 3] = d;
-	      },
-	      _doCryptBlock: function (a, b, c, d, e, j, l, f) {
-	        for (
-	          var m = this._nRounds,
-	            g = a[b] ^ c[0],
-	            h = a[b + 1] ^ c[1],
-	            k = a[b + 2] ^ c[2],
-	            n = a[b + 3] ^ c[3],
-	            p = 4,
-	            r = 1;
-	          r < m;
-	          r++
-	        )
-	          var q = d[g >>> 24] ^ e[(h >>> 16) & 255] ^ j[(k >>> 8) & 255] ^ l[n & 255] ^ c[p++],
-	            s = d[h >>> 24] ^ e[(k >>> 16) & 255] ^ j[(n >>> 8) & 255] ^ l[g & 255] ^ c[p++],
-	            t = d[k >>> 24] ^ e[(n >>> 16) & 255] ^ j[(g >>> 8) & 255] ^ l[h & 255] ^ c[p++],
-	            n = d[n >>> 24] ^ e[(g >>> 16) & 255] ^ j[(h >>> 8) & 255] ^ l[k & 255] ^ c[p++],
-	            g = q,
-	            h = s,
-	            k = t;
-	        q = ((f[g >>> 24] << 24) | (f[(h >>> 16) & 255] << 16) | (f[(k >>> 8) & 255] << 8) | f[n & 255]) ^ c[p++];
-	        s = ((f[h >>> 24] << 24) | (f[(k >>> 16) & 255] << 16) | (f[(n >>> 8) & 255] << 8) | f[g & 255]) ^ c[p++];
-	        t = ((f[k >>> 24] << 24) | (f[(n >>> 16) & 255] << 16) | (f[(g >>> 8) & 255] << 8) | f[h & 255]) ^ c[p++];
-	        n = ((f[n >>> 24] << 24) | (f[(g >>> 16) & 255] << 16) | (f[(h >>> 8) & 255] << 8) | f[k & 255]) ^ c[p++];
-	        a[b] = q;
-	        a[b + 1] = s;
-	        a[b + 2] = t;
-	        a[b + 3] = n;
-	      },
-	      keySize: 8,
-	    }));
-	  u.AES = p._createHelper(d);
-	})();
-
-	// Mode ECB
-	CryptoJS.mode.ECB = (function () {
-	  var ECB = CryptoJS.lib.BlockCipherMode.extend();
-
-	  ECB.Encryptor = ECB.extend({
-	    processBlock: function (words, offset) {
-	      this._cipher.encryptBlock(words, offset);
-	    },
-	  });
-
-	  ECB.Decryptor = ECB.extend({
-	    processBlock: function (words, offset) {
-	      this._cipher.decryptBlock(words, offset);
-	    },
-	  });
-
-	  return ECB;
-	})();
-
-	var hmacSha256 = CryptoJS;
-
-	var CryptoJS$1 = /*@__PURE__*/getDefaultExportFromCjs(hmacSha256);
+	WebCryptoPrimitives.MAX_CACHED_KEYS = 8;
 
 	/**
 	 * AES-CBC cryptor module.
@@ -1925,34 +1229,24 @@
 	class AesCbcCryptor {
 	    constructor({ cipherKey }) {
 	        this.cipherKey = cipherKey;
-	        this.CryptoJS = CryptoJS$1;
-	        this.encryptedKey = this.CryptoJS.SHA256(cipherKey);
 	    }
 	    // --------------------------------------------------------
 	    // --------------------- Encryption -----------------------
 	    // --------------------------------------------------------
 	    // region Encryption
 	    encrypt(data) {
-	        const stringData = typeof data === 'string' ? data : AesCbcCryptor.decoder.decode(data);
-	        if (stringData.length === 0)
-	            throw new Error('encryption error. empty content');
-	        const abIv = this.getIv();
-	        return {
-	            metadata: abIv,
-	            data: decode(this.CryptoJS.AES.encrypt(data, this.encryptedKey, {
-	                iv: this.bufferToWordArray(abIv),
-	                mode: this.CryptoJS.mode.CBC,
-	            }).ciphertext.toString(this.CryptoJS.enc.Base64)),
-	        };
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const plaintext = typeof data === 'string' ? AesCbcCryptor.encoder.encode(data) : new Uint8Array(data);
+	            if (plaintext.byteLength === 0)
+	                throw new Error('encryption error. empty content');
+	            return this.encryptFileData(plaintext);
+	        });
 	    }
 	    encryptFileData(data) {
 	        return __awaiter(this, void 0, void 0, function* () {
-	            const key = yield this.getKey();
 	            const iv = this.getIv();
-	            return {
-	                data: yield crypto.subtle.encrypt({ name: this.algo, iv: iv }, key, data),
-	                metadata: iv,
-	            };
+	            const encrypted = yield AesCbcCryptor.primitives.aesCbcEncrypt(yield this.getKey(), iv, data instanceof Uint8Array ? data : new Uint8Array(data));
+	            return { data: toArrayBuffer(encrypted), metadata: iv.buffer };
 	        });
 	    }
 	    // endregion
@@ -1961,21 +1255,23 @@
 	    // --------------------------------------------------------
 	    // region Decryption
 	    decrypt(encryptedData) {
-	        if (typeof encryptedData.data === 'string')
-	            throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
-	        const iv = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.metadata));
-	        const data = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.data));
-	        return AesCbcCryptor.encoder.encode(this.CryptoJS.AES.decrypt({ ciphertext: data }, this.encryptedKey, {
-	            iv,
-	            mode: this.CryptoJS.mode.CBC,
-	        }).toString(this.CryptoJS.enc.Utf8)).buffer;
+	        return __awaiter(this, void 0, void 0, function* () {
+	            try {
+	                return yield this.decryptFileData(encryptedData);
+	            }
+	            catch (error) {
+	                if (error instanceof Error && error.message.startsWith('Decryption error'))
+	                    throw error;
+	                throw new Error(`Decryption error: ${error instanceof Error ? error.message : 'unable to decrypt data'}`);
+	            }
+	        });
 	    }
 	    decryptFileData(encryptedData) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            if (typeof encryptedData.data === 'string')
 	                throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
-	            const key = yield this.getKey();
-	            return crypto.subtle.decrypt({ name: this.algo, iv: encryptedData.metadata }, key, encryptedData.data);
+	            const decrypted = yield AesCbcCryptor.primitives.aesCbcDecrypt(yield this.getKey(), new Uint8Array(encryptedData.metadata), new Uint8Array(encryptedData.data));
+	            return toArrayBuffer(decrypted);
 	        });
 	    }
 	    // endregion
@@ -1987,48 +1283,30 @@
 	        return 'ACRH';
 	    }
 	    /**
-	     * Cryptor algorithm.
-	     *
-	     * @returns Cryptor module algorithm.
-	     */
-	    get algo() {
-	        return 'AES-CBC';
-	    }
-	    /**
 	     * Generate random initialization vector.
 	     *
 	     * @returns Random initialization vector.
+	     *
+	     * @internal
 	     */
 	    getIv() {
-	        return crypto.getRandomValues(new Uint8Array(AesCbcCryptor.BLOCK_SIZE));
+	        return AesCbcCryptor.primitives.randomBytes(AesCbcCryptor.BLOCK_SIZE);
 	    }
 	    /**
-	     * Convert cipher key to the {@link Buffer}.
+	     * Compute raw encryption key (cached).
 	     *
-	     * @returns SHA256 encoded cipher key {@link Buffer}.
+	     * @returns SHA-256 digest of the cipher key.
+	     *
+	     * @internal
 	     */
 	    getKey() {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            const bKey = AesCbcCryptor.encoder.encode(this.cipherKey);
-	            const abHash = yield crypto.subtle.digest('SHA-256', bKey.buffer);
-	            return crypto.subtle.importKey('raw', abHash, this.algo, true, ['encrypt', 'decrypt']);
-	        });
-	    }
-	    /**
-	     * Convert bytes array to words array.
-	     *
-	     * @param b - Bytes array (buffer) which should be converted.
-	     *
-	     * @returns Word sized array.
-	     */
-	    bufferToWordArray(b) {
-	        const wa = [];
-	        let i;
-	        for (i = 0; i < b.length; i += 1) {
-	            wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
+	        if (!this.key) {
+	            this.key = AesCbcCryptor.primitives.sha256(AesCbcCryptor.encoder.encode(this.cipherKey));
+	            this.key.catch(() => (this.key = undefined));
 	        }
-	        return this.CryptoJS.lib.WordArray.create(wa, b.length);
+	        return this.key;
 	    }
+	    // endregion
 	    /**
 	     * Serialize cryptor information to string.
 	     *
@@ -2050,6 +1328,135 @@
 	 *  {@link ArrayBuffer} to {@link string} decoder.
 	 */
 	AesCbcCryptor.decoder = new TextDecoder();
+	/**
+	 * Native crypto primitives.
+	 *
+	 * @internal
+	 */
+	AesCbcCryptor.primitives = new WebCryptoPrimitives();
+
+	/**
+	 * AES-GCM cryptor module.
+	 */
+	/**
+	 * AES-GCM cryptor.
+	 *
+	 * Decrypt-only AES-256-GCM cryptor for payloads produced by other PubNub SDKs. Cryptor metadata stored in the
+	 * header is `nonce (12 bytes)` and the authentication tag (16 bytes) is appended to the ciphertext:
+	 * `ciphertext || authentication tag`.
+	 *
+	 * **Note:** Encryption isn't supported and cryptor can't be used as crypto module default cryptor.
+	 */
+	class AesGcmCryptor {
+	    constructor({ cipherKey }) {
+	        this.cipherKey = cipherKey;
+	    }
+	    // --------------------------------------------------------
+	    // --------------------- Encryption -----------------------
+	    // --------------------------------------------------------
+	    // region Encryption
+	    encrypt(_data) {
+	        throw new Error(AesGcmCryptor.ENCRYPTION_ERROR);
+	    }
+	    encryptFileData(_data) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            throw new Error(AesGcmCryptor.ENCRYPTION_ERROR);
+	        });
+	    }
+	    // endregion
+	    // --------------------------------------------------------
+	    // --------------------- Decryption -----------------------
+	    // --------------------------------------------------------
+	    // region Decryption
+	    decrypt(encryptedData) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.decryptFileData(encryptedData);
+	        });
+	    }
+	    decryptFileData(encryptedData) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            if (typeof encryptedData.data === 'string')
+	                throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
+	            if (!encryptedData.metadata || encryptedData.metadata.byteLength !== AesGcmCryptor.METADATA_LENGTH)
+	                throw new Error('Decryption error: invalid metadata');
+	            if (encryptedData.data.byteLength <= AesGcmCryptor.TAG_LENGTH)
+	                throw new Error('Decryption error: empty content');
+	            try {
+	                const decrypted = yield AesGcmCryptor.primitives.aesGcmDecrypt(yield this.getKey(), new Uint8Array(encryptedData.metadata), new Uint8Array(encryptedData.data));
+	                return toArrayBuffer(decrypted);
+	            }
+	            catch (_error) {
+	                // Native error intentionally not exposed: wrong key and modified payload should be indistinguishable.
+	                throw new Error(AesGcmCryptor.DECRYPTION_ERROR);
+	            }
+	        });
+	    }
+	    // endregion
+	    // --------------------------------------------------------
+	    // ----------------------- Helpers ------------------------
+	    // --------------------------------------------------------
+	    // region Helpers
+	    get identifier() {
+	        return AesGcmCryptor.IDENTIFIER;
+	    }
+	    /**
+	     * Compute raw decryption key (cached).
+	     *
+	     * @returns SHA-256 digest of the cipher key.
+	     *
+	     * @internal
+	     */
+	    getKey() {
+	        if (!this.key) {
+	            this.key = AesGcmCryptor.primitives.sha256(AesGcmCryptor.encoder.encode(this.cipherKey));
+	            this.key.catch(() => (this.key = undefined));
+	        }
+	        return this.key;
+	    }
+	    // endregion
+	    /**
+	     * Serialize cryptor information to string.
+	     *
+	     * @returns Serialized cryptor information.
+	     */
+	    toString() {
+	        return 'AesGcmCryptor {}';
+	    }
+	}
+	/**
+	 * Cryptor unique identifier.
+	 */
+	AesGcmCryptor.IDENTIFIER = 'ACGM';
+	/**
+	 * Nonce length.
+	 */
+	AesGcmCryptor.NONCE_LENGTH = 12;
+	/**
+	 * Authentication tag length.
+	 */
+	AesGcmCryptor.TAG_LENGTH = 16;
+	/**
+	 * Cryptor metadata length (nonce only).
+	 */
+	AesGcmCryptor.METADATA_LENGTH = AesGcmCryptor.NONCE_LENGTH;
+	/**
+	 * Generic decryption error message (doesn't reveal which part of the payload failed authentication).
+	 */
+	AesGcmCryptor.DECRYPTION_ERROR = 'Decryption error: unable to decrypt data';
+	/**
+	 * Unsupported encryption error message.
+	 */
+	AesGcmCryptor.ENCRYPTION_ERROR = 'Encryption error: AES-GCM cryptor (ACGM) supports decryption only.';
+	/**
+	 * {@link string|String} to {@link ArrayBuffer} response decoder.
+	 */
+	AesGcmCryptor.encoder = new TextEncoder();
+	/**
+	 * Native crypto primitives.
+	 *
+	 * @internal
+	 */
+	AesGcmCryptor.primitives = new WebCryptoPrimitives();
 
 	/**
 	 * PubNub package utilities module.
@@ -2237,6 +1644,22 @@
 	        mfp[0] = (mfp[0] << 5) - mfp[0] + msg.charCodeAt(walk++);
 	    return mfp[0].toString(16).padStart(8, '0');
 	};
+	/**
+	 * Encrypt message payload which should be sent as part of request URL or body.
+	 *
+	 * @param crypto - Module which should be used to encrypt data.
+	 * @param payload - User-provided data which should be encrypted.
+	 *
+	 * @returns Stringified encrypted payload (base64 encoded if encryption result is binary).
+	 *
+	 * @throws {Error} in case if provided `payload` or results of `encryption` can't be stringified.
+	 *
+	 * @internal
+	 */
+	const encryptMessagePayload = (crypto, payload) => __awaiter(void 0, void 0, void 0, function* () {
+	    const encrypted = yield crypto.encrypt(JSON.stringify(payload));
+	    return JSON.stringify(typeof encrypted === 'string' ? encrypted : encode(encrypted));
+	});
 
 	/**
 	 * Legacy cryptography module.
@@ -2244,55 +1667,20 @@
 	 * @internal
 	 */
 	/**
-	 * Convert bytes array to words array.
+	 * Legacy cryptography module for data encryption / decryption.
 	 *
-	 * @param b - Bytes array (buffer) which should be converted.
-	 *
-	 * @returns Word sized array.
-	 *
-	 * @internal
-	 */
-	/* eslint-disable  @typescript-eslint/no-explicit-any */
-	function bufferToWordArray(b) {
-	    const wa = [];
-	    let i;
-	    for (i = 0; i < b.length; i += 1) {
-	        wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
-	    }
-	    // @ts-expect-error Bundled library without types.
-	    return CryptoJS$1.lib.WordArray.create(wa, b.length);
-	}
-	/**
-	 * Legacy cryptography module for files and signature.
+	 * Wire format (compatible with all PubNub SDKs):
+	 * - key: first 32 characters of HEX encoded SHA-256 digest of the cipher key, used as UTF-8 bytes (AES-256),
+	 * - cipher: AES-CBC with PKCS#7 padding,
+	 * - random IV: `base64(iv + ciphertext)`, static IV (`0123456789012345`): `base64(ciphertext)`.
 	 *
 	 * @internal
 	 */
-	class Crypto {
-	    constructor(configuration) {
+	class LegacyCrypto {
+	    constructor(configuration, primitives) {
 	        this.configuration = configuration;
-	        /**
-	         * Crypto initialization vector.
-	         */
-	        this.iv = '0123456789012345';
-	        /**
-	         * List os allowed cipher key encodings.
-	         */
-	        this.allowedKeyEncodings = ['hex', 'utf8', 'base64', 'binary'];
-	        /**
-	         * Allowed cipher key lengths.
-	         */
-	        this.allowedKeyLengths = [128, 256];
-	        /**
-	         * Allowed crypto modes.
-	         */
-	        this.allowedModes = ['ecb', 'cbc'];
+	        this.primitives = primitives;
 	        this.logger = configuration.logger;
-	        this.defaultOptions = {
-	            encryptKey: true,
-	            keyEncoding: 'utf8',
-	            keyLength: 256,
-	            mode: 'cbc',
-	        };
 	    }
 	    /**
 	     * Update registered loggers' manager.
@@ -2321,252 +1709,164 @@
 	        return this._logger;
 	    }
 	    /**
-	     * Generate HMAC-SHA256 hash from input data.
-	     *
-	     * @param data - Data from which hash should be generated.
-	     *
-	     * @returns HMAC-SHA256 hash from provided `data`.
-	     */
-	    HMACSHA256(data) {
-	        // @ts-expect-error Bundled library without types.
-	        const hash = CryptoJS$1.HmacSHA256(data, this.configuration.secretKey);
-	        // @ts-expect-error Bundled library without types.
-	        return hash.toString(CryptoJS$1.enc.Base64);
-	    }
-	    /**
-	     * Generate SHA256 hash from input data.
-	     *
-	     * @param data - Data from which hash should be generated.
-	     *
-	     * @returns SHA256 hash from provided `data`.
-	     */
-	    SHA256(data) {
-	        // @ts-expect-error Bundled library without types.
-	        return CryptoJS$1.SHA256(data).toString(CryptoJS$1.enc.Hex);
-	    }
-	    /**
 	     * Encrypt provided data.
 	     *
 	     * @param data - Source data which should be encrypted.
 	     * @param [customCipherKey] - Custom cipher key (different from defined on client level).
-	     * @param [options] - Specific crypto configuration options.
 	     *
 	     * @returns Encrypted `data`.
 	     */
-	    encrypt(data, customCipherKey, options) {
-	        if (this.configuration.customEncrypt) {
-	            if (this.logger)
-	                this.logger.warn('Crypto', "'customEncrypt' is deprecated. Consult docs for better alternative.");
-	            return this.configuration.customEncrypt(data);
-	        }
-	        return this.pnEncrypt(data, customCipherKey, options);
+	    encrypt(data, customCipherKey) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            if (this.configuration.customEncrypt) {
+	                if (this.logger)
+	                    this.logger.warn('Crypto', "'customEncrypt' is deprecated. Consult docs for better alternative.");
+	                return this.configuration.customEncrypt(data);
+	            }
+	            return this.pnEncrypt(typeof data === 'string' ? data : JSON.stringify(data), customCipherKey);
+	        });
 	    }
 	    /**
 	     * Decrypt provided data.
 	     *
 	     * @param data - Encrypted data which should be decrypted.
 	     * @param [customCipherKey] - Custom cipher key (different from defined on client level).
-	     * @param [options] - Specific crypto configuration options.
 	     *
 	     * @returns Decrypted `data`.
 	     */
-	    decrypt(data, customCipherKey, options) {
-	        if (this.configuration.customDecrypt) {
-	            if (this.logger)
-	                this.logger.warn('Crypto', "'customDecrypt' is deprecated. Consult docs for better alternative.");
-	            return this.configuration.customDecrypt(data);
-	        }
-	        return this.pnDecrypt(data, customCipherKey, options);
+	    decrypt(data, customCipherKey) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            if (this.configuration.customDecrypt) {
+	                if (this.logger)
+	                    this.logger.warn('Crypto', "'customDecrypt' is deprecated. Consult docs for better alternative.");
+	                return this.configuration.customDecrypt(data);
+	            }
+	            return this.pnDecrypt(data, customCipherKey);
+	        });
 	    }
 	    /**
 	     * Encrypt provided data.
 	     *
 	     * @param data - Source data which should be encrypted.
 	     * @param [customCipherKey] - Custom cipher key (different from defined on client level).
-	     * @param [options] - Specific crypto configuration options.
 	     *
 	     * @returns Encrypted `data` as string.
 	     */
-	    pnEncrypt(data, customCipherKey, options) {
-	        const decidedCipherKey = customCipherKey !== null && customCipherKey !== void 0 ? customCipherKey : this.configuration.cipherKey;
-	        if (!decidedCipherKey)
-	            return data;
-	        if (this.logger) {
-	            this.logger.debug('Crypto', () => ({
-	                messageType: 'object',
-	                message: Object.assign({ data }, (options !== null && options !== void 0 ? options : {})),
-	                details: 'Encrypt with parameters:',
-	                ignoredKeys: isSensitiveLogKey,
-	            }));
-	        }
-	        options = this.parseOptions(options);
-	        const mode = this.getMode(options);
-	        const cipherKey = this.getPaddedKey(decidedCipherKey, options);
-	        if (this.configuration.useRandomIVs) {
-	            const waIv = this.getRandomIV();
-	            // @ts-expect-error Bundled library without types.
-	            const waPayload = CryptoJS$1.AES.encrypt(data, cipherKey, { iv: waIv, mode }).ciphertext;
-	            // @ts-expect-error Bundled library without types.
-	            return waIv.clone().concat(waPayload.clone()).toString(CryptoJS$1.enc.Base64);
-	        }
-	        const iv = this.getIV(options);
-	        // @ts-expect-error Bundled library without types.
-	        const encryptedHexArray = CryptoJS$1.AES.encrypt(data, cipherKey, { iv, mode }).ciphertext;
-	        // @ts-expect-error Bundled library without types.
-	        const base64Encrypted = encryptedHexArray.toString(CryptoJS$1.enc.Base64);
-	        return base64Encrypted || data;
+	    pnEncrypt(data, customCipherKey) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const decidedCipherKey = customCipherKey !== null && customCipherKey !== void 0 ? customCipherKey : this.configuration.cipherKey;
+	            if (!decidedCipherKey)
+	                return data;
+	            if (this.logger) {
+	                this.logger.debug('Crypto', () => ({
+	                    messageType: 'object',
+	                    message: { data },
+	                    details: 'Encrypt with parameters:',
+	                    ignoredKeys: isSensitiveLogKey,
+	                }));
+	            }
+	            const key = yield this.getKey(decidedCipherKey);
+	            const plaintext = LegacyCrypto.encoder.encode(data);
+	            if (this.configuration.useRandomIVs) {
+	                const iv = this.primitives.randomBytes(LegacyCrypto.IV_LENGTH);
+	                const ciphertext = yield this.primitives.aesCbcEncrypt(key, iv, plaintext);
+	                return encode(this.concat(iv, ciphertext));
+	            }
+	            const ciphertext = yield this.primitives.aesCbcEncrypt(key, LegacyCrypto.staticIV, plaintext);
+	            return encode(toArrayBuffer(ciphertext)) || data;
+	        });
 	    }
 	    /**
 	     * Decrypt provided data.
 	     *
 	     * @param data - Encrypted data which should be decrypted.
 	     * @param [customCipherKey] - Custom cipher key (different from defined on client level).
-	     * @param [options] - Specific crypto configuration options.
 	     *
-	     * @returns Decrypted `data`.
+	     * @returns Decrypted `data` or `null` if it can't be decrypted.
 	     */
-	    pnDecrypt(data, customCipherKey, options) {
-	        const decidedCipherKey = customCipherKey !== null && customCipherKey !== void 0 ? customCipherKey : this.configuration.cipherKey;
-	        if (!decidedCipherKey)
-	            return data;
-	        if (this.logger) {
-	            this.logger.debug('Crypto', () => ({
-	                messageType: 'object',
-	                message: Object.assign({ data }, (options !== null && options !== void 0 ? options : {})),
-	                details: 'Decrypt with parameters:',
-	                ignoredKeys: isSensitiveLogKey,
-	            }));
-	        }
-	        options = this.parseOptions(options);
-	        const mode = this.getMode(options);
-	        const cipherKey = this.getPaddedKey(decidedCipherKey, options);
-	        if (this.configuration.useRandomIVs) {
-	            const ciphertext = new Uint8ClampedArray(decode(data));
-	            const iv = bufferToWordArray(ciphertext.slice(0, 16));
-	            const payload = bufferToWordArray(ciphertext.slice(16));
+	    pnDecrypt(data, customCipherKey) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const decidedCipherKey = customCipherKey !== null && customCipherKey !== void 0 ? customCipherKey : this.configuration.cipherKey;
+	            if (!decidedCipherKey)
+	                return data;
+	            if (this.logger) {
+	                this.logger.debug('Crypto', () => ({
+	                    messageType: 'object',
+	                    message: { data },
+	                    details: 'Decrypt with parameters:',
+	                    ignoredKeys: isSensitiveLogKey,
+	                }));
+	            }
 	            try {
-	                // @ts-expect-error Bundled library without types.
-	                const plainJSON = CryptoJS$1.AES.decrypt({ ciphertext: payload }, cipherKey, { iv, mode }).toString(
-	                // @ts-expect-error Bundled library without types.
-	                CryptoJS$1.enc.Utf8);
-	                return JSON.parse(plainJSON);
+	                const key = yield this.getKey(decidedCipherKey);
+	                const encrypted = new Uint8Array(decode(data));
+	                let iv = LegacyCrypto.staticIV;
+	                let ciphertext = encrypted;
+	                if (this.configuration.useRandomIVs) {
+	                    iv = encrypted.slice(0, LegacyCrypto.IV_LENGTH);
+	                    ciphertext = encrypted.slice(LegacyCrypto.IV_LENGTH);
+	                }
+	                const plaintext = yield this.primitives.aesCbcDecrypt(key, iv, ciphertext);
+	                return JSON.parse(decodeUtf8Strict(plaintext));
 	            }
 	            catch (e) {
 	                if (this.logger)
 	                    this.logger.error('Crypto', () => ({ messageType: 'error', message: e }));
 	                return null;
 	            }
+	        });
+	    }
+	    /**
+	     * Derive AES-256 key from the cipher key (cached for configured cipher key).
+	     *
+	     * @param cipherKey - User-provided cipher key.
+	     *
+	     * @returns First 32 characters of HEX encoded SHA-256 digest as UTF-8 bytes.
+	     */
+	    getKey(cipherKey) {
+	        if (cipherKey !== this.configuration.cipherKey)
+	            return this.deriveKey(cipherKey);
+	        if (!this.configuredKey) {
+	            this.configuredKey = this.deriveKey(cipherKey);
+	            this.configuredKey.catch(() => (this.configuredKey = undefined));
 	        }
-	        else {
-	            const iv = this.getIV(options);
-	            try {
-	                // @ts-expect-error Bundled library without types.
-	                const ciphertext = CryptoJS$1.enc.Base64.parse(data);
-	                // @ts-expect-error Bundled library without types.
-	                const plainJSON = CryptoJS$1.AES.decrypt({ ciphertext }, cipherKey, { iv, mode }).toString(CryptoJS$1.enc.Utf8);
-	                return JSON.parse(plainJSON);
-	            }
-	            catch (e) {
-	                if (this.logger)
-	                    this.logger.error('Crypto', () => ({ messageType: 'error', message: e }));
-	                return null;
-	            }
-	        }
+	        return this.configuredKey;
 	    }
 	    /**
-	     * Pre-process provided custom crypto configuration.
+	     * Derive AES-256 key from the cipher key.
 	     *
-	     * @param incomingOptions - Configuration which should be pre-processed before use.
+	     * @param cipherKey - User-provided cipher key.
 	     *
-	     * @returns Normalized crypto configuration options.
+	     * @returns First 32 characters of HEX encoded SHA-256 digest as UTF-8 bytes.
 	     */
-	    parseOptions(incomingOptions) {
-	        var _a, _b, _c, _d;
-	        if (!incomingOptions)
-	            return this.defaultOptions;
-	        // Defaults
-	        const options = {
-	            encryptKey: (_a = incomingOptions.encryptKey) !== null && _a !== void 0 ? _a : this.defaultOptions.encryptKey,
-	            keyEncoding: (_b = incomingOptions.keyEncoding) !== null && _b !== void 0 ? _b : this.defaultOptions.keyEncoding,
-	            keyLength: (_c = incomingOptions.keyLength) !== null && _c !== void 0 ? _c : this.defaultOptions.keyLength,
-	            mode: (_d = incomingOptions.mode) !== null && _d !== void 0 ? _d : this.defaultOptions.mode,
-	        };
-	        // Validation
-	        if (this.allowedKeyEncodings.indexOf(options.keyEncoding.toLowerCase()) === -1)
-	            options.keyEncoding = this.defaultOptions.keyEncoding;
-	        if (this.allowedKeyLengths.indexOf(options.keyLength) === -1)
-	            options.keyLength = this.defaultOptions.keyLength;
-	        if (this.allowedModes.indexOf(options.mode.toLowerCase()) === -1)
-	            options.mode = this.defaultOptions.mode;
-	        return options;
+	    deriveKey(cipherKey) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const digest = yield this.primitives.sha256(LegacyCrypto.encoder.encode(cipherKey));
+	            return LegacyCrypto.encoder.encode(bytesToHex(digest).slice(0, 32));
+	        });
 	    }
 	    /**
-	     * Decode provided cipher key.
-	     *
-	     * @param key - Key in `encoding` provided by `options`.
-	     * @param options - Crypto configuration options with cipher key details.
-	     *
-	     * @returns Array buffer with decoded key.
+	     * Join two byte arrays into {@link ArrayBuffer}.
 	     */
-	    decodeKey(key, options) {
-	        // @ts-expect-error Bundled library without types.
-	        if (options.keyEncoding === 'base64')
-	            return CryptoJS$1.enc.Base64.parse(key);
-	        // @ts-expect-error Bundled library without types.
-	        if (options.keyEncoding === 'hex')
-	            return CryptoJS$1.enc.Hex.parse(key);
-	        return key;
-	    }
-	    /**
-	     * Add padding to the cipher key.
-	     *
-	     * @param key - Key which should be padded.
-	     * @param options - Crypto configuration options with cipher key details.
-	     *
-	     * @returns Properly padded cipher key.
-	     */
-	    getPaddedKey(key, options) {
-	        key = this.decodeKey(key, options);
-	        // @ts-expect-error Bundled library without types.
-	        if (options.encryptKey)
-	            return CryptoJS$1.enc.Utf8.parse(this.SHA256(key).slice(0, 32));
-	        return key;
-	    }
-	    /**
-	     * Cipher mode.
-	     *
-	     * @param options - Crypto configuration with information about cipher mode.
-	     *
-	     * @returns Crypto cipher mode.
-	     */
-	    getMode(options) {
-	        // @ts-expect-error Bundled library without types.
-	        if (options.mode === 'ecb')
-	            return CryptoJS$1.mode.ECB;
-	        // @ts-expect-error Bundled library without types.
-	        return CryptoJS$1.mode.CBC;
-	    }
-	    /**
-	     * Cipher initialization vector.
-	     *
-	     * @param options - Crypto configuration with information about cipher mode.
-	     *
-	     * @returns Initialization vector.
-	     */
-	    getIV(options) {
-	        // @ts-expect-error Bundled library without types.
-	        return options.mode === 'cbc' ? CryptoJS$1.enc.Utf8.parse(this.iv) : null;
-	    }
-	    /**
-	     * Random initialization vector.
-	     *
-	     * @returns Generated random initialization vector.
-	     */
-	    getRandomIV() {
-	        // @ts-expect-error Bundled library without types.
-	        return CryptoJS$1.lib.WordArray.random(16);
+	    concat(a, b) {
+	        const result = new Uint8Array(a.byteLength + b.byteLength);
+	        result.set(a, 0);
+	        result.set(b, a.byteLength);
+	        return result.buffer;
 	    }
 	}
+	/**
+	 * `string` to {@link Uint8Array} encoder.
+	 */
+	LegacyCrypto.encoder = new TextEncoder();
+	/**
+	 * Static crypto initialization vector (used when random IVs are disabled).
+	 */
+	LegacyCrypto.staticIV = new TextEncoder().encode('0123456789012345');
+	/**
+	 * Initialization vector length.
+	 */
+	LegacyCrypto.IV_LENGTH = 16;
 
 	/**
 	 * Legacy browser cryptography module.
@@ -2799,7 +2099,7 @@
 	class LegacyCryptor {
 	    constructor(config) {
 	        this.config = config;
-	        this.cryptor = new Crypto(Object.assign({}, config));
+	        this.cryptor = new LegacyCrypto(Object.assign({}, config), new WebCryptoPrimitives());
 	        this.fileCryptor = new WebCryptography();
 	    }
 	    /**
@@ -2819,11 +2119,13 @@
 	    // --------------------------------------------------------
 	    // region Encryption
 	    encrypt(data) {
-	        const stringData = typeof data === 'string' ? data : LegacyCryptor.decoder.decode(data);
-	        return {
-	            data: this.cryptor.encrypt(stringData),
-	            metadata: null,
-	        };
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const stringData = typeof data === 'string' ? data : LegacyCryptor.decoder.decode(data);
+	            return {
+	                data: yield this.cryptor.encrypt(stringData),
+	                metadata: null,
+	            };
+	        });
 	    }
 	    encryptFile(file, File) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -2839,8 +2141,10 @@
 	    // --------------------------------------------------------
 	    // region Decryption
 	    decrypt(encryptedData) {
-	        const data = typeof encryptedData.data === 'string' ? encryptedData.data : encode(encryptedData.data);
-	        return this.cryptor.decrypt(data);
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const data = typeof encryptedData.data === 'string' ? encryptedData.data : encode(encryptedData.data);
+	            return this.cryptor.decrypt(data);
+	        });
 	    }
 	    decryptFile(file, File) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -2930,7 +2234,10 @@
 	        }
 	        return new WebCryptoModule({
 	            default: new LegacyCryptor(Object.assign(Object.assign({}, config), { useRandomIVs: (_a = config.useRandomIVs) !== null && _a !== void 0 ? _a : true })),
-	            cryptors: [new AesCbcCryptor({ cipherKey: config.cipherKey })],
+	            cryptors: [
+	                new AesCbcCryptor({ cipherKey: config.cipherKey }),
+	                new AesGcmCryptor({ cipherKey: config.cipherKey }),
+	            ],
 	        });
 	    }
 	    static aesCbcCryptoModule(config) {
@@ -2941,8 +2248,34 @@
 	            default: new AesCbcCryptor({ cipherKey: config.cipherKey }),
 	            cryptors: [
 	                new LegacyCryptor(Object.assign(Object.assign({}, config), { useRandomIVs: (_a = config.useRandomIVs) !== null && _a !== void 0 ? _a : true })),
+	                new AesGcmCryptor({ cipherKey: config.cipherKey }),
 	            ],
 	        });
+	    }
+	    /**
+	     * Construct decrypt-only AES-GCM cryptor.
+	     *
+	     * Modules created with {@link aesCbcCryptoModule}, {@link legacyCryptoModule} or `cipherKey` already register it.
+	     * Use it to let a custom crypto module decrypt AES-GCM (`ACGM`) payloads produced by other PubNub SDKs:
+	     *
+	     * @example
+	     * ```typescript
+	     * const cryptoModule = new PubNub.CryptoModule({
+	     *   default: myCryptor,
+	     *   cryptors: [PubNub.CryptoModule.aesGcmCryptor({ cipherKey: 'my-key' })],
+	     * });
+	     * ```
+	     *
+	     * @param config - Cryptor configuration options.
+	     *
+	     * @returns AES-GCM cryptor which can be used only as an additional (decryption) cryptor.
+	     *
+	     * @throws Error if `config.cipherKey` not set.
+	     */
+	    static aesGcmCryptor(config) {
+	        if (!config.cipherKey)
+	            throw new PubNubError('Crypto module error: cipher key not set.');
+	        return new AesGcmCryptor({ cipherKey: config.cipherKey });
 	    }
 	    /**
 	     * Construct crypto module with `cryptor` as default for data encryption and decryption.
@@ -2960,16 +2293,18 @@
 	    // --------------------------------------------------------
 	    // region Encryption
 	    encrypt(data) {
-	        // Encrypt data.
-	        const encrypted = data instanceof ArrayBuffer && this.defaultCryptor.identifier === WebCryptoModule.LEGACY_IDENTIFIER
-	            ? this.defaultCryptor.encrypt(WebCryptoModule.decoder.decode(data))
-	            : this.defaultCryptor.encrypt(data);
-	        if (!encrypted.metadata)
-	            return encrypted.data;
-	        else if (typeof encrypted.data === 'string')
-	            throw new Error('Encryption error: encrypted data should be ArrayBuffed.');
-	        const headerData = this.getHeaderData(encrypted);
-	        return this.concatArrayBuffer(headerData, encrypted.data);
+	        return __awaiter(this, void 0, void 0, function* () {
+	            // Encrypt data.
+	            const encrypted = data instanceof ArrayBuffer && this.defaultCryptor.identifier === WebCryptoModule.LEGACY_IDENTIFIER
+	                ? yield this.defaultCryptor.encrypt(WebCryptoModule.decoder.decode(data))
+	                : yield this.defaultCryptor.encrypt(data);
+	            if (!encrypted.metadata)
+	                return encrypted.data;
+	            else if (typeof encrypted.data === 'string')
+	                throw new Error('Encryption error: encrypted data should be ArrayBuffed.');
+	            const headerData = this.getHeaderData(encrypted);
+	            return this.concatArrayBuffer(headerData, encrypted.data);
+	        });
 	    }
 	    encryptFile(file, File) {
 	        return __awaiter(this, void 0, void 0, function* () {
@@ -2996,17 +2331,19 @@
 	    // --------------------------------------------------------
 	    // region Decryption
 	    decrypt(data) {
-	        const encryptedData = typeof data === 'string' ? decode(data) : data;
-	        const header = CryptorHeader.tryParse(encryptedData);
-	        const cryptor = this.getCryptor(header);
-	        const metadata = header.length > 0
-	            ? encryptedData.slice(header.length - header.metadataLength, header.length)
-	            : null;
-	        if (encryptedData.slice(header.length).byteLength <= 0)
-	            throw new Error('Decryption error: empty content');
-	        return cryptor.decrypt({
-	            data: encryptedData.slice(header.length),
-	            metadata: metadata,
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const encryptedData = typeof data === 'string' ? decode(data) : data;
+	            const header = CryptorHeader.tryParse(encryptedData);
+	            const cryptor = this.getCryptor(header);
+	            const metadata = header.length > 0
+	                ? encryptedData.slice(header.length - header.metadataLength, header.length)
+	                : null;
+	            if (encryptedData.slice(header.length).byteLength <= 0)
+	                throw new Error('Decryption error: empty content');
+	            return cryptor.decrypt({
+	                data: encryptedData.slice(header.length),
+	                metadata: metadata,
+	            });
 	        });
 	    }
 	    decryptFile(file, File) {
@@ -3024,7 +2361,7 @@
 	            const metadata = fileData.slice(header.length - header.metadataLength, header.length);
 	            return File.create({
 	                name: file.name,
-	                data: yield this.defaultCryptor.decryptFileData({
+	                data: yield cryptor.decryptFileData({
 	                    data: data.slice(header.length),
 	                    metadata: metadata,
 	                }),
@@ -6601,6 +5938,17 @@
 	        return undefined;
 	    }
 	    /**
+	     * Prepare request for sending.
+	     *
+	     * Called after successful {@link validate} and before {@link request}. Used by requests which need to
+	     * perform asynchronous pre-processing (for example, payload encryption) before the transport request can
+	     * be built synchronously.
+	     *
+	     * @returns `Promise` only if asynchronous pre-processing is required (request scheduling stays
+	     * synchronous otherwise).
+	     */
+	    prepare() { }
+	    /**
 	     * Parse service response.
 	     *
 	     * @param response - Raw service response which should be parsed.
@@ -6842,13 +6190,13 @@
 	            if (!serviceResponse) {
 	                throw new PubNubError('Service response error, check status for details', createMalformedResponseError(responseText, response.status));
 	            }
-	            const events = serviceResponse.m
-	                .filter((envelope) => {
+	            const envelopes = serviceResponse.m.filter((envelope) => {
 	                const subscribable = envelope.b === undefined ? envelope.c : envelope.b;
 	                return ((this.parameters.channels && this.parameters.channels.includes(subscribable)) ||
 	                    (this.parameters.channelGroups && this.parameters.channelGroups.includes(subscribable)));
-	            })
-	                .map((envelope) => {
+	            });
+	            // Envelopes processed concurrently (payload decryption is asynchronous); `Promise.all` preserves order.
+	            const parsedEvents = yield Promise.all(envelopes.map((envelope) => __awaiter(this, void 0, void 0, function* () {
 	                let { e: eventType } = envelope;
 	                // Events delivered on a presence channel are always presence events: the `-pnpres` suffix wins over
 	                // the service-reported type. `envelope.c` is the actual channel (`envelope.b` is the channel group
@@ -6869,20 +6217,20 @@
 	                    if (eventType == PubNubEventType.Message) {
 	                        return {
 	                            type: PubNubEventType.Message,
-	                            data: this.messageFromEnvelope(envelope),
+	                            data: yield this.messageFromEnvelope(envelope),
 	                            pn_mfp,
 	                        };
 	                    }
 	                    return {
 	                        type: PubNubEventType.Files,
-	                        data: this.fileFromEnvelope(envelope),
+	                        data: yield this.fileFromEnvelope(envelope),
 	                        pn_mfp,
 	                    };
 	                }
 	                else if (eventType == PubNubEventType.Message) {
 	                    return {
 	                        type: PubNubEventType.Message,
-	                        data: this.messageFromEnvelope(envelope),
+	                        data: yield this.messageFromEnvelope(envelope),
 	                        pn_mfp,
 	                    };
 	                }
@@ -6919,16 +6267,16 @@
 	                    // Guard: only treat as DataSync when the service marks it so; otherwise fall back to message.
 	                    if (dataSync)
 	                        return { type: PubNubEventType.DataSync, data: dataSync, pn_mfp };
-	                    return { type: PubNubEventType.Message, data: this.messageFromEnvelope(envelope), pn_mfp };
+	                    return { type: PubNubEventType.Message, data: yield this.messageFromEnvelope(envelope), pn_mfp };
 	                }
 	                // The only known event type left is a file event.
 	                return {
 	                    type: PubNubEventType.Files,
-	                    data: this.fileFromEnvelope(envelope),
+	                    data: yield this.fileFromEnvelope(envelope),
 	                    pn_mfp,
 	                };
-	            })
-	                .filter((event) => event !== undefined);
+	            })));
+	            const events = parsedEvents.filter((event) => event !== undefined);
 	            return {
 	                cursor: { timetoken: serviceResponse.t.t, region: serviceResponse.t.r },
 	                messages: events,
@@ -6984,28 +6332,30 @@
 	            subscribedChannel, timetoken: envelope.p.t }, (presenceData !== null && presenceData !== void 0 ? presenceData : {}));
 	    }
 	    messageFromEnvelope(envelope) {
-	        const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
-	        const [message, decryptionError] = this.decryptedData(envelope.d);
-	        // Backward compatibility with deprecated properties.
-	        const actualChannel = subscription !== null ? channel : null;
-	        const subscribedChannel = subscription !== null ? subscription : channel;
-	        // Basic message event payload.
-	        const event = {
-	            channel,
-	            subscription,
-	            actualChannel,
-	            subscribedChannel,
-	            timetoken: envelope.p.t,
-	            publisher: envelope.i,
-	            message,
-	        };
-	        if (envelope.u)
-	            event.userMetadata = envelope.u;
-	        if (envelope.cmt)
-	            event.customMessageType = envelope.cmt;
-	        if (decryptionError)
-	            event.error = decryptionError;
-	        return event;
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
+	            const [message, decryptionError] = yield this.decryptedData(envelope.d);
+	            // Backward compatibility with deprecated properties.
+	            const actualChannel = subscription !== null ? channel : null;
+	            const subscribedChannel = subscription !== null ? subscription : channel;
+	            // Basic message event payload.
+	            const event = {
+	                channel,
+	                subscription,
+	                actualChannel,
+	                subscribedChannel,
+	                timetoken: envelope.p.t,
+	                publisher: envelope.i,
+	                message,
+	            };
+	            if (envelope.u)
+	                event.userMetadata = envelope.u;
+	            if (envelope.cmt)
+	                event.customMessageType = envelope.cmt;
+	            if (decryptionError)
+	                event.error = decryptionError;
+	            return event;
+	        });
 	    }
 	    signalFromEnvelope(envelope) {
 	        const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
@@ -7124,37 +6474,39 @@
 	        };
 	    }
 	    fileFromEnvelope(envelope) {
-	        const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
-	        const [file, decryptionError] = this.decryptedData(envelope.d);
-	        let errorMessage = decryptionError;
-	        // Basic file event payload.
-	        const event = {
-	            channel,
-	            subscription,
-	            timetoken: envelope.p.t,
-	            publisher: envelope.i,
-	        };
-	        if (envelope.u)
-	            event.userMetadata = envelope.u;
-	        if (!file)
-	            errorMessage !== null && errorMessage !== void 0 ? errorMessage : (errorMessage = `File information payload is missing.`);
-	        else if (typeof file === 'string')
-	            errorMessage !== null && errorMessage !== void 0 ? errorMessage : (errorMessage = `Unexpected file information payload data type.`);
-	        else {
-	            event.message = file.message;
-	            if (file.file) {
-	                event.file = {
-	                    id: file.file.id,
-	                    name: file.file.name,
-	                    url: this.parameters.getFileUrl({ id: file.file.id, name: file.file.name, channel }),
-	                };
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const [channel, subscription] = this.subscriptionChannelFromEnvelope(envelope);
+	            const [file, decryptionError] = yield this.decryptedData(envelope.d);
+	            let errorMessage = decryptionError;
+	            // Basic file event payload.
+	            const event = {
+	                channel,
+	                subscription,
+	                timetoken: envelope.p.t,
+	                publisher: envelope.i,
+	            };
+	            if (envelope.u)
+	                event.userMetadata = envelope.u;
+	            if (!file)
+	                errorMessage !== null && errorMessage !== void 0 ? errorMessage : (errorMessage = `File information payload is missing.`);
+	            else if (typeof file === 'string')
+	                errorMessage !== null && errorMessage !== void 0 ? errorMessage : (errorMessage = `Unexpected file information payload data type.`);
+	            else {
+	                event.message = file.message;
+	                if (file.file) {
+	                    event.file = {
+	                        id: file.file.id,
+	                        name: file.file.name,
+	                        url: this.parameters.getFileUrl({ id: file.file.id, name: file.file.name, channel }),
+	                    };
+	                }
 	            }
-	        }
-	        if (envelope.cmt)
-	            event.customMessageType = envelope.cmt;
-	        if (errorMessage)
-	            event.error = errorMessage;
-	        return event;
+	            if (envelope.cmt)
+	                event.customMessageType = envelope.cmt;
+	            if (errorMessage)
+	                event.error = errorMessage;
+	            return event;
+	        });
 	    }
 	    // endregion
 	    subscriptionChannelFromEnvelope(envelope) {
@@ -7168,22 +6520,24 @@
 	     * @returns Tuple with decrypted data and decryption error (if any).
 	     */
 	    decryptedData(data) {
-	        if (!this.parameters.crypto || typeof data !== 'string')
-	            return [data, undefined];
-	        let payload;
-	        let error;
-	        try {
-	            const decryptedData = this.parameters.crypto.decrypt(data);
-	            payload =
-	                decryptedData instanceof ArrayBuffer
-	                    ? JSON.parse(SubscribeRequest.decoder.decode(decryptedData))
-	                    : decryptedData;
-	        }
-	        catch (err) {
-	            payload = null;
-	            error = `Error while decrypting message content: ${err.message}`;
-	        }
-	        return [(payload !== null && payload !== void 0 ? payload : data), error];
+	        return __awaiter(this, void 0, void 0, function* () {
+	            if (!this.parameters.crypto || typeof data !== 'string')
+	                return [data, undefined];
+	            let payload;
+	            let error;
+	            try {
+	                const decryptedData = yield this.parameters.crypto.decrypt(data);
+	                payload =
+	                    decryptedData instanceof ArrayBuffer
+	                        ? JSON.parse(SubscribeRequest.decoder.decode(decryptedData))
+	                        : decryptedData;
+	            }
+	            catch (err) {
+	                payload = null;
+	                error = `Error while decrypting message content: ${err.message}`;
+	            }
+	            return [(payload !== null && payload !== void 0 ? payload : data), error];
+	        });
 	    }
 	}
 	/**
@@ -10286,6 +9640,14 @@
 	        if (!publishKey)
 	            return "Missing 'publishKey'";
 	    }
+	    prepare() {
+	        const { crypto, message } = this.parameters;
+	        if (!crypto)
+	            return;
+	        return encryptMessagePayload(crypto, message).then((encrypted) => {
+	            this.encryptedPayload = encrypted;
+	        });
+	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            return { timetoken: this.deserializeResponse(response)[2] };
@@ -10323,20 +9685,21 @@
 	    /**
 	     * Pre-process provided data.
 	     *
-	     * Data will be "normalized" and encrypted if `cryptoModule` has been provided.
+	     * Data will be "normalized" and use encrypted payload computed by {@link prepare} if `cryptoModule` has
+	     * been provided.
 	     *
 	     * @param payload - User-provided data which should be pre-processed before use.
 	     *
 	     * @returns Payload which can be used as part of request URL or body.
 	     *
-	     * @throws {Error} in case if provided `payload` or results of `encryption` can't be stringified.
+	     * @throws {Error} in case if provided `payload` can't be stringified or request hasn't been prepared.
 	     */
 	    prepareMessagePayload(payload) {
-	        const { crypto } = this.parameters;
-	        if (!crypto)
+	        if (!this.parameters.crypto)
 	            return JSON.stringify(payload) || '';
-	        const encrypted = crypto.encrypt(JSON.stringify(payload));
-	        return JSON.stringify(typeof encrypted === 'string' ? encrypted : encode(encrypted));
+	        if (this.encryptedPayload === undefined)
+	            throw new Error('Encryption error: request payload not prepared');
+	        return this.encryptedPayload;
 	    }
 	}
 
@@ -12265,8 +11628,9 @@
 	            if (!Array.isArray(messages))
 	                return { messages: [], startTimeToken, endTimeToken };
 	            return {
-	                messages: messages.map((payload) => {
-	                    const processedPayload = this.processPayload(payload.message);
+	                // Messages processed concurrently (payload decryption is asynchronous); `Promise.all` preserves order.
+	                messages: yield Promise.all(messages.map((payload) => __awaiter(this, void 0, void 0, function* () {
+	                    const processedPayload = yield this.processPayload(payload.message);
 	                    const item = {
 	                        entry: processedPayload.payload,
 	                        timetoken: payload.timetoken,
@@ -12276,7 +11640,7 @@
 	                    if (payload.meta)
 	                        item.meta = payload.meta;
 	                    return item;
-	                }),
+	                }))),
 	                startTimeToken,
 	                endTimeToken,
 	            };
@@ -12291,28 +11655,30 @@
 	        return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ count: count, include_token: 'true' }, (start ? { start } : {})), (end ? { end } : {})), (stringifiedTimeToken ? { string_message_token: 'true' } : {})), (reverse !== undefined && reverse !== null ? { reverse: reverse.toString() } : {})), (includeMeta ? { include_meta: 'true' } : {}));
 	    }
 	    processPayload(payload) {
-	        const { crypto, logVerbosity } = this.parameters;
-	        if (!crypto || typeof payload !== 'string')
-	            return { payload };
-	        let decryptedPayload;
-	        let error;
-	        try {
-	            const decryptedData = crypto.decrypt(payload);
-	            decryptedPayload =
-	                decryptedData instanceof ArrayBuffer
-	                    ? JSON.parse(GetHistoryRequest.decoder.decode(decryptedData))
-	                    : decryptedData;
-	        }
-	        catch (err) {
-	            if (logVerbosity)
-	                console.log(`decryption error`, err.message);
-	            decryptedPayload = payload;
-	            error = `Error while decrypting message content: ${err.message}`;
-	        }
-	        return {
-	            payload: decryptedPayload,
-	            error,
-	        };
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const { crypto, logVerbosity } = this.parameters;
+	            if (!crypto || typeof payload !== 'string')
+	                return { payload };
+	            let decryptedPayload;
+	            let error;
+	            try {
+	                const decryptedData = yield crypto.decrypt(payload);
+	                decryptedPayload =
+	                    decryptedData instanceof ArrayBuffer
+	                        ? JSON.parse(GetHistoryRequest.decoder.decode(decryptedData))
+	                        : decryptedData;
+	            }
+	            catch (err) {
+	                if (logVerbosity)
+	                    console.log(`decryption error`, err.message);
+	                decryptedPayload = payload;
+	                error = `Error while decrypting message content: ${err.message}`;
+	            }
+	            return {
+	                payload: decryptedPayload,
+	                error,
+	            };
+	        });
 	    }
 	}
 
@@ -12420,28 +11786,30 @@
 	            const serviceResponse = this.deserializeResponse(response);
 	            const responseChannels = (_a = serviceResponse.channels) !== null && _a !== void 0 ? _a : {};
 	            const channels = {};
-	            Object.keys(responseChannels).forEach((channel) => {
-	                // Map service response to expected data object type structure.
-	                channels[channel] = responseChannels[channel].map((payload) => {
-	                    // `null` message type means regular message.
-	                    if (payload.message_type === null)
-	                        payload.message_type = PubNubMessageType.Message;
-	                    const processedPayload = this.processPayload(channel, payload);
-	                    const item = Object.assign(Object.assign({ channel, timetoken: payload.timetoken, message: processedPayload.payload, messageType: payload.message_type }, (payload.custom_message_type ? { customMessageType: payload.custom_message_type } : {})), { uuid: payload.uuid });
-	                    if (payload.actions) {
-	                        const itemWithActions = item;
-	                        itemWithActions.actions = payload.actions;
-	                        // Backward compatibility for existing users.
-	                        // TODO: Remove in next release.
-	                        itemWithActions.data = payload.actions;
-	                    }
-	                    if (payload.meta)
-	                        item.meta = payload.meta;
-	                    if (processedPayload.error)
-	                        item.error = processedPayload.error;
-	                    return item;
-	                });
-	            });
+	            // Messages processed concurrently (payload decryption is asynchronous); `Promise.all` preserves order.
+	            const channelNames = Object.keys(responseChannels);
+	            const channelsMessages = yield Promise.all(channelNames.map((channel) => 
+	            // Map service response to expected data object type structure.
+	            Promise.all(responseChannels[channel].map((payload) => __awaiter(this, void 0, void 0, function* () {
+	                // `null` message type means regular message.
+	                if (payload.message_type === null)
+	                    payload.message_type = PubNubMessageType.Message;
+	                const processedPayload = yield this.processPayload(channel, payload);
+	                const item = Object.assign(Object.assign({ channel, timetoken: payload.timetoken, message: processedPayload.payload, messageType: payload.message_type }, (payload.custom_message_type ? { customMessageType: payload.custom_message_type } : {})), { uuid: payload.uuid });
+	                if (payload.actions) {
+	                    const itemWithActions = item;
+	                    itemWithActions.actions = payload.actions;
+	                    // Backward compatibility for existing users.
+	                    // TODO: Remove in next release.
+	                    itemWithActions.data = payload.actions;
+	                }
+	                if (payload.meta)
+	                    item.meta = payload.meta;
+	                if (processedPayload.error)
+	                    item.error = processedPayload.error;
+	                return item;
+	            })))));
+	            channelNames.forEach((channel, index) => (channels[channel] = channelsMessages[index]));
 	            if (serviceResponse.more)
 	                return { channels, more: serviceResponse.more };
 	            return { channels };
@@ -12467,39 +11835,41 @@
 	     * @returns
 	     */
 	    processPayload(channel, payload) {
-	        const { crypto, logVerbosity } = this.parameters;
-	        if (!crypto || typeof payload.message !== 'string')
-	            return { payload: payload.message };
-	        let decryptedPayload;
-	        let error;
-	        try {
-	            const decryptedData = crypto.decrypt(payload.message);
-	            decryptedPayload =
-	                decryptedData instanceof ArrayBuffer
-	                    ? JSON.parse(FetchMessagesRequest.decoder.decode(decryptedData))
-	                    : decryptedData;
-	        }
-	        catch (err) {
-	            if (logVerbosity)
-	                console.log(`decryption error`, err.message);
-	            decryptedPayload = payload.message;
-	            error = `Error while decrypting message content: ${err.message}`;
-	        }
-	        if (!error &&
-	            decryptedPayload &&
-	            payload.message_type == PubNubMessageType.Files &&
-	            typeof decryptedPayload === 'object' &&
-	            this.isFileMessage(decryptedPayload)) {
-	            const fileMessage = decryptedPayload;
-	            return {
-	                payload: {
-	                    message: fileMessage.message,
-	                    file: Object.assign(Object.assign({}, fileMessage.file), { url: this.parameters.getFileUrl({ channel, id: fileMessage.file.id, name: fileMessage.file.name }) }),
-	                },
-	                error,
-	            };
-	        }
-	        return { payload: decryptedPayload, error };
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const { crypto, logVerbosity } = this.parameters;
+	            if (!crypto || typeof payload.message !== 'string')
+	                return { payload: payload.message };
+	            let decryptedPayload;
+	            let error;
+	            try {
+	                const decryptedData = yield crypto.decrypt(payload.message);
+	                decryptedPayload =
+	                    decryptedData instanceof ArrayBuffer
+	                        ? JSON.parse(FetchMessagesRequest.decoder.decode(decryptedData))
+	                        : decryptedData;
+	            }
+	            catch (err) {
+	                if (logVerbosity)
+	                    console.log(`decryption error`, err.message);
+	                decryptedPayload = payload.message;
+	                error = `Error while decrypting message content: ${err.message}`;
+	            }
+	            if (!error &&
+	                decryptedPayload &&
+	                payload.message_type == PubNubMessageType.Files &&
+	                typeof decryptedPayload === 'object' &&
+	                this.isFileMessage(decryptedPayload)) {
+	                const fileMessage = decryptedPayload;
+	                return {
+	                    payload: {
+	                        message: fileMessage.message,
+	                        file: Object.assign(Object.assign({}, fileMessage.file), { url: this.parameters.getFileUrl({ channel, id: fileMessage.file.id, name: fileMessage.file.name }) }),
+	                    },
+	                    error,
+	                };
+	            }
+	            return { payload: decryptedPayload, error };
+	        });
 	    }
 	    /**
 	     * Check whether `payload` potentially represents file message.
@@ -12706,18 +12076,34 @@
 	        if (!fileName)
 	            return "file name can't be empty";
 	    }
+	    prepare() {
+	        const { crypto } = this.parameters;
+	        if (!crypto)
+	            return;
+	        return encryptMessagePayload(crypto, this.fileMessage).then((encrypted) => {
+	            this.encryptedPayload = encrypted;
+	        });
+	    }
 	    parse(response) {
 	        return __awaiter(this, void 0, void 0, function* () {
 	            return { timetoken: this.deserializeResponse(response)[2] };
 	        });
 	    }
 	    get path() {
-	        const { message, channel, keySet: { publishKey, subscribeKey }, fileId, fileName, } = this.parameters;
-	        const fileMessage = Object.assign({ file: {
+	        const { channel, keySet: { publishKey, subscribeKey }, } = this.parameters;
+	        return `/v1/files/publish-file/${publishKey}/${subscribeKey}/0/${encodeString(channel)}/0/${encodeString(this.prepareMessagePayload(this.fileMessage))}`;
+	    }
+	    /**
+	     * File message which should be published.
+	     *
+	     * @returns File message payload.
+	     */
+	    get fileMessage() {
+	        const { message, fileId, fileName } = this.parameters;
+	        return Object.assign({ file: {
 	                name: fileName,
 	                id: fileId,
 	            } }, (message ? { message } : {}));
-	        return `/v1/files/publish-file/${publishKey}/${subscribeKey}/0/${encodeString(channel)}/0/${encodeString(this.prepareMessagePayload(fileMessage))}`;
 	    }
 	    get queryParameters() {
 	        const { customMessageType, storeInHistory, ttl, meta } = this.parameters;
@@ -12726,20 +12112,21 @@
 	    /**
 	     * Pre-process provided data.
 	     *
-	     * Data will be "normalized" and encrypted if `cryptoModule` has been provided.
+	     * Data will be "normalized" and use encrypted payload computed by {@link prepare} if `cryptoModule` has
+	     * been provided.
 	     *
 	     * @param payload - User-provided data which should be pre-processed before use.
 	     *
 	     * @returns Payload which can be used as part of request URL or body.
 	     *
-	     * @throws {Error} in case if provided `payload` or results of `encryption` can't be stringified.
+	     * @throws {Error} in case if provided `payload` can't be stringified or request hasn't been prepared.
 	     */
 	    prepareMessagePayload(payload) {
-	        const { crypto } = this.parameters;
-	        if (!crypto)
+	        if (!this.parameters.crypto)
 	            return JSON.stringify(payload) || '';
-	        const encrypted = crypto.encrypt(JSON.stringify(payload));
-	        return JSON.stringify(typeof encrypted === 'string' ? encrypted : encode(encrypted));
+	        if (this.encryptedPayload === undefined)
+	            throw new Error('Encryption error: request payload not prepared');
+	        return this.encryptedPayload;
 	    }
 	}
 
@@ -18573,6 +17960,15 @@
 	     */
 	    constructor(configuration) {
 	        /**
+	         * Tail of the asynchronous requests preparation queue.
+	         *
+	         * Used to schedule requests which require asynchronous preparation (for example, payload encryption) in the
+	         * same order in which they have been called.
+	         *
+	         * @internal
+	         */
+	        this.requestsPreparation = Promise.resolve();
+	        /**
 	         * List of subscribe capable objects with active subscriptions.
 	         *
 	         * Track list of {@link Subscription} and {@link SubscriptionSet} objects with active
@@ -19249,6 +18645,19 @@
 	                    return callback(validationError, null);
 	                throw new PubNubError('Validation failed, check status for details', validationError);
 	            }
+	            // Asynchronous request pre-processing (for example, payload encryption).
+	            const preparation = request.prepare();
+	            if (preparation) {
+	                // Requests which require preparation are scheduled in call order (same as synchronous requests).
+	                const orderedPreparation = this.requestsPreparation.then(() => preparation);
+	                this.requestsPreparation = orderedPreparation.catch(() => { });
+	                try {
+	                    yield orderedPreparation;
+	                }
+	                catch (error) {
+	                    return this.handleRequestError(error, request.operation(), callback);
+	                }
+	            }
 	            // Complete request configuration.
 	            const transportRequest = request.request();
 	            const operation = request.operation();
@@ -19302,24 +18711,38 @@
 	                    return callback(status, parsed);
 	                return parsed;
 	            })
-	                .catch((error) => {
-	                const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
-	                // Notify callback (if possible).
-	                if (callback) {
-	                    if (apiError.category !== StatusCategory$1.PNCancelledCategory) {
-	                        this.logger.error('PubNub', () => ({
-	                            messageType: 'error',
-	                            message: apiError.toPubNubError(operation, 'REST API request processing error, check status for details'),
-	                        }));
-	                    }
-	                    return callback(apiError.toStatus(operation), null);
-	                }
-	                const pubNubError = apiError.toPubNubError(operation, 'REST API request processing error, check status for details');
-	                if (apiError.category !== StatusCategory$1.PNCancelledCategory)
-	                    this.logger.error('PubNub', () => ({ messageType: 'error', message: pubNubError }));
-	                throw pubNubError;
-	            });
+	                .catch((error) => this.handleRequestError(error, operation, callback));
 	        });
+	    }
+	    /**
+	     * Handle REST API request processing error.
+	     *
+	     * @internal
+	     *
+	     * @param error - Request processing error.
+	     * @param operation - Type of failed REST API operation.
+	     * @param [callback] - Request completion handler callback.
+	     *
+	     * @returns `void` in case if `callback` provided.
+	     *
+	     * @throws PubNubError in case if `callback` not provided.
+	     */
+	    handleRequestError(error, operation, callback) {
+	        const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
+	        // Notify callback (if possible).
+	        if (callback) {
+	            if (apiError.category !== StatusCategory$1.PNCancelledCategory) {
+	                this.logger.error('PubNub', () => ({
+	                    messageType: 'error',
+	                    message: apiError.toPubNubError(operation, 'REST API request processing error, check status for details'),
+	                }));
+	            }
+	            return callback(apiError.toStatus(operation), null);
+	        }
+	        const pubNubError = apiError.toPubNubError(operation, 'REST API request processing error, check status for details');
+	        if (apiError.category !== StatusCategory$1.PNCancelledCategory)
+	            this.logger.error('PubNub', () => ({ messageType: 'error', message: pubNubError }));
+	        throw pubNubError;
 	    }
 	    /**
 	     * Unsubscribe from all channels and groups.
@@ -21433,22 +20856,24 @@
 	     * @param [customCipherKey] - Cipher key which should be used to encrypt data. **Deprecated:**
 	     * use {@link Configuration#cryptoModule|cryptoModule} instead.
 	     *
-	     * @returns Data encryption result as a string.
+	     * @returns Asynchronous data encryption result as a string.
 	     *
 	     * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
 	     */
 	    encrypt(data, customCipherKey) {
-	        this.logger.warn('PubNub', "'encrypt' is deprecated. Use cryptoModule instead.");
-	        const cryptoModule = this._configuration.getCryptoModule();
-	        if (!customCipherKey && cryptoModule && typeof data === 'string') {
-	            const encrypted = cryptoModule.encrypt(data);
-	            return typeof encrypted === 'string' ? encrypted : encode(encrypted);
-	        }
-	        if (!this.crypto)
-	            throw new Error('Encryption error: cypher key not set');
-	        {
-	            return this.crypto.encrypt(data, customCipherKey);
-	        }
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.warn('PubNub', "'encrypt' is deprecated. Use cryptoModule instead.");
+	            const cryptoModule = this._configuration.getCryptoModule();
+	            if (!customCipherKey && cryptoModule && typeof data === 'string') {
+	                const encrypted = yield cryptoModule.encrypt(data);
+	                return typeof encrypted === 'string' ? encrypted : encode(encrypted);
+	            }
+	            if (!this.crypto)
+	                throw new Error('Encryption error: cypher key not set');
+	            {
+	                return this.crypto.encrypt(data, customCipherKey);
+	            }
+	        });
 	    }
 	    /**
 	     * Decrypt data.
@@ -21457,22 +20882,24 @@
 	     * @param [customCipherKey] - Cipher key which should be used to decrypt data. **Deprecated:**
 	     * use {@link Configuration#cryptoModule|cryptoModule} instead.
 	     *
-	     * @returns Data decryption result as an object.
+	     * @returns Asynchronous data decryption result as an object.
 	     *
 	     * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
 	     */
 	    decrypt(data, customCipherKey) {
-	        this.logger.warn('PubNub', "'decrypt' is deprecated. Use cryptoModule instead.");
-	        const cryptoModule = this._configuration.getCryptoModule();
-	        if (!customCipherKey && cryptoModule) {
-	            const decrypted = cryptoModule.decrypt(data);
-	            return decrypted instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decrypted)) : decrypted;
-	        }
-	        if (!this.crypto)
-	            throw new Error('Decryption error: cypher key not set');
-	        {
-	            return this.crypto.decrypt(data, customCipherKey);
-	        }
+	        return __awaiter(this, void 0, void 0, function* () {
+	            this.logger.warn('PubNub', "'decrypt' is deprecated. Use cryptoModule instead.");
+	            const cryptoModule = this._configuration.getCryptoModule();
+	            if (!customCipherKey && cryptoModule) {
+	                const decrypted = yield cryptoModule.decrypt(data);
+	                return decrypted instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decrypted)) : decrypted;
+	            }
+	            if (!this.crypto)
+	                throw new Error('Decryption error: cypher key not set');
+	            {
+	                return this.crypto.decrypt(data, customCipherKey);
+	            }
+	        });
 	    }
 	    /**
 	     * Encrypt file content.
@@ -21646,7 +21073,10 @@
 	            {
 	                const cryptoModule = new WebCryptoModule({
 	                    default: new LegacyCryptor(Object.assign(Object.assign({}, cryptoConfiguration), (!cryptoConfiguration.logger ? { logger: clientConfiguration.logger() } : {}))),
-	                    cryptors: [new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey })],
+	                    cryptors: [
+	                        new AesCbcCryptor({ cipherKey: cryptoConfiguration.cipherKey }),
+	                        new AesGcmCryptor({ cipherKey: cryptoConfiguration.cipherKey }),
+	                    ],
 	                });
 	                return cryptoModule;
 	            }
@@ -21674,14 +21104,14 @@
 	        let crypto;
 	        {
 	            if (clientConfiguration.getCipherKey() || clientConfiguration.secretKey) {
-	                crypto = new Crypto({
+	                crypto = new LegacyCrypto({
 	                    secretKey: clientConfiguration.secretKey,
 	                    cipherKey: clientConfiguration.getCipherKey(),
 	                    useRandomIVs: clientConfiguration.getUseRandomIVs(),
 	                    customEncrypt: clientConfiguration.getCustomEncrypt(),
 	                    customDecrypt: clientConfiguration.getCustomDecrypt(),
 	                    logger: clientConfiguration.logger(),
-	                });
+	                }, new WebCryptoPrimitives());
 	            }
 	        }
 	        // Settings change handlers

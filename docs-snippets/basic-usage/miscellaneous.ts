@@ -17,7 +17,7 @@ const msgContent = 'This is the data I wish to encrypt.';
 console.log(`Original Message: ${msgContent}`);
 
 // Encrypt the message
-const encryptedMessage = cryptoModule.encrypt(JSON.stringify(msgContent));
+const encryptedMessage = await cryptoModule.encrypt(JSON.stringify(msgContent));
 console.log('message encrypted successfully');
 // snippet.end
 
@@ -34,7 +34,7 @@ const encryptedFile = await pubnub.encryptFile(file);
 
 const encrypted = '..';
 // snippet.decryptBasicUsage
-const decrypted = pubnub.decrypt(encrypted); // Pass the encrypted data as the first parameter in decrypt Method
+const decrypted = await pubnub.decrypt(encrypted); // Pass the encrypted data as the first parameter in decrypt Method
 // snippet.end
 
 // snippet.decryptFileBasicUsage

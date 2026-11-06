@@ -12,6 +12,7 @@ import { PubNubError } from '../../../errors/pubnub-error';
 import { isSensitiveLogKey } from '../../../core/utils';
 import { ILegacyCryptor } from './ILegacyCryptor';
 import { EncryptedDataType } from './ICryptor';
+import WebCryptoPrimitives from '../../primitives/web';
 import FileCryptor from '../web';
 
 /**
@@ -45,7 +46,7 @@ export default class LegacyCryptor implements ILegacyCryptor {
 
   constructor(config: CryptorConfiguration) {
     this.config = config;
-    this.cryptor = new Crypto({ ...config });
+    this.cryptor = new Crypto({ ...config }, new WebCryptoPrimitives());
     this.fileCryptor = new FileCryptor();
   }
 
@@ -71,11 +72,11 @@ export default class LegacyCryptor implements ILegacyCryptor {
   // --------------------------------------------------------
   // region Encryption
 
-  encrypt(data: ArrayBuffer | string) {
+  async encrypt(data: ArrayBuffer | string): Promise<EncryptedDataType> {
     const stringData = typeof data === 'string' ? data : LegacyCryptor.decoder.decode(data);
 
     return {
-      data: this.cryptor.encrypt(stringData),
+      data: await this.cryptor.encrypt(stringData),
       metadata: null,
     };
   }
@@ -92,7 +93,7 @@ export default class LegacyCryptor implements ILegacyCryptor {
   // --------------------------------------------------------
   // region Decryption
 
-  decrypt(encryptedData: EncryptedDataType) {
+  async decrypt(encryptedData: EncryptedDataType) {
     const data = typeof encryptedData.data === 'string' ? encryptedData.data : encode(encryptedData.data);
 
     return this.cryptor.decrypt(data);

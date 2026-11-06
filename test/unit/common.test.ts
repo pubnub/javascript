@@ -3,7 +3,6 @@
 import lilUUID from 'lil-uuid';
 import assert from 'assert';
 
-import CryptoJS from '../../src/core/components/cryptography/hmac-sha256';
 import { Payload } from '../../src/core/types/api';
 import PubNub from '../../src/node/index';
 
@@ -61,103 +60,96 @@ describe('#core / mounting point', () => {
     assert.equal(lilUUID.isUUID(PubNub.generateUUID()), true);
   });
 
-  it('supports encryption with static IV', () => {
+  it('supports encryption with static IV', async () => {
     let pn = new PubNub({
       subscribeKey: 'demo',
       cipherKey: 'customKey',
       useRandomIVs: false,
       uuid: 'myUUID',
     });
-    assert.equal(pn.encrypt(JSON.stringify({ hi: 'there' })), 'TejX6F2JNqH/gIiGHWN4Cw==');
+    assert.equal(await pn.encrypt(JSON.stringify({ hi: 'there' })), 'TejX6F2JNqH/gIiGHWN4Cw==');
   });
 
-  it('supports encryption with random IV', () => {
+  it('supports encryption with random IV', async () => {
     let pn = new PubNub({
       subscribeKey: 'demo',
       cipherKey: 'customKey',
       uuid: 'myUUID',
     });
-    const data1 = pn.encrypt(JSON.stringify({ hi: 'there' }));
-    const data2 = pn.encrypt(JSON.stringify({ hi: 'there' }));
+    const data1 = await pn.encrypt(JSON.stringify({ hi: 'there' }));
+    const data2 = await pn.encrypt(JSON.stringify({ hi: 'there' }));
 
-    assert.notEqual(pn.encrypt(JSON.stringify({ hi: 'there' })), 'TejX6F2JNqH/gIiGHWN4Cw==');
+    assert.notEqual(await pn.encrypt(JSON.stringify({ hi: 'there' })), 'TejX6F2JNqH/gIiGHWN4Cw==');
     assert.notEqual(data1, data2);
   });
 
-  it('supports encryption with custom key and static IV', () => {
+  it('supports encryption with custom key and static IV', async () => {
     let pn = new PubNub({
       subscribeKey: 'demo',
       useRandomIVs: false,
       uuid: 'myUUID',
     });
-    assert.equal(pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey'), 'TejX6F2JNqH/gIiGHWN4Cw==');
+    assert.equal(await pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey'), 'TejX6F2JNqH/gIiGHWN4Cw==');
   });
 
-  it('supports encryption with custom key and random IV', () => {
+  it('supports encryption with custom key and random IV', async () => {
     let pn = new PubNub({ subscribeKey: 'demo', uuid: 'myUUID' });
-    const data1 = pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey');
-    const data2 = pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey');
+    const data1 = await pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey');
+    const data2 = await pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey');
 
-    assert.notEqual(pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey'), 'TejX6F2JNqH/gIiGHWN4Cw==');
+    assert.notEqual(await pn.encrypt(JSON.stringify({ hi: 'there' }), 'customKey'), 'TejX6F2JNqH/gIiGHWN4Cw==');
     assert.notEqual(data1, data2);
   });
 
-  it('supports decryption with static IV', () => {
+  it('supports decryption with static IV', async () => {
     let pn = new PubNub({
       subscribeKey: 'demo',
       cipherKey: 'customKey',
       useRandomIVs: false,
       uuid: 'myUUID',
     });
-    assert.deepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw=='), { hi: 'there' });
+    assert.deepEqual(await pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw=='), { hi: 'there' });
   });
 
-  it('supports decryption with random IV', () => {
+  it('supports decryption with random IV', async () => {
     let pn = new PubNub({
       subscribeKey: 'demo',
       cipherKey: 'customKey',
       uuid: 'myUUID',
     });
-    const data = pn.encrypt(JSON.stringify({ hi: 'there2' }));
+    const data = await pn.encrypt(JSON.stringify({ hi: 'there2' }));
 
-    assert.notDeepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw=='), { hi: 'there' });
-    assert.deepEqual(pn.decrypt(data), { hi: 'there2' });
+    assert.notDeepEqual(await pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw=='), { hi: 'there' });
+    assert.deepEqual(await pn.decrypt(data), { hi: 'there2' });
   });
 
-  it('supports decryption with custom key and static IV', () => {
+  it('supports decryption with custom key and static IV', async () => {
     let pn = new PubNub({
       subscribeKey: 'demo',
       useRandomIVs: false,
       uuid: 'myUUID',
     });
-    assert.deepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), {
+    assert.deepEqual(await pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), {
       hi: 'there',
     });
   });
 
-  it('supports decryption with custom key and random IV', () => {
+  it('supports decryption with custom key and random IV', async () => {
     let pn = new PubNub({ subscribeKey: 'demo', uuid: 'myUUID' });
-    const data = pn.encrypt(JSON.stringify({ hi: 'there2' }), 'customKey');
+    const data = await pn.encrypt(JSON.stringify({ hi: 'there2' }), 'customKey');
 
-    assert.notDeepEqual(pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), {
+    assert.notDeepEqual(await pn.decrypt('TejX6F2JNqH/gIiGHWN4Cw==', 'customKey'), {
       hi: 'there',
     });
-    assert.deepEqual(pn.decrypt(data, 'customKey'), { hi: 'there2' });
+    assert.deepEqual(await pn.decrypt(data, 'customKey'), { hi: 'there2' });
   });
 
-  it('supports custom encryption/decryption', () => {
-    let customEncrypt = (data: Payload) => {
-      // @ts-expect-error Bundled library without types.
-      let cipher = CryptoJS.AES.encrypt(JSON.stringify(data), 'customKey');
-      return cipher.toString();
-    };
+  it('supports custom encryption/decryption', async () => {
+    // Simple reversible transformation (custom encryption is user-defined and opaque to the SDK).
+    let customEncrypt = (data: Payload) => Buffer.from(JSON.stringify(data)).reverse().toString('base64');
 
-    let customDecrypt = (data: Payload) => {
-      // @ts-expect-error Bundled library without types.
-      let bytes = CryptoJS.AES.decrypt(data, 'customKey');
-      // @ts-expect-error Bundled library without types.
-      return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-    };
+    let customDecrypt = (data: Payload) =>
+      JSON.parse(Buffer.from(data as string, 'base64').reverse().toString('utf8'));
 
     let pn = new PubNub({
       subscribeKey: 'demo',
@@ -166,8 +158,9 @@ describe('#core / mounting point', () => {
       uuid: 'myUUID',
     });
 
-    let ciphertext = pn.encrypt({ hi: 'there' });
+    let ciphertext = await pn.encrypt({ hi: 'there' });
 
-    assert.deepEqual(pn.decrypt(ciphertext), { hi: 'there' });
+    assert.notDeepEqual(ciphertext, JSON.stringify({ hi: 'there' }));
+    assert.deepEqual(await pn.decrypt(ciphertext), { hi: 'there' });
   });
 });
