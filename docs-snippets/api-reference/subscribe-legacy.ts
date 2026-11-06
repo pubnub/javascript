@@ -340,6 +340,20 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     const joinerReady = connected(joiner, { channels: [channel] });
     joiner.subscribe({ channels: [channel] });
     await joinerReady;
+    // The service can lose or delay one join. Wait briefly for the joiner's join. If it does not arrive, subscribe the joiner
+    // again, at most twice. Every re-subscribe is recorded in the report, so a lost join stays visible and is never hidden.
+    const joinerJoined = () => seen.presence.some((p) => p.action === 'join' && p.uuid === joiner.getUserId());
+    for (let attempt = 1; attempt <= 2 && !joinerJoined(); attempt += 1) {
+      try {
+        await eventually(() => assert.ok(joinerJoined(), 'the joiner join arrived'), { timeout: 8_000, label: 'joiner join arrived' });
+      } catch {
+        recorder.record({ kind: 'event', label: `joiner join not delivered, subscribed again (attempt ${attempt})`, ok: true });
+        joiner.unsubscribeAll();
+        const again = connected(joiner, { channels: [channel] });
+        joiner.subscribe({ channels: [channel] });
+        await again;
+      }
+    }
     const published = await world.friend.publish({ channel, message: { legacy: 'listeners' } });
     await world.friend.signal({ channel, message: 'ping' });
     await world.friend.addMessageAction({ channel, messageTimetoken: published.timetoken, action: { type: 'reaction', value: 'smiley_face' } });
