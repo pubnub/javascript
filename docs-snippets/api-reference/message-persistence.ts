@@ -4,15 +4,7 @@ import { eventually } from '../harness/wait.js';
 import { addToTimetoken } from '../harness/assertions.js';
 
 /**
- * docs/sdks/javascript/api-reference/message-persistence.md
- *
- * Keyset: open. Phase: P5. In the Sneaker Drop story this is the shopper catching up on a drop channel's history.
- *
- * Every step seeds its own messages with the `friend` client, so the steps do not depend on what the real-time steps
- * published. History is eventually consistent: each step first waits until the seeded messages are stored, then runs
- * the snippet once. `deleteMessages` needs "delete from history" on the keyset (`preflightDeleteFromHistory`).
- * The snippets use placeholder timetokens, set with `world.setPh` after seeding.
- * What it does not prove: retention expiry, and paging beyond one fetch (see message-persistence-legacy.ts for paging).
+ * Message persistence examples.
  */
 export default page('api-reference/message-persistence', 'P5', (world) => {
   // Publishes `count` messages as the friend and returns their timetokens, oldest first.
@@ -35,8 +27,6 @@ export default page('api-reference/message-persistence', 'P5', (world) => {
       for (const token of tokens) assert.ok(have.has(token), `${token} is not stored yet`);
     }, { timeout: 30_000, label: `messages stored on ${channel}` });
 
-  // Proves fetchMessages with count, start and end returns exactly one seeded message.
-  // start is exclusive and end inclusive, so the placeholders bracket the seeded messages (newest + 1 and oldest).
   step('fetchMessagesBasicUsage', { needs: ['preflightPersistence'], proves: 'fetchMessages with count, start and end returns exactly one seeded message.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('my-channel');
@@ -63,8 +53,6 @@ export default page('api-reference/message-persistence', 'P5', (world) => {
     assert.equal(messages[0].customMessageType, 'seed');
   });
 
-  // Proves includeMeta, includeMessageActions and includeCustomMessageType come back on the message.
-  // The setup waits until the action is attached, because an action is stored separately from its message.
   step('fetchMessagesWithMetaActions', { needs: ['preflightPersistence'], proves: 'fetchMessages returns meta, message actions and the custom message type when asked for.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('my_channel');
@@ -102,7 +90,6 @@ export default page('api-reference/message-persistence', 'P5', (world) => {
     assert.ok((found as WithActions).actions?.reaction?.smiley_face, 'the reaction is attached to the message');
   });
 
-  // Proves messageCounts with one timetoken for all channels. The timetoken is taken before seeding, so it counts 2 and 1.
   step('messageCountBasicUsage', { needs: ['preflightPersistence'], proves: 'messageCounts with one timetoken counts the messages per channel since that time.' }, async () => {
     const pubnub = world.shopper;
     const [room1, room2] = [world.n('chats.room1'), world.n('chats.room2')];
@@ -123,7 +110,6 @@ export default page('api-reference/message-persistence', 'P5', (world) => {
     assert.deepEqual(result.channels, { [room1]: 2, [room2]: 1 });
   });
 
-  // Proves per-channel timetokens. Each timetoken is taken just before that channel gets 1, 2 and 3 messages, which gives the counts the assertion expects.
   step('messageCountTimetokensForChannels', { needs: ['preflightPersistence'], proves: 'messageCounts with one timetoken per channel gives the per-channel counts.' }, async () => {
     const pubnub = world.shopper;
     const channels = [world.n('ch1'), world.n('ch2'), world.n('ch3')];
@@ -164,7 +150,6 @@ export default page('api-reference/message-persistence', 'P5', (world) => {
       assert.ok(!(history.channels[channel] ?? []).some((m) => String(m.timetoken) === token), 'message is still stored');
     }, { timeout: 30_000, label: 'message deleted' });
 
-  // Proves deleteMessages removes exactly the message at the boundary timetoken.
   step('deleteMessagesBasicUsage', { needs: ['preflightDeleteFromHistory'], proves: 'deleteMessages removes exactly the message at the boundary timetoken.' }, async () => {
     const pubnub = world.shopper;
     const { channel, token } = await deleteOne();
@@ -180,7 +165,6 @@ export default page('api-reference/message-persistence', 'P5', (world) => {
     await untilDeleted(channel, token);
   });
 
-  // Same proof as deleteMessagesBasicUsage for the page's second sample (identical call, separate docs section).
   step('deleteSpecificMessages', { needs: ['preflightDeleteFromHistory'], proves: 'The second deleteMessages sample removes exactly the message at its boundary timetoken.' }, async () => {
     const pubnub = world.shopper;
     const { channel, token } = await deleteOne();

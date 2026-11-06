@@ -1,18 +1,8 @@
 import PubNub from 'pubnub';
 
 /**
- * Snippet source of the Web quickstart (docs/sdks/javascript/quickstart-web.md), the four step-by-step blocks.
- *
- * The page loads the SDK from the CDN, which exposes the `PubNub` global. The import above only lets the compiler check
- * the snippets (`npm run test:docs-snippets:types`, tsconfig.browser.json, with the DOM library). The snippet bodies are the
- * exact text the page shows. The page that combines them is `quickstart-web.html`. This repository cannot run either file,
- * because it has no browser.
- *
- * The publish snippet keeps its try and catch because the page teaches that error handling. Standalone quickstart files
- * are exempt from the "snippets let errors throw" rule of the Node snippets (see lint-markers.ts, STANDALONE_DIR).
- *
- * Not run by Mocha: there is no `page()` module and no phase. Companion files with no comments of their own, because their text is the docs text:
- * `quickstart-web.html`.
+ * Web quickstart examples. The page loads the SDK from the CDN, which exposes the `PubNub` global. The import below
+ * only lets the compiler check the examples.
  */
 
 // snippet.quickstartWebInit

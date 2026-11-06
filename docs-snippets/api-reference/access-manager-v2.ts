@@ -6,24 +6,7 @@ import { rejectsValidation } from '../harness/assertions.js';
 import { revokeApplicationGrant } from '../harness/revoke.js';
 
 /**
- * docs/sdks/javascript/api-reference/access-manager-v2.md (Access Manager v2 `grant`)
- *
- * Secured keyset, `world.server` (secret key). The auth keys (`my_authkey`, `key1`, `my-auth-key`) and the
- * channel `my_channel` are registered names, so every grant lands on this run's own resources. The hardcoded
- * samples of the page get new snippet ids (they were fenced blocks before), `grantWithCategories` keeps the id
- * the page embeds today.
- *
- * Effect checks use clients with an `authKey`. The application level sample would open the whole keyset, so it
- * runs last (P9) and a `finally` revokes it again.
- *
- * Phase P1 for everything except the application level grant. Sneaker Drop role: the staff server hands out
- * Access Manager v2 permissions to shop clients by auth key (the older model, before tokens in access-manager.ts).
- *
- * Proves: the grant response carries the permissions the snippet asked for (levels `user`, `uuid`, `category`,
- * `channel`, `subkey`) and, where it is reliable, that a client with the auth key can really publish.
- * Does not prove: downgrades or revokes take effect on a client. Access Manager (v2) caches allows, so a
- * downgrade stays visible only in the response. Grants carry a ttl and are not revoked one by one, only the
- * application level grant is (it would expose the whole keyset). The others sit on run-suffixed names.
+ * Access Manager v2 `grant` examples. These calls require the secret key.
  */
 export default page('api-reference/access-manager-v2', 'P1', (world) => {
   const secured = { keyset: 'pam' } as const;
@@ -37,15 +20,9 @@ export default page('api-reference/access-manager-v2', 'P1', (world) => {
   const publishTo = async (client: PubNub, channel: string): Promise<string> =>
     (await client.publish({ channel, message: { text: 'am-v2' } })).timetoken;
 
-  /**
-   * Closes a grant again (every permission false, ttl 1), because the pam keyset is shared with other test jobs. Category
-   * grants cannot use ttl 1 (the SDK refuses one-minute category grants), so they close with ttl 2.
-   */
   const closeGrant = (params: Record<string, unknown>): Promise<unknown> =>
     world.server.grant({ read: false, write: false, ttl: 1, ...params } as never);
 
-  // Full r/w/m/d grant to one auth key on one channel. The effect check publishes with a client that carries that
-  // auth key, which proves the grant is live. Console logging stays because the snippet's output is shown in docs.
   step('grantBasicUsage', { ...secured, proves: 'grant returns the permissions asked for on one auth key and channel, and a client carrying that auth key can publish there.' }, async () => {
     const pubnub = world.server;
     // snippet.grantBasicUsage
@@ -98,14 +75,8 @@ export default page('api-reference/access-manager-v2', 'P1', (world) => {
     } finally {
       await closeGrant({ authKeys: [world.n('my_authkey')], channels: [world.n('my_channel')] });
     }
-    // No client-side effect check on purpose. Access Manager caches an earlier allow, so a publish after the
-    // downgrade kept succeeding for more than 60 s in live runs, and `audit()` returned no entries for a fresh
-    // grant (live finding).
   });
 
-  // Grants the `-pnpres` companion channel. The snippet literal `my_channel-pnpres` is a registered placeholder
-  // (not a suffixed name, because the suffix has to sit before `-pnpres`), so the step sets its live value
-  // before the snippet runs.
   step('grantPresenceChannelOnAuthKey', { ...secured, proves: 'Granting the -pnpres companion channel returns the permissions for that presence channel.' }, async () => {
     const pubnub = world.server;
     world.setPh('myChannelPnpres', `${world.n('my_channel')}-pnpres`);
@@ -154,7 +125,6 @@ export default page('api-reference/access-manager-v2', 'P1', (world) => {
     }
   });
 
-  // Category grant (all channel metadata and all uuid metadata). The id is the one the live page embeds today.
   step('grantWithCategories', { ...secured, proves: 'A category grant returns the permissions for all channel metadata and all uuid metadata.' }, async () => {
     const pubnub = world.server;
     // snippet.grantWithCategories
@@ -179,10 +149,6 @@ export default page('api-reference/access-manager-v2', 'P1', (world) => {
     }
   });
 
-  // Channel level grant without auth keys, so any client may use the channel. Effect check: a client with no auth
-  // key publishes. The grant sits on a run-suffixed channel and is closed again at the end of the step, because the same
-  // channel name is used later in the run by `publishHandleErrors` (publish.ts, P4), which needs a client without a token
-  // to be refused. That step also waits for the revoke to propagate (up to about 60 s).
   step('grantChannelAllAuthKeys', { ...secured, proves: 'A channel level grant without auth keys opens the channel to a client with no auth key, and the grant is closed again at the end.' }, async () => {
     const pubnub = world.server;
     // snippet.grantChannelAllAuthKeys
@@ -263,7 +229,6 @@ export default page('api-reference/access-manager-v2', 'P1', (world) => {
         label: 'a stranger can read now',
       });
     } finally {
-      // Three attempts and a loud warning. The Mocha root hooks, the janitor and the signal handlers revoke again.
       await revokeApplicationGrant(pubnub);
     }
     // The revoke took, so the keyset is not left open for other modules.

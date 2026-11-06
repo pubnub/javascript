@@ -5,45 +5,7 @@ import { connected, eventually } from '../harness/wait.js';
 import { filterFragments, patchFragments, sortFragments } from '../fixtures/datasync-fragments.js';
 
 /**
- * docs/sdks/javascript/api-reference/datasync.md, plus the four DataSync samples of the subscribe page
- * (addDataSyncListener, subscribeToDataSyncEntity, observeDataSyncEntitiesByPattern, combineDataSyncSubscriptions).
- * Those four live here because they need the same fixtures. They are still reported under this page.
- *
- * Keyset: `secured` (Access Manager and DataSync). Every snippet runs as `world.server`, the client that holds the
- * secret key and signs each request, so no token plumbing is needed. Token-holder behaviour (Alice, Bob) belongs
- * to the Access Manager module.
- *
- * Classes: users, channels and memberships use the Global classes PubNub seeds. Entities need the `product` class
- * and relationships need `ProductOwner`. Both come from provision/datasync-classes.json. While a class is missing,
- * its steps skip as `blocked-by:datasyncClassProduct` and `blocked-by:datasyncClassProductOwner`.
- *
- * Events: DataSync publishes events only for class versions with an event rule, and that rule is switched on in
- * the Admin Portal (no Admin API endpoint). The `datasyncEvents` check probes which object kinds publish. Event
- * steps skip with `needs-feature:datasync-events` for the kinds that do not, which fails the run (harness/policy.ts).
- *
- * Two snippet ids differ from the docs: `createChannelBasicUsage` (also used by the subscribe page) and
- * `getMembershipBasicUsage` (also used by the App Context page) became `createDataSyncChannelBasicUsage` and
- * `getDataSyncMembershipBasicUsage`, because snippet ids are unique across the suite. The datasync page embeds the
- * old names from basic-usage/data-sync.ts and needs the new ones when it switches to this app.
- *
- * Doc inconsistencies the steps work around, all found by live runs:
- * - The membership and relationship create samples set no `id`, but the get, set, patch and remove samples use
- *   fixed ids. The create steps remove the generated object and recreate it with the id the later samples use.
- * - The two membership filter samples used to filter on `role`, which the Global Membership class does not declare
- *   (the service answers 400 DS-1001). They now filter on the built-in `status` field. The check
- *   `datasyncMembershipFilterRejected` records that payload fields stay unfilterable.
- *
- * Phase P2 (App Context era data model, after Access Manager in P1). Sneaker Drop role: DataSync is the shop's
- * live catalogue. Alice (`user-alice`, a shopper) joins the `channel-summer-sale` drop, Bob (`seller-bob`) owns the
- * `product-sneaker-42` entity through a `ProductOwner` relationship. The steps run in the page's order: users,
- * channels, memberships, entities, events, relationships, then removal.
- *
- * Proves: each docs call against the live service returns what the page says (ids with the run suffix, payloads,
- * eTags, sorting, filters, cursor paging) and that removed objects answer 404.
- * Does not prove: token-holder access (Access Manager module), projections that filter events, or event delivery
- * when the keyset's event rules are off. Those steps still prove the subscription connects, then skip with
- * `needs-feature:datasync-events`. Missing classes skip as `blocked-by:*`.
- * The signature and response blocks of the page are not run here.
+ * DataSync examples, including the DataSync listener and subscription examples.
  */
 export default page('api-reference/datasync', 'P2', (world) => {
   const secured = { keyset: 'datasync' as const };
@@ -59,8 +21,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
   };
   const missingClass = (error: unknown): boolean => /404/.test(errorText(error)) && /DS-0100/.test(errorText(error));
 
-  // DS-0100 with HTTP 404 means the class does not exist on the keyset. These probes are cached promises, so the
-  // whole page asks the service once. Any other error is a real failure and is re-thrown.
   let productClass: Promise<boolean> | undefined;
   let ownerClass: Promise<boolean> | undefined;
   const hasProductClass = (): Promise<boolean> =>
@@ -72,8 +32,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
       .getRelationships({ class: 'ProductOwner', limit: 1 })
       .then(() => true, (error) => (missingClass(error) ? false : Promise.reject(error))));
 
-  // Event probe: DataSync only publishes events for class versions whose event rule is on, and nothing in the API
-  // reports that. So the page writes one object of each kind while listening, once, and remembers what arrived.
   type EventKind = 'user' | 'channel' | 'membership' | 'entity' | 'relationship';
   const EVENT_LABEL: Record<EventKind, string> = {
     user: 'User v1',
@@ -139,19 +97,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     return kinds.filter((kind) => !on.has(kind));
   }
 
-  /**
-   * Skips the calling step when `off` is not empty.
-   *
-   * The skip is `needs-feature:datasync-events`: the keyset lacks a switch that only the Admin Portal can set (DataSync
-   * tab, "Select entities to sync", no Admin API endpoint). Every skip fails the run (harness/policy.ts), so a keyset
-   * without the rules cannot pass unnoticed. The detail names the class versions whose create event did not arrive within the probe
-   * window, so the skip says what was observed (no event) and what to do, not a guess about why.
-   *
-   * Event steps call this only after their subscription is connected (see `eventStep` users). With the rules off the
-   * step has still proved that the snippet's subscription code runs and the SDK connects to the data channels
-   * (wildcard and projection channels included). Only the delivery of events is left unverified, and that is
-   * exactly what the skip reports.
-   */
   function skipUnlessEvents(off: EventKind[]): void {
     if (off.length > 0) {
       skipStep(
@@ -162,8 +107,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     }
   }
 
-  // Live ids of the fixed objects the docs samples use. Snippets show the plain literal, the staging rewrite
-  // suffixes it, and the assertions use these to compare with what the service returned.
   const user = (): string => world.n('user-alice');
   const channel = (): string => world.n('channel-summer-sale');
   const membership = (): string => world.n('membership-alice-summer-sale');
@@ -175,8 +118,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
 
   // ---- preconditions -----------------------------------------------------------------------------------------
 
-  // Precondition, no snippet. Skips (not fails) when the `product` class is not provisioned, and every entity step
-  // then skips as `blocked-by:datasyncClassProduct`. Provisioning is a separate approved action (provision/).
   check('datasyncClassProduct', { ...secured, proves: 'Precondition: the product class exists on the keyset, otherwise dependent DataSync steps skip.' }, async () => {
     if (!(await hasProductClass())) {
       skipStep('blocked-by:datasync-class-missing (product v1), run provision/provision-datasync.ts --apply after approval');
@@ -192,8 +133,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     }
   });
 
-  // Runs the event probe and logs which object kinds publish events. Never fails: event steps decide on their own
-  // whether to skip. The long timeout covers the probe window plus connect time.
   check('datasyncEvents', { ...secured, timeout: 90_000, proves: 'Probes which DataSync object kinds publish events, so event steps can skip when event rules are off.' }, async () => {
     const on = await events();
     console.log(`DataSync event rules on: ${[...on].map((k) => EVENT_LABEL[k]).join(', ') || 'none'}`);
@@ -201,8 +140,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
 
   // ---- users -------------------------------------------------------------------------------------------------
 
-  // Creates Alice, the root of the user fixtures. Asserts the echoed payload and that an eTag is returned (later
-  // steps rely on it). Every user step `needs` this one.
   step('createUserBasicUsage', { ...secured, proves: 'createUser creates Alice, echoes the payload and returns an eTag.' }, async () => {
     const pubnub = world.server;
     // snippet.createUserBasicUsage
@@ -233,7 +170,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     assert.equal(response.data.payload?.name, 'Alice');
   });
 
-  // Lists users sorted by `createdAt`. The sort is verified on the returned timestamps, since the snippet only logs.
   step('getUsersBasicUsage', { ...secured, needs: ['createUserBasicUsage'], proves: 'getUsers lists users sorted by createdAt, verified on the returned timestamps.' }, async () => {
     const pubnub = world.server;
     // snippet.getUsersBasicUsage
@@ -251,8 +187,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     assert.deepEqual(created, [...created].sort((a, b) => a - b), 'sorted by createdAt ascending');
   });
 
-  // `filter` runs on eventually consistent storage, so the step polls with the same expression until Alice is
-  // indexed, then runs the snippet once.
   step('getUsersFilterExample', { ...secured, needs: ['createUserBasicUsage'], timeout: 60_000, proves: 'getUsers with filter finds Alice once the eventually consistent index has caught up.' }, async () => {
     const pubnub = world.server;
     // `filter` is eventually consistent, so wait until the service indexed the user before running the sample.
@@ -284,8 +218,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     assert.ok(ids(response).includes(user()), 'filterFast sees the user right after the write');
   });
 
-  // Cursor loop from the page. Console output is captured to prove the loop ran and listed Alice. Real multi-page
-  // paging is covered by the check `datasyncCursorPaging`.
   step('getUsersCursorPagingExample', { ...secured, needs: ['createUserBasicUsage'], proves: 'The cursor paging loop for users runs and lists Alice.' }, async () => {
     const pubnub = world.server;
     await world.withConsole(async (logs) => {
@@ -312,9 +244,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     });
   });
 
-  // `setUser` with `ifMatchesEtag`. The docs show an example eTag (a registered placeholder), so the step stores
-  // Alice's real eTag first. Afterwards it replays the old eTag to prove the guard rejects stale writes. Records a
-  // docs bug: the page promises 412, the service answers 403.
   step('updateUserBasicUsage', { ...secured, needs: ['createUserBasicUsage'], proves: 'setUser with ifMatchesEtag replaces Alice and a stale eTag is rejected.' }, async () => {
     const pubnub = world.server;
     // The sample shows an example eTag. Use the real one, otherwise the guard (correctly) rejects the write.
@@ -334,13 +263,11 @@ export default page('api-reference/datasync', 'P2', (world) => {
     assert.notEqual(response.data.eTag, world.ph('userEtag'), 'the write produced a new eTag');
     await assert.rejects(
       () => api().setUser({ id: user(), data: { classVersion: 1, payload: { name: 'stale' } }, ifMatchesEtag: world.ph('userEtag') }),
-      // The docs promise 412. The service answers 403 "Forbidden" from "Access Manager" (live finding).
       (error: unknown) => /\b(412|403)\b/.test(errorText(error)),
       'the old eTag is now stale',
     );
   });
 
-  // JSON Patch style `updateUser`. Needs the previous step so the starting name is known.
   step('patchUserBasicUsage', { ...secured, needs: ['updateUserBasicUsage'], proves: 'updateUser applies a patch to the user name.' }, async () => {
     const pubnub = world.server;
     // snippet.patchUserBasicUsage
@@ -356,8 +283,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
 
   // ---- channels ----------------------------------------------------------------------------------------------
 
-  // Creates the drop channel. Renamed from `createChannelBasicUsage` because that id is also used by another page
-  // (ids are unique across the suite).
   step('createDataSyncChannelBasicUsage', { ...secured, proves: 'createChannel creates the drop channel and echoes the payload.' }, async () => {
     const pubnub = world.server;
     // snippet.createDataSyncChannelBasicUsage
@@ -385,7 +310,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     assert.equal(response.data.payload?.name, 'Summer Sale');
   });
 
-  // Lists channels, checks the page envelope (`data` array and `meta.has_next`).
   step('getChannelsBasicUsage', { ...secured, needs: ['createDataSyncChannelBasicUsage'], proves: 'getChannels lists channels with the data array and meta.has_next envelope.' }, async () => {
     const pubnub = world.server;
     // snippet.getChannelsBasicUsage
@@ -397,7 +321,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     assert.equal(typeof response.meta?.has_next, 'boolean');
   });
 
-  // Polls until the eventually consistent `filter` index contains the new channel, then runs the snippet.
   step('getChannelsFilterExample', { ...secured, needs: ['createDataSyncChannelBasicUsage'], timeout: 60_000, proves: 'getChannels with filter finds the new channel once the index has caught up.' }, async () => {
     const pubnub = world.server;
     await eventually(async () => {
@@ -502,8 +425,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     assert.deepEqual(response.data.payload, { role: 'viewer' });
   });
 
-  // Reads the membership by its fixed id. Renamed from `getMembershipBasicUsage` (id clash with the App Context
-  // page).
   step('getDataSyncMembershipBasicUsage', { ...secured, needs: ['createMembershipBasicUsage'], proves: 'getMembership reads the membership by its fixed id.' }, async () => {
     const pubnub = world.server;
     // snippet.getDataSyncMembershipBasicUsage
@@ -690,7 +611,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
 
   const entity = { ...secured, needs: ['datasyncClassProduct', 'createEntityBasicUsage'] };
 
-  // Creates the `product` entity, the object most later steps use. Skips with the class precondition.
   step('createEntityBasicUsage', { ...secured, needs: ['datasyncClassProduct'], proves: 'createEntity creates the product entity that later steps use.' }, async () => {
     const pubnub = world.server;
     // snippet.createEntityBasicUsage
@@ -737,7 +657,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     assert.deepEqual(prices, [...prices].sort((a, b) => b - a), 'sorted by price descending');
   });
 
-  // Polls until the eventually consistent `filter` finds the product, then runs the snippet.
   step('getEntitiesFilterExample', { ...entity, timeout: 60_000, proves: 'getEntities with filter finds the product once the index has caught up.' }, async () => {
     const pubnub = world.server;
     await eventually(async () => {
@@ -794,7 +713,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     });
   });
 
-  // Full replace. Sets the price and stock that later patch steps assert against.
   step('updateEntityBasicUsage', { ...entity, proves: 'setEntity replaces the product and sets the price and stock later steps rely on.' }, async () => {
     const pubnub = world.server;
     // snippet.updateEntityBasicUsage
@@ -824,13 +742,8 @@ export default page('api-reference/datasync', 'P2', (world) => {
     assert.equal(response.data.payload?.stock, 8);
   });
 
-  // Mixes all six JSON Patch operations in one call. The patch only applies to a payload that has the touched
-  // fields, so the step first rewrites the entity with them and stores its eTag in the `entityEtag` placeholder.
-  // After the snippet it replays the old eTag to prove the guard rejects it (403 on the service, 412 on the page).
   step('updateEntityCombinedPatchExample', { ...secured, needs: ['patchEntityBasicUsage'], proves: 'One patch call with all six JSON Patch operations applies, and a stale eTag is rejected.' }, async () => {
     const pubnub = world.server;
-    // The patch needs a payload it can apply to: stock 8 for `test`, an existing `tags` array, `legacy.field`
-    // to remove and `legacyName` to move.
     const seeded = await api().setEntity({
       id: product(),
       data: {
@@ -869,15 +782,7 @@ export default page('api-reference/datasync', 'P2', (world) => {
     );
   });
 
-  // ---- first-run probes that need no events ------------------------------------------------------------------
-  //
-  // These are harness checks (no snippet markers). They settle questions that the event steps depend on, so a failure
-  // of an event step can be told apart from a wrong assumption about ids or timing.
 
-  /**
-   * The pattern samples use entity ids with a dot (`product.676`) and subscribe to `product.*`. The wildcard needs a
-   * dot in the id, so first prove the service stores such ids, returns them verbatim, and filters on them.
-   */
   check('datasyncDotIds', { ...secured, needs: ['datasyncClassProduct'], proves: 'Entity ids with a dot are stored verbatim, returned verbatim and found by filterFast.' }, async () => {
     const id = world.n('product.676');
     try {
@@ -892,11 +797,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     }
   });
 
-  /**
-   * `addDataSyncListener` deletes the observed product and creates it again with the same id so the later steps can
-   * use it. Find out whether the service accepts the create straight after the delete, so the step does not need a
-   * retry loop that would hide a real problem. A failure here prints what the service said.
-   */
   check('datasyncDeleteRecreate', { ...secured, needs: ['datasyncClassProduct'], proves: 'An entity can be created again with the same id right after it was deleted.' }, async () => {
     // (Used by addDataSyncListener, which recreates the product it deletes without a retry loop.)
     const id = world.n('product.678');
@@ -911,14 +811,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     }
   });
 
-  /**
-   * The four fragment blocks of the page (filter and sort options, patch forms) are not snippets. This runs every
-   * line of fixtures/datasync-fragments.ts against the service so none of them is only decoration.
-   *
-   * Filters run against class `product`. `filterFast` is strongly consistent and runs at once. `filter` runs on
-   * eventually consistent storage, so each of those is polled until the service accepts it. A 400 is not retried:
-   * it means the expression is invalid, which is what this check exists to find.
-   */
   check('datasyncFragments', { ...secured, needs: ['datasyncClassProduct'], timeout: 120_000, proves: 'Every filter, sort and patch line shown in the DataSync page fragments is accepted or refused by the service as documented.' }, async () => {
     const accepted = async (query: Pick<PubNub.DataSync.GetEntitiesParameters, 'filter' | 'filterFast' | 'sort'>): Promise<void> => {
       await api().getEntities({ ...query, class: 'product', limit: 5 });
@@ -974,14 +866,10 @@ export default page('api-reference/datasync', 'P2', (world) => {
     }
   });
 
-  // ---- real-time events (subscribe page samples and the datasync page sample) ---------------------------------
 
   const eventStep = { ...secured, needs: ['datasyncClassProduct', 'createEntityBasicUsage', 'datasyncEvents'], timeout: 60_000 };
   const logged = (lines: string[], text: string): boolean => lines.some((line) => line.includes(text));
 
-  // Subscribe-page sample. `connected` is registered before the snippet subscribes because statuses are not
-  // replayed. The event check happens only after `skipUnlessEvents`, so with event rules off the step still proves
-  // the subscription connects.
   step('dataSyncEntitySubscribeExample', { ...eventStep, proves: 'The entity subscribe sample connects, and a changed entity arrives as an event when event rules are on.' }, async () => {
     // The probe result is cached, so this decides the skip up front but the skip itself is thrown only after the
     // subscription connected (below).
@@ -1007,8 +895,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     });
   });
 
-  // Subscribe-page sample that observes one entity. Same connect-first, skip-if-no-events structure. Asserts the new
-  // stock arrives in the event payload.
   step('subscribeToDataSyncEntity', { ...eventStep, proves: 'Subscribing to one entity delivers the new stock in the event payload when event rules are on.' }, async () => {
     const off = await offKinds('entity');
     const pubnub = world.server;
@@ -1100,9 +986,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     });
   });
 
-  // Exercises all three branches of the sample's `switch`: update, then delete, then create. Deleting and recreating
-  // the product with the same id is safe because the check `datasyncDeleteRecreate` proved the service allows it,
-  // and the product is back for the steps that follow.
   step('addDataSyncListener', { ...eventStep, proves: 'The listener switch sees update, delete and create events in that order for one product.' }, async () => {
     const off = await offKinds('entity');
     const pubnub = world.server;
@@ -1147,7 +1030,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
         skipUnlessEvents(off);
         await api().updateEntity({ id: product(), replace: { '/payload/price': 69.5 } });
         await eventually(() => assert.ok(logged(logs.lines, 'New price: 69.5')), { label: 'update branch' });
-        // Delete and recreate, which covers the other two branches and leaves the product for the later steps.
         await api().removeEntity({ id: product() });
         await eventually(() => assert.ok(logged(logs.lines, `Product deleted: ${product()}`)), { label: 'delete branch' });
         // The check datasyncDeleteRecreate proved that the service accepts the same id straight after a delete, so no retry
@@ -1160,8 +1042,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     });
   });
 
-  // The projection sample of the "DataSync SDK entities" section of the subscribe page. It only builds two
-  // subscriptions, so it needs no event rules. The harness then subscribes both and checks the two data channels.
   step('dataSyncProjectionSubscriptions', { ...secured, proves: 'Two projection subscriptions connect, and unsubscribing one leaves the other subscribed.' }, async () => {
     const pubnub = world.server;
     // snippet.dataSyncProjectionSubscriptions
@@ -1186,8 +1066,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
 
   const link = { ...secured, needs: ['datasyncClassProductOwner', 'createRelationshipBasicUsage'] };
 
-  // Fixture, no snippet. Creates Bob as a user, the owning end of the `ProductOwner` link. Bob is a DataSync user,
-  // not an Access Manager token holder.
   check('datasyncSellerFixture', { ...secured, needs: ['datasyncClassProductOwner', 'createEntityBasicUsage'], proves: 'Fixture: Bob exists as a DataSync user, the owning end of the ProductOwner link.' }, async () => {
     const created = await api().createUser({ id: seller(), data: { classVersion: 1, payload: { name: 'Bob', type: 'seller' } } });
     assert.equal(created.data.id, seller());
@@ -1261,7 +1139,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     assert.deepEqual(ids(response), [relationship()]);
   });
 
-  // Full replace that adds a `tier` to the payload, which the filter steps then query.
   step('updateRelationshipBasicUsage', { ...link, proves: 'setRelationship replaces the link and adds a tier to its payload.' }, async () => {
     const pubnub = world.server;
     // snippet.updateRelationshipBasicUsage
@@ -1335,7 +1212,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     });
   });
 
-  // Patch of the tier. Runs after the filter steps, which rely on tier `gold`.
   step('patchRelationshipBasicUsage', { ...secured, needs: ['updateRelationshipBasicUsage'], proves: 'updateRelationship patches the tier of the link.' }, async () => {
     const pubnub = world.server;
     // snippet.patchRelationshipBasicUsage
@@ -1349,13 +1225,8 @@ export default page('api-reference/datasync', 'P2', (world) => {
     assert.equal(response.data.payload?.since, '2026-07-13');
   });
 
-  // ---- cursor paging, harness side ----------------------------------------------------------------------------
 
-  // Harness side of paging: pages by one so `next_cursor`, `has_next` and no-duplicates are really exercised, which
-  // the page-size-20 samples never do.
   check('datasyncCursorPaging', { ...secured, needs: ['createUserBasicUsage', 'createDataSyncChannelBasicUsage'], proves: 'Paging one item at a time returns next_cursor and has_next correctly and never repeats an item.' }, async () => {
-    // The samples ask for 20 per page and the keyset holds a handful of objects, so they never leave page one.
-    // Page by one over the two objects of this run to prove `next_cursor` and `has_next` work as described.
     const seen: string[] = [];
     let cursor: string | undefined;
     let pages = 0;
@@ -1374,8 +1245,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
 
   // ---- removal, last --------------------------------------------------------------------------------------------
 
-  // Removal runs last and in dependency order (link, membership, entity, channel, user), so earlier steps can rely
-  // on the fixtures. Each step proves the 404 afterwards.
   step('removeRelationshipBasicUsage', { ...secured, needs: ['patchRelationshipBasicUsage'], proves: 'removeRelationship deletes the link and a read afterwards answers 404.' }, async () => {
     const pubnub = world.server;
     // snippet.removeRelationshipBasicUsage
@@ -1388,7 +1257,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     await assert.rejects(() => api().getRelationship({ id: relationship() }), (error: unknown) => /404/.test(errorText(error)));
   });
 
-  // Removes the membership, then proves it answers 404.
   step('removeMembershipBasicUsage', { ...secured, needs: ['patchMembershipBasicUsage'], proves: 'removeMembership deletes the membership and a read afterwards answers 404.' }, async () => {
     const pubnub = world.server;
     // snippet.removeMembershipBasicUsage
@@ -1401,7 +1269,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     await assert.rejects(() => api().getMembership({ id: membership() }), (error: unknown) => /404/.test(errorText(error)));
   });
 
-  // Removes the product (also removes its links), then proves 404.
   step('removeEntityBasicUsage', { ...secured, needs: ['datasyncClassProduct', 'createEntityBasicUsage'], proves: 'removeEntity deletes the product and a read afterwards answers 404.' }, async () => {
     const pubnub = world.server;
     // snippet.removeEntityBasicUsage
@@ -1412,7 +1279,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     await assert.rejects(() => api().getEntity({ id: product() }), (error: unknown) => /404/.test(errorText(error)));
   });
 
-  // Removes the channel, then proves 404.
   step('removeChannelBasicUsage', { ...secured, needs: ['createDataSyncChannelBasicUsage'], proves: 'removeChannel deletes the DataSync channel and a read afterwards answers 404.' }, async () => {
     const pubnub = world.server;
     // snippet.removeChannelBasicUsage
@@ -1423,7 +1289,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
     await assert.rejects(() => api().getChannel({ id: channel() }), (error: unknown) => /404/.test(errorText(error)));
   });
 
-  // Removes Alice (the janitor also sweeps by run suffix), then proves 404.
   step('removeUserBasicUsage', { ...secured, needs: ['createUserBasicUsage'], proves: 'removeUser deletes Alice and a read afterwards answers 404.' }, async () => {
     const pubnub = world.server;
     // snippet.removeUserBasicUsage
@@ -1436,7 +1301,6 @@ export default page('api-reference/datasync', 'P2', (world) => {
 
   // Removes the one fixture no sample removes (Bob).
   check('datasyncTeardown', { ...secured, proves: 'Teardown removes the one fixture no sample removes (Bob).' }, async () => {
-    // Fixtures that no sample removes. The janitor also sweeps by run suffix, this keeps the keyset tidy on success.
     await api().removeUser({ id: seller() }).catch(() => undefined);
   });
 });

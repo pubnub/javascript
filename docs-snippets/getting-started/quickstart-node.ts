@@ -8,28 +8,11 @@ import { page, step, check } from '../harness/step.js';
 import { eventually } from '../harness/wait.js';
 
 /**
- * docs/sdks/javascript/quickstart-node.md
- *
- * P4. The page walks through one script: import, initialize, listeners, subscription, publish. The first step runs those
- * snippets in the order of the page in one scope, the way a reader pastes them into `index.mjs`, and the client publishes and
- * receives its own message. The second step runs the complete `quickstart-node.mjs` file from the "Run" section in a real
- * Node.js process and reads its output. The `importPubNub` import is in `shared/import-pubnub.ts`.
- *
- * `quickstartNodeListeners` is hardcoded on the docs page today. `quickstartNodePublish` holds the status listener that
- * publishes once the client is connected, with the `try` and `catch` of the docs body.
- *
- * Open keyset. In the Sneaker Drop story this is the first script a new developer runs: connect, listen on `hello_world`, say
- * hello. Proves the four step-by-step snippets work in page order in one scope, that the user id and channel placeholders are
- * what the page says, and that the complete `quickstart-node.mjs` runs as a real Node.js child process and prints the three
- * documented lines. `quickstart-node.mjs` carries no comments on purpose, it is the exact text the docs show.
- * The script publishes after the `PNConnectedCategory` status, so the own message is asserted.
+ * Node.js quickstart examples.
  */
 export default page('getting-started/quickstart-node', 'P4', (world) => {
   const HERE = path.dirname(fileURLToPath(import.meta.url));
 
-  // One step, four snippet ids, because the page reads as one script. `world.withConsole` captures `console.log` so the lines the
-  // page promises ("Connected to PubNub", "Published, timetoken: ...", "Received on ...") can be asserted. The snippets stay in
-  // one function scope, so `pubnub` and `subscription` are visible to the later snippets exactly as on the page.
   step('gettingStartedInitPubnub', { snippets: ['gettingStartedInitPubnub', 'quickstartNodeListeners', 'gettingStartedCreateSubscription', 'quickstartNodePublish'], proves: 'The Node quickstart script connects, publishes and receives, and prints the lines the page promises.' }, async () => {
     await world.withConsole(async (logs) => {
       // snippet.gettingStartedInitPubnub
@@ -94,9 +77,6 @@ export default page('getting-started/quickstart-node', 'P4', (world) => {
     });
   });
 
-  // Why the placeholder replacement is done with `replace`: the file is the docs text with placeholders, so it is never edited
-  // on disk. The child process is registered with `world.trackChild`, so a killed run does not leave a subscribed process behind.
-  // The complete file of the "Run" section, executed with Node.js. Placeholders get the live keys and run-suffixed names.
   check('quickstartNodeRun', { timeout: 60_000, proves: 'The complete quickstart file runs in a Node process, prints Connected and Published, receives its own message, and receives a message from another client.' }, async () => {
     const open = world.env.open!;
     const source = fs

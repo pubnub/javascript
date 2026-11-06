@@ -1,12 +1,6 @@
 /**
- * Snippet source of the React quickstart (docs/sdks/javascript/quickstart-react.md), the step-by-step blocks.
- *
- * The page embeds the snippets below one by one. `quickstart-react-app.tsx` is the complete `src/App.tsx` of the "Run"
- * section. This repository keeps both files for the docs URLs. It cannot run or compile them, because the SDK has no
- * React dependencies.
- *
- * Not run by Mocha (no `page()` module, no phase). `Subscribe` and `Publish` exist only so the hook calls of the snippets sit inside
- * a component for the compiler, they are not rendered. `quickstart-react-app.tsx` has no comments of its own, its text is the docs text.
+ * React quickstart examples. `Subscribe` and `Publish` only place the hook calls inside a component. They are not
+ * rendered.
  */
 
 // snippet.quickstartReactImports

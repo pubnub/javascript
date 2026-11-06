@@ -5,37 +5,18 @@ import { rejectsValidation } from '../harness/assertions.js';
 import { granted } from './access-manager.js';
 
 /**
- * docs/sdks/javascript/api-reference/access-manager-legacy.md (`grantToken` with `spaces` and `users`)
- *
- * Secured keyset, `world.server`. The SDK still maps the deprecated terms to the current ones, so a `spaces`
- * grant is readable in the parsed token as `channels`. The four samples of the page were fenced blocks, so
- * their snippet ids are new. The mixing rules of the deprecated scopes are asserted without sending anything.
- *
- * Phase P8 (legacy pages). Sneaker Drop role: the staff server issues tokens with the old vocabulary
- * (`spaces`, `users`, `uuids`, `authorized_uuid`) that older shop code still sends.
- *
- * Proves: each snippet gets a token from the service, and the parsed token carries the deprecated scopes under
- * their current names (`spaces` becomes `channels`, `users` stays `users`). The checks cover the alias parameter
- * and the client-side mixing errors.
- * Does not prove: that a deprecated token authorizes real traffic. No client uses these tokens, and the token
- * format is covered by access-manager.ts. The mixing errors are validation errors raised before any request.
+ * Access Manager token examples that use the deprecated `spaces`, `users` and `uuids` terms. The SDK maps them to the
+ * current terms, so a `spaces` grant appears as `channels` in the parsed token.
  */
 export default page('api-reference/access-manager-legacy', 'P8', (world) => {
   const secured = { keyset: 'pam' } as const;
 
-  /**
-   * The public `grantToken` overloads do not accept `spaces` (live finding). The SDK
-   * exports `ObjectsGrantTokenParameters` for the deprecated vocabulary, so the snippets type-check against it.
-   */
   interface LegacyGrantClient {
     grantToken(parameters: PubNub.PAM.ObjectsGrantTokenParameters): Promise<string>;
     parseToken: PubNub['parseToken'];
   }
   const legacy = (): LegacyGrantClient => world.server as unknown as LegacyGrantClient;
 
-  // Proves a `spaces` grant round-trips: the parsed token lists the space under `channels`. The user id is
-  // asserted with the run suffix because the staging rewrite suffixes `my-authorized-userId`. The client is
-  // bound outside the markers through `legacy()` so the snippet can use the deprecated shape.
   step('grantTokenSpacesBasicUsage', { ...secured, proves: 'A grant that uses the deprecated spaces scope returns a token whose parsed form lists the space under channels.' }, async () => {
     const pubnub = legacy();
     // snippet.grantTokenSpacesBasicUsage
@@ -200,9 +181,6 @@ export default page('api-reference/access-manager-legacy', 'P8', (world) => {
     assert.deepEqual(granted(parsed?.patterns?.channels?.['^space-[A-Za-z0-9]$']), { read: true });
   });
 
-  // Deprecated parameter and scope sections of the page (prose, no snippets).
-  // `authorized_uuid` and `authorizedUserId` must produce the same token owner, and giving both is a validation
-  // error. The cast to `never` bypasses the type guard that forbids the combination, on purpose.
   check('accessManagerLegacyAuthorizedUuidAlias', { ...secured, proves: 'authorized_uuid and authorizedUserId produce the same token owner, and passing both is a validation error.' }, async () => {
     const server = world.server;
     const user = world.n('my-authorized-userId');

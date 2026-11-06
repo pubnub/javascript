@@ -1,16 +1,6 @@
 /**
- * Snippet source of the React Native quickstart (docs/sdks/javascript/quickstart-react-native.md), the step-by-step
- * blocks. The page shows them as loose fragments, so each one sits inside a small host component here, with the names
- * the fragment expects (`pubnub`, `styles`, the React Native components) in scope. The snippet bodies are the exact text
- * of the page.
- *
- * `quickstart-react-native-app.tsx` is the complete `App.tsx` ("Set up event listeners" and "Complete example", the same
- * text twice on the page). This repository keeps the files for the docs URLs. It cannot run or compile them, because the
- * SDK has no React Native dependencies.
- *
- * Not run by Mocha (no `page()` module, no phase).
- * `quickstart-react-native-app.tsx` has no comments of its own, its text is the docs text. The odd indentation of the
- * snippet bodies below is the docs text too.
+ * React Native quickstart examples. Each fragment sits inside a small host component with the names it expects
+ * (`pubnub`, `styles` and the React Native components) in scope.
  */
 import React, { useEffect, useState } from 'react';
 import { Alert, Button, StyleSheet, TextInput, View } from 'react-native';

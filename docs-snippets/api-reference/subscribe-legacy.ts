@@ -4,21 +4,9 @@ import { recorder } from '../harness/recorder.js';
 import { connected, eventually, expectEvent, expectStatus, KindLog, PRESENCE_EVENT_TIMEOUT, sleep } from '../harness/wait.js';
 
 /**
- * docs/sdks/javascript/api-reference/subscribe-legacy.md
- *
- * Keyset: open. Phase: P8 "Legacy", the group fixture runs in P3. `pubnub.subscribe()`, `pubnub.unsubscribe()` and
- * `pubnub.unsubscribeAll()` are the older way to call Subscribe. In the Sneaker Drop story this is the original shop
- * app before it moved to subscription objects.
- *
- * Every step runs on its own throwaway client (`world.fresh`) so it cannot disturb the subscriptions of the P4 steps,
- * and a second client (`friend`) publishes. The docs show the `OLD*` snippet ids, which this module keeps. Two ids are
- * new because the docs page still hardcodes those blocks: `OLDaddListeners` and `OLDremoveListeners`.
- * Waits follow the pattern `connected()` and `expectEvent()` registered before the snippet, then the publish.
- * What it proves: subscribe forms, listeners, unsubscribe forms. Two checks record where the docs and the SDK disagree
- * (status fields, see below).
+ * Examples for the older `pubnub.subscribe()`, `pubnub.unsubscribe()` and `pubnub.unsubscribeAll()` methods.
  */
 export default page('api-reference/subscribe-legacy', 'P8', (world) => {
-  // Every message the friend publishes carries `{ legacy: <tag> }`, so a step can recognise its own message.
   const tag = (m: { message: unknown }): string | undefined => (m.message as { legacy?: string }).legacy;
   // Subscription state lists have no guaranteed order.
   const sorted = (values: string[]): string[] => [...values].sort();
@@ -28,7 +16,7 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
   const GROUPS = ['my_channelGroup', 'family', 'my_channelGroup1', 'my_channelGroup2', 'my_channelGroup3', 'demo_group1', 'demo_group2'];
   const member = (group: string): string => `${world.n(group)}_member`;
 
-  // Creates every group above with its member channel. Several groups share names with channel-groups.ts (`family`), which cleans up after itself.
+  // Creates every group above with its member channel.
   check('legacyGroupsFixture', { phase: 'P3', proves: 'Fixture: every channel group of the legacy subscribe page exists with a member channel.' }, async () => {
     for (const group of GROUPS) {
       await world.friend.channelGroups.addChannels({ channelGroup: world.n(group), channels: [member(group)] });
@@ -41,7 +29,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     }, { label: 'legacy groups have their members' });
   });
 
-  // Proves pubnub.subscribe({ channels }) connects and delivers.
   step('OLDsubscribeBasicUsage', { proves: 'The legacy subscribe call connects and delivers a message.' }, async () => {
     const pubnub = world.fresh('oldsub');
     const channel = world.n('my_channel');
@@ -61,7 +48,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves one subscribe call covers three channels, checked by a message on the middle one.
   step('OLDsubscribeMultipleChannels', { proves: 'One legacy subscribe call covers three channels, shown by a message on the middle one.' }, async () => {
     const pubnub = world.fresh('oldmulti');
     const channels = ['my_channel_1', 'my_channel_2', 'my_channel_3'].map((c) => world.n(c));
@@ -81,7 +67,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves withPresence: true yields the client's own join event with the fields the docs table lists.
   step('OLDsubscribeWithPresence', { needs: ['preflightPresence'], proves: 'withPresence true produces the own join event with the fields the page table lists.' }, async () => {
     const pubnub = world.fresh('oldpresence');
     const channel = world.n('my_channel');
@@ -103,7 +88,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves a wildcard subscription receives a message on a matching channel, reported as the subscription.
   step('OLDsubscribeWithWildCardChannels', { proves: 'A wildcard subscription receives a message on a matching channel.' }, async () => {
     const pubnub = world.fresh('oldwild');
     const root = world.n('ab.*');
@@ -125,8 +109,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves the connected-status handler can set state. The observer reads the state back per channel, because with several
-  // channels getState nests its result one level deeper (docs finding).
   step('OLDsubscribeWithState', { needs: ['preflightPresence'], timeout: 60_000, proves: 'The connected status handler can set state, and the observer reads it back per channel.' }, async () => {
     const pubnub = world.fresh('oldstate');
     const channels = ['ch1', 'ch2', 'ch3'].map((c) => world.n(c));
@@ -169,7 +151,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves subscribing to a group delivers a message from its member channel, reported with the group as subscription.
   step('OLDsubscribeChannelGroup', { needs: ['legacyGroupsFixture'], proves: 'Subscribing to a channel group delivers a message from its member channel.' }, async () => {
     const pubnub = world.fresh('oldgroup');
     const group = world.n('my_channelGroup');
@@ -190,7 +171,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves a group subscription with presence yields a join event that belongs to the group.
   step('OLDsubscribeChannelGroupWithPresence', { needs: ['legacyGroupsFixture', 'preflightPresence'], timeout: 60_000, proves: 'A group subscription with presence yields a join event that belongs to the group.' }, async () => {
     const pubnub = world.fresh('oldgrouppresence');
     const group = world.n('family');
@@ -210,7 +190,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves one call subscribes to three groups, checked by a message through the last group.
   step('OLDsubscribeMultipleChannelGroup', { needs: ['legacyGroupsFixture'], proves: 'One call subscribes to three groups, shown by a message through the last group.' }, async () => {
     const pubnub = world.fresh('oldgroups');
     const groups = ['my_channelGroup1', 'my_channelGroup2', 'my_channelGroup3'].map((g) => world.n(g));
@@ -230,7 +209,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves channels and groups can be mixed in one call, with one message through each.
   step('OLDsubscribeChannelGroupAndChannels', { needs: ['legacyGroupsFixture'], proves: 'Channels and groups can be mixed in one call, shown by a message through each.' }, async () => {
     const pubnub = world.fresh('oldmixed');
     const [channel, group] = [world.n('my_channel'), world.n('my_channelGroup')];
@@ -253,20 +231,10 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // The listener samples. The docs page hardcodes them, so these two ids are proposed ids, the docs page does not embed them yet.
-  // Why the step is built this way (an intermittent 30 s timeout on a presence event):
-  // - The snippet names no channel, so the step uses its own channel (`legacy_listeners_channel`) and not the shared `my_channel`.
-  //   On `my_channel` other steps join and leave in the same seconds, which can satisfy or starve a "some presence event arrived" wait.
-  // - The presence event is caused on purpose: a second fresh client joins the channel and later leaves. The wait is for exactly
-  //   that join, so it does not depend on whether the client's own join falls before or after its first subscribe timetoken.
-  //   The own join is still recorded in the report, but not asserted.
   step('OLDaddListeners', { needs: ['preflightPresence'], timeout: 90_000, proves: 'The legacy listener sample handlers see status, message and presence events whose fields exist on live events.' }, async () => {
     const pubnub = world.fresh('oldlisteners');
     const joiner = world.fresh('oldlistenersjoiner');
     const channel = world.n('legacy_listeners_channel');
-    // A recording listener next to the snippet's own proves that the fields the snippet reads exist on the live events.
-    // KindLog keeps a count and the first arrival time per kind, so a timeout names the missing kinds. `match` narrows each
-    // kind to the event this step caused.
     const log = new KindLog(['message', 'presence', 'signal', 'objects', 'messageAction', 'status'], {
       message: (m) => (m.message as { legacy?: string }).legacy === 'listeners',
       presence: (p) => p.action === 'join' && p.uuid === joiner.getUserId(),
@@ -393,7 +361,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     // Recording it keeps the question open in the report instead of hiding it.
     recorder.record({ kind: 'event', label: `own join event ${seen.presence.some((p) => p.action === 'join' && p.uuid === pubnub.getUserId()) ? 'was' : 'was NOT'} delivered to the subscribing client (not asserted)`, ok: true });
 
-    // The fields the snippet reads exist on the live payloads.
     const [message] = seen.message;
     assert.equal(message.channel, channel);
     assert.equal(message.publisher, world.friend.getUserId());
@@ -432,7 +399,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     await world.friend.objects.removeChannelMetadata({ channel });
   });
 
-  // The sample above and the page's status table list lastTimetoken and subscribedChannels. Only the legacy manager sets them.
   check('legacyStatusFieldsByEventEngine', { proves: 'lastTimetoken and subscribedChannels are set on the status only by the legacy subscription manager.' }, async () => {
     const channel = world.n('my_channel');
     for (const enableEventEngine of [true, false]) {
@@ -451,9 +417,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     }
   });
 
-  // The sample removes a listener object it declares itself, so the step can only observe that the call is targeted: the
-  // client's other listener keeps receiving and the removed object receives nothing. The effect of removing a listener that
-  // was added is the next check.
   step('OLDremoveListeners', { timeout: 45_000, proves: 'removeListener leaves the other listeners of the client working, and the removed object receives nothing.' }, async () => {
     const pubnub = world.fresh('oldremove');
     const channel = world.n('my_channel');
@@ -501,7 +464,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves unsubscribe({ channels }) drops the channel. The setup subscribes first, since there is nothing to unsubscribe from otherwise.
   step('OLDUnsubscribeBasicUsage', { proves: 'unsubscribe with channels drops that channel.' }, async () => {
     const pubnub = world.fresh('oldunsub');
     const channel = world.n('my_channel');
@@ -519,7 +481,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     await eventually(() => assert.deepEqual(pubnub.getSubscribedChannels(), []), { label: 'channel dropped' });
   });
 
-  // Proves unsubscribing three of four channels leaves exactly the fourth.
   step('OLDUnsubscribeMultipleChannels', { proves: 'Unsubscribing three of four channels leaves exactly the fourth.' }, async () => {
     const pubnub = world.fresh('oldunsubmulti');
     const channels = ['chan1', 'chan2', 'chan3', 'ch1'].map((c) => world.n(c));
@@ -538,7 +499,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves unsubscribing two of three groups leaves exactly the third.
   step('OLDUnsubscribeMultipleChannelGroup', { needs: ['legacyGroupsFixture'], proves: 'Unsubscribing two of three groups leaves exactly the third.' }, async () => {
     const pubnub = world.fresh('oldunsubgroups');
     const groups = ['demo_group1', 'demo_group2', 'family'].map((g) => world.n(g));
@@ -556,7 +516,6 @@ export default page('api-reference/subscribe-legacy', 'P8', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves unsubscribeAll clears channels and groups. The disconnected status promise is only there so a rejection after the run cannot surface as an unhandled rejection.
   step('OLDUnsubscribeAllBasicUsage', { needs: ['legacyGroupsFixture'], proves: 'unsubscribeAll clears all channels and groups.' }, async () => {
     const pubnub = world.fresh('oldunsuball');
     const channels = ['ch1', 'ch2'].map((c) => world.n(c));

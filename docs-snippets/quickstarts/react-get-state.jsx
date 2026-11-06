@@ -1,5 +1,4 @@
-// docs/sdks/javascript/api-reference/presence.md, React tab. Between the markers: the exact text of the page. The export at the end of
-// the file is not on the page (the page does not export the component), a separate React test project imports it.
+// React example. The component export at the end of the file is not part of the example.
 // snippet.reactGetState
 import React, { useState, useEffect } from 'react';
 import PubNub from 'pubnub';

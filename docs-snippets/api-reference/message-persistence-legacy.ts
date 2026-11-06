@@ -6,17 +6,7 @@ import { recorder } from '../harness/recorder.js';
 import { addToTimetoken } from '../harness/assertions.js';
 
 /**
- * docs/sdks/javascript/api-reference/message-persistence-legacy.md
- *
- * Keyset: open. Phase: P8 "Legacy". In the Sneaker Drop story this is the old way the shop app read a drop's history.
- * `history()` is the deprecated reader of Message Persistence, and the page also documents the deprecated `data`
- * property of `actions` on `fetchMessages()`. The docs page hardcodes every sample, so the snippet ids below are
- * proposed ids, the docs page does not embed them yet.
- *
- * Every step seeds its own messages with the `friend` client and waits until they are stored before it runs the
- * snippet once (storage is eventually consistent). The two `check`s at the end have no snippet: they prove the prose
- * and Returns block of the page. The history anchors in the docs are 1970 literals, so each step maps them to live
- * timetokens through placeholders (`world.setPh`). It does not prove retention expiry.
+ * Examples for the deprecated `history()` method and the deprecated `data` property of `actions` on `fetchMessages()`.
  */
 export default page('api-reference/message-persistence-legacy', 'P8', (world) => {
   // Publishes `count` messages as the friend, optionally with `meta`, and returns their timetokens, oldest first.
@@ -73,7 +63,6 @@ export default page('api-reference/message-persistence-legacy', 'P8', (world) =>
   // history() always returns oldest first, whatever `reverse` is.
   const isAscending = (tokens: string[]): boolean => tokens.every((t, i) => i === 0 || BigInt(tokens[i - 1]) < BigInt(t));
 
-  // Proves history() returns the three seeded messages oldest first, with start and end timetokens of the first and last item.
   step('historyBasicUsage', { needs: ['preflightPersistence'], proves: 'history returns the three seeded messages oldest first with the start and end timetokens.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('history_channel');
@@ -102,7 +91,6 @@ export default page('api-reference/message-persistence-legacy', 'P8', (world) =>
     assert.equal(result.endTimeToken, tokens[2]);
   });
 
-  // Proves reverse: true with count 3 returns the three OLDEST messages of the channel (expected values come from fetchMessages).
   step('historyOldestThree', { needs: ['preflightPersistence'], proves: 'history with reverse true and count 3 returns the three oldest messages.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('my_channel');
@@ -131,7 +119,6 @@ export default page('api-reference/message-persistence-legacy', 'P8', (world) =>
     assert.deepEqual(tokensOf(result), expected, 'the three oldest messages of the channel');
   });
 
-  // Proves reverse + start returns messages newer than the anchor. The anchor is a placeholder set to the middle message, start is exclusive.
   step('historyNewerThanTimetoken', { needs: ['preflightPersistence'], proves: 'history with reverse and start returns only messages newer than the anchor, and start is exclusive.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('my_channel');
@@ -163,7 +150,6 @@ export default page('api-reference/message-persistence-legacy', 'P8', (world) =>
     assert.ok(isAscending(tokens));
   });
 
-  // Proves `end` alone returns messages down to the anchor, and end is inclusive (the anchor is the oldest returned).
   step('historyUntilTimetoken', { needs: ['preflightPersistence'], proves: 'history with only end returns messages down to the anchor, and end is inclusive.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('my_channel');
@@ -194,14 +180,6 @@ export default page('api-reference/message-persistence-legacy', 'P8', (world) =>
     assert.ok(isAscending(tokens));
   });
 
-  // Proves the docs' own paging helper collects every message. 120 messages means two pages, so the loop must page.
-  // The helper is polled with `eventually` because the oldest messages can lag behind the newest 100.
-  //
-  // The SDK does not retry history, and one lost DNS lookup (`getaddrinfo ENOTFOUND`) on a developer machine failed a whole run.
-  // So this step uses its own client whose `history` retries ONLY a PNNetworkIssuesCategory failure, at most 3 attempts with a
-  // growing pause. Any other failure (access denied, validation, a wrong result) is thrown at once, and a third network failure
-  // is thrown with the retry count in the message. The retries are listed in the report. The snippet text is unchanged,
-  // it calls `pubnub.history` and gets the wrapped method.
   step('historyPagingExample', { needs: ['preflightPersistence'], timeout: 120_000, proves: 'The paging helper of the page collects all 120 messages across two pages.' }, async () => {
     const pubnub = world.fresh('history-paging');
     const originalHistory = pubnub.history.bind(pubnub) as (...args: unknown[]) => Promise<unknown>;
@@ -282,7 +260,6 @@ export default page('api-reference/message-persistence-legacy', 'P8', (world) =>
     assert.equal(fromMiddle.length, 59, 'start is exclusive, so only the 59 messages before the 60th are returned');
   });
 
-  // Proves includeMeta returns `meta` for a message published with metadata and omits the property for others.
   step('historyIncludeMeta', { needs: ['preflightPersistence'], proves: 'includeMeta returns meta for a message published with metadata and omits it for others.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('my_channel');
@@ -312,8 +289,6 @@ export default page('api-reference/message-persistence-legacy', 'P8', (world) =>
     assert.ok(result.messages.some((m) => m.meta === undefined), 'messages without metadata have no meta property');
   });
 
-  // Proves the promise form works. The snippet only logs, so the step captures console.log and parses the logged response.
-  // The docs literals follow the parameter table: start is the higher timetoken, end the lower one.
   step('historyWithPromises', { needs: ['preflightPersistence'], proves: 'The promise form of history logs the response with the expected messages.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('history_channel');
@@ -347,9 +322,7 @@ export default page('api-reference/message-persistence-legacy', 'P8', (world) =>
     });
   });
 
-  // ---- the prose and the Returns block of the page -------------------------------------------------------------
 
-  // Proves the prose claims of the page (cap of 100, ordering, Returns fields, number vs string timetokens, start/end order). Needs the paging step's channel of 120 messages.
   check('historyDocumentedBehavior', { needs: ['historyPagingExample'], timeout: 60_000, proves: 'The prose claims of the history page hold: the cap of 100, ordering, returned fields and timetoken types.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('history_test');
@@ -387,7 +360,6 @@ export default page('api-reference/message-persistence-legacy', 'P8', (world) =>
     assert.ok(ordered.messages.length > 0, 'start above end returns the messages in between');
   });
 
-  // Proves the deprecated `data` property on actions equals `actions`, and that both are absent without includeMessageActions.
   check('historyActionsDataDeprecated', { needs: ['preflightPersistence'], proves: 'The deprecated data property of actions equals actions, and both are absent without includeMessageActions.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('persist_channel');

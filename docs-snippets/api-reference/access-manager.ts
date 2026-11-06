@@ -9,26 +9,7 @@ export const granted = (permissions: object | undefined): Record<string, boolean
   Object.fromEntries(Object.entries(permissions ?? {}).filter(([, value]) => value === true));
 
 /**
- * docs/sdks/javascript/api-reference/access-manager.md (Access Manager v3 tokens)
- *
- * Secured keyset only. The docs call `grantToken` as a server that holds the secret key, so every snippet runs
- * as `world.server`. Property keys inside `resources` and `patterns` (`'channel-a'`, `'user-bob'`) are never
- * rewritten by the staging step, only values are. The authorized user ids are registered names, so each run
- * grants to its own user ids and never touches another module's tokens.
- *
- * Alice and Bob: the check `accessManagerTokenFixture` grants them real tokens for the private room
- * `am_room`, wires Bob through `world.setToken('bob', ...)` and leaves Alice's token to `setTokenBasicUsage`,
- * which is the docs sample for exactly that call.
- *
- * Phase P1. Sneaker Drop role: the staff server (secret key) issues Access Manager (v3) tokens to the shop's
- * clients. Alice (read and write) and Bob (read only) share the private room `am_room`.
- *
- * Proves: every `grantToken` sample returns a token the SDK can parse, and the parsed token holds the scopes the
- * snippet asked for. Real enforcement is proven for the room (Alice publishes, Bob and a stranger are denied)
- * and for `revokeToken` (a revoked token ends up rejected).
- * Does not prove: that the DataSync scopes (`dataSync`, `dataSyncProjections`) are enforced. Those two samples
- * only check that the token is created and parses, enforcement belongs to the DataSync page. Also not proven:
- * the ttl expiring, which would take 15 minutes.
+ * Access Manager v3 token examples. The `grantToken` calls run on a server that holds the secret key.
  */
 export default page('api-reference/access-manager', 'P1', (world) => {
   const secured = { keyset: 'pam' } as const;
@@ -41,10 +22,6 @@ export default page('api-reference/access-manager', 'P1', (world) => {
     return response.timetoken;
   };
 
-  // Harness fixture, no snippet. Grants Alice read and write and Bob read only on `am_room`, installs Bob's token
-  // on his client and keeps both tokens for the steps below (`needs` this check). The assertions prove the
-  // fixture works, so later failures point at the snippet and not at the setup: Bob is denied on publish but
-  // can subscribe, and `connected` is registered before `subscribe()` because statuses are not replayed.
   check('accessManagerTokenFixture', { keyset: 'pam', timeout: 60_000, proves: 'Fixture: Alice gets read and write and Bob read only on the room, and Bob is denied on publish but can subscribe.' }, async () => {
     const server = world.server;
     const room = world.n('am_room');
@@ -69,8 +46,6 @@ export default page('api-reference/access-manager', 'P1', (world) => {
     subscription.unsubscribe();
   });
 
-  // Basic `grantToken` sample. The parsed token is checked field by field (user id with run suffix, channel
-  // permissions, ttl). The token is stored as the `grantedToken` placeholder for snippets that parse it later.
   step('accessManagerBasicUsage', { ...secured, proves: 'grantToken returns a token whose parsed form carries the user id, channel permissions and ttl that were asked for.' }, async () => {
     const pubnub = world.server;
     // snippet.accessManagerBasicUsage
@@ -96,9 +71,6 @@ export default page('api-reference/access-manager', 'P1', (world) => {
     world.setPh('grantedToken', token);
   });
 
-  // The docs pass a literal token (a registered placeholder, so the staged snippet revokes the real one). The step
-  // first builds a user with a working token, so the revoke has an effect to observe. The long timeout and the
-  // polling exist because the service caches the non-revoked state for up to a minute.
   step('revokeTokenBasicUsage', { ...secured, timeout: 240_000, proves: 'revokeToken makes a working token stop working, observed by a client that was allowed before and by two fresh clients with the same token.' }, async () => {
     // Fixture: a user with a working token, so the effect of the revoke is visible.
     const room = world.n('am_other');
@@ -122,8 +94,6 @@ export default page('api-reference/access-manager', 'P1', (world) => {
       // The docs say a revoke can take up to one minute, because the non-revoked state is cached for that long.
       { timeout: 100_000, interval: 2_000, label: 'revoked token is rejected' },
     );
-    // Enforcement reaches the service nodes unevenly, so one refusal is not enough. Two fresh clients with the same user id
-    // and the revoked token (a client without any token would be refused anyway and prove nothing) must be refused too.
     for (const attempt of [1, 2]) {
       const fresh = world.client('secured', 'am-revokee');
       fresh.setToken(token);
@@ -134,8 +104,6 @@ export default page('api-reference/access-manager', 'P1', (world) => {
     }
   });
 
-  // `parseToken` is local. The snippet parses a placeholder, the assertions parse Alice's real token from the
-  // fixture and check owner and permissions.
   step('parseTokenBasicUsage', { ...secured, needs: ['accessManagerTokenFixture'], proves: 'parseToken decodes a token locally, and the fixture token shows the right owner and permissions.' }, () => {
     const pubnub = world.server;
     world.setPh('grantedToken', aliceToken);
@@ -147,8 +115,6 @@ export default page('api-reference/access-manager', 'P1', (world) => {
     assert.deepEqual(granted(parsed?.resources?.channels?.[world.n('am_room')]), { read: true, write: true });
   });
 
-  // Alice starts without a token and is denied. The snippet installs the token (placeholder staged to Alice's
-  // real token), then the effect is checked: she publishes to her room, not to another one, and Bob stays read only.
   step('setTokenBasicUsage', { ...secured, needs: ['accessManagerTokenFixture'], timeout: 60_000, proves: 'setToken lets Alice publish to her room but not to another, while Bob stays read only.' }, async () => {
     const pubnub = world.alice;
     const room = world.n('am_room');
@@ -314,8 +280,6 @@ export default page('api-reference/access-manager', 'P1', (world) => {
     world.setPh('grantedToken', token);
   });
 
-  // Parses the token from the previous step through the placeholder. `needs` it because the placeholder only has
-  // a value after that step passed.
   step('parseTokenWithCategories', { ...secured, needs: ['grantTokenWithCategories'], proves: 'parseToken reads the category permissions of the token created by the previous step.' }, () => {
     const pubnub = world.server;
     // snippet.parseTokenWithCategories
@@ -329,8 +293,6 @@ export default page('api-reference/access-manager', 'P1', (world) => {
     assert.equal(parsedToken?.categories?.uuids?.get, true);
   });
 
-  // DataSync scopes in a token (`dataSync.entities` plus the top-level `users` scope for DataSync users). Creation
-  // and parsing only. The ids are registered DataSync names, so the authorized user is Alice's suffixed id.
   step('grantTokenDataSyncResources', { keyset: 'datasync', proves: 'A token can carry DataSync entity scopes and the top-level users scope, and parseToken returns them.' }, async () => {
     const pubnub = world.server;
     // snippet.grantTokenDataSyncResources
@@ -373,10 +335,6 @@ export default page('api-reference/access-manager', 'P1', (world) => {
     assert.ok(parsed?.resources, 'the token carries resources');
   });
 
-  // Same grant plus `dataSyncProjections`. Creation and parsing only. `authorizedUserId` combines with `dataSyncProjections`
-  // in the SDK types (checked with tsc). The projection is assigned to entities of the `product` class only, because that
-  // class declares `public`. The built-in Global User class declares only `__default__`, so a `public` assignment to a
-  // user would make the token fail with 403 when used (docs row 24, the page now assigns no user projection).
   step('grantTokenWithProjection', { keyset: 'datasync', proves: 'A token with dataSyncProjections is created and parsed, and the projection assignment for an entity of a class that declares it is carried in the token.' }, async () => {
     const pubnub = world.server;
     // snippet.grantTokenWithProjection
@@ -430,7 +388,6 @@ export default page('api-reference/access-manager', 'P1', (world) => {
     assert.equal(parsed.meta?.['pn-projections']?.pat?.['datasync:entities:product-.*'], 'public');
   });
 
-  // Error behavior the page documents or implies. Local validation, no token is created.
   check('accessManagerGrantTokenErrors', { ...secured, proves: 'The documented grantToken mistakes are refused locally with validation errors and create no token.' }, async () => {
     const server = world.server;
     await rejectsValidation(server.grantToken({ ttl: 15 } as never), /Missing values for either Resources or Patterns/);

@@ -4,20 +4,9 @@ import { eventually, watch } from '../harness/wait.js';
 import { addToTimetoken } from '../harness/assertions.js';
 
 /**
- * docs/sdks/javascript/api-reference/message-actions.md
- *
- * Keyset: open (needs Message Persistence, hence the `preflightPersistence` dependency). Phase: P4. In the Sneaker Drop
- * story a friend posts a message in a drop channel and the shopper reacts to it.
- *
- * The docs snippets use placeholder timetokens (`replace_with_message_timetoken` and friends). The staged copy turns
- * them into `world.ph(...)` calls, and each step sets the live values with `world.setPh` before the snippet runs.
- * What it proves: add, remove and get of message actions, including the `messageAction` event a second subscriber
- * sees. What it does not prove: pagination of getMessageActions beyond one action.
+ * Message action examples.
  */
 export default page('api-reference/message-actions', 'P4', (world) => {
-  // Proves addMessageAction returns the action and that a subscriber gets an `added` messageAction event.
-  // The observer subscribes BEFORE the action is added (watch records events, so the later `next` cannot race it).
-  // The action timetoken is stored as a placeholder for the remove step.
   step('addMessageActionBasicUsage', { needs: ['preflightPersistence'], proves: 'addMessageAction returns the action and a subscriber receives an added event.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('channel_name');
@@ -48,9 +37,6 @@ export default page('api-reference/message-actions', 'P4', (world) => {
     listening.stop();
   });
 
-  // Proves removeMessageAction emits a `removed` event and that the action disappears from the stored list.
-  // Reads the message and action timetokens placeholders set by the add step, hence the `needs`.
-  // The list read polls: storage lags the event slightly.
   step('removeMessageActionBasicUsage', { needs: ['addMessageActionBasicUsage', 'preflightPersistence'], proves: 'removeMessageAction emits a removed event and the action disappears from the stored list.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('channel_name');
@@ -74,12 +60,9 @@ export default page('api-reference/message-actions', 'P4', (world) => {
     listening.stop();
   });
 
-  // Proves getMessageActions returns the one action added during setup, with the right type, value and message timetoken.
-  // start and end are placeholders around that single action, so the result is exactly one entry.
   step('getMessageActionsBasicUsage', { needs: ['preflightPersistence'], proves: 'getMessageActions returns the one action added during setup with the right type, value and message timetoken.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('channel_name');
-    // Publish a message and add one action to it, as the snippet comment asks.
     const published = await world.friend.publish({ channel, message: { text: 'count my reactions' } });
     const added = await world.friend.addMessageAction({
       channel,

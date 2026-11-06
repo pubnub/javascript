@@ -11,32 +11,15 @@ import PubNub from 'pubnub';
 import { page, step, check } from '../harness/step.js';
 
 /**
- * docs/sdks/javascript/set-up-your-environment.md
- *
- * P0. Most of the page is shell commands, HTML and prose. What can run headless runs here: the TypeScript sample and
- * its `tsconfig.json` (compiled with the real `tsc`), the module format claims (ESM, CommonJS, `.mjs`, `"type": "module"`),
- * the build module table against `rollup.config.js`, the CDN URLs, and the Webpack configuration (syntax only).
- * The shared worker sample needs a browser and is type-checked only.
- *
- * `setUpTypeScriptInit` is hardcoded on the docs page today, so that id is a proposed id, the docs page does not embed it yet. The import
- * line sits outside the snippet, because a step body cannot hold an import (`importPubNub` embeds it).
- *
- * Open keyset for the one live step, everything else needs no keys. In the Sneaker Drop story this is the developer's laptop
- * being prepared: toolchain, module format, bundle size options. Proves what the page claims about installation and build:
- * the TypeScript sample compiles under strict settings, the three module formats load the SDK, the documented build variables
- * equal the SDK's `rollup.config.js` and the CDN files exist. Does not prove a Webpack build (the configuration is only parsed),
- * npm installs, shell commands or the shared worker (needs a browser).
+ * Examples for setting up your environment.
  */
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SDK_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.resolve('pubnub'))), '..', '..');
 const TSC = path.resolve(path.dirname(fileURLToPath(import.meta.resolve('typescript'))), 'tsc.js');
 
 export default page('getting-started/set-up-your-environment', 'P0', (world) => {
-  /** A scratch directory below the staged suite, so `pubnub` resolves from the suite's node_modules. */
   const scratch = (): string => fs.mkdtempSync(path.join(HERE, '.setup-'));
 
-  // The only live step: the TypeScript init snippet with real keys. The hidden spread supplies them, `world.n` shows the staging
-  // rewrite renamed the user id, and `time()` proves the keys work.
   step('setUpTypeScriptInit', { proves: 'The TypeScript init sample builds a working client and time() succeeds.' }, async () => {
     // snippet.setUpTypeScriptInit
     const pubnub = new PubNub({
@@ -53,7 +36,6 @@ export default page('getting-started/set-up-your-environment', 'P0', (world) => 
     world.check.serverTime((await pubnub.time()).timetoken);
   });
 
-  // The whole TypeScript walk-through: the sample file and the documented tsconfig.json compile under strict settings.
   check('setUpTypeScriptProject', { timeout: 90_000, proves: 'The TypeScript sample file and the documented tsconfig.json compile under strict settings.' }, () => {
     const dir = scratch();
     try {
@@ -94,8 +76,6 @@ const pubnub = new PubNub({
     }
   });
 
-  // Each format runs in a real Node.js process in a scratch directory below the suite, so `pubnub` resolves from the suite's
-  // node_modules. The probe constructs a client with a dummy subscribe key only, it makes no request.
   check('setUpModuleFormats', { timeout: 60_000, proves: 'Each documented module format loads the SDK in a real Node process.' }, () => {
     const dir = scratch();
     const run = (args: string[], cwd = dir): string => execFileSync(process.execPath, args, { cwd, encoding: 'utf8', stdio: 'pipe' }).trim();
@@ -141,7 +121,6 @@ const pubnub = new PubNub({
     const actual: Record<string, string> = {};
     for (const match of rollup.matchAll(/'process\.env\.([A-Z_]+)':\s*JSON\.stringify\(process\.env\.\1 \?\? '(enabled|disabled)'\)/g)) actual[match[1]] = match[2];
     assert.deepEqual(actual, documented, 'documented build variables and defaults equal rollup.config.js');
-    // The page names the modules the SDK source actually checks.
     const used = new Set<string>();
     const walk = (dir: string): void => {
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -156,7 +135,6 @@ const pubnub = new PubNub({
     assert.match(rollup, /const enableTreeShaking = (false|true);/);
   });
 
-  // The Webpack configuration of the page: valid JavaScript, and it defines the variables of the table.
   check('setUpWebpackConfigSyntax', { proves: 'The documented Webpack configuration is valid JavaScript and defines the variables of the table.' }, () => {
     const source = `const webpack = require('webpack');
 
@@ -175,9 +153,6 @@ module.exports = {
     assert.deepEqual(result.diagnostics ?? [], [], 'the Webpack configuration parses');
   });
 
-  // Load the SDK from a CDN: the pinned URLs of the current version exist.
-  // Network, but no keys: HEAD requests against the public CDN for the version of the linked SDK. Fails until that version is
-  // published, which is the point (the page pins the URL).
   check('setUpCdnUrls', { timeout: 30_000, proves: 'The pinned CDN URLs for the linked SDK version exist.' }, async () => {
     const version = JSON.parse(fs.readFileSync(path.join(SDK_ROOT, 'package.json'), 'utf8')).version as string;
     for (const file of [`pubnub.${version}.js`, `pubnub.worker.${version}.js`]) {
@@ -186,6 +161,4 @@ module.exports = {
     }
   });
 
-  // The SharedWorker sample (configurationBasicUsageSubscriptionWorkerUrl) needs a browser. Its source is
-  // quickstarts/browser-shared-worker.ts. This repository has no browser, so it cannot run it.
 });

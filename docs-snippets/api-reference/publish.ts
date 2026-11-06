@@ -6,20 +6,9 @@ import { eventually, sleep, watch } from '../harness/wait.js';
 import { rejectsValidation, rejectsWithCategory } from '../harness/assertions.js';
 
 /**
- * docs/sdks/javascript/api-reference/publish.md (plus `fire`, which has no sample on the docs page yet).
- *
- * Keyset: open for all steps but `publishHandleErrors` (secured). Phase: P4, `fireBasicUsage` runs in P8. In the Sneaker Drop
- * story this is the shopper announcing and signalling in a drop channel.
- *
- * Every step subscribes a fresh observer before the snippet runs, so the effect is checked by a second client
- * (design 4.4, layer 3) and the later `listening.next` cannot race the publish. Steps that store messages also read
- * Message Persistence back, hence `preflightPersistence`. `publishHandleErrors` is the one snippet that keeps try, catch
- * and console.error, because showing them is its purpose. `harness/lint-markers.ts` lists it in
- * ERROR_HANDLING_SNIPPETS, every other snippet lets errors throw.
- * What it does not prove: publish limits (message size, rate) and encrypted publish (see encryption.ts).
+ * Publish and signal examples, including `fire()`.
  */
 export default page('api-reference/publish', 'P4', (world) => {
-  // Proves publish delivers to a subscriber with the options the snippet sets (meta, customMessageType) and stores the message.
   step('publishBasicUsage', { needs: ['preflightPersistence'], proves: 'publish delivers a message with meta and a custom message type to a subscriber and stores it.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('my_channel');
@@ -51,7 +40,6 @@ export default page('api-reference/publish', 'P4', (world) => {
     listening.stop();
   });
 
-  // Proves the ttl variant still delivers and stores. The 10 hour expiry itself cannot be observed in a run.
   step('publishStoreThePublishedMessagefor10Hours', { needs: ['preflightPersistence'], proves: 'publish with a ttl still delivers and stores the message.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('my_channel');
@@ -79,7 +67,6 @@ export default page('api-reference/publish', 'P4', (world) => {
     listening.stop();
   });
 
-  // Proves the minimal call returns a string timetoken and delivers.
   step('publishMinimal', { proves: 'The minimal publish returns a string timetoken and delivers the message.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('my_channel');
@@ -101,7 +88,6 @@ export default page('api-reference/publish', 'P4', (world) => {
     listening.stop();
   });
 
-  // Proves the wrapped value 0 is delivered, and records the claim in the snippet comment: publishing a bare 0 is rejected.
   step('publishFalsyMessage', { proves: 'A wrapped value 0 is delivered as a message.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('my_channel');
@@ -117,12 +103,10 @@ export default page('api-reference/publish', 'P4', (world) => {
 
     const received = await listening.next('message', (m) => (m.message as { value?: number }).value === 0);
     assert.deepEqual(received.message, { value: 0 });
-    // The comment in the snippet is a claim about the SDK: the bare falsy value is rejected.
     await rejectsValidation(pubnub.publish({ channel, message: 0 }), /Missing 'message'/);
     listening.stop();
   });
 
-  // Proves signal reaches a subscriber as a `signal` event (not a message) with the custom message type.
   step('signalBasicUsage', { proves: 'signal reaches a subscriber as a signal event with the custom message type, not as a message.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('foo');
@@ -145,9 +129,6 @@ export default page('api-reference/publish', 'P4', (world) => {
     listening.stop();
   });
 
-  // `fire` belongs to publish-legacy in the docs. The snippet id is kept so the page can embed it later.
-  // fire() reaches Functions only. The old snippet read `response.timetoken`, but fire() resolves with undefined (found by the first live run).
-  // This body drops that line on purpose, an intended difference from the old docs body.
   step('fireBasicUsage', { phase: 'P8', proves: 'fire sends to Functions only, so subscribers receive nothing and history stores nothing.' }, async () => {
     const pubnub = world.shopper;
     const channel = world.n('my_channel');
@@ -183,19 +164,7 @@ export default page('api-reference/publish', 'P4', (world) => {
     listening.stop();
   });
 
-  // The error handling sample of the publish page. It is the one snippet with try, catch and console.error on purpose.
-  // The sample publishes a valid message, so the branches can only be reached by changing the client it runs with:
-  //   success            the server client publishes, nothing is logged
-  //   access denied      a client of the secured keyset without a token, the keyset enforces Access Manager (403)
-  //   validation         a client without a publish key, the SDK refuses before it sends anything
-  //   network            a client behind the local proxy while the proxy refuses tunnels
-  // The same snippet text runs four times through `attempt`, and the step asserts which line it logged each time.
-  //
-  // Precondition (added after a live failure, see the wait below): the channel must really refuse a client without a token.
-  // access-manager-v2.ts `grantChannelAllAuthKeys` (P1) opens the very same run-suffixed channel for every client, and it
-  // revokes right after its own check, but an Access Manager (v2) revoke takes up to about 60 seconds to propagate.
   step('publishHandleErrors', { keyset: 'pam', timeout: 240_000, proves: 'The same error handling code logs the right line for success, access denied (403), validation and network failure.' }, async () => {
-    // The docs use the class name `PubNubError` without an import line, so give the snippet that name.
     type PubNubError = PubNub.PubNubError;
 
     const attempt = async (pubnub: PubNub): Promise<string[]> => {
@@ -242,11 +211,6 @@ export default page('api-reference/publish', 'P4', (world) => {
     // Success: the server client may publish, so no error line.
     assert.deepEqual(await attempt(world.server), [], 'a valid publish logs nothing');
 
-    // Access denied: the secured keyset enforces Access Manager and this client has no token.
-    // A grant or revoke reaches the service nodes one after the other. Live run 3xuhpx saw the probe above refused and the very next
-    // tokenless publish accepted (nothing logged), so one refusal does not prove every node refuses. The step claim is what the
-    // code logs when the 403 arrives, so repeat the attempt until the 403 line appears. The number of attempts goes into the
-    // report, so an enforcement that stays uneven shows up as data. A client that is never refused fails after the wait.
     let deniedAttempts = 0;
     await eventually(async () => {
       deniedAttempts += 1;

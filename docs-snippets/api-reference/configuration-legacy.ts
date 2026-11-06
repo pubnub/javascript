@@ -4,16 +4,8 @@ import { check, page } from '../harness/step.js';
 import { connected, eventually } from '../harness/wait.js';
 
 /**
- * docs/sdks/javascript/api-reference/configuration-legacy.md
- *
- * The page has no code sample: a table of the deprecated `uuid`, `logVerbosity`, `cipherKey` and `useRandomIVs`
- * parameters and the deprecated `stop()` method. Each row becomes a check that proves the documented behavior and
- * the documented replacement.
- *
- * Keyset: open. Phase: P8 (legacy pages). Sneaker Drop story: an old shop client still configured with deprecated
- * parameters keeps working. Proves: each deprecated parameter does what its row says, and its replacement does the
- * same. Deliberately does not prove: anything about the current configuration page (configuration.ts). There are
- * no snippets here, so every step is a harness-only check.
+ * Examples for the deprecated configuration parameters `uuid`, `logVerbosity`, `cipherKey` and `useRandomIVs`, and for
+ * the deprecated `stop()` method.
  */
 export default page('api-reference/configuration-legacy', 'P8', (world) => {
   // Reads the keys from the env on purpose: these checks build clients with raw (deprecated) configuration objects.
@@ -127,9 +119,6 @@ export default page('api-reference/configuration-legacy', 'P8', (world) => {
     assert.equal(m1, f1, 'the module option gives the same cipher text as the deprecated parameter');
   });
 
-  // Row `stop()`. The first client proves stop() unsubscribes. A second client carries the recording Warn logger and
-  // calls stop() last, because the deprecation warning is logged by the client that is stopped (the first one is
-  // already torn down).
   check('configurationLegacyStop', { proves: 'stop() unsubscribes the client and logs a deprecation warning.' }, async () => {
     const client = world.fresh('legacy-stop');
     const channel = world.n('ch1');

@@ -5,16 +5,8 @@ import { sleep, watch } from '../harness/wait.js';
 import { rejectsValidation } from '../harness/assertions.js';
 
 /**
- * docs/sdks/javascript/api-reference/publish-legacy.md
- *
- * Keyset: open. Phase: P8 "Legacy". In the Sneaker Drop story this covers the old fire-and-forget way to announce a
- * drop to Functions only.
- *
- * The page has no code sample, only prose about `fire()`. The snippet `fireBasicUsage` lives in `publish.ts` (P8, kept
- * with the other publish samples so the id stays together). These checks have no snippet markers, they prove the
- * page's claims: `fire()` resolves with `undefined` and swallows request errors, and the replacement
- * `publish({ storeInHistory: false, replicate: false })` returns a timetoken, reports errors and neither reaches
- * subscribers nor Message Persistence.
+ * Examples for the deprecated `fire()` method and its replacement, `publish()` with `storeInHistory: false` and
+ * `replicate: false`.
  */
 export default page('api-reference/publish-legacy', 'P8', (world) => {
   // Records a docs/SDK mismatch: the TypeScript type promises a PublishResponse but fire() resolves with undefined.
@@ -36,9 +28,6 @@ export default page('api-reference/publish-legacy', 'P8', (world) => {
     assert.equal(await noPublishKey.fire({ channel, message: { legacy: 'fire' } }), undefined, 'fire() resolves undefined and discards the error');
   });
 
-  // Proves the replacement call. The two negative claims (no delivery, no storage) cannot wait for an event,
-  // so the check sleeps 4 seconds and then reads history. Needs persistence so the empty history means "not stored"
-  // and not "persistence is off".
   check('publishLegacyReplacementDoesNotReplicateOrStore', { needs: ['preflightPersistence'], timeout: 45_000, proves: 'The fire replacement call is neither delivered to subscribers nor stored in history.' }, async () => {
     const channel = world.n('fire_replacement');
     const listening = await watch(world.fresh('observer'), [channel]);

@@ -6,27 +6,9 @@ import { page, step, check } from '../harness/step.js';
 import { connected, eventually, expectEvent, sleep } from '../harness/wait.js';
 
 /**
- * docs/sdks/javascript/status-events.md
- *
- * The embedded `eventListenerAddConnectionStatusListenersBasicUsage` is a subscribe-page snippet (api-reference/subscribe.ts).
- * This module covers the rest of the page: the before and after listener samples (P4), the request status categories
- * against a scripted local origin (P0), and the subscription statuses under a network outage through the local CONNECT
- * proxy (P7): `PNDisconnectedUnexpectedlyCategory`, `PNConnectionErrorCategory`, retry policies, and the legacy manager.
- *
- * The page hardcodes its two samples, so the ids `statusEventsMigrationBefore` and `statusEventsMigrationAfter` are
- * proposed ids, the docs page does not embed them yet. Browser-only statuses stay out (`PNNetworkUpCategory`,
- * `PNNetworkDownCategory`, `PNSharedWorkerUpdatedCategory`).
- *
- * Phase P7 for the page, with per-step overrides, open keyset (one step uses the secured one). In the Sneaker Drop story this is
- * the shop's connection indicator: what the app is told when the network flaps. Proves the category names and the order the
- * page promises, using three tools: a scripted local HTTP origin (exact status codes on demand), the local CONNECT proxy with an
- * outage switch (a real subscription loses and regains its network) and the legacy manager. Deliberately not proven: the
- * browser statuses listed above, they need a real browser network stack.
+ * Status event examples.
  */
 export default page('status-events', 'P7', (world) => {
-  // Local helpers. `nextStatus` is like `expectStatus` in harness/wait.ts but resolves with the whole event, because several
-  // checks assert on `error` and other fields. Register it before the action, statuses are not replayed.
-  /** Resolves with the whole status event for the first status in `categories`. Register it before the action. */
   const nextStatus = (client: PubNub, categories: string[], timeout = 20_000): Promise<PubNub.Status | PubNub.StatusEvent> =>
     new Promise((resolve, reject) => {
       const listener: PubNub.Listener = {
@@ -48,8 +30,6 @@ export default page('status-events', 'P7', (world) => {
 
   // ---- before and after: PNConnectedCategory on every change versus PNSubscriptionChangedCategory ---------------
 
-  // The two migration samples run at P4, ahead of the outage checks. Both use real subscriptions on the open keyset.
-  // Before: the legacy manager (`enableEventEngine: false`) fires PNConnectedCategory on every change of the channel mix.
   step('statusEventsMigrationBefore', { phase: 'P4', proves: 'The legacy subscription manager reports PNConnectedCategory on every change of the channel mix.' }, async () => {
     const pubnub = world.fresh('status-before', { enableEventEngine: false });
     const [c1, c2] = [world.n('ch1'), world.n('ch2')];
@@ -110,9 +90,6 @@ export default page('status-events', 'P7', (world) => {
 
   // ---- request statuses against a scripted origin ----------------------------------------------------------------
 
-  // No PubNub traffic for the categories: a throwaway local HTTP server answers with whatever `respond` is set to, so each documented category is
-  // triggered with a real HTTP status. `NoneRetryPolicy` keeps `time()` from retrying a 500. Records two docs bugs (a body that is not
-  // JSON is PNUnknownCategory, not PNMalformedResponseCategory, and a missing publishKey is a validation error, see the comments inline).
   check('statusEventsRequestCategories', { phase: 'P0', timeout: 60_000, proves: 'Each documented status category is produced by the matching HTTP response from a local server.' }, async () => {
     let respond: (res: http.ServerResponse) => void = (res) => res.end('[]');
     const server = http.createServer((_req, res) => respond(res));
@@ -144,8 +121,6 @@ export default page('status-events', 'P7', (world) => {
       assert.equal((await categoryOf(client())).category, 'PNServerErrorCategory', '503');
       respond = reply(418, '{"error":true}');
       assert.equal((await categoryOf(client())).category, 'PNUnknownCategory', 'unhandled status code');
-      // The page lists PNMalformedResponseCategory for an unexpected response from a proxy. The SDK reports a 200 with a body
-      // that is not JSON, an empty body and an HTML page all as PNUnknownCategory with statusCode 0 (live finding).
       respond = reply(200, 'this is not json');
       assert.equal((await categoryOf(client())).category, 'PNUnknownCategory', '200 with a body that is not JSON');
       respond = (res) => res.writeHead(200, { 'content-type': 'text/html' }).end('<html>proxy login</html>');
@@ -173,8 +148,6 @@ export default page('status-events', 'P7', (world) => {
       }
     }
 
-    // PNValidationErrorCategory: incomplete parameters. The docs also list PNBadRequestCategory for a missing publishKey,
-    // but the SDK reports a missing publishKey, channel or message as PNValidationErrorCategory (live finding).
     const open = world.env.open!;
     const withoutPublishKey = world.track(new PubNub({ subscribeKey: open.subscribeKey, userId: world.n('status-nokey') }));
     for (const call of [
@@ -189,9 +162,6 @@ export default page('status-events', 'P7', (world) => {
     }
   });
 
-  // "The default policy applies only when enableEventEngine is true, and it retries only subscribe requests." (Configuration page)
-  // The default policy excludes message send, presence, files, message storage, channel groups, push, App Context and
-  // message actions, so time() is retried too. Against a server that answers 500, time() keeps retrying and stays pending.
   check('statusEventsDefaultRetryAlsoRetriesTime', { timeout: 30_000, proves: 'The default retry policy also retries time(), so it stays pending against a server that answers 500.' }, async () => {
     let hits = 0;
     const server = http.createServer((_req, res) => {
@@ -218,9 +188,6 @@ export default page('status-events', 'P7', (world) => {
 
   // ---- subscription statuses under an outage ---------------------------------------------------------------------
 
-  // Outage tooling for the checks below. Traffic goes through `world.proxy` (harness/proxy.ts). `outage(true)` refuses new tunnels and
-  // destroys open ones, which is a network loss as the SDK sees it. The outage is always switched off in `finally`.
-  /** A proxied client on the open keyset subscribed to one channel, resolved once connected. */
   const proxiedSubscriber = async (label: string, extra: Partial<PubNub.PubNubConfiguration>) => {
     await world.proxy.start();
     world.proxy.outage(false);
@@ -234,8 +201,6 @@ export default page('status-events', 'P7', (world) => {
     return { pubnub, channel, subscription };
   };
 
-  // NoneRetryPolicy: the first lost request is reported at once as PNDisconnectedUnexpectedlyCategory. After the outage `reconnect()`
-  // brings the subscription back, and a message published by `friend` proves the loop works again.
   check('statusEventsUnexpectedDisconnectAndReconnect', { timeout: 90_000, proves: 'With no retry policy a lost request reports PNDisconnectedUnexpectedlyCategory and reconnect() restores delivery.' }, async () => {
     const { pubnub, channel, subscription } = await proxiedSubscriber('outage-none', { retryConfiguration: PubNub.NoneRetryPolicy() });
     try {
@@ -340,7 +305,6 @@ export default page('status-events', 'P7', (world) => {
 
   // Legacy manager (`enableEventEngine: false`) reports an outage as PNNetworkIssuesCategory and the recovery as PNReconnectedCategory.
   check('statusEventsLegacyManagerOutage', { timeout: 90_000, proves: 'The legacy manager reports an outage as PNNetworkIssuesCategory and recovery as PNReconnectedCategory.' }, async () => {
-    // enableEventEngine: false. The page lists PNNetworkIssuesCategory for an unreachable network and PNReconnectedCategory afterwards.
     await world.proxy.start();
     world.proxy.outage(false);
     const pubnub = world.fresh('outage-legacy', { enableEventEngine: false });

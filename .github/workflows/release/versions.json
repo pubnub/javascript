@@ -38,5 +38,24 @@
       "clearedPrefix": true,
       "clearedSuffix": false
     }
+  ],
+  "docs-snippets/quickstarts/quickstart-web.html": [
+    {
+      "pattern": "cdn\\.pubnub\\.com/sdk/javascript/pubnub\\.(v?(\\.?\\d+){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?)\\.js\\\"",
+      "clearedPrefix": true,
+      "clearedSuffix": false
+    }
+  ],
+  "docs-snippets/quickstarts/browser-shared-worker.ts": [
+    {
+      "pattern": "using PubNub JS SDK (v?(\\.?\\d+){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?), make sure the versions match\\.",
+      "clearedPrefix": true,
+      "clearedSuffix": false
+    },
+    {
+      "pattern": "pubnub\\.worker\\.(v?(\\.?\\d+){2,}([a-zA-Z0-9-]+(\\.?\\d+)?)?)\\.js'",
+      "clearedPrefix": true,
+      "clearedSuffix": false
+    }
   ]
 }

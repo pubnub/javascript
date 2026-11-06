@@ -3,21 +3,11 @@ import { page, step, check } from '../harness/step.js';
 import { assertAll, connected, eventually, expectEvent, PRESENCE_EVENT_TIMEOUT } from '../harness/wait.js';
 
 /**
- * docs/sdks/javascript/api-reference/subscribe.md, without the DataSync samples (they belong to the DataSync
- * module, api-reference/datasync.ts).
- *
- * Keyset: open. Phase: P4, the group fixture runs in P3. In the Sneaker Drop story this is the shop app subscribing to
- * drop channels. Snippets that subscribe run on a fresh client so they cannot disturb each other. A second client
- * (`friend`) publishes, and the snippet's own listeners are proven by the console lines they write
- * (`world.withConsole`), so the snippet text needs no change.
- * Waits: `connected()` is registered BEFORE the snippet subscribes because statuses are not replayed, and
- * `expectEvent()` is registered before the publish for the same reason.
- * What it does not prove: reconnection, presence heartbeat timing and filter expressions.
+ * Subscribe examples, without the DataSync examples, which are in the DataSync examples file.
  */
 export default page('api-reference/subscribe', 'P4', (world) => {
   // Subscription state lists have no guaranteed order.
   const sorted = (values: string[]): string[] => [...values].sort();
-  // True when a captured console line starts with `prefix`. Used to prove a snippet listener ran.
   const hasLine = (lines: string[], prefix: string): boolean => lines.some((line) => line.startsWith(prefix));
 
   // Gives `channelGroup_1` one member channel, because three samples subscribe to it. A group without channels carries no messages.
@@ -32,7 +22,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     }, { label: 'channelGroup_1 has its member' });
   });
 
-  // Proves the entity factory returns the suffixed name and does not subscribe.
   step('createChannelBasicUsage', { proves: 'The channel entity factory returns the run channel name and does not subscribe.' }, () => {
     const pubnub = world.shopper;
     // snippet.createChannelBasicUsage
@@ -42,7 +31,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     assert.deepEqual(pubnub.getSubscribedChannels(), [], 'creating an entity does not subscribe');
   });
 
-  // Proves the channel group entity carries the (staged) group name.
   step('createChannelGroupBasicUsage', { proves: 'The channel group entity carries the run group name.' }, () => {
     const pubnub = world.shopper;
     // snippet.createChannelGroupBasicUsage
@@ -52,7 +40,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     assert.equal(channelGroup.name, world.n('channelGroup_1'));
   });
 
-  // Proves the channel metadata entity carries the staged id. No network call happens.
   step('createChannelMetadataBasicUsage', { proves: 'The channel metadata entity carries the run id and makes no network call.' }, () => {
     const pubnub = world.shopper;
     // snippet.createChannelMetadataBasicUsage
@@ -63,7 +50,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     assert.equal(channelMetadata.id, world.n('channel_1'));
   });
 
-  // Proves the user metadata entity carries the staged id. No network call happens.
   step('createUserMetadataBasicUsage', { proves: 'The user metadata entity carries the run id and makes no network call.' }, () => {
     const pubnub = world.shopper;
     // snippet.createUserMetadataBasicUsage
@@ -74,7 +60,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     assert.equal(userMetadata.id, world.n('user_meta1'));
   });
 
-  // Proves creating a subscription object subscribes nothing.
   step('createSubscription', { proves: 'Creating a subscription object does not subscribe anything.' }, () => {
     const pubnub = world.fresh('createsub');
     // snippet.createSubscription
@@ -87,7 +72,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     assert.deepEqual(pubnub.getSubscribedChannels(), []);
   });
 
-  // Proves subscribing a set connects to both channels and delivers a message from the friend.
   step('subscriptionSetSubscribeBasicUsage', { proves: 'Subscribing a set connects both channels and delivers a message from a friend.' }, async () => {
     const pubnub = world.fresh('setsubscribe');
     const [ch1, ch2] = [world.n('ch1'), world.n('ch2')];
@@ -106,9 +90,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     channelsSubscriptionSet.unsubscribe();
   });
 
-  // The snippet only registers listeners. The harness subscribes the same subscription afterwards and triggers a message,
-  // a signal and a message action, then checks the snippet's handlers logged. Presence, objects and file handlers are
-  // not triggered here (presence is covered by eventListenerBasicUsage).
   step('eventListenerAddListeners', { proves: 'The message, signal and message action handlers of the sample log when the events arrive.' }, async () => {
     const pubnub = world.fresh('addlisteners');
     const channelName = world.n('channel_1');
@@ -195,7 +176,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
 
       // snippet.end
 
-      // The snippet only registers listeners. Subscribe and trigger events to prove they are wired.
       const ready = connected(pubnub, { channels: [channelName] });
       subscription.subscribe();
       await ready;
@@ -215,8 +195,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     });
   });
 
-  // Proves status, message, presence and set-level message action listeners from one snippet.
-  // Needs Presence (the sample asks for presence events) and has a longer timeout because presence events can arrive late.
   step('eventListenerBasicUsage', { needs: ['preflightPresence'], timeout: 60_000, proves: 'Status, message, presence and set level message action listeners all fire from one sample.' }, async () => {
     const pubnub = world.fresh('listenerbasic');
     const [c1, ch1, ch2] = [world.n('channel_1'), world.n('ch1'), world.n('ch2')];
@@ -260,9 +238,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
       // snippet.end
 
       await ready;
-      // The presence listener must see a presence event. The client's own join may fall before its first subscribe timetoken and
-      // never arrive, so a second client joins now that the first one is connected. Its join is published after the snippet's
-      // subscription is running and is announced after the keyset's 2 s debounce (the channel has far fewer than 20 occupants).
       const joiner = world.fresh('listenerbasicjoiner');
       const joinerReady = connected(joiner, { channels: [c1] });
       joiner.subscribe({ channels: [c1] });
@@ -288,7 +263,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     });
   });
 
-  // Proves the status listener fires PNConnectedCategory. The subscribe happens outside the snippet, it only registers the listener.
   step('eventListenerAddConnectionStatusListenersBasicUsage', { proves: 'The status listener fires PNConnectedCategory.' }, async () => {
     const pubnub = world.fresh('statuslistener');
     await world.withConsole(async (logs) => {
@@ -308,7 +282,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     });
   });
 
-  // Proves unsubscribing both a subscription and a set leaves nothing subscribed. Polls, because unsubscribe applies asynchronously.
   step('unsubscribeBasicUsage', { proves: 'Unsubscribing a subscription and a set leaves nothing subscribed.' }, async () => {
     const pubnub = world.fresh('unsubscribe');
     // snippet.unsubscribeBasicUsage
@@ -328,7 +301,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     await eventually(() => assert.deepEqual(pubnub.getSubscribedChannels(), []), { label: 'nothing left subscribed' });
   });
 
-  // Proves unsubscribeAll clears channels and groups. Needs the group fixture so the group subscription is real.
   step('unsubscribeAllBasicUsage', { needs: ['subscribeGroupFixture'], proves: 'unsubscribeAll clears channels and groups.' }, async () => {
     const pubnub = world.fresh('unsubscribeall');
     // snippet.unsubscribeAllBasicUsage
@@ -350,7 +322,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     }, { label: 'unsubscribeAll clears channels and groups' });
   });
 
-  // Proves add/removeSubscription: channel_3 is removed before subscribing, channel_1 and the group stay.
   step('subscriptionSetFrom2IndividualSubscriptions', { needs: ['subscribeGroupFixture'], proves: 'addSubscription and removeSubscription change the set before subscribing.' }, async () => {
     const pubnub = world.fresh('setfromsubs');
     const [c1, c3, group] = [world.n('channel_1'), world.n('channel_3'), world.n('channelGroup_1')];
@@ -386,7 +357,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     pubnub.unsubscribeAll();
   });
 
-  // Proves add/removeSubscriptionSet is a local operation: nothing is subscribed and the first set is back to its own channels.
   step('SubscriptionSetFrom2Sets', { proves: 'addSubscriptionSet and removeSubscriptionSet are local operations and subscribe nothing.' }, () => {
     const pubnub = world.fresh('setfromsets');
     // snippet.SubscriptionSetFrom2Sets
@@ -410,7 +380,6 @@ export default page('api-reference/subscribe', 'P4', (world) => {
     assert.deepEqual(sorted(subscriptionSet1.channels), sorted([world.n('ch1'), world.n('ch2')]));
   });
 
-  // Proves that adding sets and subscriptions to an already subscribed set takes effect at once: a message on ch4 and one via the group arrive.
   step('AddToExistingSubscriptionSet', { needs: ['subscribeGroupFixture'], proves: 'Adding sets and subscriptions to an already subscribed set takes effect at once.' }, async () => {
     const pubnub = world.fresh('addtoset');
     const [ch1, ch2, ch3, ch4] = ['ch1', 'ch2', 'ch3', 'ch4'].map((c) => world.n(c));

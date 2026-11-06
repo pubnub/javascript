@@ -10,13 +10,8 @@ import { page, step } from '../harness/step.js';
 import { eventually } from '../harness/wait.js';
 
 /**
- * docs/sdks/javascript/logging.md, "File logger" (Node.js). A module of its own because the sample's imports
- * (`import * as fs from 'fs'` and the Logger types) would clash with the imports of getting-started/logging.ts.
- *
- * The page shows the import snippet `loggingFileLoggerImports` followed by `loggingFileLogger`. The sample reads the level
- * name from `PubNub.LogLevel`: the SDK is a CommonJS package, so `import { LogLevel } from 'pubnub'` (what the page
- * showed until 2026-11-03) fails in an ES module project ("does not provide an export named 'LogLevel'"). `Logger` and
- * `LogMessage` are types only, the compiler removes them, so they are fine as named imports.
+ * File logger example for Node.js. It reads the level name from `PubNub.LogLevel` because the SDK is a CommonJS
+ * package. `Logger` and `LogMessage` are types, so they work as named imports.
  */
 export default page('logging', 'P0', (world) => {
   // Changes into a temp directory because the sample writes `./pubnub.log`. The previous directory is restored in `finally`.
@@ -91,7 +86,6 @@ export default page('logging', 'P0', (world) => {
     } finally {
       quiet.restore();
       process.chdir(previous);
-      // The Debug log holds the SDK configuration, keys included. It must not outlive the step.
       fs.rmSync(dir, { recursive: true, force: true });
     }
   });

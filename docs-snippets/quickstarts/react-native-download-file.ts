@@ -1,11 +1,8 @@
 import type PubNub from 'pubnub';
 
 /**
- * docs/sdks/javascript/api-reference/file-sharing.md, "Download file", the React and React Native sample.
- *
- * Not compiled and not run here, because the SDK has no React Native dependencies and this repository has no browser. The
- * page shows loose statements that use a client named `pubnub`, so they sit in a function that receives it. Only the lines
- * between the markers are on the page.
+ * Example for downloading a file in React and React Native. The example assumes a client named `pubnub`, so it sits in
+ * a function that receives it.
  */
 export async function downloadFileSample(pubnub: PubNub): Promise<ArrayBuffer> {
   // snippet.downloadFileReactNativeBasicUsage
