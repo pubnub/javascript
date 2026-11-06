@@ -5,7 +5,7 @@
  *   live          a step runs it against the service and asserts the effect
  *   compile-only  type checked only: import-only snippets, and the browser sources of tsconfig.browser.json
  *   stub          not run and not compiled here: React and React Native sources, which cannot run in this repository (the SDK has no
- *                 React or React Native dependencies), and the documented `stub()` steps of pages that need a browser or React Native
+ *                 React or React Native dependencies)
  *
  * `npm run docs-snippets:manifest -- --check` fails on a marker id without a step, a step id without a marker, a duplicate id
  * or a stale coverage.json. It also reports, without failing, docs ids missing from the manifest and manifest ids that no
@@ -57,8 +57,8 @@ export function buildManifest(lint: LintResult, reg: Registry): { manifest: Mani
         step: def.id,
         role: def.keyset,
         phase: def.phase,
-        mode: def.skipIf ? 'compile-only' : 'live',
-        reason: def.skipIf ?? null,
+        mode: 'live',
+        reason: null,
       };
     } else if (snippet.importOnly) {
       entries[snippet.id] = {
@@ -86,17 +86,6 @@ export function buildManifest(lint: LintResult, reg: Registry): { manifest: Mani
     }
   }
   for (const def of reg.ordered()) {
-    if (def.kind === 'stub') {
-      entries[def.id] = {
-        file: null,
-        step: def.id,
-        role: def.keyset,
-        phase: def.phase,
-        mode: 'stub',
-        reason: def.skipIf ?? null,
-      };
-      continue;
-    }
     for (const id of def.snippets) {
       if (!seen.has(id)) problems.push(`step ${def.id} declares snippet ${id}, but no marker defines it`);
       else if (entries[id]?.step !== def.id)

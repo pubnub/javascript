@@ -5,12 +5,11 @@
  *
  *   docs-snippets/report/run.json   per step: step id, snippet ids, page, role, status, skip reason, duration, assertion
  *                                   count, prerequisite flag, the error. Plus the SDK version and commit, the run id, the
- *                                   selection, per-phase durations, the skip list and any disallowed skip.
+ *                                   selection, per-phase durations and the skip list. Any skip makes the status `failed`.
  *   $GITHUB_STEP_SUMMARY            a Markdown summary, when the variable is set (GitHub Actions).
  *
  * Everything written goes through `redact()` first. GitHub masks secrets in logs, not in uploaded artifacts, so this is the
- * only protection of report/run.json. CommonJS because Mocha loads reporters with `require`, which is also why the allowed
- * skip patterns repeat harness/skips.ts. Keep both in sync.
+ * only protection of report/run.json. CommonJS because Mocha loads reporters with `require`.
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -19,8 +18,6 @@ const Mocha = require('mocha');
 const { redact } = require('./redact.cjs');
 
 const { Spec } = Mocha.reporters;
-const ALLOWED = /^(browser-only|react-native|needs-real-device|needs-feature:[a-z0-9-]+)$/;
-const RUNNER = /^(blocked-by:.+|missing-env:(open|pam|datasync))$/;
 const ANSI = /\u001b\[[0-9;]*m/g;
 const PHASES = ['P0', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'];
 
@@ -101,11 +98,7 @@ function buildReport(steps, context) {
       id: s.id,
       reason: s.reason || '(none)',
       note: s.note,
-      allowed: ALLOWED.test(s.reason || '') || RUNNER.test(s.reason || ''),
     }));
-  const problems = skips
-    .filter((s) => !s.allowed)
-    .map((s) => `step ${s.id} skipped with a reason outside the allowed list: ${s.reason}`);
   const phases = {};
   for (const phase of PHASES) {
     const inPhase = steps.filter((s) => s.phase === phase);
@@ -115,7 +108,7 @@ function buildReport(steps, context) {
   const zero = steps.filter((s) => s.status === 'passed' && s.kind === 'step' && s.assertions === 0).map((s) => s.id);
   return {
     schema: 1,
-    status: summary.failed > 0 || problems.length > 0 ? 'failed' : 'passed',
+    status: summary.failed > 0 || summary.skipped > 0 ? 'failed' : 'passed',
     runId: context.runId || null,
     startedAt: context.startedAt,
     finishedAt: context.finishedAt,
@@ -125,7 +118,6 @@ function buildReport(steps, context) {
     summary,
     phases,
     skips,
-    problems,
     zeroAssertionSteps: zero,
     notSelected: plan.filter((p) => !p.selected && !p.prerequisite).map((p) => p.id),
     steps,
@@ -161,10 +153,6 @@ function renderMarkdown(report) {
     const byReason = new Map();
     for (const k of report.skips) byReason.set(k.reason, [...(byReason.get(k.reason) || []), k.id]);
     for (const [reason, ids] of byReason) lines.push(`- \`${reason}\`: ${ids.map((id) => `\`${id}\``).join(', ')}`);
-  }
-  if (report.problems.length) {
-    lines.push('', '### Problems', '');
-    for (const p of report.problems) lines.push(`- ${p}`);
   }
   lines.push('', '### Time per phase', '', '| Phase | Steps | Time |', '| :-- | ---: | ---: |');
   for (const [phase, v] of Object.entries(report.phases)) lines.push(`| ${phase} | ${v.steps} | ${seconds(v.ms)} |`);

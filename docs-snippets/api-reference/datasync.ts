@@ -19,7 +19,7 @@ import { filterFragments, patchFragments, sortFragments } from '../fixtures/data
  *
  * Events: DataSync publishes events only for class versions with an event rule, and that rule is switched on in
  * the Admin Portal (no Admin API endpoint). The `datasyncEvents` check probes which object kinds publish. Event
- * steps skip with `needs-feature:datasync-events` (an allowed skip, see harness/policy.ts) for the kinds that do not.
+ * steps skip with `needs-feature:datasync-events` for the kinds that do not, which fails the run (harness/policy.ts).
  *
  * Two snippet ids differ from the docs: `createChannelBasicUsage` (also used by the subscribe page) and
  * `getMembershipBasicUsage` (also used by the App Context page) became `createDataSyncChannelBasicUsage` and
@@ -143,9 +143,8 @@ export default page('api-reference/datasync', 'P2', (world) => {
    * Skips the calling step when `off` is not empty.
    *
    * The skip is `needs-feature:datasync-events`: the keyset lacks a switch that only the Admin Portal can set (DataSync
-   * tab, "Select entities to sync", no Admin API endpoint). That tag is an allowed skip, it does not count against
-   * `DOCS_SNIPPETS_SKIP_BUDGET`, and `DOCS_SNIPPETS_REQUIRE_FEATURES=datasync-events` turns it into a failure for a CI job whose
-   * keyset has the rules on. The detail names the class versions whose create event did not arrive within the probe
+   * tab, "Select entities to sync", no Admin API endpoint). Every skip fails the run (harness/policy.ts), so a keyset
+   * without the rules cannot pass unnoticed. The detail names the class versions whose create event did not arrive within the probe
    * window, so the skip says what was observed (no event) and what to do, not a guess about why.
    *
    * Event steps call this only after their subscription is connected (see `eventStep` users). With the rules off the

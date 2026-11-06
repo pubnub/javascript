@@ -1,6 +1,6 @@
 import assert from '../harness/assert.js';
 import { Readable } from 'node:stream';
-import { page, step, check, stub } from '../harness/step.js';
+import { page, step, check } from '../harness/step.js';
 import { eventually, watch } from '../harness/wait.js';
 import { explainError } from '../harness/guard.js';
 import { enterWorkdir, FIXTURE_FILE } from '../fixtures/workdir.js';
@@ -162,19 +162,6 @@ export default page('api-reference/file-sharing', 'P4', (world) => {
   // The React Native and browser download samples (downloadFileReactNativeBasicUsage, downloadFileWebBasicUsage) need
   // React Native or a browser. Their sources are quickstarts/react-native-download-file.ts and
   // quickstarts/browser-download-file.ts. This repository cannot run them (no React Native, no browser).
-
-  // Prose-only parts of the page that no browser-free run can execute. They appear in the report as skipped stubs.
-  stub(
-    'fileInputBrowserForms',
-    'browser-only',
-    'FileInput forms for browsers (File API, string, ArrayBuffer or Blob) and the PubNubFile methods toFile and toBlob need a browser. Hardcoded in the docs, no snippet id.',
-  );
-
-  stub(
-    'fileInputReactNativeUri',
-    'react-native',
-    'FileInput with a uri and the React Native PubNubFile methods need React Native. Hardcoded in the docs, no snippet id.',
-  );
 
   // Publishes a file message for the file uploaded earlier. The observer is registered first (race avoidance) and the
   // event is matched by timetoken, so another file event on the channel cannot satisfy it.

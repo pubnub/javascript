@@ -87,7 +87,7 @@ The suite reads one fixed set of env names, whatever fills them.
 2. Copy [`docs-snippets/.env.example`](.env.example) to `docs-snippets/.env.local` and fill in the keys. Git ignores `.env.local`.
 3. Run `npm run test:docs-snippets -- --shard open` first. It needs only the open keyset.
 
-Leave a role empty and its steps skip as `missing-env:<role>`. You can also keep the file elsewhere and set `DOCS_SNIPPETS_ENV_FILE=<path>`, or export the env names in your shell. Real environment variables always win over the file. The file may also use the older `PN_DOCS_*` names, which the loader maps onto the names above.
+Leave a role empty only when you select the other roles with `--shard <role>`. A full run with a role missing fails, because its steps would skip as `missing-env:<role>`. You can also keep the file elsewhere and set `DOCS_SNIPPETS_ENV_FILE=<path>`, or export the env names in your shell. Real environment variables always win over the file. The file may also use the older `PN_DOCS_*` names, which the loader maps onto the names above.
 
 The loader reads the file in memory and prints only "set" or "missing" per role. It never prints a key or part of one, and the reporter redacts every file before it writes it.
 
@@ -128,19 +128,14 @@ The suite never changes a keyset. A preflight names every missing feature in one
 
 ## Skips
 
-Every skip prints its reason, and the report counts it. [`harness/skips.ts`](harness/skips.ts) holds the closed list of reasons.
+A skip fails the run, always: locally, on a pull request, on master and nightly. A run must run every valid test, so a skip never counts as a pass. There is no skip budget, no allowed list and no opt-out. Every skip prints its reason and the report lists it.
 
-| Reason | Meaning | Effect in CI |
+| Reason | What it means | How to fix it |
 | :--- | :--- | :--- |
-| `browser-only` | Needs a browser (File API, `toFile`, `toBlob`) | Allowed |
-| `react-native` | Needs React Native | Allowed |
-| `needs-real-device` | Needs a device | Allowed |
-| `needs-feature:push-notifications` | The keyset has no Mobile Push add-on | Allowed, fatal when `DOCS_SNIPPETS_REQUIRE_FEATURES` names it (nightly) |
-| `needs-feature:datasync-events` | DataSync event rules are off (Admin Portal only) | Allowed, fatal when `DOCS_SNIPPETS_REQUIRE_FEATURES` names it (nightly) |
-| `missing-env:<role>` | The role's keys are not set | Fatal |
-| `blocked-by:<id>` | A step this one needs did not pass | Counts against `DOCS_SNIPPETS_SKIP_BUDGET` (0 in CI) |
-
-`DOCS_SNIPPETS_STRICT=1` makes every skip fatal.
+| `needs-feature:push-notifications` | The keyset has no Mobile Push add-on | Turn Mobile Push on for the keyset |
+| `needs-feature:datasync-events` | DataSync event rules are off (Admin Portal only) | Turn on "Select entities to sync" for the classes in "Features each keyset needs" |
+| `missing-env:<role>` | The role's keys are not set | Set the keys, or select only the roles you have keys for with `--shard <role>` |
+| `blocked-by:<id>` | A step this one needs did not pass | Fix the step it names. The steps that need it skip until then |
 
 The browser, React and React Native sources in `quickstarts/` stay here because the docs embed them. `tsconfig.browser.json` type checks the browser ones. Nothing compiles the React and React Native ones here, because the SDK has no React or React Native dependencies, so these snippets cannot be run in this repository. The browser ones are type checked only, because this repository has no browser to run them in.
 
@@ -153,9 +148,6 @@ The browser, React and React Native sources in `quickstarts/` stay here because 
 | `DOCS_SNIPPETS_ONLY` | Comma-separated step ids, like `--grep` with exact ids. Refused in CI |
 | `DOCS_SNIPPETS_MUTATE` | See "Checks that keep the tests honest". Refused in CI |
 | `DOCS_SNIPPETS_INJECT_FAILURE` | Makes a step fail with an SDK-style 403 after it ran. Refused in CI |
-| `DOCS_SNIPPETS_SKIP_BUDGET` | Most `blocked-by` skips allowed. Default 0 in CI, unlimited locally |
-| `DOCS_SNIPPETS_REQUIRE_FEATURES` | Comma-separated features whose `needs-feature` skips fail the run |
-| `DOCS_SNIPPETS_STRICT` | `1` makes every skip fatal |
 | `DOCS_SNIPPETS_LOG_LEVEL` | SDK log level of the samples. `trace` and `debug` are refused in CI, because the SDK logs its configuration at those levels |
 | `DOCS_SNIPPETS_VERBOSE` | `1` prints the console output of every step |
 | `DOCS_SNIPPETS_RUN_ID` | Fixed run id. In CI it is derived from the time, `GITHUB_RUN_ID`, `GITHUB_RUN_ATTEMPT` and the shard |

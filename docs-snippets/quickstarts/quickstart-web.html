@@ -32,8 +32,7 @@
       },
     });
 
-    const channel = pubnub.channel('hello_world');
-    const subscription = channel.subscription();
+    const subscription = pubnub.channel('hello_world').subscription();
     subscription.subscribe();
 
     document.querySelector('button')?.addEventListener('click', async () => {

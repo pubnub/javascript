@@ -1,7 +1,7 @@
 /**
  * Step registry: the single source of truth for what the suite will run and in which order.
  *
- * Page modules register steps through `step()`, `check()` and `stub()` (step.ts). The registry validates the wiring
+ * Page modules register steps through `step()` and `check()` (step.ts). The registry validates the wiring
  * (ids unique, `needs` point at earlier steps), sorts by phase, and answers one question for the Mocha binding:
  * "may this step run now?" (`skipReason`). It also remembers each step's result, because `needs` is evaluated against
  * results at run time: a step runs only when every step it needs has passed.
@@ -12,7 +12,6 @@
  * of the staged `run.ts` before inspecting it.
  */
 import type { Role } from './env.js';
-import { assertAllowedSkip } from './skips.js';
 
 /** Phases P0 to P9 run in this order. */
 export type Phase = 'P0' | 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7' | 'P8' | 'P9';
@@ -32,8 +31,6 @@ export interface StepOptions {
   phase?: Phase;
   /** Role (keyset) the step talks to. Defaults to `open`. */
   keyset?: Keyset;
-  /** Allowed skip reason (see skips.ts). The step is registered, type-checked and reported as skipped. */
-  skipIf?: string;
   /** Snippet ids the step runs. Defaults to `[id]`. Must equal the markers inside the step body (lint). */
   snippets?: string[];
   /** Mocha timeout in ms. Defaults to 30000. */
@@ -52,10 +49,9 @@ export interface StepDef {
   phase: Phase;
   keyset: Keyset;
   needs: string[];
-  skipIf?: string;
   /** Snippet ids. Empty for `check()` steps. */
   snippets: string[];
-  kind: 'step' | 'check' | 'stub';
+  kind: 'step' | 'check';
   timeout: number;
   /** One-line description for the report, see `StepOptions.proves`. */
   proves?: string;
@@ -119,16 +115,14 @@ export class Registry {
     // Same character set as snippet ids. The id doubles as the Mocha test title and the key in report JSON.
     if (!/^[A-Za-z0-9_/-]+$/.test(id)) throw new Error(`step id "${id}" is not a valid snippet id`);
     if (this.steps.has(id)) throw new Error(`duplicate step id "${id}" (already registered by ${this.steps.get(id)!.page})`);
-    if (options.skipIf) assertAllowedSkip(options.skipIf, `step ${id}`);
     const def: StepDef = {
       id,
       page: this.currentPage,
       phase: options.phase ?? this.currentPhase,
       keyset: options.keyset ?? 'open',
       needs: options.needs ?? [],
-      skipIf: options.skipIf,
-      // check() and stub() own no snippets, so the lint can assert they contain no markers.
-      snippets: kind === 'check' || kind === 'stub' ? [] : (options.snippets ?? [id]),
+      // check() owns no snippets, so the lint can assert it contains no markers.
+      snippets: kind === 'check' ? [] : (options.snippets ?? [id]),
       kind,
       timeout: options.timeout ?? 30_000,
       proves: options.proves,
@@ -206,8 +200,7 @@ export class Registry {
 
   /** Why a step cannot run right now, or undefined when it can. Pure with respect to recorded results. */
   skipReason(step: StepDef): string | undefined {
-    // Precedence: a declared skip wins, then missing keys, then an upstream step that did not pass.
-    if (step.skipIf) return step.skipIf;
+    // Precedence: missing keys first, then an upstream step that did not pass.
     if (!this.availability[step.keyset]) return `missing-env:${step.keyset}`;
     for (const need of step.needs) {
       const result = this.results.get(need);

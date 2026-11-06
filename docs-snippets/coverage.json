@@ -505,22 +505,6 @@
       "mode": "live",
       "reason": null
     },
-    "fileInputBrowserForms": {
-      "file": null,
-      "step": "fileInputBrowserForms",
-      "role": "open",
-      "phase": "P4",
-      "mode": "stub",
-      "reason": "browser-only"
-    },
-    "fileInputReactNativeUri": {
-      "file": null,
-      "step": "fileInputReactNativeUri",
-      "role": "open",
-      "phase": "P4",
-      "mode": "stub",
-      "reason": "react-native"
-    },
     "fireBasicUsage": {
       "file": "api-reference/publish.ts",
       "step": "fireBasicUsage",

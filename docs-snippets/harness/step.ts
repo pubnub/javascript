@@ -1,12 +1,11 @@
 /**
  * The authoring API of the suite: what a page module imports to register its steps.
  *
- *   page(path, defaultPhase, (world) => { step(...); check(...); stub(...); })
+ *   page(path, defaultPhase, (world) => { step(...); check(...); })
  *
  * - `step`  runs one or more docs snippets (the code between `// snippet.<id>` markers) and asserts around them.
  * - `check` is a harness-only step with no markers: fixtures, effect checks, error tables, preflights.
- * - `stub`  is a documented skipped step. It keeps a docs page visible in the report without running anything.
- * - `skipStep` lets a running step skip itself with a precise reason (see `SkipStep`).
+ * - `skipStep` lets a running step skip itself with a precise reason (see `SkipStep`). A skip fails the run (policy.ts).
  *
  * Nothing runs when these functions are called. They only record a definition in the registry (registry.ts).
  * `harness/mocha-entry.ts` later turns each definition into a Mocha test, so the order of registration, the phase and
@@ -42,14 +41,6 @@ export function check(id: string, a: StepOptions | Body, b?: Body): void {
   registry.add('check', id, options, fn);
 }
 
-/** A documented skipped stub. Reported as skipped with its reason, never executed. */
-export function stub(id: string, reason: string, note: string): void {
-  // The stub note doubles as the description in the report, so a skipped stub says what it stands for.
-  registry.add('stub', id, { skipIf: reason, proves: note }, () => {
-    throw new Error(`stub ${id} must never run: ${note}`);
-  });
-}
-
 /** What a page file default exports. `run.ts` lists these, `setup` is called once per run with the shared `World`. */
 export interface PageModule {
   path: string;
@@ -71,11 +62,13 @@ export function page(pagePath: string, phase: Phase, setup: (world: World) => vo
 /**
  * Thrown by a step or check to skip itself with a precise reason, for example a keyset that lacks DataSync
  * classes. The runner records the step as skipped, and steps that `needs` it are skipped as `blocked-by:<id>`.
+ * Every skip fails the run (policy.ts): a run must run every valid test, so a missing class or feature is a defect of
+ * the keyset to fix, never something to tolerate.
  *
- * Two reason families are accepted, both already inside the allowed list:
- * - `blocked-by:<text>`: a root cause (a missing class) hides this step. Counts against `DOCS_SNIPPETS_SKIP_BUDGET`.
+ * Two reason families are accepted:
+ * - `blocked-by:<text>`: a root cause (a missing class) hides this step.
  * - `needs-feature:<name>`: the keyset lacks a switch that cannot be set from code (DataSync event rules live in the
- *   Admin Portal). It does not count against the budget. `DOCS_SNIPPETS_REQUIRE_FEATURES` makes it a failure (policy.ts).
+ *   Admin Portal).
  *
  * `detail` is free text for the human: it is printed and written to the report as `note`, so the reason itself can
  * stay a short, matchable tag.

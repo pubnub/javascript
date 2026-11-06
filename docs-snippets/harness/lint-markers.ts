@@ -17,7 +17,7 @@ import { isInsideRegion, isVisibleLine, scanMarkers, type SnippetRegion } from '
  *     except one `@ts-expect-error` line that is listed in the output)
  *  4. a snippet sits inside a step() callback, except import-only snippets at module top level
  *  5. a step id is one of the snippet ids it contains, `snippets` equals the markers inside,
- *     check() and stub() contain none
+ *     check() contains none
  *  6. resource-like string literals inside a snippet are in fixtures/names.ts, placeholder-like literals are
  *     registered placeholders
  *  7. no try, catch or console.error inside a snippet (except the ids in ERROR_HANDLING_SNIPPETS)
@@ -78,10 +78,10 @@ export interface LintResult {
   suppressions: string[];
 }
 
-// A `step()`, `check()` or `stub()` call found in the AST, with the line span of its callback. Snippet regions are matched to
+// A `step()` or `check()` call found in the AST, with the line span of its callback. Snippet regions are matched to
 // the call whose span contains them.
 interface StepCall {
-  kind: 'step' | 'check' | 'stub';
+  kind: 'step' | 'check';
   id: string;
   startLine: number;
   endLine: number;
@@ -112,13 +112,13 @@ export function lintApp(appDir: string): LintResult {
       const { regions, problems } = scanMarkers(text);
       problems.forEach((p) => add(p.line, p.message));
 
-      // Collect step(), check() and stub() calls. The callback is the last function argument, so both the `(id, fn)` and
+      // Collect step() and check() calls. The callback is the last function argument, so both the `(id, fn)` and
       // `(id, options, fn)` overloads work. Only string-literal ids count: a computed id could not be matched to markers.
       const calls: StepCall[] = [];
       const collect = (node: ts.Node): void => {
         if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
           const name = node.expression.text;
-          if ((name === 'step' || name === 'check' || name === 'stub') && node.arguments.length > 0) {
+          if ((name === 'step' || name === 'check') && node.arguments.length > 0) {
             const first = node.arguments[0];
             const fn = [...node.arguments].reverse().find((a) => ts.isArrowFunction(a) || ts.isFunctionExpression(a));
             if (ts.isStringLiteral(first)) {

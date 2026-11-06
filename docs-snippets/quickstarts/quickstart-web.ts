@@ -40,8 +40,7 @@ pubnub.addListener({
 // snippet.end
 
 // snippet.quickstartWebSubscribe
-const channel = pubnub.channel('hello_world');
-const subscription = channel.subscription();
+const subscription = pubnub.channel('hello_world').subscription();
 subscription.subscribe();
 // snippet.end
 

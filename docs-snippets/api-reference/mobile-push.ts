@@ -49,13 +49,12 @@ export default page('api-reference/mobile-push', 'P6', (world) => {
   // Push Notifications is an add-on. With it off, every registration call answers 403 "Use of the mobile push
   // notifications API requires Push Notifications which is not enabled for this subscribe key". That is a keyset
   // configuration gap, not a docs or SDK defect, so it is a precise `needs-feature:push-notifications` skip.
-  // harness/policy.ts treats that tag as an allowed skip that never counts against the skip budget, prints it in the
-  // end-of-run summary ("feature skip: ..."), and turns it into a failure when the run sets
-  // DOCS_SNIPPETS_REQUIRE_FEATURES=push-notifications. A CI job that owns a keyset with the add-on on sets that variable,
-  // so the push steps cannot stop running there unnoticed. Any other error (400, 5xx, network) is a real failure.
+  // harness/policy.ts fails the run on every skip, so a keyset without the add-on cannot pass with the push steps
+  // unnoticed. The skip still names the missing feature, which is easier to fix than a bare failure. Any other error
+  // (400, 5xx, network) is a real failure.
   //
   // The dependent steps do NOT use `needs: ['preflightMobilePush']`. A skipped upstream would turn them into
-  // `blocked-by:*` skips, which count against the budget and would hide that the real cause is the add-on. Each step
+  // `blocked-by:*` skips, which would hide that the real cause is the add-on. Each step
   // calls `requirePush()` instead, which repeats the same precise feature skip.
   /**
    * Everything the service said about a failed call, as one string: the SDK message, the HTTP status and the body.

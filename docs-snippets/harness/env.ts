@@ -1,6 +1,5 @@
 /**
- * The environment contract of the suite: keysets per role, the admin key, run id, log level, skip budget, required
- * features, the strict flag and the CI flag.
+ * The environment contract of the suite: keysets per role, the admin key, run id, log level and the CI flag.
  *
  * One fixed set of names. The harness reads only these, wherever the value came from:
  *
@@ -59,9 +58,6 @@ export const ENV_VARS = {
   envFile: 'DOCS_SNIPPETS_ENV_FILE',
   runId: 'DOCS_SNIPPETS_RUN_ID',
   logLevel: 'DOCS_SNIPPETS_LOG_LEVEL',
-  skipBudget: 'DOCS_SNIPPETS_SKIP_BUDGET',
-  requireFeatures: 'DOCS_SNIPPETS_REQUIRE_FEATURES',
-  strict: 'DOCS_SNIPPETS_STRICT',
   shard: 'DOCS_SNIPPETS_SHARD',
   openKeysetId: 'DOCS_SNIPPETS_OPEN_KEYSET_ID',
   pamKeysetId: 'DOCS_SNIPPETS_PAM_KEYSET_ID',
@@ -107,15 +103,6 @@ export interface Env {
   runId?: string;
   logLevel: LogLevelName;
   ci: boolean;
-  /**
-   * Most `blocked-by:*` skips a live run may report before it fails. Unset: 0 in CI and unlimited elsewhere.
-   */
-  skipBudget: number;
-  skipBudgetProblem?: string;
-  /** Features whose `needs-feature:<name>` skips fail the run (`DOCS_SNIPPETS_REQUIRE_FEATURES`). */
-  requireFeatures: string[];
-  /** `DOCS_SNIPPETS_STRICT=1`: every skip fails the run. */
-  strict: boolean;
   /** `DOCS_SNIPPETS_SHARD=<role>`: the role whose steps this run selects. Undefined means all roles. */
   shard?: Role;
   shardProblem?: string;
@@ -197,19 +184,6 @@ export function loadEnv(source: Record<string, string | undefined> = envSource()
   const levels: LogLevelName[] = ['trace', 'debug', 'info', 'warn', 'error', 'none'];
   const logLevel = (levels as string[]).includes(rawLevel) ? (rawLevel as LogLevelName) : 'none';
 
-  const rawBudget = source[ENV_VARS.skipBudget]?.trim();
-  let skipBudget = ci ? 0 : Number.POSITIVE_INFINITY;
-  let skipBudgetProblem: string | undefined;
-  if (rawBudget) {
-    if (/^\d+$/.test(rawBudget)) skipBudget = Number.parseInt(rawBudget, 10);
-    else skipBudgetProblem = `${ENV_VARS.skipBudget}="${rawBudget}" is not a non-negative integer`;
-  }
-
-  const requireFeatures = (source[ENV_VARS.requireFeatures] ?? '')
-    .split(',')
-    .map((f) => f.trim().toLowerCase())
-    .filter(Boolean);
-
   const rawShard = source[ENV_VARS.shard]?.trim().toLowerCase();
   let shard: Role | undefined;
   let shardProblem: string | undefined;
@@ -243,10 +217,6 @@ export function loadEnv(source: Record<string, string | undefined> = envSource()
     runId,
     logLevel,
     ci,
-    skipBudget,
-    skipBudgetProblem,
-    requireFeatures,
-    strict: source[ENV_VARS.strict] === '1',
     shard,
     shardProblem,
     envFile: source[ENV_VARS.envFile]?.trim() || undefined,

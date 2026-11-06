@@ -266,7 +266,7 @@ function parses(text: string): string[] {
   return (diagnostics ?? []).map((d) => ts.flattenDiagnosticMessageText(d.messageText, ' '));
 }
 
-/** Ids of regions that sit inside a `step()` callback (not check, not stub, not import-only). */
+/** Ids of regions that sit inside a `step()` callback (not check, not import-only). */
 function stepRegions(text: string, file: string): SnippetRegion[] {
   const { regions } = scanMarkers(text);
   if (regions.length === 0) return [];

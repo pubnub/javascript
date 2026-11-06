@@ -289,7 +289,6 @@ describe('JavaScript SDK docs snippets', function () {
       phase: def.phase,
       kind: def.kind,
       snippets: def.snippets,
-      skipIf: def.skipIf,
       keyset: def.keyset,
       needs: def.needs,
       proves: def.proves,

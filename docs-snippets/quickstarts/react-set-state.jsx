@@ -1,7 +1,7 @@
 // docs/sdks/javascript/api-reference/presence.md, React tab. Between the markers: the exact text of the page. The export at the end of
 // the file is not on the page (the page does not export the component), a separate React test project imports it.
 // snippet.reactSetState
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import PubNub from 'pubnub';
 
 const pubnub = new PubNub({
@@ -11,6 +11,8 @@ const pubnub = new PubNub({
 });
 
 function UserWithPresenceState() {
+  const [isStateSet, setIsStateSet] = useState(false);
+
   useEffect(() => {
     async function setPresenceState() {
       try {
@@ -19,6 +21,7 @@ function UserWithPresenceState() {
           channels: ['my_channel'],
         });
         console.log('State set successfully:', response);
+        setIsStateSet(true);
       } catch (error) {
         console.error('setState failed:', error);
       }
@@ -26,7 +29,7 @@ function UserWithPresenceState() {
     setPresenceState();
   }, []);
 
-  return <div>User with presence state</div>;
+  return <div>{isStateSet ? 'User with presence state' : 'Setting state...'}</div>;
 }
 // snippet.end
 

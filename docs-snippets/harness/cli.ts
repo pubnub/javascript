@@ -19,7 +19,7 @@ import {
 import { lintApp, printLint } from './lint-markers.js';
 import { stage } from './stage.js';
 import { runJanitor } from './janitor.js';
-import { featureSkips, launchProblems, outcomeProblems } from './policy.js';
+import { launchProblems, outcomeProblems } from './policy.js';
 import { classifyPreflightError, preflightMessage } from './preflight-errors.js';
 import { buildManifest, docsIds, serialize } from './manifest.js';
 import { provisionDataSync } from '../provision/provision-datasync.js';
@@ -41,7 +41,7 @@ import type { Registry, Selection } from './registry.js';
  *      (provision/provision-datasync.ts), before preflight and before any step
  *   4. run Mocha programmatically on `.run/<runId>/harness/mocha-entry.ts`. Its root hooks prove Access Manager enforcement
  *      before and after, and run the janitor after. The reporter writes report/run.json
- *   5. read that report back and apply the outcome policy (skip budget, required features, strict, residue)
+ *   5. read that report back and apply the outcome policy (any skip fails the run, residue)
  *   6. wait for the event loop to drain. If it is still busy 10 s later, print the open handles and exit 1
  *
  * Mocha is driven from here and not through a config file alone because the file to run only exists after staging.
@@ -246,18 +246,15 @@ async function live(): Promise<number> {
   if (fs.existsSync(reportPath)) {
     const report = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as {
       runId: string;
-      problems: string[];
       skips: Array<{ id: string; reason: string; note?: string }>;
     };
     if (report.runId !== runId) problems.push(`report/run.json belongs to run ${report.runId}, not ${runId}`);
-    problems = [...problems, ...report.problems];
     skips = report.skips;
   } else {
     problems.push('no report was written to docs-snippets/report/run.json');
   }
-  problems.push(...outcomeProblems(env, { skips }));
+  problems.push(...outcomeProblems({ skips }));
   for (const skip of skips) console.log(`skip: ${skip.id} (${skip.reason})${skip.note ? ` ${skip.note}` : ''}`);
-  for (const skip of featureSkips({ skips })) console.log(`feature skip: ${skip.id} (${skip.reason})`);
   problems.forEach((p) => console.error(p));
   return failures > 0 || problems.length > 0 ? 1 : 0;
 }
@@ -484,17 +481,17 @@ async function dryRun(): Promise<number> {
     const keys = { PUBLISH_KEY: 'pub-c-x', SUBSCRIBE_KEY: 'sub-c-x' };
     const base = loadEnv(keys);
     const ci = loadEnv({ ...keys, CI: 'true' });
-    const blocked = {
-      skips: [
-        { id: 'a', reason: 'blocked-by:preflightPresence' },
-        { id: 'b', reason: 'needs-feature:push-notifications' },
-      ],
-    };
-    if (outcomeProblems(base, blocked).length !== 0) fail('policy: blocked-by skips fail a local run by default');
-    if (outcomeProblems(ci, blocked).length !== 1)
-      fail('policy: CI must fail on a blocked-by skip with the default budget');
-    if (outcomeProblems(loadEnv({ ...keys, CI: 'true', DOCS_SNIPPETS_SKIP_BUDGET: '1' }), blocked).length !== 0)
-      fail('policy: DOCS_SNIPPETS_SKIP_BUDGET=1 should allow one blocked-by skip');
+    const none = { skips: [] };
+    if (outcomeProblems(none).length !== 0) fail('policy: a run without skips must pass');
+    const reasons = ['blocked-by:preflightPresence', 'needs-feature:push-notifications', 'needs-feature:datasync-events', 'missing-env:pam'];
+    for (const reason of reasons) {
+      const result = outcomeProblems({ skips: [{ id: 'x', reason }] });
+      if (result.length !== 1 || !result[0].includes(reason))
+        fail(`policy: a ${reason} skip must fail the run and name its reason`);
+    }
+    // Every skip fails, locally and in CI alike. The loaded env has no part in it any more.
+    if (outcomeProblems({ skips: [{ id: 'a', reason: 'needs-feature:datasync-events' }, { id: 'b', reason: 'needs-feature:datasync-events' }] }).length !== 1)
+      fail('policy: skips must come out as one grouped message');
     if (launchProblems(ci, {}, { grep: 'x' }).length !== 1) fail('policy: --grep must fail in CI');
     for (const name of ['DOCS_SNIPPETS_ONLY', 'DOCS_SNIPPETS_MUTATE', 'DOCS_SNIPPETS_INJECT_FAILURE']) {
       if (launchProblems(ci, { [name]: 'x' }).length !== 1) fail(`policy: ${name} must fail in CI`);
@@ -502,21 +499,7 @@ async function dryRun(): Promise<number> {
     }
     if (launchProblems(loadEnv({ CI: 'true', DOCS_SNIPPETS_LOG_LEVEL: 'debug' }), {}).length !== 1)
       fail('policy: debug log level must be refused in CI');
-    const featureOnly = { skips: [{ id: 'e', reason: 'needs-feature:datasync-events' }] };
-    if (outcomeProblems(ci, featureOnly).length !== 0)
-      fail('policy: a needs-feature skip must not count against the CI skip budget');
-    if (
-      outcomeProblems(loadEnv({ ...keys, CI: 'true', DOCS_SNIPPETS_REQUIRE_FEATURES: 'datasync-events' }), featureOnly)
-        .length !== 1
-    )
-      fail('policy: DOCS_SNIPPETS_REQUIRE_FEATURES must fail the named feature skip');
-    if (outcomeProblems(loadEnv({ ...keys, DOCS_SNIPPETS_STRICT: '1' }), featureOnly).length !== 1)
-      fail('policy: DOCS_SNIPPETS_STRICT=1 must make every skip fatal');
-    if (outcomeProblems(ci, { skips: [{ id: 'm', reason: 'missing-env:pam' }] }).length !== 1)
-      fail('policy: missing-env must fail in CI');
-    console.log(
-      '  run policy: skip budget, feature skips, strict, subset options and debug logging behave as documented',
-    );
+    console.log('  run policy: any skip fails the run, subset options and debug logging behave as documented');
 
     const cases: Array<[string, unknown, string]> = [
       [
