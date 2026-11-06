@@ -1,0 +1,9 @@
+{
+  "//": "Run time only (tsx reads it through TSX_TSCONFIG_PATH). Same options as tsconfig.live.json, but pubnub resolves to the built SDK of this repository, lib/node/index.js. lib/node has no .d.ts, so type checking uses tsconfig.live.json, which maps pubnub to the shipped types.",
+  "extends": "./tsconfig.live.json",
+  "compilerOptions": {
+    "paths": {
+      "pubnub": ["../lib/node/index.js"]
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "$comment": "Desired DataSync classes on the secured docs keyset. Applied by provision-datasync.ts (dry run by default). Only SubKey-level classes are managed here. The Global User, Channel and Membership classes are seeded by PubNub and cannot be changed. Event publishing per class version has no Admin API endpoint and is switched on in the Admin Portal (DataSync tab, Select entities to sync): User v1, Channel v1, Membership v1, product v1, ProductOwner v1.",
+  "entityClasses": [
+    {
+      "name": "product",
+      "version": 1,
+      "description": "Sneaker product used by the JavaScript SDK docs snippet tests. The public projection exposes name and price, admin exposes everything.",
+      "config": { "ttlSec": 2678400 },
+      "properties": [
+        {
+          "name": "name",
+          "path": "/payload/name",
+          "valueKind": "string",
+          "filtering": "full",
+          "isNullable": true,
+          "projections": [{ "name": "__default__" }, { "name": "public" }, { "name": "admin" }]
+        },
+        {
+          "name": "price",
+          "path": "/payload/price",
+          "valueKind": "number",
+          "filtering": "simple",
+          "isNullable": false,
+          "projections": [{ "name": "__default__" }, { "name": "public" }, { "name": "admin" }]
+        },
+        {
+          "name": "stock",
+          "path": "/payload/stock",
+          "valueKind": "number",
+          "filtering": "simple",
+          "isNullable": true,
+          "projections": [{ "name": "__default__" }, { "name": "admin" }]
+        }
+      ]
+    }
+  ],
+  "relationshipClasses": [
+    {
+      "name": "ProductOwner",
+      "version": 1,
+      "description": "Links a seller (entity A, any class) to a product (entity B) in the JavaScript SDK docs snippet tests.",
+      "cardinality": "many-to-many",
+      "entityBClass": "product",
+      "properties": [
+        {
+          "name": "tier",
+          "path": "/payload/tier",
+          "valueKind": "string",
+          "filtering": "full",
+          "isNullable": true,
+          "projections": [{ "name": "__default__" }, { "name": "public" }, { "name": "admin" }]
+        }
+      ]
+    }
+  ],
+  "expectedBuiltIns": {
+    "entityClasses": [
+      { "name": "User", "version": 1, "level": "Global" },
+      { "name": "Channel", "version": 1, "level": "Global" }
+    ],
+    "relationshipClasses": [{ "name": "Membership", "version": 1 }]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "//": "Type check only. Browser samples of the docs that need a DOM: the web quickstart, the browser file download and the shared worker configuration. React and React Native sources are not checked here (the SDK has no react, react-native or expo dependencies).",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "pubnub": ["../lib/types/index.d.ts"]
+    }
+  },
+  "include": ["quickstarts/quickstart-web.ts", "quickstarts/browser-download-file.ts", "quickstarts/browser-shared-worker.ts"]
+}
