@@ -10,8 +10,7 @@ import { AbstractRequest } from '../../components/request';
 import * as FileSharing from '../../types/api/file-sharing';
 import RequestOperation from '../../constants/operations';
 import { KeySet, Payload, Query } from '../../types/api';
-import { encode } from '../../components/base64_codec';
-import { encodeString } from '../../utils';
+import { encodeString, encryptMessagePayload } from '../../utils';
 
 // --------------------------------------------------------
 // ----------------------- Defaults -----------------------
@@ -59,6 +58,11 @@ export class PublishFileMessageRequest extends AbstractRequest<
   FileSharing.PublishFileMessageResponse,
   ServiceResponse
 > {
+  /**
+   * Stringified encrypted file message (computed by {@link prepare} when `crypto` is set).
+   */
+  private encryptedPayload?: string;
+
   constructor(private readonly parameters: RequestParameters) {
     super();
 
@@ -78,30 +82,45 @@ export class PublishFileMessageRequest extends AbstractRequest<
     if (!fileName) return "file name can't be empty";
   }
 
+  prepare(): Promise<void> | void {
+    const { crypto } = this.parameters;
+    if (!crypto) return;
+
+    return encryptMessagePayload(crypto, this.fileMessage).then((encrypted) => {
+      this.encryptedPayload = encrypted;
+    });
+  }
+
   async parse(response: TransportResponse): Promise<FileSharing.PublishFileMessageResponse> {
     return { timetoken: this.deserializeResponse(response)[2] };
   }
 
   protected get path(): string {
     const {
-      message,
       channel,
       keySet: { publishKey, subscribeKey },
-      fileId,
-      fileName,
     } = this.parameters;
 
-    const fileMessage = {
+    return `/v1/files/publish-file/${publishKey}/${subscribeKey}/0/${encodeString(channel)}/0/${encodeString(
+      this.prepareMessagePayload(this.fileMessage),
+    )}`;
+  }
+
+  /**
+   * File message which should be published.
+   *
+   * @returns File message payload.
+   */
+  private get fileMessage(): Payload {
+    const { message, fileId, fileName } = this.parameters;
+
+    return {
       file: {
         name: fileName,
         id: fileId,
       },
       ...(message ? { message } : {}),
     };
-
-    return `/v1/files/publish-file/${publishKey}/${subscribeKey}/0/${encodeString(channel)}/0/${encodeString(
-      this.prepareMessagePayload(fileMessage),
-    )}`;
   }
 
   protected get queryParameters(): Query {
@@ -117,20 +136,19 @@ export class PublishFileMessageRequest extends AbstractRequest<
   /**
    * Pre-process provided data.
    *
-   * Data will be "normalized" and encrypted if `cryptoModule` has been provided.
+   * Data will be "normalized" and use encrypted payload computed by {@link prepare} if `cryptoModule` has
+   * been provided.
    *
    * @param payload - User-provided data which should be pre-processed before use.
    *
    * @returns Payload which can be used as part of request URL or body.
    *
-   * @throws {Error} in case if provided `payload` or results of `encryption` can't be stringified.
+   * @throws {Error} in case if provided `payload` can't be stringified or request hasn't been prepared.
    */
   private prepareMessagePayload(payload: Payload): string {
-    const { crypto } = this.parameters;
-    if (!crypto) return JSON.stringify(payload) || '';
+    if (!this.parameters.crypto) return JSON.stringify(payload) || '';
+    if (this.encryptedPayload === undefined) throw new Error('Encryption error: request payload not prepared');
 
-    const encrypted = crypto.encrypt(JSON.stringify(payload));
-
-    return JSON.stringify(typeof encrypted === 'string' ? encrypted : encode(encrypted));
+    return this.encryptedPayload;
   }
 }

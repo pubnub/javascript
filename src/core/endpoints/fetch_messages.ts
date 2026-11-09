@@ -215,37 +215,44 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
     const responseChannels = serviceResponse.channels ?? {};
     const channels: History.FetchMessagesResponse['channels'] = {};
 
-    Object.keys(responseChannels).forEach((channel) => {
-      // Map service response to expected data object type structure.
-      channels[channel] = responseChannels[channel].map((payload) => {
-        // `null` message type means regular message.
-        if (payload.message_type === null) payload.message_type = History.PubNubMessageType.Message;
-        const processedPayload = this.processPayload(channel, payload);
+    // Messages processed concurrently (payload decryption is asynchronous); `Promise.all` preserves order.
+    const channelNames = Object.keys(responseChannels);
+    const channelsMessages = await Promise.all(
+      channelNames.map((channel) =>
+        // Map service response to expected data object type structure.
+        Promise.all(
+          responseChannels[channel].map(async (payload) => {
+            // `null` message type means regular message.
+            if (payload.message_type === null) payload.message_type = History.PubNubMessageType.Message;
+            const processedPayload = await this.processPayload(channel, payload);
 
-        const item = {
-          channel,
-          timetoken: payload.timetoken,
-          message: processedPayload.payload,
-          messageType: payload.message_type,
-          ...(payload.custom_message_type ? { customMessageType: payload.custom_message_type } : {}),
-          uuid: payload.uuid,
-        };
+            const item = {
+              channel,
+              timetoken: payload.timetoken,
+              message: processedPayload.payload,
+              messageType: payload.message_type,
+              ...(payload.custom_message_type ? { customMessageType: payload.custom_message_type } : {}),
+              uuid: payload.uuid,
+            };
 
-        if (payload.actions) {
-          const itemWithActions = item as unknown as History.FetchedMessageWithActions;
-          itemWithActions.actions = payload.actions;
+            if (payload.actions) {
+              const itemWithActions = item as unknown as History.FetchedMessageWithActions;
+              itemWithActions.actions = payload.actions;
 
-          // Backward compatibility for existing users.
-          // TODO: Remove in next release.
-          itemWithActions.data = payload.actions;
-        }
+              // Backward compatibility for existing users.
+              // TODO: Remove in next release.
+              itemWithActions.data = payload.actions;
+            }
 
-        if (payload.meta) (item as History.FetchedMessage).meta = payload.meta;
-        if (processedPayload.error) (item as History.FetchedMessage).error = processedPayload.error;
+            if (payload.meta) (item as History.FetchedMessage).meta = payload.meta;
+            if (processedPayload.error) (item as History.FetchedMessage).error = processedPayload.error;
 
-        return item as History.FetchedMessage;
-      });
-    });
+            return item as History.FetchedMessage;
+          }),
+        ),
+      ),
+    );
+    channelNames.forEach((channel, index) => (channels[channel] = channelsMessages[index]));
 
     if (serviceResponse.more)
       return { channels, more: serviceResponse.more } as History.FetchMessagesWithActionsResponse;
@@ -298,13 +305,13 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
    *
    * @returns
    */
-  private processPayload(
+  private async processPayload(
     channel: string,
     payload: ServiceResponse['channels'][string][number],
-  ): {
+  ): Promise<{
     payload: History.FetchedMessage['message'];
     error?: string;
-  } {
+  }> {
     const { crypto, logVerbosity } = this.parameters;
     if (!crypto || typeof payload.message !== 'string') return { payload: payload.message };
 
@@ -312,7 +319,7 @@ export class FetchMessagesRequest extends AbstractRequest<History.FetchMessagesR
     let error: string | undefined;
 
     try {
-      const decryptedData = crypto.decrypt(payload.message);
+      const decryptedData = await crypto.decrypt(payload.message);
       decryptedPayload =
         decryptedData instanceof ArrayBuffer
           ? JSON.parse(FetchMessagesRequest.decoder.decode(decryptedData))

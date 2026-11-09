@@ -94,6 +94,18 @@ export abstract class AbstractRequest<ResponseType, ServiceResponse extends obje
   }
 
   /**
+   * Prepare request for sending.
+   *
+   * Called after successful {@link validate} and before {@link request}. Used by requests which need to
+   * perform asynchronous pre-processing (for example, payload encryption) before the transport request can
+   * be built synchronously.
+   *
+   * @returns `Promise` only if asynchronous pre-processing is required (request scheduling stays
+   * synchronous otherwise).
+   */
+  prepare(): Promise<void> | void {}
+
+  /**
    * Parse service response.
    *
    * @param response - Raw service response which should be parsed.

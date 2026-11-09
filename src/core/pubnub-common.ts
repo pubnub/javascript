@@ -250,6 +250,16 @@ export class PubNubCore<
   private readonly cryptography?: Cryptography<CryptographyTypes>;
 
   /**
+   * Tail of the asynchronous requests preparation queue.
+   *
+   * Used to schedule requests which require asynchronous preparation (for example, payload encryption) in the
+   * same order in which they have been called.
+   *
+   * @internal
+   */
+  private requestsPreparation: Promise<void> = Promise.resolve();
+
+  /**
    * Legacy crypto (legacy data encryption / decryption and request signature support).
    *
    * @internal
@@ -1208,6 +1218,20 @@ export class PubNubCore<
       throw new PubNubError('Validation failed, check status for details', validationError);
     }
 
+    // Asynchronous request pre-processing (for example, payload encryption).
+    const preparation = request.prepare();
+    if (preparation) {
+      // Requests which require preparation are scheduled in call order (same as synchronous requests).
+      const orderedPreparation = this.requestsPreparation.then(() => preparation);
+      this.requestsPreparation = orderedPreparation.catch(() => {});
+
+      try {
+        await orderedPreparation;
+      } catch (error) {
+        return this.handleRequestError(error as Error, request.operation(), callback);
+      }
+    }
+
     // Complete request configuration.
     const transportRequest = request.request();
     const operation = request.operation();
@@ -1267,31 +1291,50 @@ export class PubNubCore<
 
         return parsed;
       })
-      .catch((error: Error) => {
-        const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
+      .catch((error: Error) => this.handleRequestError(error, operation, callback));
+  }
 
-        // Notify callback (if possible).
-        if (callback) {
-          if (apiError.category !== Categories.PNCancelledCategory) {
-            this.logger.error('PubNub', () => ({
-              messageType: 'error',
-              message: apiError.toPubNubError(operation, 'REST API request processing error, check status for details'),
-            }));
-          }
+  /**
+   * Handle REST API request processing error.
+   *
+   * @internal
+   *
+   * @param error - Request processing error.
+   * @param operation - Type of failed REST API operation.
+   * @param [callback] - Request completion handler callback.
+   *
+   * @returns `void` in case if `callback` provided.
+   *
+   * @throws PubNubError in case if `callback` not provided.
+   */
+  private handleRequestError<ResponseType>(
+    error: Error,
+    operation: RequestOperation,
+    callback?: ResultCallback<ResponseType>,
+  ): void {
+    const apiError = !(error instanceof PubNubAPIError) ? PubNubAPIError.create(error) : error;
 
-          return callback(apiError.toStatus(operation), null);
-        }
+    // Notify callback (if possible).
+    if (callback) {
+      if (apiError.category !== Categories.PNCancelledCategory) {
+        this.logger.error('PubNub', () => ({
+          messageType: 'error',
+          message: apiError.toPubNubError(operation, 'REST API request processing error, check status for details'),
+        }));
+      }
 
-        const pubNubError = apiError.toPubNubError(
-          operation,
-          'REST API request processing error, check status for details',
-        );
+      return callback(apiError.toStatus(operation), null);
+    }
 
-        if (apiError.category !== Categories.PNCancelledCategory)
-          this.logger.error('PubNub', () => ({ messageType: 'error', message: pubNubError }));
+    const pubNubError = apiError.toPubNubError(
+      operation,
+      'REST API request processing error, check status for details',
+    );
 
-        throw pubNubError;
-      });
+    if (apiError.category !== Categories.PNCancelledCategory)
+      this.logger.error('PubNub', () => ({ messageType: 'error', message: pubNubError }));
+
+    throw pubNubError;
   }
 
   /**
@@ -4921,17 +4964,17 @@ export class PubNubCore<
    * @param [customCipherKey] - Cipher key which should be used to encrypt data. **Deprecated:**
    * use {@link Configuration#cryptoModule|cryptoModule} instead.
    *
-   * @returns Data encryption result as a string.
+   * @returns Asynchronous data encryption result as a string.
    *
    * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
-  public encrypt(data: string | Payload, customCipherKey?: string): string {
+  public async encrypt(data: string | Payload, customCipherKey?: string): Promise<string> {
     this.logger.warn('PubNub', "'encrypt' is deprecated. Use cryptoModule instead.");
 
     const cryptoModule = this._configuration.getCryptoModule();
 
     if (!customCipherKey && cryptoModule && typeof data === 'string') {
-      const encrypted = cryptoModule.encrypt(data);
+      const encrypted = await cryptoModule.encrypt(data);
 
       return typeof encrypted === 'string' ? encrypted : encode(encrypted);
     }
@@ -4950,16 +4993,16 @@ export class PubNubCore<
    * @param [customCipherKey] - Cipher key which should be used to decrypt data. **Deprecated:**
    * use {@link Configuration#cryptoModule|cryptoModule} instead.
    *
-   * @returns Data decryption result as an object.
+   * @returns Asynchronous data decryption result as an object.
    *
    * @deprecated Use {@link Configuration#cryptoModule|cryptoModule} instead.
    */
-  public decrypt(data: string, customCipherKey?: string): Payload | null {
+  public async decrypt(data: string, customCipherKey?: string): Promise<Payload | null> {
     this.logger.warn('PubNub', "'decrypt' is deprecated. Use cryptoModule instead.");
 
     const cryptoModule = this._configuration.getCryptoModule();
     if (!customCipherKey && cryptoModule) {
-      const decrypted = cryptoModule.decrypt(data);
+      const decrypted = await cryptoModule.decrypt(data);
 
       return decrypted instanceof ArrayBuffer ? JSON.parse(new TextDecoder().decode(decrypted)) : decrypted;
     }

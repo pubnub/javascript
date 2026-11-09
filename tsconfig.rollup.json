@@ -19,6 +19,8 @@
     "node_modules",
     "test",
     "src/file/modules/node.ts",
+    "src/crypto/primitives/node.ts",
+    "src/crypto/primitives/react-native.ts",
     "src/file/modules/react-native.ts",
     "src/node/**/*",
     "src/react_native/**/*",
