@@ -2819,7 +2819,7 @@ declare namespace PubNub {
      */
     heartbeatInterval?: number;
     /**
-     * Transactional requests timeout in milliseconds.
+     * Transactional requests timeout in seconds.
      *
      * Maximum duration for which PubNub client should wait for transactional request completion.
      *
@@ -2827,7 +2827,7 @@ declare namespace PubNub {
      */
     transactionalRequestTimeout?: number;
     /**
-     * Subscription requests timeout in milliseconds.
+     * Subscription requests timeout in seconds.
      *
      * Maximum duration for which PubNub client should wait for subscription request completion.
      *
@@ -2835,7 +2835,7 @@ declare namespace PubNub {
      */
     subscribeRequestTimeout?: number;
     /**
-     * File upload / download request timeout in milliseconds.
+     * File upload / download request timeout in seconds.
      *
      * Maximum duration for which PubNub client should wait for file upload / download request
      * completion.
