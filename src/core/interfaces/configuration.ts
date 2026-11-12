@@ -220,7 +220,7 @@ export type UserConfiguration = {
   heartbeatInterval?: number;
 
   /**
-   * Transactional requests timeout in milliseconds.
+   * Transactional requests timeout in seconds.
    *
    * Maximum duration for which PubNub client should wait for transactional request completion.
    *
@@ -229,7 +229,7 @@ export type UserConfiguration = {
   transactionalRequestTimeout?: number;
 
   /**
-   * Subscription requests timeout in milliseconds.
+   * Subscription requests timeout in seconds.
    *
    * Maximum duration for which PubNub client should wait for subscription request completion.
    *
@@ -238,7 +238,7 @@ export type UserConfiguration = {
   subscribeRequestTimeout?: number;
 
   /**
-   * File upload / download request timeout in milliseconds.
+   * File upload / download request timeout in seconds.
    *
    * Maximum duration for which PubNub client should wait for file upload / download request
    * completion.
@@ -682,7 +682,7 @@ export interface PrivateClientConfiguration
   /**
    * Transactional request timeout.
    *
-   * @returns Maximum duration in milliseconds for which PubNub client should wait for
+   * @returns Maximum duration in seconds for which PubNub client should wait for
    * transactional request completion.
    */
   getTransactionTimeout(): number;
@@ -690,7 +690,7 @@ export interface PrivateClientConfiguration
   /**
    * Subscription requests timeout.
    *
-   * @returns Maximum duration in milliseconds for which PubNub client should wait for
+   * @returns Maximum duration in seconds for which PubNub client should wait for
    * subscription request completion.
    */
   getSubscribeTimeout(): number;
@@ -698,7 +698,7 @@ export interface PrivateClientConfiguration
   /**
    * File requests timeout.
    *
-   * @returns Maximum duration in milliseconds for which PubNub client should wait for
+   * @returns Maximum duration in seconds for which PubNub client should wait for
    * file upload / download request completion.
    */
   getFileTimeout(): number;
