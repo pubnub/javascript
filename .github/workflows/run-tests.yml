@@ -36,13 +36,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Checkout actions
-        uses: actions/checkout@v4
-        with:
-          repository: pubnub/client-engineering-deployment-tools
-          ref: v1
-          token: ${{ secrets.GH_TOKEN }}
-          path: .github/.release/actions
       - name: Setup NodeJS ${{ matrix.node }}
         uses: actions/setup-node@v4
         with:
@@ -56,9 +49,6 @@ jobs:
       - name: Test docs snippets syntax
         if: matrix.node == '22' && matrix.env == 'ci:node'
         run: npm run test:snippets
-      - name: Cancel workflow runs for commit on error
-        if: failure()
-        uses: ./.github/.release/actions/actions/utils/fast-jobs-failure
   all-tests:
     name: Tests
     runs-on:

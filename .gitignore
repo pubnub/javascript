@@ -24,3 +24,11 @@ test/specs
 release-artifacts-*
 
 .vscode
+
+# Live docs snippet suite (docs-snippets/README.md) #
+####################################################
+docs-snippets/.run/
+docs-snippets/report/
+.env
+.env.*
+!docs-snippets/.env.example
