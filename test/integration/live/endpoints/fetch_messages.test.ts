@@ -12,6 +12,7 @@ import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
 
 import { createClient } from '../support/clients';
+import { seedOnFreshChannel } from '../support/retry';
 import { eventually } from '../support/wait';
 
 /** Published test message shape. */
@@ -77,8 +78,12 @@ describe('endpoints/fetch_messages: fetchMessages against the service', function
   });
 
   it('supports metadata', async () => {
-    const channel = uniqueChannel();
-    const messages = await publishMessagesToChannel(pubnub, 10, channel, '');
+    // Seeding (publishing) is retried on a new channel after a transient failure, see seedOnFreshChannel in support/retry.ts.
+    const { channel, result: messages } = await seedOnFreshChannel(
+      uniqueChannel,
+      (name) => publishMessagesToChannel(pubnub, 10, name, ''),
+      { label: 'fetch_messages metadata seed' },
+    );
 
     await eventually(
       async () => {
@@ -93,8 +98,11 @@ describe('endpoints/fetch_messages: fetchMessages against the service', function
   });
 
   it('supports custom message type', async () => {
-    const channel = uniqueChannel();
-    await publishMessagesToChannel(pubnub, 2, channel, 'test-message-type');
+    const { channel } = await seedOnFreshChannel(
+      uniqueChannel,
+      (name) => publishMessagesToChannel(pubnub, 2, name, 'test-message-type'),
+      { label: 'fetch_messages message type seed' },
+    );
 
     const response = await pubnub.fetchMessages({ channels: [channel], includeCustomMessageType: true });
     response.channels[channel].forEach((message) => {
@@ -104,11 +112,23 @@ describe('endpoints/fetch_messages: fetchMessages against the service', function
 
   for (const field of ['data', 'actions'] as const) {
     it(`supports actions (stored as '${field}' field)`, async () => {
-      const channel = uniqueChannel();
       const expectedActionsCount = 4;
-      const messages = await publishMessagesToChannel(pubnub, 2, channel, '');
-      const messageTimetokens = messages.map((message) => message.timetoken);
-      const actions = await addActionsInChannel(pubnub, expectedActionsCount, messageTimetokens, channel);
+      // Publishing and adding the actions are both seeding here (the assertion is on what fetchMessages returns).
+      const {
+        channel,
+        result: { messageTimetokens, actions },
+      } = await seedOnFreshChannel(
+        uniqueChannel,
+        async (name) => {
+          const messages = await publishMessagesToChannel(pubnub, 2, name, '');
+          const timetokens = messages.map((message) => message.timetoken);
+          return {
+            messageTimetokens: timetokens,
+            actions: await addActionsInChannel(pubnub, expectedActionsCount, timetokens, name),
+          };
+        },
+        { label: `fetch_messages actions seed (${field})` },
+      );
 
       // The mocked original waited a fixed 2 s before reading; poll until the actions are visible instead.
       await eventually(

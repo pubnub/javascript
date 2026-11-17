@@ -20,6 +20,7 @@ import {
   freshId,
   freshPubNub,
 } from '../../support/datasync-live-helpers';
+import { createWithRunUniqueId } from '../../support/retry';
 
 describe('endpoints/data_sync/events.entity: DataSync events — Entity Customer', function () {
   this.timeout(60000);
@@ -30,18 +31,22 @@ describe('endpoints/data_sync/events.entity: DataSync events — Entity Customer
     pubnub = freshPubNub();
   });
 
+  // The id comes from `freshId` and is unique to this run, so a 409 on a retry means the first attempt was stored (see retry.ts).
   const createCustomer = (id: string) =>
-    pubnub.dataSync
-      .createEntity({
-        id,
-        class: ENTITY_CLASS_CUSTOMER,
-        data: {
-          classVersion: CLASS_VERSION,
-          status: 'active',
-          payload: customerPayload(id),
-        },
-      })
-      .then(() => undefined);
+    createWithRunUniqueId(
+      () =>
+        pubnub.dataSync.createEntity({
+          id,
+          class: ENTITY_CLASS_CUSTOMER,
+          data: {
+            classVersion: CLASS_VERSION,
+            status: 'active',
+            payload: customerPayload(id),
+          },
+        }),
+      () => pubnub.dataSync.getEntity({ id }),
+      { label: 'createEntity' },
+    ).then(() => undefined);
 
   it('entity create - create event', async () => {
     const id = freshId('customer');

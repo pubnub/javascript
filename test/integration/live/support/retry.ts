@@ -84,3 +84,93 @@ export async function retryTransient<T>(fn: () => Promise<T>, options: RetryOpti
     }
   }
 }
+
+/**
+ * True for the answer a DataSync create gets when the id already exists: HTTP 409 with the service code DS-0301 in the error
+ * body (`status.errorData`, for example `{ errors: [{ errorCode: 'DS-0301', ... }] }`; see the duplicate create test in
+ * api-reference/datasync.test.ts).
+ */
+export function isAlreadyExists(error: unknown): boolean {
+  if (statusCode(error) !== 409) return false;
+  const data = (error as { status?: { errorData?: unknown } } | undefined)?.status?.errorData;
+  try {
+    return JSON.stringify(data ?? {}).includes('DS-0301');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Creates a DataSync object whose id is unique to this run (`freshId`, `projectionId`) and tolerates a transient service error.
+ *
+ * A create is not idempotent, so a plain retry is unsafe: when the first attempt was stored but its answer was lost (a 5xx after
+ * the write, a timeout), the retry meets the object it just created and gets 409 (DS-0301). With an id nobody else can hold,
+ * that 409 can only mean "the earlier attempt was stored", so it counts as success, and the object is read back (`readBack`, a get
+ * by id) so the caller still gets the eTag and timestamps the create would have returned.
+ *
+ * - failure of the FIRST attempt that is not transient (including a 409, which means the id was not unique): thrown at once.
+ * - transient failure (`isTransient`): retried like `retryTransient`, up to `attempts` tries (default 3).
+ * - 409 / DS-0301 on a RETRY: resolved through `readBack` (itself retried on transient errors). Never on the first attempt.
+ * - any other failure of a retry (403, 400, ...): thrown.
+ *
+ * Use it for setup, and for a create that only triggers an event the test then asserts on. Never inside a documentation sample
+ * (those use fixed literal ids, where a 409 means a leftover and must fail). Logs one line per retry and one when the 409 path
+ * resolves; ids, payloads and keys are never logged.
+ */
+export async function createWithRunUniqueId<T>(
+  create: () => Promise<T>,
+  readBack: () => Promise<T>,
+  options: RetryOptions = {},
+): Promise<T> {
+  const attempts = options.attempts ?? 3;
+  const backoff = options.backoff ?? 500;
+  const label = options.label ?? 'create';
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await create();
+    } catch (error) {
+      if (attempt > 1 && isAlreadyExists(error)) {
+        console.log(
+          `createWithRunUniqueId: ${label} answered 409 DS-0301 on attempt ${attempt} of ${attempts}: ` +
+            'an earlier attempt was stored, reading the object back',
+        );
+        return retryTransient(readBack, { ...options, label: `${label} read-back` });
+      }
+      if (attempt >= attempts || !isTransient(error)) throw error;
+      console.log(
+        `createWithRunUniqueId: ${label} failed (attempt ${attempt} of ${attempts}, ` +
+          `category ${categoryOf(error) ?? 'none'}, status ${statusCode(error) ?? 'none'}), retrying`,
+      );
+      await pause(backoff * attempt);
+    }
+  }
+}
+
+/**
+ * Seeds state on a channel with a run-unique name and, when a seeding call fails transiently, throws that channel away and runs
+ * the whole seeding again on a new one (up to `attempts` tries, default 3). Nothing else depends on the channel name, and the
+ * tests that use it assert exact counts of what the seeding wrote, so a half-written channel must never be reused: a publish that
+ * was stored although its answer was lost would add one message, and a plain retry would add another. Only the seeding is
+ * covered. The call a test asserts on stays outside and is never retried. Returns the channel that was seeded and what `seed` returned.
+ */
+export async function seedOnFreshChannel<T>(
+  newChannel: () => string,
+  seed: (channel: string) => Promise<T>,
+  options: RetryOptions = {},
+): Promise<{ channel: string; result: T }> {
+  const attempts = options.attempts ?? 3;
+  const backoff = options.backoff ?? 500;
+  for (let attempt = 1; ; attempt += 1) {
+    const channel = newChannel();
+    try {
+      return { channel, result: await seed(channel) };
+    } catch (error) {
+      if (attempt >= attempts || !isTransient(error)) throw error;
+      console.log(
+        `seedOnFreshChannel: ${options.label ?? 'seed'} failed (attempt ${attempt} of ${attempts}, ` +
+          `category ${categoryOf(error) ?? 'none'}, status ${statusCode(error) ?? 'none'}), starting again on a new channel`,
+      );
+      await pause(backoff * attempt);
+    }
+  }
+}

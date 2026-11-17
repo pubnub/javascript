@@ -18,6 +18,7 @@ import {
   freshId,
   freshPubNub,
 } from '../../support/datasync-live-helpers';
+import { createWithRunUniqueId } from '../../support/retry';
 
 describe('endpoints/data_sync/events.channel: DataSync events — Channel', function () {
   this.timeout(60000);
@@ -28,10 +29,13 @@ describe('endpoints/data_sync/events.channel: DataSync events — Channel', func
     pubnub = freshPubNub();
   });
 
+  // The id comes from `freshId` and is unique to this run, so a 409 on a retry means the first attempt was stored (see retry.ts).
   const createChannel = (id: string, payload = channelPayload()) =>
-    pubnub.dataSync
-      .createChannel({ id, data: { classVersion: CLASS_VERSION, status: 'active', payload } })
-      .then(() => undefined);
+    createWithRunUniqueId(
+      () => pubnub.dataSync.createChannel({ id, data: { classVersion: CLASS_VERSION, status: 'active', payload } }),
+      () => pubnub.dataSync.getChannel({ id }),
+      { label: 'createChannel' },
+    ).then(() => undefined);
 
   it('channel create → "create" event (objectType "channel")', async () => {
     const id = freshId('channel');

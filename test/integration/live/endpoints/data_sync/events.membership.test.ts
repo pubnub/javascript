@@ -24,6 +24,7 @@ import {
   safeRemove,
   userPayload,
 } from '../../support/datasync-live-helpers';
+import { createWithRunUniqueId } from '../../support/retry';
 
 describe('endpoints/data_sync/events.membership: DataSync events — Membership', function () {
   this.timeout(60000);
@@ -38,30 +39,45 @@ describe('endpoints/data_sync/events.membership: DataSync events — Membership'
   async function seedEndpoints(): Promise<{ userId: string; channelId: string }> {
     const userId = freshId('user');
     const channelId = freshId('channel');
-    await pubnub.dataSync.createUser({
-      id: userId,
-      data: { classVersion: CLASS_VERSION, status: 'active', payload: userPayload() },
-    });
-    await pubnub.dataSync.createChannel({
-      id: channelId,
-      data: { classVersion: CLASS_VERSION, status: 'active', payload: channelPayload() },
-    });
+    // Both ids come from `freshId`, unique to this run: a 409 on a retry means the first attempt was stored (see retry.ts).
+    await createWithRunUniqueId(
+      () =>
+        pubnub.dataSync.createUser({
+          id: userId,
+          data: { classVersion: CLASS_VERSION, status: 'active', payload: userPayload() },
+        }),
+      () => pubnub.dataSync.getUser({ id: userId }),
+      { label: 'createUser' },
+    );
+    await createWithRunUniqueId(
+      () =>
+        pubnub.dataSync.createChannel({
+          id: channelId,
+          data: { classVersion: CLASS_VERSION, status: 'active', payload: channelPayload() },
+        }),
+      () => pubnub.dataSync.getChannel({ id: channelId }),
+      { label: 'createChannel' },
+    );
     return { userId, channelId };
   }
 
+  // The id comes from `freshId` and is unique to this run, so a 409 on a retry means the first attempt was stored (see retry.ts).
   const createMembership = (id: string, userId: string, channelId: string, role = 'member') =>
-    pubnub.dataSync
-      .createMembership({
-        id,
-        userId,
-        channelId,
-        data: {
-          classVersion: CLASS_VERSION,
-          status: 'active',
-          payload: { role, joinedAt: '2026-07-06T10:00:00.000Z' },
-        },
-      })
-      .then(() => undefined);
+    createWithRunUniqueId(
+      () =>
+        pubnub.dataSync.createMembership({
+          id,
+          userId,
+          channelId,
+          data: {
+            classVersion: CLASS_VERSION,
+            status: 'active',
+            payload: { role, joinedAt: '2026-07-06T10:00:00.000Z' },
+          },
+        }),
+      () => pubnub.dataSync.getMembership({ id }),
+      { label: 'createMembership' },
+    ).then(() => undefined);
 
   it('membership create → "create" event (delivered on channel + user)', async () => {
     const { userId, channelId } = await seedEndpoints();

@@ -27,6 +27,7 @@ import {
   loanQuotePayload,
   safeRemove,
 } from '../../support/datasync-live-helpers';
+import { createWithRunUniqueId } from '../../support/retry';
 
 describe('endpoints/data_sync/events.relationship: DataSync events Relationship REQUESTED_BY', function () {
   this.timeout(60000);
@@ -41,41 +42,56 @@ describe('endpoints/data_sync/events.relationship: DataSync events Relationship 
   async function seedEndpoints(): Promise<{ customerId: string; loanQuoteId: string }> {
     const customerId = freshId('customer');
     const loanQuoteId = freshId('loanquote');
-    await pubnub.dataSync.createEntity({
-      id: customerId,
-      class: ENTITY_CLASS_CUSTOMER,
-      data: {
-        classVersion: CLASS_VERSION,
-        status: 'active',
-        payload: customerPayload(customerId),
-      },
-    });
-    await pubnub.dataSync.createEntity({
-      id: loanQuoteId,
-      class: ENTITY_CLASS_LOAN_QUOTE,
-      data: {
-        classVersion: CLASS_VERSION,
-        status: 'active',
-        payload: loanQuotePayload(loanQuoteId),
-      },
-    });
+    // Both ids come from `freshId`, unique to this run: a 409 on a retry means the first attempt was stored (see retry.ts).
+    await createWithRunUniqueId(
+      () =>
+        pubnub.dataSync.createEntity({
+          id: customerId,
+          class: ENTITY_CLASS_CUSTOMER,
+          data: {
+            classVersion: CLASS_VERSION,
+            status: 'active',
+            payload: customerPayload(customerId),
+          },
+        }),
+      () => pubnub.dataSync.getEntity({ id: customerId }),
+      { label: 'createEntity customer' },
+    );
+    await createWithRunUniqueId(
+      () =>
+        pubnub.dataSync.createEntity({
+          id: loanQuoteId,
+          class: ENTITY_CLASS_LOAN_QUOTE,
+          data: {
+            classVersion: CLASS_VERSION,
+            status: 'active',
+            payload: loanQuotePayload(loanQuoteId),
+          },
+        }),
+      () => pubnub.dataSync.getEntity({ id: loanQuoteId }),
+      { label: 'createEntity loanQuote' },
+    );
     return { customerId, loanQuoteId };
   }
 
+  // The id comes from `freshId` and is unique to this run, so a 409 on a retry means the first attempt was stored (see retry.ts).
   const createRel = (relId: string, customerId: string, loanQuoteId: string, linkedAt = '2026-07-06T10:00:00.000Z') =>
-    pubnub.dataSync
-      .createRelationship({
-        id: relId,
-        class: RELATIONSHIP_CLASS_REQUESTED_BY,
-        entityAId: customerId,
-        entityBId: loanQuoteId,
-        data: {
-          classVersion: CLASS_VERSION,
-          status: 'active',
-          payload: { linkedAt },
-        },
-      })
-      .then(() => undefined);
+    createWithRunUniqueId(
+      () =>
+        pubnub.dataSync.createRelationship({
+          id: relId,
+          class: RELATIONSHIP_CLASS_REQUESTED_BY,
+          entityAId: customerId,
+          entityBId: loanQuoteId,
+          data: {
+            classVersion: CLASS_VERSION,
+            status: 'active',
+            payload: { linkedAt },
+          },
+        }),
+      () => pubnub.dataSync.getRelationship({ id: relId }),
+      { label: 'createRelationship' },
+    ).then(() => undefined);
 
   it('relationship create create event delivered on endpoint channels', async () => {
     const { customerId, loanQuoteId } = await seedEndpoints();

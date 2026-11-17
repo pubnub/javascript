@@ -12,6 +12,7 @@ import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
 
 import { createClient } from '../support/clients';
+import { seedOnFreshChannel } from '../support/retry';
 import { eventually } from '../support/wait';
 
 /** Published test message shape. */
@@ -49,8 +50,13 @@ describe('endpoints/history: history against the service', function () {
   });
 
   it('supports metadata', async () => {
-    const channel = `history-${randomUUID()}`;
-    const messages = await publishMessagesToChannel(pubnub, 10, channel);
+    // A transient publish failure discards the channel and seeds a new one (nothing else depends on its name), so the read
+    // below never sees a channel that a lost-answer publish left with an extra message.
+    const { channel, result: messages } = await seedOnFreshChannel(
+      () => `history-${randomUUID()}`,
+      (name) => publishMessagesToChannel(pubnub, 10, name),
+      { label: 'history seed' },
+    );
 
     await eventually(
       async () => {

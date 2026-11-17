@@ -6,6 +6,7 @@ import assert from 'node:assert';
 import PubNub from 'pubnub';
 import { createClient } from './clients';
 import { keysOf } from './env';
+import { createWithRunUniqueId } from './retry';
 import { connected } from './wait';
 
 // --------------------------------------------------------
@@ -229,15 +230,20 @@ export async function createCustomerEntity(
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.EntityObject>> {
   const id = freshId('customer');
-  const res = await pn.dataSync.createEntity({
-    id,
-    class: ENTITY_CLASS_CUSTOMER,
-    data: {
-      classVersion: CLASS_VERSION,
-      status: 'active',
-      payload: customerPayload(id, overrides),
-    },
-  });
+  const res = await createWithRunUniqueId(
+    () =>
+      pn.dataSync.createEntity({
+        id,
+        class: ENTITY_CLASS_CUSTOMER,
+        data: {
+          classVersion: CLASS_VERSION,
+          status: 'active',
+          payload: customerPayload(id, overrides),
+        },
+      }),
+    () => pn.dataSync.getEntity({ id }),
+    { label: 'createEntity' },
+  );
   return { obj: res.data, dispose: () => safeRemove(() => pn.dataSync.removeEntity({ id: res.data.id })) };
 }
 
@@ -246,15 +252,20 @@ export async function createLoanQuoteEntity(
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.EntityObject>> {
   const id = freshId('loanquote');
-  const res = await pn.dataSync.createEntity({
-    id,
-    class: ENTITY_CLASS_LOAN_QUOTE,
-    data: {
-      classVersion: CLASS_VERSION,
-      status: 'active',
-      payload: loanQuotePayload(id, overrides),
-    },
-  });
+  const res = await createWithRunUniqueId(
+    () =>
+      pn.dataSync.createEntity({
+        id,
+        class: ENTITY_CLASS_LOAN_QUOTE,
+        data: {
+          classVersion: CLASS_VERSION,
+          status: 'active',
+          payload: loanQuotePayload(id, overrides),
+        },
+      }),
+    () => pn.dataSync.getEntity({ id }),
+    { label: 'createEntity' },
+  );
   return { obj: res.data, dispose: () => safeRemove(() => pn.dataSync.removeEntity({ id: res.data.id })) };
 }
 
@@ -265,17 +276,22 @@ export async function createRequestedByRelationship(
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.RelationshipObject>> {
   const id = freshId('requested-by');
-  const res = await pn.dataSync.createRelationship({
-    id,
-    class: RELATIONSHIP_CLASS_REQUESTED_BY,
-    entityAId: customerId,
-    entityBId: loanQuoteId,
-    data: {
-      classVersion: CLASS_VERSION,
-      status: 'active',
-      payload: { linkedAt: '2026-07-06T10:00:00.000Z', ...overrides },
-    },
-  });
+  const res = await createWithRunUniqueId(
+    () =>
+      pn.dataSync.createRelationship({
+        id,
+        class: RELATIONSHIP_CLASS_REQUESTED_BY,
+        entityAId: customerId,
+        entityBId: loanQuoteId,
+        data: {
+          classVersion: CLASS_VERSION,
+          status: 'active',
+          payload: { linkedAt: '2026-07-06T10:00:00.000Z', ...overrides },
+        },
+      }),
+    () => pn.dataSync.getRelationship({ id }),
+    { label: 'createRelationship' },
+  );
   return { obj: res.data, dispose: () => safeRemove(() => pn.dataSync.removeRelationship({ id: res.data.id })) };
 }
 
@@ -284,10 +300,15 @@ export async function createUserObj(
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.UserObject>> {
   const id = freshId('user');
-  const res = await pn.dataSync.createUser({
-    id,
-    data: { classVersion: CLASS_VERSION, status: 'active', payload: userPayload(overrides) },
-  });
+  const res = await createWithRunUniqueId(
+    () =>
+      pn.dataSync.createUser({
+        id,
+        data: { classVersion: CLASS_VERSION, status: 'active', payload: userPayload(overrides) },
+      }),
+    () => pn.dataSync.getUser({ id }),
+    { label: 'createUser' },
+  );
   return { obj: res.data, dispose: () => safeRemove(() => pn.dataSync.removeUser({ id: res.data.id })) };
 }
 
@@ -296,10 +317,15 @@ export async function createChannelObj(
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.ChannelObject>> {
   const id = freshId('JSchannel');
-  const res = await pn.dataSync.createChannel({
-    id,
-    data: { classVersion: CLASS_VERSION, status: 'active', payload: channelPayload(overrides) },
-  });
+  const res = await createWithRunUniqueId(
+    () =>
+      pn.dataSync.createChannel({
+        id,
+        data: { classVersion: CLASS_VERSION, status: 'active', payload: channelPayload(overrides) },
+      }),
+    () => pn.dataSync.getChannel({ id }),
+    { label: 'createChannel' },
+  );
   return { obj: res.data, dispose: () => safeRemove(() => pn.dataSync.removeChannel({ id: res.data.id })) };
 }
 
@@ -310,16 +336,21 @@ export async function createMembershipObj(
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.MembershipObject>> {
   const id = freshId('membership');
-  const res = await pn.dataSync.createMembership({
-    id,
-    userId,
-    channelId,
-    data: {
-      classVersion: CLASS_VERSION,
-      status: 'active',
-      payload: { role: 'member', joinedAt: '2026-07-06T10:00:00.000Z', ...overrides },
-    },
-  });
+  const res = await createWithRunUniqueId(
+    () =>
+      pn.dataSync.createMembership({
+        id,
+        userId,
+        channelId,
+        data: {
+          classVersion: CLASS_VERSION,
+          status: 'active',
+          payload: { role: 'member', joinedAt: '2026-07-06T10:00:00.000Z', ...overrides },
+        },
+      }),
+    () => pn.dataSync.getMembership({ id }),
+    { label: 'createMembership' },
+  );
   return { obj: res.data, dispose: () => safeRemove(() => pn.dataSync.removeMembership({ id: res.data.id })) };
 }
 

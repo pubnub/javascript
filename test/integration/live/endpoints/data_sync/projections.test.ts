@@ -20,6 +20,7 @@ import assert from 'node:assert';
 import PubNub from 'pubnub';
 
 import { createClient } from '../../support/clients';
+import { createWithRunUniqueId } from '../../support/retry';
 import { sleep } from '../../support/wait';
 
 import {
@@ -369,42 +370,59 @@ function eventOn(events: PubNub.Subscription.DataSyncObject[], channel: string):
 // --------------------------------------------------------
 
 /** Every seeded object carries a `private` field, which only the `admin` projection exposes. */
+// The ids come from `projectionId` and are unique to this run, so a 409 on a retry means the first attempt was stored (see
+// createWithRunUniqueId in support/retry.ts). The read-back is a plain get with the super-user client.
 async function seedCustomer(pnPam: PubNub, id: string, overrides: Record<string, unknown> = {}): Promise<void> {
-  await pnPam.dataSync.createEntity({
-    id,
-    class: ENTITY_CLASS_CUSTOMER,
-    data: {
-      classVersion: CLASS_VERSION,
-      status: 'active',
-      payload: customerPayload(id, { private: CUSTOMER_SECRET, ...overrides }),
-    },
-  });
+  await createWithRunUniqueId(
+    () =>
+      pnPam.dataSync.createEntity({
+        id,
+        class: ENTITY_CLASS_CUSTOMER,
+        data: {
+          classVersion: CLASS_VERSION,
+          status: 'active',
+          payload: customerPayload(id, { private: CUSTOMER_SECRET, ...overrides }),
+        },
+      }),
+    () => pnPam.dataSync.getEntity({ id }),
+    { label: 'createEntity customer' },
+  );
 }
 
 async function seedLoanQuote(pnPam: PubNub, id: string): Promise<void> {
-  await pnPam.dataSync.createEntity({
-    id,
-    class: ENTITY_CLASS_LOAN_QUOTE,
-    data: {
-      classVersion: CLASS_VERSION,
-      status: 'active',
-      payload: loanQuotePayload(id, { private: LOAN_QUOTE_SECRET }),
-    },
-  });
+  await createWithRunUniqueId(
+    () =>
+      pnPam.dataSync.createEntity({
+        id,
+        class: ENTITY_CLASS_LOAN_QUOTE,
+        data: {
+          classVersion: CLASS_VERSION,
+          status: 'active',
+          payload: loanQuotePayload(id, { private: LOAN_QUOTE_SECRET }),
+        },
+      }),
+    () => pnPam.dataSync.getEntity({ id }),
+    { label: 'createEntity loanQuote' },
+  );
 }
 
 async function seedRequestedBy(pnPam: PubNub, id: string, customerId: string, loanQuoteId: string): Promise<void> {
-  await pnPam.dataSync.createRelationship({
-    id,
-    class: RELATIONSHIP_CLASS_REQUESTED_BY,
-    entityAId: customerId,
-    entityBId: loanQuoteId,
-    data: {
-      classVersion: CLASS_VERSION,
-      status: 'active',
-      payload: { linkedAt: LINKED_AT, private: REQUESTED_BY_SECRET },
-    },
-  });
+  await createWithRunUniqueId(
+    () =>
+      pnPam.dataSync.createRelationship({
+        id,
+        class: RELATIONSHIP_CLASS_REQUESTED_BY,
+        entityAId: customerId,
+        entityBId: loanQuoteId,
+        data: {
+          classVersion: CLASS_VERSION,
+          status: 'active',
+          payload: { linkedAt: LINKED_AT, private: REQUESTED_BY_SECRET },
+        },
+      }),
+    () => pnPam.dataSync.getRelationship({ id }),
+    { label: 'createRelationship' },
+  );
 }
 
 // --------------------------------------------------------

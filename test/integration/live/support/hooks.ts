@@ -10,6 +10,10 @@
  *   the next run's "before all" cleanup retries and fails the run when the keyset is still dirty). One exception: a failed revoke of
  *   the application-level Access Manager grant leaves a secured keyset open, so it fails the run.
  *
+ * failure explanation: every failure of a test or of a hook (before, beforeEach, after, ...) that is, or wraps through `.cause`, a
+ *   PubNub SDK error gets the SDK's status (category, status code, operation, the service's error data) appended to its message,
+ *   so the failure list at the end of the run explains itself. See explain-error.ts. Installed for both npm scripts.
+ *
  * The endpoint tests (`.mocharc.endpoints.cjs`, LIVE_TIER=endpoints) check no role up front: a test fails with a "missing keys"
  * message (env names) when the role it builds a client for is not set. Janitor and preflight default to off there.
  *
@@ -19,6 +23,7 @@
 import { destroyClients } from './clients';
 import { restoreAllConsoles } from './console';
 import { describeRoles, env, janitorEnabled, preflightEnabled, redact, ROLES } from './env';
+import { explainSdkError } from './explain-error';
 import { formatReport, runJanitor, verifyApplicationGrantClosed } from './janitor';
 import { runPreflight } from './preflight';
 
@@ -34,6 +39,30 @@ function isFullRun(argv: readonly string[] = process.argv.slice(2)): boolean {
 
 /** True under `.mocharc.endpoints.cjs` (it sets LIVE_TIER=endpoints): no role is checked up front (each test needs its own, see `keysOf`), janitor and preflight default to off. */
 const endpointsTier = process.env.LIVE_TIER === 'endpoints';
+
+/**
+ * Every failure of the run, test or hook, passes through `Runner#fail` before the reporter sees it, so wrapping it once covers
+ * all of them, including `before` and `beforeEach` hooks, which `afterEach` cannot reach (a failed hook is reported against the
+ * hook, not `currentTest`). The wrapper only annotates the error and then calls the original with the same arguments: results,
+ * counts and the error object stay as they are. `Runner#fail` is not part of Mocha's documented API, so when it is missing (a
+ * Mocha upgrade) the install reports false and the `afterEach` fallback below annotates failed tests (hook failures stay plain).
+ */
+function installFailureExplainer(): boolean {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Runner = require('mocha/lib/runner') as { prototype: { fail?: (...args: unknown[]) => unknown } };
+    const original = Runner.prototype.fail;
+    if (typeof original !== 'function') return false;
+    Runner.prototype.fail = function (this: unknown, ...args: unknown[]): unknown {
+      explainSdkError(args[1]);
+      return original.apply(this, args);
+    };
+    return true;
+  } catch {
+    return false;
+  }
+}
+const explainerInstalled = installFailureExplainer();
 
 const banner = (lines: string[]): void => {
   const bar = '!'.repeat(78);
@@ -88,7 +117,8 @@ export const mochaHooks = {
       console.log('preflight: keyset features ok');
     }
   },
-  afterEach(): void {
+  afterEach(this: Mocha.Context): void {
+    if (!explainerInstalled) explainSdkError(this.currentTest?.err);
     restoreAllConsoles();
     destroyClients();
   },

@@ -13,6 +13,7 @@ import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
 
 import { createClient } from '../support/clients';
+import { retryTransient, seedOnFreshChannel } from '../support/retry';
 import { connected, eventually, expectEvent } from '../support/wait';
 
 /** Message action object. */
@@ -67,10 +68,27 @@ describe('endpoints/message_actions: message actions against the service', funct
     pubnub = createClient('open', 'myUUID');
   });
 
+  /** Seeding for `seedOnFreshChannel`: publishes `messages` messages, then adds `actionsPerMessage` actions to each. */
+  const seedActions =
+    (messages: number, actionsPerMessage: number) =>
+    async (channel: string): Promise<{ messageTimetokens: string[]; actionTimetokens: string[] }> => {
+      const messageTimetokens = await publishMessages(pubnub, messages, channel);
+      const actionTimetokens = await addActions(pubnub, actionsPerMessage, messageTimetokens, channel);
+      return { messageTimetokens, actionTimetokens };
+    };
+
   describe('addMessageAction', () => {
-    const addsAction = async (channel: string): Promise<void> => {
+    const addsAction = async (suffix?: string): Promise<void> => {
       const messageAction: MessageAction = { type: 'custom', value: randomUUID() };
-      const [messageTimetoken] = await publishMessages(pubnub, 1, channel);
+      // Only the publish is seeding. The addMessageAction call below is what the test asserts on and is never retried.
+      const {
+        channel,
+        result: [messageTimetoken],
+      } = await seedOnFreshChannel(
+        () => uniqueChannel(suffix),
+        (name) => publishMessages(pubnub, 1, name),
+        { label: 'addMessageAction seed' },
+      );
 
       const response = await pubnub.addMessageAction({ channel, messageTimetoken, action: messageAction });
 
@@ -81,9 +99,9 @@ describe('endpoints/message_actions: message actions against the service', funct
       assert(response.data.actionTimetoken);
     };
 
-    it('add message action', () => addsAction(uniqueChannel()));
+    it('add message action', () => addsAction());
 
-    it('add message action with encoded channel', () => addsAction(uniqueChannel('#1')));
+    it('add message action with encoded channel', () => addsAction('#1'));
 
     it('add message action should trigger event', async () => {
       const messageAction: MessageAction = { type: 'custom', value: randomUUID() };
@@ -94,7 +112,12 @@ describe('endpoints/message_actions: message actions against the service', funct
       pubnub.subscribe({ channels: [channel] });
       await ready;
 
-      const published = await pubnub.publish({ channel, message: { hello: 'test' }, sendByPost: true });
+      // Seeding: the message the action is attached to. A duplicate stored by a retried publish is harmless, the assertions use the
+      // timetoken of the publish that answered. The addMessageAction call below is the trigger and is not retried.
+      const published = await retryTransient(
+        () => pubnub.publish({ channel, message: { hello: 'test' }, sendByPost: true }),
+        { label: 'publish seed' },
+      );
       await pubnub.addMessageAction({ channel, messageTimetoken: published.timetoken, action: messageAction });
 
       const messageActionEvent = await event;
@@ -110,9 +133,13 @@ describe('endpoints/message_actions: message actions against the service', funct
   });
 
   describe('removeMessageAction', () => {
-    const removesAction = async (channel: string): Promise<void> => {
-      const messageTimetokens = await publishMessages(pubnub, 1, channel);
-      const actionTimetokens = await addActions(pubnub, 1, messageTimetokens, channel);
+    const removesAction = async (suffix?: string): Promise<void> => {
+      const {
+        channel,
+        result: { messageTimetokens, actionTimetokens },
+      } = await seedOnFreshChannel(() => uniqueChannel(suffix), seedActions(1, 1), {
+        label: 'removeMessageAction seed',
+      });
 
       await eventually(
         async () => {
@@ -138,14 +165,15 @@ describe('endpoints/message_actions: message actions against the service', funct
       );
     };
 
-    it('remove message action', () => removesAction(uniqueChannel()));
+    it('remove message action', () => removesAction());
 
-    it('remove message action with encoded channel', () => removesAction(uniqueChannel('#1')));
+    it('remove message action with encoded channel', () => removesAction('#1'));
 
     it('remove message action should trigger event', async () => {
-      const channel = uniqueChannel();
-      const messageTimetokens = await publishMessages(pubnub, 1, channel);
-      const actionTimetokens = await addActions(pubnub, 1, messageTimetokens, channel);
+      const {
+        channel,
+        result: { messageTimetokens, actionTimetokens },
+      } = await seedOnFreshChannel(uniqueChannel, seedActions(1, 1), { label: 'removeMessageAction event seed' });
 
       const ready = connected(pubnub, { channels: [channel] });
       const event = expectEvent(pubnub, 'messageAction', (e) => e.event === 'removed');
@@ -169,9 +197,11 @@ describe('endpoints/message_actions: message actions against the service', funct
   });
 
   describe('getMessageAction', () => {
-    const fetchesActions = async (channel: string): Promise<void> => {
-      const messageTimetokens = await publishMessages(pubnub, 2, channel);
-      const actionTimetokens = await addActions(pubnub, 3, messageTimetokens, channel);
+    const fetchesActions = async (suffix?: string): Promise<void> => {
+      const {
+        channel,
+        result: { actionTimetokens },
+      } = await seedOnFreshChannel(() => uniqueChannel(suffix), seedActions(2, 3), { label: 'getMessageActions seed' });
       const lastPublishedActionTimetoken = actionTimetokens[actionTimetokens.length - 1];
       const firstPublishedActionTimetoken = actionTimetokens[0];
 
@@ -190,14 +220,15 @@ describe('endpoints/message_actions: message actions against the service', funct
       );
     };
 
-    it('fetch message actions', () => fetchesActions(uniqueChannel()));
+    it('fetch message actions', () => fetchesActions());
 
-    it('fetch message actions with encoded channel', () => fetchesActions(uniqueChannel('#1')));
+    it('fetch message actions with encoded channel', () => fetchesActions('#1'));
 
     it('fetch next message actions page', async () => {
-      const channel = uniqueChannel();
-      const messageTimetokens = await publishMessages(pubnub, 2, channel);
-      const actionTimetokens = await addActions(pubnub, 5, messageTimetokens, channel);
+      const {
+        channel,
+        result: { actionTimetokens },
+      } = await seedOnFreshChannel(uniqueChannel, seedActions(2, 5), { label: 'getMessageActions page seed' });
       const lastPublishedActionTimetoken = actionTimetokens[actionTimetokens.length - 1];
       const halfSize = Math.floor(actionTimetokens.length * 0.5);
       const firstPublishedActionTimetoken = actionTimetokens[0];
