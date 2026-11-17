@@ -148,7 +148,7 @@ describe('#core / mounting point', () => {
     // Simple reversible transformation (custom encryption is user-defined and opaque to the SDK).
     let customEncrypt = (data: Payload) => Buffer.from(JSON.stringify(data)).reverse().toString('base64');
 
-    let customDecrypt = (data: Payload) =>
+    const customDecrypt = (data: Payload) =>
       JSON.parse(Buffer.from(data as string, 'base64').reverse().toString('utf8'));
 
     let pn = new PubNub({
@@ -158,7 +158,7 @@ describe('#core / mounting point', () => {
       uuid: 'myUUID',
     });
 
-    let ciphertext = await pn.encrypt({ hi: 'there' });
+    const ciphertext = await pn.encrypt({ hi: 'there' });
 
     assert.notDeepEqual(ciphertext, JSON.stringify({ hi: 'there' }));
     assert.deepEqual(await pn.decrypt(ciphertext), { hi: 'there' });

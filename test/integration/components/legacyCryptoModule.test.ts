@@ -187,19 +187,31 @@ describe('LegacyCryptoModule Integration Tests', () => {
 
   describe('Error Handling', () => {
     it('should throw error for null encryption data', async () => {
-      await expectRejection(cryptoModule.encrypt(null as any), 'Encryption data cannot be null or undefined');
+      await expectRejection(
+        cryptoModule.encrypt(null as unknown as string),
+        'Encryption data cannot be null or undefined',
+      );
     });
 
     it('should throw error for undefined encryption data', async () => {
-      await expectRejection(cryptoModule.encrypt(undefined as any), 'Encryption data cannot be null or undefined');
+      await expectRejection(
+        cryptoModule.encrypt(undefined as unknown as string),
+        'Encryption data cannot be null or undefined',
+      );
     });
 
     it('should throw error for null decryption data', async () => {
-      await expectRejection(cryptoModule.decrypt(null as any), 'Decryption data cannot be null or undefined');
+      await expectRejection(
+        cryptoModule.decrypt(null as unknown as string),
+        'Decryption data cannot be null or undefined',
+      );
     });
 
     it('should throw error for undefined decryption data', async () => {
-      await expectRejection(cryptoModule.decrypt(undefined as any), 'Decryption data cannot be null or undefined');
+      await expectRejection(
+        cryptoModule.decrypt(undefined as unknown as string),
+        'Decryption data cannot be null or undefined',
+      );
     });
 
     it('should throw error for empty string decryption', async () => {
