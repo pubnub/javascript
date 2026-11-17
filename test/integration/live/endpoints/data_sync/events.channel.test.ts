@@ -17,6 +17,7 @@ import {
   channelPayload,
   freshId,
   freshPubNub,
+  removeAfterTest,
 } from '../../support/datasync-live-helpers';
 import { createWithRunUniqueId } from '../../support/retry';
 
@@ -38,7 +39,7 @@ describe('endpoints/data_sync/events.channel: DataSync events — Channel', func
     ).then(() => undefined);
 
   it('channel create → "create" event (objectType "channel")', async () => {
-    const id = freshId('channel');
+    const id = removeAfterTest(pubnub, 'channel', freshId('channel'));
     const event = await captureEvent(
       pubnub,
       [id],
@@ -63,7 +64,7 @@ describe('endpoints/data_sync/events.channel: DataSync events — Channel', func
   });
 
   it('channel update (PUT) → "update" event', async () => {
-    const id = freshId('channel');
+    const id = removeAfterTest(pubnub, 'channel', freshId('channel'));
     await createChannel(id);
 
     const event = await captureEvent(
@@ -100,7 +101,7 @@ describe('endpoints/data_sync/events.channel: DataSync events — Channel', func
   });
 
   it('channel update → "update" event', async () => {
-    const id = freshId('channel');
+    const id = removeAfterTest(pubnub, 'channel', freshId('channel'));
     // Seed `memberCount` first — the service rejects update-replace of a property that does not already
     // exist (`SYN-0006: Property does not exist`).
     await createChannel(id, channelPayload({ memberCount: 1 }));
@@ -128,7 +129,7 @@ describe('endpoints/data_sync/events.channel: DataSync events — Channel', func
   });
 
   it('channel delete → "delete" event with only {id, deletedAt}', async () => {
-    const id = freshId('channel');
+    const id = removeAfterTest(pubnub, 'channel', freshId('channel'));
     await createChannel(id);
 
     const event = await captureEvent(

@@ -107,8 +107,13 @@ describe('endpoints/message_actions: message actions against the service', funct
       const messageAction: MessageAction = { type: 'custom', value: randomUUID() };
       const channel = uniqueChannel();
 
+      // Timetokens the test knows, for the timeout message: an action whose timetoken is not after the cursor of the connected
+      // status (`tt=` in the statuses listed) is one a subscribe request that starts at that cursor does not return.
+      const known: Record<string, string> = {};
       const ready = connected(pubnub, { channels: [channel] });
-      const event = expectEvent(pubnub, 'messageAction', (e) => e.data.value === messageAction.value);
+      const event = expectEvent(pubnub, 'messageAction', (e) => e.data.value === messageAction.value, {
+        describe: () => `Timetokens the test knows: ${JSON.stringify(known)}.`,
+      });
       pubnub.subscribe({ channels: [channel] });
       await ready;
 
@@ -118,7 +123,13 @@ describe('endpoints/message_actions: message actions against the service', funct
         () => pubnub.publish({ channel, message: { hello: 'test' }, sendByPost: true }),
         { label: 'publish seed' },
       );
-      await pubnub.addMessageAction({ channel, messageTimetoken: published.timetoken, action: messageAction });
+      known.published = published.timetoken;
+      const added = await pubnub.addMessageAction({
+        channel,
+        messageTimetoken: published.timetoken,
+        action: messageAction,
+      });
+      known.actionAdded = added.data.actionTimetoken;
 
       const messageActionEvent = await event;
       assert(messageActionEvent.data);
@@ -175,8 +186,12 @@ describe('endpoints/message_actions: message actions against the service', funct
         result: { messageTimetokens, actionTimetokens },
       } = await seedOnFreshChannel(uniqueChannel, seedActions(1, 1), { label: 'removeMessageAction event seed' });
 
+      // Timetokens and steps the test knows, for the timeout message (see the add test).
+      const known: Record<string, string | boolean> = { seededAction: actionTimetokens[0] };
       const ready = connected(pubnub, { channels: [channel] });
-      const event = expectEvent(pubnub, 'messageAction', (e) => e.event === 'removed');
+      const event = expectEvent(pubnub, 'messageAction', (e) => e.event === 'removed', {
+        describe: () => `What the test knows: ${JSON.stringify(known)}.`,
+      });
       pubnub.subscribe({ channels: [channel] });
       await ready;
 
@@ -185,6 +200,7 @@ describe('endpoints/message_actions: message actions against the service', funct
         actionTimetoken: actionTimetokens[0],
         messageTimetoken: messageTimetokens[0],
       });
+      known.removeAnswered = true;
 
       const messageActionEvent = await event;
       assert(messageActionEvent.data);

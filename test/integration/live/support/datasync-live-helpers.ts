@@ -6,7 +6,9 @@ import assert from 'node:assert';
 import PubNub from 'pubnub';
 import { createClient } from './clients';
 import { keysOf } from './env';
+import { cleanupAfterTest } from './cleanup';
 import { createWithRunUniqueId } from './retry';
+import { uniqueSuffix } from './util';
 import { connected } from './wait';
 
 // --------------------------------------------------------
@@ -56,9 +58,16 @@ export function untrackedPubNub(overrides: Record<string, unknown> = {}): PubNub
   } as PubNub.PubNubConfiguration);
 }
 
-/** Client-supplied id, underscore-free (service rejects `_` with SYN-0004). */
+/**
+ * Client-supplied id for an object this run creates: `<prefix>-<uniqueSuffix()>`, for example `customer-mh3k9x2a4f7q1z`. The
+ * suffix (support/util.ts) is the time in base 36 plus 6 random base-36 characters, so it cannot meet an object that earlier
+ * runs left on the keyset. Underscore-free (the service rejects `_` with SYN-0004), lower-case apart from the caller's prefix, and
+ * at most 28 characters with the prefixes used here (the longest id known to be accepted is 28 characters).
+ * `createWithRunUniqueId` (retry.ts) relies on this: a 409 on a retry may only mean that our own first attempt was stored.
+ * Register the id with `removeAfterTest` before creating the object, so a red test does not leave it behind.
+ */
 export function freshId(prefix: string): string {
-  return `${prefix}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
+  return `${prefix}-${uniqueSuffix()}`;
 }
 
 /** Per-run marker used to isolate list/filter assertions against a shared live subkey. */
@@ -66,6 +75,28 @@ export function runMarker(): string {
   return String(PubNub.generateUUID())
     .replace(/[^a-z0-9]/gi, '')
     .slice(0, 12);
+}
+
+/** What `removeAfterTest` knows how to remove. */
+export type DataSyncKind = 'entity' | 'user' | 'channel' | 'relationship' | 'membership';
+
+/**
+ * Registers the removal of an object THIS test creates and returns its id, so it reads `const id = removeAfterTest(pubnub, 'entity', freshId('customer'))`.
+ * Call it before the create: the root `afterEach` (hooks.ts, `support/cleanup.ts`) then removes the object whether the test passed,
+ * failed on an assertion, or failed in the create itself (a create whose answer was lost can still have stored the object). The
+ * removals run newest first, so a relationship or membership goes before the entities it links, and a 404 (the test removed it itself,
+ * or it was never stored) is expected. It only ever removes the ids registered here, which this run generated.
+ */
+export function removeAfterTest(pn: PubNub, kind: DataSyncKind, id: string): string {
+  const remove: Record<DataSyncKind, () => Promise<unknown>> = {
+    entity: () => pn.dataSync.removeEntity({ id }),
+    user: () => pn.dataSync.removeUser({ id }),
+    channel: () => pn.dataSync.removeChannel({ id }),
+    relationship: () => pn.dataSync.removeRelationship({ id }),
+    membership: () => pn.dataSync.removeMembership({ id }),
+  };
+  cleanupAfterTest(`remove ${kind} ${id}`, remove[kind]);
+  return id;
 }
 
 /** Await `fn`, swallowing any error. Use only for cleanup — never in the assertion path. */
@@ -221,7 +252,8 @@ export function assertMembershipObject(
 // -------------- REST fixture factories ------------------
 // --------------------------------------------------------
 // Each factory creates a valid object and returns `{ obj, dispose }`. `dispose()` is idempotent and
-// swallows errors (already-removed objects 404, which is fine for cleanup).
+// swallows errors (already-removed objects 404, which is fine for cleanup). The id is also registered with `removeAfterTest`, so a
+// test that forgets `dispose()` does not leave the object behind.
 
 export type Fixture<T> = { obj: T; dispose: () => Promise<void> };
 
@@ -229,7 +261,7 @@ export async function createCustomerEntity(
   pn: PubNub,
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.EntityObject>> {
-  const id = freshId('customer');
+  const id = removeAfterTest(pn, 'entity', freshId('customer'));
   const res = await createWithRunUniqueId(
     () =>
       pn.dataSync.createEntity({
@@ -251,7 +283,7 @@ export async function createLoanQuoteEntity(
   pn: PubNub,
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.EntityObject>> {
-  const id = freshId('loanquote');
+  const id = removeAfterTest(pn, 'entity', freshId('loanquote'));
   const res = await createWithRunUniqueId(
     () =>
       pn.dataSync.createEntity({
@@ -275,7 +307,7 @@ export async function createRequestedByRelationship(
   loanQuoteId: string,
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.RelationshipObject>> {
-  const id = freshId('requested-by');
+  const id = removeAfterTest(pn, 'relationship', freshId('requested-by'));
   const res = await createWithRunUniqueId(
     () =>
       pn.dataSync.createRelationship({
@@ -299,7 +331,7 @@ export async function createUserObj(
   pn: PubNub,
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.UserObject>> {
-  const id = freshId('user');
+  const id = removeAfterTest(pn, 'user', freshId('user'));
   const res = await createWithRunUniqueId(
     () =>
       pn.dataSync.createUser({
@@ -316,7 +348,7 @@ export async function createChannelObj(
   pn: PubNub,
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.ChannelObject>> {
-  const id = freshId('JSchannel');
+  const id = removeAfterTest(pn, 'channel', freshId('JSchannel'));
   const res = await createWithRunUniqueId(
     () =>
       pn.dataSync.createChannel({
@@ -335,7 +367,7 @@ export async function createMembershipObj(
   channelId: string,
   overrides: Record<string, unknown> = {},
 ): Promise<Fixture<PubNub.DataSync.MembershipObject>> {
-  const id = freshId('membership');
+  const id = removeAfterTest(pn, 'membership', freshId('membership'));
   const res = await createWithRunUniqueId(
     () =>
       pn.dataSync.createMembership({

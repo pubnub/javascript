@@ -19,6 +19,7 @@ import {
   customerPayload,
   freshId,
   freshPubNub,
+  removeAfterTest,
 } from '../../support/datasync-live-helpers';
 import { createWithRunUniqueId } from '../../support/retry';
 
@@ -49,7 +50,7 @@ describe('endpoints/data_sync/events.entity: DataSync events — Entity Customer
     ).then(() => undefined);
 
   it('entity create - create event', async () => {
-    const id = freshId('customer');
+    const id = removeAfterTest(pubnub, 'entity', freshId('customer'));
     const event = await captureEvent(
       pubnub,
       [id],
@@ -74,7 +75,7 @@ describe('endpoints/data_sync/events.entity: DataSync events — Entity Customer
   });
 
   it('entity update (PUT) - update event', async () => {
-    const id = freshId('customer');
+    const id = removeAfterTest(pubnub, 'entity', freshId('customer'));
     await createCustomer(id);
 
     const event = await captureEvent(
@@ -111,7 +112,7 @@ describe('endpoints/data_sync/events.entity: DataSync events — Entity Customer
   });
 
   it('entity update  update event', async () => {
-    const id = freshId('customer');
+    const id = removeAfterTest(pubnub, 'entity', freshId('customer'));
     await createCustomer(id);
 
     const event = await captureEvent(
@@ -137,7 +138,7 @@ describe('endpoints/data_sync/events.entity: DataSync events — Entity Customer
   });
 
   it('entity delete - delete event with only id, deletedAt', async () => {
-    const id = freshId('customer');
+    const id = removeAfterTest(pubnub, 'entity', freshId('customer'));
     await createCustomer(id);
 
     const event = await captureEvent(

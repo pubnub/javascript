@@ -5,7 +5,8 @@
  *   keysets too, see `isFullRun`), then the janitor (cleans every resource of resources.ts), then, on a
  *   secured keyset, a wait until a client without a token is refused again, then the preflight (keyset features).
  *   A cleanup failure here FAILS the run with a message that lists what could not be removed: the tests assume a clean slate.
- * after each: restores the console if a test left it captured, then destroys every tracked client.
+ * after each: removes what the test registered with `cleanupAfterTest` (cleanup.ts; the clients are still alive), restores the
+ *   console if a test left it captured, then destroys every tracked client.
  * after all: the janitor again. Its failures are printed loudly but do NOT fail the run (the test results stay what they are, and
  *   the next run's "before all" cleanup retries and fails the run when the keyset is still dirty). One exception: a failed revoke of
  *   the application-level Access Manager grant leaves a secured keyset open, so it fails the run.
@@ -21,6 +22,7 @@
  * reported in the README). `LIVE_PREFLIGHT=off` skips the preflight.
  */
 import { destroyClients } from './clients';
+import { runCleanups } from './cleanup';
 import { restoreAllConsoles } from './console';
 import { describeRoles, env, janitorEnabled, preflightEnabled, redact, ROLES } from './env';
 import { explainSdkError } from './explain-error';
@@ -117,10 +119,15 @@ export const mochaHooks = {
       console.log('preflight: keyset features ok');
     }
   },
-  afterEach(this: Mocha.Context): void {
+  async afterEach(this: Mocha.Context): Promise<void> {
     if (!explainerInstalled) explainSdkError(this.currentTest?.err);
-    restoreAllConsoles();
-    destroyClients();
+    // Before the clients are destroyed: the registered removals use them. Never throws.
+    try {
+      await runCleanups();
+    } finally {
+      restoreAllConsoles();
+      destroyClients();
+    }
   },
   async afterAll(this: Mocha.Context): Promise<void> {
     if (!janitorEnabled()) return;

@@ -21,6 +21,7 @@ import PubNub from 'pubnub';
 
 import { createClient } from '../../support/clients';
 import { createWithRunUniqueId } from '../../support/retry';
+import { uniqueSuffix } from '../../support/util';
 import { sleep } from '../../support/wait';
 
 import {
@@ -91,10 +92,11 @@ const itWhenAllClassesEmit = LOAN_QUOTE_AND_RELATIONSHIP_EVENTS_ENABLED ? it : i
 /**
  * Dot-separated id, so `dataSyncEntity('<prefix>.*')` matches the object's own channel — and
  * `subscription({ projection: 'admin' })` matches `__admin__<prefix>.*`. (helpers' `freshId` uses
- * `-`, which no wildcard matches.)
+ * `-`, which no wildcard matches.) The part after `.p` is `uniqueSuffix()` (time in base 36 plus 6 random base-36 characters),
+ * so the id cannot meet an object an earlier run left on the keyset; no `_` (the service rejects it), at most 27 characters here.
  */
 function projectionId(prefix: string): string {
-  return `${prefix}.p${Date.now().toString(36)}${Math.floor(Math.random() * 90000) + 10000}`;
+  return `${prefix}.p${uniqueSuffix()}`;
 }
 
 /** Token-only client: same keyset as `freshPubNub()` but deliberately **without** `secretKey`. */
@@ -546,7 +548,7 @@ describe('endpoints/data_sync/projections: DataSync projections admin vs __defau
       await safeRemove(() => pnPam.dataSync.removeRelationship({ id: relationshipId }));
       await safeRemove(() => pnPam.dataSync.removeEntity({ id: customerId }));
       await safeRemove(() => pnPam.dataSync.removeEntity({ id: loanQuoteId }));
-      pnPam.destroy();
+      pnPam?.destroy();
     });
 
     /** Readers come from the tier's `createClient`, so the root hook destroys them after each test. */

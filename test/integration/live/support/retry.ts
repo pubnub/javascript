@@ -101,12 +101,19 @@ export function isAlreadyExists(error: unknown): boolean {
 }
 
 /**
- * Creates a DataSync object whose id is unique to this run (`freshId`, `projectionId`) and tolerates a transient service error.
+ * Creates a DataSync object whose id is unique to this run (`freshId`, `projectionId`: time in base 36 plus 6 random base-36
+ * characters, see `uniqueSuffix` in util.ts) and tolerates a transient service error.
  *
  * A create is not idempotent, so a plain retry is unsafe: when the first attempt was stored but its answer was lost (a 5xx after
  * the write, a timeout), the retry meets the object it just created and gets 409 (DS-0301). With an id nobody else can hold,
  * that 409 can only mean "the earlier attempt was stored", so it counts as success, and the object is read back (`readBack`, a get
  * by id) so the caller still gets the eTag and timestamps the create would have returned.
+ *
+ * The rule is only as good as the id. With the old `prefix-NNNNN` ids (90,000 values) every object left on a keyset made a first
+ * attempt fail with 409 (DS-0301) with probability 1 in 90,000 per leftover of that prefix, and CI hit it. An id with a time part
+ * and 36^6 random values can meet an old object only by drawing the same random part in the same millisecond. What remains is a
+ * collision between a retry and another run in the same millisecond with the same draw: the 409 path would then read back that
+ * other run's object, and the test's own assertions on the id and payload are what would catch it.
  *
  * - failure of the FIRST attempt that is not transient (including a 409, which means the id was not unique): thrown at once.
  * - transient failure (`isTransient`): retried like `retryTransient`, up to `attempts` tries (default 3).

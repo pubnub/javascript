@@ -21,6 +21,7 @@ import {
   channelPayload,
   freshId,
   freshPubNub,
+  removeAfterTest,
   safeRemove,
   userPayload,
 } from '../../support/datasync-live-helpers';
@@ -37,8 +38,8 @@ describe('endpoints/data_sync/events.membership: DataSync events — Membership'
 
   /** Seed the User + Channel a Membership joins. */
   async function seedEndpoints(): Promise<{ userId: string; channelId: string }> {
-    const userId = freshId('user');
-    const channelId = freshId('channel');
+    const userId = removeAfterTest(pubnub, 'user', freshId('user'));
+    const channelId = removeAfterTest(pubnub, 'channel', freshId('channel'));
     // Both ids come from `freshId`, unique to this run: a 409 on a retry means the first attempt was stored (see retry.ts).
     await createWithRunUniqueId(
       () =>
@@ -81,7 +82,7 @@ describe('endpoints/data_sync/events.membership: DataSync events — Membership'
 
   it('membership create → "create" event (delivered on channel + user)', async () => {
     const { userId, channelId } = await seedEndpoints();
-    const id = freshId('membership');
+    const id = removeAfterTest(pubnub, 'membership', freshId('membership'));
 
     const event = await captureEvent(
       pubnub,
@@ -110,7 +111,7 @@ describe('endpoints/data_sync/events.membership: DataSync events — Membership'
 
   it('membership update (PUT) → "update" event', async () => {
     const { userId, channelId } = await seedEndpoints();
-    const id = freshId('membership');
+    const id = removeAfterTest(pubnub, 'membership', freshId('membership'));
     await createMembership(id, userId, channelId);
 
     const event = await captureEvent(
@@ -151,7 +152,7 @@ describe('endpoints/data_sync/events.membership: DataSync events — Membership'
 
   it('membership update → "update" event', async () => {
     const { userId, channelId } = await seedEndpoints();
-    const id = freshId('membership');
+    const id = removeAfterTest(pubnub, 'membership', freshId('membership'));
     await createMembership(id, userId, channelId);
 
     const event = await captureEvent(
@@ -180,7 +181,7 @@ describe('endpoints/data_sync/events.membership: DataSync events — Membership'
 
   it('membership delete → "delete" event with {id, deletedAt, channelId, userId}', async () => {
     const { userId, channelId } = await seedEndpoints();
-    const id = freshId('membership');
+    const id = removeAfterTest(pubnub, 'membership', freshId('membership'));
     await createMembership(id, userId, channelId);
 
     const event = await captureEvent(
@@ -204,7 +205,7 @@ describe('endpoints/data_sync/events.membership: DataSync events — Membership'
 
   it('routing proof — a subscriber to the membership id receives nothing', async () => {
     const { userId, channelId } = await seedEndpoints();
-    const id = freshId('membership');
+    const id = removeAfterTest(pubnub, 'membership', freshId('membership'));
     try {
       await assert.rejects(
         () =>

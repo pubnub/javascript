@@ -15,6 +15,7 @@ import {
   captureEvent,
   freshId,
   freshPubNub,
+  removeAfterTest,
   userPayload,
 } from '../../support/datasync-live-helpers';
 import { createWithRunUniqueId } from '../../support/retry';
@@ -37,7 +38,7 @@ describe('endpoints/data_sync/events.user: DataSync events — User', function (
     ).then(() => undefined);
 
   it('user create → "create" event (objectType "user")', async () => {
-    const id = freshId('user');
+    const id = removeAfterTest(pubnub, 'user', freshId('user'));
     const event = await captureEvent(
       pubnub,
       [id],
@@ -62,7 +63,7 @@ describe('endpoints/data_sync/events.user: DataSync events — User', function (
   });
 
   it('user update (PUT) → "update" event', async () => {
-    const id = freshId('user');
+    const id = removeAfterTest(pubnub, 'user', freshId('user'));
     await createUser(id);
 
     const event = await captureEvent(
@@ -95,7 +96,7 @@ describe('endpoints/data_sync/events.user: DataSync events — User', function (
   });
 
   it('user update → "update" event', async () => {
-    const id = freshId('user');
+    const id = removeAfterTest(pubnub, 'user', freshId('user'));
     // Seed `level` first — the service rejects update-replace of a property that does not already
     // exist (`SYN-0006: Property does not exist`).
     await createUser(id, userPayload({ level: 'L3' }));
@@ -123,7 +124,7 @@ describe('endpoints/data_sync/events.user: DataSync events — User', function (
   });
 
   it('user delete → "delete" event with only {id, deletedAt}', async () => {
-    const id = freshId('user');
+    const id = removeAfterTest(pubnub, 'user', freshId('user'));
     await createUser(id);
 
     const event = await captureEvent(

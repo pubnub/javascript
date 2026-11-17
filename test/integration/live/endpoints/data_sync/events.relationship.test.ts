@@ -24,6 +24,7 @@ import {
   customerPayload,
   freshId,
   freshPubNub,
+  removeAfterTest,
   loanQuotePayload,
   safeRemove,
 } from '../../support/datasync-live-helpers';
@@ -40,8 +41,8 @@ describe('endpoints/data_sync/events.relationship: DataSync events Relationship 
 
   /** Seed the two endpoint entities a REQUESTED_BY relationship links. */
   async function seedEndpoints(): Promise<{ customerId: string; loanQuoteId: string }> {
-    const customerId = freshId('customer');
-    const loanQuoteId = freshId('loanquote');
+    const customerId = removeAfterTest(pubnub, 'entity', freshId('customer'));
+    const loanQuoteId = removeAfterTest(pubnub, 'entity', freshId('loanquote'));
     // Both ids come from `freshId`, unique to this run: a 409 on a retry means the first attempt was stored (see retry.ts).
     await createWithRunUniqueId(
       () =>
@@ -95,7 +96,7 @@ describe('endpoints/data_sync/events.relationship: DataSync events Relationship 
 
   it('relationship create create event delivered on endpoint channels', async () => {
     const { customerId, loanQuoteId } = await seedEndpoints();
-    const relId = freshId('requested-by');
+    const relId = removeAfterTest(pubnub, 'relationship', freshId('requested-by'));
     try {
       const event = await captureEvent(
         pubnub,
@@ -127,7 +128,7 @@ describe('endpoints/data_sync/events.relationship: DataSync events Relationship 
 
   it('relationship set (PUT)  "update" event', async () => {
     const { customerId, loanQuoteId } = await seedEndpoints();
-    const relId = freshId('requested-by');
+    const relId = removeAfterTest(pubnub, 'relationship', freshId('requested-by'));
     await createRel(relId, customerId, loanQuoteId);
     try {
       const event = await captureEvent(
@@ -171,7 +172,7 @@ describe('endpoints/data_sync/events.relationship: DataSync events Relationship 
 
   it('relationship update (PATCH) event', async () => {
     const { customerId, loanQuoteId } = await seedEndpoints();
-    const relId = freshId('requested-by');
+    const relId = removeAfterTest(pubnub, 'relationship', freshId('requested-by'));
     await createRel(relId, customerId, loanQuoteId);
     try {
       const event = await captureEvent(
@@ -206,7 +207,7 @@ describe('endpoints/data_sync/events.relationship: DataSync events Relationship 
 
   it('relationship delete event with {id, deletedAt, entityAId, entityBId}', async () => {
     const { customerId, loanQuoteId } = await seedEndpoints();
-    const relId = freshId('requested-by');
+    const relId = removeAfterTest(pubnub, 'relationship', freshId('requested-by'));
     await createRel(relId, customerId, loanQuoteId);
 
     const event = await captureEvent(
@@ -233,7 +234,7 @@ describe('endpoints/data_sync/events.relationship: DataSync events Relationship 
 
   it('routing proof — a subscriber to the relationship id receives nothing', async () => {
     const { customerId, loanQuoteId } = await seedEndpoints();
-    const relId = freshId('requested-by');
+    const relId = removeAfterTest(pubnub, 'relationship', freshId('requested-by'));
     try {
       // Subscribing ONLY to the relationship's own id must time out — the event routes to the
       // endpoint channels, never the relationship id.
