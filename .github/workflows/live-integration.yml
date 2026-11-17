@@ -61,8 +61,11 @@ jobs:
   live:
     name: Live tier
     needs: [offline]
-    # Never on a pull request: no secrets for fork code. Scheduled and manual runs only.
-    if: ${{ github.event_name != 'pull_request' }}
+    # TEMPORARY: also runs on pull requests from a branch of this repository, so the tier can be tested before it is merged
+    # (a workflow can only be run manually or on a schedule once its file is on the default branch). Never on a fork pull
+    # request: no secrets for fork code. Before or right after the merge, change this back to
+    # `github.event_name != 'pull_request'` so the tier runs nightly and on demand only.
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on:
       group: organization/Default
     timeout-minutes: 40

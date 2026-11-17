@@ -60,6 +60,13 @@ jobs:
             live=false
             [ "$changed" = "true" ] && echo "live shards skipped: fork PR without secrets" >> "$GITHUB_STEP_SUMMARY"
           fi
+          # DISABLED: the samples now run in the live tier (.github/workflows/live-integration.yml). The dry and live jobs
+          # are switched off here, and the gate still reports success, so a branch protection rule that requires it is
+          # not left pending. Remove these three lines to switch this suite back on. The workflow goes away with
+          # docs-snippets/ at the cutover.
+          changed=false
+          live=false
+          echo "docs-snippets suite is disabled: the samples run in the live tier" >> "$GITHUB_STEP_SUMMARY"
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
           echo "live=$live" >> "$GITHUB_OUTPUT"
           echo "relevant changes: $changed, live shards: $live"
