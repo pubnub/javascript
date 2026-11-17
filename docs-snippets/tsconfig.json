@@ -20,6 +20,24 @@
       "**/*.ts"
     ],
     "exclude": [
-      "node_modules"
+      "node_modules",
+      ".run",
+      "report",
+      "api-reference",
+      "getting-started",
+      "migration-guides",
+      "shared",
+      "quickstarts",
+      "harness",
+      "fixtures",
+      "provision",
+      "run.ts",
+      ".mocharc.cjs",
+      "coverage.json",
+      "package.json",
+      "tsconfig.live.json",
+      "tsconfig.run.json",
+      "tsconfig.browser.json",
+      "README.md"
     ]
   }
