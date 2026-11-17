@@ -89,4 +89,52 @@ describe('time endpoints', () => {
       }
     });
   });
+
+  it('reports the HTTP status code of a failed request without retrying it when retries are disabled', async () => {
+    let calls = 0;
+    const scope = utils
+      .createNock()
+      .get('/time/0')
+      .times(1)
+      .query(true)
+      .reply(() => {
+        calls++;
+        return [500, undefined];
+      });
+
+    // Test-only client options (fake keys, no request identifiers in the query).
+    const testConfig: Record<string, string | boolean> = {
+      userId: 'myUUID',
+      useRequestId: false,
+    };
+
+    // snippet.retryPolicyNone
+    const pubnub = new PubNub({
+      subscribeKey: 'YOUR_SUBSCRIBE_KEY',
+      publishKey: 'YOUR_PUBLISH_KEY',
+      userId: 'YOUR_USER_ID',
+      // snippet.hide
+      ...testConfig,
+      // snippet.show
+      // Never retry a failed request.
+      retryConfiguration: PubNub.NoneRetryPolicy(),
+    });
+    // snippet.end
+
+    let reportedStatusCode: number | undefined;
+    // snippet.handleRequestErrorStatusCode
+    await pubnub.time().catch((error) => {
+      // The HTTP status code of the failed request is in the error's status.
+      console.log('Request failed with HTTP status', error.status.statusCode);
+      // snippet.hide
+      reportedStatusCode = error.status.statusCode;
+      // snippet.show
+    });
+    // snippet.end
+
+    assert.equal(reportedStatusCode, 500);
+    assert.equal(calls, 1, 'the failed request is sent once and not retried');
+    assert.equal(scope.isDone(), true);
+    pubnub.destroy(true);
+  });
 });

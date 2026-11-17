@@ -456,6 +456,67 @@ describe('#components/subscription_manager', () => {
     });
   });
 
+  it('reports a failed heartbeat to the status listener with category, operation and status code', async () => {
+    let calls = 0;
+    const scope = utils
+      .createNock()
+      .get('/v2/presence/sub-key/mySubKey/channel/ch1,ch2/heartbeat')
+      .query({
+        pnsdk: `PubNub-JS-Nodejs/${pubnub.getVersion()}`,
+        uuid: 'myUUID',
+        heartbeat: 300,
+        state: '{}',
+      })
+      .reply(() => {
+        calls++;
+        return [400, '{"status": 400, "message": "OK", "service": "Presence"}', { 'content-type': 'text/javascript' }];
+      });
+
+    type FailedHeartbeat = { category: string; operation?: string; statusCode: number; error?: unknown };
+    let reportFailure: (status: FailedHeartbeat) => void = () => {};
+    const heartbeatFailure = new Promise<FailedHeartbeat>((resolve) => {
+      reportFailure = resolve;
+    });
+    const logged: unknown[][] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => {
+      logged.push(args);
+    };
+
+    try {
+      // snippet.heartbeatFailureStatusListener
+      pubnub.addListener({
+        status: (statusEvent) => {
+          if (statusEvent.operation === PubNub.OPERATIONS.PNHeartbeatOperation && statusEvent.error) {
+            console.log('Heartbeat failed:', statusEvent.category, statusEvent.statusCode);
+            // snippet.hide
+            reportFailure(statusEvent as unknown as FailedHeartbeat);
+            // snippet.show
+          }
+        },
+      });
+
+      pubnub.subscribe({
+        channels: ['ch1', 'ch2'],
+        withPresence: true,
+        withHeartbeats: true,
+      });
+      // snippet.end
+
+      const failure = await heartbeatFailure;
+      assert.equal(failure.category, PubNub.CATEGORIES.PNBadRequestCategory);
+      assert.equal(failure.operation, PubNub.OPERATIONS.PNHeartbeatOperation);
+      assert.equal(failure.statusCode, 400);
+      assert.equal(failure.error, true);
+    } finally {
+      console.log = originalLog;
+    }
+
+    assert.equal(scope.isDone(), true);
+    assert.equal(calls, 1);
+    assert.deepEqual(logged, [['Heartbeat failed:', PubNub.CATEGORIES.PNBadRequestCategory, 400]]);
+  });
+
   it('reports when heartbeats pass', (done) => {
     const scope = utils
       .createNock()

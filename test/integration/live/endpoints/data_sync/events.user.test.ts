@@ -5,9 +5,7 @@
  * `objectType` matches the wire type. Delivered on `channel === id`.
  */
 
-import nock from 'nock';
-
-import type * as Subscription from '../../../../src/core/types/api/subscription';
+import type PubNub from 'pubnub';
 
 import {
   CLASS_VERSION,
@@ -18,26 +16,15 @@ import {
   freshId,
   freshPubNub,
   userPayload,
-} from './helpers';
+} from '../../support/datasync-live-helpers';
 
-describe('DataSync events — User', function () {
+describe('endpoints/data_sync/events.user: DataSync events — User', function () {
   this.timeout(60000);
-
-  // Earlier nocked Data Sync files call `disableNetConnect()` and never re-enable it. This suite
-  // talks to the live service, so lift that block before any REST / subscribe call.
-  before(() => {
-    nock.cleanAll();
-    nock.enableNetConnect();
-  });
 
   let pubnub: ReturnType<typeof freshPubNub>;
 
   beforeEach(() => {
     pubnub = freshPubNub();
-  });
-
-  afterEach(() => {
-    pubnub.destroy();
   });
 
   const createUser = (id: string, payload = userPayload()) =>
@@ -63,7 +50,7 @@ describe('DataSync events — User', function () {
       className: 'User',
       classLevel: 'Global',
     });
-    assertEventEntityData(event.message.data as Subscription.DataSyncEntityData, {
+    assertEventEntityData(event.message.data as PubNub.DataSyncEntityData, {
       id,
       status: 'active',
       payload: { firstName: 'Alice', lastName: 'Verma' },
@@ -96,7 +83,7 @@ describe('DataSync events — User', function () {
       className: 'User',
       classLevel: 'Global',
     });
-    assertEventEntityData(event.message.data as Subscription.DataSyncEntityData, {
+    assertEventEntityData(event.message.data as PubNub.DataSyncEntityData, {
       id,
       status: 'updated',
       payload: { level: 'L4' },
@@ -125,7 +112,7 @@ describe('DataSync events — User', function () {
       className: 'User',
       classLevel: 'Global',
     });
-    assertEventEntityData(event.message.data as Subscription.DataSyncEntityData, {
+    assertEventEntityData(event.message.data as PubNub.DataSyncEntityData, {
       id,
       payload: { level: 'L5' },
     });
@@ -151,6 +138,6 @@ describe('DataSync events — User', function () {
       className: 'User',
       classLevel: 'Global',
     });
-    assertEventDeleteData(event.message.data as Subscription.DataSyncDeleteData, id);
+    assertEventDeleteData(event.message.data as PubNub.DataSyncDeleteData, id);
   });
 });

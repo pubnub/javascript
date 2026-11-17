@@ -7,9 +7,7 @@
  *
  */
 
-import nock from 'nock';
-
-import type * as Subscription from '../../../../src/core/types/api/subscription';
+import type PubNub from 'pubnub';
 
 import {
   CLASS_VERSION,
@@ -21,26 +19,15 @@ import {
   customerPayload,
   freshId,
   freshPubNub,
-} from './helpers';
+} from '../../support/datasync-live-helpers';
 
-describe('DataSync events — Entity Customer', function () {
+describe('endpoints/data_sync/events.entity: DataSync events — Entity Customer', function () {
   this.timeout(60000);
-
-  // Earlier nocked Data Sync files call `disableNetConnect()` and never re-enable it. This suite
-  // talks to the live service, so lift that block before any REST / subscribe call.
-  before(() => {
-    nock.cleanAll();
-    nock.enableNetConnect();
-  });
 
   let pubnub: ReturnType<typeof freshPubNub>;
 
   beforeEach(() => {
     pubnub = freshPubNub();
-  });
-
-  afterEach(() => {
-    pubnub.destroy();
   });
 
   const createCustomer = (id: string) =>
@@ -74,7 +61,7 @@ describe('DataSync events — Entity Customer', function () {
       className: ENTITY_CLASS_CUSTOMER,
       classLevel: 'SubKey',
     });
-    assertEventEntityData(event.message.data as Subscription.DataSyncEntityData, {
+    assertEventEntityData(event.message.data as PubNub.DataSyncEntityData, {
       id,
       status: 'active',
       payload: { customerId: id, firstName: 'Alice', creditScore: 720, city: 'Pune' },
@@ -111,7 +98,7 @@ describe('DataSync events — Entity Customer', function () {
       className: ENTITY_CLASS_CUSTOMER,
       classLevel: 'SubKey',
     });
-    assertEventEntityData(event.message.data as Subscription.DataSyncEntityData, {
+    assertEventEntityData(event.message.data as PubNub.DataSyncEntityData, {
       id,
       status: 'updated',
       payload: { creditScore: 780 },
@@ -138,7 +125,7 @@ describe('DataSync events — Entity Customer', function () {
       className: ENTITY_CLASS_CUSTOMER,
       classLevel: 'SubKey',
     });
-    assertEventEntityData(event.message.data as Subscription.DataSyncEntityData, {
+    assertEventEntityData(event.message.data as PubNub.DataSyncEntityData, {
       id,
       payload: { creditScore: 810 },
     });
@@ -164,6 +151,6 @@ describe('DataSync events — Entity Customer', function () {
       className: ENTITY_CLASS_CUSTOMER,
       classLevel: 'SubKey',
     });
-    assertEventDeleteData(event.message.data as Subscription.DataSyncDeleteData, id);
+    assertEventDeleteData(event.message.data as PubNub.DataSyncDeleteData, id);
   });
 });

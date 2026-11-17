@@ -8,10 +8,9 @@
  * `userId`, not the relationship's `entityAId` / `entityBId`.
  */
 
-import assert from 'assert';
-import nock from 'nock';
+import assert from 'node:assert';
 
-import type * as Subscription from '../../../../src/core/types/api/subscription';
+import type PubNub from 'pubnub';
 
 import {
   CLASS_VERSION,
@@ -24,26 +23,15 @@ import {
   freshPubNub,
   safeRemove,
   userPayload,
-} from './helpers';
+} from '../../support/datasync-live-helpers';
 
-describe('DataSync events — Membership', function () {
+describe('endpoints/data_sync/events.membership: DataSync events — Membership', function () {
   this.timeout(60000);
-
-  // Earlier nocked Data Sync files call `disableNetConnect()` and never re-enable it. This suite
-  // talks to the live service, so lift that block before any REST / subscribe call.
-  before(() => {
-    nock.cleanAll();
-    nock.enableNetConnect();
-  });
 
   let pubnub: ReturnType<typeof freshPubNub>;
 
   beforeEach(() => {
     pubnub = freshPubNub();
-  });
-
-  afterEach(() => {
-    pubnub.destroy();
   });
 
   /** Seed the User + Channel a Membership joins. */
@@ -95,7 +83,7 @@ describe('DataSync events — Membership', function () {
       className: 'Membership',
       classLevel: 'Global',
     });
-    assertEventMembershipData(event.message.data as Subscription.DataSyncMembershipData, {
+    assertEventMembershipData(event.message.data as PubNub.DataSyncMembershipData, {
       id,
       channelId,
       userId,
@@ -137,7 +125,7 @@ describe('DataSync events — Membership', function () {
       className: 'Membership',
       classLevel: 'Global',
     });
-    assertEventMembershipData(event.message.data as Subscription.DataSyncMembershipData, {
+    assertEventMembershipData(event.message.data as PubNub.DataSyncMembershipData, {
       id,
       channelId,
       userId,
@@ -166,7 +154,7 @@ describe('DataSync events — Membership', function () {
       className: 'Membership',
       classLevel: 'Global',
     });
-    assertEventMembershipData(event.message.data as Subscription.DataSyncMembershipData, {
+    assertEventMembershipData(event.message.data as PubNub.DataSyncMembershipData, {
       id,
       channelId,
       userId,
@@ -195,7 +183,7 @@ describe('DataSync events — Membership', function () {
       className: 'Membership',
       classLevel: 'Global',
     });
-    assertEventDeleteData(event.message.data as Subscription.DataSyncDeleteData, id, { channelId, userId });
+    assertEventDeleteData(event.message.data as PubNub.DataSyncDeleteData, id, { channelId, userId });
   });
 
   it('routing proof — a subscriber to the membership id receives nothing', async () => {

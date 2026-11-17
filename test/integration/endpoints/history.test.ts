@@ -4,68 +4,16 @@
 import assert from 'assert';
 import nock from 'nock';
 
-import { Payload } from '../../../src/core/types/api';
 import PubNub from '../../../src/node/index';
 import utils from '../../utils';
 
-/**
- * Published test message shape.
- */
-type TestMessage = { messageIdx: string; time: number };
-
-/**
- * Prepare messages history.
- *
- * @param client - PubNub client instance which will be used to publish messages.
- * @param count - How many messages should be published.
- * @param channel - Name of the channel into which messages should be published.
- * @param completion - Messages set publish completion function.
- */
-function publishMessagesToChannel(
-  client: PubNub,
-  count: number,
-  channel: string,
-  completion: (published: { message: TestMessage; timetoken: string }[]) => void,
-) {
-  let messages: { message: TestMessage; timetoken: string }[] = [];
-  let publishCompleted = 0;
-
-  const publish = (messageIdx: number) => {
-    const payload: { channel: string; message: TestMessage; meta?: Payload } = {
-      message: { messageIdx: [channel, messageIdx].join(': '), time: Date.now() },
-      channel,
-    };
-
-    if (messageIdx % 2 === 0) payload.meta = { time: payload.message.time };
-
-    client.publish(payload, (status, response) => {
-      publishCompleted += 1;
-
-      if (!status.error && response) {
-        messages.push({ message: payload.message, timetoken: response.timetoken });
-        messages = messages.sort((left, right) => parseInt(left.timetoken, 10) - parseInt(right.timetoken, 10));
-      } else {
-        console.error('Publish did fail:', status);
-      }
-
-      if (publishCompleted < count) {
-        publish(publishCompleted);
-      } else if (publishCompleted === count) {
-        completion(messages);
-      }
-    });
-  };
-
-  publish(publishCompleted);
-}
-
 describe('history endpoints', () => {
-  const subscribeKey = process.env.SUBSCRIBE_KEY || 'demo';
-  const publishKey = process.env.PUBLISH_KEY || 'demo';
+  // Fake keys: every test of this file is nock-mocked. Real-network tests: test/integration/live/endpoints/.
+  const subscribeKey = 'demo';
+  const publishKey = 'demo';
   let pubnub: PubNub;
 
   afterEach(() => {
-    nock.enableNetConnect();
     pubnub.removeAllListeners();
     pubnub.unsubscribeAll();
     pubnub.destroy(true);
@@ -155,24 +103,6 @@ describe('history endpoints', () => {
       }
     });
   });
-
-  it('supports metadata', (done) => {
-    const channel = PubNub.generateUUID();
-    const expectedMessagesCount = 10;
-
-    publishMessagesToChannel(pubnub, expectedMessagesCount, channel, (messages) => {
-      pubnub.history({ channel, includeMeta: true }, (_, response) => {
-        try {
-          assert(response !== null);
-          assert.deepEqual(response.messages[0].meta, { time: messages[0].message.time });
-          assert(!response.messages[1].meta);
-          done();
-        } catch (error) {
-          done(error);
-        }
-      });
-    });
-  }).timeout(60000);
 
   it('handles unencrypted payload with cryptoModule', (done) => {
     nock.disableNetConnect();

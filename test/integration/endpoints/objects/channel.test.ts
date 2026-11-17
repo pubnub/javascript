@@ -4,7 +4,6 @@ import nock from 'nock';
 import { asResponse, allChannels, channel1 } from './fixtures.js';
 import PubNub from '../../../../src/node/index';
 import utils from '../../../utils';
-import { RetryPolicy } from '../../../../src/core/components/retry-policy.js';
 
 describe('objects channel', () => {
   const PUBLISH_KEY = 'myPublishKey';
@@ -732,37 +731,58 @@ describe('objects channel', () => {
     it('should not retry on 404 Not Found error with linear retry policy', async () => {
       const channelName = 'non-existent-channel';
       
+      // Count the requests which reach the (mocked) service.
+      let calls = 0;
+
       // Set up nock mock before creating PubNub instance
       const scope = utils
         .createNock()
         .get(`/v2/objects/${SUBSCRIBE_KEY}/channels/${channelName}`)
         .times(1)
         .query(true)
-        .reply(404, {
-          status: 404,
-          error: {
-            message: 'Requested object was not found.',
-            source: 'objects',
-          },
+        .reply(() => {
+          calls++;
+          return [
+            404,
+            {
+              status: 404,
+              error: {
+                message: 'Requested object was not found.',
+                source: 'objects',
+              },
+            },
+          ];
         });
 
-      // Create a new PubNub instance with linear retry policy
-      const pubnubWithRetry = new PubNub({
+      // Test-only client options (fake keys, no request identifiers in the query).
+      const testConfig: Record<string, string | boolean> = {
         subscribeKey: SUBSCRIBE_KEY,
         publishKey: PUBLISH_KEY,
-        uuid: UUID,
-        // @ts-expect-error Force override default value.
+        userId: UUID,
         useRequestId: false,
         authKey: AUTH_KEY,
-        retryConfiguration: RetryPolicy.LinearRetryPolicy({
+      };
+
+      // Create a new PubNub instance with linear retry policy
+      // snippet.retryPolicyLinear
+      const pubnub = new PubNub({
+        subscribeKey: 'YOUR_SUBSCRIBE_KEY',
+        publishKey: 'YOUR_PUBLISH_KEY',
+        userId: 'YOUR_USER_ID',
+        // snippet.hide
+        ...testConfig,
+        // snippet.show
+        // Retry a failed request up to 2 times, 2 seconds apart.
+        retryConfiguration: PubNub.LinearRetryPolicy({
           delay: 2,
           maximumRetry: 2,
         }),
       });
+      // snippet.end
 
       let caughtError: any;
       try {
-        await pubnubWithRetry.objects.getChannelMetadata({ channel: channelName });
+        await pubnub.objects.getChannelMetadata({ channel: channelName });
       } catch (error) {
         caughtError = error;
       }
@@ -782,8 +802,83 @@ describe('objects channel', () => {
       
       // Verify the scope was called exactly once (no retries on 404
       expect(scope.isDone()).to.be.true;
-      
-      pubnubWithRetry.destroy(true);
+      expect(calls).to.equal(1);
+
+      pubnub.destroy(true);
+    });
+
+    it('should retry on 503 error with exponential retry policy until maximum retry count is reached', async () => {
+      const channelName = 'unavailable-channel';
+      let calls = 0;
+
+      // Retry delays are at least 2 seconds (policy validation), so record them and run the retries without waiting.
+      const retryDelays: number[] = [];
+      const originalSetTimeout = global.setTimeout;
+      global.setTimeout = ((handler: any, timeout?: number, ...args: any[]) => {
+        if (timeout !== undefined && timeout >= 1000) {
+          retryDelays.push(timeout);
+          return originalSetTimeout(handler, 1, ...args);
+        }
+        return originalSetTimeout(handler, timeout, ...args);
+      }) as typeof global.setTimeout;
+
+      const scope = utils
+        .createNock()
+        .get(`/v2/objects/${SUBSCRIBE_KEY}/channels/${channelName}`)
+        .times(3)
+        .query(true)
+        .reply(() => {
+          calls++;
+          return [503, { status: 503, error: { message: 'Service unavailable.', source: 'objects' } }];
+        });
+
+      // Test-only client options (fake keys, no request identifiers in the query).
+      const testConfig: Record<string, string | boolean> = {
+        subscribeKey: SUBSCRIBE_KEY,
+        publishKey: PUBLISH_KEY,
+        userId: UUID,
+        useRequestId: false,
+        authKey: AUTH_KEY,
+      };
+
+      // snippet.retryPolicyExponential
+      const pubnub = new PubNub({
+        subscribeKey: 'YOUR_SUBSCRIBE_KEY',
+        publishKey: 'YOUR_PUBLISH_KEY',
+        userId: 'YOUR_USER_ID',
+        // snippet.hide
+        ...testConfig,
+        // snippet.show
+        // Retry a failed request up to 2 times, doubling the wait from 2 seconds up to 10 seconds.
+        retryConfiguration: PubNub.ExponentialRetryPolicy({
+          minimumDelay: 2,
+          maximumDelay: 10,
+          maximumRetry: 2,
+        }),
+      });
+      // snippet.end
+
+      let caughtError: any;
+      try {
+        await pubnub.objects.getChannelMetadata({ channel: channelName });
+      } catch (error) {
+        caughtError = error;
+      } finally {
+        global.setTimeout = originalSetTimeout;
+      }
+
+      // The original request plus `maximumRetry` retries, and the last failure is reported.
+      expect(calls).to.equal(3);
+      expect(scope.isDone()).to.be.true;
+      expect(caughtError).to.exist;
+      expect(caughtError.status.statusCode).to.equal(503);
+
+      // Waits double from `minimumDelay` (2 s, then 4 s), each plus up to 1 s of jitter.
+      expect(retryDelays).to.have.length(2);
+      expect(retryDelays[0]).to.be.within(2000, 3000);
+      expect(retryDelays[1]).to.be.within(4000, 5000);
+
+      pubnub.destroy(true);
     });
   });
 });

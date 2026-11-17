@@ -1,20 +1,22 @@
-import assert from 'assert';
-
-import PubNub from '../../../../src/node/index';
-import type * as DataSync from '../../../../src/core/types/api/data-sync';
-import type * as Subscription from '../../../../src/core/types/api/subscription';
-import type { Status, StatusEvent } from '../../../../src/core/types/api';
+/**
+ * Helpers of the live DataSync event and projection tests (endpoints/data_sync/*.test.ts). Moved here from the mocked
+ * test folder: the nock-mocked DataSync tests never used them. Keys come from the tier's env loading (the `datasync` role).
+ */
+import assert from 'node:assert';
+import PubNub from 'pubnub';
+import { createClient } from './clients';
+import { keysOf } from './env';
+import { connected } from './wait';
 
 // --------------------------------------------------------
 // ------------------- Config & basics --------------------
 // --------------------------------------------------------
 
-export const DATA_SYNC_KEYSET = {
-  subscribeKey: process.env.DS_SUBSCRIBE_KEY ?? '',
-  publishKey: process.env.DS_PUBLISH_KEY ?? '',
-  secretKey: process.env.DS_SECRET_KEY ?? '',
-  userId: 'dsjs',
-} as const;
+/** Keys of the `datasync` role (DS_* variables or the tier's env file). Read on use, so a missing keyset fails the test that needs it. */
+export const dataSyncKeyset = (): { subscribeKey: string; publishKey: string; secretKey: string } => keysOf('datasync');
+
+/** User id of every DataSync test client. */
+export const DATA_SYNC_USER_ID = 'dsjs';
 
 /** Entity/relationship class schema version provisioned on this subkey. */
 export const CLASS_VERSION = 1;
@@ -27,14 +29,30 @@ export const RELATIONSHIP_CLASS_REQUESTED_BY = 'JSREQUESTED_BY';
 /** Class the service pins for the typed `/memberships` endpoints (never sent by the client). */
 export const RELATIONSHIP_CLASS_MEMBERSHIP = 'Membership';
 
-/** Fresh client per test — no shared mutable state, no cross-test bleed. */
+/**
+ * Fresh client per call on the datasync keyset, with the secret key. The root hook destroys it after the test.
+ * Pass `secretKey: undefined` for a token-only client.
+ */
 export function freshPubNub(overrides: Record<string, unknown> = {}): PubNub {
-  return new PubNub({
-    ...DATA_SYNC_KEYSET,
-    // @ts-expect-error Force override default value.
+  // `useRequestId: false` is an internal switch the public type does not declare.
+  return createClient('datasync', DATA_SYNC_USER_ID, {
+    secretKey: dataSyncKeyset().secretKey,
     useRequestId: false,
     ...overrides,
-  });
+  } as Partial<PubNub.PubNubConfiguration>);
+}
+
+/**
+ * Like `freshPubNub`, but NOT tracked: for a client built in a `before` hook, which must outlive the first test. The caller
+ * destroys it in `after`.
+ */
+export function untrackedPubNub(overrides: Record<string, unknown> = {}): PubNub {
+  return new PubNub({
+    ...dataSyncKeyset(),
+    userId: DATA_SYNC_USER_ID,
+    useRequestId: false,
+    ...overrides,
+  } as PubNub.PubNubConfiguration);
 }
 
 /** Client-supplied id, underscore-free (service rejects `_` with SYN-0004). */
@@ -48,8 +66,6 @@ export function runMarker(): string {
     .replace(/[^a-z0-9]/gi, '')
     .slice(0, 12);
 }
-
-export const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Await `fn`, swallowing any error. Use only for cleanup — never in the assertion path. */
 export async function safeRemove(fn: () => Promise<unknown>): Promise<void> {
@@ -115,7 +131,7 @@ export function assertPayloadContains(
 }
 
 export function assertEntityObject(
-  obj: DataSync.EntityObject,
+  obj: PubNub.DataSync.EntityObject,
   expected: {
     id: string;
     entityClass: string;
@@ -133,7 +149,7 @@ export function assertEntityObject(
 }
 
 export function assertRelationshipObject(
-  obj: DataSync.RelationshipObject,
+  obj: PubNub.DataSync.RelationshipObject,
   expected: {
     id: string;
     entityAId: string;
@@ -156,7 +172,7 @@ export function assertRelationshipObject(
 
 /** UserObject/ChannelObject share the shape: id + entityClassVersion + status? + payload + timestamps. */
 export function assertUserOrChannelObject(
-  obj: DataSync.UserObject | DataSync.ChannelObject,
+  obj: PubNub.DataSync.UserObject | PubNub.DataSync.ChannelObject,
   expected: { id: string; entityClassVersion: number; status?: string; payload?: Record<string, unknown> },
 ): void {
   assert.strictEqual(obj.id, expected.id, 'id');
@@ -167,7 +183,7 @@ export function assertUserOrChannelObject(
 }
 
 export function assertMembershipObject(
-  obj: DataSync.MembershipObject,
+  obj: PubNub.DataSync.MembershipObject,
   expected: {
     id: string;
     channelId: string;
@@ -211,7 +227,7 @@ export type Fixture<T> = { obj: T; dispose: () => Promise<void> };
 export async function createCustomerEntity(
   pn: PubNub,
   overrides: Record<string, unknown> = {},
-): Promise<Fixture<DataSync.EntityObject>> {
+): Promise<Fixture<PubNub.DataSync.EntityObject>> {
   const id = freshId('customer');
   const res = await pn.dataSync.createEntity({
     id,
@@ -228,7 +244,7 @@ export async function createCustomerEntity(
 export async function createLoanQuoteEntity(
   pn: PubNub,
   overrides: Record<string, unknown> = {},
-): Promise<Fixture<DataSync.EntityObject>> {
+): Promise<Fixture<PubNub.DataSync.EntityObject>> {
   const id = freshId('loanquote');
   const res = await pn.dataSync.createEntity({
     id,
@@ -247,7 +263,7 @@ export async function createRequestedByRelationship(
   customerId: string,
   loanQuoteId: string,
   overrides: Record<string, unknown> = {},
-): Promise<Fixture<DataSync.RelationshipObject>> {
+): Promise<Fixture<PubNub.DataSync.RelationshipObject>> {
   const id = freshId('requested-by');
   const res = await pn.dataSync.createRelationship({
     id,
@@ -266,7 +282,7 @@ export async function createRequestedByRelationship(
 export async function createUserObj(
   pn: PubNub,
   overrides: Record<string, unknown> = {},
-): Promise<Fixture<DataSync.UserObject>> {
+): Promise<Fixture<PubNub.DataSync.UserObject>> {
   const id = freshId('user');
   const res = await pn.dataSync.createUser({
     id,
@@ -278,7 +294,7 @@ export async function createUserObj(
 export async function createChannelObj(
   pn: PubNub,
   overrides: Record<string, unknown> = {},
-): Promise<Fixture<DataSync.ChannelObject>> {
+): Promise<Fixture<PubNub.DataSync.ChannelObject>> {
   const id = freshId('JSchannel');
   const res = await pn.dataSync.createChannel({
     id,
@@ -292,7 +308,7 @@ export async function createMembershipObj(
   userId: string,
   channelId: string,
   overrides: Record<string, unknown> = {},
-): Promise<Fixture<DataSync.MembershipObject>> {
+): Promise<Fixture<PubNub.DataSync.MembershipObject>> {
   const id = freshId('membership');
   const res = await pn.dataSync.createMembership({
     id,
@@ -312,7 +328,8 @@ export async function createMembershipObj(
 // --------------------------------------------------------
 
 /**
- * Subscribe to `channels`, wait for the connection to settle, run `trigger`, and resolve with the
+ * Subscribe to `channels`, wait until the subscription is connected (the tier's `connected` helper; it replaced a fixed
+ * 3 s settle delay), run `trigger`, and resolve with the
  * first DataSync event matching `predicate`. Rejects on timeout or if `trigger` throws. Always cleans
  * up (removes listener + unsubscribes), even on the happy path.
  *
@@ -322,24 +339,23 @@ export async function createMembershipObj(
 export function captureEvent(
   pn: PubNub,
   channels: string[],
-  predicate: (event: Subscription.DataSyncObject) => boolean,
+  predicate: (event: PubNub.Subscription.DataSyncObject) => boolean,
   trigger: () => Promise<void>,
-  opts: { settleMs?: number; timeoutMs?: number } = {},
-): Promise<Subscription.DataSyncObject> {
-  const settleMs = opts.settleMs ?? 3000;
+  opts: { timeoutMs?: number } = {},
+): Promise<PubNub.Subscription.DataSyncObject> {
   const timeoutMs = opts.timeoutMs ?? 20000;
 
-  return new Promise<Subscription.DataSyncObject>((resolve, reject) => {
+  return new Promise<PubNub.Subscription.DataSyncObject>((resolve, reject) => {
     let settled = false;
 
     const listener = {
-      dataSync: (event: Subscription.DataSyncObject) => {
+      dataSync: (event: PubNub.Subscription.DataSyncObject) => {
         if (settled || !predicate(event)) return;
         settled = true;
         cleanup();
         resolve(event);
       },
-      status: (_status: Status | StatusEvent) => {
+      status: (_status: PubNub.Status | PubNub.StatusEvent) => {
         /* connection lifecycle — not asserted here */
       },
     };
@@ -357,17 +373,17 @@ export function captureEvent(
       pn.unsubscribe({ channels });
     }
 
+    // Register for the connected status BEFORE subscribing: statuses are not replayed.
+    const ready = connected(pn, { channels }, { timeout: timeoutMs });
     pn.addListener(listener);
     pn.subscribe({ channels });
 
-    delay(settleMs)
-      .then(trigger)
-      .catch((error) => {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        reject(error);
-      });
+    ready.then(trigger).catch((error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    });
   });
 }
 
@@ -388,15 +404,15 @@ function assertNoDuplicatedClassFields(data: object): void {
 
 /** Assert the fields common to every parsed DataSync event. */
 export function assertEventCommon(
-  event: Subscription.DataSyncObject,
+  event: PubNub.Subscription.DataSyncObject,
   expected: {
     event: 'create' | 'update' | 'delete';
-    type: Subscription.DataSyncObjectType;
-    objectType: Subscription.DataSyncObjectType;
+    type: PubNub.DataSyncObjectType;
+    objectType: PubNub.DataSyncObjectType;
     id: string;
     channelOneOf: string[];
     className?: string;
-    classLevel?: Subscription.DataSyncClassLevel;
+    classLevel?: PubNub.DataSyncClassLevel;
   },
 ): void {
   assert.strictEqual(event.message.source, 'data-sync', 'source');
@@ -419,7 +435,7 @@ export function assertEventCommon(
 
 /** For create/update: assert the full non-delete entity data body. */
 export function assertEventEntityData(
-  data: Subscription.DataSyncEntityData,
+  data: PubNub.DataSyncEntityData,
   exp: { id: string; status?: string; payload?: Record<string, unknown> },
 ): void {
   assert.strictEqual(data.id, exp.id, 'data.id');
@@ -434,7 +450,7 @@ export function assertEventEntityData(
 
 /** For create/update: assert the full non-delete relationship data body. */
 export function assertEventRelationshipData(
-  data: Subscription.DataSyncRelationshipData,
+  data: PubNub.DataSyncRelationshipData,
   exp: {
     id: string;
     entityAId: string;
@@ -461,7 +477,7 @@ export function assertEventRelationshipData(
  * (`channelId` / `userId`) — the same axis the REST `MembershipObject` uses.
  */
 export function assertEventMembershipData(
-  data: Subscription.DataSyncMembershipData,
+  data: PubNub.DataSyncMembershipData,
   exp: {
     id: string;
     channelId: string;
@@ -490,7 +506,7 @@ export function assertEventMembershipData(
  * those ids; otherwise every link key must be absent.
  */
 export function assertEventDeleteData(
-  data: Subscription.DataSyncDeleteData & {
+  data: PubNub.DataSyncDeleteData & {
     channelId?: string;
     userId?: string;
     entityAId?: string;

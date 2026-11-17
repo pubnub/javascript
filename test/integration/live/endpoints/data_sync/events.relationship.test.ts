@@ -8,10 +8,9 @@
  *
  */
 
-import assert from 'assert';
-import nock from 'nock';
+import assert from 'node:assert';
 
-import type * as Subscription from '../../../../src/core/types/api/subscription';
+import type PubNub from 'pubnub';
 
 import {
   CLASS_VERSION,
@@ -27,26 +26,15 @@ import {
   freshPubNub,
   loanQuotePayload,
   safeRemove,
-} from './helpers';
+} from '../../support/datasync-live-helpers';
 
-describe('DataSync events Relationship REQUESTED_BY', function () {
+describe('endpoints/data_sync/events.relationship: DataSync events Relationship REQUESTED_BY', function () {
   this.timeout(60000);
-
-  // Earlier nocked Data Sync files call `disableNetConnect()` and never re-enable it. This suite
-  // talks to the live service, so lift that block before any REST / subscribe call.
-  before(() => {
-    nock.cleanAll();
-    nock.enableNetConnect();
-  });
 
   let pubnub: ReturnType<typeof freshPubNub>;
 
   beforeEach(() => {
     pubnub = freshPubNub();
-  });
-
-  afterEach(() => {
-    pubnub.destroy();
   });
 
   /** Seed the two endpoint entities a REQUESTED_BY relationship links. */
@@ -109,7 +97,7 @@ describe('DataSync events Relationship REQUESTED_BY', function () {
         className: RELATIONSHIP_CLASS_REQUESTED_BY,
         classLevel: 'SubKey',
       });
-      assertEventRelationshipData(event.message.data as Subscription.DataSyncRelationshipData, {
+      assertEventRelationshipData(event.message.data as PubNub.DataSyncRelationshipData, {
         id: relId,
         entityAId: customerId,
         entityBId: loanQuoteId,
@@ -154,7 +142,7 @@ describe('DataSync events Relationship REQUESTED_BY', function () {
         className: RELATIONSHIP_CLASS_REQUESTED_BY,
         classLevel: 'SubKey',
       });
-      assertEventRelationshipData(event.message.data as Subscription.DataSyncRelationshipData, {
+      assertEventRelationshipData(event.message.data as PubNub.DataSyncRelationshipData, {
         id: relId,
         entityAId: customerId,
         entityBId: loanQuoteId,
@@ -189,7 +177,7 @@ describe('DataSync events Relationship REQUESTED_BY', function () {
         className: RELATIONSHIP_CLASS_REQUESTED_BY,
         classLevel: 'SubKey',
       });
-      assertEventRelationshipData(event.message.data as Subscription.DataSyncRelationshipData, {
+      assertEventRelationshipData(event.message.data as PubNub.DataSyncRelationshipData, {
         id: relId,
         entityAId: customerId,
         entityBId: loanQuoteId,
@@ -221,7 +209,7 @@ describe('DataSync events Relationship REQUESTED_BY', function () {
       className: RELATIONSHIP_CLASS_REQUESTED_BY,
       classLevel: 'SubKey',
     });
-    assertEventDeleteData(event.message.data as Subscription.DataSyncDeleteData, relId, {
+    assertEventDeleteData(event.message.data as PubNub.DataSyncDeleteData, relId, {
       entityAId: customerId,
       entityBId: loanQuoteId,
     });

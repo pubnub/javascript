@@ -16,28 +16,26 @@
  *
  */
 
-import assert from 'assert';
-import nock from 'nock';
+import assert from 'node:assert';
+import PubNub from 'pubnub';
 
-import PubNub from '../../../../src/node/index';
-import type * as PAM from '../../../../src/core/types/api/access-manager';
-import type * as Subscription from '../../../../src/core/types/api/subscription';
-import type { Status, StatusEvent } from '../../../../src/core/types/api';
+import { createClient } from '../../support/clients';
+import { sleep } from '../../support/wait';
 
 import {
   CLASS_VERSION,
-  DATA_SYNC_KEYSET,
+  dataSyncKeyset,
+  freshPubNub,
+  untrackedPubNub,
   ENTITY_CLASS_CUSTOMER,
   ENTITY_CLASS_LOAN_QUOTE,
   RELATIONSHIP_CLASS_REQUESTED_BY,
   assertEventCommon,
   assertEventDeleteData,
   customerPayload,
-  delay,
-  freshPubNub,
   loanQuotePayload,
   safeRemove,
-} from './helpers';
+} from '../../support/datasync-live-helpers';
 
 // --------------------------------------------------------
 // ------------------- Projection facts -------------------
@@ -100,22 +98,21 @@ function projectionId(prefix: string): string {
 
 /** Token-only client: same keyset as `freshPubNub()` but deliberately **without** `secretKey`. */
 function receiverClient(userId: string): PubNub {
-  const { secretKey: _superUserKey, ...publicKeyset } = DATA_SYNC_KEYSET;
-  return new PubNub({
+  // Created through the tier's `createClient`: the root hook destroys it after the test.
+  const { secretKey: _superUserKey, ...publicKeyset } = dataSyncKeyset();
+  return createClient('datasync', userId, {
     ...publicKeyset,
-    userId,
-    // @ts-expect-error Force override default value.
     useRequestId: false,
-  });
+  } as Partial<PubNub.PubNubConfiguration>);
 }
 
 /** DataSync CRUD wide open — this suite isolates *projections*, never CRUD permission bits. */
-const DATA_SYNC_FULL_ACCESS: PAM.DataSyncTokenScopes = {
+const DATA_SYNC_FULL_ACCESS: PubNub.PAM.DataSyncTokenScopes = {
   entities: { '.*': { get: true, create: true, update: true, delete: true } },
   relationships: { '.*': { get: true, create: true, update: true, delete: true } },
 };
 
-const channelReadMap = (names: readonly string[]): Record<string, PAM.ChannelTokenPermissions> =>
+const channelReadMap = (names: readonly string[]): Record<string, PubNub.PAM.ChannelTokenPermissions> =>
   Object.fromEntries(names.map((name) => [name, { read: true, join: true }]));
 
 /**
@@ -127,7 +124,7 @@ function grantReaderToken(
   opts: {
     channelPatterns?: readonly string[];
     channelResources?: readonly string[];
-    projections?: PAM.DataSyncProjections;
+    projections?: PubNub.PAM.DataSyncProjections;
   } = {},
 ): Promise<string> {
   return pnPam.grantToken({
@@ -141,7 +138,7 @@ function grantReaderToken(
   });
 }
 
-/** A reader wired to a freshly minted token. Caller owns `destroy()`. */
+/** A reader wired to a freshly minted token. The root hook destroys it after the test. */
 async function readerWithToken(
   pnPam: PubNub,
   userId: string,
@@ -202,7 +199,7 @@ function rejectsWithDataSyncError(expected: {
 
 /** Entity / set subscription — the surface `dataSyncEntity(id).subscription()` returns. */
 type EntitySubscription = {
-  addListener(listener: { dataSync?: (event: Subscription.DataSyncObject) => void }): void;
+  addListener(listener: { dataSync?: (event: PubNub.Subscription.DataSyncObject) => void }): void;
   removeListener(listener: object): void;
   subscribe(): void;
   unsubscribe(): void;
@@ -235,7 +232,7 @@ function adminProjection(reader: PubNub, id: string): EntitySubscription {
 function captureEvents(
   pn: PubNub,
   subscription: EntitySubscription,
-  predicate: (event: Subscription.DataSyncObject) => boolean,
+  predicate: (event: PubNub.Subscription.DataSyncObject) => boolean,
   expectedCount: number,
   trigger: () => Promise<void>,
   opts: {
@@ -243,21 +240,21 @@ function captureEvents(
     connectTimeoutMs?: number;
     timeoutMs?: number;
     /** When set, wins over `expectedCount` — used when fan-out order is not stable. */
-    completeWhen?: (events: Subscription.DataSyncObject[]) => boolean;
+    completeWhen?: (events: PubNub.Subscription.DataSyncObject[]) => boolean;
   } = {},
-): Promise<Subscription.DataSyncObject[]> {
+): Promise<PubNub.Subscription.DataSyncObject[]> {
   const graceMs = opts.graceMs ?? 1000;
   const connectTimeoutMs = opts.connectTimeoutMs ?? 20000;
   const timeoutMs = opts.timeoutMs ?? 45000;
-  const isComplete = (events: Subscription.DataSyncObject[]): boolean =>
+  const isComplete = (events: PubNub.Subscription.DataSyncObject[]): boolean =>
     opts.completeWhen ? opts.completeWhen(events) : events.length >= expectedCount;
 
-  return new Promise<Subscription.DataSyncObject[]>((resolve, reject) => {
-    const collected: Subscription.DataSyncObject[] = [];
+  return new Promise<PubNub.Subscription.DataSyncObject[]>((resolve, reject) => {
+    const collected: PubNub.Subscription.DataSyncObject[] = [];
     let settled = false;
 
     const listener = {
-      dataSync: (event: Subscription.DataSyncObject) => {
+      dataSync: (event: PubNub.Subscription.DataSyncObject) => {
         if (settled || !predicate(event)) return;
         collected.push(event);
         if (!isComplete(collected)) return;
@@ -270,7 +267,7 @@ function captureEvents(
     /** Resolves on the first connect status; rejects if the subscribe never comes up. */
     const connected = new Promise<void>((onConnected, onConnectFailure) => {
       const statusListener = {
-        status: (status: Status | StatusEvent) => {
+        status: (status: PubNub.Status | PubNub.StatusEvent) => {
           if (
             status.category !== PubNub.CATEGORIES.PNConnectedCategory &&
             status.category !== PubNub.CATEGORIES.PNSubscriptionChangedCategory
@@ -316,7 +313,7 @@ function captureEvents(
     subscription.subscribe();
 
     connected
-      .then(() => delay(graceMs))
+      .then(() => sleep(graceMs))
       .then(trigger)
       .catch((error) => {
         if (settled) return;
@@ -336,22 +333,22 @@ async function observeSubscribe(
   subscription: EntitySubscription,
   trigger: () => Promise<void>,
   opts: { settleMs?: number; windowMs?: number } = {},
-): Promise<{ events: Subscription.DataSyncObject[]; statuses: Array<Status | StatusEvent> }> {
+): Promise<{ events: PubNub.Subscription.DataSyncObject[]; statuses: Array<PubNub.Status | PubNub.StatusEvent> }> {
   const settleMs = opts.settleMs ?? 4000;
   const windowMs = opts.windowMs ?? 10000;
 
-  const events: Subscription.DataSyncObject[] = [];
-  const statuses: Array<Status | StatusEvent> = [];
-  const dataSyncListener = { dataSync: (event: Subscription.DataSyncObject) => events.push(event) };
-  const statusListener = { status: (status: Status | StatusEvent) => statuses.push(status) };
+  const events: PubNub.Subscription.DataSyncObject[] = [];
+  const statuses: Array<PubNub.Status | PubNub.StatusEvent> = [];
+  const dataSyncListener = { dataSync: (event: PubNub.Subscription.DataSyncObject) => events.push(event) };
+  const statusListener = { status: (status: PubNub.Status | PubNub.StatusEvent) => statuses.push(status) };
 
   pn.addListener(statusListener);
   subscription.addListener(dataSyncListener);
   subscription.subscribe();
   try {
-    await delay(settleMs);
+    await sleep(settleMs);
     await trigger();
-    await delay(windowMs);
+    await sleep(windowMs);
   } finally {
     subscription.removeListener(dataSyncListener);
     subscription.unsubscribe();
@@ -361,7 +358,7 @@ async function observeSubscribe(
 }
 
 /** Pick the single event delivered on `channel` out of a fan-out batch. */
-function eventOn(events: Subscription.DataSyncObject[], channel: string): Subscription.DataSyncObject {
+function eventOn(events: PubNub.Subscription.DataSyncObject[], channel: string): PubNub.Subscription.DataSyncObject {
   const matches = events.filter((e) => e.channel === channel);
   assert.strictEqual(matches.length, 1, `exactly one event on ${channel} (got ${matches.length})`);
   return matches[0];
@@ -414,15 +411,8 @@ async function seedRequestedBy(pnPam: PubNub, id: string, customerId: string, lo
 // ------------------------- Tests ------------------------
 // --------------------------------------------------------
 
-describe('DataSync projections admin vs __default__', function () {
+describe('endpoints/data_sync/projections: DataSync projections admin vs __default__', function () {
   this.timeout(120000);
-
-  // Earlier nocked Data Sync files call `disableNetConnect()` and never re-enable it. This suite
-  // talks to the live service, so lift that block before any REST / subscribe call.
-  before(() => {
-    nock.cleanAll();
-    nock.enableNetConnect();
-  });
 
   // ======================================================
   // grantToken / parseToken encoding
@@ -432,10 +422,6 @@ describe('DataSync projections admin vs __default__', function () {
 
     beforeEach(() => {
       pnPam = freshPubNub();
-    });
-
-    afterEach(() => {
-      pnPam.destroy();
     });
 
     const projectionsMeta = (token: string): Record<string, Record<string, string>> | undefined => {
@@ -525,11 +511,11 @@ describe('DataSync projections admin vs __default__', function () {
     let customerId: string;
     let loanQuoteId: string;
     let relationshipId: string;
-    const readers: PubNub[] = [];
 
     /** Seeded once — there is nothing to isolate per test. */
     before(async () => {
-      pnPam = freshPubNub();
+      // Built in a `before` hook, so it must outlive the first test: not tracked by the root hook, destroyed in `after`.
+      pnPam = untrackedPubNub();
       customerId = projectionId('customer');
       loanQuoteId = projectionId('loanquote');
       relationshipId = projectionId('requestedby');
@@ -545,18 +531,11 @@ describe('DataSync projections admin vs __default__', function () {
       pnPam.destroy();
     });
 
-    afterEach(() => {
-      while (readers.length) readers.pop()!.destroy();
-    });
-
-    /** Track for teardown. */
-    const track = (reader: PubNub): PubNub => {
-      readers.push(reader);
-      return reader;
-    };
+    /** Readers come from the tier's `createClient`, so the root hook destroys them after each test. */
+    const track = (reader: PubNub): PubNub => reader;
 
     /** Projection assignments covering every object this section seeded. */
-    const allAdmin = (): PAM.DataSyncProjections => ({
+    const allAdmin = (): PubNub.PAM.DataSyncProjections => ({
       patterns: {
         entities: { 'customer.*': PROJECTION_ADMIN, 'loanquote.*': PROJECTION_ADMIN },
         relationships: { 'requestedby.*': PROJECTION_ADMIN },
@@ -739,8 +718,6 @@ describe('DataSync projections admin vs __default__', function () {
 
     afterEach(async () => {
       await safeRemove(() => pnPam.dataSync.removeEntity({ id: customerId }));
-      reader?.destroy();
-      pnPam.destroy();
     });
 
     /** Wildcard grant covering both the id channel and its mirror, spelled out explicitly. */
@@ -773,8 +750,8 @@ describe('DataSync projections admin vs __default__', function () {
       }
 
       // Same object, same revision — only the payload projection differs.
-      const plainData = onPlain.message.data as Subscription.DataSyncEntityData;
-      const mirrorData = onMirror.message.data as Subscription.DataSyncEntityData;
+      const plainData = onPlain.message.data as PubNub.DataSyncEntityData;
+      const mirrorData = onMirror.message.data as PubNub.DataSyncEntityData;
       assert.strictEqual(mirrorData.eTag, plainData.eTag, 'both events describe the same revision');
       assert.strictEqual(mirrorData.updatedAt, plainData.updatedAt, 'same updatedAt');
 
@@ -798,7 +775,7 @@ describe('DataSync projections admin vs __default__', function () {
         () => seedCustomer(pnPam, customerId),
       );
 
-      const mirrorData = eventOn(events, mirrorChannel).message.data as Subscription.DataSyncEntityData;
+      const mirrorData = eventOn(events, mirrorChannel).message.data as PubNub.DataSyncEntityData;
       assertPayloadFields(payloadOf(mirrorData), CUSTOMER_ADMIN_FIELDS, 'mirror event, projection-less token');
       assert.strictEqual(payloadOf(mirrorData)!.private, CUSTOMER_SECRET, '`private` delivered regardless');
 
@@ -820,7 +797,7 @@ describe('DataSync projections admin vs __default__', function () {
         () => seedCustomer(pnPam, customerId),
       );
 
-      const mirrorData = events[0].message.data as Subscription.DataSyncEntityData;
+      const mirrorData = events[0].message.data as PubNub.DataSyncEntityData;
       assert.strictEqual(events[0].channel, mirrorChannel, 'delivered on the mirror channel');
       assert.strictEqual(payloadOf(mirrorData)!.private, CUSTOMER_SECRET, '`private` leaked via the pattern grant');
     });
@@ -845,7 +822,7 @@ describe('DataSync projections admin vs __default__', function () {
         (status) =>
           status.category === PubNub.CATEGORIES.PNAccessDeniedCategory ||
           status.category === PubNub.CATEGORIES.PNConnectionErrorCategory ||
-          (status as Status).statusCode === 403,
+          (status as PubNub.Status).statusCode === 403,
       );
       assert.ok(refused, `subscribe must be refused; saw [${statuses.map((s) => s.category).join(', ')}]`);
     });
@@ -866,12 +843,12 @@ describe('DataSync projections admin vs __default__', function () {
             .then(() => undefined),
       );
 
-      const plainData = eventOn(events, plainChannel).message.data as Subscription.DataSyncEntityData;
+      const plainData = eventOn(events, plainChannel).message.data as PubNub.DataSyncEntityData;
       assertPayloadFields(payloadOf(plainData), CUSTOMER_DEFAULT_FIELDS, 'id-channel update');
       assert.strictEqual(payloadOf(plainData)!.city, 'Mumbai', 'default field updated');
       assert.ok(!('private' in payloadOf(plainData)!), 'id channel still withholds `private`');
 
-      const mirrorData = eventOn(events, mirrorChannel).message.data as Subscription.DataSyncEntityData;
+      const mirrorData = eventOn(events, mirrorChannel).message.data as PubNub.DataSyncEntityData;
       assertPayloadFields(payloadOf(mirrorData), CUSTOMER_ADMIN_FIELDS, 'mirror-channel update');
       assert.strictEqual(payloadOf(mirrorData)!.private, 'rotated', 'rotated `private` visible on the mirror');
       assert.strictEqual(payloadOf(mirrorData)!.city, 'Mumbai', 'shared field updated on the mirror too');
@@ -901,7 +878,7 @@ describe('DataSync projections admin vs __default__', function () {
           className: ENTITY_CLASS_CUSTOMER,
           classLevel: 'SubKey',
         });
-        assertEventDeleteData(event.message.data as Subscription.DataSyncDeleteData, customerId);
+        assertEventDeleteData(event.message.data as PubNub.DataSyncDeleteData, customerId);
       }
     });
   });
@@ -928,8 +905,6 @@ describe('DataSync projections admin vs __default__', function () {
       await safeRemove(() => pnPam.dataSync.removeRelationship({ id: relationshipId }));
       await safeRemove(() => pnPam.dataSync.removeEntity({ id: customerId }));
       await safeRemove(() => pnPam.dataSync.removeEntity({ id: loanQuoteId }));
-      reader?.destroy();
-      pnPam.destroy();
     });
 
     itWhenAllClassesEmit('LoanQuote create — mirror narrows to {quoteId, private}', async () => {
@@ -945,10 +920,10 @@ describe('DataSync projections admin vs __default__', function () {
         () => seedLoanQuote(pnPam, loanQuoteId),
       );
 
-      const plainData = eventOn(events, loanQuoteId).message.data as Subscription.DataSyncEntityData;
+      const plainData = eventOn(events, loanQuoteId).message.data as PubNub.DataSyncEntityData;
       assertPayloadFields(payloadOf(plainData), LOAN_QUOTE_DEFAULT_FIELDS, 'LoanQuote id-channel event');
 
-      const mirrorData = eventOn(events, adminChannel(loanQuoteId)).message.data as Subscription.DataSyncEntityData;
+      const mirrorData = eventOn(events, adminChannel(loanQuoteId)).message.data as PubNub.DataSyncEntityData;
       assertPayloadFields(payloadOf(mirrorData), LOAN_QUOTE_ADMIN_FIELDS, 'LoanQuote mirror event');
       assert.strictEqual(payloadOf(mirrorData)!.private, LOAN_QUOTE_SECRET, 'LoanQuote `private` on the mirror');
     });
@@ -1006,11 +981,11 @@ describe('DataSync projections admin vs __default__', function () {
       assert.ok(mirrorEvents.length >= 1, 'relationship event on at least one endpoint mirror channel');
 
       for (const event of plainEvents) {
-        const data = event.message.data as Subscription.DataSyncRelationshipData;
+        const data = event.message.data as PubNub.DataSyncRelationshipData;
         assertPayloadFields(payloadOf(data), REQUESTED_BY_DEFAULT_FIELDS, `${event.channel} (default)`);
       }
       for (const event of mirrorEvents) {
-        const data = event.message.data as Subscription.DataSyncRelationshipData;
+        const data = event.message.data as PubNub.DataSyncRelationshipData;
         assertPayloadFields(payloadOf(data), REQUESTED_BY_ADMIN_FIELDS, `${event.channel} (admin)`);
         assert.strictEqual(payloadOf(data)!.private, REQUESTED_BY_SECRET, 'relationship `private` on the mirror');
       }
