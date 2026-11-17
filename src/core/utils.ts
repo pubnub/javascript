@@ -4,6 +4,8 @@
  * @internal
  */
 
+import type { ICryptoModule } from './interfaces/crypto-module';
+import { encode } from './components/base64_codec';
 import { Payload, Query } from './types/api';
 
 /**
@@ -209,4 +211,22 @@ export const messageFingerprint = (input: Payload) => {
 
   while (len-- > 0) mfp[0] = (mfp[0] << 5) - mfp[0] + msg.charCodeAt(walk++);
   return mfp[0].toString(16).padStart(8, '0');
+};
+
+/**
+ * Encrypt message payload which should be sent as part of request URL or body.
+ *
+ * @param crypto - Module which should be used to encrypt data.
+ * @param payload - User-provided data which should be encrypted.
+ *
+ * @returns Stringified encrypted payload (base64 encoded if encryption result is binary).
+ *
+ * @throws {Error} in case if provided `payload` or results of `encryption` can't be stringified.
+ *
+ * @internal
+ */
+export const encryptMessagePayload = async (crypto: ICryptoModule, payload: Payload): Promise<string> => {
+  const encrypted = await crypto.encrypt(JSON.stringify(payload));
+
+  return JSON.stringify(typeof encrypted === 'string' ? encrypted : encode(encrypted));
 };

@@ -39,9 +39,8 @@ describe('api-reference/configuration', () => {
       assert.equal(pubnubConfig.getAuthKey(), 'accessMangerToken');
       // cryptoModule is active: encrypt and decrypt round trip. encrypt() with a crypto module takes a string and decrypt()
       // JSON-parses the plain text, so pass stringified JSON.
-      assert.deepEqual(pubnubConfig.decrypt(pubnubConfig.encrypt(JSON.stringify({ greeting: 'hello' }))), {
-        greeting: 'hello',
-      });
+      const greeting = await pubnubConfig.encrypt(JSON.stringify({ greeting: 'hello' }));
+      assert.deepEqual(await pubnubConfig.decrypt(greeting), { greeting: 'hello' });
       assertServerTime((await pubnubConfig.time()).timetoken);
     } finally {
       debugLog.restore();
@@ -93,7 +92,7 @@ describe('api-reference/configuration', () => {
     assertServerTime((await pubnubReadOnly.time()).timetoken);
   });
 
-  it("configurationCryptoModule: two clients with different crypto modules decrypt each other's data as the sample comments claim", () => {
+  it("configurationCryptoModule: two clients with different crypto modules decrypt each other's data as the sample comments claim", async () => {
     // snippet.configurationCryptoModule
     // encrypts using 256-bit AES-CBC cipher (recommended)
     // decrypts data encrypted with the legacy and the 256 bit AES-CBC ciphers
@@ -120,10 +119,10 @@ describe('api-reference/configuration', () => {
     track(pubnub);
     track(pubnubLegacy);
     const payload = JSON.stringify({ note: 'same input' });
-    assert.deepEqual(pubnub.decrypt(pubnubLegacy.encrypt(payload)), { note: 'same input' });
-    assert.deepEqual(pubnubLegacy.decrypt(pubnub.encrypt(payload)), { note: 'same input' });
+    assert.deepEqual(await pubnub.decrypt(await pubnubLegacy.encrypt(payload)), { note: 'same input' });
+    assert.deepEqual(await pubnubLegacy.decrypt(await pubnub.encrypt(payload)), { note: 'same input' });
     // The two modules produce different ciphertext (random IVs, different headers), so the choice is applied.
-    assert.notEqual(pubnub.encrypt(payload), pubnubLegacy.encrypt(payload));
+    assert.notEqual(await pubnub.encrypt(payload), await pubnubLegacy.encrypt(payload));
   });
 
   it('setUserIdBasicUsage: setUserId renames the user and the client keeps working', async () => {

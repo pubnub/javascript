@@ -2,6 +2,8 @@
  * Cryptor module.
  */
 
+import { MaybePromise } from '../../../core/interfaces/crypto-primitives';
+
 /**
  * Data encrypted by {@link NodeCryptoModule}.
  */
@@ -62,7 +64,7 @@ export interface ICryptor {
    *
    * @throws Error if unknown data type has been passed.
    */
-  encrypt(data: BufferSource | string): EncryptedDataType;
+  encrypt(data: BufferSource | string): MaybePromise<EncryptedDataType>;
 
   /**
    * Encrypt provided source {@link Readable} stream.
@@ -90,7 +92,7 @@ export interface ICryptor {
    *
    * @throws Error if unknown data type has been passed.
    */
-  decrypt(data: EncryptedDataType): ArrayBuffer;
+  decrypt(data: EncryptedDataType): MaybePromise<ArrayBuffer>;
 
   /**
    * Decrypt provided encrypted stream object.

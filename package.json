@@ -1,6 +1,6 @@
 {
   "name": "pubnub",
-  "version": "13.1.3",
+  "version": "14.0.0",
   "author": "PubNub <support@pubnub.com>",
   "description": "PubNub SDK for JavaScript. Publish/subscribe messaging over HTTP long-poll with server-assigned message ordering, channel occupancy via Here Now, and message history through Message Persistence.",
   "scripts": {
@@ -74,12 +74,20 @@
     "fast-text-encoding": "^1.0.6",
     "fflate": "^0.8.3",
     "lil-uuid": "^0.1.1",
-    "undici": "^7.30.1"
+    "undici": "^7.30.2"
   },
   "peerDependencies": {
+    "@noble/ciphers": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
     "react-native-url-polyfill": "^2.0.0"
   },
   "peerDependenciesMeta": {
+    "@noble/ciphers": {
+      "optional": true
+    },
+    "@noble/hashes": {
+      "optional": true
+    },
     "react-native-url-polyfill": {
       "optional": true
     }
@@ -88,6 +96,8 @@
     "basic-ftp": "5.3.1"
   },
   "devDependencies": {
+    "@noble/ciphers": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
