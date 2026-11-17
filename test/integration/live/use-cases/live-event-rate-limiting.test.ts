@@ -5,7 +5,7 @@ import { captureConsole } from '../support/console';
 import { settled, sleep, watch } from '../support/wait';
 
 /**
- * Live event rate limiting. Port of docs-snippets/use-cases/live-event-rate-limiting.ts.
+ * Live event rate limiting.
  * Needs Presence on the open keyset (the shard occupancy comes from Here Now).
  */
 describe('use-cases/live-event-rate-limiting', () => {

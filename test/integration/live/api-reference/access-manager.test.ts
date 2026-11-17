@@ -9,7 +9,6 @@ import { connected, eventually } from '../support/wait';
 
 /**
  * Access Manager v3 token examples. The `grantToken` calls run on a server that holds the secret key (pam keyset).
- * Port of docs-snippets/api-reference/access-manager.ts.
  *
  * Tokens are bound to a user id and a resource, never to an application-wide grant, so nothing here opens the keyset for
  * strangers and no cleanup hook is needed. The only residue is tokens that expire by themselves (ttl 15 minutes) and the

@@ -8,7 +8,7 @@ import { newSeedRun, seedPublish, settleSeeded, untilStored } from '../support/h
 import { eventually, settled } from '../support/wait';
 
 /**
- * Message persistence examples. Port of docs-snippets/api-reference/message-persistence.ts. Message Persistence and
+ * Message persistence examples. Message Persistence and
  * Delete-From-History must be on for the open keyset.
  *
  * The samples carry placeholder literals (`replace-with-start-timetoken` and so on). The client is wrapped with

@@ -2,8 +2,7 @@ name: Live integration
 
 # Live tier (test/integration/live/README.md): the public documentation's code samples run against the real PubNub service.
 # Nightly and on demand only. The live job never runs on a pull request, so fork PRs never see secrets. Pull requests get the
-# offline job only (lint, manifest freshness, types), and it is not a required check. The old harness workflow
-# (docs-snippets.yml) stays until the cutover.
+# offline job only (lint, manifest freshness, types), and it is not a required check.
 
 on:
   # Pull requests: offline job only, and only when something the tier or its mocked samples depend on changed.
@@ -15,7 +14,6 @@ on:
       - 'test/integration/components/subscription_manager.test.ts'
       - 'package.json'
       - '.github/workflows/live-integration.yml'
-  # 04:43 UTC, away from docs-snippets.yml (03:17 UTC), so the two never queue behind each other for the shared keysets.
   schedule:
     - cron: '43 4 * * *'
   workflow_dispatch:
@@ -69,8 +67,8 @@ jobs:
     runs-on:
       group: organization/Default
     timeout-minutes: 40
-    # Same group name as the live job of docs-snippets.yml on purpose: both use the same keysets, and this tier uses fixed
-    # resource names, so the two must never overlap. A running job is never cancelled.
+    # One live run per keyset at a time: this tier uses fixed resource names, so two runs must never overlap. A running job is
+    # never cancelled.
     concurrency:
       group: docs-snippets-live
       cancel-in-progress: false

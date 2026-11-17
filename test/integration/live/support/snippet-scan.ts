@@ -23,8 +23,12 @@ export const MOCKED_FILES: readonly string[] = [
   'test/integration/components/subscription_manager.test.ts',
 ];
 
-/** Directories under live/ that never hold samples. */
-const SKIP_DIRS = new Set(['node_modules', 'support', 'provision', 'fixtures', '.run']);
+/**
+ * Directories under live/ that no test runs. `quickstarts` holds the browser, React and React Native samples the docs embed:
+ * they cannot run in Node, so they are listed in snippet-exceptions.json (and the browser ones are type checked by
+ * tsconfig.browser.json) instead of being scanned for a test.
+ */
+const SKIP_DIRS = new Set(['node_modules', 'support', 'provision', 'fixtures', 'quickstarts', '.run']);
 const SAMPLE_EXT = /\.(mjs|cjs|js|jsx|tsx|ts|html)$/;
 
 export type Mode = 'live' | 'compile-only' | 'mocked';

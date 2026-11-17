@@ -9,7 +9,7 @@ import { SDK_ROOT } from '../support/tsc-scratch';
 import { LocalProxy } from '../support/proxy';
 
 /**
- * Examples for the version 12 migration guide. Port of docs-snippets/migration-guides/v12.ts. The page has no snippet markers.
+ * Examples for the version 12 migration guide. The page has no snippet markers.
  */
 describe('migration-guides/v12', () => {
   it('migrationV12ProxyEnvironmentVariablesIgnored: the SDK ignores proxy environment variables, shown by zero tunnel requests at the local proxy', async function () {

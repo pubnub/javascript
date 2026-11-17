@@ -6,7 +6,7 @@ import { storedMessage } from '../support/history';
 import { connected, eventually, sleep, watch } from '../support/wait';
 
 /**
- * Automated polling. Port of docs-snippets/use-cases/automated-polling.ts.
+ * Automated polling.
  * The trigger messages come from an Illuminate Business Rule on the real service. The keyset of the tier has no such rule, so
  * the test publishes the triggers itself with the payload the page describes and verifies the poll service side.
  * Needs Message Persistence on the open keyset (the poll is published with storeInHistory).

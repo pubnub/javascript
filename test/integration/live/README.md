@@ -12,7 +12,7 @@ npm run test:integration:live:endpoints              # only endpoints/**: real-n
 npm run test:integration:live -- --grep publishMinimal
 npm run test:integration:live -- --dry-run           # lists the tests, no network, no keys needed
 npm run test:integration:live:types                  # type check (needs the build for lib/types)
-npx eslint "test/integration/live/**/*.ts"           # lint (npm run lint covers src/ only). Do not add --config: it drops the max-len override of live/.eslintrc.cjs
+npx eslint "test/integration/live/**/*.ts" --ignore-pattern "test/integration/live/quickstarts/**"           # lint (npm run lint covers src/ only). Do not add --config: it drops the max-len override of live/.eslintrc.cjs
 ```
 
 Env names: `SUBSCRIBE_KEY`, `PUBLISH_KEY` (open keyset), `PAM_SUBSCRIBE_KEY`, `PAM_PUBLISH_KEY`, `PAM_SECRET_KEY` (Access Manager), `DS_*` (DataSync). Real environment variables win over the file. `LIVE_ENV_FILE=<path>` points at another file. The run fails at once when the open keyset is missing. A docs-tier run without `--grep` (and without spec file arguments) needs every role: it fails at once, with the missing names, when `pam` or `datasync` is not set. A run with `--grep` or a file argument checks a role only when a test builds its client, so a page that needs only the open keyset runs with only that keyset. Run one live run per keyset at a time.
@@ -30,10 +30,10 @@ Rebuild with `npm run build:node` after a change under `src/`, otherwise the tie
 
 ## Conventions
 
-- One file per docs page: `<page>.test.ts`, named like the old page module (`docs-snippets/api-reference/publish.ts` becomes `api-reference/publish.test.ts`; keep the folder (`api-reference/`, `getting-started/`, `migration-guides/`, `shared/`) so the docs URL changes only its prefix and suffix). One `describe` per page, one `it` per old step. Start the `it` title with the snippet id(s), then what it proves.
+- One file per docs page: `<page>.test.ts` under the folder that matches the docs section (`api-reference/`, `getting-started/`, `migration-guides/`, `shared/`, `use-cases/`), so the docs URL is `test/integration/live/<folder>/<page>.test.ts`. One `describe` per page, one `it` per sample. Start the `it` title with the snippet id(s), then what it proves.
 - Plain `describe` / `it`, `node:assert/strict`. No staging, no recorder, no `page` / `step` / `check`.
-- Markers sit inside the `it` body: `// snippet.<id>` ... `// snippet.end`. The code between them is copied character for character from the old page (indentation may differ, readers get it un-indented). Everything else (setup, listeners, assertions) stays outside. Use `// snippet.hide` / `// snippet.show` only where the sample cannot run without a line readers must not see.
-- Check each page with the equivalence script (below). Every snippet id must stay and its text must not change.
+- Markers sit inside the `it` body: `// snippet.<id>` ... `// snippet.end`. The code between them is the published sample text (indentation may differ, readers get it un-indented). Never change it without the approval of the docs owner. Everything else (setup, listeners, assertions) stays outside. Use `// snippet.hide` / `// snippet.show` only where the sample cannot run without a line readers must not see.
+- Run the marker lint (`npm run test:integration:live:lint`) after every change. A snippet id is part of the docs URL, so keep it stable.
 - **Literal names.** The code in the markers uses exactly the names the docs show (`'my_channel'`, `'foo'`, ...), and that is what runs. Isolation comes from one live run per keyset at a time and a cleanup pass before and after (the janitor).
 - **Assertions must not assume a private, clean resource.** Channels, users and groups are shared and persist across runs. Assert on this run's own data: the `timetoken` the sample returned, an ID, or a unique value your test generates outside the markers. Do not assert exact counts or "the latest N". When the sample does not keep its response, match as narrowly as the sample allows (publisher, payload) and say why in a comment.
 - **Reset, then assert exactly.** A test that works on a literal resource (a channel group, a user, a device token, a DataSync object) first resets it to a known state (remove, then seed what it needs), and then asserts the exact result. This is safe because the janitor cleans the listed names and one run owns a keyset at a time. Put the reset in the test or in a hook of the page, not in the sample.
@@ -68,19 +68,11 @@ Rebuild with `npm run build:node` after a change under `src/`, otherwise the tie
 | `console.ts` | `captureConsole(method)`, `quietConsole()`, `restoreAllConsoles()` |
 | `resources.ts` | the janitor's resource list; `DATASYNC_PAGE_OBJECTS` is shared with `datasync-state.ts` |
 | `hooks.ts` | root hooks: role check before a full run, janitor, preflight, client cleanup after each test |
-| `snippets.ts`, `compare-snippets.ts` | snippet extraction with the docs rules, and the equivalence check |
+| `snippets.ts` | snippet extraction with the rules of the docs extractor |
 
 Other files in `support/` serve one page or one tool (`janitor*.ts`, `preflight.ts`, `datasync-*.ts`, `subscribe-groups.ts`, `proxy.ts`, `file-workdir.ts`, `access-manager.ts`).
 
 Every `observer()`, `shopper()` call builds a new client, so a test can have two clients with the same user id when it needs them.
-
-## Equivalence check
-
-```bash
-npx tsx test/integration/live/support/compare-snippets.ts docs-snippets/api-reference/publish.ts test/integration/live/api-reference/publish.test.ts
-```
-
-It extracts every snippet of both files with the rules of the docs extractor and compares them per id. It exits 1 on any difference, missing or extra id, or marker problem.
 
 ## Cleanup (janitor), preflight, provisioning
 
@@ -109,7 +101,7 @@ A full pass walks every listed name, so it takes a while (see the measured time 
 
 ### Preflight (`support/preflight.ts`)
 
-After the janitor, the root hook fails fast, with a message that names each missing feature. With `PUBNUB_ADMIN_API_KEY` and the keyset ids (`DOCS_SNIPPETS_OPEN_KEYSET_ID`, `DOCS_SNIPPETS_PAM_KEYSET_ID`, `DOCS_SNIPPETS_DS_KEYSET_ID`) it reads each keyset's configuration through the Admin API (read only) and lists what the role needs and lacks (Presence, Message Persistence, Delete-From-History, App Context and its events, Files, Stream Controller, Access Manager, DataSync). Live probes on the open keyset always run: publish (keys and network), Message Persistence, Delete-From-History, and Presence when the Admin API did not vouch for it. The features each keyset needs are listed in `docs-snippets/README.md`.
+After the janitor, the root hook fails fast, with a message that names each missing feature. With `PUBNUB_ADMIN_API_KEY` and the keyset ids (`DOCS_SNIPPETS_OPEN_KEYSET_ID`, `DOCS_SNIPPETS_PAM_KEYSET_ID`, `DOCS_SNIPPETS_DS_KEYSET_ID`) it reads each keyset's configuration through the Admin API (read only) and lists what the role needs and lacks (Presence, Message Persistence, Delete-From-History, App Context and its events, Files, Stream Controller, Access Manager, DataSync). Live probes on the open keyset always run: publish (keys and network), Message Persistence, Delete-From-History, and Presence when the Admin API did not vouch for it. The features each keyset needs are the ones the message names; `missingFeatures` in `support/preflight.ts` is the full list per role (open, pam, datasync).
 
 ### Provisioning (`provision/`)
 
@@ -149,4 +141,4 @@ npm run test:integration:live:docs-check            # docs cross-check (needs th
 
 **Manifest** (`support/manifest.ts`, output `coverage.json`, generated, do not edit). One entry per snippet id: file, the full Mocha title that runs it (describe + it), keyset role when the test names one (heuristic), and `mode`: `live` (inside an `it()`), `compile-only` (import-only samples: type-checked and loaded, not run as an API call), `mocked` (inside a nock-mocked test listed in `MOCKED_FILES` in `support/snippet-scan.ts`: `test/integration/endpoints/objects/channel.test.ts`, `test/integration/endpoints/time.test.ts`, `test/integration/components/subscription_manager.test.ts`, five samples; the same lint rules apply, except the title-names-the-id warning, which is the live tier's convention). `files` lists whole-file samples that a test runs (`getting-started/quickstart-node.mjs`). `-- --check` fails when `coverage.json` is stale. Things the docs embed that are deliberately not run (the browser, React and React Native quickstarts) are listed by hand, with a reason, in `snippet-exceptions.json`.
 
-**Docs cross-check** (`support/docs-check.ts`). Reads every `<EmbeddedCode>` that points at `pubnub/javascript` in the documentation checkout (first argument, `DOCS_REPO`, or `../documentation`) and reports each embed as live, compile-only, mocked, exception or NOT COVERED (exit code 1 unless `--report-only`). It understands both URL styles. An old-style URL (`docs-snippets/<folder>/<page>.ts`) is mapped to `test/integration/live/<folder>/<page>.test.ts`. A new-style URL (a path under `test/integration/live/`, or one of the mocked test files) is checked as it stands: the file must exist and `coverage.json` must list each requested snippet id for that very file (a whole-file embed needs a file named by a test in `coverage.json`, or a listed exception); its `action` in the repoint list is `done`. Use `--out <file>` when you run it on a checkout so the default repoint list is not overwritten. For an embed that points at an old duplicate copy (`docs-snippets/basic-usage/*`, `docs-snippets/<page>.ts`) it finds the same id in the tier and says whether the old copy and the tested twin are IDENTICAL or DIFFERENT (diffs in `/tmp/pn-live/dup-diffs/`). Such embeds stay listed as NOT COVERED until the docs are repointed. It writes the list for repointing the docs URLs to `/tmp/pn-live/docs-repoint.json` (`--out <file>` to change); its `action` is `repoint` (the mapped path), `repoint-to-twin` (the embed points at an old duplicate copy: change it to `newPath`, the tested twin), `keep` (documented exception), `done` (the URL already points at the tested tier) or `blocked` (not covered and no twin). The pages `users`, `spaces`, `memberships` and `access-manager-v2` of the API reference are out of scope. The documentation repository is only read.
+**Docs cross-check** (`support/docs-check.ts`). Reads every `<EmbeddedCode>` that points at `pubnub/javascript` in the documentation checkout (first argument, `DOCS_REPO`, or `../documentation`) and reports each embed as live, compile-only, mocked, exception or NOT COVERED (exit code 1 unless `--report-only`). The URL must name a file under `test/integration/live/` or one of the mocked test files: the file must exist and `coverage.json` must list each requested snippet id for that very file (a whole-file embed needs a file named by a test in `coverage.json`, or a listed exception). Any other path, such as a leftover `docs-snippets/...` URL, is NOT COVERED. The pages `users`, `spaces`, `memberships` and `access-manager-v2` of the API reference are out of scope. The documentation repository is only read.

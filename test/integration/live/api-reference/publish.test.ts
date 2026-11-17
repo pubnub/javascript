@@ -7,7 +7,7 @@ import { storedMessage } from '../support/history';
 import { eventually, settled, sleep, watch } from '../support/wait';
 
 /**
- * Publish and signal examples, including `fire()`. Port of docs-snippets/api-reference/publish.ts.
+ * Publish and signal examples, including `fire()`.
  * Message Persistence must be on for the open keyset (publishBasicUsage and the ttl test read history).
  */
 describe('api-reference/publish', () => {

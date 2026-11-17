@@ -7,7 +7,7 @@ import { storedMessage } from '../support/history';
 import { connected, eventually, settled, sleep } from '../support/wait';
 
 /**
- * Live commentary tutorial. Port of docs-snippets/use-cases/live-commentary.ts.
+ * Live commentary tutorial.
  * Needs Message Persistence on the open keyset (the backlog step reads stored remarks).
  */
 describe('use-cases/live-commentary', () => {

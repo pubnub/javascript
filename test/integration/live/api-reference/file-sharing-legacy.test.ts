@@ -5,8 +5,9 @@ import { withPlaceholders } from '../support/placeholders';
 import { enterWorkdir, FIXTURE_FILE } from '../support/file-workdir';
 
 /**
- * Example for the deprecated per-call `cipherKey` parameter of file sharing. Port of
- * docs-snippets/api-reference/file-sharing-legacy.ts. Files persist on the shared channel 'my_channel', so each test asserts
+ * Example for the deprecated per-call `cipherKey` parameter of file sharing.
+ *
+ * Files persist on the shared channel 'my_channel', so each test asserts
  * on the id it got back and an `afterEach` deletes the files the test uploaded. The download sample shows the id placeholder
  * '...': it runs unchanged through a client wrapper (`withPlaceholders`) that swaps it for the real id.
  */

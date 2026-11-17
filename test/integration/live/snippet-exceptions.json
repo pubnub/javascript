@@ -1,22 +1,22 @@
 {
-  "$comment": "Hand maintained. Things the public docs embed from this repository that are deliberately NOT run against the service, each with a reason. An entry is keyed by the docs-facing path (the path in the EmbeddedCode url, as the docs use it today) and the snippet ids; an entry without \"ids\" covers every embed of that path (whole-file embeds). Seeded from docs-snippets/coverage.json (modes stub and compile-only of the quickstarts). npm run test:integration:live:docs-check reads it.",
+  "$comment": "Hand maintained. Things the public docs embed from this repository that are deliberately NOT run against the service, each with a reason. An entry is keyed by the docs-facing path (the path in the EmbeddedCode url) and the snippet ids; an entry without \"ids\" covers every embed of that path (whole-file embeds). npm run test:integration:live:docs-check reads it.",
   "exceptions": [
     {
-      "path": "docs-snippets/quickstarts/browser-download-file.ts",
+      "path": "test/integration/live/quickstarts/browser-download-file.ts",
       "ids": [
         "downloadFileWebBasicUsage"
       ],
-      "reason": "Browser-only sample (needs window and a bundler or a script tag), so it cannot run in Node. Stays in docs-snippets/quickstarts/ and is type-checked by docs-snippets/tsconfig.browser.json (npm run test:docs-snippets:types); it is not run against the service. Old mode: compile-only."
+      "reason": "Browser-only sample (needs window and a bundler or a script tag), so it cannot run in Node. Stays in test/integration/live/quickstarts/ and is type-checked by test/integration/live/tsconfig.browser.json (npm run test:integration:live:types); it is not run against the service."
     },
     {
-      "path": "docs-snippets/quickstarts/browser-shared-worker.ts",
+      "path": "test/integration/live/quickstarts/browser-shared-worker.ts",
       "ids": [
         "configurationBasicUsageSubscriptionWorkerUrl"
       ],
-      "reason": "Browser-only sample (needs window and a bundler or a script tag), so it cannot run in Node. Stays in docs-snippets/quickstarts/ and is type-checked by docs-snippets/tsconfig.browser.json (npm run test:docs-snippets:types); it is not run against the service. Old mode: compile-only."
+      "reason": "Browser-only sample (needs window and a bundler or a script tag), so it cannot run in Node. Stays in test/integration/live/quickstarts/ and is type-checked by test/integration/live/tsconfig.browser.json (npm run test:integration:live:types); it is not run against the service."
     },
     {
-      "path": "docs-snippets/quickstarts/quickstart-react-native.tsx",
+      "path": "test/integration/live/quickstarts/quickstart-react-native.tsx",
       "ids": [
         "quickstartReactNativeCleanup",
         "quickstartReactNativeImport",
@@ -24,109 +24,109 @@
         "quickstartReactNativePublish",
         "quickstartReactNativeSubscription"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/quickstart-react.tsx",
+      "path": "test/integration/live/quickstarts/quickstart-react.tsx",
       "ids": [
         "quickstartReactImports",
         "quickstartReactInit",
         "quickstartReactPublish",
         "quickstartReactSubscribe"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/quickstart-web.ts",
+      "path": "test/integration/live/quickstarts/quickstart-web.ts",
       "ids": [
         "quickstartWebInit",
         "quickstartWebListeners",
         "quickstartWebPublish",
         "quickstartWebSubscribe"
       ],
-      "reason": "Browser-only sample (needs window and a bundler or a script tag), so it cannot run in Node. Stays in docs-snippets/quickstarts/ and is type-checked by docs-snippets/tsconfig.browser.json (npm run test:docs-snippets:types); it is not run against the service. Old mode: compile-only."
+      "reason": "Browser-only sample (needs window and a bundler or a script tag), so it cannot run in Node. Stays in test/integration/live/quickstarts/ and is type-checked by test/integration/live/tsconfig.browser.json (npm run test:integration:live:types); it is not run against the service."
     },
     {
-      "path": "docs-snippets/quickstarts/react-configuration.jsx",
+      "path": "test/integration/live/quickstarts/react-configuration.jsx",
       "ids": [
         "reactConfigurationLifecycle"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/react-fetch-messages.jsx",
+      "path": "test/integration/live/quickstarts/react-fetch-messages.jsx",
       "ids": [
         "reactFetchMessages"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/react-get-state.jsx",
+      "path": "test/integration/live/quickstarts/react-get-state.jsx",
       "ids": [
         "reactGetState"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/react-here-now.jsx",
+      "path": "test/integration/live/quickstarts/react-here-now.jsx",
       "ids": [
         "reactHereNow"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/react-listeners.jsx",
+      "path": "test/integration/live/quickstarts/react-listeners.jsx",
       "ids": [
         "reactListeners"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/react-native-download-file.ts",
+      "path": "test/integration/live/quickstarts/react-native-download-file.ts",
       "ids": [
         "downloadFileReactNativeBasicUsage"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/react-presence-events.jsx",
+      "path": "test/integration/live/quickstarts/react-presence-events.jsx",
       "ids": [
         "reactPresenceEvents"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/react-set-state.jsx",
+      "path": "test/integration/live/quickstarts/react-set-state.jsx",
       "ids": [
         "reactSetState"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/react-subscribe.jsx",
+      "path": "test/integration/live/quickstarts/react-subscribe.jsx",
       "ids": [
         "reactSubscribe"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/react-where-now.jsx",
+      "path": "test/integration/live/quickstarts/react-where-now.jsx",
       "ids": [
         "reactWhereNow"
       ],
-      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "reason": "React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/quickstart-web.html",
-      "reason": "Whole-file embed of the browser quickstart page (script tag, DOM, CDN build): needs a browser. Stays in docs-snippets/quickstarts/; not run, not type-checked. Its snippets are the same code as quickstart-web.ts."
+      "path": "test/integration/live/quickstarts/quickstart-web.html",
+      "reason": "Whole-file embed of the browser quickstart page (script tag, DOM, CDN build): needs a browser. Stays in test/integration/live/quickstarts/; not run, not type-checked. Its snippets are the same code as quickstart-web.ts."
     },
     {
-      "path": "docs-snippets/quickstarts/quickstart-react-app.tsx",
-      "reason": "Whole-file embed of the React quickstart app: React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "path": "test/integration/live/quickstarts/quickstart-react-app.tsx",
+      "reason": "Whole-file embed of the React quickstart app: React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     },
     {
-      "path": "docs-snippets/quickstarts/quickstart-react-native-app.tsx",
-      "reason": "Whole-file embed of the React Native quickstart app: React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in docs-snippets/quickstarts/. Old mode: stub."
+      "path": "test/integration/live/quickstarts/quickstart-react-native-app.tsx",
+      "reason": "Whole-file embed of the React Native quickstart app: React / React Native sample: this repository has no React or React Native dependency, so the sample can be shown but not run or type-checked here. Stays in test/integration/live/quickstarts/."
     }
   ]
 }

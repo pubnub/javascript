@@ -7,7 +7,7 @@ import { observer, shopper, track } from '../support/clients';
 import { sleep, watch } from '../support/wait';
 
 /**
- * Examples for the deprecated `fire()` method and its replacement. Port of docs-snippets/api-reference/publish-legacy.ts.
+ * Examples for the deprecated `fire()` method and its replacement.
  * The page has no snippet markers: every test is a behaviour check. Channels are unique per run (nothing is stored on them,
  * and a unique name keeps the "nothing arrived" checks free of other runs' traffic).
  */

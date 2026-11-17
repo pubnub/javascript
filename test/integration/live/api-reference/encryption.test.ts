@@ -7,7 +7,7 @@ import PubNub from 'pubnub';
 import { createClient } from '../support/clients';
 
 /**
- * Encryption examples. Port of docs-snippets/api-reference/encryption.ts. Everything runs locally (no request is made),
+ * Encryption examples. Everything runs locally (no request is made),
  * the clients only carry a crypto module. Each file test works in its own temp directory.
  */
 describe('api-reference/encryption', () => {

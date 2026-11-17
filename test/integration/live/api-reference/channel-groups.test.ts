@@ -6,7 +6,7 @@ import { eventually, settled } from '../support/wait';
 import { sorted } from '../support/util';
 
 /**
- * Channel group examples. Port of docs-snippets/api-reference/channel-groups.ts.
+ * Channel group examples.
  * The groups 'myChannelGroup' and 'family' are shared literal names, so every test deletes the group it works on first
  * (reset approach). After the reset the exact channel list assertions are legitimate.
  */

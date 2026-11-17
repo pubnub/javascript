@@ -8,7 +8,7 @@ import PubNub, { AppContext } from 'pubnub'
 import { tscScratch } from '../support/tsc-scratch';
 
 /**
- * Examples for the version 8 migration guide. Port of docs-snippets/migration-guides/v8.ts.
+ * Examples for the version 8 migration guide.
  * The import snippet sits at the top because an import cannot sit inside a test. It is type checked by the tier's tsconfig
  * (npm run test:integration:live:types) and loaded when the file runs. The scratch projects of the second test show what the
  * guide claims about the "before" import.

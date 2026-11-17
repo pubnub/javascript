@@ -8,7 +8,7 @@ import { connected, eventually, settled } from '../support/wait';
 
 /**
  * Examples for the deprecated configuration parameters `uuid`, `logVerbosity`, `cipherKey` and `useRandomIVs`, and for the
- * deprecated `stop()` method. Port of docs-snippets/api-reference/configuration-legacy.ts. The page has no snippet markers.
+ * deprecated `stop()` method. The page has no snippet markers.
  * The cipherKey and useRandomIVs tests read stored messages back, so Message Persistence must be on for the open keyset.
  */
 

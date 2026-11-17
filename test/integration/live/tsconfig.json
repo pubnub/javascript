@@ -18,5 +18,6 @@
       "pubnub": ["lib/types/index.d.ts", "lib/node/index.js"]
     }
   },
-  "include": ["./**/*.ts"]
+  "include": ["./**/*.ts"],
+  "exclude": ["quickstarts"]
 }

@@ -7,7 +7,7 @@ import { sorted } from '../support/util';
 
 /**
  * Examples for the older `pubnub.subscribe()`, `pubnub.unsubscribe()` and `pubnub.unsubscribeAll()` methods.
- * Port of docs-snippets/api-reference/subscribe-legacy.ts. Presence must be on for the open keyset.
+ * Presence must be on for the open keyset.
  */
 describe('api-reference/subscribe-legacy', () => {
   const tagOf = (m: { message: unknown }): string | undefined => (m.message as { run?: string }).run;

@@ -68,7 +68,7 @@ export async function readFeatures(environment: Env, role: Role): Promise<Featur
   return { status: 'read', config: config.json as KeysetConfig };
 }
 
-/** Features a role needs (docs-snippets/README.md, "Features each keyset needs"). One sentence per missing feature. */
+/** Features a role needs (the live tier README, "Preflight"). One sentence per missing feature. */
 export function missingFeatures(role: Role, c: KeysetConfig): string[] {
   const out: string[] = [];
   const on = (value: boolean | undefined, text: string): void => {
@@ -196,7 +196,7 @@ export async function runPreflight(environment: Env = env()): Promise<{ notes: s
     throw new Error(
       redact(
         `Keyset preflight failed. Fix these, then run again:\n${problems.map((p) => `  - ${p}`).join('\n')}\n` +
-          'The features each keyset needs are listed in docs-snippets/README.md ("Features each keyset needs").',
+          'The features each keyset needs are listed in test/integration/live/README.md ("Preflight").',
       ),
     );
   }

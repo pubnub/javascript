@@ -10,7 +10,7 @@ import { withPlaceholders } from '../support/placeholders';
 import { eventually } from '../support/wait';
 
 /**
- * Port of docs-snippets/use-cases/fan-behavior-management.ts (page use-cases/sports-media-entertainment/fan-behavior-management).
+ *
  * Runs on the secured keyset: the token service signs and revokes tokens, the fan client only applies them.
  *
  * The state-store snippet starts with an `import`, which only exists at module level, so it sits at file level, before the

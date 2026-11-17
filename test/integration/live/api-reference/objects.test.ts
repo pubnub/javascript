@@ -7,7 +7,7 @@ import { eventually, settled, watch } from '../support/wait';
 import { sorted } from '../support/util';
 
 /**
- * App Context examples. Port of docs-snippets/api-reference/objects.ts.
+ * App Context examples.
  * Needs App Context on the open keyset. Users, channels, memberships and members are shared literal names, so every test
  * resets the specific resources its sample works on first (reset approach) and then asserts exact lists. The `after` hook
  * removes what the samples leave behind.

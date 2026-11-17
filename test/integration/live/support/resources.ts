@@ -5,8 +5,8 @@
  * what is listed here before and after every run, and nothing else. It never lists a keyset and deletes what it finds.
  *
  * To add a name: put it in the right list of the right role below (one string, no logic). A name that a test creates but that is
- * not listed here is never cleaned and leaks from run to run. Seeded from docs-snippets/fixtures/names.ts and from the
- * literals of the old page modules (snippet regions and `world.n(...)`).
+ * not listed here is never cleaned and leaks from run to run. The names are the literals of the docs samples
+ * (snippet regions) and of the setup around them.
  *
  * Which list does a name belong to?
  *   channels       every channel a test publishes to or reads history from (history is deleted on these, and on `fileChannels`)

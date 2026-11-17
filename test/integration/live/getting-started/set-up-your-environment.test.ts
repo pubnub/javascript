@@ -14,7 +14,7 @@ import { openKeys } from '../support/env';
 import { makeScratch, SDK_ROOT, tscScratch } from '../support/tsc-scratch';
 
 /**
- * Examples for setting up your environment. Port of docs-snippets/getting-started/set-up-your-environment.ts.
+ * Examples for setting up your environment.
  * The import snippet sits at the top because an import cannot sit inside a test. It is type checked by the tier's tsconfig and
  * loaded when the file runs.
  */

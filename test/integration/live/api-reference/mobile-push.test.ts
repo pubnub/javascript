@@ -7,7 +7,7 @@ import { eventually, settled, watch } from '../support/wait';
 import { sorted } from '../support/util';
 
 /**
- * Mobile push notification examples. Port of docs-snippets/api-reference/mobile-push.ts.
+ * Mobile push notification examples.
  * Registering a device token does not send a push. Delivery needs a real device and APNs or FCM credentials.
  * Needs the Push Notifications add-on on the open keyset (no APNs or FCM credentials are needed).
  *

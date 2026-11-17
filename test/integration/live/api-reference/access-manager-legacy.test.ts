@@ -7,7 +7,7 @@ import { granted } from '../support/access-manager';
 /**
  * Access Manager token examples that use the deprecated `spaces`, `users` and `uuids` terms. The SDK maps them to the
  * current terms, so a `spaces` grant appears as `channels` in the parsed token.
- * Port of docs-snippets/api-reference/access-manager-legacy.ts. Only `grantToken` is called (no application-level grant),
+ * Only `grantToken` is called (no application-level grant),
  * so no cleanup hook is needed. Tokens expire by themselves (ttl 15).
  */
 describe('api-reference/access-manager-legacy', () => {

@@ -8,7 +8,7 @@ import { DEVICE_TOKEN_EXAMPLE } from '../support/resources';
 import { connected, eventually, PRESENCE_TIMEOUT, settled, watch } from '../support/wait';
 
 /**
- * Fan re-engagement. Port of docs-snippets/use-cases/fan-re-engagement.ts.
+ * Fan re-engagement.
  * Needs Presence and Mobile Push Notifications on the open keyset. The test registers a device token for push but no real
  * device exists, so it cannot verify that a push notification is DELIVERED; it verifies the publish to the fan's own alert
  * channel, the payload, and the device registration.

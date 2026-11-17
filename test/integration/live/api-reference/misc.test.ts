@@ -6,7 +6,7 @@ import { LocalProxy } from '../support/proxy';
 import { expectStatus, sleep, watch } from '../support/wait';
 
 /**
- * Network examples: `disconnect()`, `reconnect()` and `setProxy()`. Port of docs-snippets/api-reference/misc.ts.
+ * Network examples: `disconnect()`, `reconnect()` and `setProxy()`.
  * The samples name no channel, so each test listens on a channel of its own name.
  */
 describe('api-reference/misc', () => {

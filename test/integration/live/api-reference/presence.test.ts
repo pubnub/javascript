@@ -6,7 +6,7 @@ import { connected, eventually, PRESENCE_TIMEOUT, settled } from '../support/wai
 import { sorted } from '../support/util';
 
 /**
- * Presence examples. Port of docs-snippets/api-reference/presence.ts.
+ * Presence examples.
  *
  * The samples run as the user id `uuid` on the channels `ch1`, `my_channel` and the channel group `cg1`. One occupant client
  * joins them once in `before` and leaves in `after`, because joining is the slow part of presence. It is built by hand

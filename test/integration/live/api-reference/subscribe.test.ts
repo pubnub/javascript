@@ -7,7 +7,7 @@ import { ensureGroups, memberOf, removeGroupMembers } from '../support/subscribe
 import { sorted } from '../support/util';
 
 /**
- * Subscribe examples, without the DataSync examples. Port of docs-snippets/api-reference/subscribe.ts.
+ * Subscribe examples, without the DataSync examples.
  * Presence must be on for the open keyset (eventListenerBasicUsage reads join events).
  */
 describe('api-reference/subscribe', () => {

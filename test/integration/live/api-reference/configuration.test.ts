@@ -7,7 +7,7 @@ import { keysOf, openKeys, securedKeys, subscribeKeyOnly } from '../support/env'
 import { eventually, watch } from '../support/wait';
 
 /**
- * Configuration examples. Port of docs-snippets/api-reference/configuration.ts.
+ * Configuration examples.
  * The samples show placeholder keys. The hidden spread after them puts the real keys of the keyset in, so the text readers see
  * stays generic. The spread is typed Partial, otherwise TypeScript reports the overwritten visible keys (TS2783).
  */

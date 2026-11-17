@@ -8,7 +8,7 @@ import { keysOf } from '../support/env';
 import { connected, eventually, settled, sleep, watch } from '../support/wait';
 
 /**
- * Port of docs-snippets/use-cases/live-polls.ts (page use-cases/sports-media-entertainment/live-polls).
+ *
  * One flow over three channels: open a poll, a late fan fetches it, the fan votes, the service publishes the tally and the
  * fan receives it. Needs Message Persistence on the open keyset.
  */

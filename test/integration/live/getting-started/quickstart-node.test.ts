@@ -10,7 +10,7 @@ import { makeScratch, SDK_ROOT } from '../support/tsc-scratch';
 import { eventually, watch } from '../support/wait';
 
 /**
- * Node.js quickstart examples. Port of docs-snippets/getting-started/quickstart-node.ts.
+ * Node.js quickstart examples.
  * The docs embed quickstart-node.mjs as a whole file, and the test runs that file in a child process. It sits next to this
  * test and is a byte for byte copy of the file of the docs.
  */

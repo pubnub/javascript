@@ -4,7 +4,7 @@ import { createClient } from '../support/clients';
 
 /**
  * Examples for the deprecated `encrypt()` and `decrypt()` methods and the cipher key arguments. Both methods log a
- * deprecation warning on every call. Port of docs-snippets/api-reference/encryption-legacy.ts. Everything runs locally.
+ * deprecation warning on every call. Everything runs locally.
  */
 describe('api-reference/encryption-legacy', () => {
   // Open keyset client with an AES-CBC crypto module, the setup the legacy methods fall back to.

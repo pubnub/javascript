@@ -11,7 +11,7 @@ import { openKeys } from '../support/env';
 
 /**
  * Shared examples used next to the examples of many pages: the SDK import line, the `fs` import for Node.js file sharing and
- * the generic client constructor. Port of docs-snippets/shared/import-pubnub.ts.
+ * the generic client constructor.
  * The two import snippets sit at the top of the file because an import cannot sit inside a test. They run when the file loads
  * and the tests below prove that the imported names are the real thing.
  */

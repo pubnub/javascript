@@ -20,7 +20,7 @@ import { openKeys } from '../support/env';
 import { eventually } from '../support/wait';
 
 /**
- * Logging examples. Port of docs-snippets/getting-started/logging.ts.
+ * Logging examples.
  * The samples show placeholder keys. Hidden lines spread the real keys of the open keyset over them.
  */
 const LogLevel = PubNub.LogLevel;

@@ -10,9 +10,9 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "types": [],
-    "baseUrl": ".",
+    "baseUrl": "../../..",
     "paths": {
-      "pubnub": ["../lib/types/index.d.ts"]
+      "pubnub": ["lib/types/index.d.ts"]
     }
   },
   "include": ["quickstarts/quickstart-web.ts", "quickstarts/browser-download-file.ts", "quickstarts/browser-shared-worker.ts"]

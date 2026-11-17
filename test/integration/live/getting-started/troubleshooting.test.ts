@@ -5,7 +5,7 @@ import { createClient, shopper, track } from '../support/clients';
 import { keysOf } from '../support/env';
 
 /**
- * Troubleshooting examples. Port of docs-snippets/getting-started/troubleshooting.ts. The page has no snippet markers.
+ * Troubleshooting examples. The page has no snippet markers.
  * The access denied test needs a secured (pam) keyset on which the secret-less client has no token.
  */
 describe('getting-started/troubleshooting', () => {

@@ -8,7 +8,7 @@ import { keysOf, openKeys } from '../support/env';
 import { connected, eventually, settled } from '../support/wait';
 
 /**
- * Examples for the version 11 migration guide. Port of docs-snippets/migration-guides/v11.ts.
+ * Examples for the version 11 migration guide.
  * The presence test needs Presence on for the open keyset.
  */
 

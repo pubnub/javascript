@@ -9,7 +9,7 @@ import { describeRoles, env as currentEnv, redact, type Env } from '../support/e
  *   npm run test:integration:live:provision -- --check    no-write diff, exit code 1 when anything differs
  *
  * The live tier does NOT run it: run it by hand when a keyset is new or the classes changed (the preflight cannot see
- * classes). Working copy of docs-snippets/provision/provision-datasync.ts.
+ * classes).
  *
  * Rules:
  * - Never deletes a class. A class whose immutable fields differ (relationship cardinality or entity sides) fails with the

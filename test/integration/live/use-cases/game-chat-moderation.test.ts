@@ -8,7 +8,7 @@ import { withPlaceholders } from '../support/placeholders';
 import { connected, eventually, settled, sleep } from '../support/wait';
 
 /**
- * Hide and remove chat messages. Port of docs-snippets/use-cases/game-chat-moderation.ts.
+ * Hide and remove chat messages.
  * Runs on the Access Manager keyset (grantToken needs the secret key); Message Persistence and Delete-From-History must be on.
  */
 describe('use-cases/game-chat-moderation', () => {

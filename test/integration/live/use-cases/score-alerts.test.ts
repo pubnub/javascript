@@ -8,7 +8,7 @@ import { keysOf } from '../support/env';
 import { watch, eventually, settled } from '../support/wait';
 
 /**
- * Port of docs-snippets/use-cases/score-alerts.ts (page use-cases/sports-media-entertainment/real-time-score-alerts).
+ *
  * One flow: register a device, build and publish the alert, list the registration, remove it. Needs the Push Notifications
  * add-on on the open keyset. Delivery of the notification itself needs a real device and provider credentials: not verified.
  */

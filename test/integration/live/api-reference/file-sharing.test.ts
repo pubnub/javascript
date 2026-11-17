@@ -10,7 +10,7 @@ import { enterWorkdir, FIXTURE_FILE } from '../support/file-workdir';
 import { eventually, settled, watch } from '../support/wait';
 
 /**
- * File sharing examples for Node.js. Port of docs-snippets/api-reference/file-sharing.ts.
+ * File sharing examples for Node.js.
  * The open keyset needs File Sharing and Message Persistence enabled.
  *
  * Files persist on the shared channel 'my_channel', so every test asserts on the file id it got back and an `afterEach`

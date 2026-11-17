@@ -6,7 +6,7 @@ import { captureConsole } from '../support/console';
 import { connected, eventually, watch } from '../support/wait';
 
 /**
- * Real-time ads and reaction upgrades. Port of docs-snippets/use-cases/real-time-ads.ts.
+ * Real-time ads and reaction upgrades.
  * The ad decisions and reaction upgrades come from Illuminate Business Rules on the real service. The keyset used by the tier
  * has no such rule, so the test publishes the decisions itself, with the payload shape the page describes, and verifies the
  * client side: what the fan publishes and how the client reacts to a decision.

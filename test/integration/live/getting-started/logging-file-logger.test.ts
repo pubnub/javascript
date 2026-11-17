@@ -14,7 +14,7 @@ import { openKeys } from '../support/env';
 import { eventually } from '../support/wait';
 
 /**
- * File logger example for Node.js. Port of docs-snippets/getting-started/logging-file-logger.ts.
+ * File logger example for Node.js.
  * It reads the level name from `PubNub.LogLevel` because the SDK is a CommonJS package.
  */
 describe('getting-started/logging-file-logger', () => {

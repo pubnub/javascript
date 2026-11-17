@@ -41,7 +41,7 @@ export interface Manifest {
 }
 
 export interface ExceptionEntry {
-  /** Docs-facing path, as in the EmbeddedCode url (for example docs-snippets/quickstarts/quickstart-web.ts). */
+  /** Docs-facing path, as in the EmbeddedCode url (for example test/integration/live/quickstarts/quickstart-web.ts). */
   path: string;
   /** Snippet ids. Absent: every embed of the path, whole-file embeds included. */
   ids?: string[];
@@ -60,8 +60,8 @@ export function checkExceptions(entries: ExceptionEntry[]): string[] {
   const seen = new Set<string>();
   entries.forEach((e, i) => {
     const where = `snippet-exceptions.json entry ${i + 1} (${e.path ?? '?'})`;
-    if (typeof e.path !== 'string' || !e.path.startsWith('docs-snippets/'))
-      problems.push(`${where}: "path" must be a docs-snippets/... path`);
+    if (typeof e.path !== 'string' || !e.path.startsWith('test/integration/live/'))
+      problems.push(`${where}: "path" must be a test/integration/live/... path`);
     if (typeof e.reason !== 'string' || e.reason.trim().length < 10) problems.push(`${where}: "reason" is required`);
     if (
       e.ids !== undefined &&

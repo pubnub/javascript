@@ -9,7 +9,7 @@ import { withPlaceholders } from '../support/placeholders';
 import { connected, eventually, PRESENCE_TIMEOUT, settled } from '../support/wait';
 
 /**
- * Port of docs-snippets/use-cases/real-time-chat.ts (page use-cases/sports-media-entertainment/real-time-chat).
+ *
  * One flow, as the page runs it: set channel and fan metadata, join with presence, send, load history, count fans, react.
  * Needs Presence, Message Persistence and App Context on the open keyset.
  */

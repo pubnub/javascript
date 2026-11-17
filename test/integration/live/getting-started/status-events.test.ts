@@ -9,7 +9,7 @@ import { LocalProxy } from '../support/proxy';
 import { connected, eventually, expectEvent, sleep } from '../support/wait';
 
 /**
- * Status event examples. Port of docs-snippets/getting-started/status-events.ts.
+ * Status event examples.
  * Outages are simulated with a local CONNECT proxy. The fixed sleeps prove that a call is still pending or that nothing arrived.
  */
 describe('getting-started/status-events', () => {

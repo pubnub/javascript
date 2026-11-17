@@ -13,7 +13,6 @@
  *   | `JSCustomer`     | customerId, firstName, lastName, email, creditScore, city | same **minus** `email`, **plus** `private` |
  *   | `JSLoanQuote`    | quoteId, make, model, price                              | quoteId, `private`     |
  *   | `JSREQUESTED_BY` | linkedAt                                                 | linkedAt, `private`    |
- *
  */
 
 import assert from 'node:assert';

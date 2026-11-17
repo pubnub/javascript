@@ -5,7 +5,6 @@
  * (`entityAId` AND `entityBId`), NEVER on the relationship's own id. We therefore subscribe to both
  * endpoint ids and assert `channel ∈ {customerId, loanQuoteId}`; `data.id` still equals the rel id.
  * A delete keeps those endpoint ids on the body along with `id` and `deletedAt`.
- *
  */
 
 import assert from 'node:assert';

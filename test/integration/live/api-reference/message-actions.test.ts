@@ -6,7 +6,7 @@ import { withPlaceholders } from '../support/placeholders';
 import { eventually, settled, watch } from '../support/wait';
 
 /**
- * Message action examples. Port of docs-snippets/api-reference/message-actions.ts. Message Persistence must be on for the open
+ * Message action examples. Message Persistence must be on for the open
  * keyset. The samples carry placeholder literals (`replace_with_message_timetoken` and so on): the client is wrapped with
  * `withPlaceholders`, so the sample text stays unchanged and the real timetokens reach the service. Every test publishes its
  * own message first, so the tests do not depend on each other.

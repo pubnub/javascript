@@ -9,7 +9,7 @@ import { storedMessage } from '../support/history';
 import { connected, eventually, settled, watch } from '../support/wait';
 
 /**
- * Port of docs-snippets/use-cases/match-stats.ts (page use-cases/sports-media-entertainment/match-stats).
+ *
  * One flow: a scoreboard subscribes to the wildcard, a feed publishes one stat, a late scoreboard fills in current values.
  * Needs wildcard subscribe (Stream Controller) and Message Persistence on the open keyset.
  */

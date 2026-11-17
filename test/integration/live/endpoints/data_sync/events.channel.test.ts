@@ -3,7 +3,6 @@
  *
  * Channels ride the wire as `type: 'channel'` with `className: 'Channel'` / `classLevel: 'Global'`,
  * so `objectType` matches the wire type. Delivered on `channel === id`.
- *
  */
 
 import type PubNub from 'pubnub';

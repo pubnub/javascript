@@ -4,7 +4,6 @@
  * Entity-type events are delivered on `channel === object.id`, so we subscribe to the (client-supplied)
  * id before creating the entity. `JSCustomer` is a developer-defined class, so the wire carries
  * `className: 'JSCustomer'` / `classLevel: 'SubKey'` and `objectType` stays the wire `'entity'`.
- *
  */
 
 import type PubNub from 'pubnub';

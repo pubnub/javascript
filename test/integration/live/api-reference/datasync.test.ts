@@ -7,7 +7,7 @@ import { errorText, removePageObjects, untilPageObjectsGone } from '../support/d
 import { connected, eventually, settled } from '../support/wait';
 
 /**
- * DataSync examples, including the DataSync listener and subscription examples. Port of docs-snippets/api-reference/datasync.ts.
+ * DataSync examples, including the DataSync listener and subscription examples.
  *
  * Runs on the `datasync` keyset. The samples create DataSync objects with fixed literal ids, and the service answers a create of
  * an existing id with 409 (DS-0301), it does not overwrite. So a before hook removes every literal object the page creates
@@ -81,7 +81,7 @@ describe('api-reference/datasync', () => {
   });
 
   describe('preconditions', () => {
-    // The classes are provisioned separately (docs-snippets/provision/). This only reports a missing one.
+    // The classes are provisioned separately (test/integration/live/provision/). This only reports a missing one.
     it('the product entity class exists on the keyset', async () => {
       const klass = await server('datasync').dataSync.getEntities({ class: 'product', classVersion: 1, limit: 1 });
       assert.equal(klass.status, 200);

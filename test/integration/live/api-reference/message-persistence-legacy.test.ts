@@ -10,7 +10,7 @@ import { eventually, settled, sleep } from '../support/wait';
 
 /**
  * Examples for the deprecated `history()` method and the deprecated `data` property of `actions` on `fetchMessages()`.
- * Port of docs-snippets/api-reference/message-persistence-legacy.ts. Message Persistence and Delete-From-History must be on
+ * Message Persistence and Delete-From-History must be on
  * for the open keyset.
  *
  * Channels are shared and persistent, and the samples read "the latest 100" of a channel. So every test reads its own
