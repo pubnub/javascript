@@ -146,12 +146,16 @@ describe('#core / mounting point', () => {
 
   it('supports custom encryption/decryption', async () => {
     // Simple reversible transformation (custom encryption is user-defined and opaque to the SDK).
-    let customEncrypt = (data: Payload) => Buffer.from(JSON.stringify(data)).reverse().toString('base64');
+    const customEncrypt = (data: Payload) => Buffer.from(JSON.stringify(data)).reverse().toString('base64');
 
     const customDecrypt = (data: Payload) =>
-      JSON.parse(Buffer.from(data as string, 'base64').reverse().toString('utf8'));
+      JSON.parse(
+        Buffer.from(data as string, 'base64')
+          .reverse()
+          .toString('utf8'),
+      );
 
-    let pn = new PubNub({
+    const pn = new PubNub({
       subscribeKey: 'demo',
       customEncrypt,
       customDecrypt,
