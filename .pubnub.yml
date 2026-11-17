@@ -1,5 +1,14 @@
 ---
 changelog:
+  - date: 2026-11-17
+    version: v14.0.0
+    changes:
+      - type: feature
+        text: "Add support for aes gcm type decryption by adding cryptor with decryption capability."
+      - type: improvement
+        text: "BREAKING CHANGES: Replaced the bundled CryptoJS with native crypto on web, Node.js and noble on React Native."
+      - type: improvement
+        text: "Undici minor version bump."
   - date: 2026-10-22
     version: v13.1.3
     changes:
@@ -1531,7 +1540,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '13.1.3'
+version: '14.0.0'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1547,7 +1556,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v13.1.3.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v14.0.0.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2218,7 +2227,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v13.1.3/pubnub.13.1.3.js
+            location: https://github.com/pubnub/javascript/releases/download/v14.0.0/pubnub.14.0.0.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'

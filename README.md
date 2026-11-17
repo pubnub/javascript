@@ -27,8 +27,8 @@ npm install pubnub
 
 Or download one of our builds from our CDN:
 
-- https://cdn.pubnub.com/sdk/javascript/pubnub.13.1.3.js
-- https://cdn.pubnub.com/sdk/javascript/pubnub.13.1.3.min.js
+- https://cdn.pubnub.com/sdk/javascript/pubnub.14.0.0.js
+- https://cdn.pubnub.com/sdk/javascript/pubnub.14.0.0.min.js
 
 For other installation methods, see [environment setup](https://www.pubnub.com/docs/sdks/javascript/environment-setup).
 

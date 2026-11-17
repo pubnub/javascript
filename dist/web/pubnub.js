@@ -4950,7 +4950,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '13.1.3';
+	            return '14.0.0';
 	        },
 	        getVersion() {
 	            return this.version;
