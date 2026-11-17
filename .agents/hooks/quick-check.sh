@@ -5,7 +5,7 @@
 cd "${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}" || exit 0
 [ -n "$(git status --porcelain -- src test 2>/dev/null)" ] || exit 0 # no TypeScript changed
 if [ ! -x node_modules/.bin/tsc ]; then
-  echo "quick-check skipped: node_modules missing (run npm ci)" >&2
+  echo "quick-check skipped: typecheck did not run because node_modules/.bin/tsc is absent; npm install makes this check available" >&2
   exit 0
 fi
 if ! out=$(npm run -s typecheck 2>&1); then
