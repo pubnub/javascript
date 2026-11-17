@@ -3,7 +3,7 @@ import type PubNub from 'pubnub';
 import { friend, observer, shopper } from '../support/clients';
 import { retryTransient } from '../support/retry';
 import { captureConsole } from '../support/console';
-import { eventually, watch } from '../support/wait';
+import { eventually, settled, watch } from '../support/wait';
 import { sorted } from '../support/util';
 
 /**
@@ -18,7 +18,7 @@ describe('api-reference/objects', () => {
 
   const SHOPPER = 'shopper';
 
-  /** Removes every membership of the user and waits until another client sees none. */
+  /** Removes every membership of the user and waits until another client sees none on consecutive reads. */
   async function clearMemberships(uuid: string): Promise<void> {
     const admin = friend();
     const current = await admin.objects.getMemberships({ uuid, limit: 100 });
@@ -26,12 +26,12 @@ describe('api-reference/objects', () => {
       await admin.objects.removeMemberships({ uuid, channels: current.data.map((m) => m.channel.id) });
     }
     const reader = observer();
-    await eventually(async () => assert.deepEqual((await reader.objects.getMemberships({ uuid })).data, []), {
+    await settled(async () => assert.deepEqual((await reader.objects.getMemberships({ uuid })).data, []), {
       label: `memberships of ${uuid} cleared`,
     });
   }
 
-  /** Removes every member of the channel and waits until another client sees none. */
+  /** Removes every member of the channel and waits until another client sees none on consecutive reads. */
   async function clearMembers(channel: string): Promise<void> {
     const admin = friend();
     const current = await admin.objects.getChannelMembers({ channel, limit: 100 });
@@ -39,7 +39,7 @@ describe('api-reference/objects', () => {
       await admin.objects.removeChannelMembers({ channel, uuids: current.data.map((m) => m.uuid.id) });
     }
     const reader = observer();
-    await eventually(async () => assert.deepEqual((await reader.objects.getChannelMembers({ channel })).data, []), {
+    await settled(async () => assert.deepEqual((await reader.objects.getChannelMembers({ channel })).data, []), {
       label: `members of ${channel} cleared`,
     });
   }
@@ -54,13 +54,15 @@ describe('api-reference/objects', () => {
         }),
       { label: 'seed app context' },
     );
+    // The samples read team.blue by id and through the `*Team` name filter (an index), so both reads must hold on consecutive polls.
     const reader = observer();
-    await eventually(
-      async () =>
-        assert.equal((await reader.objects.getChannelMetadata({ channel: 'team.blue' })).data.name, 'Blue Team'),
-      {
-        label: 'team.blue visible',
+    await settled(
+      async () => {
+        assert.equal((await reader.objects.getChannelMetadata({ channel: 'team.blue' })).data.name, 'Blue Team');
+        const filtered = await reader.objects.getAllChannelMetadata({ filter: 'name LIKE "*Team"' });
+        assert.ok(ids(filtered.data).includes('team.blue'), 'team.blue is in the filtered list');
       },
+      { label: 'team.blue visible by id and in the name filter' },
     );
   }
 
@@ -147,7 +149,7 @@ describe('api-reference/objects', () => {
       { label: 'seed app context' },
     );
     const reader = observer();
-    await eventually(
+    await settled(
       async () => {
         assert.equal((await reader.objects.getUUIDMetadata({ uuid: SHOPPER })).data.name, 'John Doe');
         assert.equal((await reader.objects.getUUIDMetadata({ uuid: 'myUuid' })).data.email, 'john.doe@example.com');
@@ -501,11 +503,17 @@ describe('api-reference/objects', () => {
       () => admin.objects.setMemberships({ uuid: SHOPPER, channels: ['my-channel', 'channel-with-status-type'] }),
       { label: 'seed app context' },
     );
+    // The sample lists both users and the starred filter (an index) once each, so wait until the same reads hold on consecutive polls.
     const reader = observer();
-    await eventually(
+    await settled(
       async () => {
         assert.equal((await reader.objects.getMemberships({ uuid: 'myUuid' })).data.length, 2);
         assert.equal((await reader.objects.getMemberships({ uuid: SHOPPER })).data.length, 2);
+        const starred = await reader.objects.getMemberships({ uuid: 'myUuid', filter: 'custom.starred == true' });
+        assert.deepEqual(
+          starred.data.map((m) => m.channel.id),
+          ['my-channel'],
+        );
       },
       { label: 'memberships seeded' },
     );
@@ -552,7 +560,7 @@ describe('api-reference/objects', () => {
       });
     }
     const reader = observer();
-    await eventually(
+    await settled(
       async () => {
         for (const uuid of [SHOPPER, 'myUuid']) {
           assert.equal((await reader.objects.getMemberships({ uuid })).data.length, 3);
@@ -616,12 +624,26 @@ describe('api-reference/objects', () => {
       () => friend().objects.setChannelMembers({ channel: 'myChannel', uuids: ['uuid-1', 'uuid-2'] }),
       { label: 'seed app context' },
     );
+    // The sample lists the members with their user fields and filters them by user name (an index), so wait until the same reads hold.
     const reader = observer();
-    await eventually(
+    await settled(
       async () => {
-        assert.equal((await reader.objects.getChannelMembers({ channel: 'myChannel' })).data.length, 2);
+        const members = await reader.objects.getChannelMembers({ channel: 'myChannel', include: { UUIDFields: true } });
+        assert.deepEqual(members.data.map((m) => m.uuid.id).sort(), ['uuid-1', 'uuid-2']);
+        assert.equal(
+          (members.data.find((m) => m.uuid.id === 'uuid-1')?.uuid as { name?: string } | undefined)?.name,
+          'Member One',
+        );
+        const admins = await reader.objects.getChannelMembers({
+          channel: 'myChannel',
+          filter: 'uuid.name LIKE "*admin*"',
+        });
+        assert.deepEqual(
+          admins.data.map((m) => m.uuid.id),
+          ['uuid-2'],
+        );
       },
-      { label: 'members seeded' },
+      { label: 'members seeded and name filter indexed' },
     );
 
     // snippet.getChannelMembersBasicUsage
@@ -694,7 +716,7 @@ describe('api-reference/objects', () => {
       { label: 'seed app context' },
     );
     const reader = observer();
-    await eventually(
+    await settled(
       async () => {
         assert.equal((await reader.objects.getChannelMembers({ channel: 'myChannel' })).data.length, 3);
       },

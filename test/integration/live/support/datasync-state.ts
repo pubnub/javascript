@@ -5,6 +5,7 @@
  */
 import type PubNub from 'pubnub';
 import { DATASYNC_PAGE_OBJECTS as PAGE_OBJECTS } from './resources';
+import { settled } from './wait';
 
 /** The SDK error carries the service answer in `status`. Assertions match on this string, so a changed code shows in the failure. */
 export const errorText = (error: unknown): string => {
@@ -29,4 +30,27 @@ export async function removePageObjects(client: PubNub): Promise<void> {
   await Promise.all(PAGE_OBJECTS.entities.map((id) => quietly(() => api.removeEntity({ id }))));
   await Promise.all(PAGE_OBJECTS.users.map((id) => quietly(() => api.removeUser({ id }))));
   await Promise.all(PAGE_OBJECTS.channels.map((id) => quietly(() => api.removeChannel({ id }))));
+}
+
+/**
+ * Waits until the lists the page's exact-list samples read show nothing of the page's objects: no membership of Alice or of the
+ * summer channel, no link of Bob or of the sneaker. `removePageObjects` does not observe its own effect, and the memberships and
+ * links disappear as a cascade of removing their end, so a list read right after could still show a leftover. The reads must be
+ * empty on consecutive polls (`settled`).
+ */
+export async function untilPageObjectsGone(client: PubNub): Promise<void> {
+  const api = client.dataSync;
+  await settled(
+    async () => {
+      const [byUser, byChannel, bySeller, byProduct] = await Promise.all([
+        api.getMemberships({ userId: 'user-alice', limit: 20 }),
+        api.getMemberships({ channelId: 'channel-summer-sale', limit: 20 }),
+        api.getRelationships({ class: 'ProductOwner', entityAId: 'seller-bob', limit: 20 }),
+        api.getRelationships({ class: 'ProductOwner', entityBId: 'product-sneaker-42', limit: 20 }),
+      ]);
+      const left = [...byUser.data, ...byChannel.data, ...bySeller.data, ...byProduct.data].map((o) => o.id);
+      if (left.length > 0) throw new Error(`still listed after the reset: ${[...new Set(left)].join(', ')}`);
+    },
+    { timeout: 45_000, label: 'page objects gone from the lists' },
+  );
 }

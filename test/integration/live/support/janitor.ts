@@ -68,10 +68,16 @@ async function revokeApplicationGrant(client: PubNub, ledger: Ledger): Promise<v
   }
 }
 
+const CLOSED_ROUNDS = 3;
+const CONFIRM_PAUSE = 1_500;
+
 /**
  * Waits until a client WITHOUT a token is refused on the secured keyset (Access Manager enforces again). A revoke starts a clock of up
  * to about 60 seconds, and a test that expects a 403 for a tokenless client would fail on a keyset that still behaves as open.
  * The probe uses a channel no test ever grants. Returns the waiting time in ms, throws when the keyset stays open for `timeoutMs`.
+ * One refusal is not enough: Access Manager answers from nodes that learn of a revoke at different moments, so a round that is
+ * refused can be followed by one that is let through (the tests then see a stranger publish). The keyset counts as closed after
+ * `CLOSED_ROUNDS` consecutive refused rounds, `CONFIRM_PAUSE` ms apart; any round that is let through or unclear starts the count again.
  */
 export async function verifyApplicationGrantClosed(
   keys: { publishKey: string; subscribeKey: string },
@@ -79,6 +85,7 @@ export async function verifyApplicationGrantClosed(
 ): Promise<number> {
   const started = Date.now();
   let last = '';
+  let closedRounds = 0;
   for (let attempt = 1; ; attempt += 1) {
     // Only the publish and subscribe key: a client that holds the secret key would never be refused.
     const probe = new PubNub({
@@ -106,7 +113,13 @@ export async function verifyApplicationGrantClosed(
       probe.destroy();
     }
     // Closed only when both calls got a 403. An unclear answer (network, 5xx, 400) is retried, never taken as closed.
-    if (open.length === 0 && unclear.length === 0) return Date.now() - started;
+    if (open.length === 0 && unclear.length === 0) {
+      closedRounds += 1;
+      if (closedRounds >= CLOSED_ROUNDS) return Date.now() - started;
+      await pause(CONFIRM_PAUSE);
+      continue;
+    }
+    closedRounds = 0;
     last = [open.length ? `a client without a token could ${open.join(' and ')}` : '', unclear.join('; ')]
       .filter(Boolean)
       .join(', ');

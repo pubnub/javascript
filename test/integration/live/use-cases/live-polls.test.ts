@@ -5,7 +5,7 @@ import { assertTimetoken } from '../support/assertions';
 import { createClient, observer, track } from '../support/clients';
 import { captureConsole } from '../support/console';
 import { keysOf } from '../support/env';
-import { connected, eventually, sleep, watch } from '../support/wait';
+import { connected, eventually, settled, sleep, watch } from '../support/wait';
 
 /**
  * Port of docs-snippets/use-cases/live-polls.ts (page use-cases/sports-media-entertainment/live-polls).
@@ -117,8 +117,19 @@ describe('use-cases/live-polls', () => {
         'the poll published before the subscription is not delivered live',
       );
 
-      // 3. ... so the fan fetches the stored poll instead. Message Persistence lags the publish, so the sample runs again until
-      // it finds this run's poll.
+      // 3. ... so the fan fetches the stored poll instead. Message Persistence lags the publish, so wait until the same read, from
+      // another client, returns this run's poll on consecutive polls. The sample then runs once.
+      await settled(
+        async () => {
+          const probe = await observer().fetchMessages({ channels: ['game.new-poll'], count: 1 });
+          assert.equal(
+            probe.channels['game.new-poll']?.[0]?.timetoken,
+            pollTimetoken,
+            "the newest stored poll is this run's",
+          );
+        },
+        { label: 'the stored poll is fetched', timeout: 30_000 },
+      );
       const fetchOpenPoll = async (): Promise<void> => {
         const pubnub = fan;
         /* eslint-disable prettier/prettier */
@@ -141,15 +152,10 @@ describe('use-cases/live-polls', () => {
         // snippet.end
         /* eslint-enable prettier/prettier */
       };
-      await eventually(
-        async () => {
-          log.lines.length = 0;
-          await fetchOpenPoll();
-          assert.deepEqual(errors.lines, [], 'the fetch did not take the error path');
-          assert.equal(log.lines.length, 1, `logged: ${log.lines.join(' | ')}`);
-        },
-        { label: 'the stored poll is fetched' },
-      );
+      log.lines.length = 0;
+      await fetchOpenPoll();
+      assert.deepEqual(errors.lines, [], 'the fetch did not take the error path');
+      assert.equal(log.lines.length, 1, `logged: ${log.lines.join(' | ')}`);
       // The service returns the keys in its own order, so compare the parsed object.
       assert.ok(log.lines[0].startsWith('poll that is already open: '));
       assert.deepEqual(JSON.parse(log.lines[0].slice('poll that is already open: '.length)), {

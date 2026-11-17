@@ -4,7 +4,7 @@ import { assertTimetoken, rejectsValidation, rejectsWithCategory } from '../supp
 import { createClient, observer, server, shopper, unreachable } from '../support/clients';
 import { captureConsole } from '../support/console';
 import { storedMessage } from '../support/history';
-import { eventually, sleep, watch } from '../support/wait';
+import { eventually, settled, sleep, watch } from '../support/wait';
 
 /**
  * Publish and signal examples, including `fire()`. Port of docs-snippets/api-reference/publish.ts.
@@ -208,10 +208,11 @@ describe('api-reference/publish', () => {
       return errors.lines;
     };
 
-    // Wait until the keyset enforces Access Manager on this channel for a stranger. Without this wait the 403 branch below
-    // is only as reliable as the propagation of earlier grants and revokes on the keyset. A keyset that never denies fails
-    // here with a message that names the cause, not with an empty list further down.
-    await eventually(
+    // Wait until the keyset enforces Access Manager on this channel for a stranger, on consecutive probes. One refusal only proves
+    // that one node knows the revoke (the nodes learn of it at different moments, up to about 60 s), and the sample below runs
+    // once, so a stranger that is let through by a lagging node would fail it. A keyset that never denies fails here with a
+    // message that names the cause, not with an empty list further down.
+    await settled(
       () =>
         rejectsWithCategory(
           createClient('pam', 'no-token-probe').publish({ channel: 'my_channel', message: { probe: true } }),
@@ -219,7 +220,7 @@ describe('api-reference/publish', () => {
         ),
       {
         timeout: 120_000,
-        interval: 3_000,
+        interval: 2_000,
         label:
           'a client without a token is refused on the channel (Access Manager grants and revokes take up to 60 s to propagate)',
       },
@@ -228,19 +229,10 @@ describe('api-reference/publish', () => {
     // Success: the server client may publish, so no error line.
     assert.deepEqual(await attempt(server()), [], 'a valid publish logs nothing');
 
-    let deniedAttempts = 0;
-    await eventually(
-      async () => {
-        deniedAttempts += 1;
-        const denied = await attempt(createClient('pam', 'no-token-user'));
-        assert.deepEqual(denied, ['403: the token or authKey has no write permission on the channel']);
-      },
-      {
-        timeout: 90_000,
-        interval: 3_000,
-        label: 'a tokenless publish logs the 403 line (Access Manager enforcement reaches every node)',
-      },
-    );
+    // Access denied: the sample runs once, as written.
+    assert.deepEqual(await attempt(createClient('pam', 'no-token-user')), [
+      '403: the token or authKey has no write permission on the channel',
+    ]);
 
     // Validation: no publish key, the SDK refuses before it sends.
     const invalid = await attempt(createClient('pam', 'no-publish-key-user', { publishKey: '' }));

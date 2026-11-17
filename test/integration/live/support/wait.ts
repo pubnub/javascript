@@ -3,6 +3,8 @@
  * fixed `sleep` only to prove that something did NOT arrive.
  *
  * - `eventually`    poll a read (hereNow, history, App Context filter) that is eventually consistent on the service.
+ * - `settled`       like `eventually`, but the read must hold on several consecutive polls. Use it as the precondition of a
+ *                   sample that reads the same state once and asserts it exactly (see README, Waiting).
  * - `expectEvent`   register a listener BEFORE the action, resolve on the first matching event.
  * - `connected`     resolve when a subscribe is really active. A publish sent before that point is not delivered.
  * - `watch`         subscribe once and record everything, so the assertion can come after the publish without racing.
@@ -52,6 +54,62 @@ export async function eventually<T>(fn: () => Promise<T> | T, options: Eventuall
   const detail = last instanceof Error ? last.message : String(last);
   const error = new Error(
     `eventually${options.label ? ` (${options.label})` : ''} timed out after ${timeout}ms, ${attempts} attempts. Last: ${detail}`,
+  );
+  (error as Error & { cause?: unknown }).cause = last;
+  throw error;
+}
+
+export interface SettledOptions extends EventuallyOptions {
+  /** How many polls in a row must pass. Default 3. */
+  consecutive?: number;
+}
+
+/**
+ * Polls a read until it passes `consecutive` times in a row, then returns the value of the last pass. A failed poll resets
+ * the count. Use it where a later request reads the same state ONCE and an exact assertion depends on it: the service answers
+ * reads from replicas that do not all see a write at the same moment, so one passing read only proves that one replica caught
+ * up (a read right after it can still land on a lagging one, as `getMembershipsFilterExample` did in CI).
+ *
+ * Defaults: 3 passes, 750 ms apart. The spacing matters as much as the count. Reads a few milliseconds apart can be served from the
+ * same replica or cache, so they confirm little. 750 ms gives another replica a real chance to answer, and three passes cover two independent confirmations of the first, at a fixed cost of
+ * (consecutive - 1) * interval = 1.5 s once the state is visible. `interval` is also the pause between failed polls. The
+ * default `timeout` is 15 s like `eventually`; pass the same longer timeout the old `eventually` call had.
+ * A fresh client does not help: the tier's helper clients share one connection pool (support/clients.ts), so only time moves
+ * a read to another replica.
+ */
+export async function settled<T>(fn: () => Promise<T> | T, options: SettledOptions = {}): Promise<T> {
+  const timeout = options.timeout ?? 15_000;
+  const interval = options.interval ?? 750;
+  const consecutive = options.consecutive ?? 3;
+  if (!Number.isInteger(consecutive) || consecutive < 1) {
+    throw new Error('settled: consecutive must be an integer >= 1');
+  }
+  const deadline = Date.now() + timeout;
+  let last: unknown;
+  let lastValue: T | undefined;
+  let streak = 0;
+  let best = 0;
+  let polls = 0;
+  for (;;) {
+    polls += 1;
+    try {
+      lastValue = await fn();
+      streak += 1;
+      best = Math.max(best, streak);
+      if (streak >= consecutive) return lastValue;
+    } catch (error) {
+      last = error;
+      streak = 0;
+    }
+    if (Date.now() + interval > deadline) break;
+    await sleep(interval);
+  }
+  let detail: string;
+  if (last === undefined) detail = 'none (no poll failed, the timeout was shorter than the confirmations)';
+  else detail = last instanceof Error ? last.message : String(last);
+  const error = new Error(
+    `settled${options.label ? ` (${options.label})` : ''} timed out after ${timeout}ms, ${polls} polls. ` +
+      `Reached ${streak} consecutive successes at the end, at most ${best}, of ${consecutive} needed. Last failure: ${detail}`,
   );
   (error as Error & { cause?: unknown }).cause = last;
   throw error;

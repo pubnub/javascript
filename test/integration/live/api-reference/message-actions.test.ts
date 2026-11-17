@@ -3,7 +3,7 @@ import { addToTimetoken } from '../support/assertions';
 import { friend, observer, shopper } from '../support/clients';
 import { retryTransient } from '../support/retry';
 import { withPlaceholders } from '../support/placeholders';
-import { eventually, watch } from '../support/wait';
+import { eventually, settled, watch } from '../support/wait';
 
 /**
  * Message action examples. Port of docs-snippets/api-reference/message-actions.ts. Message Persistence must be on for the open
@@ -111,6 +111,20 @@ describe('api-reference/message-actions', () => {
       replace_with_start_timetoken: addToTimetoken(added.data.actionTimetoken, 1),
       replace_with_end_timetoken: added.data.actionTimetoken,
     });
+    // The sample lists the window once and the assertion is exact, so wait until the same read, from another client, returns the
+    // action on consecutive polls.
+    await settled(
+      async () => {
+        const probe = await observer().getMessageActions({
+          channel,
+          start: addToTimetoken(added.data.actionTimetoken, 1),
+          end: added.data.actionTimetoken,
+          limit: 100,
+        });
+        assert.equal(probe.data.length, 1, 'the window lists the action');
+      },
+      { label: 'action listed' },
+    );
 
     // snippet.getMessageActionsBasicUsage
     // to get some data in response, first publish a message and then add a message action

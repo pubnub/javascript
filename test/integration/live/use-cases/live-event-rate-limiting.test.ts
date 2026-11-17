@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { createClient, observer } from '../support/clients';
 import { captureConsole } from '../support/console';
-import { eventually, sleep, watch } from '../support/wait';
+import { settled, sleep, watch } from '../support/wait';
 
 /**
  * Live event rate limiting. Port of docs-snippets/use-cases/live-event-rate-limiting.ts.
@@ -17,10 +17,17 @@ describe('use-cases/live-event-rate-limiting', () => {
     // Another fan sits in shard 0, so the shard has a known occupant. The hereNow of the open keyset is eventually consistent.
     const occupant = await watch(observer(), ['game.chat.shard-0']);
     try {
-      await eventually(
+      // The sample reads the three shards once and the assertion needs shard 0 to hold the occupant, so wait until the same
+      // read, from another client, shows it on consecutive polls.
+      await settled(
         async () => {
           const here = await observer().hereNow({ channels: ['game.chat.shard-0'], includeUUIDs: true });
           assert.ok(here.channels['game.chat.shard-0']?.occupants.some((o) => o.uuid === 'observer'), 'observer is listed');
+          const counted = await observer().hereNow({
+            channels: ['game.chat.shard-0', 'game.chat.shard-1', 'game.chat.shard-2'],
+            includeUUIDs: false,
+          });
+          assert.ok((counted.channels['game.chat.shard-0']?.occupancy ?? 0) >= 1, 'shard 0 counts the occupant');
         },
         { timeout: 30_000, label: 'occupant visible in hereNow' },
       );

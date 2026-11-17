@@ -5,7 +5,7 @@ import { createClient, observer, track } from '../support/clients';
 import { captureConsole } from '../support/console';
 import { openKeys } from '../support/env';
 import { DEVICE_TOKEN_EXAMPLE } from '../support/resources';
-import { connected, eventually, PRESENCE_TIMEOUT, watch } from '../support/wait';
+import { connected, eventually, PRESENCE_TIMEOUT, settled, watch } from '../support/wait';
 
 /**
  * Fan re-engagement. Port of docs-snippets/use-cases/fan-re-engagement.ts.
@@ -24,12 +24,16 @@ describe('use-cases/fan-re-engagement', () => {
     // Two stand-in fans that watch the stream: fan-b leaves in the middle of the flow, fan-a is the sample's viewer.
     const fanB = createClient('open', 'fan-b');
     const fanBWatching = await watch(fanB, ['game.stream']);
+    // The samples read the presence of the fan once (hereNow for the count, whereNow for the check of one fan) and the assertions
+    // after them need the fan listed, so both reads must hold on consecutive polls.
     const presenceSeen = async (userId: string, present = true) => {
-      await eventually(
+      await settled(
         async () => {
           const here = await observer().hereNow({ channels: ['game.stream'], includeUUIDs: true });
           const listed = here.channels['game.stream']?.occupants.some((o) => o.uuid === userId) ?? false;
           assert.equal(listed, present, `${userId} ${present ? 'is' : 'is not'} listed on game.stream`);
+          const where = await observer().whereNow({ uuid: userId });
+          assert.equal(where.channels.includes('game.stream'), present, `whereNow ${present ? 'lists' : 'omits'} game.stream for ${userId}`);
         },
         { timeout: PRESENCE_TIMEOUT, label: `${userId} presence on game.stream` },
       );
@@ -235,8 +239,16 @@ describe('use-cases/fan-re-engagement', () => {
       assert.equal(viewerUserId, 'fan-a', 'the viewer defaults to fan-a');
       assert.deepEqual(errors.lines, [], 'the error path was not taken');
       assert.ok(logs.lines.some((line) => line.startsWith('fan-a registered its device for game.moment-alerts.fan-a:')));
-      const registered = await observer().push.listChannels({ device: DEVICE_TOKEN_EXAMPLE, pushGateway: 'fcm' });
-      assert.ok(registered.channels.includes('game.moment-alerts.fan-a'), 'the device is registered for the fan alert channel');
+      await settled(
+        async () => {
+          const registered = await observer().push.listChannels({ device: DEVICE_TOKEN_EXAMPLE, pushGateway: 'fcm' });
+          assert.ok(
+            registered.channels.includes('game.moment-alerts.fan-a'),
+            'the device is registered for the fan alert channel',
+          );
+        },
+        { label: 'device registration listed' },
+      );
       await presenceSeen('fan-a');
 
       // The fan's alert-channel subscription is live: an alert from the service reaches it.

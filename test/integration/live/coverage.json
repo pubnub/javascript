@@ -711,6 +711,7 @@
     "getStateBasicUsage": {
       "file": "test/integration/live/api-reference/presence.test.ts",
       "test": "api-reference/presence getStateBasicUsage: getState returns the state set for the channel and the group",
+      "role": "open",
       "mode": "live"
     },
     "getUUIDMetadataBasicUsage": {

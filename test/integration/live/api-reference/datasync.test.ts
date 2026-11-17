@@ -3,8 +3,8 @@ import type PubNub from 'pubnub';
 import { server } from '../support/clients';
 import { captureConsole } from '../support/console';
 import { filterFragments, patchFragments, sortFragments } from '../support/datasync-fragments';
-import { errorText, removePageObjects } from '../support/datasync-state';
-import { connected, eventually } from '../support/wait';
+import { errorText, removePageObjects, untilPageObjectsGone } from '../support/datasync-state';
+import { connected, eventually, settled } from '../support/wait';
 
 /**
  * DataSync examples, including the DataSync listener and subscription examples. Port of docs-snippets/api-reference/datasync.ts.
@@ -69,8 +69,11 @@ describe('api-reference/datasync', () => {
     }
   };
   before(async function () {
-    this.timeout(60_000);
+    this.timeout(90_000);
     await reset();
+    // The exact-list samples below assume nothing of an earlier run is left. Removing a user, channel or entity cascades to its
+    // memberships and links, so wait until consecutive reads from the service show them gone.
+    await untilPageObjectsGone(server('datasync'));
   });
   after(async function () {
     this.timeout(60_000);
@@ -146,8 +149,9 @@ describe('api-reference/datasync', () => {
 
     it('getUsersFilterExample: getUsers with filter finds Alice once the eventually consistent index has caught up', async () => {
       const pubnub = server('datasync');
-      // `filter` is eventually consistent, so wait until the service indexed the object before running the sample.
-      await eventually(
+      // `filter` is eventually consistent, so wait until the service indexed the object before running the sample. One read that
+      // sees it does not prove the next one will (replicas lag independently), so the read must hold several times in a row.
+      await settled(
         async () => {
           assert.ok(ids(await pubnub.dataSync.getUsers({ filter: 'name LIKE "*Alice*"' })).includes(ALICE));
         },
@@ -304,8 +308,8 @@ describe('api-reference/datasync', () => {
 
     it('getChannelsFilterExample: getChannels with filter finds the new channel once the index has caught up', async () => {
       const pubnub = server('datasync');
-      // `filter` is eventually consistent, so wait until the service indexed the object before running the sample.
-      await eventually(
+      // `filter` is eventually consistent: wait until it holds on consecutive reads before running the sample (see `settled`).
+      await settled(
         async () => {
           assert.ok(ids(await pubnub.dataSync.getChannels({ filter: 'name LIKE "*Sale*"' })).includes(SUMMER));
         },
@@ -441,6 +445,15 @@ describe('api-reference/datasync', () => {
 
     it('getMembershipsBasicUsage: getMemberships lists exactly the membership of Alice', async () => {
       const pubnub = server('datasync');
+      // The sample reads the list once and the assertion is exact. Nothing documents a plain list as strongly consistent, so
+      // wait until consecutive reads show the membership created a moment ago.
+      await settled(
+        async () => {
+          const listed = await pubnub.dataSync.getMemberships({ userId: ALICE, limit: 20 });
+          assert.deepEqual(ids(listed), [MEMBERSHIP]);
+        },
+        { timeout: 45_000, label: 'Alice lists exactly her membership' },
+      );
       // snippet.getMembershipsBasicUsage
       const response = await pubnub.dataSync.getMemberships({
         userId: 'user-alice',
@@ -456,6 +469,17 @@ describe('api-reference/datasync', () => {
 
     it('getMembershipsByChannelIdExample: getMemberships by channel id lists Alice as the only member', async () => {
       const pubnub = server('datasync');
+      // Exact list again: wait until consecutive reads show the one member (see getMembershipsBasicUsage).
+      await settled(
+        async () => {
+          const listed = await pubnub.dataSync.getMemberships({ channelId: SUMMER, limit: 20 });
+          assert.deepEqual(
+            listed.data.map((m) => m.userId),
+            [ALICE],
+          );
+        },
+        { timeout: 45_000, label: 'the channel lists exactly Alice' },
+      );
       // snippet.getMembershipsByChannelIdExample
       // Pass `channelId` instead of `userId` to list the members of a channel rather than a user's
       // memberships.
@@ -481,8 +505,9 @@ describe('api-reference/datasync', () => {
       const pubnub = server('datasync');
       await seedArchivedMembership(pubnub);
       try {
-        // `filter` is eventually consistent, so wait until the service indexed the new membership.
-        await eventually(
+        // `filter` is eventually consistent: wait until it holds on consecutive reads before running the sample. One read that saw the
+        // membership was not enough in CI: the sample's own read, milliseconds later, returned [] from a replica that lagged.
+        await settled(
           async () => {
             const found = await pubnub.dataSync.getMemberships({ userId: ALICE, filter: 'status LIKE "arch*"' });
             assert.ok(ids(found).includes(WINTER_MEMBERSHIP));
@@ -639,6 +664,18 @@ describe('api-reference/datasync', () => {
 
     it('getEntitiesBasicUsage: getEntities lists products sorted by price descending, verified on the returned prices', async () => {
       const pubnub = server('datasync');
+      // `sort` on a declared property is served from the same index as `filter` (eventually consistent), and the sample is
+      // asserted to list the product created a moment ago, so wait until consecutive reads list it.
+      await settled(
+        async () => {
+          assert.ok(
+            ids(await pubnub.dataSync.getEntities({ class: 'product', sort: { price: 'desc' }, limit: 20 })).includes(
+              PRODUCT,
+            ),
+          );
+        },
+        { timeout: 45_000, label: 'sorted product list includes the new product' },
+      );
       // snippet.getEntitiesBasicUsage
       const response = await pubnub.dataSync.getEntities({
         class: 'product',
@@ -659,8 +696,8 @@ describe('api-reference/datasync', () => {
 
     it('getEntitiesFilterExample: getEntities with filter finds the product once the index has caught up', async () => {
       const pubnub = server('datasync');
-      // `filter` is eventually consistent, so wait until the service indexed the object before running the sample.
-      await eventually(
+      // `filter` is eventually consistent: wait until it holds on consecutive reads before running the sample (see `settled`).
+      await settled(
         async () => {
           assert.ok(
             ids(
@@ -1201,6 +1238,14 @@ describe('api-reference/datasync', () => {
 
     it('getRelationshipsBasicUsage: getRelationships lists exactly the link from the seller side', async () => {
       const pubnub = server('datasync');
+      // Exact list: wait until consecutive reads show the link created a moment ago (a plain list is not documented as strongly consistent).
+      await settled(
+        async () => {
+          const listed = await pubnub.dataSync.getRelationships({ class: 'ProductOwner', entityAId: BOB, limit: 20 });
+          assert.deepEqual(ids(listed), [REL]);
+        },
+        { timeout: 45_000, label: 'Bob lists exactly his link' },
+      );
       // snippet.getRelationshipsBasicUsage
       const response = await pubnub.dataSync.getRelationships({
         class: 'ProductOwner',
@@ -1216,6 +1261,17 @@ describe('api-reference/datasync', () => {
 
     it('getRelationshipsByEntityBIdExample: getRelationships by entity B id lists the same link from the product side', async () => {
       const pubnub = server('datasync');
+      await settled(
+        async () => {
+          const listed = await pubnub.dataSync.getRelationships({
+            class: 'ProductOwner',
+            entityBId: PRODUCT,
+            limit: 20,
+          });
+          assert.deepEqual(ids(listed), [REL]);
+        },
+        { timeout: 45_000, label: 'the product lists exactly the link' },
+      );
       // snippet.getRelationshipsByEntityBIdExample
       // Pass `entityBId` instead of `entityAId` to list relationships where the entity is on the second
       // side of the link.
@@ -1249,8 +1305,8 @@ describe('api-reference/datasync', () => {
 
     it('getRelationshipsFilterExample: a negated filter keeps the gold link once the index has caught up', async () => {
       const pubnub = server('datasync');
-      // `filter` is eventually consistent, so wait until the service indexed the object before running the sample.
-      await eventually(
+      // `filter` is eventually consistent: wait until it holds on consecutive reads before running the sample (see `settled`).
+      await settled(
         async () => {
           assert.ok(
             ids(

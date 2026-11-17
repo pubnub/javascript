@@ -7,7 +7,7 @@ import { captureConsole } from '../support/console';
 import { createClient, observer, shopper } from '../support/clients';
 import { withPlaceholders } from '../support/placeholders';
 import { enterWorkdir, FIXTURE_FILE } from '../support/file-workdir';
-import { eventually, watch } from '../support/wait';
+import { eventually, settled, watch } from '../support/wait';
 
 /**
  * File sharing examples for Node.js. Port of docs-snippets/api-reference/file-sharing.ts.
@@ -86,6 +86,18 @@ describe('api-reference/file-sharing', () => {
     this.timeout(60_000);
     const { id } = await upload(shopper());
     const pubnub = shopper();
+    // The file list is an index that trails the upload. The sample lists once and the assertion needs the file, so wait until
+    // the same listing, from another client, shows it on consecutive polls.
+    await settled(
+      async () => {
+        const probe = await observer().listFiles({ channel: CHANNEL });
+        assert.ok(
+          probe.data.some((f) => f.id === id),
+          'the uploaded file is listed',
+        );
+      },
+      { label: 'uploaded file listed' },
+    );
     // snippet.listFilesBasicUsage
     const response = await pubnub.listFiles({ channel: 'my_channel' });
     console.log('Files listed successfully:', response);

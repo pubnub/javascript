@@ -6,7 +6,7 @@ import { friend, observer, shopper } from '../support/clients';
 import { withPlaceholders } from '../support/placeholders';
 import { newSeedRun, seedPublish, settleSeeded, storedMessage, untilStored } from '../support/history';
 import { retryTransient } from '../support/retry';
-import { eventually, sleep } from '../support/wait';
+import { eventually, settled, sleep } from '../support/wait';
 
 /**
  * Examples for the deprecated `history()` method and the deprecated `data` property of `actions` on `fetchMessages()`.
@@ -196,7 +196,7 @@ describe('api-reference/message-persistence-legacy', () => {
 
   it('historyNewerThanTimetoken: history with reverse and start returns only messages newer than the anchor, and start is exclusive', async () => {
     const [, middle, newest] = await seed('my_channel', 3);
-    await untilStored('my_channel', [newest]);
+    await untilStored('my_channel', [middle, newest]);
     const pubnub = withPlaceholders(shopper(), { '13406746780720711': middle });
 
     /* eslint-disable prettier/prettier, max-len -- sample text is copied as readers see it */
@@ -229,7 +229,7 @@ describe('api-reference/message-persistence-legacy', () => {
 
   it('historyUntilTimetoken: history with only end returns messages down to the anchor, and end is inclusive', async () => {
     const [oldest, middle, newest] = await seed('my_channel', 3);
-    await untilStored('my_channel', [newest]);
+    await untilStored('my_channel', [middle, newest]);
     const pubnub = withPlaceholders(shopper(), { '13406746780720711': middle });
 
     /* eslint-disable prettier/prettier, max-len -- sample text is copied as readers see it */
@@ -283,7 +283,7 @@ describe('api-reference/message-persistence-legacy', () => {
     const now = (await observer().time()).timetoken;
     const deleteBound = now;
     await shopper().deleteMessages({ channel: 'history_test', start: '1', end: now });
-    await eventually(
+    await settled(
       async () => {
         const probe = await observer().fetchMessages({ channels: ['history_test'], count: 1 });
         assert.equal(probe.channels['history_test']?.length ?? 0, 0, 'history_test is empty');
@@ -365,7 +365,8 @@ describe('api-reference/message-persistence-legacy', () => {
     let lastFound: Array<{ timetoken: string | number }> = [];
     let all: Array<{ timetoken: string | number }>;
     try {
-      all = await eventually(
+      // `fromMiddle` below reads the channel once more, so the walk must return everything on consecutive polls, not once.
+      all = await settled(
         async () => {
           pages.length = 0;
           const found = await getAllMessages();
@@ -501,7 +502,7 @@ describe('api-reference/message-persistence-legacy', () => {
           ),
         );
       }
-      await eventually(async () => assert.equal(await probeCount(), 100), {
+      await settled(async () => assert.equal(await probeCount(), 100), {
         timeout: 45_000,
         label: 'channel holds 100 messages',
       });
@@ -563,7 +564,8 @@ describe('api-reference/message-persistence-legacy', () => {
       actions?: Record<string, Record<string, unknown[]>>;
       data?: unknown;
     };
-    const found = await eventually(
+    // The reads after the wait look up the same message again, so the wait must hold on consecutive polls.
+    const found = await settled(
       async () => {
         const response = await pubnub.fetchMessages({ channels: [channel], includeMessageActions: true });
         const item = response.channels[channel]?.find((m) => String(m.timetoken) === token) as WithActions | undefined;

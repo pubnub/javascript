@@ -3,7 +3,7 @@ import type PubNub from 'pubnub';
 import { addToTimetoken } from './assertions';
 import { observer, shopper } from './clients';
 import { retryTransient } from './retry';
-import { eventually, sleep } from './wait';
+import { settled, sleep } from './wait';
 import { randomUUID } from 'node:crypto';
 
 /**
@@ -21,10 +21,12 @@ export async function storedMessage(client: PubNub, channel: string, timetoken: 
 
 /**
  * Waits until every timetoken of `tokens` is visible to a reader on `channel` (newest 100 messages only; the write and the read
- * model of the service are separate). For larger sets, page through the channel instead.
+ * model of the service are separate). For larger sets, page through the channel instead. One read that shows the messages does
+ * not vouch for the next one (replicas lag independently), and the samples read the window once and assert it exactly, so the
+ * read must hold on consecutive polls (`settled`, about 1.5 s once the messages are visible).
  */
 export function untilStored(channel: string, tokens: string[]): Promise<void> {
-  return eventually(
+  return settled(
     async () => {
       const history = await observer().fetchMessages({ channels: [channel], count: 100 });
       const have = new Set((history.channels[channel] ?? []).map((m) => String(m.timetoken)));
@@ -95,7 +97,7 @@ export async function settleSeeded(channel: string, tokens: string[], run: SeedR
     (await scanChannel(channel, bound)).filter(
       (m) => (m.message as { run?: string } | null)?.run === run.id && !wanted.has(m.timetoken),
     );
-  await eventually(
+  await settled(
     async () => {
       const have = new Set((await scanChannel(channel, bound)).map((m) => m.timetoken));
       for (const token of tokens) assert.ok(have.has(token), `${token} is not stored yet`);
@@ -113,7 +115,7 @@ export async function settleSeeded(channel: string, tokens: string[], run: SeedR
     );
   }
   if (duplicates.length > 0) {
-    await eventually(async () => assert.equal((await extras()).length, 0, 'duplicates are gone'), {
+    await settled(async () => assert.equal((await extras()).length, 0, 'duplicates are gone'), {
       timeout: 45_000,
       label: `duplicate seeds removed from ${channel}`,
     });

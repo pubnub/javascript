@@ -4,18 +4,22 @@
  */
 import assert from 'node:assert/strict';
 import { createClient, friend, observer } from './clients';
-import { eventually } from './wait';
+import { settled } from './wait';
 
 export const memberOf = (group: string): string => `${group}_member`;
 
-/** Gives every group its member channel and waits until the service lists it. */
+/**
+ * Gives every group its member channel and waits until the service lists it. A sample subscribes to the group right after and the
+ * test expects a message on the member channel to arrive, so one listing that shows the member is not enough: the listing must hold
+ * on consecutive polls (`settled`), because the subscribe request is served by whichever node answers it.
+ */
 export async function ensureGroups(groups: string[]): Promise<void> {
   const writer = friend();
   for (const group of groups) {
     await writer.channelGroups.addChannels({ channelGroup: group, channels: [memberOf(group)] });
   }
   const reader = observer();
-  await eventually(
+  await settled(
     async () => {
       for (const group of groups) {
         const listed = await reader.channelGroups.listChannels({ channelGroup: group });

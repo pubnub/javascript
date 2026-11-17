@@ -6,7 +6,7 @@ import { createClient, observer, track } from '../support/clients';
 import { captureConsole } from '../support/console';
 import { keysOf } from '../support/env';
 import { withPlaceholders } from '../support/placeholders';
-import { connected, eventually, PRESENCE_TIMEOUT } from '../support/wait';
+import { connected, eventually, PRESENCE_TIMEOUT, settled } from '../support/wait';
 
 /**
  * Port of docs-snippets/use-cases/real-time-chat.ts (page use-cases/sports-media-entertainment/real-time-chat).
@@ -157,7 +157,16 @@ describe('use-cases/real-time-chat', () => {
       await fan108.publish({ channel: 'game.chat', message: { text: reply }, storeInHistory: true });
       await eventually(() => assert.ok(log.lines.includes(`fan-108: {"text":"${reply}"}`), log.lines.join(' | ')));
 
-      // Load what was said: Message Persistence lags the publish, so run the sample again until this run's message shows.
+      // Load what was said: Message Persistence lags the publish, so wait until the same read, from another client, lists this run's
+      // message on consecutive polls. The sample then runs once.
+      await settled(
+        async () => {
+          const probe = await reader.fetchMessages({ channels: ['game.chat'], count: 25, includeMessageActions: true });
+          const tokens = (probe.channels['game.chat'] ?? []).map((m) => String(m.timetoken));
+          assert.ok(tokens.includes(messageTimetoken), 'the message of this run is in the newest 25');
+        },
+        { label: 'backlog contains the message of this run', timeout: 30_000 },
+      );
       const loadRecent = async (): Promise<void> => {
         /* eslint-disable prettier/prettier */
         // snippet.fanChatLoadRecentMessages
@@ -180,18 +189,10 @@ describe('use-cases/real-time-chat', () => {
         // snippet.end
         /* eslint-enable prettier/prettier */
       };
-      await eventually(
-        async () => {
-          log.lines.length = 0;
-          await loadRecent();
-          assert.deepEqual(errors.lines, [], 'load: error path not taken');
-          assert.ok(
-            log.lines.includes(`${messageTimetoken} {"text":"What a save!"}`),
-            `backlog: ${log.lines.join(' | ')}`,
-          );
-        },
-        { label: 'backlog contains the message of this run' },
-      );
+      log.lines.length = 0;
+      await loadRecent();
+      assert.deepEqual(errors.lines, [], 'load: error path not taken');
+      assert.ok(log.lines.includes(`${messageTimetoken} {"text":"What a save!"}`), `backlog: ${log.lines.join(' | ')}`);
 
       // Here Now in count-only mode: at least the two fans of this run are present (others may be, on the shared channel).
       const countFans = async (): Promise<void> => {
@@ -210,17 +211,20 @@ describe('use-cases/real-time-chat', () => {
         // snippet.end
         /* eslint-enable prettier/prettier */
       };
-      await eventually(
+      // Presence lags the join: wait until the same count, read from another client, holds on consecutive polls. The sample runs once.
+      await settled(
         async () => {
-          log.lines.length = 0;
-          await countFans();
-          assert.deepEqual(errors.lines, [], 'count: error path not taken');
-          const line = log.lines.find((l) => l.startsWith('fans in the chat: '));
-          assert.ok(line, `logged: ${log.lines.join(' | ')}`);
-          assert.ok(Number(line.split(': ')[1]) >= 2, line);
+          const here = await reader.hereNow({ channels: ['game.chat'], includeUUIDs: false });
+          assert.ok((here.totalOccupancy ?? 0) >= 2, `occupancy ${here.totalOccupancy}`);
         },
         { label: 'Here Now counts both fans', timeout: PRESENCE_TIMEOUT },
       );
+      log.lines.length = 0;
+      await countFans();
+      assert.deepEqual(errors.lines, [], 'count: error path not taken');
+      const countLine = log.lines.find((l) => l.startsWith('fans in the chat: '));
+      assert.ok(countLine, `logged: ${log.lines.join(' | ')}`);
+      assert.ok(Number(countLine.split(': ')[1]) >= 2, countLine);
 
       // Reactions: the handler is registered first, then a reaction is added to the message sent above.
       log.lines.length = 0;

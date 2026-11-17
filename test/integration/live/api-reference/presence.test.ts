@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import PubNub from 'pubnub';
 import { friend, observer } from '../support/clients';
 import { keysOf } from '../support/env';
-import { connected, eventually, PRESENCE_TIMEOUT } from '../support/wait';
+import { connected, eventually, PRESENCE_TIMEOUT, settled } from '../support/wait';
 import { sorted } from '../support/util';
 
 /**
@@ -42,7 +42,15 @@ describe('api-reference/presence', () => {
   it('fixture: the occupant is visible on all its channels, through both channel groups, with its state', async function () {
     this.timeout(120_000);
     const channels = ['ch1', 'my_channel', 'cg1_member'];
-    await eventually(
+    // The samples below read each of these views once and assert the occupant exactly, so one pass over all of them is not
+    // enough: every view must hold on consecutive passes (`settled`), because presence reads come from replicas that catch up
+    // independently.
+    const groupReads: Array<[string, { channels?: string[]; channelGroups: string[] }]> = [
+      ['cg1', { channelGroups: ['cg1'] }],
+      ['my_channel_group', { channelGroups: ['my_channel_group'] }],
+      ['ch1 and cg1', { channels: ['ch1'], channelGroups: ['cg1'] }],
+    ];
+    await settled(
       async () => {
         const result = await here({ channels });
         for (const channel of channels) {
@@ -51,41 +59,28 @@ describe('api-reference/presence', () => {
             `${channel} lists the occupant`,
           );
         }
-      },
-      { timeout: PRESENCE_TIMEOUT, label: 'occupant visible in hereNow' },
-    );
-    const reads: Array<[string, { channels?: string[]; channelGroups: string[] }]> = [
-      ['cg1', { channelGroups: ['cg1'] }],
-      ['my_channel_group', { channelGroups: ['my_channel_group'] }],
-      ['ch1 and cg1', { channels: ['ch1'], channelGroups: ['cg1'] }],
-    ];
-    for (const [label, query] of reads) {
-      await eventually(
-        async () => {
-          const result = await here(query);
+        for (const [label, query] of groupReads) {
+          const viaGroup = await here(query);
           assert.ok(
-            result.channels['cg1_member']?.occupants.some((o) => o.uuid === 'uuid'),
+            viaGroup.channels['cg1_member']?.occupants.some((o) => o.uuid === 'uuid'),
             `${label} lists the occupant on cg1_member`,
           );
-        },
-        { timeout: PRESENCE_TIMEOUT, label: `occupant visible through ${label}` },
-      );
-    }
-    await eventually(
-      async () => {
-        const result = await here({ channels: ['my_channel'], includeState: true });
+        }
+        const withState = await here({ channels: ['my_channel'], includeState: true });
         assert.deepEqual(
-          result.channels['my_channel']?.occupants.find((o) => o.uuid === 'uuid')?.state,
+          withState.channels['my_channel']?.occupants.find((o) => o.uuid === 'uuid')?.state,
           { status: 'online' },
           'hereNow lists the state on the channel',
         );
+        const counted = await here({ channels: ['my_channel'], includeUUIDs: false });
+        assert.ok((counted.channels['my_channel']?.occupancy ?? 0) >= 1, 'occupancy counts the occupant');
         const where = await observer().whereNow({ uuid: 'uuid' });
         assert.ok(
           ['ch1', 'my_channel'].every((c) => where.channels.includes(c)),
           'whereNow lists both channels',
         );
       },
-      { timeout: PRESENCE_TIMEOUT, label: 'state and channel list visible' },
+      { timeout: PRESENCE_TIMEOUT, label: 'occupant visible through every read the samples use' },
     );
   });
 
@@ -135,6 +130,15 @@ describe('api-reference/presence', () => {
     this.timeout(60_000);
     const pubnub = occupant;
     await pubnub.setState({ state: { status: 'online' }, channels: ['ch1'], channelGroups: ['cg1'] });
+    // The sample reads the state once. Wait until consecutive reads from another client return it (the previous test left the
+    // same value, so this matters mostly when this test runs alone).
+    await settled(
+      async () => {
+        const stored = await observer().getState({ uuid: 'uuid', channels: ['ch1'] });
+        assert.deepEqual(stored.channels['ch1'], { status: 'online' });
+      },
+      { label: 'state visible before the sample reads it' },
+    );
 
     // snippet.getStateBasicUsage
     const response = await pubnub.getState({
@@ -152,7 +156,7 @@ describe('api-reference/presence', () => {
     this.timeout(60_000);
     const pubnub = occupant;
     await pubnub.setState({ state: { status: 'online' }, channels: ['ch1'] });
-    await eventually(
+    await settled(
       async () => {
         const result = await here({ channels: ['ch1'], includeState: true });
         assert.deepEqual(result.channels['ch1']?.occupants.find((o) => o.uuid === 'uuid')?.state, { status: 'online' });

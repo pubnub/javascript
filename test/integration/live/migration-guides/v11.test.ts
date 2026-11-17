@@ -5,7 +5,7 @@ import { createClient, observer, track } from '../support/clients';
 import { unique } from '../support/util';
 import { keysOf, openKeys } from '../support/env';
 
-import { connected, eventually } from '../support/wait';
+import { connected, eventually, settled } from '../support/wait';
 
 /**
  * Examples for the version 11 migration guide. Port of docs-snippets/migration-guides/v11.ts.
@@ -98,7 +98,9 @@ describe('migration-guides/v11', () => {
         label: 'state set',
       });
       client.disconnect();
-      await eventually(async () => assert.deepEqual(await stateOn(client), {}), {
+      // The assertion after the loop reads the dropped client's state once more and expects it NOT to be back, so a replica that still
+      // holds the old state must not be able to pass here: the cleared state has to hold on consecutive reads.
+      await settled(async () => assert.deepEqual(await stateOn(client), {}), {
         timeout: 30_000,
         label: 'state cleared by the leave',
       });

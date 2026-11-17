@@ -5,7 +5,7 @@ import { assertTimetoken } from '../support/assertions';
 import { createClient, observer, track } from '../support/clients';
 import { captureConsole } from '../support/console';
 import { keysOf } from '../support/env';
-import { watch, eventually } from '../support/wait';
+import { watch, eventually, settled } from '../support/wait';
 
 /**
  * Port of docs-snippets/use-cases/score-alerts.ts (page use-cases/sports-media-entertainment/real-time-score-alerts).
@@ -123,7 +123,8 @@ describe('use-cases/score-alerts', () => {
         log.lines.join(' | '),
       );
       // Another client sees both registrations: one channel per token (the tokens are this run's own).
-      await eventually(
+      // The listing samples below read each registration once and assert it exactly, so the same reads must hold on consecutive polls.
+      await settled(
         async () =>
           assert.deepEqual(await registrations(), { apns: ['game.score-alerts'], fcm: ['game.score-alerts'] }),
         {

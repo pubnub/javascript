@@ -5,7 +5,7 @@ import { createClient } from '../support/clients';
 import { captureConsole } from '../support/console';
 import { keysOf } from '../support/env';
 import { withPlaceholders } from '../support/placeholders';
-import { connected, eventually, sleep } from '../support/wait';
+import { connected, eventually, settled, sleep } from '../support/wait';
 
 /**
  * Hide and remove chat messages. Port of docs-snippets/use-cases/game-chat-moderation.ts.
@@ -183,8 +183,9 @@ describe('use-cases/game-chat-moderation', () => {
       assert.ok(!hiddenTimetokens.has(neighbour.timetoken), 'a non-hide decision hides nothing');
       assert.deepEqual(errors.lines, [], 'the error path was not taken');
 
-      // Wait until history holds the three chat messages and both hide decisions, so the history fetch sees them.
-      await eventually(
+      // Wait until history holds the three chat messages and both hide decisions, so the history fetch sees them. The sample reads
+      // this once and the assertions are exact, so the same read must hold on consecutive polls.
+      await settled(
         async () => {
           const history = await server.fetchMessages({ channels: ['game.chat', 'game.chat.moderation'], count: 25 });
           const chat = (history.channels['game.chat'] ?? []).map((m) => m.timetoken);

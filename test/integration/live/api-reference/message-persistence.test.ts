@@ -5,7 +5,7 @@ import { friend, observer, shopper } from '../support/clients';
 import { retryTransient } from '../support/retry';
 import { withPlaceholders } from '../support/placeholders';
 import { newSeedRun, seedPublish, settleSeeded, untilStored } from '../support/history';
-import { eventually } from '../support/wait';
+import { eventually, settled } from '../support/wait';
 
 /**
  * Message persistence examples. Port of docs-snippets/api-reference/message-persistence.ts. Message Persistence and
@@ -81,15 +81,19 @@ describe('api-reference/message-persistence', () => {
       messageTimetoken: timetoken,
       action: { type: 'reaction', value: 'smiley_face' },
     });
-    await eventually(
+    // The same read as the sample, from another client, until it holds on consecutive polls.
+    await settled(
       async () => {
         const probe = await observer().fetchMessages({
           channels: ['my_channel'],
-          includeMessageActions: true,
+          stringifiedTimeToken: true,
           includeMeta: true,
+          includeMessageActions: true,
+          includeCustomMessageType: true,
         });
         const found = probe.channels['my_channel']?.find((m) => String(m.timetoken) === timetoken);
         assert.ok((found as WithActions | undefined)?.actions, 'message and its action are stored');
+        assert.deepEqual(found?.meta, { source: 'docs-snippets' });
       },
       { timeout: 30_000, label: 'message with action stored' },
     );
@@ -118,6 +122,18 @@ describe('api-reference/message-persistence', () => {
     const second = await seed('chats.room2', 1);
     await untilStored('chats.room1', first);
     await untilStored('chats.room2', second);
+    // messageCounts is its own read path, so wait for the same count the sample reads, not only for the history.
+    await settled(
+      async () => {
+        const counts = await observer().messageCounts({
+          channels: ['chats.room1', 'chats.room2'],
+          channelTimetokens: [before],
+        });
+        assert.ok(counts.channels['chats.room1'] >= 2, `chats.room1 counts ${counts.channels['chats.room1']}`);
+        assert.ok(counts.channels['chats.room2'] >= 1, `chats.room2 counts ${counts.channels['chats.room2']}`);
+      },
+      { label: 'message counts caught up' },
+    );
     const pubnub = withPlaceholders(shopper(), { 'replace-with-timetoken': before });
 
     // snippet.messageCountBasicUsage
@@ -145,8 +161,18 @@ describe('api-reference/message-persistence', () => {
     const froms: string[] = [];
     for (const [index, channel] of channels.entries()) {
       froms.push((await observer().time()).timetoken);
-      await untilStored(channel, await seed(channel, index + 1));
+      await seed(channel, index + 1);
     }
+    // One wait for the three channels: the same count the sample reads, held on consecutive polls.
+    await settled(
+      async () => {
+        const counts = await observer().messageCounts({ channels, channelTimetokens: froms });
+        channels.forEach((channel, index) => {
+          assert.ok(counts.channels[channel] >= index + 1, `${channel} counts ${counts.channels[channel]}`);
+        });
+      },
+      { label: 'message counts caught up on ch1, ch2, ch3' },
+    );
     const pubnub = withPlaceholders(shopper(), {
       'replace-with-channel-timetoken-ch1': froms[0],
       'replace-with-channel-timetoken-ch2': froms[1],
@@ -174,11 +200,14 @@ describe('api-reference/message-persistence', () => {
   });
 
   // `start` is exclusive and `end` inclusive, so start = T - 1 and end = T delete exactly the message at T.
-  const deleteOne = async (): Promise<{ token: string; placeholders: Record<string, string> }> => {
+  // A neighbour is published right after the target, and must survive the delete. One wait covers both.
+  const deleteOne = async (): Promise<{ token: string; neighbour: string; placeholders: Record<string, string> }> => {
     const [token] = await seed('ch1', 1);
-    await untilStored('ch1', [token]);
+    const [neighbour] = await seed('ch1', 1);
+    await untilStored('ch1', [token, neighbour]);
     return {
       token,
+      neighbour,
       placeholders: {
         'replace-with-start-timetoken': addToTimetoken(token, -1),
         'replace-with-end-timetoken': token,
@@ -200,10 +229,8 @@ describe('api-reference/message-persistence', () => {
     );
 
   it('deleteMessagesBasicUsage: deleteMessages removes exactly the message at the boundary timetoken', async () => {
-    const { token, placeholders } = await deleteOne();
     // A neighbour published right after must survive the delete of `token`.
-    const [neighbour] = await seed('ch1', 1);
-    await untilStored('ch1', [neighbour]);
+    const { token, neighbour, placeholders } = await deleteOne();
     const pubnub = withPlaceholders(shopper(), placeholders);
 
     // snippet.deleteMessagesBasicUsage
@@ -223,9 +250,7 @@ describe('api-reference/message-persistence', () => {
   });
 
   it('deleteSpecificMessages: the second deleteMessages sample removes exactly the message at its boundary timetoken', async () => {
-    const { token, placeholders } = await deleteOne();
-    const [neighbour] = await seed('ch1', 1);
-    await untilStored('ch1', [neighbour]);
+    const { token, neighbour, placeholders } = await deleteOne();
     const pubnub = withPlaceholders(shopper(), placeholders);
 
     // snippet.deleteSpecificMessages

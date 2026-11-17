@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import type PubNub from 'pubnub';
 import { observer, shopper } from '../support/clients';
 import { retryTransient } from '../support/retry';
-import { eventually } from '../support/wait';
+import { eventually, settled } from '../support/wait';
 import { sorted } from '../support/util';
 
 /**
@@ -16,23 +16,23 @@ describe('api-reference/channel-groups', () => {
   const listed = async (pubnub: PubNub, channelGroup: string): Promise<string[]> =>
     (await pubnub.channelGroups.listChannels({ channelGroup })).channels;
 
-  /** Deletes the group and waits until another client sees it empty. */
+  /** Deletes the group and waits until another client sees it empty on consecutive reads. */
   async function resetGroup(channelGroup: string): Promise<void> {
     const reader = observer();
     await reader.channelGroups.deleteGroup({ channelGroup });
-    await eventually(async () => assert.deepEqual(await listed(reader, channelGroup), []), {
+    await settled(async () => assert.deepEqual(await listed(reader, channelGroup), []), {
       label: `group ${channelGroup} reset`,
     });
   }
 
-  /** Resets a group, fills it with `channels` and waits until another client lists exactly those. */
+  /** Resets a group, fills it with `channels` and waits until another client lists exactly those on consecutive reads. */
   async function seedGroup(channelGroup: string, channels: string[]): Promise<void> {
     await resetGroup(channelGroup);
     const reader = observer();
     await retryTransient(() => reader.channelGroups.addChannels({ channelGroup, channels }), {
       label: 'seed channel group',
     });
-    await eventually(async () => assert.deepEqual(sorted(await listed(reader, channelGroup)), sorted(channels)), {
+    await settled(async () => assert.deepEqual(sorted(await listed(reader, channelGroup)), sorted(channels)), {
       label: `group ${channelGroup} seeded`,
     });
   }

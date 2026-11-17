@@ -4,7 +4,7 @@ import { assertTimetoken } from '../support/assertions';
 import { createClient, observer } from '../support/clients';
 import { captureConsole } from '../support/console';
 import { storedMessage } from '../support/history';
-import { connected, eventually, sleep } from '../support/wait';
+import { connected, eventually, settled, sleep } from '../support/wait';
 
 /**
  * Live commentary tutorial. Port of docs-snippets/use-cases/live-commentary.ts.
@@ -99,11 +99,16 @@ describe('use-cases/live-commentary', () => {
         'the remark published before the subscription is not replayed live',
       );
 
-      await eventually(
+      // The sample loads the newest 25 once and the assertions need both remarks, so wait until the same read, from another client,
+      // lists both on consecutive polls.
+      await settled(
         async () => {
-          assert.ok(await storedMessage(observer(), 'game.commentary', live.timetoken), 'live remark is stored');
+          const backlog = await observer().fetchMessages({ channels: ['game.commentary'], count: 25 });
+          const tokens = (backlog.channels['game.commentary'] ?? []).map((m) => String(m.timetoken));
+          assert.ok(tokens.includes(firstTimetoken), 'first remark is in the backlog');
+          assert.ok(tokens.includes(live.timetoken), 'live remark is in the backlog');
         },
-        { label: 'live remark stored' },
+        { label: 'both remarks in the newest 25' },
       );
       const beforeBacklog = logs.lines.length;
       // snippet.liveCommentaryLoadBacklog

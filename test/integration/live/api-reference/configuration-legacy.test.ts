@@ -4,7 +4,7 @@ import { createClient, track } from '../support/clients';
 import { quietConsole } from '../support/console';
 import { keysOf } from '../support/env';
 import { unique } from '../support/util';
-import { connected, eventually } from '../support/wait';
+import { connected, eventually, settled } from '../support/wait';
 
 /**
  * Examples for the deprecated configuration parameters `uuid`, `logVerbosity`, `cipherKey` and `useRandomIVs`, and for the
@@ -133,9 +133,17 @@ describe('api-reference/configuration-legacy', () => {
     const viaModule = createClient('open', 'legacy-cipher-module', {
       cryptoModule: PubNub.CryptoModule.legacyCryptoModule({ cipherKey }),
     });
-    const read = await viaModule.fetchMessages({ channels: [channel], count: 25 });
-    const item = read.channels[channel]?.find((m) => String(m.timetoken) === published.timetoken);
-    assert.deepEqual(item?.message, { secret: 'legacy' });
+    // `rawMessage` saw the message once. This read goes to the service again, so it must hold on consecutive polls.
+    const item = await settled(
+      async () => {
+        const read = await viaModule.fetchMessages({ channels: [channel], count: 25 });
+        const found = read.channels[channel]?.find((m) => String(m.timetoken) === published.timetoken);
+        assert.ok(found, 'the message is stored');
+        return found;
+      },
+      { timeout: 30_000, label: 'legacy message read through the module' },
+    );
+    assert.deepEqual(item.message, { secret: 'legacy' });
 
     // The AES-CBC module opt-in produces the PNED format.
     const aes = createClient('open', 'legacy-aes', {

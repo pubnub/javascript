@@ -3,7 +3,7 @@ import PubNub from 'pubnub';
 import { observer, friend, shopper } from '../support/clients';
 import { retryTransient } from '../support/retry';
 import { captureConsole } from '../support/console';
-import { eventually, watch } from '../support/wait';
+import { eventually, settled, watch } from '../support/wait';
 import { sorted } from '../support/util';
 
 /**
@@ -29,7 +29,7 @@ describe('api-reference/mobile-push', () => {
     return { apns2: sorted(apns2.channels), fcm: sorted(fcm.channels) };
   }
 
-  /** Removes every registration of the device on both gateways and waits until another client sees none. */
+  /** Removes every registration of the device on both gateways and waits until another client sees none on consecutive reads. */
   async function resetDevice(): Promise<void> {
     const client = friend();
     try {
@@ -46,13 +46,13 @@ describe('api-reference/mobile-push', () => {
       throw error;
     }
     const reader = observer();
-    await eventually(async () => assert.deepEqual(await registrations(reader), { apns2: [], fcm: [] }), {
+    await settled(async () => assert.deepEqual(await registrations(reader), { apns2: [], fcm: [] }), {
       label: 'device has no registrations',
       timeout: 30_000,
     });
   }
 
-  /** Resets the device, registers `channels` on both gateways and waits until another client lists them. */
+  /** Resets the device, registers `channels` on both gateways and waits until another client lists them on consecutive reads. */
   async function seedDevice(channels: string[]): Promise<void> {
     await resetDevice();
     const client = friend();
@@ -63,7 +63,7 @@ describe('api-reference/mobile-push', () => {
       label: 'seed push registration',
     });
     const reader = observer();
-    await eventually(
+    await settled(
       async () => assert.deepEqual(await registrations(reader), { apns2: sorted(channels), fcm: sorted(channels) }),
       { label: 'device registrations visible', timeout: 30_000 },
     );
