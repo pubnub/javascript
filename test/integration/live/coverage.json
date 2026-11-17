@@ -303,7 +303,7 @@
     },
     "decryptBasicUsage": {
       "file": "test/integration/live/api-reference/encryption-legacy.test.ts",
-      "test": "api-reference/encryption-legacy decryptBasicUsage: the legacy decrypt returns the original JSON for text encrypted with the same cipher key",
+      "test": "api-reference/encryption-legacy decryptBasicUsage: the legacy decrypt resolves to the original JSON for text encrypted with the same cipher key",
       "role": "open",
       "mode": "live"
     },
