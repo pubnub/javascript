@@ -256,6 +256,28 @@ function captureEvents(
     const collected: PubNub.Subscription.DataSyncObject[] = [];
     let settled = false;
 
+    // Diagnostics only: what the client saw while it waited, reported when the wait gives up. Categories, operations,
+    // channels and timetokens; no payloads, keys or tokens.
+    const startedAt = Date.now();
+    const seenStatuses: string[] = [];
+    const seenEvents: string[] = [];
+    const recorder = {
+      status: (status: PubNub.Status | PubNub.StatusEvent) => {
+        const tt = (status as { currentTimetoken?: string }).currentTimetoken;
+        const operation = (status as { operation?: string }).operation;
+        seenStatuses.push(
+          `${status.category}${operation ? `/${operation}` : ''}${tt ? ` tt=${tt}` : ''} +${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+        );
+      },
+      dataSync: (event: PubNub.Subscription.DataSyncObject) => {
+        seenEvents.push(`${(event.message as { event?: string }).event ?? '?'} on ${event.channel}`);
+      },
+    };
+    pn.addListener(recorder);
+    const diagnostics = (): string =>
+      ` Statuses seen: [${seenStatuses.join('; ') || 'none'}]. Events seen (any, before the predicate): ` +
+      `[${seenEvents.join('; ') || 'none'}].`;
+
     const listener = {
       dataSync: (event: PubNub.Subscription.DataSyncObject) => {
         if (settled || !predicate(event)) return;
@@ -301,13 +323,15 @@ function captureEvents(
         new Error(
           `Timed out waiting for DataSync event(s)` +
             `${opts.completeWhen ? '' : ` (expected ${expectedCount})`}; ` +
-            `got ${collected.length} on [${collected.map((e) => e.channel).join(', ')}].`,
+            `got ${collected.length} on [${collected.map((e) => e.channel).join(', ')}].` +
+            diagnostics(),
         ),
       );
     }, timeoutMs);
 
     function cleanup(): void {
       clearTimeout(timer);
+      pn.removeListener(recorder);
       subscription.removeListener(listener);
       subscription.unsubscribe();
     }

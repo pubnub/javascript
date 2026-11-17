@@ -345,6 +345,35 @@ describe('api-reference/objects', () => {
   it('iterativelyUpdateExistingMetadata: the read-modify-write pattern merges custom data and the merged object survives on the service', async () => {
     const pubnub = shopper();
 
+    // The sample reads the channel back once, right after its own first write, and merges into what it reads. An earlier test
+    // left other custom data on team.red, so a replica that is behind would hand the sample that old data and the merge would
+    // drop `visible`. Store exactly what the sample's first write stores, and wait until it is stable, so that old and new
+    // state read the same.
+    await retryTransient(
+      () =>
+        pubnub.objects.setChannelMetadata({
+          channel: 'team.red',
+          data: {
+            name: 'Red Team',
+            description: 'The channel for Red team.',
+            custom: { visible: 'team' },
+          },
+        }),
+      { label: 'seed team.red' },
+    );
+    await settled(
+      async () => {
+        const stored = await observer().objects.getChannelMetadata({
+          channel: 'team.red',
+          include: { customFields: true },
+        });
+        assert.deepEqual(stored.data.custom, { visible: 'team' });
+        assert.equal(stored.data.name, 'Red Team');
+        assert.equal(stored.data.description, 'The channel for Red team.');
+      },
+      { timeout: 45_000, label: 'team.red holds the state the sample writes first' },
+    );
+
     // snippet.iterativelyUpdateExistingMetadata
     const channel = 'team.red';
     const name = 'Red Team';

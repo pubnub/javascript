@@ -1226,6 +1226,12 @@ describe('api-reference/datasync', () => {
 
     it('getRelationshipBasicUsage: getRelationship reads the link by its fixed id', async () => {
       const pubnub = server('datasync');
+      // The sample reads once, right after the create above: wait until consecutive reads find the link (a replica that has not
+      // seen the write answers 404 DS-0100).
+      await settled(() => pubnub.dataSync.getRelationship({ id: REL }), {
+        timeout: 45_000,
+        label: 'the link is readable',
+      });
       // snippet.getRelationshipBasicUsage
       const response = await pubnub.dataSync.getRelationship({
         id: 'rel-bob-owns-sneaker-42',
@@ -1390,9 +1396,14 @@ describe('api-reference/datasync', () => {
       console.log('removeRelationship response status:', response.status);
       // snippet.end
       assert.ok(response.status >= 200 && response.status < 300);
-      await assert.rejects(
-        () => pubnub.dataSync.getRelationship({ id: REL }),
-        (error: unknown) => /404/.test(errorText(error)),
+      // A replica that has not seen the delete can still answer the read, so wait for the 404.
+      await eventually(
+        () =>
+          assert.rejects(
+            () => pubnub.dataSync.getRelationship({ id: REL }),
+            (error: unknown) => /404/.test(errorText(error)),
+          ),
+        { timeout: 30_000, label: 'REL reads 404 after removal' },
       );
     });
 
@@ -1405,9 +1416,14 @@ describe('api-reference/datasync', () => {
       console.log('removeMembership response status:', response.status);
       // snippet.end
       assert.ok(response.status >= 200 && response.status < 300);
-      await assert.rejects(
-        () => pubnub.dataSync.getMembership({ id: MEMBERSHIP }),
-        (error: unknown) => /404/.test(errorText(error)),
+      // A replica that has not seen the delete can still answer the read, so wait for the 404.
+      await eventually(
+        () =>
+          assert.rejects(
+            () => pubnub.dataSync.getMembership({ id: MEMBERSHIP }),
+            (error: unknown) => /404/.test(errorText(error)),
+          ),
+        { timeout: 30_000, label: 'MEMBERSHIP reads 404 after removal' },
       );
     });
 
@@ -1418,9 +1434,14 @@ describe('api-reference/datasync', () => {
       console.log('removeEntity response status:', response.status);
       // snippet.end
       assert.ok(response.status >= 200 && response.status < 300);
-      await assert.rejects(
-        () => pubnub.dataSync.getEntity({ id: PRODUCT }),
-        (error: unknown) => /404/.test(errorText(error)),
+      // A replica that has not seen the delete can still answer the read, so wait for the 404.
+      await eventually(
+        () =>
+          assert.rejects(
+            () => pubnub.dataSync.getEntity({ id: PRODUCT }),
+            (error: unknown) => /404/.test(errorText(error)),
+          ),
+        { timeout: 30_000, label: 'PRODUCT reads 404 after removal' },
       );
     });
 
@@ -1431,9 +1452,14 @@ describe('api-reference/datasync', () => {
       console.log('removeChannel response status:', response.status);
       // snippet.end
       assert.ok(response.status >= 200 && response.status < 300);
-      await assert.rejects(
-        () => pubnub.dataSync.getChannel({ id: SUMMER }),
-        (error: unknown) => /404/.test(errorText(error)),
+      // A replica that has not seen the delete can still answer the read, so wait for the 404.
+      await eventually(
+        () =>
+          assert.rejects(
+            () => pubnub.dataSync.getChannel({ id: SUMMER }),
+            (error: unknown) => /404/.test(errorText(error)),
+          ),
+        { timeout: 30_000, label: 'SUMMER reads 404 after removal' },
       );
     });
 
@@ -1444,9 +1470,14 @@ describe('api-reference/datasync', () => {
       console.log('removeUser response status:', response.status);
       // snippet.end
       assert.ok(response.status >= 200 && response.status < 300);
-      await assert.rejects(
-        () => pubnub.dataSync.getUser({ id: ALICE }),
-        (error: unknown) => /404/.test(errorText(error)),
+      // A replica that has not seen the delete can still answer the read, so wait for the 404.
+      await eventually(
+        () =>
+          assert.rejects(
+            () => pubnub.dataSync.getUser({ id: ALICE }),
+            (error: unknown) => /404/.test(errorText(error)),
+          ),
+        { timeout: 30_000, label: 'ALICE reads 404 after removal' },
       );
     });
   });
