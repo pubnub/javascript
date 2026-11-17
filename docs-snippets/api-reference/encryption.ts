@@ -27,7 +27,7 @@ export default page('api-reference/encryption', 'P4', (world) => {
   const cryptoClient = (label: string): PubNub =>
     world.client('open', label, { cryptoModule: PubNub.CryptoModule.aesCbcCryptoModule({ cipherKey: 'pubnubenigma' }) });
 
-  step('encryptMessageBasicUsage', { proves: 'encrypt turns a message into cipher text that differs from the plain text, and decrypt reads it back.' }, () => {
+  step('encryptMessageBasicUsage', { proves: 'encrypt turns a message into cipher text that differs from the plain text, and decrypt reads it back.' }, async () => {
     // snippet.encryptMessageBasicUsage
     // Create a crypto module instance with AES-CBC encryption
     const cryptoModule = PubNub.CryptoModule.aesCbcCryptoModule({
@@ -38,11 +38,11 @@ export default page('api-reference/encryption', 'P4', (world) => {
     console.log(`Original Message: ${msgContent}`);
 
     // Encrypt the message
-    const encryptedMessage = cryptoModule.encrypt(JSON.stringify(msgContent));
+    const encryptedMessage = await cryptoModule.encrypt(JSON.stringify(msgContent));
     console.log('message encrypted successfully');
 
-    // Decrypt with the same instance. decrypt() returns an ArrayBuffer with the bytes of the JSON string
-    const decryptedBytes = cryptoModule.decrypt(encryptedMessage) as ArrayBuffer;
+    // Decrypt with the same instance. decrypt() returns a Promise that resolves to an ArrayBuffer with the bytes of the JSON string
+    const decryptedBytes = (await cryptoModule.decrypt(encryptedMessage)) as ArrayBuffer;
     const decryptedMessage = JSON.parse(new TextDecoder().decode(decryptedBytes));
     console.log(`Decrypted Message: ${decryptedMessage}`);
     // snippet.end

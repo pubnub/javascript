@@ -2,8 +2,8 @@
  * AES-CBC cryptor module.
  */
 
-import cryptoJS from '../../../core/components/cryptography/hmac-sha256';
-import { decode } from '../../../core/components/base64_codec';
+import { toArrayBuffer } from '../../../core/components/cryptography/bytes';
+import WebCryptoPrimitives from '../../primitives/web';
 import { ICryptor, EncryptedDataType } from './ICryptor';
 
 /**
@@ -28,19 +28,26 @@ export default class AesCbcCryptor implements ICryptor {
   static decoder = new TextDecoder();
 
   /**
+   * Native crypto primitives.
+   *
+   * @internal
+   */
+  private static primitives = new WebCryptoPrimitives();
+
+  /**
    * Data encryption / decryption cipher key.
    */
   cipherKey: string;
 
-  /* eslint-disable  @typescript-eslint/no-explicit-any */
-  encryptedKey: any;
-  /* eslint-disable  @typescript-eslint/no-explicit-any */
-  CryptoJS: any;
+  /**
+   * Raw encryption key (SHA-256 digest of the cipher key).
+   *
+   * @internal
+   */
+  private key?: Promise<Uint8Array>;
 
   constructor({ cipherKey }: { cipherKey: string }) {
     this.cipherKey = cipherKey;
-    this.CryptoJS = cryptoJS;
-    this.encryptedKey = this.CryptoJS.SHA256(cipherKey);
   }
 
   // --------------------------------------------------------
@@ -48,29 +55,22 @@ export default class AesCbcCryptor implements ICryptor {
   // --------------------------------------------------------
   // region Encryption
 
-  encrypt(data: ArrayBuffer | string): EncryptedDataType {
-    const stringData = typeof data === 'string' ? data : AesCbcCryptor.decoder.decode(data);
-    if (stringData.length === 0) throw new Error('encryption error. empty content');
-    const abIv = this.getIv();
+  async encrypt(data: ArrayBuffer | string): Promise<EncryptedDataType> {
+    const plaintext = typeof data === 'string' ? AesCbcCryptor.encoder.encode(data) : new Uint8Array(data);
+    if (plaintext.byteLength === 0) throw new Error('encryption error. empty content');
 
-    return {
-      metadata: abIv,
-      data: decode(
-        this.CryptoJS.AES.encrypt(data, this.encryptedKey, {
-          iv: this.bufferToWordArray(abIv),
-          mode: this.CryptoJS.mode.CBC,
-        }).ciphertext.toString(this.CryptoJS.enc.Base64),
-      ),
-    };
+    return this.encryptFileData(plaintext);
   }
 
-  async encryptFileData(data: ArrayBuffer): Promise<EncryptedDataType> {
-    const key = await this.getKey();
+  async encryptFileData(data: ArrayBuffer | Uint8Array): Promise<EncryptedDataType> {
     const iv = this.getIv();
-    return {
-      data: await crypto.subtle.encrypt({ name: this.algo, iv: iv }, key, data),
-      metadata: iv,
-    };
+    const encrypted = await AesCbcCryptor.primitives.aesCbcEncrypt(
+      await this.getKey(),
+      iv,
+      data instanceof Uint8Array ? data : new Uint8Array(data),
+    );
+
+    return { data: toArrayBuffer(encrypted), metadata: iv.buffer };
   }
   // endregion
 
@@ -79,27 +79,26 @@ export default class AesCbcCryptor implements ICryptor {
   // --------------------------------------------------------
   // region Decryption
 
-  decrypt(encryptedData: EncryptedDataType) {
-    if (typeof encryptedData.data === 'string')
-      throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
-
-    const iv = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.metadata!));
-    const data = this.bufferToWordArray(new Uint8ClampedArray(encryptedData.data));
-
-    return AesCbcCryptor.encoder.encode(
-      this.CryptoJS.AES.decrypt({ ciphertext: data }, this.encryptedKey, {
-        iv,
-        mode: this.CryptoJS.mode.CBC,
-      }).toString(this.CryptoJS.enc.Utf8),
-    ).buffer;
+  async decrypt(encryptedData: EncryptedDataType): Promise<ArrayBuffer> {
+    try {
+      return await this.decryptFileData(encryptedData);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Decryption error')) throw error;
+      throw new Error(`Decryption error: ${error instanceof Error ? error.message : 'unable to decrypt data'}`);
+    }
   }
 
   async decryptFileData(encryptedData: EncryptedDataType): Promise<ArrayBuffer> {
     if (typeof encryptedData.data === 'string')
       throw new Error('Decryption error: data for decryption should be ArrayBuffed.');
 
-    const key = await this.getKey();
-    return crypto.subtle.decrypt({ name: this.algo, iv: encryptedData.metadata! }, key, encryptedData.data);
+    const decrypted = await AesCbcCryptor.primitives.aesCbcDecrypt(
+      await this.getKey(),
+      new Uint8Array(encryptedData.metadata!),
+      new Uint8Array(encryptedData.data),
+    );
+
+    return toArrayBuffer(decrypted);
   }
   // endregion
 
@@ -113,52 +112,32 @@ export default class AesCbcCryptor implements ICryptor {
   }
 
   /**
-   * Cryptor algorithm.
-   *
-   * @returns Cryptor module algorithm.
-   */
-  private get algo() {
-    return 'AES-CBC';
-  }
-
-  /**
    * Generate random initialization vector.
    *
    * @returns Random initialization vector.
+   *
+   * @internal
    */
-
   private getIv() {
-    return crypto.getRandomValues(new Uint8Array(AesCbcCryptor.BLOCK_SIZE));
+    return AesCbcCryptor.primitives.randomBytes(AesCbcCryptor.BLOCK_SIZE);
   }
 
   /**
-   * Convert cipher key to the {@link Buffer}.
+   * Compute raw encryption key (cached).
    *
-   * @returns SHA256 encoded cipher key {@link Buffer}.
+   * @returns SHA-256 digest of the cipher key.
+   *
+   * @internal
    */
-  private async getKey() {
-    const bKey = AesCbcCryptor.encoder.encode(this.cipherKey);
-    const abHash = await crypto.subtle.digest('SHA-256', bKey.buffer);
-    return crypto.subtle.importKey('raw', abHash, this.algo, true, ['encrypt', 'decrypt']);
-  }
-
-  /**
-   * Convert bytes array to words array.
-   *
-   * @param b - Bytes array (buffer) which should be converted.
-   *
-   * @returns Word sized array.
-   */
-  private bufferToWordArray(b: string | any[] | Uint8Array | Uint8ClampedArray) {
-    const wa: number[] = [];
-    let i;
-
-    for (i = 0; i < b.length; i += 1) {
-      wa[(i / 4) | 0] |= b[i] << (24 - 8 * i);
+  private getKey() {
+    if (!this.key) {
+      this.key = AesCbcCryptor.primitives.sha256(AesCbcCryptor.encoder.encode(this.cipherKey));
+      this.key.catch(() => (this.key = undefined));
     }
 
-    return this.CryptoJS.lib.WordArray.create(wa, b.length);
+    return this.key;
   }
+  // endregion
 
   /**
    * Serialize cryptor information to string.

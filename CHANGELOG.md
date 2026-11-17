@@ -1,3 +1,13 @@
+## v14.0.0
+November 17 2026
+
+#### Added
+- Add support for aes gcm type decryption by adding cryptor with decryption capability.
+
+#### Modified
+- **BREAKING CHANGES**: Replaced the bundled CryptoJS with native crypto on web, Node.js and noble on React Native.
+- Undici minor version bump.
+
 ## v13.1.3
 October 22 2026
 
