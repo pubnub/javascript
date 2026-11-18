@@ -18,6 +18,11 @@
  * The endpoint tests (`.mocharc.endpoints.cjs`, LIVE_TIER=endpoints) check no role up front: a test fails with a "missing keys"
  * message (env names) when the role it builds a client for is not set. Janitor and preflight default to off there.
  *
+ * Group runs (`LIVE_GROUP=<name>`, groups.cjs, both tiers): without --grep the run needs exactly the group's `roles` up front and
+ * fails at once, naming the missing env variables, when one is not set. The janitor still cleans every role that has keys (a full
+ * pass takes a few seconds, and it gives every job a clean slate whatever ran before). The wait until a tokenless client is refused
+ * runs only when the group uses a secured role (pam or datasync), and the preflight checks only the group's roles.
+ *
  * `LIVE_JANITOR=off` skips both cleanups (use it for a single page with `--grep`: a full pass costs about the time
  * reported in the README). `LIVE_PREFLIGHT=off` skips the preflight.
  */
@@ -26,13 +31,14 @@ import { runCleanups } from './cleanup';
 import { restoreAllConsoles } from './console';
 import { describeRoles, env, janitorEnabled, preflightEnabled, redact, ROLES } from './env';
 import { explainSdkError } from './explain-error';
+import { selectedGroup } from './groups';
 import { formatReport, runJanitor, verifyApplicationGrantClosed } from './janitor';
 import { runPreflight } from './preflight';
 
 /**
  * True when the command line selects everything: no --grep / --fgrep and no spec file argument. A full run needs every
- * role up front, so a missing keyset fails it at once and not after minutes in the first test that needs it. A partial run
- * checks only the roles its tests ask for, when they build their client.
+ * role up front (a group run: every role of the group), so a missing keyset fails it at once and not after minutes in the first
+ * test that needs it. A partial run checks only the roles its tests ask for, when they build their client.
  */
 function isFullRun(argv: readonly string[] = process.argv.slice(2)): boolean {
   const selects = (arg: string): boolean => /^(--grep|-g|--fgrep|-f)(=|$)/.test(arg) || /\.ts$/.test(arg);
@@ -41,6 +47,9 @@ function isFullRun(argv: readonly string[] = process.argv.slice(2)): boolean {
 
 /** True under `.mocharc.endpoints.cjs` (it sets LIVE_TIER=endpoints): no role is checked up front (each test needs its own, see `keysOf`), janitor and preflight default to off. */
 const endpointsTier = process.env.LIVE_TIER === 'endpoints';
+
+/** The group of LIVE_GROUP (groups.cjs), or undefined for a run of the whole tier. */
+const group = selectedGroup();
 
 /**
  * Every failure of the run, test or hook, passes through `Runner#fail` before the reporter sees it, so wrapping it once covers
@@ -86,11 +95,14 @@ export const mochaHooks = {
           'Set them in the environment or in test/integration/live/.env.local (see .env.example).',
       );
     }
-    if (!endpointsTier && isFullRun()) {
-      const absent = ROLES.filter((role) => !env()[role]);
+    // A group run needs the group's roles, a full docs-tier run every role, a full endpoint-tier run none (see above).
+    const required = group ? group.roles : endpointsTier ? [] : ROLES;
+    if (isFullRun()) {
+      const absent = required.filter((role) => !env()[role]);
       if (absent.length) {
         throw new Error(
-          `A full run needs every keyset. Missing: ${absent.map((role) => `${role} (${env().missing[role].join(', ')})`).join('; ')}. ` +
+          `${group ? `The group ${group.name} needs` : 'A full run needs every keyset.'} ` +
+            `Missing: ${absent.map((role) => `${role} (${env().missing[role].join(', ')})`).join('; ')}. ` +
             'Set them, or select tests with --grep (that run needs only the roles of those tests).',
         );
       }
@@ -105,7 +117,9 @@ export const mochaHooks = {
             'Fix the cause, or run `npm run test:integration:live:janitor` to retry the cleanup alone.',
         );
       }
-      const secured = env().pam ?? env().datasync;
+      // A group that uses no secured role does not wait for Access Manager (up to about 60 s after a grant change).
+      const usesSecured = !group || group.roles.some((role) => role !== 'open');
+      const secured = usesSecured ? (env().pam ?? env().datasync) : undefined;
       if (secured) {
         const ms = await verifyApplicationGrantClosed(secured);
         console.log(`janitor: a client without a token is refused on the secured keyset (${ms} ms)`);
@@ -114,7 +128,7 @@ export const mochaHooks = {
       console.log('janitor: skipped before the run (LIVE_JANITOR=off)');
     }
     if (preflightEnabled()) {
-      const { notes } = await runPreflight();
+      const { notes } = await runPreflight(env(), group?.roles);
       notes.forEach((note) => console.log(`preflight: ${note}`));
       console.log('preflight: keyset features ok');
     }

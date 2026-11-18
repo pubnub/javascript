@@ -1,8 +1,14 @@
-name: Live integration
+name: Live tests
 
-# Live tier (test/integration/live/README.md): the public documentation's code samples run against the real PubNub service.
-# Runs on non-draft pull requests into master, and on demand. No scheduled runs. Draft pull requests run nothing. Fork pull
-# requests never get the live job (no secrets for fork code).
+# Live tier (test/integration/live/README.md): the public documentation's code samples, and the real-network endpoint tests, run
+# against the real PubNub service. Runs on non-draft pull requests into master, and on demand. No scheduled runs. Draft pull
+# requests run nothing. Fork pull requests never get the live jobs (no secrets for fork code).
+#
+# One job per API group. The groups and their files are in test/integration/live/groups.cjs. The offline job turns that file into
+# the job matrix, so a new group needs no change here except the `group` input options below (the lint checks that they match).
+# The matrix runs one group at a time (max-parallel: 1) and does not stop at a failed group (fail-fast: false), so every group
+# reports its own result and the run is red when any group failed. The groups do not depend on each other: each one checks out,
+# builds, cleans the keysets before and after its tests, and can be re-run alone ("Re-run job" on that group).
 
 on:
   # Pull requests into master, only when something the tier or its mocked samples depend on changed. Marking a draft as ready
@@ -20,11 +26,34 @@ on:
       - '.github/workflows/live-integration.yml'
   workflow_dispatch:
     inputs:
+      group:
+        description: 'Run only this group (test/integration/live/groups.cjs). "all" runs every group, one after another.'
+        required: false
+        default: 'all'
+        type: choice
+        # Must list 'all' and then every group name of groups.cjs, in that order (checked by npm run test:integration:live:lint).
+        options:
+          - all
+          - messaging
+          - getting-started
+          - use-cases
+          - access-manager
+          - app-context
+          - datasync
+          - endpoints-datasync
+          - endpoints-history
       grep:
-        description: 'Run only tests whose title matches this pattern (mocha --grep). Empty runs everything.'
+        description: 'Run only tests whose title matches this pattern (mocha --grep), inside the selected groups. Empty runs everything.'
         required: false
         default: ''
         type: string
+
+# One live run at a time for the whole workflow: the tier uses fixed resource names on shared keysets, so the jobs of two runs must
+# never interleave. A running run is never cancelled. Runs that get no live jobs (draft or fork pull requests) take a group of
+# their own, so they never wait and never replace a pending live run.
+concurrency:
+  group: ${{ (github.event_name == 'pull_request' && (github.event.pull_request.draft || github.event.pull_request.head.repo.full_name != github.repository)) && format('live-tests-no-live-{0}', github.run_id) || 'docs-snippets-live' }}
+  cancel-in-progress: false
 
 defaults:
   run:
@@ -40,6 +69,8 @@ jobs:
     runs-on:
       group: organization/Default
     timeout-minutes: 15
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -54,24 +85,33 @@ jobs:
         run: npm ci
       - name: Build the SDK for Node
         run: npm run build:node
-      - name: Lint (markers, manifest, eslint)
+      - name: Lint (markers, manifest, groups, eslint)
         run: npm run test:integration:live:lint
       - name: Type check
         run: npm run test:integration:live:types
+      - name: Plan the group jobs
+        id: plan
+        env:
+          # Empty on pull requests: every group. Reaches the script only through the environment.
+          GROUP: ${{ inputs.group }}
+        run: |
+          matrix="$(npm run --silent test:integration:live:groups -- --matrix "${GROUP:-all}")"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "$matrix"
 
   live:
-    name: Live tier
+    name: ${{ matrix.group }}
     needs: [offline]
     # Pull requests: only non-draft ones from a branch of this repository (never a fork: no secrets for fork code).
     if: ${{ github.event_name != 'pull_request' || (!github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository) }}
     runs-on:
       group: organization/Default
-    timeout-minutes: 40
-    # One live run per keyset at a time: this tier uses fixed resource names, so two runs must never overlap. A running job is
-    # never cancelled.
-    concurrency:
-      group: docs-snippets-live
-      cancel-in-progress: false
+    timeout-minutes: 20
+    strategy:
+      # One group at a time (the keysets are shared), and every group runs even after a failed one.
+      max-parallel: 1
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.offline.outputs.matrix) }}
     env:
       # Not a secret. Set on the job (not the steps) because it is only a keyset id for the Admin API feature check.
       DOCS_SNIPPETS_DS_KEYSET_ID: ${{ vars.SDK_DOCS_DS_KEYSET_ID }}
@@ -91,17 +131,20 @@ jobs:
       - name: Build the SDK for Node
         id: build
         run: npm run build:node
+      # Only the groups that use the DataSync classes of the docs keyset (docs tier, role datasync). Read only.
       - name: Check the DataSync classes (read only)
-        if: ${{ steps.build.outcome == 'success' }}
+        if: ${{ steps.build.outcome == 'success' && matrix.provision }}
         env:
           DS_SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_DS_SUBSCRIBE_KEY }}
           DS_PUBLISH_KEY: ${{ secrets.SDK_DOCS_DS_PUBLISH_KEY }}
           DS_SECRET_KEY: ${{ secrets.SDK_DOCS_DS_SECRET_KEY }}
           PUBNUB_ADMIN_API_KEY: ${{ secrets.SDK_DOCS_ADMIN_API_KEY }}
         run: npm run test:integration:live:provision:check
+      # Every docs keyset, whatever the group: the janitor cleans every role before and after the group, so each job starts and
+      # ends clean even when the job before it failed. The role check and the preflight cover only the group's roles.
       - name: Docs samples (janitor and preflight on)
         id: samples
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.tier == 'docs' }}
         env:
           SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_OPEN_SUBSCRIBE_KEY }}
           PUBLISH_KEY: ${{ secrets.SDK_DOCS_OPEN_PUBLISH_KEY }}
@@ -112,6 +155,7 @@ jobs:
           DS_PUBLISH_KEY: ${{ secrets.SDK_DOCS_DS_PUBLISH_KEY }}
           DS_SECRET_KEY: ${{ secrets.SDK_DOCS_DS_SECRET_KEY }}
           PUBNUB_ADMIN_API_KEY: ${{ secrets.SDK_DOCS_ADMIN_API_KEY }}
+          LIVE_GROUP: ${{ matrix.group }}
           # Untrusted input: reaches the script only through the environment.
           GREP: ${{ inputs.grep }}
         run: |
@@ -121,19 +165,19 @@ jobs:
             npm run test:integration:live
           fi
       # The SDK's own keyset on purpose (the one run-tests.yml uses), not the docs keysets: the real-network endpoint tests are not
-      # documentation samples. The six DataSync files need the DataSync classes that exist only on the SDK's DataSync keyset
+      # documentation samples. The DataSync files need the DataSync classes that exist only on the SDK's DataSync keyset
       # (SDK_DS_*), and fetch_messages, history and message_actions need the SDK's open keyset with Message Persistence and
-      # message actions (SDK_SUB_KEY / SDK_PUB_KEY). Runs after a failed samples step too, so both results show. If either step
-      # fails the job fails (a failed step marks the job failed even when later steps pass).
+      # message actions (SDK_SUB_KEY / SDK_PUB_KEY). Janitor and preflight are off in this tier (.mocharc.endpoints.cjs).
       - name: Endpoint tests (SDK keysets)
         id: endpoints
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && matrix.tier == 'endpoints' }}
         env:
           SUBSCRIBE_KEY: ${{ secrets.SDK_SUB_KEY }}
           PUBLISH_KEY: ${{ secrets.SDK_PUB_KEY }}
           DS_SUBSCRIBE_KEY: ${{ secrets.SDK_DS_SUB_KEY }}
           DS_PUBLISH_KEY: ${{ secrets.SDK_DS_PUB_KEY }}
           DS_SECRET_KEY: ${{ secrets.SDK_DS_SEC_KEY }}
+          LIVE_GROUP: ${{ matrix.group }}
           GREP: ${{ inputs.grep }}
         run: |
           if [ -n "$GREP" ]; then
@@ -142,9 +186,10 @@ jobs:
             npm run test:integration:live:endpoints
           fi
       # After a failure or a cancel the tier's own after-hook may not have run (killed process): revoke application-level
-      # Access Manager grants and remove leftovers, so a keyset is never left open until the next run.
+      # Access Manager grants and remove leftovers, so a keyset is never left open until the next group or run. Docs tier only:
+      # the endpoint tests never touch the docs keysets and remove their own uniquely named objects.
       - name: Revoke grants and clean up
-        if: ${{ (cancelled() || failure()) && steps.build.outcome == 'success' }}
+        if: ${{ (cancelled() || failure()) && steps.build.outcome == 'success' && matrix.tier == 'docs' }}
         env:
           SUBSCRIBE_KEY: ${{ secrets.SDK_DOCS_OPEN_SUBSCRIBE_KEY }}
           PUBLISH_KEY: ${{ secrets.SDK_DOCS_OPEN_PUBLISH_KEY }}

@@ -477,17 +477,17 @@ describe('endpoints/data_sync/projections: DataSync projections admin vs __defau
         channelPatterns: ['customer.*'],
         projections: {
           patterns: {
-            entities: { 'customer.*': PROJECTION_ADMIN, 'loanquote.*': PROJECTION_ADMIN },
-            relationships: { 'requestedby.*': PROJECTION_ADMIN },
+            entities: { '^customer\\..*': PROJECTION_ADMIN, '^loanquote\\..*': PROJECTION_ADMIN },
+            relationships: { '^requestedby\\..*': PROJECTION_ADMIN },
           },
         },
       });
 
       assert.deepStrictEqual(projectionsMeta(token), {
         pat: {
-          'datasync:entities:customer.*': PROJECTION_ADMIN,
-          'datasync:entities:loanquote.*': PROJECTION_ADMIN,
-          'datasync:relationships:requestedby.*': PROJECTION_ADMIN,
+          'datasync:entities:^customer\\..*': PROJECTION_ADMIN,
+          'datasync:entities:^loanquote\\..*': PROJECTION_ADMIN,
+          'datasync:relationships:^requestedby\\..*': PROJECTION_ADMIN,
         },
       });
     });
@@ -524,9 +524,10 @@ describe('endpoints/data_sync/projections: DataSync projections admin vs __defau
             memberships: { 'user.001:channel.001': PROJECTION_DEFAULT },
           },
           patterns: {
-            users: { 'user.*': PROJECTION_DEFAULT },
-            channels: { 'channel.*': PROJECTION_DEFAULT },
-            memberships: { 'user.*:channel.*': PROJECTION_DEFAULT },
+            users: { '^user\\..*': PROJECTION_DEFAULT },
+            channels: { '^channel\\..*': PROJECTION_DEFAULT },
+            // A wildcard in the middle (`user.*:channel.*`) is not a supported grant pattern, so match the user prefix only.
+            memberships: { '^user\\..*': PROJECTION_DEFAULT },
           },
         },
       });
@@ -538,9 +539,9 @@ describe('endpoints/data_sync/projections: DataSync projections admin vs __defau
           'datasync:memberships:user.001:channel.001': PROJECTION_DEFAULT,
         },
         pat: {
-          'datasync:users:user.*': PROJECTION_DEFAULT,
-          'datasync:channels:channel.*': PROJECTION_DEFAULT,
-          'datasync:memberships:user.*:channel.*': PROJECTION_DEFAULT,
+          'datasync:users:^user\\..*': PROJECTION_DEFAULT,
+          'datasync:channels:^channel\\..*': PROJECTION_DEFAULT,
+          'datasync:memberships:^user\\..*': PROJECTION_DEFAULT,
         },
       });
     });
@@ -577,11 +578,14 @@ describe('endpoints/data_sync/projections: DataSync projections admin vs __defau
     /** Readers come from the tier's `createClient`, so the root hook destroys them after each test. */
     const track = (reader: PubNub): PubNub => reader;
 
-    /** Projection assignments covering every object this section seeded. */
+    /**
+     * Projection assignments covering every object this section seeded. DataSync grant patterns accept only
+     * `.*`, `^lit$`, `^lit.*`, `.*lit$` and literal alternative groups, so the `.` of the id prefix is escaped.
+     */
     const allAdmin = (): PubNub.PAM.DataSyncProjections => ({
       patterns: {
-        entities: { 'customer.*': PROJECTION_ADMIN, 'loanquote.*': PROJECTION_ADMIN },
-        relationships: { 'requestedby.*': PROJECTION_ADMIN },
+        entities: { '^customer\\..*': PROJECTION_ADMIN, '^loanquote\\..*': PROJECTION_ADMIN },
+        relationships: { '^requestedby\\..*': PROJECTION_ADMIN },
       },
     });
 

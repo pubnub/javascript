@@ -11,13 +11,15 @@ npm run test:integration:live                        # the docs-sample tier: eve
 npm run test:integration:live:endpoints              # only endpoints/**: real-network endpoint tests that are not doc samples (each test needs its own role: DS_* for DataSync, SUBSCRIBE_KEY and PUBLISH_KEY for the rest)
 npm run test:integration:live -- --grep publishMinimal
 npm run test:integration:live -- --dry-run           # lists the tests, no network, no keys needed
+LIVE_GROUP=publish npm run test:integration:live     # one API group of groups.cjs (see "Groups and CI jobs")
+LIVE_GROUP=endpoints-datasync npm run test:integration:live:endpoints   # one group of the endpoint tier
 npm run test:integration:live:types                  # type check (needs the build for lib/types)
 npx eslint "test/integration/live/**/*.ts" --ignore-pattern "test/integration/live/quickstarts/**"           # lint (npm run lint covers src/ only). Do not add --config: it drops the max-len override of live/.eslintrc.cjs
 ```
 
 Environment variable names: `SUBSCRIBE_KEY` and `PUBLISH_KEY` (open keyset), `PAM_SUBSCRIBE_KEY`, `PAM_PUBLISH_KEY` and `PAM_SECRET_KEY` (Access Manager, PAM), and `DS_*` (DataSync, DS). Real environment variables take precedence over the file. `LIVE_ENV_FILE=<path>` points to another file. The run stops at once if the open keyset is missing.
 
-A docs-tier run without `--grep` and without spec file arguments needs every role. It fails at once, and names the missing variables, when `pam` or `datasync` is not set. A run with `--grep` or a file argument checks a role only when a test builds its client. So a page that needs only the open keyset runs with only that keyset. Run one live run per keyset at a time.
+A docs-tier run without `--grep` and without spec file arguments needs every role. It fails at once, and names the missing variables, when `pam` or `datasync` is not set. A group run (`LIVE_GROUP`) without `--grep` needs exactly the `roles` of its group, in both tiers. A run with `--grep` or a file argument checks a role only when a test builds its client. So a page that needs only the open keyset runs with only that keyset. Run one live run per keyset at a time.
 
 **Two runs, two keysets.** The tier has two Mocha configuration files.
 
@@ -30,7 +32,7 @@ The DataSync endpoint tests need the DataSync classes `JSCustomer`, `JSLoanQuote
 
 The other three files (`fetch_messages`, `history`, `message_actions`) publish to the real service and read the result back. They moved out of `test/integration/endpoints/`. The files with the same names there are mocked. This keeps `npm run test:node` fully offline. A root hook in `test/setup-why.ts` refuses every request that no nock scope matches. These three files are not documentation samples, and they carry no `// snippet.` markers.
 
-Continuous Integration (CI) runs the whole folder as one separate step. It uses the SDK's own keysets, the ones `run-tests.yml` uses: `SDK_SUB_KEY` and `SDK_PUB_KEY` as `SUBSCRIBE_KEY` and `PUBLISH_KEY`, and `SDK_DS_*` as `DS_*`. It does not use the docs keysets.
+Continuous Integration (CI) runs this folder in two jobs of its own, `endpoints-datasync` and `endpoints-history`. They use the SDK's own keysets, the ones `run-tests.yml` uses: `SDK_SUB_KEY` and `SDK_PUB_KEY` as `SUBSCRIBE_KEY` and `PUBLISH_KEY`, and `SDK_DS_*` as `DS_*`. It does not use the docs keysets.
 
 Each test titles itself `endpoints/<file>: ...`. So `--grep '^endpoints/(fetch_messages|history|message_actions)'` runs only the open-keyset files, and `--grep '^endpoints/data_sync'` runs only the DataSync files. A test whose role is not set fails with `missing keys: the <role> keyset is not configured, set <env names>`.
 
@@ -40,7 +42,38 @@ The janitor's resource list and the preflight's feature checks belong to the doc
 
 Mocha adds a spec file from the command line to the config's `spec`. It does not replace it. So the docs-tier config excludes `endpoints/**` with `exclude`, and a file argument for the other tier is not added to a run. Check what a script runs with `-- --dry-run`. The root `npm run test:node` lists none of this folder.
 
-The workflow (`.github/workflows/live-integration.yml`) runs on non-draft pull requests into `master`, when the paths it watches change, and on demand. It has no scheduled runs. It does not alert anyone on failure yet. The GitHub run logs are the only signal.
+The workflow (`.github/workflows/live-integration.yml`, named "Live tests") runs on non-draft pull requests into `master`, when the paths it watches change, and on demand. It has no scheduled runs. It does not alert anyone on failure yet. The GitHub run logs are the only signal.
+
+## Groups and CI jobs
+
+`groups.cjs` splits the tier into API groups. Each group has a `name`, a `tier` (`docs` or `endpoints`), the keyset `roles` its tests use, and its `files`. `LIVE_GROUP=<name>` makes `.mocharc.cjs` or `.mocharc.endpoints.cjs` run only the files of that group (`support/group-select.cjs`). The config's `spec` is replaced, so no other file runs. A name of the other tier stops the run and names the right script. `--grep` still works inside a group.
+
+| Group | Tier | Files | About |
+| :--- | :--- | :--- | :--- |
+| `messaging` | docs | `api-reference/publish*`, `subscribe*`, `presence`, `channel-groups`, `file-sharing*`, `mobile-push`, `message-persistence*`, `message-actions` | 130 s |
+| `getting-started` | docs | `getting-started/*`, `shared/*`, `api-reference/configuration*`, `encryption*`, `misc`, `migration-guides/*` | 100 s |
+| `use-cases` | docs | `use-cases/*` | 180 s |
+| `access-manager` | docs | `api-reference/access-manager*` | 60 s |
+| `app-context` | docs | `api-reference/objects` | 40 s |
+| `datasync` | docs | `api-reference/datasync` | 50 s |
+| `endpoints-datasync` | endpoints | `endpoints/data_sync/*` | 90 s |
+| `endpoints-history` | endpoints | `endpoints/fetch_messages`, `history`, `message_actions` | 3 s |
+
+`groups.cjs` is the source of truth. The table above is a summary, and the times are rough runtimes of a green run.
+
+`datasync`, `endpoints-datasync`, `app-context` and `endpoints-history` stay separate because they failed most often in CI history, so a single re-run does not repeat stable tests. `access-manager` stays alone too, because it needs the DataSync role that the flaky groups share. The endpoint groups use other keysets and another Mocha config, so they never merge with docs groups.
+
+**Every test file is in exactly one group.** `npm run test:integration:live:lint` runs `support/groups.ts --check`. It fails when a test file is in no group or in two groups, when a listed file does not exist or sits in the other tier, when a file uses the `pam` or `datasync` keyset and its group does not list that role, and when the workflow's `group` input options differ from the group names. So a new test file fails the lint until you add it to a group. So the groups together run exactly the full run. Compare the `-- --dry-run` lists when in doubt.
+
+**One job per group.** The offline job checks the lint and types, then turns `groups.cjs` into the job matrix (`npm run test:integration:live:groups -- --matrix all`). The `live` job runs one matrix entry per group, one at a time (`max-parallel: 1`). A failed group does not stop the others (`fail-fast: false`), and the run is red when any group failed. Each job checks out, installs, builds and runs its group on its own. No job depends on another, so a single job can be re-run.
+
+- Re-run one failed group in Actions: open the run, select the group's job, and choose "Re-run job". "Re-run failed jobs" re-runs only the failed groups.
+- Start one group by hand: run the workflow with the `group` input set to its name (`all` runs every group). The `grep` input narrows the tests inside the selected groups.
+- Run one group locally: `LIVE_GROUP=<name> npm run test:integration:live` (docs tier) or `LIVE_GROUP=<name> npm run test:integration:live:endpoints`.
+
+The whole workflow has one concurrency group, `docs-snippets-live`, with `cancel-in-progress: false`. So the jobs of two runs never interleave on the keysets. A run that gets no live job (a draft or fork pull request) takes a group of its own.
+
+To add a group: add it to `groups.cjs`, then add its name to the `group` input options of the workflow, in the same order. The lint fails until both match.
 
 Rebuild with `npm run build:node` after a change under `src/`. Otherwise the tier tests the previous build.
 
@@ -87,7 +120,8 @@ Rebuild with `npm run build:node` after a change under `src/`. Otherwise the tie
 | `explain-error.ts` | `explainSdkError(err)`: appends the SDK status summary to a failure's message; installed by `hooks.ts` |
 | `console.ts` | `captureConsole(method)`, `quietConsole()`, `restoreAllConsoles()` |
 | `resources.ts` | the janitor's resource list; `DATASYNC_PAGE_OBJECTS` is shared with `datasync-state.ts` |
-| `hooks.ts` | root hooks: role check before a full run, janitor, preflight, client cleanup after each test |
+| `hooks.ts` | root hooks: role check before a full run or a group run, janitor, preflight, client cleanup after each test |
+| `groups.ts` | `GROUPS`, `selectedGroup()`, `checkGroups()`, `matrixOf()`; `--check` and `--matrix` on the command line |
 | `snippets.ts` | snippet extraction with the rules of the docs extractor |
 
 Other files in `support/` serve one page or one tool (`janitor*.ts`, `preflight.ts`, `datasync-*.ts`, `subscribe-groups.ts`, `proxy.ts`, `file-workdir.ts`, `access-manager.ts`).
@@ -108,26 +142,30 @@ The tests use the literal names that the docs show (`'my_channel'`, `'family'`, 
 | pam | revokes the application-level Access Manager grant; the same lists as open when the role has any; history of its listed channels |
 | datasync | the same revoke (once when pam and datasync are one keyset); DataSync relationships and memberships, then entities, users and channels from the list; history |
 
-The janitor runs automatically from the root hooks. It runs once before all tests. A failure fails the run, and the output lists what could not be removed. On a secured keyset, the janitor then waits until a client without a token is refused again. That can take up to about 60 s when the previous run just changed a grant. It gives up after 120 s. It also runs once after all tests. A failure there prints a loud banner and does not fail the run. The exception is a failed grant revoke, which leaves a secured keyset open. The next run's cleanup retries before the run, and it fails if the keyset is still dirty.
+The janitor runs automatically from the root hooks. It runs once before all tests of a run, so once before each group job in CI. A failure fails the run, and the output lists what could not be removed. On a secured keyset, the janitor then waits until a client without a token is refused again. That can take up to about 60 s when the previous run just changed a grant. It gives up after 120 s. This wait runs only when the run uses a secured keyset: always for a run of the whole tier, and for a group only when its `roles` list `pam` or `datasync`. It also runs once after all tests. A failure there prints a loud banner and does not fail the run. The exception is a failed grant revoke, which leaves a secured keyset open. The next run's cleanup retries before the run, and it fails if the keyset is still dirty.
 
 ```bash
 npm run test:integration:live:janitor            # the janitor alone, all roles; exit code 1 when something could not be removed
 npm run test:integration:live:janitor -- --role open
 ```
 
-A full pass walks every listed name, so it takes a while. For a single page or a `--grep` run, turn the janitor off: `LIVE_JANITOR=off npm run test:integration:live -- --grep publishMinimal`. Run the janitor command before and after such runs when you want a clean slate.
+A full pass walks every listed name. In CI it takes about 4 s, plus about 3 s for the wait on the secured keyset. The tests take the rest of the time. For a single page or a `--grep` run, you can turn the janitor off: `LIVE_JANITOR=off npm run test:integration:live -- --grep publishMinimal`. Run the janitor command before and after such runs when you want a clean slate.
+
+**Not scoped by group.** A group job cleans the whole list for every role that has keys, not only the names of its group. Most names (`my_channel`, `game.chat` and many others) are shared by several groups. A list per group could miss a name without any error. A full pass is cheap, and it starts each job from a clean keyset whatever the job before it left. After a failed or cancelled docs-tier job, the workflow runs `npm run test:integration:live:janitor` again. That revokes the application-level Access Manager grant and waits until the secured keyset refuses a client without a token.
 
 **Adding a name.** Add one string to the right list of the right role in `support/resources.ts`: `channels`, `fileChannels`, `channelGroups`, `appContext.users`, `appContext.channels`, `pushDevices`, or `dataSync.*`. The file holds data only. A resource that a test creates and does not list is never cleaned, so it stays on the keyset from run to run. One channel is left out on purpose: `history_documented_behavior`. It holds more than 100 messages, which its test writes once and reuses (see the comment in `resources.ts`). Names with a per-run suffix are not listed either. Their messages expire with the keyset's retention period. A channel in a channel group must also be listed under `channels`, because deleting a group does not delete its member channels.
 
 ### Preflight (`support/preflight.ts`)
 
-After the janitor, the root hook fails fast. Its message names each missing feature. With `PUBNUB_ADMIN_API_KEY` and the keyset ids (`DOCS_SNIPPETS_OPEN_KEYSET_ID`, `DOCS_SNIPPETS_PAM_KEYSET_ID`, `DOCS_SNIPPETS_DS_KEYSET_ID`), the hook reads each keyset's configuration through the Admin API, read-only. It lists what the role needs and lacks: Presence, Message Persistence, Delete-From-History, App Context and its events, Files, Stream Controller, Access Manager and DataSync.
+After the janitor, the root hook fails fast. Its message names each missing feature. A group run checks only the roles of its group. With `PUBNUB_ADMIN_API_KEY` and the keyset ids (`DOCS_SNIPPETS_OPEN_KEYSET_ID`, `DOCS_SNIPPETS_PAM_KEYSET_ID`, `DOCS_SNIPPETS_DS_KEYSET_ID`), the hook reads each keyset's configuration through the Admin API, read-only. It lists what the role needs and lacks: Presence, Message Persistence, Delete-From-History, App Context and its events, Files, Stream Controller, Access Manager and DataSync.
 
 Live probes on the open keyset always run. They check publish (keys and network), Message Persistence, Delete-From-History, and Presence when the Admin API did not confirm it. The features each keyset needs are the ones the message names. `missingFeatures` in `support/preflight.ts` is the full list per role (open, pam, datasync).
 
 ### Provisioning (`provision/`)
 
-`provision/provision-datasync.ts` creates the DataSync classes from `provision/datasync-classes.json`. The script is idempotent. It never deletes a class, and it fails on a class whose immutable fields differ. The tier does not run it. Run it when a DataSync keyset is new or when the class file changes.
+`provision/provision-datasync.ts` creates the DataSync classes from `provision/datasync-classes.json`. The script is idempotent. It never deletes a class, and it fails on a class whose immutable fields differ. The tests never run it. Run it when a DataSync keyset is new or when the class file changes.
+
+CI runs only the read-only check (`provision:check`), as a step of each docs-tier group whose `roles` list `datasync` (`access-manager` and `datasync`; the merged groups `messaging` and `getting-started` do not list it). Those are the groups that use the DataSync classes of the docs keyset. A failed check does not skip the tests of the job. The endpoint tier uses other classes on another keyset, so its jobs do not run the check.
 
 ```bash
 npm run test:integration:live:provision:check    # dry diff, writes nothing, exit code 1 when anything differs
@@ -143,6 +181,7 @@ Without `PUBNUB_ADMIN_API_KEY`, the script only checks through the SDK that each
 | `SUBSCRIBE_KEY`, `PUBLISH_KEY`, `PAM_*`, `DS_*` | keysets, as above |
 | `PUBNUB_ADMIN_API_KEY` | optional; Admin API feature check and provisioning |
 | `DOCS_SNIPPETS_OPEN_KEYSET_ID`, `DOCS_SNIPPETS_PAM_KEYSET_ID`, `DOCS_SNIPPETS_DS_KEYSET_ID` | optional; keyset ids for the feature check (not secrets) |
+| `LIVE_GROUP` | run only one group of `groups.cjs` |
 | `LIVE_JANITOR=off` | skip the janitor before and after the run (any other value runs it) |
 | `LIVE_PREFLIGHT=off` | skip the preflight |
 | `LIVE_ENV_FILE` | another env file |
@@ -154,7 +193,7 @@ Everything the janitor, the preflight and the provisioning print goes through `r
 Three scripts need no keys and no network. They answer one question: does every snippet that the public docs embed from this repository run against the real service in a test here, or is it on a listed exception with a reason?
 
 ```bash
-npm run test:integration:live:lint                  # marker lint + manifest --check + eslint of the tier
+npm run test:integration:live:lint                  # marker lint + manifest --check + groups --check + eslint of the tier
 npm run test:integration:live:manifest              # regenerate coverage.json
 npm run test:integration:live:docs-check            # docs cross-check (needs the documentation checkout)
 ```

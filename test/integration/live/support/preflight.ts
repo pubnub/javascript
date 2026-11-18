@@ -171,12 +171,18 @@ async function probeOpenKeyset(environment: Env, presenceVouched: boolean): Prom
   return problems;
 }
 
-/** Throws one error that lists every problem. `notes` returns the roles the Admin API could not check. */
-export async function runPreflight(environment: Env = env()): Promise<{ notes: string[] }> {
+/**
+ * Throws one error that lists every problem. `notes` returns the roles the Admin API could not check. `roles` limits the Admin API
+ * check (a group run passes its group's roles); the live probes of the open keyset run whenever the open keys are set.
+ */
+export async function runPreflight(
+  environment: Env = env(),
+  roles: readonly Role[] = ROLES,
+): Promise<{ notes: string[] }> {
   const problems: string[] = [];
   const notes: string[] = [];
   let openVouched = false;
-  for (const role of ROLES) {
+  for (const role of roles) {
     if (!environment[role]) continue;
     const read = await readFeatures(environment, role).catch((error: unknown) => ({
       status: 'error' as const,
