@@ -173,8 +173,40 @@ const payloadOf = (obj: { payload?: unknown }): Record<string, unknown> | undefi
 /** Shape of a rejected DataSync REST call: generic message, service detail under `status`. */
 type RestRejection = {
   message: string;
-  status: { statusCode: number; category?: string; errorData?: { errors?: Array<{ errorCode?: string }> } };
+  status: {
+    statusCode: number;
+    category?: string;
+    errorData?: { message?: string; errors?: Array<{ errorCode?: string; message?: string }> };
+  };
 };
+
+/**
+ * Unexpected REST rejections keep the SDK's generic `message`. Mocha prints that and nothing else,
+ * so the status code and the service `errors[].message` never appear. Append them when a call
+ * escapes a test. `assert.rejects` catches the original error first, so expected DS-xxxx cases
+ * still see the generic message.
+ */
+function annotateRestFailure(error: unknown): void {
+  if (!(error instanceof Error) || error.message.includes('\nstatusCode:')) return;
+  const status = (error as { status?: RestRejection['status'] }).status;
+  if (!status) return;
+
+  const lines = [`statusCode: ${status.statusCode}`];
+  if (status.category) lines.push(`category: ${status.category}`);
+  if (status.errorData?.message) lines.push(status.errorData.message);
+  for (const entry of status.errorData?.errors ?? []) {
+    const text = [entry.errorCode, entry.message].filter((part) => part && part.length > 0).join(': ');
+    if (text) lines.push(text);
+  }
+  const original = error.message;
+  const annotated = `${original}\n${lines.join('\n')}`;
+  error.message = annotated;
+  // Mocha snapshots `stack` before afterEach. Keep that snapshot in sync so the reporter
+  // does not print the generic message a second time above the stack.
+  if (typeof error.stack === 'string' && error.stack.includes(original)) {
+    error.stack = error.stack.replace(original, annotated);
+  }
+}
 
 /**
  * `assert.rejects` matcher for a service error code. The SDK's `PubNubError.message` is always the
@@ -422,6 +454,11 @@ describe('DataSync projections admin vs __default__', function () {
   before(() => {
     nock.cleanAll();
     nock.enableNetConnect();
+  });
+
+  // Runs before the reporter prints the failure, and mutates the same error object Mocha stored.
+  afterEach(function () {
+    if (this.currentTest?.err) annotateRestFailure(this.currentTest.err);
   });
 
   // ======================================================
