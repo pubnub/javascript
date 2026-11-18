@@ -1,12 +1,16 @@
 name: Live integration
 
 # Live tier (test/integration/live/README.md): the public documentation's code samples run against the real PubNub service.
-# Nightly and on demand only. The live job never runs on a pull request, so fork PRs never see secrets. Pull requests get the
-# offline job only (lint, manifest freshness, types), and it is not a required check.
+# Runs on non-draft pull requests into master, and on demand. No scheduled runs. Draft pull requests run nothing. Fork pull
+# requests never get the live job (no secrets for fork code).
 
 on:
-  # Pull requests: offline job only, and only when something the tier or its mocked samples depend on changed.
+  # Pull requests into master, only when something the tier or its mocked samples depend on changed. Marking a draft as ready
+  # for review starts a run.
   pull_request:
+    branches:
+      - master
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'test/integration/live/**'
       - 'test/integration/endpoints/objects/channel.test.ts'
@@ -14,8 +18,6 @@ on:
       - 'test/integration/components/subscription_manager.test.ts'
       - 'package.json'
       - '.github/workflows/live-integration.yml'
-  schedule:
-    - cron: '43 4 * * *'
   workflow_dispatch:
     inputs:
       grep:
@@ -34,6 +36,7 @@ permissions:
 jobs:
   offline:
     name: Offline checks (lint, types)
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on:
       group: organization/Default
     timeout-minutes: 15
@@ -59,11 +62,8 @@ jobs:
   live:
     name: Live tier
     needs: [offline]
-    # TEMPORARY: also runs on pull requests from a branch of this repository, so the tier can be tested before it is merged
-    # (a workflow can only be run manually or on a schedule once its file is on the default branch). Never on a fork pull
-    # request: no secrets for fork code. Before or right after the merge, change this back to
-    # `github.event_name != 'pull_request'` so the tier runs nightly and on demand only.
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    # Pull requests: only non-draft ones from a branch of this repository (never a fork: no secrets for fork code).
+    if: ${{ github.event_name != 'pull_request' || (!github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository) }}
     runs-on:
       group: organization/Default
     timeout-minutes: 40
