@@ -45,14 +45,14 @@ export default class LegacyCryptoModule implements ICryptoModule {
    * @returns The encrypted data as a string
    * @throws {Error} When data is null/undefined or encryption fails
    */
-  encrypt(data: ArrayBuffer | string): ArrayBuffer | string {
+  async encrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | string> {
     if (data === null || data === undefined) {
       throw new Error('Encryption data cannot be null or undefined');
     }
 
     try {
       const plaintext = typeof data === 'string' ? data : Buffer.from(new Uint8Array(data)).toString('utf8');
-      const encrypted = this.legacy.encrypt(plaintext);
+      const encrypted = await this.legacy.encrypt(plaintext);
 
       if (typeof encrypted !== 'string') {
         throw new Error('Legacy encryption failed: expected string result');
@@ -82,7 +82,7 @@ export default class LegacyCryptoModule implements ICryptoModule {
    * @returns The decrypted payload, or null if decryption fails
    * @throws {Error} When data is null/undefined/empty or decryption fails
    */
-  decrypt(data: ArrayBuffer | string): ArrayBuffer | Payload | null {
+  async decrypt(data: ArrayBuffer | string): Promise<ArrayBuffer | Payload | null> {
     if (data === null || data === undefined) {
       throw new Error('Decryption data cannot be null or undefined');
     }
@@ -101,7 +101,7 @@ export default class LegacyCryptoModule implements ICryptoModule {
         ciphertextB64 = Buffer.from(new Uint8Array(data)).toString('base64');
       }
 
-      const decrypted = this.legacy.decrypt(ciphertextB64);
+      const decrypted = await this.legacy.decrypt(ciphertextB64);
 
       // The legacy decrypt method returns Payload | null, so no unsafe casting needed
       return decrypted;
