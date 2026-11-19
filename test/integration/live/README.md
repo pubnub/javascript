@@ -159,7 +159,7 @@ A full pass walks every listed name. In CI it takes about 4 s, plus about 3 s fo
 
 After the janitor, the root hook fails fast. Its message names each missing feature. A group run checks only the roles of its group. With `PUBNUB_ADMIN_API_KEY` and the keyset ids (`DOCS_SNIPPETS_OPEN_KEYSET_ID`, `DOCS_SNIPPETS_PAM_KEYSET_ID`, `DOCS_SNIPPETS_DS_KEYSET_ID`), the hook reads each keyset's configuration through the Admin API, read-only. It lists what the role needs and lacks: Presence, Message Persistence, Delete-From-History, App Context and its events, Files, Stream Controller, Access Manager and DataSync.
 
-Live probes on the open keyset always run. They check publish (keys and network), Message Persistence, Delete-From-History, and Presence when the Admin API did not confirm it. The features each keyset needs are the ones the message names. `missingFeatures` in `support/preflight.ts` is the full list per role (open, pam, datasync).
+Live probes on the open keyset always run. They check publish (keys and network), Message Persistence, Delete-From-History, and Presence when the Admin API did not confirm it. The full list per role is in "Keyset and API key requirements" below.
 
 ### Provisioning (`provision/`)
 
@@ -172,7 +172,7 @@ npm run test:integration:live:provision:check    # dry diff, writes nothing, exi
 npm run test:integration:live:provision          # creates missing classes, updates drifted mutable fields
 ```
 
-Without `PUBNUB_ADMIN_API_KEY`, the script only checks through the SDK that each class exists. The Admin API key needs a DataSync permission row for the DataSync keyset.
+Without `PUBNUB_ADMIN_API_KEY`, the script only checks through the SDK that each class exists. The key permissions are in "Keyset and API key requirements" below.
 
 ### Environment variables
 
@@ -187,6 +187,213 @@ Without `PUBNUB_ADMIN_API_KEY`, the script only checks through the SDK that each
 | `LIVE_ENV_FILE` | another env file |
 
 Everything the janitor, the preflight and the provisioning print goes through `redact()` (`support/env.ts`). It masks every key of the environment, the admin key, key-shaped strings and long token-like strings.
+
+## Keyset and API key requirements
+
+This section lists what you must set up on fresh PubNub keysets and on the Admin API integration key so that all 8 groups pass. Every row comes from the code, and the last column names the file. A value marked "not verified from code" is not proven by any file in this folder. Check it in the Admin Portal.
+
+Shorthand: "preflight" is `missingFeatures` and the live probes in `support/preflight.ts`. "Test" means the header comment or the assertions of the named test file. The preflight reads the Admin API only when `PUBNUB_ADMIN_API_KEY` and the keyset id of the role are set (see "Admin API integration key"). Without them, a feature below is still required, but only a failing test shows it.
+
+### Keysets and roles
+
+| Role | Env names | Docs tier (CI secrets) | Endpoint tier (CI secrets) |
+| :--- | :--- | :--- | :--- |
+| open | `SUBSCRIBE_KEY`, `PUBLISH_KEY` | `SDK_DOCS_OPEN_SUBSCRIBE_KEY`, `SDK_DOCS_OPEN_PUBLISH_KEY` | `SDK_SUB_KEY`, `SDK_PUB_KEY` (the SDK open keyset) |
+| pam | `PAM_SUBSCRIBE_KEY`, `PAM_PUBLISH_KEY`, `PAM_SECRET_KEY` | `SDK_DOCS_PAM_SUBSCRIBE_KEY`, `SDK_DOCS_PAM_PUBLISH_KEY`, `SDK_DOCS_PAM_SECRET_KEY` | not used |
+| datasync | `DS_SUBSCRIBE_KEY`, `DS_PUBLISH_KEY`, `DS_SECRET_KEY` | `SDK_DOCS_DS_SUBSCRIBE_KEY`, `SDK_DOCS_DS_PUBLISH_KEY`, `SDK_DOCS_DS_SECRET_KEY` | `SDK_DS_SUB_KEY`, `SDK_DS_PUB_KEY`, `SDK_DS_SEC_KEY` (the SDK DataSync keyset) |
+
+Sources: `support/env.ts`, `.github/workflows/live-integration.yml`.
+
+- The docs tier needs the open role in every run, even for a group that lists no other role (`support/hooks.ts`, the check before the janitor).
+- The docs tier has three role slots but may use two keysets. `pam` and `datasync` may be one keyset (`sharedSecured` in `support/env.ts`, `.env.example`). Then that one keyset needs every `pam` and every `datasync` feature below, and the janitor revokes the application-level grant once (`support/janitor.ts`).
+- The open keyset must differ from the secured keyset: Access Manager is off on open and on for pam (preflight).
+- The endpoint tier never uses the docs keysets and has no pam role (`.github/workflows/live-integration.yml`, step "Endpoint tests (SDK keysets)").
+- Run one live run per keyset at a time. The tests use fixed names (`support/resources.ts`, workflow `concurrency`).
+
+### Open keyset (docs tier)
+
+| Feature or setting | Required value | Groups | Proof |
+| :--- | :--- | :--- | :--- |
+| Access Manager | off | all docs groups | preflight (`missingFeatures`); the clients of `shopper()`, `friend()` and `observer()` never carry a token (`support/clients.ts`) |
+| Presence | on | `messaging`, `getting-started`, `use-cases` | preflight; `api-reference/presence.test.ts`, `api-reference/subscribe.test.ts` and `subscribe-legacy.test.ts` (headers), `migration-guides/v11.test.ts` (header), `use-cases/real-time-chat.test.ts`, `fan-re-engagement.test.ts`, `live-event-rate-limiting.test.ts` (headers) |
+| Presence tracking rule | a rule with pattern `*` and tracking on | same | preflight |
+| Presence events to listeners | join events reach a subscriber; leave or timeout events too | `messaging`, `use-cases` | `subscribe.test.ts` (`eventListenerBasicUsage` reads the join event), `use-cases/fan-re-engagement.test.ts` (leave or timeout) |
+| Message Persistence | on | `messaging`, `getting-started`, `use-cases`, `endpoints-history` | preflight (config and `fetchMessages` probe); `publish.test.ts`, `message-persistence*.test.ts`, `message-actions.test.ts`, `file-sharing.test.ts`, `configuration-legacy.test.ts`, `use-cases/live-commentary.test.ts`, `live-polls.test.ts`, `match-stats.test.ts`, `real-time-chat.test.ts`, `automated-polling.test.ts`, `endpoints/history.test.ts` (headers) |
+| Delete-From-History | on | `messaging`, `use-cases` | preflight (config and an empty-range `deleteMessages` probe); `message-persistence.test.ts` and `message-persistence-legacy.test.ts` (headers); the janitor skips history cleanup with a note when it is off (`support/janitor.ts`, `cleanHistory`) |
+| Message actions (add, remove, fetch, and the events they raise) | on | `messaging`, `endpoints-history` | `api-reference/message-actions.test.ts`, `endpoints/message_actions.test.ts`; no config field is read, so the preflight does not check it |
+| Stream Controller | on, with wildcard subscribe | `messaging`, `use-cases` | preflight; `channel-groups.test.ts`, `presence.test.ts` (channel group `cg1`), `subscribe-legacy.test.ts` (`OLDsubscribeWithWildCardChannels`), `use-cases/match-stats.test.ts` (header) |
+| App Context | on | `app-context`, `use-cases` | preflight; `objects.test.ts` (the `before` hook fails with "does not have App Context"), `use-cases/real-time-chat.test.ts` |
+| App Context events | user metadata, channel metadata and membership events on | `app-context`, `use-cases` | preflight; `objects.test.ts` (`setChannelMetadataBasicUsage` reads the channel event). The user and membership events are proven only by the preflight |
+| App Context referential integrity | off | `app-context`, `use-cases` | preflight; `support/janitor.ts` (`cleanAppContext` removes memberships first because deleting a user or channel leaves them) |
+| App Context disallow get all (user and channel metadata) | off | `app-context` | preflight; `objects.test.ts` (`getAllUUIDMetadata`, `getAllChannelMetadata`) |
+| Files | on | `messaging` | preflight; `file-sharing.test.ts` (header) |
+| Push Notifications add-on | on. No APNs or FCM credentials: the tests only register device tokens and list them | `messaging`, `use-cases` | `api-reference/mobile-push.test.ts` (header and `PUSH_OFF`), `use-cases/fan-re-engagement.test.ts`, `use-cases/score-alerts.test.ts`. The preflight does not check it, and the janitor treats a push 400, 403 or 404 as "not applicable" |
+| Subscribe filter expressions (Stream Filtering) | usable with `setFilterExpression` and message `meta` | `getting-started` | `api-reference/configuration.test.ts` (`filterExpressionDropsMessage`). No config field is read, so the preflight does not check it |
+| Encryption | no keyset setting (client side only) | `getting-started` | `api-reference/encryption.test.ts` (header), `encryption-legacy.test.ts` |
+| Illuminate Business Rules | none. The tests publish the trigger messages themselves | `use-cases` | `use-cases/automated-polling.test.ts`, `real-time-ads.test.ts` (headers) |
+
+### Pam keyset (docs tier)
+
+| Feature or setting | Required value | Groups | Proof |
+| :--- | :--- | :--- | :--- |
+| Access Manager | on, with the secret key | `messaging`, `getting-started`, `use-cases`, `access-manager` | preflight; `publish.test.ts` (a client without a token must get 403), `getting-started/status-events.test.ts`, `troubleshooting.test.ts` (header), `use-cases/game-chat-moderation.test.ts` |
+| No application-level grant | none left over. The janitor revokes it and waits until a tokenless client is refused (3 refusals in a row, up to 120 s) | all groups that list `pam` or `datasync` | `support/janitor.ts` (`revokeApplicationGrant`, `verifyApplicationGrantClosed`), `support/hooks.ts` |
+| Access Manager token revocation | on | `access-manager`, `use-cases` | preflight (role `pam` only); `access-manager.test.ts` (`revokeTokenBasicUsage`), `use-cases/fan-behavior-management.test.ts` (`revokeToken`) |
+| Access Manager v3 tokens | `grantToken`, `parseToken`, `revokeToken`, `authorizedUserId`, patterns | `access-manager` and others | `access-manager.test.ts`, `access-manager-legacy.test.ts` (header: only `grantToken` is called) |
+| Access Manager v2 grant | the janitor calls `grant({ read: false, write: false, ttl: 1 })`. The v2 grant call must stay allowed | all groups that list `pam` or `datasync` | `support/janitor.ts`. No test calls `grant` or uses an `authKey` for a live request |
+| Message Persistence | on | `use-cases` | preflight; `use-cases/game-chat-moderation.test.ts` (header) |
+| Delete-From-History | on | `use-cases` | `use-cases/game-chat-moderation.test.ts` (header). The preflight does not check it for this role |
+| Presence | on | `getting-started`, `use-cases` | preflight only. No pam test reads presence |
+
+### Datasync keyset (docs tier)
+
+| Feature or setting | Required value | Groups | Proof |
+| :--- | :--- | :--- | :--- |
+| DataSync | on. The built-in classes `User` v1 (global), `Channel` v1 (global) and `Membership` v1 exist | `datasync`, `access-manager` | preflight; `provision/provision-datasync.ts` (`expectedBuiltIns`) |
+| Access Manager | on, with the secret key | `datasync`, `access-manager` | preflight; `access-manager.test.ts` (`grantTokenDataSyncResources`, `grantTokenWithProjection` sign on `server('datasync')`) |
+| Message Persistence | on | `datasync`, `access-manager` | preflight only |
+| Presence | on | `datasync`, `access-manager` | preflight only |
+| Classes, projections, event rules | see "DataSync classes, projections and event rules" | `datasync`, `access-manager` | `api-reference/datasync.test.ts` (header and `preconditions`) |
+
+### SDK open keyset (endpoint tier, `endpoints-history`)
+
+| Feature or setting | Required value | Proof |
+| :--- | :--- | :--- |
+| Message Persistence | on | `endpoints/history.test.ts`, `fetch_messages.test.ts`, `message_actions.test.ts` (headers) |
+| Message actions | on, including the events of add and remove | `endpoints/message_actions.test.ts` (`should trigger event`) |
+| Access Manager | off. The clients carry no token | `endpoints/*.test.ts` use `createClient('open', ...)` without a token |
+| Everything else | not needed. Presence, Files, App Context, Stream Controller, Delete-From-History and Push are not used | no test in `endpoints/` calls them |
+
+The preflight and the janitor are off in this tier (`.mocharc.endpoints.cjs`), so nothing checks the keyset up front. A missing feature shows as a failing test.
+
+### SDK datasync keyset (endpoint tier, `endpoints-datasync`)
+
+| Feature or setting | Required value | Proof |
+| :--- | :--- | :--- |
+| DataSync | on, with the classes of the endpoint tests (see below) | `support/datasync-live-helpers.ts`, `endpoints/data_sync/*.test.ts` |
+| Access Manager | on, with the secret key (the projection tests call `grantToken`) | `endpoints/data_sync/projections.test.ts` |
+| Event rules | on for every class listed below | `endpoints/data_sync/events.*.test.ts`, `projections.test.ts` |
+| Other features | none proven (Presence and Message Persistence are not used) | no test in `endpoints/data_sync/` calls them |
+
+### Groups, roles and the setting behind a failure
+
+| Group | Tier | Roles (`groups.cjs`) | Settings that make it fail when missing |
+| :--- | :--- | :--- | :--- |
+| `messaging` | docs | open, pam | open: Presence, Message Persistence, Delete-From-History, message actions, Stream Controller (channel groups), Files, Push add-on. pam: Access Manager on, no leftover grant |
+| `getting-started` | docs | open, pam | open: Presence (v11 guide), Message Persistence (legacy configuration), filter expressions. pam: Access Manager on |
+| `use-cases` | docs | open, pam | open: Presence, Message Persistence, App Context and its events, wildcard subscribe, Push add-on. pam: Access Manager with token revocation, Message Persistence, Delete-From-History |
+| `access-manager` | docs | open, pam, datasync | pam: Access Manager with token revocation. datasync: Access Manager and DataSync (token grants only, no DataSync object is created). The group runs `provision:check` first |
+| `app-context` | docs | open, pam | open: App Context, the three event switches, referential integrity off, disallow get all off. `objects.test.ts` builds no pam client, but `groups.cjs` lists the role, so the run needs the `PAM_*` keys |
+| `datasync` | docs | open, datasync | datasync: DataSync, the classes `product` and `ProductOwner`, the event rules and the `admin` projection of `product`. `datasync.test.ts` builds no open client, but the docs tier needs the open keys anyway. The group runs `provision:check` first |
+| `endpoints-datasync` | endpoints | datasync | SDK datasync keyset: classes `JSCustomer`, `JSLoanQuote`, `JSREQUESTED_BY`, event rules, `admin` projection |
+| `endpoints-history` | endpoints | open | SDK open keyset: Message Persistence, message actions |
+
+### DataSync classes, projections and event rules
+
+Provisioning creates only what `provision/datasync-classes.json` lists, on the docs datasync keyset. The Admin Portal holds the rest.
+
+| Class | Kind | Version | Fields (property, type, filtering, nullable) | Projections | Created by |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `User` | built-in entity, level `Global` | 1 | none declared by this tier | `__default__` | PubNub, when DataSync is on |
+| `Channel` | built-in entity, level `Global` | 1 | none declared by this tier | `__default__` | PubNub, when DataSync is on |
+| `Membership` | built-in relationship | 1 | none (the class cannot be extended, `datasync.test.ts`) | `__default__` | PubNub, when DataSync is on |
+| `product` | entity | 1 | `name` string full nullable; `price` number simple not nullable; `stock` number simple nullable. Class `ttlSec` 2678400 | `name` and `price`: `__default__`, `public`, `admin`; `stock`: `__default__`, `admin` | `npm run test:integration:live:provision` |
+| `ProductOwner` | relationship | 1 | many-to-many, entity B class `product`, entity A any class; `tier` string full nullable | `tier`: `__default__`, `public`, `admin` | `npm run test:integration:live:provision` |
+
+Facts for provisioning (`provision/provision-datasync.ts`):
+
+- It never deletes a class. It fails on a relationship class whose cardinality or entity sides differ, because those fields are immutable. Only a person may delete and recreate it.
+- It replaces mutable fields of a class that drifted (PUT) and creates a missing class (POST). `--check` writes nothing and exits with 1 on any difference.
+- It reads only classes it lists. It never touches the `JS*` classes.
+- The per-class event switch ("Select entities to sync") has no Admin API endpoint. You set it by hand in the Admin Portal, DataSync tab.
+
+Event rules to switch on by hand in the Admin Portal:
+
+| Keyset | Event rule (class and version) | Needed by |
+| :--- | :--- | :--- |
+| docs datasync | `User` v1, `Channel` v1, `product` v1 | `api-reference/datasync.test.ts` (header and the `events and subscriptions` block). A kind without a rule fails the test that waits for its event |
+| docs datasync | `ProductOwner` v1, `Membership` v1 | the comment in `provision/datasync-classes.json` lists them. No test in `datasync.test.ts` waits for their events |
+| SDK datasync | `User` v1, `Channel` v1, `Membership` v1, `JSCustomer` v1, `JSREQUESTED_BY` v1 | `events.user`, `events.channel`, `events.membership`, `events.entity`, `events.relationship` tests |
+| SDK datasync | `JSLoanQuote` v1 | `projections.test.ts`: the flag `LOAN_QUOTE_AND_RELATIONSHIP_EVENTS_ENABLED` is `true`, so the mirror channel events of `JSLoanQuote` and `JSREQUESTED_BY` are asserted |
+
+The classes of the endpoint tier are not in `datasync-classes.json`, and no script creates them. `support/datasync-live-helpers.ts` calls them "provisioned" (version 1). What the tests prove about them:
+
+| Class | Kind | Fields the tests send and read | Projections the tests rely on |
+| :--- | :--- | :--- | :--- |
+| `JSCustomer` v1 | entity | `customerId`, `firstName`, `lastName`, `email`, `creditScore`, `city` | `__default__`: all six fields. `admin`: the same without `email`, plus `private` |
+| `JSLoanQuote` v1 | entity | `quoteId`, `make`, `model`, `price` | `__default__`: all four. `admin`: `quoteId` and `private` |
+| `JSREQUESTED_BY` v1 | relationship, from `JSCustomer` (entity A) to `JSLoanQuote` (entity B) | `linkedAt` | `__default__`: `linkedAt`. `admin`: `linkedAt` and `private` |
+
+Source: `endpoints/data_sync/projections.test.ts` (header table and the field constants), `events.relationship.test.ts`, `support/datasync-live-helpers.ts`. The `private` field must exist in every class, and the `admin` projection must exist on all three. The tests assert that an unknown projection name is rejected, so `nosuchprojection` must not exist. Property types, filtering modes and cardinality of these three classes are not in the code (see "Not verified from code").
+
+Projection names used by the docs tier (`api-reference/datasync.test.ts`, `access-manager.test.ts`): `admin` (the mirror channel `__admin__<id>`, for example `__admin__product.*`) and `public` (in a token that assigns it to `product-sneaker-42` and `product-.*`). Both are declared on `product` in `datasync-classes.json`.
+
+### Admin API integration key
+
+Both Admin API calls send the raw key in the `Authorization` header (no `Bearer`) and the header `PubNub-Version: 2026-09-17`. The base is `https://admin-api.pubnub.com`.
+
+| Used by | Call | Permission it needs | Code |
+| :--- | :--- | :--- | :--- |
+| Preflight feature check (docs tier, role open, pam or datasync) | `GET /v2/keysets/{keysetId}` and `GET /v2/keysets/{keysetId}/config` | read access to the keyset configuration of each keyset you give an id for. The exact permission name is not verified from code | `support/preflight.ts` (`readFeatures`) |
+| `provision:check` and `provision`, reads | `GET /v2/datasync/subkeys/{subscribeKey}/entity-classes` and `.../relationship-classes` | a DataSync permission row, keyset level, for the docs datasync keyset (the 403 hint says "Read & write") | `provision/provision-datasync.ts` |
+| `provision` only, creates | `POST /v2/datasync/subkeys/{subscribeKey}/{entity-classes or relationship-classes}/{name}/versions/{version}` | DataSync, keyset level, write | same |
+| `provision` only, updates | `PUT` on the same URL | DataSync, keyset level, write | same |
+
+What the key does in CI:
+
+- The step "Check the DataSync classes (read only)" and the step "Docs samples" get `PUBNUB_ADMIN_API_KEY` from the secret `SDK_DOCS_ADMIN_API_KEY`. The endpoint step and the cleanup step do not get it.
+- `provision:check` runs only for groups with `provision: true`, which are the docs groups that list `datasync`: `access-manager` and `datasync`. It never writes. The CI key therefore needs only read access to DataSync. `provision` (writes) is a manual step and needs write access.
+- The feature check needs a keyset id per role. The workflow sets only `DOCS_SNIPPETS_DS_KEYSET_ID`, from the repository variable `vars.SDK_DOCS_DS_KEYSET_ID`, on the job. `DOCS_SNIPPETS_OPEN_KEYSET_ID` and `DOCS_SNIPPETS_PAM_KEYSET_ID` are not wired in CI. So in CI the Admin API checks only the `datasync` role. The open and pam roles get no config check, and the open keyset gets only the live probes.
+- The `datasync` role feature check also confirms that the keyset of that id holds the `DS_SUBSCRIBE_KEY` (`mismatch` otherwise).
+
+Without the key or without an id:
+
+- Preflight: the role is skipped with the note "Admin API feature check skipped". For the open role, the live probes still check publish, Message Persistence, Delete-From-History and Presence (`hereNow` must list a subscribed client). Nothing else is checked, so the run can fail later in a test.
+- `provision:check` and `provision`: the script checks through the SDK, with the datasync keys, that `product` v1 and `ProductOwner` v1 exist, and it writes nothing. It does not diff fields and does not check the built-in classes. `provision` cannot create classes without the key.
+- The tests themselves never use the Admin API key. The endpoint tier never uses it.
+
+CI secrets and variables that feed the tier (`.github/workflows/live-integration.yml`):
+
+| Where | Name | Becomes |
+| :--- | :--- | :--- |
+| secret | `SDK_DOCS_OPEN_SUBSCRIBE_KEY`, `SDK_DOCS_OPEN_PUBLISH_KEY` | `SUBSCRIBE_KEY`, `PUBLISH_KEY` |
+| secret | `SDK_DOCS_PAM_SUBSCRIBE_KEY`, `SDK_DOCS_PAM_PUBLISH_KEY`, `SDK_DOCS_PAM_SECRET_KEY` | `PAM_SUBSCRIBE_KEY`, `PAM_PUBLISH_KEY`, `PAM_SECRET_KEY` |
+| secret | `SDK_DOCS_DS_SUBSCRIBE_KEY`, `SDK_DOCS_DS_PUBLISH_KEY`, `SDK_DOCS_DS_SECRET_KEY` | `DS_SUBSCRIBE_KEY`, `DS_PUBLISH_KEY`, `DS_SECRET_KEY` (docs tier, janitor, `provision:check`) |
+| secret | `SDK_DOCS_ADMIN_API_KEY` | `PUBNUB_ADMIN_API_KEY` (docs tier and `provision:check`) |
+| variable | `SDK_DOCS_DS_KEYSET_ID` | `DOCS_SNIPPETS_DS_KEYSET_ID` (job level) |
+| secret | `SDK_SUB_KEY`, `SDK_PUB_KEY` | `SUBSCRIBE_KEY`, `PUBLISH_KEY` (endpoint tier) |
+| secret | `SDK_DS_SUB_KEY`, `SDK_DS_PUB_KEY`, `SDK_DS_SEC_KEY` | `DS_SUBSCRIBE_KEY`, `DS_PUBLISH_KEY`, `DS_SECRET_KEY` (endpoint tier) |
+
+### Setup checklist
+
+1. Create the keysets: one open keyset and one or two secured keysets for pam and datasync, plus the two SDK keysets (open and datasync) for the endpoint tier. Keep the open keysets free of Access Manager.
+2. Open keysets: turn on Message Persistence and message actions on both (the SDK open keyset needs nothing else). For the docs open keyset, also turn on Delete-From-History, Presence with a tracking rule for `*`, Stream Controller with wildcard subscribe, App Context with the user, channel and membership events (referential integrity and "disallow get all" off), Files and the Push Notifications add-on.
+3. Secured keysets: turn on Access Manager (with token revocation), Message Persistence, Delete-From-History (the pam role) and Presence. On the datasync keyset, turn on DataSync.
+4. Create the Admin API integration key with the permissions in "Admin API integration key". Note the keyset id of the docs datasync keyset.
+5. Copy `.env.example` to `.env.local` and fill the keys, `PUBNUB_ADMIN_API_KEY` and the `DOCS_SNIPPETS_*_KEYSET_ID` values (the file is read in memory and git ignores it). Add the CI secrets and the variable `SDK_DOCS_DS_KEYSET_ID`.
+6. Run `npm run test:integration:live:provision` once on the docs datasync keyset to create `product` v1 and `ProductOwner` v1.
+7. In the Admin Portal, DataSync tab, switch on the event rules in the table above. The three `JS*` classes must exist on the SDK datasync keyset with the `admin` projection and the `private` field. No script in this folder creates them.
+8. Confirm the setup without changing state:
+   - `npm run test:integration:live -- --dry-run` and `npm run test:integration:live:endpoints -- --dry-run` list the tests and need no keys.
+   - `npm run test:integration:live:provision:check` diffs the classes and writes nothing.
+   - The preflight has no command of its own. It runs in the `before all` hook of every docs-tier run, after the janitor. It reads the Admin API (read only) and sends a few probe requests to the open keyset (a publish, a history read, an empty-range delete and a presence subscribe). Those requests are the only traffic it adds. The janitor sends requests too (it deletes the listed resources), so start a real run only against keysets meant for the tier.
+
+### Not verified from code
+
+- The exact Admin API permission name and level for `GET /v2/keysets/{id}` and `/config`.
+- Whether the CI key needs write access for `provision:check` (the code only reads), and whether a Read permission row is enough. The 403 hint names "Read & write".
+- Message Persistence retention: the tests need messages to stay only for the length of a run, and the channel `history_documented_behavior` is refilled when it holds fewer than 100 messages. No minimum retention is in the code.
+- Message actions: no config field is read, so the name of the portal switch is not known.
+- Stream Filtering: whether it needs its own portal switch.
+- Presence: announce max, interval mode, and any minimum or maximum for `presenceTimeout` and `heartbeatInterval` on the server. The client uses `presenceTimeout: 20` and `heartbeatInterval: 8`. The Presence rule pattern is the only server setting the code reads.
+- File retention, Files region, App Context region, data region of any keyset, and the plan tier or rate limits. No code reads them.
+- Push Notifications as a keyset setting: the code proves only the add-on is needed and not APNs or FCM credentials.
+- Whether the pam and datasync keysets are one keyset in the CI secrets. The code supports both.
+- Whether Message Persistence, Presence or Delete-From-History is needed on the secured keysets beyond the preflight list and the `game-chat-moderation` header.
+- Whether the Membership and `ProductOwner` event rules are needed in the docs tier, and whether `User` and `Channel` need a named projection other than `__default__`.
+- The schema of `JSCustomer`, `JSLoanQuote` and `JSREQUESTED_BY` beyond the field lists above (types, filtering modes, cardinality, class `ttlSec`), and who creates them.
+- Whether `grantToken` with `dataSyncProjections` is validated against the class at grant time (the `public` projection comment says the class must declare it).
+- Whether the application-level v2 grant call (used only by the janitor) can be disabled on a keyset.
 
 ## Offline checks: marker lint, coverage manifest, docs cross-check
 

@@ -31,7 +31,6 @@ describe('api-reference/subscribe', () => {
   it('createChannelGroupBasicUsage: the channel group entity carries the group name', () => {
     const pubnub = shopper();
     // snippet.createChannelGroupBasicUsage
-    // Initialize PubNub with demo keys
     const channelGroup = pubnub.channelGroup('channelGroup_1');
     // snippet.end
     assert.equal(channelGroup.name, 'channelGroup_1');
@@ -40,8 +39,6 @@ describe('api-reference/subscribe', () => {
   it('createChannelMetadataBasicUsage: the channel metadata entity carries the id and makes no network call', () => {
     const pubnub = shopper();
     // snippet.createChannelMetadataBasicUsage
-    // Initialize PubNub with demo keys
-
     const channelMetadata = pubnub.channelMetadata('channel_1');
     // snippet.end
     assert.equal(channelMetadata.id, 'channel_1');
@@ -50,8 +47,6 @@ describe('api-reference/subscribe', () => {
   it('createUserMetadataBasicUsage: the user metadata entity carries the id and makes no network call', () => {
     const pubnub = shopper();
     // snippet.createUserMetadataBasicUsage
-    // Initialize PubNub with demo keys
-
     const userMetadata = pubnub.userMetadata('user_meta1');
     // snippet.end
     assert.equal(userMetadata.id, 'user_meta1');

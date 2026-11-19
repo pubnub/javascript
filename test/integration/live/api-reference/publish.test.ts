@@ -144,7 +144,6 @@ describe('api-reference/publish', () => {
     const { timetoken: before } = await observer().time();
 
     // snippet.fireBasicUsage
-    // Initialize PubNub with your keys
     await pubnub.fire({
       message: {
         such: 'object',
