@@ -27,7 +27,7 @@ export interface LiveGroup {
 export const LIVE_DIR = path.resolve(__dirname, '..');
 const WORKFLOW = path.resolve(LIVE_DIR, '../../../.github/workflows/live-integration.yml');
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 export const GROUPS = require('../groups.cjs') as readonly LiveGroup[];
 
 /** The group LIVE_GROUP names, or undefined when it is not set. The Mocha configs already reject an unknown name. */
@@ -57,7 +57,7 @@ const ROLE_USE: Record<Exclude<Role, 'open'>, RegExp> = {
 
 /** The `group` options of the workflow's workflow_dispatch input, or undefined when the workflow has none. */
 function workflowGroupOptions(): string[] | undefined {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
   const yaml = require('js-yaml') as { safeLoad(text: string): unknown };
   const doc = yaml.safeLoad(fs.readFileSync(WORKFLOW, 'utf8')) as {
     on?: { workflow_dispatch?: { inputs?: { group?: { options?: string[] } } } };

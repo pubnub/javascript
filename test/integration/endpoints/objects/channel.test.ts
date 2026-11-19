@@ -814,7 +814,7 @@ describe('objects channel', () => {
       // Retry delays are at least 2 seconds (policy validation), so record them and run the retries without waiting.
       const retryDelays: number[] = [];
       const originalSetTimeout = global.setTimeout;
-      global.setTimeout = ((handler: any, timeout?: number, ...args: any[]) => {
+      global.setTimeout = ((handler: (...handlerArgs: unknown[]) => void, timeout?: number, ...args: unknown[]) => {
         if (timeout !== undefined && timeout >= 1000) {
           retryDelays.push(timeout);
           return originalSetTimeout(handler, 1, ...args);

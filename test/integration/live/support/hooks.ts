@@ -60,7 +60,7 @@ const group = selectedGroup();
  */
 function installFailureExplainer(): boolean {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const Runner = require('mocha/lib/runner') as { prototype: { fail?: (...args: unknown[]) => unknown } };
     const original = Runner.prototype.fail;
     if (typeof original !== 'function') return false;

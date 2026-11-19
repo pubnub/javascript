@@ -1,7 +1,9 @@
 // Used by .mocharc.cjs and .mocharc.endpoints.cjs (plain CommonJS: Mocha reads its config before tsx is loaded).
 // `LIVE_GROUP=<name>` selects one group of ../groups.cjs: the config's `spec` becomes that group's files. Without LIVE_GROUP the
 // config keeps its own `spec`. An unknown name, or a group of the other tier, stops the run with a message.
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const path = require('node:path');
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const groups = require('../groups.cjs');
 
 const LIVE_DIR_FROM_ROOT = 'test/integration/live';
