@@ -42,7 +42,7 @@ The janitor's resource list and the preflight's feature checks belong to the doc
 
 Mocha adds a spec file from the command line to the config's `spec`. It does not replace it. So the docs-tier config excludes `endpoints/**` with `exclude`, and a file argument for the other tier is not added to a run. Check what a script runs with `-- --dry-run`. The root `npm run test:node` lists none of this folder.
 
-The workflow (`.github/workflows/live-integration.yml`, named "Live tests") runs on non-draft pull requests into `master`, when the paths it watches change, and on demand. It has no scheduled runs. It does not alert anyone on failure yet. The GitHub run logs are the only signal.
+The workflow (`.github/workflows/live-integration.yml`, named "Live tests") runs on every non-draft pull request into `master` (whatever files it changes) and on demand. It has no scheduled runs. It does not alert anyone on failure yet. The GitHub run logs are the only signal.
 
 ## Groups and CI jobs
 
@@ -71,7 +71,7 @@ The workflow (`.github/workflows/live-integration.yml`, named "Live tests") runs
 - Start one group by hand: run the workflow with the `group` input set to its name (`all` runs every group). The `grep` input narrows the tests inside the selected groups.
 - Run one group locally: `LIVE_GROUP=<name> npm run test:integration:live` (docs tier) or `LIVE_GROUP=<name> npm run test:integration:live:endpoints`.
 
-The whole workflow has one concurrency group, `docs-snippets-live`, with `cancel-in-progress: false`. So the jobs of two runs never interleave on the keysets. A run that gets no live job (a draft or fork pull request) takes a group of its own.
+The whole workflow has one concurrency group, `docs-snippets-live`, with `cancel-in-progress: false`. So the jobs of two runs never interleave on the keysets. A run that gets no live job (a draft or fork pull request) takes one group per pull request (`github.ref`), with `cancel-in-progress` on. So it never waits for a live run, and a new push cancels the older run of the same pull request.
 
 To add a group: add it to `groups.cjs`, then add its name to the `group` input options of the workflow, in the same order. The lint fails until both match.
 
@@ -143,6 +143,8 @@ The tests use the literal names that the docs show (`'my_channel'`, `'family'`, 
 | datasync | the same revoke (once when pam and datasync are one keyset); DataSync relationships and memberships, then entities, users and channels from the list; history |
 
 The janitor runs automatically from the root hooks. It runs once before all tests of a run, so once before each group job in CI. A failure fails the run, and the output lists what could not be removed. On a secured keyset, the janitor then waits until a client without a token is refused again. That can take up to about 60 s when the previous run just changed a grant. It gives up after 120 s. This wait runs only when the run uses a secured keyset: always for a run of the whole tier, and for a group only when its `roles` list `pam` or `datasync`. It also runs once after all tests. A failure there prints a loud banner and does not fail the run. The exception is a failed grant revoke, which leaves a secured keyset open. The next run's cleanup retries before the run, and it fails if the keyset is still dirty.
+
+**Cancelling a run.** A cancelled or failed docs-tier job runs the step "Revoke grants and clean up", which calls the janitor and revokes the Access Manager grant. The cancel signal gives that step a short window to run. If it does not run (a forced cancel, or a runner that dies), the next job starts with its own janitor pass before any test. That pass removes every listed name and revokes the grant, and it is safe to repeat. So a cancelled run does not break the next run. Two things stay behind. Names with a per-run suffix, such as the channels of `unique()`, are not listed, and their messages expire with the keyset's retention. The endpoint tier has no cleanup step, so a cancelled endpoint job can leave DataSync objects with run-unique ids. They cannot collide with a later run, and no script sweeps them. A new push to a pull request cancels the older live runs of the same pull request, through `.github/workflows/cancel-superseded-live-runs.yml`. That workflow runs at once, because a run that waits for the shared concurrency group cannot run any step. It cancels only runs of the same pull request with a different head commit, never a run of another pull request. A cancelled run cleans up as described here, and the new run waits until the cancelled one has finished. GitHub keeps only one waiting run per concurrency group. So if three pull requests push while one run is in progress, the middle waiting run is replaced. Push again or use "Re-run all jobs" to get it back.
 
 ```bash
 npm run test:integration:live:janitor            # the janitor alone, all roles; exit code 1 when something could not be removed

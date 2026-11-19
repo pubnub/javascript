@@ -1,0 +1,65 @@
+name: Cancel superseded live runs
+
+# Companion of live-integration.yml. When a pull request gets a new push, this workflow cancels the older "Live tests" runs of the
+# same pull request, so a quick fix does not wait for a run that is already out of date.
+#
+# Why a separate workflow: live-integration.yml has one concurrency group for all pull requests (the jobs of two runs must never
+# interleave on the shared keysets), and it never cancels in progress, because that would also cancel the run of another pull
+# request. A run that waits for that group cannot run any step, so it cannot cancel anything itself. This workflow has no such
+# lock and runs at once.
+#
+# A cancelled live run still runs its "Revoke grants and clean up" step, and the next run starts with its own janitor pass, so
+# cancelling is safe (test/integration/live/README.md, "Cancelling a run"). Only runs of the same pull request with a different
+# head commit are cancelled. Runs of other pull requests are never touched. Pull requests from forks have no live jobs and are
+# skipped.
+
+on:
+  pull_request:
+    branches:
+      - master
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cancel:
+    name: Cancel older live runs of this pull request
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on:
+      group: organization/Default
+    timeout-minutes: 5
+    steps:
+      - name: Cancel runs for older commits
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const headSha = pr.head.sha;
+            let cancelled = 0;
+            for (const status of ['queued', 'in_progress', 'waiting', 'pending']) {
+              const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+                owner,
+                repo,
+                workflow_id: 'live-integration.yml',
+                event: 'pull_request',
+                branch: pr.head.ref,
+                status,
+                per_page: 100,
+              });
+              for (const run of runs) {
+                const samePullRequest = (run.pull_requests || []).some((item) => item.number === pr.number);
+                if (!samePullRequest || run.head_sha === headSha) continue;
+                core.info(`Cancelling run ${run.id} (${status}, commit ${run.head_sha.slice(0, 8)}) of pull request #${pr.number}`);
+                try {
+                  await github.rest.actions.cancelWorkflowRun({ owner, repo, run_id: run.id });
+                  cancelled += 1;
+                } catch (error) {
+                  // The run may have finished between the list and the cancel.
+                  core.warning(`Could not cancel run ${run.id}: ${error.message}`);
+                }
+              }
+            }
+            core.info(`Cancelled ${cancelled} older run(s).`);
