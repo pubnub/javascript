@@ -1,0 +1,226 @@
+/**
+ * DataSync real-time event tests — typed Membership.
+ *
+ * ROUTING RULE: memberships ride the wire as `type: 'membership'` and are delivered on BOTH the
+ * channel-id channel AND the user-id channel, NEVER on the membership's own id. We subscribe to
+ * `[channelId, userId]` and assert `channel ∈` that set. Wire `className: 'Membership'` /
+ * `classLevel: 'Global'`, and the event body names the endpoints semantically — `channelId` /
+ * `userId`, not the relationship's `entityAId` / `entityBId`.
+ */
+
+import assert from 'node:assert';
+
+import type PubNub from 'pubnub';
+
+import {
+  CLASS_VERSION,
+  assertEventCommon,
+  assertEventDeleteData,
+  assertEventMembershipData,
+  captureEvent,
+  channelPayload,
+  freshId,
+  freshPubNub,
+  removeAfterTest,
+  safeRemove,
+  userPayload,
+} from '../../support/datasync-live-helpers';
+import { createWithRunUniqueId } from '../../support/retry';
+
+describe('endpoints/data_sync/events.membership: DataSync events — Membership', function () {
+  this.timeout(60000);
+
+  let pubnub: ReturnType<typeof freshPubNub>;
+
+  beforeEach(() => {
+    pubnub = freshPubNub();
+  });
+
+  /** Seed the User + Channel a Membership joins. */
+  async function seedEndpoints(): Promise<{ userId: string; channelId: string }> {
+    const userId = removeAfterTest(pubnub, 'user', freshId('user'));
+    const channelId = removeAfterTest(pubnub, 'channel', freshId('channel'));
+    // Both ids come from `freshId`, unique to this run: a 409 on a retry means the first attempt was stored (see retry.ts).
+    await createWithRunUniqueId(
+      () =>
+        pubnub.dataSync.createUser({
+          id: userId,
+          data: { classVersion: CLASS_VERSION, status: 'active', payload: userPayload() },
+        }),
+      () => pubnub.dataSync.getUser({ id: userId }),
+      { label: 'createUser' },
+    );
+    await createWithRunUniqueId(
+      () =>
+        pubnub.dataSync.createChannel({
+          id: channelId,
+          data: { classVersion: CLASS_VERSION, status: 'active', payload: channelPayload() },
+        }),
+      () => pubnub.dataSync.getChannel({ id: channelId }),
+      { label: 'createChannel' },
+    );
+    return { userId, channelId };
+  }
+
+  // The id comes from `freshId` and is unique to this run, so a 409 on a retry means the first attempt was stored (see retry.ts).
+  const createMembership = (id: string, userId: string, channelId: string, role = 'member') =>
+    createWithRunUniqueId(
+      () =>
+        pubnub.dataSync.createMembership({
+          id,
+          userId,
+          channelId,
+          data: {
+            classVersion: CLASS_VERSION,
+            status: 'active',
+            payload: { role, joinedAt: '2026-07-06T10:00:00.000Z' },
+          },
+        }),
+      () => pubnub.dataSync.getMembership({ id }),
+      { label: 'createMembership' },
+    ).then(() => undefined);
+
+  it('membership create → "create" event (delivered on channel + user)', async () => {
+    const { userId, channelId } = await seedEndpoints();
+    const id = removeAfterTest(pubnub, 'membership', freshId('membership'));
+
+    const event = await captureEvent(
+      pubnub,
+      [channelId, userId],
+      (e) => e.message.event === 'create' && (e.message.data as { id?: string }).id === id,
+      () => createMembership(id, userId, channelId),
+    );
+
+    assertEventCommon(event, {
+      event: 'create',
+      type: 'membership',
+      objectType: 'membership',
+      id,
+      channelOneOf: [channelId, userId],
+      className: 'Membership',
+      classLevel: 'Global',
+    });
+    assertEventMembershipData(event.message.data as PubNub.DataSyncMembershipData, {
+      id,
+      channelId,
+      userId,
+      status: 'active',
+      payload: { role: 'member' },
+    });
+  });
+
+  it('membership update (PUT) → "update" event', async () => {
+    const { userId, channelId } = await seedEndpoints();
+    const id = removeAfterTest(pubnub, 'membership', freshId('membership'));
+    await createMembership(id, userId, channelId);
+
+    const event = await captureEvent(
+      pubnub,
+      [channelId, userId],
+      (e) => e.message.event === 'update' && (e.message.data as { id?: string }).id === id,
+      () =>
+        pubnub.dataSync
+          .setMembership({
+            id,
+            userId,
+            channelId,
+            data: {
+              classVersion: CLASS_VERSION,
+              status: 'updated',
+              payload: { role: 'moderator' },
+            },
+          })
+          .then(() => undefined),
+    );
+
+    assertEventCommon(event, {
+      event: 'update',
+      type: 'membership',
+      objectType: 'membership',
+      id,
+      channelOneOf: [channelId, userId],
+      className: 'Membership',
+      classLevel: 'Global',
+    });
+    assertEventMembershipData(event.message.data as PubNub.DataSyncMembershipData, {
+      id,
+      channelId,
+      userId,
+      payload: { role: 'moderator' },
+    });
+  });
+
+  it('membership update → "update" event', async () => {
+    const { userId, channelId } = await seedEndpoints();
+    const id = removeAfterTest(pubnub, 'membership', freshId('membership'));
+    await createMembership(id, userId, channelId);
+
+    const event = await captureEvent(
+      pubnub,
+      [channelId, userId],
+      (e) => e.message.event === 'update' && (e.message.data as { id?: string }).id === id,
+      () => pubnub.dataSync.updateMembership({ id, replace: { '/payload/role': 'admin' } }).then(() => undefined),
+    );
+
+    assertEventCommon(event, {
+      event: 'update',
+      type: 'membership',
+      objectType: 'membership',
+      id,
+      channelOneOf: [channelId, userId],
+      className: 'Membership',
+      classLevel: 'Global',
+    });
+    assertEventMembershipData(event.message.data as PubNub.DataSyncMembershipData, {
+      id,
+      channelId,
+      userId,
+      payload: { role: 'admin' },
+    });
+  });
+
+  it('membership delete → "delete" event with {id, deletedAt, channelId, userId}', async () => {
+    const { userId, channelId } = await seedEndpoints();
+    const id = removeAfterTest(pubnub, 'membership', freshId('membership'));
+    await createMembership(id, userId, channelId);
+
+    const event = await captureEvent(
+      pubnub,
+      [channelId, userId],
+      (e) => e.message.event === 'delete' && (e.message.data as { id?: string }).id === id,
+      () => pubnub.dataSync.removeMembership({ id }).then(() => undefined),
+    );
+
+    assertEventCommon(event, {
+      event: 'delete',
+      type: 'membership',
+      objectType: 'membership',
+      id,
+      channelOneOf: [channelId, userId],
+      className: 'Membership',
+      classLevel: 'Global',
+    });
+    assertEventDeleteData(event.message.data as PubNub.DataSyncDeleteData, id, { channelId, userId });
+  });
+
+  it('routing proof — a subscriber to the membership id receives nothing', async () => {
+    const { userId, channelId } = await seedEndpoints();
+    const id = removeAfterTest(pubnub, 'membership', freshId('membership'));
+    try {
+      await assert.rejects(
+        () =>
+          captureEvent(
+            pubnub,
+            [id],
+            (e) => (e.message.data as { id?: string }).id === id,
+            () => createMembership(id, userId, channelId),
+            { timeoutMs: 8000 },
+          ),
+        /Timed out/,
+        'membership event must not arrive on the membership id channel',
+      );
+    } finally {
+      await safeRemove(() => pubnub.dataSync.removeMembership({ id }));
+    }
+  });
+});

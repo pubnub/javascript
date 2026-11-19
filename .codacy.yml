@@ -1,2 +1,2 @@
 exclude_paths:
-  - "docs-snippets/**"
+  - "test/integration/live/quickstarts/**"
