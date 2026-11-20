@@ -17,3 +17,6 @@ description: Use when upgrading, adding or auditing PubNub JavaScript SDK npm de
    commits rebuilt artifacts ([sdk-release](../sdk-release/SKILL.md)).
 6. Triaging `npm outdated` or `npm audit` output is mechanical; give it to a light-model subagent. Report the
    versions changed and the risk.
+7. Dependency vulnerability scanning is done by Snyk, outside this repo; there is no in-repo audit gate.
+8. `overrides` pins `@types/eslint-scope` to its 9.x stub. webpack's 3.x typings conflict with ESLint 10's own types and
+   break `typecheck` and `build:node`. Drop the override once webpack stops depending on them.

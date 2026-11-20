@@ -14,7 +14,7 @@ npm run test:integration:live -- --dry-run           # lists the tests, no netwo
 LIVE_GROUP=publish npm run test:integration:live     # one API group of groups.cjs (see "Groups and CI jobs")
 LIVE_GROUP=endpoints-datasync npm run test:integration:live:endpoints   # one group of the endpoint tier
 npm run test:integration:live:types                  # type check (needs the build for lib/types)
-npx eslint "test/integration/live/**/*.ts" --ignore-pattern "test/integration/live/quickstarts/**"           # lint (npm run lint covers src/ only). Do not add --config: it drops the max-len override of live/.eslintrc.cjs
+npx eslint "test/integration/live/**/*.ts" --ignore-pattern "test/integration/live/quickstarts/**"           # lint (npm run lint covers src/ only; the live-tier rules are a block in eslint.config.mjs)
 ```
 
 Environment variable names: `SUBSCRIBE_KEY` and `PUBLISH_KEY` (open keyset), `PAM_SUBSCRIBE_KEY`, `PAM_PUBLISH_KEY` and `PAM_SECRET_KEY` (Access Manager, PAM), and `DS_*` (DataSync, DS). Real environment variables take precedence over the file. `LIVE_ENV_FILE=<path>` points to another file. The run stops at once if the open keyset is missing.

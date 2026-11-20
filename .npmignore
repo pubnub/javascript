@@ -9,8 +9,10 @@ coverage/
 *.iml
 .travis
 test/*
-.eslintignore
-.eslintrc.cjs
+eslint.config.mjs
+eslint-suppressions.json
+.dependency-cruiser.cjs
+knip.json
 .prettierrc
 .prettierignore
 .prettierignore

@@ -24,7 +24,10 @@ light-model subagent that returns the wrapper output verbatim.
 
 - `test/unit/event_engine*.test.ts` drive full clients over nock-mocked HTTP.
 - `npm test` includes live browser traffic; it is not an offline smoke test.
-- `ci:*` scripts clean, build, lint and test everything. Use them only for full validation, never concurrently.
+- `ci:*` scripts clean, build, lint (`lint` + `lint:arch`) and test everything. Use them only for full validation, never
+  concurrently. They delete `lib/` and `dist/`, so run `npm run pkg:check` before them, not after.
+- Static checks need no keys or network. A new lint error in code you touched is a failure;
+  don't add it to `eslint-suppressions.json`.
 - Run one suite at a time. Suites share ports, fake timers, mocks and build directories.
 
 ## Secrets
