@@ -1,0 +1,9 @@
+{
+  "//": "Read by tsx at run time (TSX_TSCONFIG_PATH). 'pubnub' resolves to the built library of this checkout. lib/node has no .d.ts, so type checking uses tsconfig.json.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "pubnub": ["lib/node/index.js"]
+    }
+  }
+}

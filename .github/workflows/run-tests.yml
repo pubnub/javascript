@@ -46,9 +46,6 @@ jobs:
         run: |
           npm install
           npm run ${{ matrix.env }}
-      - name: Test docs snippets syntax
-        if: matrix.node == '22' && matrix.env == 'ci:node'
-        run: npm run test:snippets
   all-tests:
     name: Tests
     runs-on:

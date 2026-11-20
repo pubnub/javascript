@@ -86,7 +86,7 @@ export type EntityResponseObject = DataSync.EntityObject & {
   entityClassLevel: 'Global' | 'SubKey';
 };
 
-/** The payload template `helpers.ts::customerPayload` seeds, as the service echoes it back. */
+/** The payload template `customerPayload` of the live DataSync helpers seeds, as the service echoes it back. */
 export const customerPayload = (id: string, overrides: Record<string, unknown> = {}) => ({
   customerId: id,
   firstName: 'Alice',
@@ -173,7 +173,7 @@ export type UserResponseObject = DataSync.UserObject & {
   entityClassLevel: 'Global' | 'SubKey';
 };
 
-/** The payload template `helpers.ts::userPayload` seeds, as the service echoes it back. */
+/** The payload template `userPayload` of the live DataSync helpers seeds, as the service echoes it back. */
 export const userPayload = (overrides: Record<string, unknown> = {}) => ({
   firstName: 'Alice',
   lastName: 'Verma',

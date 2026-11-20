@@ -24,10 +24,10 @@ release-artifacts-*
 
 .vscode
 
-# Live docs snippet suite (docs-snippets/README.md) #
-####################################################
-docs-snippets/.run/
-docs-snippets/report/
 .env
 .env.*
-!docs-snippets/.env.example
+
+# Live integration tier (test/integration/live/README.md) #
+###########################################################
+test/integration/live/.env.local
+!test/integration/live/.env.example
