@@ -7,14 +7,15 @@ types and realtime behavior, so small behavior changes can break them.
 - Install: `npm install`, as `run-tests.yml` does. Use Node 22 or 24, the CI matrix. Mocha fails at startup on Node 26; that's environmental, not an SDK bug.
 - Build (no keys needed): `npm run build:node` (tsc → `lib/` + aggregated `lib/types/index.d.ts`) · `npm run build:web` (rollup → `dist/web/`). Run `build:node` before the `release` or `node` suite when `src/` changed since `lib/types/index.d.ts` was built, or that file is missing.
 - Typecheck: `npm run typecheck`. It covers Node sources only; browser/worker sources are type-checked by `build:web`.
-- Lint: `npm run lint` (src/ only)
+- Lint: `npm run lint` (src/ only; type-aware ESLint, `eslint.config.mjs`). Existing violations are baselined in `eslint-suppressions.json`, so new code must pass every rule. After fixing baselined ones, run `npx eslint src --prune-suppressions`; never use `--suppress-all` to hide new violations.
+- Static analysis: `npm run lint:arch` (dependency-cruiser: shared code imports no Node built-ins or platform code; no runtime import cycles) · `npm run pkg:check` (publint + attw on the committed `lib/` and `dist/`; `ci:*` deletes them, so run it first) · `npm run api:check` (after `build:node`; fails until the rebuilt `lib/types/index.d.ts` is committed) · `npm run knip` (report-only, not in CI; `buffer` is the React Native polyfill, not unused). CodeQL runs in `.github/workflows/codeql.yml`.
 - Test, one file: `.scripts/agent-test.sh test/unit/publish/publish.test.ts [--grep '<re>']`
 - Keyless tests: `.scripts/agent-test.sh unit` runs with no env keys; nock mocks all HTTP. `integration` also passes without keys, except `test/integration/endpoints/data_sync/` (35 tests), which needs the `DS_*` keys.
 - Other suites: `release` and `node` need `build:node` when `src/` changed since `lib/types/index.d.ts` was built, or that file is missing. `node` also needs the `DS_*` keys. Browser, live-key and contract suites → sdk-test skill, ask first.
 - Wrap any noisy command: `.scripts/agent-test.sh npm run build:node` prints one line on pass and only the failures on fail.
 - Don't call mocha/karma/cucumber directly: mocha without `--no-config` silently runs the whole suite.
 - Inspect logs with `grep`/`tail`; never read a full log.
-- Each edit to `src/` runs `eslint --fix` (includes prettier) and each edit to `test/` runs prettier, via the PostToolUse hook `.agents/hooks/post-edit-format.sh`. Nothing runs the secret scan.
+- `.agents/hooks/post-edit-format.sh` runs `eslint --fix` (includes prettier) on `src/` and prettier on `test/`, but `.claude/settings.json` doesn't register it as a PostToolUse hook yet, so edits aren't auto-formatted: run `npm run lint`. The gitleaks secret scan runs in `.pre-commit-config.yaml` and, on PRs, `.github/workflows/pre-commit.yml`.
 
 ## Layout
 - `src/core/`: shared public API. `pubnub-common.ts` (PubNubCore), `endpoints/` (one `AbstractRequest` subclass per REST call), `components/`, `types/api/`
@@ -48,7 +49,7 @@ types and realtime behavior, so small behavior changes can break them.
 - **Never** (each is enforced by a hook or CI):
   - hand-edit `lib/`, `dist/`, `package-lock.json`, `CHANGELOG.md`, `.pubnub.yml`, `.env*` or key files → `.agents/hooks/protect-files.sh`
   - force-push or use `--no-verify` → `.agents/hooks/git-policy.sh`
-  - commit secrets → not enforced yet; no secret-scan hook or CI step runs (gitleaks was in the removed pre-commit config)
+  - commit secrets → gitleaks in `.pre-commit-config.yaml` and `.github/workflows/pre-commit.yml` (PRs)
   - finish with a failing typecheck → `.agents/hooks/quick-check.sh`
 
 ## More context

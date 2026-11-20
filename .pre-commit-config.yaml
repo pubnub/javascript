@@ -19,7 +19,7 @@ repos:
     hooks:
       - id: eslint
         name: eslint --fix (includes prettier) on src
-        entry: npx --no-install eslint --fix --config .eslintrc.cjs
+        entry: npx --no-install eslint --fix
         language: system
         files: ^src/.*\.ts$
       - id: prettier

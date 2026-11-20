@@ -1,0 +1,13 @@
+name: PubNub JavaScript SDK CodeQL config
+
+queries:
+  - uses: security-extended
+
+# Analyze the SDK sources only: build output is generated from src/, and tests and snippets do not ship.
+paths:
+  - src
+paths-ignore:
+  - lib
+  - dist
+  - test
+  - docs-snippets

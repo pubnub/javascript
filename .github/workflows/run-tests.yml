@@ -42,10 +42,17 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
+      - name: Install dependencies
+        run: npm install
+      # Runs on the committed lib/ and dist/ (what gets published), before ci:* cleans them.
+      - name: Package entry points and types resolution
+        if: matrix.node == '22' && matrix.env == 'ci:node'
+        run: npm run pkg:check
       - name: Build and run tests for NodeJS ${{ matrix.node }}
-        run: |
-          npm install
-          npm run ${{ matrix.env }}
+        run: npm run ${{ matrix.env }}
+      - name: Committed public API types match the build
+        if: matrix.node == '22' && matrix.env == 'ci:node'
+        run: npm run api:check
   all-tests:
     name: Tests
     runs-on:

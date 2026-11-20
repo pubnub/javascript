@@ -12,6 +12,9 @@ description: Use when finalizing a PubNub JavaScript SDK PR for merge or release
    Review the source diff first, then sanity-check `git diff --stat lib dist` for unexpected files.
 3. Run `.scripts/agent-test.sh release`. It checks that `package.json`, `getVersion()` and the README CDN links agree,
    and type-checks the aggregated declarations.
+   Then run `npm run pkg:check` (publint + attw on the packed package) and, once `lib/` is staged, `npm run api:check`
+   (CI fails when `lib/types/index.d.ts` differs from a fresh build). Any `lib/types` diff is a public API change:
+   call it out in the PR body. attw ignores only `named-exports` (an existing ESM named-import gap in the CJS build).
 4. Write the PR title and body in the format from `.github/pull_request_template.md`: `type(scope): subject`, a body,
    then a footer. The bot builds the changelog from them, so state the user-visible change precisely. Use `Closes #n`
    for issues addressed and `BREAKING CHANGES:` for any breaking change.

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "src/react_native/index.ts",
+    "src/titanium/index.ts",
+    ".scripts/*.ts",
+    "test/**/*.test.{ts,js}",
+    "test/integration/live/support/lint-selftest.ts",
+    "cucumber.js",
+    "test/contract/**/*.{ts,js}"
+  ],
+  "project": [
+    "src/**/*.{ts,js}",
+    "test/**/*.{ts,js}",
+    ".scripts/**/*.ts"
+  ],
+  "ignore": [
+    "src/nativescript/**",
+    "test/integration/live/quickstarts/**"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "karma": {
+    "config": [
+      "karma/web.config.cjs",
+      "karma/shared-worker.config.js"
+    ]
+  },
+  "ignoreDependencies": [
+    "buffer",
+    "es6-shim",
+    "ts-loader"
+  ],
+  "ignoreBinaries": [
+    "cucumber-js"
+  ]
+}
