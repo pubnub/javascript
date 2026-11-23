@@ -262,7 +262,10 @@ describe('EventEngine shared subscriptions', () => {
   });
 
   it('drops presence channels of released subscriptions when a channel is resubscribed without presence', async () => {
-    const first = pubnub.subscriptionSet({ channels: ['ch1', 'ch2'], subscriptionOptions: { receivePresenceEvents: true } });
+    const first = pubnub.subscriptionSet({
+      channels: ['ch1', 'ch2'],
+      subscriptionOptions: { receivePresenceEvents: true },
+    });
     const second = pubnub.subscriptionSet({
       channels: ['ch1', 'ch2'],
       subscriptionOptions: { receivePresenceEvents: true },
