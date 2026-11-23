@@ -161,6 +161,18 @@ class PubNub extends PubNubCore<string | ArrayBuffer | Buffer | Readable, PubNub
     this.nodeTransport.setProxy(configuration);
     this.reconnect();
   }
+
+  /**
+   * Unsubscribe from all channels and groups.
+   *
+   * Connections held by the client are released once pending requests (including the presence `leave`) complete.
+   *
+   * @param [isOffline] - Whether `offline` presence should be notified or not.
+   */
+  public destroy(isOffline: boolean = false): void {
+    super.destroy(isOffline);
+    this.nodeTransport.releaseConnections();
+  }
 }
 
 export = PubNub;
