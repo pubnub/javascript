@@ -58,31 +58,6 @@ export const encodeNames = (names: string[], defaultString?: string) => {
 };
 
 /**
- * @internal
- */
-export const removeSingleOccurrence = (source: string[], elementsToRemove: string[]) => {
-  const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
-
-  return source.filter((e) => {
-    if (elementsToRemove.includes(e) && !removed[e]) {
-      removed[e] = true;
-      return false;
-    }
-    return true;
-  });
-};
-
-/**
- * @internal
- */
-export const findUniqueCommonElements = (a: string[], b: string[]) => {
-  return [...a].filter(
-    (value) =>
-      b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value),
-  );
-};
-
-/**
  * Transform query key / value pairs to the string.
  *
  * @param query - Key / value pairs of the request query parameters.

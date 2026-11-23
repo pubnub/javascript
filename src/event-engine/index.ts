@@ -9,7 +9,6 @@ import { Dependencies, EventEngineDispatcher } from './dispatcher';
 import { subscriptionTimetokenFromReference } from '../core/utils';
 import { Dispatcher, Engine } from './core';
 import categoryConstants from '../core/constants/categories';
-import * as utils from '../core/utils';
 import * as effects from './effects';
 import * as events from './events';
 
@@ -84,8 +83,10 @@ export class EventEngine {
     const hasNewGroups = channelGroups?.some((group) => !this.groups.includes(group));
     const hasNewSubscriptions = hasNewChannels || hasNewGroups;
 
-    this.channels = [...this.channels, ...(channels ?? [])];
-    this.groups = [...this.groups, ...(channelGroups ?? [])];
+    // Channels and groups are tracked as a set. Reference counting for entities shared by several subscriptions is done
+    // by the PubNub client, which calls `unsubscribe` only when no active subscription uses them anymore.
+    this.channels = Array.from(new Set([...this.channels, ...(channels ?? [])]));
+    this.groups = Array.from(new Set([...this.groups, ...(channelGroups ?? [])]));
 
     if (withPresence) {
       this.channels.map((c) => this.channels.push(`${c}-pnpres`));
@@ -142,22 +143,14 @@ export class EventEngine {
   }
 
   unsubscribe({ channels = [], channelGroups = [] }: { channels?: string[]; channelGroups?: string[] }): void {
-    const filteredChannels = utils.removeSingleOccurrence(this.channels, [
-      ...channels,
-      ...channels.map((c) => `${c}-pnpres`),
-    ]);
+    const channelsToRemove = [...channels, ...channels.map((c) => `${c}-pnpres`)];
+    const groupsToRemove = [...channelGroups, ...channelGroups.map((g) => `${g}-pnpres`)];
+    const filteredChannels = this.channels.filter((c) => !channelsToRemove.includes(c));
+    const filteredGroups = this.groups.filter((g) => !groupsToRemove.includes(g));
 
-    const filteredGroups = utils.removeSingleOccurrence(this.groups, [
-      ...channelGroups,
-      ...channelGroups.map((c) => `${c}-pnpres`),
-    ]);
-
-    if (
-      new Set(this.channels).size !== new Set(filteredChannels).size ||
-      new Set(this.groups).size !== new Set(filteredGroups).size
-    ) {
-      const channelsToLeave = utils.findUniqueCommonElements(this.channels, channels);
-      const groupsToLeave = utils.findUniqueCommonElements(this.groups, channelGroups);
+    if (filteredChannels.length !== this.channels.length || filteredGroups.length !== this.groups.length) {
+      const channelsToLeave = Array.from(new Set(this.channels.filter((c) => channels.includes(c))));
+      const groupsToLeave = Array.from(new Set(this.groups.filter((g) => channelGroups.includes(g))));
       if (this.dependencies.presenceState) {
         channelsToLeave?.forEach((c) => delete this.dependencies.presenceState[c]);
         groupsToLeave?.forEach((g) => delete this.dependencies.presenceState[g]);
