@@ -1,6 +1,9 @@
 /* global describe, it, before, after, beforeEach, afterEach */
 
+import { EventEmitter } from 'events';
 import { expect } from 'chai';
+import { errors } from 'undici';
+import sinon from 'sinon';
 import nock from 'nock';
 
 import { NodeTransport } from '../../src/transport/node-transport';
@@ -10,12 +13,40 @@ import { LogLevel } from '../../src/core/interfaces/logger';
 import StatusCategory from '../../src/core/constants/categories';
 import { PubNubAPIError } from '../../src/errors/pubnub-api-error';
 import { PubNubFileInterface } from '../../src/core/types/file';
+import PubNub from '../../src/node/index';
 
 const ORIGIN = 'https://ps.pndsn.com';
 
 /** Build a transport with a silent logger. */
-const makeTransport = (keepAlive = false) =>
-  new NodeTransport(new LoggerManager('test', LogLevel.None, []), keepAlive);
+const makeTransport = (keepAlive = false, keepAliveSettings?: { timeout?: number }) =>
+  new NodeTransport(new LoggerManager('test', LogLevel.None, []), keepAlive, keepAliveSettings);
+
+/** Wait for pending macrotasks (the deferred dispatcher release runs on one). */
+const nextMacrotask = () => new Promise((resolve) => setTimeout(resolve, 5));
+
+/** Internals used by the connection lifecycle tests. */
+type TransportInternals = {
+  keepAliveAgent?: { close: () => Promise<void> };
+  sequentialAgent?: { close: () => Promise<void> };
+  dispatcherForTransportRequest: (method: TransportMethod) => { close: () => Promise<void> };
+  onClientConnected: (client: unknown, socket: unknown, multiplex: boolean) => void;
+  idleConnectionTimeout: () => number;
+};
+const internals = (transport: NodeTransport) => transport as unknown as TransportInternals;
+
+/** Minimal stand-in for an `undici` `Client`. */
+const makeFakeClient = (size = 0) =>
+  Object.assign(new EventEmitter(), { pipelining: 1, closed: false, destroyed: false, stats: { size } });
+
+/** Minimal stand-in for a connected TLS socket. */
+const makeFakeSocket = (alpnProtocol: string | false) => {
+  const socket = Object.assign(new EventEmitter(), { alpnProtocol, destroyed: false });
+  const destroy = sinon.spy((_error?: Error) => {
+    socket.destroyed = true;
+    socket.emit('close');
+  });
+  return Object.assign(socket, { destroy });
+};
 
 /** Build a minimal transport request. */
 const makeRequest = (overrides: Partial<TransportRequest> = {}): TransportRequest => ({
@@ -37,9 +68,7 @@ describe('NodeTransport (undici)', () => {
   afterEach(() => nock.cleanAll());
 
   it('parses a successful response, lowercasing header values and decoding the body', async () => {
-    nock(ORIGIN)
-      .get('/time/0')
-      .reply(200, '[123]', { 'Content-Type': 'TEXT/Javascript; CHARSET=UTF-8' });
+    nock(ORIGIN).get('/time/0').reply(200, '[123]', { 'Content-Type': 'TEXT/Javascript; CHARSET=UTF-8' });
 
     const [promise] = makeTransport().makeSendable(makeRequest());
     const response = await promise;
@@ -292,5 +321,180 @@ describe('NodeTransport (undici)', () => {
     } catch (error) {
       expect(error).to.be.instanceOf(PubNubAPIError);
     }
+  });
+
+  describe('connection lifecycle', () => {
+    afterEach(() => sinon.restore());
+
+    it('releases the dispatcher on the next macrotask when idle and creates a new one on demand', async () => {
+      const transport = makeTransport();
+      const agent = internals(transport).dispatcherForTransportRequest(TransportMethod.GET);
+      const close = sinon.stub(agent, 'close').resolves();
+
+      transport.releaseConnections();
+      expect(close.called).to.equal(false);
+      await nextMacrotask();
+
+      expect(close.calledOnce).to.equal(true);
+      expect(internals(transport).keepAliveAgent).to.equal(undefined);
+      expect(internals(transport).dispatcherForTransportRequest(TransportMethod.GET)).to.not.equal(agent);
+    });
+
+    it('waits for in-flight requests (e.g. the destroy leave) before releasing', async () => {
+      nock(ORIGIN).get('/time/0').delay(30).reply(200, '[1]');
+      const transport = makeTransport();
+      const agent = internals(transport).dispatcherForTransportRequest(TransportMethod.GET);
+      const close = sinon.stub(agent, 'close').resolves();
+
+      transport.releaseConnections();
+      // Started in the same macrotask as the release request, like the `leave` sent by `destroy()`.
+      const [promise] = transport.makeSendable(makeRequest());
+      await nextMacrotask();
+      expect(close.called).to.equal(false);
+
+      await promise;
+      await nextMacrotask();
+      expect(close.calledOnce).to.equal(true);
+    });
+
+    it('sends non-GET requests through a separate, non-multiplexed dispatcher and releases both', async () => {
+      const transport = makeTransport();
+      const getAgent = internals(transport).dispatcherForTransportRequest(TransportMethod.GET);
+      const postAgent = internals(transport).dispatcherForTransportRequest(TransportMethod.POST);
+      expect(postAgent).to.not.equal(getAgent);
+      expect(internals(transport).dispatcherForTransportRequest(TransportMethod.PATCH)).to.equal(postAgent);
+      expect(internals(transport).dispatcherForTransportRequest(TransportMethod.DELETE)).to.equal(postAgent);
+
+      const closeGet = sinon.stub(getAgent, 'close').resolves();
+      const closePost = sinon.stub(postAgent, 'close').resolves();
+      transport.releaseConnections();
+      await nextMacrotask();
+
+      expect(closeGet.calledOnce).to.equal(true);
+      expect(closePost.calledOnce).to.equal(true);
+      expect(internals(transport).sequentialAgent).to.equal(undefined);
+    });
+
+    it('does not release again for requests made after a completed release', async () => {
+      nock(ORIGIN).get('/time/0').reply(200, '[1]');
+      const transport = makeTransport();
+      transport.releaseConnections();
+      await nextMacrotask();
+
+      const agent = internals(transport).dispatcherForTransportRequest(TransportMethod.GET);
+      const close = sinon.stub(agent, 'close').resolves();
+      await transport.makeSendable(makeRequest())[0];
+      await nextMacrotask();
+
+      expect(close.called).to.equal(false);
+      expect(internals(transport).keepAliveAgent).to.equal(agent);
+    });
+
+    it('keeps request rejections unchanged while tracking completion', async () => {
+      nock(ORIGIN).get('/time/0').reply(403, '{"message":"Forbidden"}', { 'Content-Type': 'application/json' });
+      const transport = makeTransport();
+      transport.releaseConnections();
+
+      try {
+        await transport.makeSendable(makeRequest())[0];
+        expect.fail('expected rejection');
+      } catch (error) {
+        expect(error).to.be.instanceOf(PubNubAPIError);
+        expect((error as PubNubAPIError).category).to.equal(StatusCategory.PNAccessDeniedCategory);
+      }
+    });
+
+    it('uses the keep-alive timeout for idle connections, or undici default without keep-alive', () => {
+      expect(internals(makeTransport()).idleConnectionTimeout()).to.equal(4000);
+      expect(internals(makeTransport(true)).idleConnectionTimeout()).to.equal(30000);
+      expect(internals(makeTransport(true, { timeout: 12000 })).idleConnectionTimeout()).to.equal(12000);
+      expect(internals(makeTransport(true, {})).idleConnectionTimeout()).to.equal(4000);
+    });
+
+    describe('HTTP/2 connections', () => {
+      let clock: sinon.SinonFakeTimers;
+      beforeEach(() => (clock = sinon.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })));
+      afterEach(() => clock.restore());
+
+      it('multiplexes requests over an h2 session', () => {
+        const client = makeFakeClient();
+        internals(makeTransport()).onClientConnected(client, makeFakeSocket('h2'), true);
+
+        expect(client.pipelining).to.equal(10);
+      });
+
+      it('does not multiplex h2 sessions of the non-GET dispatcher but still closes them when idle', () => {
+        const client = makeFakeClient(0);
+        const socket = makeFakeSocket('h2');
+        internals(makeTransport()).onClientConnected(client, socket, false);
+        expect(client.pipelining).to.equal(1);
+
+        clock.tick(5000);
+        expect(socket.destroy.calledOnce).to.equal(true);
+      });
+
+      it('leaves HTTP/1.1 connections untouched', () => {
+        const client = makeFakeClient();
+        const socket = makeFakeSocket('http/1.1');
+        internals(makeTransport()).onClientConnected(client, socket, true);
+        clock.tick(60000);
+
+        expect(client.pipelining).to.equal(1);
+        expect(socket.destroy.called).to.equal(false);
+      });
+
+      it('closes an idle h2 session after the idle timeout with a non-fatal undici error', () => {
+        const client = makeFakeClient(0);
+        const socket = makeFakeSocket('h2');
+        internals(makeTransport()).onClientConnected(client, socket, true);
+
+        clock.tick(3000);
+        expect(socket.destroy.called).to.equal(false);
+        clock.tick(2000);
+
+        expect(socket.destroy.calledOnce).to.equal(true);
+        expect(socket.destroy.firstCall.args[0]).to.be.instanceOf(errors.InformationalError);
+      });
+
+      it('keeps an h2 session open while requests (e.g. a long-poll) are running', () => {
+        const client = makeFakeClient(1);
+        const socket = makeFakeSocket('h2');
+        internals(makeTransport()).onClientConnected(client, socket, true);
+        clock.tick(60000);
+        expect(socket.destroy.called).to.equal(false);
+
+        // Idle time is counted from the moment the session became idle.
+        client.stats.size = 0;
+        clock.tick(3000);
+        expect(socket.destroy.called).to.equal(false);
+        clock.tick(2000);
+        expect(socket.destroy.calledOnce).to.equal(true);
+      });
+
+      it('restores HTTP/1.1 pipelining when the h2 connection closes', () => {
+        const client = makeFakeClient();
+        const keepAliveClient = makeFakeClient();
+        internals(makeTransport()).onClientConnected(client, makeFakeSocket('h2'), true);
+        internals(makeTransport(true)).onClientConnected(keepAliveClient, makeFakeSocket('h2'), true);
+
+        client.emit('disconnect');
+        keepAliveClient.emit('disconnect');
+
+        expect(client.pipelining).to.equal(0);
+        expect(keepAliveClient.pipelining).to.equal(1);
+      });
+    });
+
+    it('releases transport connections when the Node client is destroyed', () => {
+      const pubnub = new PubNub({ subscribeKey: 'demo', publishKey: 'demo', userId: 'transport-test' });
+      const release = sinon.stub(
+        (pubnub as unknown as { nodeTransport: NodeTransport }).nodeTransport,
+        'releaseConnections',
+      );
+
+      pubnub.destroy();
+
+      expect(release.calledOnce).to.equal(true);
+    });
   });
 });
