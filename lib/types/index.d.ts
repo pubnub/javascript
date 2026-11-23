@@ -34,6 +34,14 @@ declare class PubNub extends PubNubCore<
    * `keepAlive` and `proxy` can't be used simultaneously.
    */
   setProxy(configuration?: PubNub.NodeTransportProxyConfiguration): void;
+  /**
+   * Unsubscribe from all channels and groups.
+   *
+   * Connections held by the client are released once pending requests (including the presence `leave`) complete.
+   *
+   * @param [isOffline] - Whether `offline` presence should be notified or not.
+   */
+  destroy(isOffline?: boolean): void;
 }
 
 /**
