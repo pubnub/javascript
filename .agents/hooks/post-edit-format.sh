@@ -8,7 +8,7 @@ cd "$root" || exit 0
 case "$rel" in
   src/*.ts|src/*.js)
     # eslint-plugin-prettier applies prettier as part of --fix.
-    npx --no-install eslint --fix --config .eslintrc.cjs "$rel" >&2 || exit 2 ;;
+    npx --no-install eslint --fix "$rel" >&2 || exit 2 ;;
   test/*.ts|test/*.js)
     npx --no-install prettier --write "$rel" >/dev/null ;;
 esac

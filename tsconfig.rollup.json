@@ -6,6 +6,7 @@
     "allowJs": true,
     "noEmitOnError": true,
     "strict": true,
+    "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "outDir": "./lib",
     "lib": [
