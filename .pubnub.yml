@@ -1,5 +1,12 @@
 ---
 changelog:
+  - date: 2026-11-24
+    version: v14.0.1
+    changes:
+      - type: bug
+        text: "NodeTransport now closes an h2 session once it has had no queued or running requests for idle time, or for keepAliveSettings.timeout duration when keepAlive is on."
+      - type: bug
+        text: "Fix issue with unsubscribe method not releasing channel in case of zero active subscription reference."
   - date: 2026-11-17
     version: v14.0.0
     changes:
@@ -1540,7 +1547,7 @@ supported-platforms:
       - 'Ubuntu 14.04 and up'
       - 'Windows 7 and up'
     version: 'Pubnub Javascript for Node'
-version: '14.0.0'
+version: '14.0.1'
 sdks:
   - full-name: PubNub Javascript SDK
     short-name: Javascript
@@ -1556,7 +1563,7 @@ sdks:
           - distribution-type: source
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/archive/refs/tags/v14.0.0.zip
+            location: https://github.com/pubnub/javascript/archive/refs/tags/v14.0.1.zip
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
@@ -2227,7 +2234,7 @@ sdks:
           - distribution-type: library
             distribution-repository: GitHub release
             package-name: pubnub.js
-            location: https://github.com/pubnub/javascript/releases/download/v14.0.0/pubnub.14.0.0.js
+            location: https://github.com/pubnub/javascript/releases/download/v14.0.1/pubnub.14.0.1.js
             requires:
               - name: 'agentkeepalive'
                 min-version: '3.5.2'
