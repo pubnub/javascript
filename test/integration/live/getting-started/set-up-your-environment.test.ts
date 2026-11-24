@@ -166,9 +166,18 @@ module.exports = {
   it('setUpCdnUrls: the pinned CDN URLs for the linked SDK version exist', async function () {
     this.timeout(30_000);
     const version = JSON.parse(fs.readFileSync(path.join(SDK_ROOT, 'package.json'), 'utf8')).version as string;
+    // The release bot writes the next version into the PR. S3 upload runs only after merge, and a missing object is 403.
+    const published = (await fetch(`https://registry.npmjs.org/pubnub/${version}`)).status === 200;
     for (const file of [`pubnub.${version}.js`, `pubnub.worker.${version}.js`]) {
       const response = await fetch(`https://cdn.pubnub.com/sdk/javascript/${file}`, { method: 'HEAD' });
-      assert.equal(response.status, 200, `${file} exists on the CDN`);
+      if (published) {
+        assert.equal(response.status, 200, `${file} exists on the CDN`);
+      } else {
+        assert.ok(
+          response.status === 200 || response.status === 403,
+          `${file} is not on npm yet; CDN returned ${response.status}`,
+        );
+      }
     }
   });
 });
