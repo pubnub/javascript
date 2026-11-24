@@ -1,3 +1,10 @@
+## v14.0.1
+November 24 2026
+
+#### Fixed
+- NodeTransport now closes an h2 session once it has had no queued or running requests for idle time, or for keepAliveSettings.timeout duration when keepAlive is on.
+- Fix issue with unsubscribe method not releasing channel in case of zero active subscription reference.
+
 ## v14.0.0
 November 17 2026
 

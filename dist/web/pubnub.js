@@ -1509,25 +1509,6 @@
 	    return encodedNames.length ? encodedNames.join(',') : (defaultString !== null && defaultString !== void 0 ? defaultString : '');
 	};
 	/**
-	 * @internal
-	 */
-	const removeSingleOccurrence = (source, elementsToRemove) => {
-	    const removed = Object.fromEntries(elementsToRemove.map((prop) => [prop, false]));
-	    return source.filter((e) => {
-	        if (elementsToRemove.includes(e) && !removed[e]) {
-	            removed[e] = true;
-	            return false;
-	        }
-	        return true;
-	    });
-	};
-	/**
-	 * @internal
-	 */
-	const findUniqueCommonElements = (a, b) => {
-	    return [...a].filter((value) => b.includes(value) && a.indexOf(value) === a.lastIndexOf(value) && b.indexOf(value) === b.lastIndexOf(value));
-	};
-	/**
 	 * Transform query key / value pairs to the string.
 	 *
 	 * @param query - Key / value pairs of the request query parameters.
@@ -4950,7 +4931,7 @@
 	            return base.PubNubFile;
 	        },
 	        get version() {
-	            return '14.0.0';
+	            return '14.0.1';
 	        },
 	        getVersion() {
 	            return this.version;
@@ -9484,8 +9465,10 @@
 	        const hasNewChannels = channels === null || channels === void 0 ? void 0 : channels.some((channel) => !this.channels.includes(channel));
 	        const hasNewGroups = channelGroups === null || channelGroups === void 0 ? void 0 : channelGroups.some((group) => !this.groups.includes(group));
 	        const hasNewSubscriptions = hasNewChannels || hasNewGroups;
-	        this.channels = [...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])];
-	        this.groups = [...this.groups, ...(channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])];
+	        // Channels and groups are tracked as a set. Reference counting for entities shared by several subscriptions is done
+	        // by the PubNub client, which calls `unsubscribe` only when no active subscription uses them anymore.
+	        this.channels = Array.from(new Set([...this.channels, ...(channels !== null && channels !== void 0 ? channels : [])]));
+	        this.groups = Array.from(new Set([...this.groups, ...(channelGroups !== null && channelGroups !== void 0 ? channelGroups : [])]));
 	        if (withPresence) {
 	            this.channels.map((c) => this.channels.push(`${c}-pnpres`));
 	            this.groups.map((g) => this.groups.push(`${g}-pnpres`));
@@ -9526,18 +9509,18 @@
 	        }
 	    }
 	    unsubscribe({ channels = [], channelGroups = [] }) {
-	        const filteredChannels = removeSingleOccurrence(this.channels, [
-	            ...channels,
-	            ...channels.map((c) => `${c}-pnpres`),
-	        ]);
-	        const filteredGroups = removeSingleOccurrence(this.groups, [
-	            ...channelGroups,
-	            ...channelGroups.map((c) => `${c}-pnpres`),
-	        ]);
-	        if (new Set(this.channels).size !== new Set(filteredChannels).size ||
-	            new Set(this.groups).size !== new Set(filteredGroups).size) {
-	            const channelsToLeave = findUniqueCommonElements(this.channels, channels);
-	            const groupsToLeave = findUniqueCommonElements(this.groups, channelGroups);
+	        // A name which already is a presence channel or group (`<name>-pnpres`) doesn't get the suffix a second time.
+	        const withPresenceNames = (names) => [
+	            ...names,
+	            ...names.filter((name) => !name.endsWith('-pnpres')).map((name) => `${name}-pnpres`),
+	        ];
+	        const channelsToRemove = withPresenceNames(channels);
+	        const groupsToRemove = withPresenceNames(channelGroups);
+	        const filteredChannels = this.channels.filter((c) => !channelsToRemove.includes(c));
+	        const filteredGroups = this.groups.filter((g) => !groupsToRemove.includes(g));
+	        if (filteredChannels.length !== this.channels.length || filteredGroups.length !== this.groups.length) {
+	            const channelsToLeave = Array.from(new Set(this.channels.filter((c) => channels.includes(c))));
+	            const groupsToLeave = Array.from(new Set(this.groups.filter((g) => channelGroups.includes(g))));
 	            if (this.dependencies.presenceState) {
 	                channelsToLeave === null || channelsToLeave === void 0 ? void 0 : channelsToLeave.forEach((c) => delete this.dependencies.presenceState[c]);
 	                groupsToLeave === null || groupsToLeave === void 0 ? void 0 : groupsToLeave.forEach((g) => delete this.dependencies.presenceState[g]);

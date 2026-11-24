@@ -26,7 +26,9 @@ const usesDefaultConnection = (extra: Partial<PubNub.PubNubConfiguration>): bool
   !extra.keepAliveSettings &&
   extra.ssl !== false;
 
-type Pooled = { nodeTransport?: { keepAliveAgent?: unknown; makeKeepAliveAgent?: () => unknown } };
+type Pooled = {
+  nodeTransport?: { keepAliveAgent?: unknown; makeKeepAliveAgent?: () => unknown; releaseConnections?: () => void };
+};
 
 function shareConnectionPool(client: PubNub): void {
   // The transport and its pool are SDK internals (no public option takes a pool), so this stays defensive: when the shape
@@ -41,7 +43,17 @@ function shareConnectionPool(client: PubNub): void {
     sharedPool = (donor as unknown as Pooled).nodeTransport?.makeKeepAliveAgent?.();
     donor.destroy();
   }
-  if (sharedPool) transport.keepAliveAgent = sharedPool;
+  if (!sharedPool) return;
+  transport.keepAliveAgent = sharedPool;
+
+  // `destroy()` releases the transport's dispatchers, which would close the shared pool for every later client. Detach it
+  // first, so a destroyed client (by the root hook or by its test) closes only the dispatchers it created itself.
+  const release = transport.releaseConnections?.bind(transport);
+  if (release)
+    transport.releaseConnections = () => {
+      if (transport.keepAliveAgent === sharedPool) transport.keepAliveAgent = undefined;
+      release();
+    };
 }
 
 /**

@@ -4,12 +4,14 @@
  * @internal
  */
 
-import { Agent, ProxyAgent, Dispatcher, buildConnector } from 'undici';
+import { Agent, Client, Pool, ProxyAgent, Dispatcher, buildConnector, errors } from 'undici';
 import { Buffer } from 'buffer';
 import * as zlib from 'zlib';
+import type { Socket } from 'net';
+import type { TLSSocket } from 'tls';
 
 import type { NodeTransportProxyConfiguration } from '../node/types/proxy';
-import { CancellationController, TransportRequest } from '../core/types/transport-request';
+import { CancellationController, TransportMethod, TransportRequest } from '../core/types/transport-request';
 import { Transport, TransportKeepAlive } from '../core/interfaces/transport';
 import { TransportResponse } from '../core/types/transport-response';
 import { AbortError } from '../core/components/abort_signal';
@@ -18,6 +20,38 @@ import StatusCategory from '../core/constants/categories';
 import { PubNubAPIError } from '../errors/pubnub-api-error';
 import { PubNubFileInterface } from '../core/types/file';
 import { queryStringFromObject } from '../core/utils';
+
+/**
+ * Maximum number of concurrent requests (streams) a single HTTP/2 session may carry.
+ *
+ * `undici`'s `Client` defaults `pipelining` to `1`, which also caps HTTP/2 to one stream per session, so every
+ * concurrent request (subscribe long-poll, heartbeat, publish, leave) would otherwise open its own TCP + TLS + h2
+ * session. `undici` does not compare this value with the server's `SETTINGS_MAX_CONCURRENT_STREAMS`, so it is kept
+ * well below common server limits (100 - 128) while still above the SDK's usual concurrency. A burst larger than
+ * this spills into an additional session, which the idle-session timeout then closes.
+ *
+ * Applied only to connections whose TLS ALPN negotiated `h2`, and only for the GET dispatcher (see
+ * {@link NodeTransport#sequentialAgent}); HTTP/1.1 connections keep their pipelining value.
+ *
+ * @internal
+ */
+const H2_MAX_CONCURRENT_STREAMS = 10;
+
+/**
+ * Idle time (ms) after which a connection is closed when no explicit keep-alive `timeout` is configured.
+ *
+ * Matches `undici`'s default `keepAliveTimeout`, which is what HTTP/1.1 sockets already get.
+ *
+ * @internal
+ */
+const DEFAULT_IDLE_CONNECTION_TIMEOUT = 4000;
+
+/**
+ * Upper bound (ms) for the interval at which an HTTP/2 session is checked for idleness.
+ *
+ * @internal
+ */
+const IDLE_SESSION_CHECK_INTERVAL = 1000;
 
 /**
  * Class representing a `fetch`-based Node.js transport provider.
@@ -59,6 +93,19 @@ export class NodeTransport implements Transport {
   private keepAliveAgent?: Agent;
 
   /**
+   * Cached dispatcher for non-idempotent requests (everything except `GET`).
+   *
+   * `undici`'s HTTP/2 client refuses to start a non-idempotent request while any other request runs on the same
+   * session, and the request then waits in that client's queue (it is not re-dispatched elsewhere). On a
+   * multiplexed session carrying the subscribe long-poll, a POST / PATCH / DELETE would wait until the long-poll
+   * returns, or time out. These requests therefore use a separate dispatcher whose connections carry one request
+   * at a time, which is how every request was handled before HTTP/2 multiplexing was enabled.
+   *
+   * @internal
+   */
+  private sequentialAgent?: Agent;
+
+  /**
    * Application-layer protocol most recently negotiated (via TLS ALPN) by the keep-alive connector.
    *
    * The WHATWG `fetch` `Response` exposes no HTTP version, so the negotiated protocol is captured from
@@ -73,6 +120,28 @@ export class NodeTransport implements Transport {
    * @internal
    */
   private lastNegotiatedProtocol?: string;
+
+  /**
+   * Number of requests started through {@link makeSendable} which haven't settled yet.
+   *
+   * @internal
+   */
+  private activeRequests = 0;
+
+  /**
+   * Whether dispatchers should be released as soon as there are no active requests (see
+   * {@link releaseConnections}).
+   *
+   * @internal
+   */
+  private releaseRequested = false;
+
+  /**
+   * Timer which defers the dispatchers release by one macrotask.
+   *
+   * @internal
+   */
+  private releaseTimer?: ReturnType<typeof setTimeout>;
 
   /**
    * Creates a new `fetch`-based transport instance.
@@ -118,9 +187,30 @@ export class NodeTransport implements Transport {
     }
   }
 
+  /**
+   * Release connections held by the transport as soon as there are no active requests.
+   *
+   * Called when the PubNub client is destroyed. Requests which are still in flight (or are started within the same
+   * macrotask, e.g. the presence `leave` sent by `destroy()`) complete first: the dispatchers are detached and
+   * closed gracefully once the transport is idle. Dispatchers are created lazily, so the transport remains usable
+   * after the release - a later request simply opens a new connection.
+   *
+   * @internal
+   */
+  public releaseConnections() {
+    this.releaseRequested = true;
+    if (this.activeRequests === 0) this.scheduleRelease();
+  }
+
   makeSendable(req: TransportRequest): [Promise<TransportResponse>, CancellationController | undefined] {
     let controller: CancellationController | undefined = undefined;
     let abortController: AbortController | undefined;
+
+    this.activeRequests++;
+    if (this.releaseTimer) {
+      clearTimeout(this.releaseTimer);
+      this.releaseTimer = undefined;
+    }
 
     // `undici`'s `fetch` has no per-request `timeout` option (unlike `node-fetch`), so the timeout is
     // expressed as an abort signal. The signal is created at fetch time (inside the `.then` below),
@@ -161,7 +251,7 @@ export class NodeTransport implements Transport {
             // The `undici` dispatcher carries connection-pool / proxy settings and the `allowH2` flag.
             // It is set on the `fetch` init (not on the `Request`) and is not part of the standard
             // `RequestInit`, hence the cast.
-            dispatcher: this.dispatcherForTransportRequest(),
+            dispatcher: this.dispatcherForTransportRequest(req.method),
           } as RequestInit & { dispatcher: Dispatcher })
             .then((response): Promise<[Response, ArrayBuffer]> | [Response, ArrayBuffer] =>
               response.arrayBuffer().then((arrayBuffer) => [response, arrayBuffer]),
@@ -253,13 +343,54 @@ export class NodeTransport implements Transport {
           }
 
           throw apiError;
-        }),
+        })
+        // `finally` passes the resolution / rejection through unchanged.
+        .finally(() => this.onRequestSettled()),
       controller,
     ];
   }
 
   request(req: TransportRequest): TransportRequest {
     return req;
+  }
+
+  /**
+   * Track request completion and release dispatchers if it has been requested and the transport became idle.
+   *
+   * @internal
+   */
+  private onRequestSettled() {
+    this.activeRequests = Math.max(0, this.activeRequests - 1);
+    if (this.activeRequests === 0 && this.releaseRequested) this.scheduleRelease();
+  }
+
+  /**
+   * Schedule dispatchers release on the next macrotask.
+   *
+   * The delay lets requests which are queued in the same macrotask (e.g. the `leave` sent by `destroy()`) reach
+   * {@link makeSendable} first, which cancels the scheduled release until they settle.
+   *
+   * @internal
+   */
+  private scheduleRelease() {
+    if (this.releaseTimer) clearTimeout(this.releaseTimer);
+
+    this.releaseTimer = setTimeout(() => {
+      this.releaseTimer = undefined;
+      if (this.activeRequests > 0 || !this.releaseRequested) return;
+      this.releaseRequested = false;
+
+      this.logger.debug('NodeTransport', 'Releasing idle connections.');
+
+      // Detach first, so a later request lazily creates a new dispatcher, then close gracefully.
+      const dispatchers = [this.keepAliveAgent, this.sequentialAgent, this.proxyAgent];
+      this.keepAliveAgent = undefined;
+      this.sequentialAgent = undefined;
+      this.proxyAgent = undefined;
+      for (const dispatcher of dispatchers) if (dispatcher) void dispatcher.close().catch(() => {});
+    }, 0);
+    // Don't keep the event loop alive only to release connections.
+    this.releaseTimer.unref?.();
   }
 
   /**
@@ -339,26 +470,34 @@ export class NodeTransport implements Transport {
    * A proxy dispatcher (when configured) takes precedence over the keep-alive dispatcher — the same
    * precedence the previous `proxy-agent` implementation had over the keep-alive `http.Agent`.
    *
+   * Without a proxy, `GET` requests use the dispatcher which multiplexes them over HTTP/2 sessions, and all other
+   * methods use {@link sequentialAgent}.
+   *
+   * @param method - HTTP method of the request.
+   *
    * @returns Dispatcher carrying connection-pool / proxy settings and the HTTP/2 negotiation flag.
    *
    * @internal
    */
-  private dispatcherForTransportRequest(): Dispatcher {
+  private dispatcherForTransportRequest(method: TransportMethod): Dispatcher {
     if (this.proxyConfiguration)
       return (this.proxyAgent ??= new ProxyAgent(NodeTransport.proxyAgentOptions(this.proxyConfiguration)));
 
-    return (this.keepAliveAgent ??= this.makeKeepAliveAgent());
+    if (method === TransportMethod.GET) return (this.keepAliveAgent ??= this.makeKeepAliveAgent(true));
+    return (this.sequentialAgent ??= this.makeKeepAliveAgent(false));
   }
 
   /**
    * Builds the keep-alive {@link Agent}, mapping the public {@link TransportKeepAlive} options (which
    * use Node `http.Agent` semantics) onto `undici`'s connection-pool options.
    *
+   * @param multiplex - Whether HTTP/2 sessions may carry concurrent requests (only safe for idempotent requests).
+   *
    * @returns Configured multi-origin dispatcher.
    *
    * @internal
    */
-  private makeKeepAliveAgent(): Agent {
+  private makeKeepAliveAgent(multiplex: boolean): Agent {
     // `allowH2` is the single HTTP/2-facing switch: it lets `undici` speak HTTP/2 over a socket whose
     // TLS ALPN negotiated `h2`. When an origin only advertises HTTP/1.1, `undici` transparently falls
     // back, so this is safe for every origin and does not change behaviour against HTTP/1.1-only
@@ -395,7 +534,124 @@ export class NodeTransport implements Transport {
     // timeout, and the keep-alive probe delay that undici would otherwise have set itself.
     options.connect = this.makeConnector(keepAliveInitialDelay);
 
+    // Clients are created by the transport so each connection can be adjusted once its protocol is known (see
+    // `onClientConnected`). Mirrors `undici`'s default Agent factory: a single `Client` for `connections: 1`, otherwise
+    // a `Pool`.
+    const clientFactory = (origin: string | URL, clientOptions: object) =>
+      this.makeClient(origin, clientOptions as Client.Options, multiplex);
+    options.factory = (origin, poolOptions) =>
+      (poolOptions as Pool.Options).connections === 1
+        ? clientFactory(origin, poolOptions)
+        : new Pool(origin, { ...(poolOptions as Pool.Options), factory: clientFactory });
+
     return new Agent(options);
+  }
+
+  /**
+   * Creates a connection client whose connector reports each established socket to {@link onClientConnected}.
+   *
+   * @param origin - Origin which the client connects to.
+   * @param options - Client options prepared by `undici`'s `Agent` / `Pool` (includes the custom connector).
+   * @param multiplex - Whether an HTTP/2 connection may carry concurrent requests.
+   *
+   * @returns Connection client.
+   *
+   * @internal
+   */
+  private makeClient(origin: string | URL, options: Client.Options, multiplex: boolean): Client {
+    const connector = options.connect as buildConnector.connector;
+
+    const client: Client = new Client(origin, {
+      ...options,
+      connect: (connectOptions, callback) =>
+        connector(connectOptions, (error, socket) => {
+          if (!error && socket) this.onClientConnected(client, socket, multiplex);
+
+          if (error) callback(error, null);
+          else callback(null, socket!);
+        }),
+    });
+
+    return client;
+  }
+
+  /**
+   * Configures a client for its freshly established connection.
+   *
+   * For an HTTP/2 connection (TLS ALPN negotiated `h2`):
+   * - when `multiplex` is set, raise the client's `pipelining` to {@link H2_MAX_CONCURRENT_STREAMS} so concurrent
+   *   requests are multiplexed over one session instead of each opening a new one;
+   * - close the session after it was idle for the keep-alive timeout. `undici` applies `keepAliveTimeout` to
+   *   HTTP/1.1 sockets only, so without this an idle HTTP/2 session would stay open until the server closes it.
+   *
+   * When the connection closes, the client's `pipelining` is restored, so if its next connection negotiates
+   * HTTP/1.1 requests are not queued behind a long-poll on the same socket.
+   *
+   * @param client - Client which owns the connection.
+   * @param socket - Established connection socket.
+   * @param multiplex - Whether the HTTP/2 session may carry concurrent requests.
+   *
+   * @internal
+   */
+  private onClientConnected(client: Client, socket: Socket | TLSSocket, multiplex: boolean) {
+    if (!('alpnProtocol' in socket) || socket.alpnProtocol !== 'h2') return;
+
+    if (multiplex) {
+      client.pipelining = H2_MAX_CONCURRENT_STREAMS;
+      client.once('disconnect', () => {
+        if (!client.closed && !client.destroyed) client.pipelining = this.http1Pipelining();
+      });
+    }
+
+    const idleTimeout = this.idleConnectionTimeout();
+    const checkInterval = Math.min(IDLE_SESSION_CHECK_INTERVAL, Math.max(100, Math.floor(idleTimeout / 4)));
+    let idleSince: number | undefined;
+
+    const timer = setInterval(() => {
+      if (socket.destroyed) return clearInterval(timer);
+
+      // `size` counts queued and running requests; an open long-poll keeps the session busy.
+      if (client.stats.size > 0) {
+        idleSince = undefined;
+        return;
+      }
+
+      idleSince ??= Date.now();
+      if (Date.now() - idleSince < idleTimeout) return;
+
+      clearInterval(timer);
+      this.logger.trace('NodeTransport', `Closing HTTP/2 session idle for ${idleTimeout}ms.`);
+      // Same as `undici` does with idle HTTP/1.1 sockets: the client stays in its pool and reconnects lazily. The
+      // socket must be destroyed WITH an error: `undici`'s HTTP/2 session `close` handler reads the error from the
+      // socket and otherwise dereferences the already-released socket (throws). `InformationalError`
+      // (`UND_ERR_INFO`) is treated by `undici` as non-fatal: no queued request is failed because of it.
+      socket.destroy(new errors.InformationalError('HTTP/2 session idle timeout'));
+    }, checkInterval);
+    timer.unref();
+    socket.once('close', () => clearInterval(timer));
+  }
+
+  /**
+   * Idle time (ms) after which a connection is closed.
+   *
+   * Uses the keep-alive `timeout` (the same value given to `undici` as HTTP/1.1 `keepAliveTimeout`) when keep-alive
+   * is enabled, otherwise `undici`'s default `keepAliveTimeout`.
+   *
+   * @internal
+   */
+  private idleConnectionTimeout(): number {
+    const timeout = this.keepAliveSettings.timeout;
+    return this.keepAlive && typeof timeout === 'number' && timeout > 0 ? timeout : DEFAULT_IDLE_CONNECTION_TIMEOUT;
+  }
+
+  /**
+   * `pipelining` value used for HTTP/1.1 connections, matching what {@link makeKeepAliveAgent} configures.
+   *
+   * @internal
+   */
+  private http1Pipelining(): number {
+    // `pipelining: 0` when keep-alive is disabled, otherwise `undici`'s default (`1`).
+    return this.keepAlive ? 1 : 0;
   }
 
   /**
