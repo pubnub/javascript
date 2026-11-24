@@ -25,12 +25,12 @@ describe('getting-started/set-up-your-environment', () => {
     /* eslint-disable prettier/prettier -- the sample text is shown to readers as written */
     // snippet.setUpTypeScriptInit
     const pubnub = new PubNub({
-        publishKey: 'your-publish-key',
-        subscribeKey: 'your-subscribe-key',
-        // snippet.hide
-        ...openKeys(),
-        // snippet.show
-        userId: 'your-user-id'
+      publishKey: 'your-publish-key',
+      subscribeKey: 'your-subscribe-key',
+      // snippet.hide
+      ...openKeys(),
+      // snippet.show
+      userId: 'your-user-id',
     });
     // snippet.end
     /* eslint-enable prettier/prettier */
