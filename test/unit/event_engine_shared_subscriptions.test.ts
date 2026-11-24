@@ -297,6 +297,17 @@ describe('EventEngine shared subscriptions', () => {
     expectLeaves([{ channels: ['ch1', 'ch2'] }, { channels: ['ch1'] }]);
   });
 
+  it('does not append a second -pnpres suffix when unsubscribing a presence channel', async () => {
+    pubnub.subscribe({ channels: ['ch1-pnpres', 'ch1-pnpres-pnpres'] });
+    await settle();
+    expectSubscribed({ channels: ['ch1-pnpres', 'ch1-pnpres-pnpres'] });
+
+    // Only `ch1-pnpres` is released; `ch1-pnpres-pnpres` is not its presence channel.
+    pubnub.unsubscribe({ channels: ['ch1-pnpres'] });
+    await settle();
+    expectSubscribed({ channels: ['ch1-pnpres-pnpres'] });
+  });
+
   it('releases channel groups and channels shared across rounds and resubscribes a released group', async () => {
     const mixedA = pubnub.subscriptionSet({ channels: ['ch1'], channelGroups: ['cg1', 'cg2'] });
     const mixedB = pubnub.subscriptionSet({ channels: ['ch1'], channelGroups: ['cg2'] });

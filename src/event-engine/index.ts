@@ -143,8 +143,13 @@ export class EventEngine {
   }
 
   unsubscribe({ channels = [], channelGroups = [] }: { channels?: string[]; channelGroups?: string[] }): void {
-    const channelsToRemove = [...channels, ...channels.map((c) => `${c}-pnpres`)];
-    const groupsToRemove = [...channelGroups, ...channelGroups.map((g) => `${g}-pnpres`)];
+    // A name which already is a presence channel or group (`<name>-pnpres`) doesn't get the suffix a second time.
+    const withPresenceNames = (names: string[]) => [
+      ...names,
+      ...names.filter((name) => !name.endsWith('-pnpres')).map((name) => `${name}-pnpres`),
+    ];
+    const channelsToRemove = withPresenceNames(channels);
+    const groupsToRemove = withPresenceNames(channelGroups);
     const filteredChannels = this.channels.filter((c) => !channelsToRemove.includes(c));
     const filteredGroups = this.groups.filter((g) => !groupsToRemove.includes(g));
 
